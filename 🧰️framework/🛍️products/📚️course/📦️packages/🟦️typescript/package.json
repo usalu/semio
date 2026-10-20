@@ -6,7 +6,9 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./🟦️.ts"
+    ".": "./🟦️.ts",
+    "./schema.json": "./🧬️schema/🔣️json/🟦️.ts",
+    "./schema/projection": "./🧬️schema/📽️projection/🟦️.ts"
   },
   "license": "LGPL-3.0-or-later",
   "semio": {

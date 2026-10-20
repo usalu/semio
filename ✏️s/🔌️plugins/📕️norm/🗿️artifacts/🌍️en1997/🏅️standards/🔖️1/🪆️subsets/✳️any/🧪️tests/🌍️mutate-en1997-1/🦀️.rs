@@ -44,6 +44,9 @@ const ROWS: &[&str] = &[
     "insert-layer-dupe",
     "insert-footing-dupe",
     "insert-pile-dupe",
+    "remove-footing-middle",
+    "remove-layer-middle",
+    "remove-pile-middle",
 ];
 
 /// 🗣️ The real committed EN 1997 document, read where the domain already keeps it.
@@ -62,6 +65,24 @@ const PACK_ASSET: &str = "asset://🎬️demo/📦️.pack.semio";
 #[cfg(feature = "sut")]
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
+        "remove-footing-middle" => (
+            include_str!("../🧫️fixtures/🧬️mutations/➖remove-footing/🧭️middle/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/➖remove-footing/🧭️middle/🦠️mutation/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/➖remove-footing/🧭️middle/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/➖remove-footing/🧭️middle/🎯️outcome/🔣️.json"),
+        ),
+        "remove-layer-middle" => (
+            include_str!("../🧫️fixtures/🧬️mutations/➖️remove-layer/🧭️middle/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/➖️remove-layer/🧭️middle/🦠️mutation/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/➖️remove-layer/🧭️middle/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/➖️remove-layer/🧭️middle/🎯️outcome/🔣️.json"),
+        ),
+        "remove-pile-middle" => (
+            include_str!("../🧫️fixtures/🧬️mutations/📤remove-pile/🧭️middle/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/📤remove-pile/🧭️middle/🦠️mutation/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/📤remove-pile/🧭️middle/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/📤remove-pile/🧭️middle/🎯️outcome/🔣️.json"),
+        ),
         "change-annex" => (
             include_str!("../🧫️fixtures/🧬️mutations/🌍️change-annex/✅apply/📸️snapshot/⬅️before/🔣️.json"),
             include_str!("../🧫️fixtures/🧬️mutations/🌍️change-annex/✅apply/🦠️mutation/🔣️.json"),

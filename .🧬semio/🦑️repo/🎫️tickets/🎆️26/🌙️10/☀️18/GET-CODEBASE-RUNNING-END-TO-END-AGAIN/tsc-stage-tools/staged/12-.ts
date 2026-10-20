@@ -17,8 +17,8 @@ const plugin = await import("../../🟨️.mjs");
 await plugin.libraryBootstrap;
 const api = plugin.cacheInternals;
 const ajv = new Ajv({ strict: true, allErrors: true });
-const validateDecision = ajv.compile(cacheSchema);
-const decisionOf = (target: any): [string, string] | null => { const value = target?.metadata?.semio?.cache; return value ? [value.class, value.reason] : null; };
+const validateDecision = ajv.compile<ReturnType<typeof api.cacheDecisionV1>>(cacheSchema);
+const decisionOf = (target: any): string[] | null => { const value = target?.metadata?.semio?.cache; return value ? [value.class, value.reason] : null; };
 const expand = (template: string, variant: string, profile = "") => template.replaceAll("{variant}", variant).replaceAll("{profile}", profile);
 const artifacts = () => process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir();
 
@@ -30,10 +30,11 @@ test("the corpus and the cache decision schema satisfy the strict independent va
 
 test("the repository contract admits exactly the decisions the independent schema admits", () => {
   for (const row of corpus.decisions) {
-    expect(validateDecision(row.value), row.id).toBe(row.valid);
+    const decision: unknown = row.value, admitted = validateDecision(decision);
+    expect(admitted, row.id).toBe(row.valid);
     const value = row.value as Record<string, unknown>;
     if (value.version !== 1 || Object.keys(value).sort().join() !== "class,reason,version") continue;
-    if (row.valid) expect<unknown>(api.cacheDecisionV1(value.class as string, value.reason as string), row.id).toEqual(row.value);
+    if (admitted) expect(api.cacheDecisionV1(value.class as string, value.reason as string), row.id).toEqual(decision);
     else expect(() => api.cacheDecisionV1(value.class as string, value.reason as string), row.id).toThrow("Repository target cache decision refused");
   }
   expect(api.cacheDecisionV1("continuous", "serves-until-stopped")).toBe(api.cacheDecisionV1("continuous", "serves-until-stopped"));
@@ -44,7 +45,7 @@ test("workspace policy refusals carry the physical reason and replayable names c
     const target: any = api.targetPolicy(row.name, { cache: row.authored === false ? false : undefined, options: { command: "bun ./📜️script.ts " + row.name } });
     expect(target.cache, row.name).toBe(row.cache);
     expect(target.continuous === true, row.name).toBe(row.continuous === true);
-    expect<unknown>(decisionOf(target), row.name).toEqual(row.decision);
+    expect(decisionOf(target), row.name).toEqual(row.decision);
     if (row.decision) expect(validateDecision(target.metadata.semio.cache), row.name).toBe(true);
   }
 });
@@ -119,7 +120,7 @@ test("artifact packages replay their tests, checks and receipted store-linked bu
     for (const [name, expected] of Object.entries(row.expect)) {
       const target = project.targets[name] as any;
       expect(target.cache, name).toBe(expected.cache);
-      expect<unknown>(decisionOf(target), name).toEqual(expected.decision);
+      expect(decisionOf(target), name).toEqual(expected.decision);
       const outputs = (expected as { outputs?: readonly string[] }).outputs; if (outputs) expect(target.outputs, name).toEqual(outputs);
       if (expected.decision) expect(validateDecision(target.metadata.semio.cache), name).toBe(true);
     }

@@ -3,7 +3,7 @@ import {captureOwnedCommandV1} from "@semio-tech/process/execution";
 import {readScriptProcessJsonV1} from "@semio-tech/process/routing/invocation/process/json";
 import { readingGroupSchema as groupSchema } from "@semio-tech/repo-lib/artifacts";
 import {withArtifactDescriptorSlotV1} from "@semio-tech/process/artifacts/publication/sources";
-import {withArtifactDescriptorV1,artifactReadFlagsV1} from "@semio-tech/framework/filesystem/observation/descriptor";
+import {withArtifactDescriptorV1,artifactReadFlagsV1} from "@semio-tech/framework-filesystem/observation/descriptor";
 import { withRepositoryCacheStoreV1, requireCompilerWriterCustodyV1, withCompilerWorkspaceWriteV1 } from "@semio-tech/repo-lib/storage";
 import { withArtifactScratchV1, withArtifactDestinationTaskV1, withRepositoryArtifactDestinationV1, stageRepositoryArtifacts, readNativeCallerAuthorityV1 } from "@semio-tech/repo-lib/artifacts";
 import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "@semio-tech/process/artifacts/native-build/storage";

@@ -72,8 +72,8 @@ pub mod export {
 }
 //#endregion 🧩️Modules
 
-use semio_s_artifact_stdio_step_geometry::geometry::StepSolidExporter;
-use semio_s_artifact_stdio_step_geometry::geometry::StepSolidImporter;
+use semio_s_artifact_stdio_step::geometry::StepSolidExporter;
+use semio_s_artifact_stdio_step::geometry::StepSolidImporter;
 pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.json", "stdio.txt"]
 }

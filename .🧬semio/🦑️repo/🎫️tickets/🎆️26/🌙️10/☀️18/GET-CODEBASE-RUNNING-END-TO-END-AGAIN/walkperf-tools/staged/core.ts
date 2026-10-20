@@ -16,7 +16,7 @@ export interface GenerationControlV1{readonly signal:AbortSignal;check():void;ti
 export interface GenerationRuntimeV1{readonly bun:string;readonly revision:string;readonly node:string;readonly platform:string;readonly arch:string;readonly sha256:string}
 /** 🔖️ Points at one immutable content-addressed evidence file next to the receipt. */
 export interface GenerationEvidenceV1{readonly name:string;readonly sha256:string;readonly bytes:number;readonly rows:number}
-/** 🔏️ Seals the runtime import closure of the walk and fence entries: the sorted entry list and the content-addressed per-file digest rows. */
+/** 🗃️ Seals the runtime import closure of the walk and fence entries: the sorted entry list and the content-addressed per-file digest rows. */
 export interface GenerationImplementationV1{readonly entries:readonly string[];readonly evidence:GenerationEvidenceV1}
 /** 🗝️ Names one installer configuration file as every installer level could read it; a missing file is part of the proof. */
 export interface GenerationProducerFileV1{readonly path:string;readonly kind:"missing"|"file"|"other";readonly bytes:number;readonly sha256:string|null}

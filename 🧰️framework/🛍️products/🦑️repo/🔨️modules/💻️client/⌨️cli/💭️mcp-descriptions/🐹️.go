@@ -25,7 +25,7 @@ func mcpDesc(kind McpClientKind, key string) string {
 	return ""
 }
 
-// mcpDescriptionTable: keys = stable ids; inner map must include generic + each IDE kind used.
+// 🔌️mcpDescriptionTable: keys = stable ids; inner map must include generic + each IDE kind used.
 var mcpDescriptionTable = map[string]map[McpClientKind]string{
 	"prompt_enhance": {
 		McpClientGeneric: "Use when you are about to add behavior and must align the change with repository rules before editing.",

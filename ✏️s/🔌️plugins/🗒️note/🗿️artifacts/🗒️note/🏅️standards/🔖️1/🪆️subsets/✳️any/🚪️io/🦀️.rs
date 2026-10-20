@@ -22,7 +22,8 @@
 //! new `io_mechanism` registry (ticket status.md wave W2, not this plugin's boundary) — a real,
 //! documented cross-plugin limitation, not an oversight (see `## openQuestions`).
 
-use crate::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
+use crate::{NoteBlockNode, NoteTextParagraph, NoteTextRun};
+use semio_s_artifact_note_note_schema::NoteSnapshot;
 use {semio_framework_plugin::app::io_dispatch,semio_framework_artifact_reference::Dialect,semio_framework_plugin::app::ErasedComposeSource,semio_framework_plugin::app::IoDirection,semio_framework_plugin::app::IoKey,semio_framework_plugin::app::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing;
 use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry;

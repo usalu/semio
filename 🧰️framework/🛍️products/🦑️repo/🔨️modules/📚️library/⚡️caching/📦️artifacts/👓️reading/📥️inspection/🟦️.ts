@@ -1,4 +1,4 @@
-import {withArtifactDescriptorV1,artifactReadFlagsV1} from "@semio-tech/framework/filesystem/observation/descriptor";
+import {withArtifactDescriptorV1,artifactReadFlagsV1} from "@semio-tech/framework-filesystem/observation/descriptor";
 import {createHash} from "node:crypto";
 import {join,relative} from "node:path";
 import {lstat,open,opendir} from "node:fs/promises";

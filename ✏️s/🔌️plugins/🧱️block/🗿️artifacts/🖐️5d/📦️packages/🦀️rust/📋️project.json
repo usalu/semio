@@ -47,6 +47,7 @@
     },
     "test": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -56,6 +57,7 @@
     "test-snapshot-sqlite-source": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite source",
@@ -65,6 +67,7 @@
     "verify-snapshot-sqlite-source": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify snapshot-sqlite-source",
@@ -74,6 +77,7 @@
     "test-snapshot-sqlite-native": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite native",

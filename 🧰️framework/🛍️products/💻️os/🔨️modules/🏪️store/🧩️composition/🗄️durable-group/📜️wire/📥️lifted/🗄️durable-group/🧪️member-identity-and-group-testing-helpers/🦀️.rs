@@ -38,36 +38,21 @@ fn durable_group_test_revision(bytes: &[u8]) -> [u8; 32] {
     std::array::from_fn(|index| u8::from_str_radix(&digest[index * 2..index * 2 + 2], 16).expect("SHA-256 hexadecimal byte"))
 }
 
-/// 🧪️ One caller-issued fixture candidate and the exact issuers that close its original owners.
+/// 🧪️ One caller-issued fixture member: its actual edit, post root and the exact issuers that close those original owners.
 #[cfg(feature = "durable-group-testing")]
-pub fn durable_group_test_outcome<P, Mutation>(recovery_schema: &str, ordinal: u64, edit: Edit<Mutation>, post_snapshot: P) -> Result<DurableStorePreparedOutcomeV1, DurableOwnedGroupDecisionError>
-where
-    P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot,
-    Mutation: ValueToValue + ValueFromValue,
-{
-    let actor = edit.actor.clone().ok_or(DurableOwnedGroupDecisionError::InvalidIdentity)?;
-    let meta = edit.mutation_meta.first().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    let authority = Arc::new(ArtifactStoreOneItemLiveAuthority::mint(
-        semio_framework_job::OperationId(10_000 + ordinal),
-        semio_framework_job::Generation(ordinal),
-        durable_group_test_revision(format!("durable-group-test-base-{ordinal}").as_bytes()),
-        0,
-        edit.sequence_number,
-        meta.timestamp,
-        actor,
-        edit.line.clone(),
-        meta.group_id.clone(),
-        None,
-    ));
-    let prepared = authority.prepare_one_item(edit, Arc::new(post_snapshot)).map_err(DurableOwnedGroupDecisionError::Codec)?;
-    DurableStorePreparedOutcomeV1::from_prepared(recovery_schema, &prepared)
+pub struct DurableOwnedGroupTestMember<P: 'static, Mutation: 'static> {
+    pub edit: Edit<Mutation>,
+    pub post_snapshot: Arc<P>,
+    pub mutation_retirement: Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Mutation>>,
+    pub snapshot_retirement: Arc<dyn semio_framework_value::SnapshotRetirementFactory<P>>,
 }
 
+/// 🧪️ One caller-issued fixture candidate: the member's original owners close through their own issuers.
 #[cfg(feature = "durable-group-testing")]
-fn durable_group_test_outcome<P, Mutation>(recovery_schema: &str, ordinal: u64, member: DurableOwnedGroupTestMember<P, Mutation>) -> Result<DurableStorePreparedOutcomeV1, DurableOwnedGroupDecisionError>
+pub fn durable_group_test_outcome<P, Mutation>(recovery_schema: &str, ordinal: u64, member: DurableOwnedGroupTestMember<P, Mutation>) -> Result<DurableStorePreparedOutcomeV1, DurableOwnedGroupDecisionError>
 where
-    P: ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
-    Mutation: ValueToValue + ValueFromValue + semio_framework_value::retirement::RetireOwned,
+    P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    Mutation: ValueToValue + ValueFromValue + semio_framework_value::retirement::RetireOwned + Send + 'static,
 {
     let mut owners = semio_framework_os_store_one_item_batch::OneItemOwners::from_returned(member.edit, member.post_snapshot, member.mutation_retirement, member.snapshot_retirement);
     let outcome = (|| {

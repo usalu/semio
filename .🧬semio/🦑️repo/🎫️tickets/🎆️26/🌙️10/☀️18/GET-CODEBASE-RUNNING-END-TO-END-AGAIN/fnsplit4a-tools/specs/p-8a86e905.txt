@@ -1,0 +1,4 @@
+registerHeartbeatAndLivenessTests 3 phases, keep=-, final return=false
+9-10 registerShardClientHeartbeatWatchdogTests
+65-65 registerShardClientLivenessWatchdogTests
+379-379 registerShardClientSabHeartbeatTests

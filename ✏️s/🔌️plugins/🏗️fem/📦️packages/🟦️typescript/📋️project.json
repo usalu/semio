@@ -8,6 +8,7 @@
     "verify-combination-stress": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify-combination-stress"
@@ -16,6 +17,7 @@
     },
     "test": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",

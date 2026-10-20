@@ -2,21 +2,17 @@
 
 The repo command surface: the command framework and its verb tree, the engine and its event stream,
 the NDJSON / human / markdown renderers, the usage text, and the `mcp` verb that serves the protocol.
-The Rust crate produces the `semio-repo` binary every dev entry point resolves by default and the
-`repo` MCP stdio server; the Go module produces the `semio-repo` twin selected by
-`SEMIO_REPO_IMPLEMENTATION=go`. Neither binary links a terminal user interface: the `semio`
-dashboard binary belongs to `🎛️dashboard`, which may depend on the repo domain crates but is never
-a dependency of this crate.
+Both native implementations expose one executable, `repo`. Repository verbs stay native; build verbs enter the owned build implementation through its tool-independent process port. `repo mcp` serves stdio with the profile selected by `SEMIO_REPO_MCP_CLIENT`. Human developers open `repo dashboard`; agents run declared owner targets and never start the dashboard. The terminal viewer remains a separately built implementation owned by `🎛️dashboard` and is prepared lazily through its authored target.
 
 ## 📦️ Packages
 
-- `📦️packages/🦀️rust` — `semio-framework-repo-cli` (binaries `semio-repo`, `repo`): the declared command tree, the process entry and the projections, over the producer crates below
+- `📦️packages/🦀️rust` — `semio-framework-repo-cli` (binary `repo`): the declared command tree, the process entry and the projections, over the producer crates below
 - `📡️event-stream/📦️packages/🦀️rust` — `semio-framework-repo-cli-event-stream`
 - `🧭️repo-cli/🎮️command-framework/📦️packages/🦀️rust` — `semio-framework-repo-cli-command-framework`
 - `🧭️repo-cli/🗂️tree-source-and-search/📦️packages/🦀️rust` — `semio-framework-repo-cli-tree-source-and-search`
 - `🔌️mcp-verb/📦️packages/🦀️rust` — `semio-framework-repo-cli-mcp-verb`
 - `🧭️repo-cli/🚦️verbs/📦️packages/🦀️rust` — `semio-framework-repo-cli-verbs`
-- `📦️packages/🐹️go` — `github.com/usalu/semio/repo/cli`, entry point in `📦️packages/🐹️go/🚀️bin`
+- `📦️packages/🐹️go` — `github.com/usalu/semio/repo/cli`, the canonical Go entry point is owned by `💻️client/🔌️mcp/🧩️component`
 - `📦️packages/🟦️typescript` — the binary-resolution and invocation helpers
 
 ## 🧱️ Rust layout

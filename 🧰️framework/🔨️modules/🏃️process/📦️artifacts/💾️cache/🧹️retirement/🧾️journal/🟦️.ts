@@ -1,7 +1,7 @@
 import{open,lstat,type FileHandle}from"node:fs/promises";
 import{constants,type Stats}from"node:fs";
 import{dirname,resolve}from"node:path";
-import{withArtifactDescriptorV1,artifactReadFlagsV1}from"@semio-tech/framework/filesystem/observation/descriptor";
+import{withArtifactDescriptorV1,artifactReadFlagsV1}from"@semio-tech/framework-filesystem/observation/descriptor";
 import{checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseControl}from"../../../../🔒️leases/🟦️.ts";
 import{requireIssuedResourceControlV1}from"../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import{nativeCacheRetirementProtocolV1,nativeCacheRetirementEntryBytesV1,replayNativeCacheRetirementV1,nextNativeCacheRetirementEntryV1,type NativeCacheRetirementEntryV1}from"../🟦️.ts";

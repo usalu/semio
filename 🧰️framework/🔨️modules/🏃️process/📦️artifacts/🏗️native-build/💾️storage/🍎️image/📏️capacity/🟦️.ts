@@ -1,5 +1,5 @@
-import imageSchema from"../../🧬️schema/🔣️.json";
-import schema from"./🧬️schema/🔣️.json";
+import imageSchema from"../../🧬️schema/🔣️.json" with { type: "json" };
+import schema from"./🧬️schema/🔣️.json" with { type: "json" };
 const protocol=schema.definitions.Protocol.const,image=imageSchema.definitions.ImageProtocol.const;
 const size=(bytes:number)=>{if(!Number.isSafeInteger(bytes)||bytes<image.minimumFilesystemBytes)throw Error("Native image size at or above the minimum filesystem required");return bytes;};
 /** 📏️ Predicts the byte size `statfs` reports for an empty APFS volume created in a fixed image of the given size. */

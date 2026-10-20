@@ -6,7 +6,7 @@
 use super::{Generation3dViewPresence, Generation3dViewPresencePatch};
 use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewCamera;
 
-#[path = "📷️set-preview/🦀️.rs"]
+#[path = "📷️set-preview-camera/🦀️.rs"]
 mod set_preview_camera;
 #[path = "👁️set-show-mode/🦀️.rs"]
 mod set_show_mode;

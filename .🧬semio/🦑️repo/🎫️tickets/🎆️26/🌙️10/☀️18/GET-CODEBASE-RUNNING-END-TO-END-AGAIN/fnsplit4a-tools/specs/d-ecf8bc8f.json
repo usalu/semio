@@ -1,0 +1,37 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🐾️pets/🧪️tests/🪞️fixture-lifting/🟦️.tsx",
+ "describeLine": 175,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of the 🪞️ fixture lifting suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️copies-element-computed-look",
+   "doc": "/** 🔶️ The copies element computed look tests of the 🪞️ fixture lifting suite. */",
+   "name": "registerCopiesElementComputedLookTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the copies element computed look tests of the 🪞️ fixture lifting suite.",
+   "from": 176,
+   "to": 322
+  },
+  {
+   "dir": "🔸️takes-lift-back-any",
+   "doc": "/** 🔸️ The takes lift back any tests of the 🪞️ fixture lifting suite. */",
+   "name": "registerTakesLiftBackAnyTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the takes lift back any tests of the 🪞️ fixture lifting suite.",
+   "from": 336,
+   "to": 479
+  },
+  {
+   "dir": "🟠️never-writes-way-policy",
+   "doc": "/** 🟠️ The never writes way policy tests of the 🪞️ fixture lifting suite. */",
+   "name": "registerNeverWritesWayPolicyTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the never writes way policy tests of the 🪞️ fixture lifting suite.",
+   "from": 498,
+   "to": 498
+  }
+ ]
+}

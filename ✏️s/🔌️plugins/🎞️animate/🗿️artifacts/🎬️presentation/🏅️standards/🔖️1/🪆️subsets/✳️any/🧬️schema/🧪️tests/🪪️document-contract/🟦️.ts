@@ -22,7 +22,7 @@ export function testPresentationDocumentContractOracle(): void {
     validDocuments: [{ input: vectors.document, output: vectors.document }],
     invalidDocuments: vectors.invalidDocuments, invalidDiffs: vectors.invalidDiffs,
     mutationRoots: [join(import.meta.dir, "../../../🧪️tests/🧫️fixtures/🧬️mutations")],
-    committed: { snapshots: 18, diffs: 5 },
+    committed: { snapshots: 16, diffs: 4 },
   });
   assert.deepEqual(parsePresentationDiff(vectors.diff), vectors.diff);
   assert.deepEqual(parsePresentationDiff({}), { schema: null, source: null, tiles: null });

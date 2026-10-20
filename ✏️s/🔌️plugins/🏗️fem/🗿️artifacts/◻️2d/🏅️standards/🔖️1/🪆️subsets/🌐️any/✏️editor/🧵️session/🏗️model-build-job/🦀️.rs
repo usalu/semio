@@ -200,73 +200,10 @@ impl MountedModelBuild {
                 self.node_cursor += 1;
                 self.stage = ModelBuildStage::Nodes;
             }
-            ModelBuildStage::ElementStart => {
-                let Some(element) = snapshot.elements.get(self.element_cursor) else {
-                    self.stage = ModelBuildStage::Supports;
-                    return Ok(false);
-                };
-                let start = match element {
-                    FemElement::Bar { start, .. } | FemElement::Beam { start, .. } => start,
-                };
-                if let Some(node) = snapshot.nodes.get(self.lookup_cursor) {
-                    if node.id == *start {
-                        self.lookup_cursor = 0;
-                        self.stage = ModelBuildStage::ElementEnd;
-                    } else {
-                        self.lookup_cursor += 1;
-                    }
-                } else {
-                    return Err(b"fem2d.model-unknown-start-node".to_vec());
-                }
-            }
-            ModelBuildStage::ElementEnd => {
-                let element = &snapshot.elements[self.element_cursor];
-                let end = match element {
-                    FemElement::Bar { end, .. } | FemElement::Beam { end, .. } => end,
-                };
-                if let Some(node) = snapshot.nodes.get(self.lookup_cursor) {
-                    if node.id == *end {
-                        self.lookup_cursor = 0;
-                        self.stage = ModelBuildStage::ElementMaterial;
-                    } else {
-                        self.lookup_cursor += 1;
-                    }
-                } else {
-                    return Err(b"fem2d.model-unknown-end-node".to_vec());
-                }
-            }
-            ModelBuildStage::ElementMaterial => {
-                let material_id = match &snapshot.elements[self.element_cursor] {
-                    FemElement::Bar { material_id, .. } | FemElement::Beam { material_id, .. } => material_id,
-                };
-                if let Some(material) = snapshot.materials.get(self.lookup_cursor) {
-                    if material.id == *material_id {
-                        self.resolved_material = self.lookup_cursor;
-                        self.lookup_cursor = 0;
-                        self.stage = ModelBuildStage::ElementSection;
-                    } else {
-                        self.lookup_cursor += 1;
-                    }
-                } else {
-                    return Err(b"fem2d.model-unknown-material".to_vec());
-                }
-            }
-            ModelBuildStage::ElementSection => {
-                let section_id = match &snapshot.elements[self.element_cursor] {
-                    FemElement::Bar { section_id, .. } | FemElement::Beam { section_id, .. } => section_id,
-                };
-                if let Some(section) = snapshot.sections.get(self.lookup_cursor) {
-                    if section.id == *section_id {
-                        self.resolved_section = self.lookup_cursor;
-                        self.lookup_cursor = 0;
-                        self.stage = ModelBuildStage::ElementIdOwner;
-                    } else {
-                        self.lookup_cursor += 1;
-                    }
-                } else {
-                    return Err(b"fem2d.model-unknown-section".to_vec());
-                }
-            }
+            ModelBuildStage::ElementStart => self.model_element_start(snapshot),
+            ModelBuildStage::ElementEnd => self.model_element_end(snapshot),
+            ModelBuildStage::ElementMaterial => self.model_element_material(snapshot),
+            ModelBuildStage::ElementSection => self.model_element_section(snapshot),
             ModelBuildStage::ElementIdOwner => {
                 let element = &snapshot.elements[self.element_cursor];
                 self.pending_element_id = Some(match element {
@@ -290,36 +227,7 @@ impl MountedModelBuild {
                 });
                 self.stage = ModelBuildStage::ElementCommit;
             }
-            ModelBuildStage::ElementCommit => {
-                bounded_derived_string(self.pending_element_end.as_ref().ok_or_else(|| b"fem2d.model-element-end-owner-missing".to_vec())?)?;
-                let element = &snapshot.elements[self.element_cursor];
-                let material = &snapshot.materials[self.resolved_material];
-                let section = &snapshot.sections[self.resolved_section];
-                let resolved = match element {
-                    FemElement::Bar { .. } => semio_s_fem_elements2d::Bar2 {
-                        id: self.pending_element_id.take().ok_or_else(|| b"fem2d.model-element-id-owner-missing".to_vec())?,
-                        start: self.pending_element_start.take().ok_or_else(|| b"fem2d.model-element-start-owner-missing".to_vec())?,
-                        end: self.pending_element_end.take().ok_or_else(|| b"fem2d.model-element-end-owner-missing".to_vec())?,
-                        e: material.e,
-                        area: section.area,
-                        density: material.rho,
-                    }
-                    .into(),
-                    FemElement::Beam { .. } => semio_s_fem_elements2d::BeamEb2 {
-                        id: self.pending_element_id.take().ok_or_else(|| b"fem2d.model-element-id-owner-missing".to_vec())?,
-                        start: self.pending_element_start.take().ok_or_else(|| b"fem2d.model-element-start-owner-missing".to_vec())?,
-                        end: self.pending_element_end.take().ok_or_else(|| b"fem2d.model-element-end-owner-missing".to_vec())?,
-                        e: material.e,
-                        area: section.area,
-                        iy: section.iy,
-                        density: material.rho,
-                    }
-                    .into(),
-                };
-                self.model.push_element(resolved).map_err(|_| b"fem2d.model-element-capacity".to_vec())?;
-                self.element_cursor += 1;
-                self.stage = ModelBuildStage::ElementStart;
-            }
+            ModelBuildStage::ElementCommit => self.model_element_commit(snapshot),
             ModelBuildStage::Supports => {
                 if let Some(support) = snapshot.supports.get(self.support_cursor) {
                     self.pending_support = Some(MountedAnalysisSupport::new(support.node_id.clone()));
@@ -351,28 +259,7 @@ impl MountedModelBuild {
                 self.support_cursor += 1;
                 self.stage = ModelBuildStage::Supports;
             }
-            ModelBuildStage::RegionNodeCoordinate => {
-                if snapshot.regions.is_empty() {
-                    self.stage = ModelBuildStage::Complete;
-                    return Ok(false);
-                };
-                let Some(point) = self.mesh.as_ref().and_then(|mesh| mesh.points.get(self.region_point_cursor)).copied() else {
-                    self.stage = ModelBuildStage::RegionElementMaterial;
-                    return Ok(false);
-                };
-                if let Some(node) = self.model.node(self.lookup_cursor) {
-                    if (node.pos[0] - point[0]).abs() < 1e-9 && (node.pos[1] - point[1]).abs() < 1e-9 {
-                        self.pending_region_id = Some(node.id.clone());
-                        self.pending_region_insert = false;
-                        self.lookup_cursor = 0;
-                        self.stage = ModelBuildStage::RegionNodeCommit;
-                    } else {
-                        self.lookup_cursor += 1;
-                    }
-                } else {
-                    self.stage = ModelBuildStage::RegionNodeIdReserve;
-                }
-            }
+            ModelBuildStage::RegionNodeCoordinate => self.model_region_node_coordinate(snapshot),
             ModelBuildStage::RegionNodeIdReserve => {
                 let region = snapshot.regions.get(self.region_cursor).ok_or_else(|| b"fem2d.model-region-owner-missing".to_vec())?;
                 let required = region.id.len().checked_add(24).ok_or_else(|| b"fem2d.model-generated-node-id-overflow".to_vec())?;
@@ -428,25 +315,7 @@ impl MountedModelBuild {
                 self.region_point_cursor += 1;
                 self.stage = ModelBuildStage::RegionNodeCoordinate;
             }
-            ModelBuildStage::RegionElementMaterial => {
-                let Some(region) = snapshot.regions.get(self.region_cursor) else {
-                    self.stage = ModelBuildStage::Complete;
-                    return Ok(false);
-                };
-                if self.mesh.as_ref().and_then(|mesh| mesh.tris.get(self.region_triangle_cursor)).is_none() {
-                    self.stage = ModelBuildStage::Complete;
-                } else if let Some(material) = snapshot.materials.get(self.lookup_cursor) {
-                    if material.id == region.material_id {
-                        self.resolved_material = self.lookup_cursor;
-                        self.lookup_cursor = 0;
-                        self.stage = ModelBuildStage::RegionElementIdReserve;
-                    } else {
-                        self.lookup_cursor += 1;
-                    }
-                } else {
-                    return Err(b"fem2d.model-unknown-region-material".to_vec());
-                }
-            }
+            ModelBuildStage::RegionElementMaterial => self.model_region_element_material(snapshot),
             ModelBuildStage::RegionElementIdReserve => {
                 let region = snapshot.regions.get(self.region_cursor).ok_or_else(|| b"fem2d.model-region-owner-missing".to_vec())?;
                 let required = region.id.len().checked_add(24).ok_or_else(|| b"fem2d.model-generated-element-id-overflow".to_vec())?;
@@ -491,31 +360,186 @@ impl MountedModelBuild {
                     self.stage = ModelBuildStage::RegionElementCommit;
                 }
             }
-            ModelBuildStage::RegionElementCommit => {
-                for owner in &self.pending_region_element_nodes {
-                    bounded_derived_string(owner.as_ref().ok_or_else(|| b"fem2d.model-region-element-node-owner-missing".to_vec())?)?;
-                }
-                let region = snapshot.regions.get(self.region_cursor).expect("region element retains region");
-                let material = &snapshot.materials[self.resolved_material];
-                let nodes = std::array::from_fn(|index| self.pending_region_element_nodes[index].take().expect("region element node owner retained"));
-                self.model.push_element(
-                    semio_s_fem_elements2d::Tri3Cst {
-                        id: self.pending_region_element_id.take().ok_or_else(|| b"fem2d.model-region-element-id-owner-missing".to_vec())?,
-                        nodes,
-                        e: material.e,
-                        nu: material.nu,
-                        thickness: region.thickness,
-                        kind: semio_s_fem_elements2d::PlaneKind::Stress,
-                        density: material.rho,
-                    }
-                    .into(),
-                ).map_err(|_| b"fem2d.model-region-element-capacity".to_vec())?;
-                self.region_triangle_cursor += 1;
-                self.stage = ModelBuildStage::RegionElementMaterial;
-            }
+            ModelBuildStage::RegionElementCommit => self.model_region_element_commit(snapshot),
             ModelBuildStage::Complete => return Ok(true),
         }
         Ok(false)
+    }
+
+    /// 🧱️ Runs the `element start` stage of `step_one`.
+    fn model_element_start(&mut self, snapshot: &Fem2dSnapshot) -> Result<bool, Vec<u8>> {
+        let Some(element) = snapshot.elements.get(self.element_cursor) else {
+            self.stage = ModelBuildStage::Supports;
+            return Ok(false);
+        };
+        let start = match element {
+            FemElement::Bar { start, .. } | FemElement::Beam { start, .. } => start,
+        };
+        if let Some(node) = snapshot.nodes.get(self.lookup_cursor) {
+            if node.id == *start {
+                self.lookup_cursor = 0;
+                self.stage = ModelBuildStage::ElementEnd;
+            } else {
+                self.lookup_cursor += 1;
+            }
+        } else {
+            return Err(b"fem2d.model-unknown-start-node".to_vec());
+        }
+    }
+
+    /// 🪵️ Runs the `element end` stage of `step_one`.
+    fn model_element_end(&mut self, snapshot: &Fem2dSnapshot) -> Result<bool, Vec<u8>> {
+        let element = &snapshot.elements[self.element_cursor];
+        let end = match element {
+            FemElement::Bar { end, .. } | FemElement::Beam { end, .. } => end,
+        };
+        if let Some(node) = snapshot.nodes.get(self.lookup_cursor) {
+            if node.id == *end {
+                self.lookup_cursor = 0;
+                self.stage = ModelBuildStage::ElementMaterial;
+            } else {
+                self.lookup_cursor += 1;
+            }
+        } else {
+            return Err(b"fem2d.model-unknown-end-node".to_vec());
+        }
+    }
+
+    /// 🔩️ Runs the `element material` stage of `step_one`.
+    fn model_element_material(&mut self, snapshot: &Fem2dSnapshot) -> Result<bool, Vec<u8>> {
+        let material_id = match &snapshot.elements[self.element_cursor] {
+            FemElement::Bar { material_id, .. } | FemElement::Beam { material_id, .. } => material_id,
+        };
+        if let Some(material) = snapshot.materials.get(self.lookup_cursor) {
+            if material.id == *material_id {
+                self.resolved_material = self.lookup_cursor;
+                self.lookup_cursor = 0;
+                self.stage = ModelBuildStage::ElementSection;
+            } else {
+                self.lookup_cursor += 1;
+            }
+        } else {
+            return Err(b"fem2d.model-unknown-material".to_vec());
+        }
+    }
+
+    /// ⚙️ Runs the `element section` stage of `step_one`.
+    fn model_element_section(&mut self, snapshot: &Fem2dSnapshot) -> Result<bool, Vec<u8>> {
+        let section_id = match &snapshot.elements[self.element_cursor] {
+            FemElement::Bar { section_id, .. } | FemElement::Beam { section_id, .. } => section_id,
+        };
+        if let Some(section) = snapshot.sections.get(self.lookup_cursor) {
+            if section.id == *section_id {
+                self.resolved_section = self.lookup_cursor;
+                self.lookup_cursor = 0;
+                self.stage = ModelBuildStage::ElementIdOwner;
+            } else {
+                self.lookup_cursor += 1;
+            }
+        } else {
+            return Err(b"fem2d.model-unknown-section".to_vec());
+        }
+    }
+
+    /// 🧲️ Runs the `element commit` stage of `step_one`.
+    fn model_element_commit(&mut self, snapshot: &Fem2dSnapshot) -> Result<bool, Vec<u8>> {
+        bounded_derived_string(self.pending_element_end.as_ref().ok_or_else(|| b"fem2d.model-element-end-owner-missing".to_vec())?)?;
+        let element = &snapshot.elements[self.element_cursor];
+        let material = &snapshot.materials[self.resolved_material];
+        let section = &snapshot.sections[self.resolved_section];
+        let resolved = match element {
+            FemElement::Bar { .. } => semio_s_fem_elements2d::Bar2 {
+                id: self.pending_element_id.take().ok_or_else(|| b"fem2d.model-element-id-owner-missing".to_vec())?,
+                start: self.pending_element_start.take().ok_or_else(|| b"fem2d.model-element-start-owner-missing".to_vec())?,
+                end: self.pending_element_end.take().ok_or_else(|| b"fem2d.model-element-end-owner-missing".to_vec())?,
+                e: material.e,
+                area: section.area,
+                density: material.rho,
+            }
+            .into(),
+            FemElement::Beam { .. } => semio_s_fem_elements2d::BeamEb2 {
+                id: self.pending_element_id.take().ok_or_else(|| b"fem2d.model-element-id-owner-missing".to_vec())?,
+                start: self.pending_element_start.take().ok_or_else(|| b"fem2d.model-element-start-owner-missing".to_vec())?,
+                end: self.pending_element_end.take().ok_or_else(|| b"fem2d.model-element-end-owner-missing".to_vec())?,
+                e: material.e,
+                area: section.area,
+                iy: section.iy,
+                density: material.rho,
+            }
+            .into(),
+        };
+        self.model.push_element(resolved).map_err(|_| b"fem2d.model-element-capacity".to_vec())?;
+        self.element_cursor += 1;
+        self.stage = ModelBuildStage::ElementStart;
+    }
+
+    /// 🪛️ Runs the `region node coordinate` stage of `step_one`.
+    fn model_region_node_coordinate(&mut self, snapshot: &Fem2dSnapshot) -> Result<bool, Vec<u8>> {
+        if snapshot.regions.is_empty() {
+            self.stage = ModelBuildStage::Complete;
+            return Ok(false);
+        };
+        let Some(point) = self.mesh.as_ref().and_then(|mesh| mesh.points.get(self.region_point_cursor)).copied() else {
+            self.stage = ModelBuildStage::RegionElementMaterial;
+            return Ok(false);
+        };
+        if let Some(node) = self.model.node(self.lookup_cursor) {
+            if (node.pos[0] - point[0]).abs() < 1e-9 && (node.pos[1] - point[1]).abs() < 1e-9 {
+                self.pending_region_id = Some(node.id.clone());
+                self.pending_region_insert = false;
+                self.lookup_cursor = 0;
+                self.stage = ModelBuildStage::RegionNodeCommit;
+            } else {
+                self.lookup_cursor += 1;
+            }
+        } else {
+            self.stage = ModelBuildStage::RegionNodeIdReserve;
+        }
+    }
+
+    /// 🔧️ Runs the `region element material` stage of `step_one`.
+    fn model_region_element_material(&mut self, snapshot: &Fem2dSnapshot) -> Result<bool, Vec<u8>> {
+        let Some(region) = snapshot.regions.get(self.region_cursor) else {
+            self.stage = ModelBuildStage::Complete;
+            return Ok(false);
+        };
+        if self.mesh.as_ref().and_then(|mesh| mesh.tris.get(self.region_triangle_cursor)).is_none() {
+            self.stage = ModelBuildStage::Complete;
+        } else if let Some(material) = snapshot.materials.get(self.lookup_cursor) {
+            if material.id == region.material_id {
+                self.resolved_material = self.lookup_cursor;
+                self.lookup_cursor = 0;
+                self.stage = ModelBuildStage::RegionElementIdReserve;
+            } else {
+                self.lookup_cursor += 1;
+            }
+        } else {
+            return Err(b"fem2d.model-unknown-region-material".to_vec());
+        }
+    }
+
+    /// 🔨️ Runs the `region element commit` stage of `step_one`.
+    fn model_region_element_commit(&mut self, snapshot: &Fem2dSnapshot) -> Result<bool, Vec<u8>> {
+        for owner in &self.pending_region_element_nodes {
+            bounded_derived_string(owner.as_ref().ok_or_else(|| b"fem2d.model-region-element-node-owner-missing".to_vec())?)?;
+        }
+        let region = snapshot.regions.get(self.region_cursor).expect("region element retains region");
+        let material = &snapshot.materials[self.resolved_material];
+        let nodes = std::array::from_fn(|index| self.pending_region_element_nodes[index].take().expect("region element node owner retained"));
+        self.model.push_element(
+            semio_s_fem_elements2d::Tri3Cst {
+                id: self.pending_region_element_id.take().ok_or_else(|| b"fem2d.model-region-element-id-owner-missing".to_vec())?,
+                nodes,
+                e: material.e,
+                nu: material.nu,
+                thickness: region.thickness,
+                kind: semio_s_fem_elements2d::PlaneKind::Stress,
+                density: material.rho,
+            }
+            .into(),
+        ).map_err(|_| b"fem2d.model-region-element-capacity".to_vec())?;
+        self.region_triangle_cursor += 1;
+        self.stage = ModelBuildStage::RegionElementMaterial;
     }
 
 }

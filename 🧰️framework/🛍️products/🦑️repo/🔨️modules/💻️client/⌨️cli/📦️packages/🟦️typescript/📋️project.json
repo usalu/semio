@@ -28,9 +28,14 @@
         "command": "bun ./📜️script.ts build",
         "forwardAllArgs": true
       },
-      "cache": true,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "driver-owned", "reason": "freshness-owned-by-driver" }
+        }
+      },
+      "cache": false,
       "outputs": [
-        "{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/🗃️bin/{options.env.SEMIO_BUILD_MODE}/client"
+        "{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/🗃️bin/{options.env.SEMIO_BUILD_MODE}/repo"
       ],
       "dependsOn": [
         "generate-entity-kinds"

@@ -4,7 +4,7 @@ import type { LoadedProgramState } from "../../🧱️elements/🐚️Shell/📦
 import extensionInvocationFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🔣️extension-invocation.json";
 import { extensionInvocationWireFixture } from "../../../../🌊️flow/🧪️tests/🧫️fixtures/🟦️.ts";
 import { describe, expect, it, vi } from "vitest";
-import { manifestPublicInvocationSchema as publicInvocationSchema } from "@semio-tech/framework/manifest/testing/fixtures";
+import { manifestPublicInvocationSchema as publicInvocationSchema } from "@semio-tech/framework-manifest/testing/fixtures";
 import { PUBLIC_INVOCATION_BODY_BYTES, PUBLIC_INVOCATION_DEPTH, PUBLIC_INVOCATION_STRING_BYTES, publicInvocationCharCost, publicInvocationStringPages } from "@semio-tech/framework";
 import { rendererExport } from "../🧰️engine-contract-helpers/🟦️.ts";
 

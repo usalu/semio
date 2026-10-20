@@ -246,6 +246,113 @@
           "maximum": 1
         }
       }
+    },
+    "CopyCheckpointCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "records",
+        "barrier",
+        "kind",
+        "fault",
+        "checkpoints",
+        "peak",
+        "outcome"
+      ],
+      "properties": {
+        "records": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "barrier": {
+          "enum": [
+            "aligned",
+            "held"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "files",
+            "mixed"
+          ]
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "checkpoint-error",
+            "checkpoint-undefined",
+            "publish-cancel"
+          ]
+        },
+        "checkpoints": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8
+        },
+        "peak": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "outcome": {
+          "enum": [
+            "value",
+            "error",
+            "undefined-error"
+          ]
+        }
+      }
+    },
+    "ReadCheckpointCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation",
+        "records",
+        "fault",
+        "checkpoints",
+        "peak",
+        "outcome"
+      ],
+      "properties": {
+        "operation": {
+          "enum": [
+            "capture",
+            "verification"
+          ]
+        },
+        "records": {
+          "type": "integer",
+          "minimum": 128,
+          "maximum": 2048
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "checkpoint-error",
+            "checkpoint-undefined",
+            "publish-cancel"
+          ]
+        },
+        "checkpoints": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16
+        },
+        "peak": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "outcome": {
+          "enum": [
+            "value",
+            "error",
+            "undefined-error"
+          ]
+        }
+      }
     }
   }
 }

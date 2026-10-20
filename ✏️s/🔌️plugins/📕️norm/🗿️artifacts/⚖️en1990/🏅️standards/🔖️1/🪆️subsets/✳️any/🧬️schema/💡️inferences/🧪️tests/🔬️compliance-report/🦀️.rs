@@ -252,7 +252,7 @@ async fn table_2_1_bridge_category_remedy_flips_to_pass() {
 
 #[semio_framework_async_macros::async_test]
 async fn bridge_a2_partial_factors_de_vs_en_diverge_on_rail_gamma_q() {
-    use semio_s_artifact_norm_en1990_schema::{combination_str_geo_610a_for, gamma_q_bridge_traffic, ActionSet, NaDe, NaEn};
+    use semio_s_artifact_norm_en1990_checks::{combination_str_geo_610a_for, gamma_q_bridge_traffic, ActionSet, NaDe, NaEn};
     use semio_s_plugin_norm_compliance::AnnexChoice;
     assert!((gamma_q_bridge_traffic(AnnexChoice::De, "rail_traffic") - 1.40).abs() < 1e-12);
     assert!((gamma_q_bridge_traffic(AnnexChoice::En, "rail_traffic") - 1.45).abs() < 1e-12);
@@ -335,212 +335,16 @@ async fn fatigue_failing_fails_fat_check() {
 
 #[semio_framework_async_macros::async_test]
 async fn every_editable_leaf_changes_a_check_when_perturbed_in_applicable_scope() {
-    const LABEL_EXCEPTIONS: &[&str] = &["projectId", "labelEn", "labelDe"];
 
-    fn leaf_name(path: &str) -> &str {
-        path.rsplit(['.', ']']).next().unwrap_or(path).trim_start_matches('.')
-    }
 
-    fn is_exempt(path: &str) -> bool {
-        let leaf = leaf_name(path);
-        LABEL_EXCEPTIONS.contains(&leaf) || leaf == "name" || leaf == "title"
-    }
 
-    fn table_name(path: &str) -> Option<&str> {
-        path.split('[').next()
-    }
 
-    fn sibling_id(path: &str, tree: &serde_json::Value, current: &str) -> Option<String> {
-        let table = table_name(path)?;
-        let arr = get_json(tree, table)?.as_array()?;
-        for item in arr {
-            if let Some(id) = item.get("id").and_then(|v| v.as_str()) {
-                if id != current {
-                    return Some(id.to_string());
-                }
-            }
-        }
-        None
-    }
 
-    fn perturb_leaf(path: &str, cur: &serde_json::Value, tree: &serde_json::Value) -> Option<serde_json::Value> {
-        let leaf = leaf_name(path);
-        if leaf == "memberId" || leaf == "actionId" {
-            let s = cur.as_str()?;
-            return Some(serde_json::json!(format!("{s}-x")));
-        }
-        if leaf == "id" {
-            let s = cur.as_str()?;
-            if let Some(sibling) = sibling_id(path, tree, s) {
-                return Some(serde_json::json!(sibling));
-            }
-            return Some(serde_json::json!(format!("{s}-x")));
-        }
-        perturb(cur)
-    }
 
-    fn walk(prefix: &str, value: &serde_json::Value, out: &mut Vec<String>) {
-        match value {
-            serde_json::Value::Object(map) => {
-                for (k, v) in map {
-                    let p = if prefix.is_empty() { k.clone() } else { format!("{prefix}.{k}") };
-                    walk(&p, v, out);
-                }
-            }
-            serde_json::Value::Array(items) => {
-                for (i, v) in items.iter().enumerate() {
-                    let id = v.get("id").and_then(|x| x.as_str());
-                    let p = match id {
-                        Some(id) => format!("{prefix}[id={id}]"),
-                        None => format!("{prefix}[{i}]"),
-                    };
-                    walk(&p, v, out);
-                }
-            }
-            _ => {
-                if !prefix.is_empty() {
-                    out.push(prefix.to_string());
-                }
-            }
-        }
-    }
 
-    fn get_json<'a>(root: &'a serde_json::Value, path: &str) -> Option<&'a serde_json::Value> {
-        let mut cur = root;
-        let mut rest = path;
-        while !rest.is_empty() {
-            if let Some(r) = rest.strip_prefix('.') {
-                rest = r;
-            }
-            if let Some(r) = rest.strip_prefix('[') {
-                let close = r.find(']')?;
-                let inner = &r[..close];
-                let arr = cur.as_array()?;
-                cur = if let Some(id) = inner.strip_prefix("id=") {
-                    arr.iter().find(|v| v.get("id").and_then(|x| x.as_str()) == Some(id))?
-                } else {
-                    arr.get(inner.parse::<usize>().ok()?)?
-                };
-                rest = &r[close + 1..];
-                continue;
-            }
-            let end = rest.find(['.', '[']).unwrap_or(rest.len());
-            let key = &rest[..end];
-            cur = cur.get(key)?;
-            rest = &rest[end..];
-        }
-        Some(cur)
-    }
 
-    fn set_json(root: &mut serde_json::Value, path: &str, value: serde_json::Value) -> bool {
-        let mut cur = root;
-        let mut rest = path;
-        while !rest.is_empty() {
-            if let Some(r) = rest.strip_prefix('.') {
-                rest = r;
-            }
-            if let Some(r) = rest.strip_prefix('[') {
-                let close = match r.find(']') {
-                    Some(c) => c,
-                    None => return false,
-                };
-                let inner = &r[..close];
-                let arr = match cur.as_array_mut() {
-                    Some(a) => a,
-                    None => return false,
-                };
-                let idx = if let Some(id) = inner.strip_prefix("id=") {
-                    match arr.iter().position(|v| v.get("id").and_then(|x| x.as_str()) == Some(id)) {
-                        Some(i) => i,
-                        None => return false,
-                    }
-                } else {
-                    match inner.parse::<usize>() {
-                        Ok(i) => i,
-                        Err(_) => return false,
-                    }
-                };
-                rest = &r[close + 1..];
-                if rest.is_empty() {
-                    arr[idx] = value;
-                    return true;
-                }
-                cur = &mut arr[idx];
-                continue;
-            }
-            let end = rest.find(['.', '[']).unwrap_or(rest.len());
-            let key = &rest[..end];
-            rest = &rest[end..];
-            if rest.is_empty() {
-                if let Some(obj) = cur.as_object_mut() {
-                    obj.insert(key.to_string(), value);
-                    return true;
-                }
-                return false;
-            }
-            cur = match cur.get_mut(key) {
-                Some(v) => v,
-                None => return false,
-            };
-        }
-        false
-    }
 
-    fn perturb(cur: &serde_json::Value) -> Option<serde_json::Value> {
-        match cur {
-            serde_json::Value::Number(n) => {
-                let v = n.as_f64().unwrap_or(0.0);
-                let nv = if v.abs() < 1e-12 {
-                    1.0
-                } else if (0.0..1000.0).contains(&v) && (v - 0.0).abs() < 1e-9 {
-                    1200.0
-                } else {
-                    v * 1.25 + 0.5
-                };
-                Some(serde_json::json!(nv))
-            }
-            serde_json::Value::String(s) => {
-                let ns = match s.as_str() {
-                    "De" => "En",
-                    "En" => "De",
-                    "building" => "road_bridge",
-                    "road_bridge" | "footbridge" | "rail_bridge" => "building",
-                    "DSL1" => "DSL2",
-                    "DSL2" => "DSL3",
-                    "DSL3" => "DSL1",
-                    "IL1" => "IL2",
-                    "IL2" => "IL3",
-                    "IL3" => "IL1",
-                    "office" => "snow",
-                    "wind" => "snow",
-                    "snow" => "wind",
-                    "road_traffic" => "rail_traffic",
-                    "g_sup" => "g_inf",
-                    "g_inf" => "prestress",
-                    other => return Some(serde_json::json!(format!("{other}-x"))),
-                };
-                Some(serde_json::json!(ns))
-            }
-            serde_json::Value::Bool(b) => Some(serde_json::json!(!b)),
-            _ => None,
-        }
-    }
 
-    fn sig(report: &semio_s_plugin_norm_compliance::CheckReport) -> Vec<(String, CheckStatus, i64, i64, i64)> {
-        report
-            .checks
-            .iter()
-            .map(|c| {
-                (
-                    c.id.clone(),
-                    c.status,
-                    (c.computed.value * 1e3).round() as i64,
-                    (c.limit.value * 1e3).round() as i64,
-                    (c.utilization * 1e6).round() as i64,
-                )
-            })
-            .collect()
-    }
 
     let building = En1990Snapshot::default();
     let mut building_snow = semio_s_artifact_norm_en1990_examples::high_consequence_office::reference_snapshot();
@@ -692,4 +496,211 @@ async fn every_editable_leaf_changes_a_check_when_perturbed_in_applicable_scope(
 
     assert!(checked >= 20, "expected broad leaf coverage, checked={checked}");
     assert!(unchanged.is_empty(), "leaves with no check influence: {unchanged:?} (checked={checked})");
+}
+
+const LABEL_EXCEPTIONS: &[&str] = &["projectId", "labelEn", "labelDe"];
+
+fn leaf_name(path: &str) -> &str {
+    path.rsplit(['.', ']']).next().unwrap_or(path).trim_start_matches('.')
+}
+
+fn is_exempt(path: &str) -> bool {
+    let leaf = leaf_name(path);
+    LABEL_EXCEPTIONS.contains(&leaf) || leaf == "name" || leaf == "title"
+}
+
+fn table_name(path: &str) -> Option<&str> {
+    path.split('[').next()
+}
+
+fn sibling_id(path: &str, tree: &serde_json::Value, current: &str) -> Option<String> {
+    let table = table_name(path)?;
+    let arr = get_json(tree, table)?.as_array()?;
+    for item in arr {
+        if let Some(id) = item.get("id").and_then(|v| v.as_str()) {
+            if id != current {
+                return Some(id.to_string());
+            }
+        }
+    }
+    None
+}
+
+fn perturb_leaf(path: &str, cur: &serde_json::Value, tree: &serde_json::Value) -> Option<serde_json::Value> {
+    let leaf = leaf_name(path);
+    if leaf == "memberId" || leaf == "actionId" {
+        let s = cur.as_str()?;
+        return Some(serde_json::json!(format!("{s}-x")));
+    }
+    if leaf == "id" {
+        let s = cur.as_str()?;
+        if let Some(sibling) = sibling_id(path, tree, s) {
+            return Some(serde_json::json!(sibling));
+        }
+        return Some(serde_json::json!(format!("{s}-x")));
+    }
+    perturb(cur)
+}
+
+fn walk(prefix: &str, value: &serde_json::Value, out: &mut Vec<String>) {
+    match value {
+        serde_json::Value::Object(map) => {
+            for (k, v) in map {
+                let p = if prefix.is_empty() { k.clone() } else { format!("{prefix}.{k}") };
+                walk(&p, v, out);
+            }
+        }
+        serde_json::Value::Array(items) => {
+            for (i, v) in items.iter().enumerate() {
+                let id = v.get("id").and_then(|x| x.as_str());
+                let p = match id {
+                    Some(id) => format!("{prefix}[id={id}]"),
+                    None => format!("{prefix}[{i}]"),
+                };
+                walk(&p, v, out);
+            }
+        }
+        _ => {
+            if !prefix.is_empty() {
+                out.push(prefix.to_string());
+            }
+        }
+    }
+}
+
+fn get_json<'a>(root: &'a serde_json::Value, path: &str) -> Option<&'a serde_json::Value> {
+    let mut cur = root;
+    let mut rest = path;
+    while !rest.is_empty() {
+        if let Some(r) = rest.strip_prefix('.') {
+            rest = r;
+        }
+        if let Some(r) = rest.strip_prefix('[') {
+            let close = r.find(']')?;
+            let inner = &r[..close];
+            let arr = cur.as_array()?;
+            cur = if let Some(id) = inner.strip_prefix("id=") {
+                arr.iter().find(|v| v.get("id").and_then(|x| x.as_str()) == Some(id))?
+            } else {
+                arr.get(inner.parse::<usize>().ok()?)?
+            };
+            rest = &r[close + 1..];
+            continue;
+        }
+        let end = rest.find(['.', '[']).unwrap_or(rest.len());
+        let key = &rest[..end];
+        cur = cur.get(key)?;
+        rest = &rest[end..];
+    }
+    Some(cur)
+}
+
+fn set_json(root: &mut serde_json::Value, path: &str, value: serde_json::Value) -> bool {
+    let mut cur = root;
+    let mut rest = path;
+    while !rest.is_empty() {
+        if let Some(r) = rest.strip_prefix('.') {
+            rest = r;
+        }
+        if let Some(r) = rest.strip_prefix('[') {
+            let close = match r.find(']') {
+                Some(c) => c,
+                None => return false,
+            };
+            let inner = &r[..close];
+            let arr = match cur.as_array_mut() {
+                Some(a) => a,
+                None => return false,
+            };
+            let idx = if let Some(id) = inner.strip_prefix("id=") {
+                match arr.iter().position(|v| v.get("id").and_then(|x| x.as_str()) == Some(id)) {
+                    Some(i) => i,
+                    None => return false,
+                }
+            } else {
+                match inner.parse::<usize>() {
+                    Ok(i) => i,
+                    Err(_) => return false,
+                }
+            };
+            rest = &r[close + 1..];
+            if rest.is_empty() {
+                arr[idx] = value;
+                return true;
+            }
+            cur = &mut arr[idx];
+            continue;
+        }
+        let end = rest.find(['.', '[']).unwrap_or(rest.len());
+        let key = &rest[..end];
+        rest = &rest[end..];
+        if rest.is_empty() {
+            if let Some(obj) = cur.as_object_mut() {
+                obj.insert(key.to_string(), value);
+                return true;
+            }
+            return false;
+        }
+        cur = match cur.get_mut(key) {
+            Some(v) => v,
+            None => return false,
+        };
+    }
+    false
+}
+
+fn perturb(cur: &serde_json::Value) -> Option<serde_json::Value> {
+    match cur {
+        serde_json::Value::Number(n) => {
+            let v = n.as_f64().unwrap_or(0.0);
+            let nv = if v.abs() < 1e-12 {
+                1.0
+            } else if (0.0..1000.0).contains(&v) && (v - 0.0).abs() < 1e-9 {
+                1200.0
+            } else {
+                v * 1.25 + 0.5
+            };
+            Some(serde_json::json!(nv))
+        }
+        serde_json::Value::String(s) => {
+            let ns = match s.as_str() {
+                "De" => "En",
+                "En" => "De",
+                "building" => "road_bridge",
+                "road_bridge" | "footbridge" | "rail_bridge" => "building",
+                "DSL1" => "DSL2",
+                "DSL2" => "DSL3",
+                "DSL3" => "DSL1",
+                "IL1" => "IL2",
+                "IL2" => "IL3",
+                "IL3" => "IL1",
+                "office" => "snow",
+                "wind" => "snow",
+                "snow" => "wind",
+                "road_traffic" => "rail_traffic",
+                "g_sup" => "g_inf",
+                "g_inf" => "prestress",
+                other => return Some(serde_json::json!(format!("{other}-x"))),
+            };
+            Some(serde_json::json!(ns))
+        }
+        serde_json::Value::Bool(b) => Some(serde_json::json!(!b)),
+        _ => None,
+    }
+}
+
+fn sig(report: &semio_s_plugin_norm_compliance::CheckReport) -> Vec<(String, CheckStatus, i64, i64, i64)> {
+    report
+        .checks
+        .iter()
+        .map(|c| {
+            (
+                c.id.clone(),
+                c.status,
+                (c.computed.value * 1e3).round() as i64,
+                (c.limit.value * 1e3).round() as i64,
+                (c.utilization * 1e6).round() as i64,
+            )
+        })
+        .collect()
 }

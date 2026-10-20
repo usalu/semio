@@ -1,5 +1,5 @@
 //! 🧭️ The repo command line and the production repository behind the repo MCP server: `repo_cli`
-//! is the `semio-repo` binary's verb tree, `mcp_verb` the repository the `repo` stdio server and
+//! is the `repo` binary's verb tree, `mcp_verb` the repository the explicit `repo mcp` stdio server and
 //! the `mcp` verb both serve. Neither links a terminal user interface. The event stream, the command
 //! framework, the tree source, the verbs and the MCP repository are producer crates; this crate keeps the
 //! declared command tree and the process entry.

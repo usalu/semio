@@ -77,7 +77,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_io_reset_payload_and_registered_text_route_preserve_the_native_snapshot() {
-    use semio_framework_os_kernel::io::io_mechanism::{io_register, io_route, io_run};
+    use semio_framework_os_kernel::io::io_mechanism::{io_register, io_route};
+    use semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits;
+    use semio_framework_test_original_snapshot_owners::io_run;
     use {semio_framework_artifact_reference::ArtifactDialect,semio_framework::io_schema::CARRIER_TEXT};
     let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🚪️io/🧪️tests/🧫️fixtures/🔁️carrier-contracts.json")).expect("neutral native snapshots");
     io_register(crate::standards::v1::subsets::any::io::io().entries).expect("sequence IO registration");
@@ -92,11 +94,11 @@ async fn artifact_io_reset_payload_and_registered_text_route_preserve_the_native
         assert_eq!(effect_pack, payload);
         assert!(!spr.is_empty());
         let export = io_route(&native, &text, 1).await.expect("text export route").value;
-        let exported = io_run(&export, IoPayload::Binary(payload.clone())).await.expect("registered text export").value;
+        let exported = io_run(&export, IoPayload::Binary(payload.clone()), SqliteDatabaseLimits::default(), &mut |_| true).await.expect("registered text export").value;
         let IoPayload::Text(body) = &exported else { panic!("raw carrier text") };
         assert_eq!(body, &<SequenceSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snapshot));
         let import = io_route(&text, &native, 1).await.expect("text import route").value;
-        let restored = io_run(&import, exported).await.expect("registered text import").value;
+        let restored = io_run(&import, exported, SqliteDatabaseLimits::default(), &mut |_| true).await.expect("registered text import").value;
         assert_eq!(restored, IoPayload::Binary(payload));
         eprintln!("Artifact IO native reset and text route bytes={}, spr={}", effect_pack.len(), spr.len());
     }

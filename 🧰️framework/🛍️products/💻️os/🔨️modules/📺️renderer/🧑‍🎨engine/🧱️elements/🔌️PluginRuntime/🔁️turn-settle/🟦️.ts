@@ -9,9 +9,9 @@ import { DEFAULT_UI_DOCUMENT_LIMITS } from "../../📃️UiDocumentStore/🟦️
 import { retainedUiIntakeStepCeiling } from "../../📃️UiDocumentStore/📥️intake/🟦️.ts";
 import { type ShardActorActivationLease } from "@semio-tech/framework/actor/shard-client/activation";
 import { type ShardEventEnvelope } from "@semio-tech/framework/actor/shard-client/wire";
-import { type Lane } from "../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts";
+import { type Lane } from "@semio-tech/framework/actor";
 import { yieldPluginUiContinuation } from "../⏩️continuation-yield/🟦️.ts";
-import { hopTrace } from "@semio-tech/framework/trace";
+import { hopTrace } from "@semio-tech/framework-trace";
 import { wireTurnStatusTag } from "@semio-tech/framework/actor/wire-turn";
 import {
   leftoverShellInvocationFrames,

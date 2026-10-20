@@ -40,6 +40,7 @@
     },
     "test": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -57,6 +58,7 @@
     "test-oracle": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-oracle"
@@ -77,7 +79,8 @@
         "{projectRoot}/../../📜️artifact-definition.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
-      ]
+      ],
+      "outputs": []
     },
     "test-snapshot-sqlite-native": {
       "executor": "repo:script",
@@ -94,7 +97,8 @@
         "{projectRoot}/../../📜️artifact-definition.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
-      ]
+      ],
+      "outputs": []
     },
     "test-snapshot-sqlite-source": {
       "executor": "repo:script",
@@ -111,7 +115,8 @@
         "{projectRoot}/../../📜️artifact-definition.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
-      ]
+      ],
+      "outputs": []
     }
   }
 }

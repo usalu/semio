@@ -68,7 +68,6 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
 /// `OnceLock`-backed `io_registry::entries()` convention below.
 fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
-    #[cfg(test)] use semio_s_artifact_norm_en1997_schema::{diff, mutations, snapshot};
     static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {

@@ -140,42 +140,8 @@ impl Fem3dNumericalChild {
                 }
                 step
             }
-            7 => {
-                let Some(job) = self.ldlt.as_mut() else {
-                    self.close_lane += 1;
-                    return Ok(Self::close_rung((false, 0, 0)));
-                };
-                if self.close_started_jobs & 1 == 0 {
-                    job.begin_close();
-                    self.close_started_jobs |= 1;
-                    return Ok(Self::close_rung((false, 1, 0)));
-                }
-                if !job.terminal_is_empty() {
-                    let step = cx.with_retained_loan(child, |same| InteractiveJob::close_step(job, same))?;
-                    return Ok((false, step.progress()));
-                }
-                self.ldlt = None;
-                let step = (true, 1, 0);
-                step
-            }
-            8 => {
-                let Some(job) = self.subspace.as_mut() else {
-                    self.close_lane += 1;
-                    return Ok(Self::close_rung((false, 0, 0)));
-                };
-                if self.close_started_jobs & 2 == 0 {
-                    job.begin_close();
-                    self.close_started_jobs |= 2;
-                    return Ok(Self::close_rung((false, 1, 0)));
-                }
-                if !job.terminal_is_empty() {
-                    let step = cx.with_retained_loan(child, |same| InteractiveJob::close_step(job, same))?;
-                    return Ok((false, step.progress()));
-                }
-                self.subspace = None;
-                let step = (true, 1, 0);
-                step
-            }
+            7 => match self.close_lane_7(cx, child)? { std::ops::ControlFlow::Continue(value) => value, std::ops::ControlFlow::Break(step) => return Ok(step) },
+            8 => match self.close_lane_8(cx, child)? { std::ops::ControlFlow::Continue(value) => value, std::ops::ControlFlow::Break(step) => return Ok(step) },
             9 => {
                 let Some(mass) = self.modal_mass.as_mut() else {
                     self.close_lane += 1;
@@ -199,70 +165,9 @@ impl Fem3dNumericalChild {
                     (false, 1, 0)
                 }
             }
-            11 => {
-                if let Some(solid) = self.meshed_solids.len().checked_sub(1).and_then(|index| self.meshed_solids.get_mut(index)) {
-                    if let Some(value) = solid.node_ids.len().checked_sub(1).and_then(|index| solid.node_ids.get_mut(index)) {
-                        let bytes = value.capacity();
-                        if bytes != 0 {
-                            if bytes > maximum_bytes {
-                                return Ok(Self::close_rung((false, 0, 0)));
-                            }
-                            *value = String::new();
-                            return Ok(Self::close_rung((false, 1, bytes)));
-                        }
-                        solid.node_ids.pop();
-                        return Ok(Self::close_rung((false, 1, 0)));
-                    }
-                    if !solid.node_ids.close_admission_one() {
-                        return Ok(Self::close_rung((false, 1, 0)));
-                    }
-                    if solid.tris.pop().is_some() || !solid.tris.close_admission_one() {
-                        return Ok(Self::close_rung((false, 1, 0)));
-                    }
-                    if solid.points.pop().is_some() || !solid.points.close_admission_one() {
-                        return Ok(Self::close_rung((false, 1, 0)));
-                    }
-                    self.meshed_solids.pop();
-                    return Ok(Self::close_rung((false, 1, 0)));
-                }
-                (self.meshed_solids.close_admission_one(), 1, 0)
-            }
-            12 => {
-                if let Some(value) = self.pending_node_id.as_mut() {
-                    let bytes = value.capacity();
-                    if bytes != 0 {
-                        if bytes > maximum_bytes {
-                            return Ok(Self::close_rung((false, 0, 0)));
-                        }
-                        *value = String::new();
-                        return Ok(Self::close_rung((false, 1, bytes)));
-                    }
-                    self.pending_node_id = None;
-                    return Ok(Self::close_rung((false, 1, 0)));
-                }
-                (true, 0, 0)
-            }
-            13 => {
-                if let Some(value) = self.solid_node_ids.len().checked_sub(1).and_then(|index| self.solid_node_ids.get_mut(index)) {
-                    let bytes = value.capacity();
-                    if bytes != 0 {
-                        if bytes > maximum_bytes {
-                            return Ok(Self::close_rung((false, 0, 0)));
-                        }
-                        *value = String::new();
-                        return Ok(Self::close_rung((false, 1, bytes)));
-                    }
-                    self.solid_node_ids.pop();
-                    return Ok(Self::close_rung((false, 1, 0)));
-                }
-                if !self.solid_node_ids.close_admission_one() {
-                    return Ok(Self::close_rung((false, 1, 0)));
-                }
-                if self.solid_node_analysis_indices.pop().is_some() || !self.solid_node_analysis_indices.close_admission_one() {
-                    return Ok(Self::close_rung((false, 1, 0)));
-                }
-                (true, 0, 0)
-            }
+            11 => match self.close_lane_11(maximum_bytes)? { std::ops::ControlFlow::Continue(value) => value, std::ops::ControlFlow::Break(step) => return Ok(step) },
+            12 => match self.close_lane_12(maximum_bytes)? { std::ops::ControlFlow::Continue(value) => value, std::ops::ControlFlow::Break(step) => return Ok(step) },
+            13 => match self.close_lane_13(maximum_bytes)? { std::ops::ControlFlow::Continue(value) => value, std::ops::ControlFlow::Break(step) => return Ok(step) },
             14 => {
                 let Some(support) = self.pending_support.as_mut() else {
                     self.close_lane += 1;
@@ -274,21 +179,7 @@ impl Fem3dNumericalChild {
                 }
                 step
             }
-            15 => {
-                if let Some(value) = self.analysis_node_ids.len().checked_sub(1).and_then(|index| self.analysis_node_ids.get_mut(index)) {
-                    let bytes = value.capacity();
-                    if bytes != 0 {
-                        if bytes > maximum_bytes {
-                            return Ok(Self::close_rung((false, 0, 0)));
-                        }
-                        *value = String::new();
-                        return Ok(Self::close_rung((false, 1, bytes)));
-                    }
-                    self.analysis_node_ids.pop();
-                    return Ok(Self::close_rung((false, 1, 0)));
-                }
-                (self.analysis_node_ids.close_admission_one(), 1, 0)
-            }
+            15 => match self.close_lane_15(maximum_bytes)? { std::ops::ControlFlow::Continue(value) => value, std::ops::ControlFlow::Break(step) => return Ok(step) },
             16 => {
                 if self.solid_tris.pop().is_some() || !self.solid_tris.close_admission_one() {
                     return Ok(Self::close_rung((false, 1, 0)));
@@ -300,36 +191,8 @@ impl Fem3dNumericalChild {
             }
             17 => (self.rhs.close_step(), 1, 0),
             18 => (self.modal_free_mass.close_step(), 1, 0),
-            19 => {
-                let Some(element) = self.pending_element.as_mut() else {
-                    self.close_lane += 1;
-                    return Ok(Self::close_rung((false, 0, 0)));
-                };
-                if let Some(bytes) = element.mounted_next_string_bytes() {
-                    if bytes > maximum_bytes {
-                        return Ok(Self::close_rung((false, 0, 0)));
-                    }
-                    let released = element.close_mounted_string_step().unwrap_or(0);
-                    return Ok(Self::close_rung((false, 1, released)));
-                }
-                self.pending_element = None;
-                (true, 1, 0)
-            }
-            20 => {
-                let Some(element) = self.pending_tet.as_mut() else {
-                    self.close_lane += 1;
-                    return Ok(Self::close_rung((false, 0, 0)));
-                };
-                if let Some(bytes) = element.mounted_next_string_bytes() {
-                    if bytes > maximum_bytes {
-                        return Ok(Self::close_rung((false, 0, 0)));
-                    }
-                    let released = element.close_mounted_string_step().unwrap_or(0);
-                    return Ok(Self::close_rung((false, 1, released)));
-                }
-                self.pending_tet = None;
-                (true, 1, 0)
-            }
+            19 => match self.close_lane_19(maximum_bytes)? { std::ops::ControlFlow::Continue(value) => value, std::ops::ControlFlow::Break(step) => return Ok(step) },
+            20 => match self.close_lane_20(maximum_bytes)? { std::ops::ControlFlow::Continue(value) => value, std::ops::ControlFlow::Break(step) => return Ok(step) },
             21 => {
                 let Some(model) = self.model.as_mut() else {
                     self.close_lane += 1;
@@ -348,6 +211,209 @@ impl Fem3dNumericalChild {
             return Ok(Self::close_rung((false, step.1, step.2)));
         }
         Ok(Self::close_rung(step))
+    }
+
+    /// 🧱️ Closes lane 7 of the close ladder.
+    fn close_lane_7(
+        &mut self,
+        cx: &mut StepContext<'_>,
+        child: RetainedCloneGrant,
+    ) -> Result<std::ops::ControlFlow<(bool, RetainedCloneProgress), (bool, usize, usize)>, semio_framework_job::OriginalTurnFailure> {
+        Ok(std::ops::ControlFlow::Continue({
+            let Some(job) = self.ldlt.as_mut() else {
+                self.close_lane += 1;
+                return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 0, 0))));
+            };
+            if self.close_started_jobs & 1 == 0 {
+                job.begin_close();
+                self.close_started_jobs |= 1;
+                return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, 0))));
+            }
+            if !job.terminal_is_empty() {
+                let step = cx.with_retained_loan(child, |same| InteractiveJob::close_step(job, same))?;
+                return Ok(std::ops::ControlFlow::Break((false, step.progress())));
+            }
+            self.ldlt = None;
+            let step = (true, 1, 0);
+            step
+        }))
+    }
+
+    /// 🪵️ Closes lane 8 of the close ladder.
+    fn close_lane_8(
+        &mut self,
+        cx: &mut StepContext<'_>,
+        child: RetainedCloneGrant,
+    ) -> Result<std::ops::ControlFlow<(bool, RetainedCloneProgress), (bool, usize, usize)>, semio_framework_job::OriginalTurnFailure> {
+        Ok(std::ops::ControlFlow::Continue({
+            let Some(job) = self.subspace.as_mut() else {
+                self.close_lane += 1;
+                return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 0, 0))));
+            };
+            if self.close_started_jobs & 2 == 0 {
+                job.begin_close();
+                self.close_started_jobs |= 2;
+                return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, 0))));
+            }
+            if !job.terminal_is_empty() {
+                let step = cx.with_retained_loan(child, |same| InteractiveJob::close_step(job, same))?;
+                return Ok(std::ops::ControlFlow::Break((false, step.progress())));
+            }
+            self.subspace = None;
+            let step = (true, 1, 0);
+            step
+        }))
+    }
+
+    /// 🔩️ Closes lane 11 of the close ladder.
+    fn close_lane_11(
+        &mut self,
+        maximum_bytes: usize,
+    ) -> Result<std::ops::ControlFlow<(bool, RetainedCloneProgress), (bool, usize, usize)>, semio_framework_job::OriginalTurnFailure> {
+        Ok(std::ops::ControlFlow::Continue({
+            if let Some(solid) = self.meshed_solids.len().checked_sub(1).and_then(|index| self.meshed_solids.get_mut(index)) {
+                if let Some(value) = solid.node_ids.len().checked_sub(1).and_then(|index| solid.node_ids.get_mut(index)) {
+                    let bytes = value.capacity();
+                    if bytes != 0 {
+                        if bytes > maximum_bytes {
+                            return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 0, 0))));
+                        }
+                        *value = String::new();
+                        return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, bytes))));
+                    }
+                    solid.node_ids.pop();
+                    return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, 0))));
+                }
+                if !solid.node_ids.close_admission_one() {
+                    return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, 0))));
+                }
+                if solid.tris.pop().is_some() || !solid.tris.close_admission_one() {
+                    return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, 0))));
+                }
+                if solid.points.pop().is_some() || !solid.points.close_admission_one() {
+                    return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, 0))));
+                }
+                self.meshed_solids.pop();
+                return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, 0))));
+            }
+            (self.meshed_solids.close_admission_one(), 1, 0)
+        }))
+    }
+
+    /// ⚙️ Closes lane 12 of the close ladder.
+    fn close_lane_12(
+        &mut self,
+        maximum_bytes: usize,
+    ) -> Result<std::ops::ControlFlow<(bool, RetainedCloneProgress), (bool, usize, usize)>, semio_framework_job::OriginalTurnFailure> {
+        Ok(std::ops::ControlFlow::Continue({
+            if let Some(value) = self.pending_node_id.as_mut() {
+                let bytes = value.capacity();
+                if bytes != 0 {
+                    if bytes > maximum_bytes {
+                        return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 0, 0))));
+                    }
+                    *value = String::new();
+                    return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, bytes))));
+                }
+                self.pending_node_id = None;
+                return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, 0))));
+            }
+            (true, 0, 0)
+        }))
+    }
+
+    /// 🧲️ Closes lane 13 of the close ladder.
+    fn close_lane_13(
+        &mut self,
+        maximum_bytes: usize,
+    ) -> Result<std::ops::ControlFlow<(bool, RetainedCloneProgress), (bool, usize, usize)>, semio_framework_job::OriginalTurnFailure> {
+        Ok(std::ops::ControlFlow::Continue({
+            if let Some(value) = self.solid_node_ids.len().checked_sub(1).and_then(|index| self.solid_node_ids.get_mut(index)) {
+                let bytes = value.capacity();
+                if bytes != 0 {
+                    if bytes > maximum_bytes {
+                        return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 0, 0))));
+                    }
+                    *value = String::new();
+                    return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, bytes))));
+                }
+                self.solid_node_ids.pop();
+                return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, 0))));
+            }
+            if !self.solid_node_ids.close_admission_one() {
+                return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, 0))));
+            }
+            if self.solid_node_analysis_indices.pop().is_some() || !self.solid_node_analysis_indices.close_admission_one() {
+                return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, 0))));
+            }
+            (true, 0, 0)
+        }))
+    }
+
+    /// 🪛️ Closes lane 15 of the close ladder.
+    fn close_lane_15(
+        &mut self,
+        maximum_bytes: usize,
+    ) -> Result<std::ops::ControlFlow<(bool, RetainedCloneProgress), (bool, usize, usize)>, semio_framework_job::OriginalTurnFailure> {
+        Ok(std::ops::ControlFlow::Continue({
+            if let Some(value) = self.analysis_node_ids.len().checked_sub(1).and_then(|index| self.analysis_node_ids.get_mut(index)) {
+                let bytes = value.capacity();
+                if bytes != 0 {
+                    if bytes > maximum_bytes {
+                        return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 0, 0))));
+                    }
+                    *value = String::new();
+                    return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, bytes))));
+                }
+                self.analysis_node_ids.pop();
+                return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, 0))));
+            }
+            (self.analysis_node_ids.close_admission_one(), 1, 0)
+        }))
+    }
+
+    /// 🔧️ Closes lane 19 of the close ladder.
+    fn close_lane_19(
+        &mut self,
+        maximum_bytes: usize,
+    ) -> Result<std::ops::ControlFlow<(bool, RetainedCloneProgress), (bool, usize, usize)>, semio_framework_job::OriginalTurnFailure> {
+        Ok(std::ops::ControlFlow::Continue({
+            let Some(element) = self.pending_element.as_mut() else {
+                self.close_lane += 1;
+                return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 0, 0))));
+            };
+            if let Some(bytes) = element.mounted_next_string_bytes() {
+                if bytes > maximum_bytes {
+                    return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 0, 0))));
+                }
+                let released = element.close_mounted_string_step().unwrap_or(0);
+                return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, released))));
+            }
+            self.pending_element = None;
+            (true, 1, 0)
+        }))
+    }
+
+    /// 🔨️ Closes lane 20 of the close ladder.
+    fn close_lane_20(
+        &mut self,
+        maximum_bytes: usize,
+    ) -> Result<std::ops::ControlFlow<(bool, RetainedCloneProgress), (bool, usize, usize)>, semio_framework_job::OriginalTurnFailure> {
+        Ok(std::ops::ControlFlow::Continue({
+            let Some(element) = self.pending_tet.as_mut() else {
+                self.close_lane += 1;
+                return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 0, 0))));
+            };
+            if let Some(bytes) = element.mounted_next_string_bytes() {
+                if bytes > maximum_bytes {
+                    return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 0, 0))));
+                }
+                let released = element.close_mounted_string_step().unwrap_or(0);
+                return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, released))));
+            }
+            self.pending_tet = None;
+            (true, 1, 0)
+        }))
     }
 }
 //#endregion 📦️PageVisualJob

@@ -2,7 +2,7 @@
  * leaf is the canonical `framework/value/schema.json#/$defs/Binary64Transport` — its exact word or a plain number — never the
  * word-only `Binary64`, so the plain number a history edit writes validates exactly where the committed word does. ajv is the
  * third-party validator; the Rust twin is `a_history_edit_of_a_binary64_offset_validates_and_replays` (editor unit tests).
- * @see ../../🫳️drag-rule/🧬️schema/🔣️.json
+ * @see ../../🫳️drag-rule-nodes/🧬️schema/🔣️.json
  * @see ../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json */
 import {test,expect} from "bun:test";
 import {existsSync,readdirSync,readFileSync} from "node:fs";

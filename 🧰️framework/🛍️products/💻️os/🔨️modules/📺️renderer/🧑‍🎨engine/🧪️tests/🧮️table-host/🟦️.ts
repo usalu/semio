@@ -2,7 +2,7 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { DEFAULT_UI_DRIVER, UiDriverProvider } from "@semio-tech/ui-react";
-import { tableStepperKeyboardFixture } from "@semio-tech/framework/ui/testing/fixtures";
+import { tableStepperKeyboardFixture } from "@semio-tech/ui/testing/fixtures";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { TableHost, tableStepperClampedDelta, tableStepperKeyDelta } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";

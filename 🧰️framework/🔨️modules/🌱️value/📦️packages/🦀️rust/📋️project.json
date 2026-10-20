@@ -1093,7 +1093,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test quick --lib quick_immutable_snapshot_projection --no-fail-fast --success-output immediate"
+        "command": "bun ./📜️script.ts test-immutable-projection native"
       }
     },
     "test-retained-utf8-source": {

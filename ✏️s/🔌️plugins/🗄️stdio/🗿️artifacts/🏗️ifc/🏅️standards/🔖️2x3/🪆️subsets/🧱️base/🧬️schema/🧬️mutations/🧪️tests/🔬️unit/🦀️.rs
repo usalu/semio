@@ -3,6 +3,10 @@ use semio_s_artifact_stdio_ifc_2x3_base_mutations::standards::v2x3::subsets::bas
 use protocol::os_spr::command::DiffAlgebra;
 use protocol::{DiffBinary,DiffCodec,DiffText, MutationDiff, OpBinary, OpText};
 use std::sync::OnceLock;
+#[cfg(test)] use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+#[cfg(test)] use semio_s_artifact_stdio_contract_part21::Part21Value;
+#[cfg(test)] use semio_s_artifact_stdio_contract_part21::Part21Header;
+#[cfg(test)] use semio_framework_replication_mutation::Mutation;
 async fn inst(id: u64, name: &str) -> Part21Instance {
     Part21Instance { id, entities: vec![(name.to_string(), vec![Part21Value::Int(id as i64)])] }
 }

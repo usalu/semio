@@ -120,7 +120,7 @@ Feature: Apply every typed semio DRAWING mutation to a real vector document, aga
       | unflatten-node | 🎈️unflatten-node |
       | replace-path | 🛤️replace-path |
       | replace-fill | 🪣️replace-fill |
-      | change-stroke-color | 🖌️change-stroke |
+      | change-stroke-color | 🖌️change-stroke-color |
       | change-stroke-width | 📐️change-stroke-width |
 
   @id-inverse
@@ -148,7 +148,7 @@ Feature: Apply every typed semio DRAWING mutation to a real vector document, aga
       | unflatten-node | 🎈️unflatten-node |
       | replace-path | 🛤️replace-path |
       | replace-fill | 🪣️replace-fill |
-      | change-stroke-color | 🖌️change-stroke |
+      | change-stroke-color | 🖌️change-stroke-color |
       | change-stroke-width | 📐️change-stroke-width |
 
   @id-spec-vector
@@ -162,7 +162,7 @@ Feature: Apply every typed semio DRAWING mutation to a real vector document, aga
     Then each reaches the committed after-snapshot and the two agree
     Examples:
       | id                  | dir                    | slug                                                        |
-      | change-stroke-color | 🖌️change-stroke | 🎨️recolours    |
+      | change-stroke-color | 🖌️change-stroke-color | 🎨️recolours    |
       | change-stroke-width | 📐change-stroke-width  | 📐️thickens                          |
       | create-layer        | 🌱create-layer         | 🪜️inserts                 |
       | create-node         | ➕create-node          | 🔤️appends               |

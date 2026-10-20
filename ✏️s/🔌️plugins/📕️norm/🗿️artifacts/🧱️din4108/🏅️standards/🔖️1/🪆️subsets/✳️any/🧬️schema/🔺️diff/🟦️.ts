@@ -36,25 +36,25 @@ export interface Din4108ThermalBridgeModification { id: string; patch: Din4108Th
 export interface Din4108ThermalBridgeDelta { removed: Din4108ThermalBridgeRemoval[]; inserted: Din4108ThermalBridgeInsertion[]; moved: Din4108ThermalBridgeRelocation[]; modified: Din4108ThermalBridgeModification[]; }
 
 export interface Din4108Diff {
-  /** @state artifact */
+  /** 🌬️ @state artifact */
   climateZone: Din4108ClimateZoneDe | null;
-  /** @state artifact */
+  /** 🔄️ @state artifact */
   usage: string | null;
-  /** @state artifact */
+  /** 🔢️ @state artifact */
   tIntC: number | null;
-  /** @state artifact */
+  /** ➕️ @state artifact */
   rhInt: number | null;
-  /** @state artifact */
+  /** ⚙️ @state artifact */
   hasMechanicalVentilation: boolean | null;
-  /** @state artifact */
+  /** ✏️ @state artifact */
   airtightnessN50: number | null;
-  /** @state artifact */
+  /** 📝️ @state artifact */
   bb2DetailsConform: boolean | null;
-  /** @state artifact */
+  /** 🛋️ @state artifact */
   zones: Din4108ZoneDelta;
-  /** @state artifact */
+  /** 🧮️ @state artifact */
   elements: Din4108ElementDelta;
-  /** @state artifact */
+  /** ❄️ @state artifact */
   thermalBridges: Din4108ThermalBridgeDelta;
 }
 

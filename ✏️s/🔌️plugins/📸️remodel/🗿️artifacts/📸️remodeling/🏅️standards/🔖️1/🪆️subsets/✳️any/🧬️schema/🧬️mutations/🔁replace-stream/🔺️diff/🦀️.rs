@@ -8,7 +8,7 @@ use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::sche
 use crate::standards::v1::subsets::any::schema::mutations::replace_stream_source::component::ReplaceStreamSource;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::ReplaceStreamSource, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
+pub fn diff(payload: &crate::standards::v1::subsets::any::schema::mutations::replace_stream_source::component::ReplaceStreamSource, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
     let Some(stream) = base.streams.iter().find(|stream| stream.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Stream \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };

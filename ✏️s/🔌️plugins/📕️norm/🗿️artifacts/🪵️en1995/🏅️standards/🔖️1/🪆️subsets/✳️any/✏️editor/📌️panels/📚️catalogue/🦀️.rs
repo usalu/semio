@@ -9,7 +9,7 @@ use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable, NormFieldChoice};
-use semio_s_artifact_norm_en1995_schema::{k_mod, parse_service_class, properties_for_class, spacing_minima, strength_class_options, LoadDuration};
+use semio_s_artifact_norm_en1995_schema::checks::timber::{k_mod, parse_service_class, properties_for_class, spacing_minima, strength_class_options, LoadDuration};
 use semio_s_plugin_norm_compliance::ClauseId;
 use semio_s_artifact_norm_en1995_model::{TimberConnection, TimberProduct};
 

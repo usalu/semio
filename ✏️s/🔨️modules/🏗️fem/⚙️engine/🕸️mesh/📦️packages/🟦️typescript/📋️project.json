@@ -9,6 +9,7 @@
     "test-surface-contract": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test-surface-contract",
@@ -18,6 +19,7 @@
     "test-neutral-surface": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test-neutral-surface",

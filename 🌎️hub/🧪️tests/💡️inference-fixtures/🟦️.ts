@@ -8,7 +8,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import Ajv from "ajv";
-import { blake3Hex } from "@semio-tech/framework/hash";
+import { blake3Hex } from "@semio-tech/framework-hash";
 import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
 import { runCmd } from "@semio-tech/process/execution";
 import { BundleScript } from "@semio-tech/process/routing";

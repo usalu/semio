@@ -140,7 +140,6 @@ impl Puzzle3dActionPrologue {
         let shared_before = window_ownership::shared(config);
         let window_before = window_ownership::Puzzle3dWindowConfig::from_runtime(config);
         let transient_before = window_ownership::transient(config, view_state);
-        // 🪟️ This action targets the one exact window owner already composed into `config`.
         let wid = window_id.map_or_else(|| semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID.into(), str::to_string);
         let mut ui_scope = puzzle3d_scope(puzzle3d_command_scope_class(action));
         let mut effects = Vec::new();
@@ -168,21 +167,11 @@ impl Puzzle3dActionPrologue {
         dispatch_puzzle3d_action(&mut ctx, action, args);
         let aborted = ctx.abort;
         if aborted {
-            // 🧯️ An aborted arm emits no document/config delta — but the refusal NOTICE it pushed is the
-            // user-visible half of that refusal and must survive, or "refused" and "silently did nothing"
-            // look identical (exactly how `duplicateSelection` presented in the browser). Effects travel
-            // on their own lane, so keeping them costs no mutation and no undo entry; the scope stays
-            // `None` because nothing was painted.
             return (Emit { effects, ui_scope: UiDirtyScope::None, ..Default::default() }, EphemeralEmit::default());
         }
         let next_active_utility = scene.active_utility.clone();
         let operations = artifact_mutations;
         let transaction = transaction.filter(|_| !operations.is_empty());
-        // 🧰️🛠️ Programmatic utility/tool switches push the host session. `setActiveTool` itself never
-        // re-emits. Entering fill emits `SetActiveTool { fill }` only. Leaving fill is exclusively a
-        // host `setActiveTool ""` — an empty tool effect here bounce-disarms a just-armed fill (Escape
-        // `engagementAbort`, mid-flow utility-field rewrite). A real utility change still emits
-        // `SetActiveUtility` (host mutual exclusion clears the tool when the utility is non-empty).
         let is_direct_tool_switch = action == SET_ACTIVE_TOOL_ACTION_ID;
         let is_direct_utility_switch = action == SET_ACTIVE_UTILITY_ACTION_ID;
         let initial_is_fill_tool = active_utility_initial == semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID;
@@ -193,9 +182,6 @@ impl Puzzle3dActionPrologue {
         if !is_direct_utility_switch && !is_direct_tool_switch && !next_is_fill_tool && next_active_utility != active_utility_initial {
             effects.push(Effect::SetActiveUtility { window_id: wid.clone(), utility_id: next_active_utility });
         }
-        // 🧮️ B1: only a REAL config change becomes a `Puzzle3dConfigMutation` — `PartialEq` (derived)
-        // makes this cheap, and keeps a pure read-only action (e.g. a re-materialize/re-save of an
-        // already-idle window's options) from creating a no-op undo entry.
         let shared_after = window_ownership::shared(&scene.runtime);
         let config_mutations = shared_before.mutations_to(&shared_after);
         let window_after = window_ownership::Puzzle3dWindowConfig::from_runtime(&scene.runtime);

@@ -3,7 +3,7 @@
 extern crate semio_framework_os_kernel as protocol;
 
 #[cfg(test)]
-pub use crate::playbook::PlaybookStep as FormStep;
+pub use semio_framework_artifact_playbook_playbook::PlaybookStep as FormStep;
 #[cfg(test)]
 pub use crate::schema::snapshot::FormsSnapshot;
 #[cfg(test)]

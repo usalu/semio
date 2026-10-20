@@ -12,8 +12,8 @@ import Ajv2020 from "ajv/dist/2020.js";
 import type { FaultNoticeDefinition } from "@semio-tech/framework";
 import { appFaultNoticeV1, historyInputDraftDispositionV1 } from "../../🛣️route-and-chrome/🟦️.tsx";
 import { syncShellLabelLocale } from "../../🏷️labels/🟦️.tsx";
-import { manifestFaultNoticesFixture as corpus } from "@semio-tech/framework/manifest/testing/fixtures";
-import { diagnosticControlledSchema as faultSchema } from "@semio-tech/framework/diagnostic/testing/fixtures";
+import { manifestFaultNoticesFixture as corpus } from "@semio-tech/framework-manifest/testing/fixtures";
+import { diagnosticControlledSchema as faultSchema } from "@semio-tech/framework-diagnostic-ts/testing/fixtures";
 import { valueRefusalSchema as valueSchema } from "@semio-tech/framework/value/testing/fixtures";
 // #endregion 🔌️Adapters
 

@@ -1,0 +1,53 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧭️fit-and-presence/🟦️.ts",
+ "function": "useWorldFitAndPresence",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of useWorldFitAndPresence. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️attractions",
+   "doc": "/** 🔶️ The attractions phase of useWorldFitAndPresence. */",
+   "phases": [
+    {
+     "name": "useAttractionsState",
+     "emoji": "🔷",
+     "doc": "Builds attractions, cameraState, contentBounds, fit of useWorldFitAndPresence.",
+     "from": 25,
+     "to": 189
+    }
+   ]
+  },
+  {
+   "dir": "🔸️meshes-ref",
+   "doc": "/** 🔸️ The meshes ref phase of useWorldFitAndPresence. */",
+   "phases": [
+    {
+     "name": "useMeshesRefState",
+     "emoji": "🔹",
+     "doc": "Builds meshesRef, marqueeStartRef, gestureRecognizer, vorticesRef of useWorldFitAndPresence.",
+     "from": 190,
+     "to": 358
+    }
+   ]
+  },
+  {
+   "dir": "🟠️handle-target-volume",
+   "doc": "/** 🟠️ The handle target volume phase of useWorldFitAndPresence. */",
+   "phases": [
+    {
+     "name": "useHandleTargetVolumeState",
+     "emoji": "🟡",
+     "doc": "Builds handleTargetVolumeSelect, handleTargetVolumeRelocate of useWorldFitAndPresence.",
+     "from": 371,
+     "to": 390
+    }
+   ]
+  }
+ ]
+}

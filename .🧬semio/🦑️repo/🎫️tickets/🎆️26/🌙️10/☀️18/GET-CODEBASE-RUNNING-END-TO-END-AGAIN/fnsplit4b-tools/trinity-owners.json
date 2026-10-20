@@ -1,0 +1,48 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️structural-correspondence/🦀️.rs",
+ "function": "direct_owners_descriptors_surfaces_and_catalog_correspond",
+ "nth": 0,
+ "first_block_line": 18,
+ "path_param": "directory",
+ "params": [
+  {
+   "name": "kind",
+   "type": "&str"
+  },
+  {
+   "name": "aggregate_variant",
+   "type": "&str"
+  },
+  {
+   "name": "directory",
+   "type": "&str"
+  },
+  {
+   "name": "binary_tag",
+   "type": "T"
+  }
+ ],
+ "helper": "assert_direct_owner_correspondence",
+ "doc": "Checks that one direct mutation owner agrees with its derived descriptor, payload schema, language surfaces and the JSON catalog.",
+ "generics": "<T>",
+ "where": "where semio_framework_pack_json::Value: PartialEq<T>, T: std::fmt::Debug",
+ "ctx": [
+  {
+   "name": "mutation_root",
+   "type": "&std::path::Path"
+  },
+  {
+   "name": "descriptor_kinds",
+   "type": "&[&str]"
+  },
+  {
+   "name": "vectors",
+   "type": "&[semio_framework_pack_json::Value]"
+  }
+ ],
+ "call_ctx": [
+  "&mutation_root",
+  "&descriptor_kinds",
+  "vectors"
+ ]
+}

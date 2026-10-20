@@ -1,4 +1,4 @@
-import { OperationDiagnosticObservers } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/📣️delivery/🟦️.ts";
+import { OperationDiagnosticObservers } from "@semio-tech/framework/actor/wire-turn/diagnostic/delivery";
 import { operationDiagnosticFanouts, type PluginOperationDiagnostic } from "../📬️typed-result/🟦️.ts";
 /** 🔗️ `adaptPluginHandle`, the `AppChannelClient` adapter over the kernel handle, with the bounded history-read retry and the shell actor identity.
  *

@@ -13,7 +13,17 @@ import { sessionWindowInstances } from "../../../../🛠️ShellHelpers/🔄️u
 import { shellHistoryUndoRouteV1 } from "../../../🪪️host-bootstrap/🟦️.tsx";
 import type { ShellCoreAfterShellUriAndDocuments } from "../../../🗄️shell-uri-documents/🟦️.ts";
 
-/** 🧲️ Resolves the spawned program that owns a dispatch from its controller and its window. */
+/**
+ * 🧲️ Resolves the spawned program that owns a dispatch from its controller and its window.
+ *
+ * 🪟️ A WINDOW-scoped dispatch belongs to the program that owns that window, whatever
+ * controller raised it. Shell chrome (the navbar's history verbs, a keybinding, a panel row)
+ * raises actions with the SESSION's controller id while the active window belongs to a
+ * spawned program — measured on the live `s` host as
+ * `noteShellCommand refused: view-state-unresolved (user window=space-2::s-workflow)`, because
+ * the host app has no window by that name. This is the "panel actions dispatch in the ACTIVE
+ * window" rule, stated once for every route below instead of per call site.
+ */
 export function resolveDispatchTarget({ hostMode, panel, loadedPlugins, activeWindowIdRef, spawnedIdsRef, session, action }: Pick<ShellCoreAfterShellUriAndDocuments, "hostMode" | "panel" | "loadedPlugins" | "activeWindowIdRef" | "spawnedIdsRef"> & {
   readonly session: ActiveSession;
   readonly action: ShellInputActionV1;

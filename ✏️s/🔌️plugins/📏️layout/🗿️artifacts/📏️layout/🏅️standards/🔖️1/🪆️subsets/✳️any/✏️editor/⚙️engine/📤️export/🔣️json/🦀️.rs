@@ -47,6 +47,8 @@ macro_rules! integer_json_scalar {
     };
 }
 
+integer_json_scalar!(u8, u32, u64, usize);
+
 //#region 🪢️TaxonomyMounts
 #[path = "../🧾️dictionary/🦀️.rs"]
 pub mod dictionary;

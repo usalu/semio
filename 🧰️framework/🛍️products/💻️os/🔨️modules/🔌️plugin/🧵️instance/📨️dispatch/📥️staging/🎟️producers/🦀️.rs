@@ -2,6 +2,8 @@
 //!
 //! 🎟️ The reserved emit producers: lease admission, owner mounting and the producer admission fixtures.
 use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
+#[cfg(test)]
+use semio_framework_plugin_job::reserved_jobs::FrameworkCutJob;
 use semio_framework_plugin_decl_app::ArtifactApp;
 use semio_framework_plugin_decl_views::child_view::ChildContentView;
 use semio_framework_value::retirement::controlled::ControlledRetirement;

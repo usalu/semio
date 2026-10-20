@@ -7,7 +7,7 @@ use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::sche
 use crate::standards::v1::subsets::any::schema::mutations::create_camera_calibration::component::CreateCameraCalibration;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::CreateCameraCalibration, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
+pub fn diff(payload: &crate::standards::v1::subsets::any::schema::mutations::create_camera_calibration::component::CreateCameraCalibration, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
     if base.calibration.cameras.iter().any(|camera| camera.id == payload.camera.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A camera calibration with id \"{}\" already exists.", payload.camera.id), [payload.camera.id.clone()]);
     }

@@ -16,6 +16,7 @@ mod insert_ifd {
 //! the committed diff alone carries before to after. The seventh pins the op codecs: the text and
 //! binary wire forms of this payload must round-trip and the binary form must reject a truncated
 //! frame.
+    use semio_s_artifact_stdio_tiff_snapshot::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot;
 use semio_framework_test_fixtures::fixture_text;
 
 
@@ -138,6 +139,7 @@ mod remove_ifd {
 //! the committed diff alone carries before to after. The seventh pins the op codecs: the text and
 //! binary wire forms of this payload must round-trip and the binary form must reject a truncated
 //! frame.
+    use semio_s_artifact_stdio_tiff_snapshot::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot;
 
 
 use crate::schema::mutations::TiffMutation;
@@ -259,6 +261,7 @@ mod remove_tag {
 //! the committed diff alone carries before to after. The seventh pins the op codecs: the text and
 //! binary wire forms of this payload must round-trip and the binary form must reject a truncated
 //! frame.
+    use semio_s_artifact_stdio_tiff_snapshot::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot;
 
 
 use crate::schema::mutations::TiffMutation;
@@ -380,6 +383,7 @@ mod replace_tag {
 //! the committed diff alone carries before to after. The seventh pins the op codecs: the text and
 //! binary wire forms of this payload must round-trip and the binary form must reject a truncated
 //! frame.
+    use semio_s_artifact_stdio_tiff_snapshot::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot;
 
 
 use crate::schema::mutations::TiffMutation;

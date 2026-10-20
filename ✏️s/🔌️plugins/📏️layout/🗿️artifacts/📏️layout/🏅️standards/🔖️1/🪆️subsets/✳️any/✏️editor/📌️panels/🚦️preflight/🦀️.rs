@@ -9,8 +9,8 @@
 //! the host's slice (`ViewModel::tree_windows`). No truncation, no `+N` row. Each issue row keeps its
 //! own `focusPreflightIssue` action; this tree binds no interaction domain.
 
-use semio_s_artifact_layout_layout_editor_panels::terminology::preflight_msg;
-use semio_s_artifact_layout_layout_editor_panels::terminology::LayoutLabels;
+use crate::terminology::preflight_msg;
+use crate::terminology::LayoutLabels;
 use semio_s_artifact_layout_layout_editor_commands::{layout_action, ui_value_map, ui_value_text};
 use semio_s_artifact_layout_layout_model::Frame;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;

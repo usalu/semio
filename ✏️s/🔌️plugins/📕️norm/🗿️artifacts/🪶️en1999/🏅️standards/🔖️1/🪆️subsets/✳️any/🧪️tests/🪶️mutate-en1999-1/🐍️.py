@@ -72,6 +72,7 @@ VECTORS = {
     "change-plate-thickness": ("🧱change-plate-thickness", "✅apply"),
     "change-weld-throat": ("🔥️change-weld-throat", "✅apply"),
     "change-bolt-count": ("🔩change-bolt-count", "✅apply"),
+    "remove-member-middle": ("remove-member", "➖remove-member", "🧭️middle"),
 }
 
 #: 🗣️ The real committed EN 1999 document, read where the domain already keeps it.

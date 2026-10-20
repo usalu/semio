@@ -1,7 +1,7 @@
 import{isAbsolute,resolve,sep}from"node:path";
 import type{OwnedProcessCaptureResult}from"../../../../📥️capture/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import schema from"./🧬️schema/🔣️.json";
+import schema from"./🧬️schema/🔣️.json" with { type: "json" };
 export type ExactCargoTargetDataV1=Readonly<{kind:"lib";name?:string}|{kind:"test"|"bin";name:string}>;
 /** 🧾️ Retains the selected executable and its actual Cargo target kinds as immutable protocol data. */
 export type ExactCargoExecutableDataV1=Readonly<{path:string;kinds:readonly string[]}>;

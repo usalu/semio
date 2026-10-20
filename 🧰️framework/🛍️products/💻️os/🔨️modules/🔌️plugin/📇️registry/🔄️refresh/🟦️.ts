@@ -83,7 +83,7 @@ export async function ensurePluginRegistry(): Promise<void> {
   const {runtimeCatalogProjectionRootV1}=await import("../📖️catalog-view/🟦️.ts");
   const root=runtimeCatalogProjectionRootV1();if(root===undefined)return;
   const {readFileSync}=await import("node:fs");
-  const {parseCatalogPublicationV1}=await import("../📣️publication/🟦️.ts");
+  const {parseCatalogPublicationV1}=await import("@semio-tech/plugin-registry-publication");
   const publication=parseCatalogPublicationV1(JSON.parse(readFileSync(join(root,"📣️publication.json"),"utf8")));
   if(resolve(repoRoot,publication.outputRoot)!==resolve(root))throw Error("Supplied catalog publication differs from its output root");
   const {renderCatalogFiles,publishCatalogFilesV1}=await import("../📽️projection/🟦️.ts");

@@ -20,7 +20,6 @@ use semio_s_fem_mesh::MeshOpts;
 use semio_s_fem_mesh::PlanarDomain;
 use semio_s_fem_mesh::TriMesh2;
 use semio_s_fem_model::Element;
-use crate::sparse::Csr;
 use semio_s_fem_sparse::MountedScalarSlots;
 use semio_s_fem_sparse_pcg::PcgJob;
 use semio_s_fem_sparse_pcg::PcgJobConstruction;
@@ -104,8 +103,10 @@ mod job_bridge_and_live_mount;
 use job_bridge_and_live_mount::{decode_input, encode_input};
 pub use job_bridge_and_live_mount::{
     close_demands, close_step, initialize, maintenance_step, prepare_snapshot_read, reconcile,
-    terminal_is_empty, with_live_visual, with_live_fields, MountedFieldsView, result_request_key, retain_result_windows, source_version,
+    terminal_is_empty, with_live_visual, with_live_fields, MountedFieldsView, retain_result_windows, source_version,
 };
+#[cfg(test)]
+pub use job_bridge_and_live_mount::result_request_key;
 use job_bridge_and_live_mount::{current_identity, merge_close_demand};
 
 #[derive(Clone, Copy, PartialEq, Eq)]

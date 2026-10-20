@@ -1,4 +1,4 @@
-import { OperationDiagnosticObservers } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/📣️delivery/🟦️.ts";
+import { OperationDiagnosticObservers } from "@semio-tech/framework/actor/wire-turn/diagnostic/delivery";
 import { operationDiagnosticFanouts } from "./📬️typed-result/🟦️.ts";
 export type { PluginOperationDiagnostic } from "./📬️typed-result/🟦️.ts";
 /// <reference types="vitest/importMeta" />
@@ -68,10 +68,10 @@ import { assertShardJspiAvailable, isShardLostError } from "@semio-tech/framewor
 import { createShardCommandIngressPages } from "@semio-tech/framework/actor/shard-client/wire";
 import { SHARD_LIVENESS_POLICY, ShardClient } from "@semio-tech/framework/actor/shard-client";
 import { SHARD_WORKER_URL } from "@semio-tech/framework/actor/shard-runtime";
-import { decodeActorUiPatchReceipt, encodeActorUiPatchReceipt } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts";
+import { decodeActorUiPatchReceipt, encodeActorUiPatchReceipt } from "@semio-tech/framework/actor/lifetime/patch";
 import { OwnedResidentLedger } from "@semio-tech/framework/value/resident";
 import { rendererResidentLedger } from "@semio-tech/framework/canvas/renderer-resident";
-import { TurnScheduler } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts";
+import { TurnScheduler } from "@semio-tech/framework/actor";
 import { wireExtensionInvocation } from "@semio-tech/framework/actor/wire-turn";
 import { TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, wireTurnStatusTag } from "@semio-tech/framework/actor/wire-turn";
 import { SEGMENTED_DOWNLOAD_MARKER_PREFIX } from "../📤️SegmentedDownload/🟦️.ts";

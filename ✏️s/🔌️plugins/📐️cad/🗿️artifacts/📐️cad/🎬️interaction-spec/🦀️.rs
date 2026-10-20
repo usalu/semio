@@ -199,8 +199,6 @@ pub fn evaluate_expr(expr: &Expr, env: &ExprEnv<'_>, vars: &std::collections::Ha
                 _ => DslValue::Null,
             }
         }
-        // `kernel.call` expressions are only used inside `spatial.action` step specs (not executed
-        // generically by this interpreter); evaluating one directly yields null.
         Expr::KernelCall { .. } => DslValue::Null,
         Expr::Binop { operation, left, right } => {
             let lv = evaluate_expr(left, env, vars);

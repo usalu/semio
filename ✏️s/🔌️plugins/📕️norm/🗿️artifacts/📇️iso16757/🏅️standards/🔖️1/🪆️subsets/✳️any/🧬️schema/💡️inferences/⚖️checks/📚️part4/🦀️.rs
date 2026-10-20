@@ -308,6 +308,14 @@ pub fn check_part_4(doc: &Iso16757Snapshot, report: &mut CheckReport) {
 /// 📚️ Part 4 §4.3 / §5.1 — dictionary reference, property typing, controlled lists, relationship endpoints.
 fn check_dictionary_typing(doc: &Iso16757Snapshot, report: &mut CheckReport) {
     let dict = &doc.dictionary;
+    check_dictionary_subjects_and_relationships(report, dict);
+    check_dictionary_properties(report, dict);
+    let subject_ids = check_dictionary_values_and_catalogue_tokens(doc, report, dict);
+    check_dictionary_references(report, dict, &subject_ids);
+}
+
+/// 🧱️ Checks the dictionary structure, the subject id uniqueness and the relationships of the dictionary.
+fn check_dictionary_subjects_and_relationships(report: &mut CheckReport, dict: &semio_s_artifact_norm_iso16757_model::part_4::Dictionary) {
     if dict.reference.id.trim().is_empty() || dict.reference.version.trim().is_empty() {
         report.push(fail(
             "iso16757.4.4.3.reference",
@@ -468,6 +476,10 @@ fn check_dictionary_typing(doc: &Iso16757Snapshot, report: &mut CheckReport) {
             ));
         }
     }
+}
+
+/// 🪵️ Checks the properties of the dictionary.
+fn check_dictionary_properties(report: &mut CheckReport, dict: &semio_s_artifact_norm_iso16757_model::part_4::Dictionary) {
     for prop in &dict.properties {
         let unit_ok = prop.unit.as_ref().map(|u| !u.symbol.trim().is_empty() && u.si_factor > 0.0).unwrap_or(true);
         let (l, m, ti, te) = prop.unit.as_ref().map(|u| (u.dimension.length, u.dimension.mass, u.dimension.time, u.dimension.temperature)).unwrap_or((0, 0, 0, 0));
@@ -599,7 +611,14 @@ fn check_dictionary_typing(doc: &Iso16757Snapshot, report: &mut CheckReport) {
             }
         }
     }
+}
 
+/// 🔩️ Checks the dictionary values and collects the tokens the catalogue uses.
+fn check_dictionary_values_and_catalogue_tokens(
+    doc: &Iso16757Snapshot,
+    report: &mut CheckReport,
+    dict: &semio_s_artifact_norm_iso16757_model::part_4::Dictionary,
+) -> HashSet<String> {
     let subject_ids: HashSet<_> = dict
         .subjects
         .iter()
@@ -712,7 +731,11 @@ fn check_dictionary_typing(doc: &Iso16757Snapshot, report: &mut CheckReport) {
             ));
         }
     }
+    subject_ids
+}
 
+/// ⚙️ Checks the references of the dictionary against the subject ids.
+fn check_dictionary_references(report: &mut CheckReport, dict: &semio_s_artifact_norm_iso16757_model::part_4::Dictionary, subject_ids: &HashSet<String>) {
     for list in &dict.controlled_lists {
         if list.values.is_empty() {
             report.push(fail(

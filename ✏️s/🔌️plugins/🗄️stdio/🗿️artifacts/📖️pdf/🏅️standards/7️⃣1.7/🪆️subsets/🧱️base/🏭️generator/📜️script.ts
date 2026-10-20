@@ -29,7 +29,7 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptProgram } from "./🟦️.ts";
 
 /** 🚪️ `generate` — runs the program of this script. */
@@ -45,4 +45,4 @@ class ManifestsScript extends BundleScript {
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("manifests", ManifestsScript);
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, argv: ["generate"] }));

@@ -651,5 +651,162 @@
         }
       ]
     }
+  },
+  "keys": {
+    "files": [
+      "a/1.ts",
+      "a/x/2.ts",
+      "a/x/y/3.ts",
+      "b/1.ts",
+      "b/y/2.ts",
+      "b/y/z/3.md",
+      "c/1.ts",
+      "package.json",
+      "root.json"
+    ],
+    "cases": [
+      {
+        "name": "disjoint-exclusions-split-per-pattern",
+        "inputs": [
+          "a/**/*",
+          "b/**/*",
+          "!a/x/**/*",
+          "!b/y/**/*"
+        ],
+        "keys": [
+          {
+            "include": "a/**/*",
+            "excludes": [
+              "a/x/**/*"
+            ]
+          },
+          {
+            "include": "b/**/*",
+            "excludes": [
+              "b/y/**/*"
+            ]
+          }
+        ],
+        "extra": [],
+        "oracle": true
+      },
+      {
+        "name": "unrelated-exclusion-is-dropped",
+        "inputs": [
+          "c/**/*",
+          "!a/x/**/*"
+        ],
+        "keys": [
+          {
+            "include": "c/**/*",
+            "excludes": []
+          }
+        ],
+        "extra": [],
+        "oracle": true
+      },
+      {
+        "name": "overlapping-prefix-keeps-the-exclusion",
+        "inputs": [
+          "a/x/**/*",
+          "!a/**/*.ts"
+        ],
+        "keys": [
+          {
+            "include": "a/x/**/*",
+            "excludes": [
+              "a/**/*.ts"
+            ]
+          }
+        ],
+        "extra": [],
+        "oracle": true
+      },
+      {
+        "name": "nested-prefix-keeps-the-narrower-exclusion",
+        "inputs": [
+          "a/**/*",
+          "!a/x/y/**/*",
+          "!b/**/*.md"
+        ],
+        "keys": [
+          {
+            "include": "a/**/*",
+            "excludes": [
+              "a/x/y/**/*"
+            ]
+          }
+        ],
+        "extra": [],
+        "oracle": true
+      },
+      {
+        "name": "literals-and-bundled-manifests",
+        "inputs": [
+          "root.json",
+          "missing.json",
+          {
+            "externalDependencies": [
+              "left-pad"
+            ]
+          }
+        ],
+        "keys": [
+          {
+            "include": "root.json",
+            "excludes": []
+          },
+          {
+            "include": "package.json",
+            "excludes": []
+          }
+        ],
+        "extra": [
+          "bun.lock",
+          "missing.json"
+        ],
+        "oracle": false
+      },
+      {
+        "name": "extglob-exclusion-is-inert-and-dropped",
+        "inputs": [
+          "a/**/*",
+          "!a/**/?(*.)+(stories|story).ts"
+        ],
+        "keys": [
+          {
+            "include": "a/**/*",
+            "excludes": []
+          }
+        ],
+        "extra": [],
+        "oracle": false
+      },
+      {
+        "name": "excluded-literal-outside-the-inventory-is-not-extra",
+        "inputs": [
+          "gone.json",
+          "!gone.json"
+        ],
+        "keys": [],
+        "extra": [],
+        "oracle": false
+      }
+    ],
+    "shared": [
+      {
+        "name": "same-include-in-two-tasks-with-different-unrelated-exclusions",
+        "first": [
+          "a/**/*",
+          "!b/y/**/*"
+        ],
+        "second": [
+          "a/**/*",
+          "!c/**/*",
+          "!b/**/*.md"
+        ],
+        "include": "a/**/*"
+      }
+    ]
   }
 }

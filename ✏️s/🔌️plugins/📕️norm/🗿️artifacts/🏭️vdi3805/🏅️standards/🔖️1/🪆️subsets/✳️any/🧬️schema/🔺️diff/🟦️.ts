@@ -5,23 +5,23 @@ import { normWireArray, normWireBoolean, normWireDefault, normWireInteger, normW
 import { type BoundingBox, type BuildingSystemNumber, type CharacteristicCurve, type Configuration, type CurvePoint, type EditionId, type ExtensionFields, type LocalizedText, type ParametricGeometry, parseBoundingBox, parseBuildingSystemNumber, parseCharacteristicCurve, parseConfiguration, parseCurvePoint, parseEditionId, parseExtensionFields, parseLocalizedText, parseParametricGeometry, parseVdi3805CatalogueProduct, parseVdi3805ConnectionPoint, parseVdi3805ExtensionBag, type Vdi3805CatalogueProduct, type Vdi3805ConnectionPoint, type Vdi3805ExtensionBag } from "../📸️snapshot/🟦️.ts";
 
 export interface Vdi3805Diff {
-  /** @state artifact */
+  /** 📄️ @state artifact */
   manufacturerFile: Vdi3805ManufacturerFilePatch | null;
-  /** @state artifact */
+  /** 📱️ @state artifact */
   products: Vdi3805ProductsRows | null;
-  /** @state artifact */
+  /** 📇️ @state artifact */
   catalogExtensions: ExtensionFields | null;
-  /** @state artifact */
+  /** ⌨️ @state artifact */
   editionProfile: Vdi3805EditionProfileRows | null;
-  /** @state artifact */
+  /** 🛠️ @state artifact */
   correctionAsOf: EditionId | null;
-  /** @state artifact */
+  /** 🔄️ @state artifact */
   strictMode: boolean | null;
-  /** @state artifact */
+  /** 🧊️ @state artifact */
   geometry: Vdi3805GeometryRows | null;
-  /** @state artifact */
+  /** 〰️ @state artifact */
   curves: Vdi3805CurvesRows | null;
-  /** @state artifact */
+  /** ↔️ @state artifact */
   limits: Vdi3805LimitsPatch | null;
 }
 

@@ -3,7 +3,7 @@ import { BundleScript } from "../../../../../../🔨️modules/🏃️process/�
 import {realpath,stat} from "node:fs/promises";
 import {isAbsolute,relative,resolve,sep} from "node:path";
 import {compileJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import selectionSchema from "./🧬️schema/🎯️project.json";
+import selectionSchema from "./🧬️schema/🎯️project.json" with { type: "json" };
 const selectionContract=compileJsonSchemaSubset(selectionSchema);
 
 /** 🎯️ Selects an authored project and only the diagnostic switches the current compiler owner admits. */

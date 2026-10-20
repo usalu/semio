@@ -1,11 +1,11 @@
 import type{ResourceLeaseControl}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{requireIssuedResourceControlInvocationV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {requireBuildOrchestrationContextV1,projectBuildOrchestrationCapabilitiesV1} from "./📤️orchestration/🟨️.mjs";
-import nxCallerSchema from"../../⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json";
-import authoringSchema from "../🧬️schema/📥️authoring.json";
-import schema from "../🧬️schema/📥️caller.json";
-import nativeSchema from "../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json";
-import executionPolicy from "../../⚡️caching/📦️artifacts/📋️native-orchestration/🔣️policy.json";
+import nxCallerSchema from"../../⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json" with { type: "json" };
+import authoringSchema from "../🧬️schema/📥️authoring.json" with { type: "json" };
+import schema from "../🧬️schema/📥️caller.json" with { type: "json" };
+import nativeSchema from "../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json" with { type: "json" };
+import executionPolicy from "../../⚡️caching/📦️artifacts/📋️native-orchestration/🔣️policy.json" with { type: "json" };
 import { canonicalArchitectureEnvironment } from "../../⚡️caching/🦀️cargo/🌿️environment/🟦️.ts";
 import {readNativeOwnerCapabilities } from "../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import type { NativeOwnerCapabilities } from "../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";

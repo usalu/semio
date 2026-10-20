@@ -5,9 +5,10 @@ import {issueStoreReceiptV1} from "../../🧾️store-receipt/🟨️.mjs";
 import {withBazelStorageV1,requireBazelStorageV1,bazelCacheFlagsV1,type BazelStorageV1} from "./💾️storage/🟦️.ts";
 import {createHash,randomUUID} from "node:crypto";
 import {spawn} from "node:child_process";
-import {constants} from "node:fs";
-import targetCacheSchema from"../../🏃️execution/🧬️schema/💾️cache.json";
-import componentSchema from"./🧬️schema/🔣️.json";const {ActionBirth:birthSchema,OutputSnapshot:snapshotSchema,ModuleSetup:moduleSchema,ImplementationPolicy:policySchema,Planner:plannerSchema,Implementation:implementationSchema,Manifest:manifestSchema,Runtime:runtimeSchema,CacheDecision:cacheDecisionSchema}=componentSchema.definitions;
+import {constants,existsSync} from "node:fs";
+import {taskCoverageV1,taskCoverageReportV1,type TaskCoverageV1,type TaskCoverageReportV1} from "../../🏃️execution/🟦️.ts";
+import targetCacheSchema from"../../🏃️execution/🧬️schema/💾️cache.json" with { type: "json" };
+import componentSchema from"./🧬️schema/🔣️.json" with { type: "json" };const {ActionBirth:birthSchema,OutputSnapshot:snapshotSchema,ModuleSetup:moduleSchema,ImplementationPolicy:policySchema,Planner:plannerSchema,Implementation:implementationSchema,Manifest:manifestSchema,Runtime:runtimeSchema,CacheDecision:cacheDecisionSchema,UncachedReport:uncachedReportSchema}=componentSchema.definitions;
 import {createServer,createConnection,type Socket} from "node:net";
 import {chmod,copyFile,link,lstat,mkdir,open,readFile,readdir,readlink,realpath,rename,rm,stat,symlink,writeFile} from "node:fs/promises";
 import {dirname,isAbsolute,join,relative,resolve,sep} from "node:path";
@@ -17,13 +18,18 @@ import {readReadinessDeclarationV1,resolveReadinessV1,watchReadinessV1,type Read
 import {buildExecutionArgumentsV1,issueBuildTaskEnvironmentV1,withBuildOrchestrationTaskEnvironmentV1,type NativeBuildCallerCapabilitiesV1} from "../../📥️caller/🟦️.ts";
 import {BAZEL_VERSION,prepareBazel} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts";
 import {buildExecEnvironmentV1} from "../../⚙️operations/🌱️exec-environment/🟦️.ts";
+import {bazelCargoClassV1,bazelCargoToolchainDigestV1,BAZEL_CARGO_RULE_V1} from "./🦀️cargo/🟦️.ts";
 import {bazelBuildEventsFileV1,recordBazelBuildMetricsV1} from "./⚙️operations/🟦️.ts";
+import {BAZEL_HERMETIC_RUNNER,BAZEL_HERMETIC_STARLARK,bazelBunStorePathV1,bazelExecutionFlagsV1,bazelExecutionPlatformV1,bazelHermeticDecisionV1,bazelHermeticManifestV1,bazelRemoteExecutionV1,linkBazelToolchainsV1,prepareBazelBunV1,renderBazelExecutionBuildV1,type BazelExecutionPlanV1} from "./🏃️execution/🟦️.ts";
+import {bazelPlatformProfileV1,bazelPlatformRulesV1} from "./🌐️platform/🟦️.ts";
+import {readNativeWindowsLongPathsEnabledV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🪟️host/🟦️.ts";
 export {prepareBazel} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts";
 import {withResourceLeases,checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {scriptCompilerAdmissionControlV1,compilerAdmissionBudgetV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {captureOwnedCommandV1,runOwnedCommand} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {advanceScriptInvocation,checkScriptInvocation,receiveScriptProcessInvocation,scriptInvocationBudget,scriptInvocationEnvironment,withScriptInvocationSignalV1,readIssuedScriptProcessEnvelopeV1,readScriptProcessEnvelope,withScriptProcessEnvelope,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import {bazelClosureMarkerV1,bazelClosureMarkersForPlanV1,loadBazelClosuresV1,managedBazelClosureFetchV1,workspaceBazelLockFilesV1,type BazelClosureFetchV1,type BazelClosuresV1} from "./🔗️closure/🟦️.ts";
 
 
 
@@ -32,18 +38,25 @@ const inputExpansionPolicy=componentSchema.definitions.InputExpansionPolicy.cons
 
 
 import{captureBuildSourceClosureV1,buildSourceClosureIdentityV1,buildSourceClosureLoaderV1}from"../../📥️source/🔏️closure/🟦️.ts";
+import buildPolicy from "../../🔣️policy.json" with { type: "json" };
+import {readWorkerPolicyV1,planWorkersV1,currentWorkerHostV1,requireWorkerPlanV1,workerActionKindV1,type WorkerPlanV1} from "../../👷️workers/🟦️.ts";
+import {installWorkerOutputCaptureV1,readWorkerInputV1,serveWorkerV1} from "../../👷️workers/📨️protocol/🟦️.ts";
+import {bazelWorkerMnemonicV1,bazelWorkerSettingsV1} from "./👷️workers/🟦️.ts";
+const workerPolicy=readWorkerPolicyV1(buildPolicy.workers);
 
 declare global{interface ImportMeta{readonly semioCapturedImplementationIdentity?:string;readonly semioCapturedLoaderIdentity?:string}}
 
-export interface BazelTaskRequestV1{tasks:string[];args?:string[];configuration?:string;parallel?:number;excludeDependencies?:boolean;skipCache?:boolean;skipRemoteCache?:boolean;bail?:boolean;verbose?:boolean;outputStyle?:"stream"|"stream-without-prefixes"|"static"}
+export interface BazelTaskRequestV1{tasks:string[];args?:string[];configuration?:string;parallel?:number;excludeDependencies?:boolean;skipCache?:boolean;skipRemoteCache?:boolean;bail?:boolean;verbose?:boolean;outputStyle?:"stream"|"stream-without-prefixes"|"static";workers?:boolean}
 type BazelImplementationV1={version:1;snapshot:string;runner:string;sha256:string;loaderSha256:string};
 type BazelManifestImplementationV1={version:1;sha256:string;loaderSha256:string};
 type BazelTaskManifestV1={version:1;task:BazelTaskV1;implementation:BazelManifestImplementationV1;orchestration?:object};
 type BazelRuntimeV1={version:1;workspace:string;environment:NodeJS.ProcessEnv};
 export interface BazelSnapshotContextV1{workspace:string;task:BazelTaskV1}
-export type BazelUncachedReasonV1="continuous"|"declared"|"skipped"|"undeclared"|"unbounded"|"driver-owned"|"managed-output"|"side-effecting"|"live"|"aggregate"|"diagnostic";
+export type BazelUncachedReasonV1="continuous"|"declared"|"skipped"|"undeclared"|"unbounded"|"driver-owned"|"managed-output"|"side-effecting"|"live"|"aggregate"|"diagnostic"|"unclassified";
 export interface BazelCacheDecisionV1{cache:boolean;reason?:BazelUncachedReasonV1}
-export interface BazelActionV1{id:string;label:string;kind:"task"|"noop"|"launch";restore:string[];cache:BazelCacheDecisionV1}
+export interface BazelUncachedReportV1{version:1;actions:number;cached:number;uncached:Record<string,number>;unbounded:{project:string;root:string;targets:{target:string;declared:"cache"|"class"}[]}[]}
+export interface BazelActionWorkerV1{kind:"test"|"check"|"generate"|"build"|"script"|"service";mnemonic:string;multiplex:boolean}
+export interface BazelActionV1{id:string;label:string;kind:"task"|"noop"|"launch"|"hermetic"|"test";restore:string[];cache:BazelCacheDecisionV1;worker?:BazelActionWorkerV1;exclusive?:true}
 type SnapshotEntryV1={path:string;kind:"directory"|"file"|"symlink";mode:number;file?:string;sha256?:string;link?:string;linkKind?:"directory"|"file"};
 type SnapshotV1={version:1;roots:string[];entries:SnapshotEntryV1[]};
 const hash=(value:string|Uint8Array)=>createHash("sha256").update(value).digest("hex"),slash=(value:string)=>value.split(sep).join("/");
@@ -57,7 +70,7 @@ export async function prepareBazelModulesV1(root:string,bazel:string,invocation:
  requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);await requireBazelStorageV1(root,storage);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);const environment=issueBuildTaskEnvironmentV1(root,invocation,{kind:"noop"},[],storage.dependencies.environment),offline=environment.CARGO_NET_OFFLINE==="true",identity=hash(JSON.stringify({version:1,bazel:BAZEL_VERSION,platform:process.platform,arch:process.arch,module:BAZEL_MODULE})),directory=join(storage.paths.modules,identity.slice(0,16)),workspace=join(directory,"workspace"),repository=join(directory,"repositories"),lockPath=join(workspace,"MODULE.bazel.lock"),receiptPath=join(directory,"ready.json"),blobs=join(repository,"content_addressable/sha256");
  const read=async()=>{try{const receipt=JSON.parse(await readFile(receiptPath,"utf8"));if(validateJsonSchemaSubset(moduleSchema,receipt).length||receipt.identity!==identity)throw new Error("Invalid Bazel module setup receipt");const lock=await readFile(lockPath,"utf8");if(hash(lock)!==receipt.lockSha256)throw new Error("Bazel module lock checksum changed");for(const digest of receipt.blobs){checkScriptInvocation(invocation);if(await fileHash(join(blobs,digest,"file"),invocation.control.signal)!==digest)throw new Error("Bazel module repository checksum changed");}return{lock,repository};}catch(error){if(invocation.control.signal.aborted)throw error;return undefined;}};
  return withResourceLeases({directory:join(root,".cache/b/l/m/data"),signal:phaseControl.signal,control:phaseControl,resources:[{resource:"bazel-modules-"+identity,mode:"exclusive"}]},async()=>{const ready=await read();if(ready)return ready;if(offline)throw new Error("Pinned Bazel module setup is not prepared for the original offline invocation");await mkdir(workspace,{recursive:true});await writeChanged(join(workspace,"MODULE.bazel"),BAZEL_MODULE);await writeChanged(join(workspace,"BUILD.bazel"),'load(":setup.bzl", "setup")\nsetup(name="setup")\n');await writeChanged(join(workspace,"setup.bzl"),'def _impl(ctx):\n    output=ctx.actions.declare_file("ready.txt")\n    ctx.actions.write(output,"ready")\n    return [DefaultInfo(files=depset([output]))]\nsetup=rule(implementation=_impl)\n');
-  console.log("[bazel] preparing fixed embedded module catalog");await runOwnedCommand(bazel,["--batch",`--output_base=${join(directory,"base")}`,`--install_base=${join(storage.paths.install,BAZEL_VERSION,process.platform+"-"+process.arch)}`,"--nosystem_rc","--nohome_rc","--noworkspace_rc","build","//:setup","--incompatible_autoload_externally=","--lockfile_mode=update",`--repository_cache=${repository}`,"--http_connector_attempts=2","--experimental_repository_downloader_retries=0"],workspace,"bazel:module-setup",Math.min(policy.moduleSetupMilliseconds,phaseControl.remainingMilliseconds()??policy.moduleSetupMilliseconds),{signal:phaseControl.signal,env:{...environment,...(process.platform==="darwin"?{LANG:"en_US.UTF-8",LC_ALL:"en_US.UTF-8"}:{})}});
+  console.log("[bazel] preparing fixed embedded module catalog");await runOwnedCommand(bazel,["--batch",`--output_base=${join(directory,"base")}`,`--install_base=${join(storage.paths.install,BAZEL_VERSION,process.platform+"-"+process.arch)}`,"--nosystem_rc","--nohome_rc","--noworkspace_rc","build","//:setup","--incompatible_autoload_externally=","--lockfile_mode=update",`--repository_cache=${repository}`,"--http_connector_attempts=2","--experimental_repository_downloader_retries=0"],workspace,"bazel:module-setup",Math.min(policy.moduleSetupMilliseconds,phaseControl.remainingMilliseconds()??policy.moduleSetupMilliseconds),{signal:phaseControl.signal,env:{...environment,...bazelPlatformRulesV1(process.platform).environment}});
   const lock=await readFile(lockPath,"utf8"),files=(await readdir(blobs)).filter(value=>/^[a-f0-9]{64}$/u.test(value)).sort();await writeChanged(receiptPath,JSON.stringify({version:1,identity,lockSha256:hash(lock),blobs:files}));const prepared=await read();if(!prepared)throw new Error("Bazel fixed module setup validation failed");console.log(`[bazel] fixed module catalog ready blobs=${files.length}`);return prepared;
  });
 }
@@ -69,6 +82,24 @@ function taskIdentity(graph:BuildGraphV1,value:string,configuration?:string):{id
  const requested=parts[2]??configuration,selected=requested&&definition.configurations?.[requested]?requested:definition.defaultConfiguration as string|undefined,chosen=selected&&definition.configurations?.[selected]?selected:undefined;
  if(parts[2]&&!definition.configurations?.[parts[2]])throw new Error(`Unknown build configuration: ${value}`);
  return {project,target,...(chosen?{configuration:chosen}:{}),id:`${project}:${target}${chosen?":"+chosen:""}`};
+}
+
+/** 🧷 Refuses a declared task dependency whose project or target is absent from the graph, naming the depending task, the declaration and the missing half. */
+export function requireBazelDependencyV1(graph:BuildGraphV1,owner:string,dependency:string):void{
+ const[project,target]=dependency.split(":");
+ if(!graph.projects[project!])throw new Error(`Unknown build task dependency: ${owner} depends on ${dependency}, but project ${project} is not in the build graph`);
+ if(!graph.projects[project!]!.targets[target??""])throw new Error(`Unknown build task dependency: ${owner} depends on ${dependency}, but project ${project} defines no target ${target}`);
+}
+
+/** 🔎️ Lists every qualified task dependency, in base targets and configurations alike, that names an absent project or target, so owners fix them in one pass instead of one refusal at a time. */
+export function bazelDanglingDependenciesV1(graph:BuildGraphV1):{task:string;dependency:string;missing:"project"|"target"}[]{
+ const found=new Map<string,{task:string;dependency:string;missing:"project"|"target"}>();
+ for(const[project,owner]of Object.entries(graph.projects))for(const[target,definition]of Object.entries(owner.targets))for(const row of [definition,...Object.values(definition.configurations??{})])for(const entry of (row as {dependsOn?:BuildTargetV1["dependsOn"]}).dependsOn??[]){
+  const dependency=(typeof entry==="string"?entry:entry.target).replace(/^\^/u,"");if(!dependency.includes(":"))continue;
+  const[name,goal]=dependency.split(":"),missing=!graph.projects[name!]?"project":!graph.projects[name!]!.targets[goal??""]?"target":undefined;
+  if(missing)found.set(project+":"+target+"\0"+dependency,{task:project+":"+target,dependency,missing});
+ }
+ return [...found.values()].sort((left,right)=>left.task<right.task?-1:left.task>right.task?1:left.dependency<right.dependency?-1:left.dependency>right.dependency?1:0);
 }
 
 /** 🕸️ Projects exact portable dependency identities before Bazel sees any actions. */
@@ -83,7 +114,7 @@ export function planBazelTasksV1(graph:BuildGraphV1,request:BazelTaskRequestV1):
   visiting.add(id);const owner=graph.projects[project]!,definition=resolveBuildTargetV1(owner.targets[target]!,identity.configuration),dependencies=new Set<string>();
   for(const dependency of definition.dependsOn??[]){
    const specification=typeof dependency==="string"?{target:dependency}:dependency,pattern=specification.target,fromDependencies=pattern.startsWith("^")||specification.projects==="dependencies"||specification.dependencies===true,operation=pattern.replace(/^\^/u,""),forwarded=specification.params==="forward"?args:[];
-   const add=(value:string)=>{const dependency=taskIdentity(graph,value,inherited).id;if(dependency!==id&&(!request.excludeDependencies||explicit.has(dependency)))dependencies.add(include(value,forwarded,inherited));};
+   const add=(value:string)=>{requireBazelDependencyV1(graph,id,value);const dependency=taskIdentity(graph,value,inherited).id;if(dependency!==id&&(!request.excludeDependencies||explicit.has(dependency)))dependencies.add(include(value,forwarded,inherited));};
    if(operation.includes(":")){add(operation);continue;}
    const projects=specification.projects===undefined||specification.projects==="self"?[project]:typeof specification.projects==="string"?[specification.projects]:specification.projects;
    let operations=matchedTargets.get(operation);if(!operations){const matcher=new Bun.Glob(operation);operations=targetNames.filter(name=>matcher.match(name));matchedTargets.set(operation,operations);}
@@ -162,10 +193,12 @@ async function sourceFiles(root:string,invocation:ScriptInvocation,patterns:stri
  return bazelFilesystemSourceFilesV1(root,invocation,patterns);
 }
 
-/** 🧾️ Expands exact project-owned Source groups before either declarations or fingerprints select files. */
-export function bazelTaskInputsV1(graph:BuildGraphV1,task:BazelTaskV1):unknown[]{
+/** 🧾️ Expands exact project-owned Source groups before either declarations or fingerprints select files; `^name` and `dependencies: true` reach the transitive dependency closure of the project, as Nx hashes them. */
+export function bazelTaskInputsV1(graph:BuildGraphV1,task:BazelTaskV1,exactClosures?:BazelClosuresV1|"ignore"):unknown[]{
  const active=new Set<string>();let entries=0;
- const groups=(project:string):Record<string,unknown[]>=>{if(!graph.projects[project])throw Error("Unknown build input project: "+project);return{default:["{projectRoot}/**/*"],...graph.namedInputs,...graph.projects[project]!.namedInputs as Record<string,unknown[]>|undefined};},dependencies=(project:string)=>[...new Set(graph.dependencies.filter(edge=>edge.source===project&&graph.projects[edge.target]).map(edge=>edge.target))];
+ const groups=(project:string):Record<string,unknown[]>=>{if(!graph.projects[project])throw Error("Unknown build input project: "+project);return{default:["{projectRoot}/**/*"],...graph.namedInputs,...graph.projects[project]!.namedInputs as Record<string,unknown[]>|undefined};};
+ const adjacency=new Map<string,string[]>(),closures=new Map<string,string[]>();for(const edge of graph.dependencies)if(graph.projects[edge.target]){const row=adjacency.get(edge.source)??[];if(!row.includes(edge.target))row.push(edge.target);adjacency.set(edge.source,row);}
+ const dependencies=(project:string):string[]=>{let known=closures.get(project);if(!known){known=[];const seen=new Set([project]),pending=[project];for(let position=0;position<pending.length;position++)for(const target of adjacency.get(pending[position]!)??[])if(!seen.has(target)){seen.add(target);known.push(target);pending.push(target);}closures.set(project,known);}return known;};
  const named=(name:string,project:string,depth:number):unknown[]=>{const values=groups(project)[name],key=project+":"+name;if(!Array.isArray(values))throw Error("Unknown build input group: "+key);if(active.has(key))throw Error("Build input group cycle: "+key);active.add(key);try{return expand(values,project,depth+1);}finally{active.delete(key);}};
  const expand=(inputs:readonly unknown[],project:string,depth=0):unknown[]=>{if(depth>inputExpansionPolicy.maximumDepth)throw Error("Build input expansion bound exceeded");const declared=groups(project);return inputs.flatMap(input=>{
   if(++entries>inputExpansionPolicy.maximumEntries)throw Error("Build input expansion bound exceeded");
@@ -174,6 +207,7 @@ export function bazelTaskInputsV1(graph:BuildGraphV1,task:BazelTaskV1):unknown[]
    if(Object.hasOwn(declared,input))return named(input,project,depth);
    const projectRoot=graph.projects[project]!.root==="."?"":graph.projects[project]!.root;return[input.replaceAll("{projectRoot}",projectRoot).replaceAll("{workspaceRoot}/","").replaceAll("{workspaceRoot}","").replace(/^\.\//u,"").replace(/^\/+/u,"")];
   }
+  const closure=bazelClosureMarkerV1(input);if(closure){if(exactClosures==="ignore")return[];if(!exactClosures)throw Error(`Bazel build input closure ${closure.kind} ${closure.key} requires its loaded manifest`);return[...exactClosures.files(closure)];}
   if(input&&typeof input==="object"&&"input"in input){const row=input as{input:string;projects?:string|string[];dependencies?:boolean};if(validateJsonSchemaSubset(componentSchema.definitions.NamedInputReference,row).length)throw Error("Closed build named input required");const owners=row.dependencies?dependencies(project):row.projects===undefined?[project]:typeof row.projects==="string"?[row.projects]:row.projects;if(!owners.length&&row.projects!==undefined||owners.some(owner=>typeof owner!=="string"||!owner))throw Error("Closed build named input required");return owners.flatMap(owner=>named(row.input,owner,depth));}
   return[input];
  });};
@@ -197,8 +231,28 @@ export function bazelCacheDecisionV1(task:BazelTaskV1,skipCache:boolean):BazelCa
  return decision;
 }
 
-/** 🔖 Resolves each emitted action to the dependency outputs it consumes; pure ordering tasks vanish behind their producers and unselected ones are never emitted. */
-export function bazelActionsV1(graph:BuildGraphV1,plan:BazelTaskPlanV1,skipCache:boolean):Map<string,BazelActionV1>{
+/** 📣 Reports why actions stay out of Bazel's action cache and which targets declare cache without outputs: `unbounded` lists them per owning project so manifest owners add real outputs or an explicit empty `outputs` array for a pure check. */
+export function bazelUncachedReportV1(plan:BazelTaskPlanV1,emitted:ReadonlyMap<string,BazelActionV1>):BazelUncachedReportV1{
+ const uncached:Record<string,number>={},owners=new Map<string,{project:string;root:string;targets:{target:string;declared:"cache"|"class"}[]}>();let cached=0;
+ for(const action of emitted.values()){
+  if(action.cache.cache){cached++;continue;}
+  const reason=action.cache.reason!;uncached[reason]=(uncached[reason]??0)+1;
+  if(reason!=="unbounded")continue;
+  const task=plan.tasks[action.id]!,owner=owners.get(task.project)??{project:task.project,root:task.root,targets:[]};owners.set(task.project,owner);owner.targets.push({target:task.target+(task.configuration?":"+task.configuration:""),declared:task.definition.cache===true?"cache":"class"});
+ }
+ const order=(left:string,right:string)=>left<right?-1:left>right?1:0,report:BazelUncachedReportV1={version:1,actions:emitted.size,cached,uncached:Object.fromEntries(Object.entries(uncached).sort(([left],[right])=>order(left,right))),unbounded:[...owners.values()].sort((left,right)=>order(left.project,right.project)).map(owner=>({...owner,targets:owner.targets.sort((left,right)=>order(left.target,right.target))}))};
+ if(validateJsonSchemaSubset(uncachedReportSchema,report).length)throw new Error("Closed Bazel uncached report required");
+ return report;
+}
+
+/** 👷️ Classifies a task into its neutral action kind and names the Bazel mnemonic and multiplexing its worker pool is keyed by; only the authored policy decides, never the host. */
+export function bazelActionWorkerV1(task:BazelTaskV1):BazelActionWorkerV1{
+ const kind=workerActionKindV1(workerPolicy,task.target,task.definition.continuous===true);
+ return {kind,mnemonic:bazelWorkerMnemonicV1(kind),multiplex:workerPolicy.kinds[kind].multiplex};
+}
+
+/** 🔖 Resolves each emitted action to the dependency outputs it consumes; pure ordering tasks vanish behind their producers and unselected ones are never emitted. With `hermetic`, a cacheable task carrying the neutral hermetic declaration becomes a `hermetic` action that a sandbox or a remote executor may run. */
+export function bazelActionsV1(graph:BuildGraphV1,plan:BazelTaskPlanV1,skipCache:boolean,execution:{hermetic:boolean}={hermetic:false}):Map<string,BazelActionV1>{
  const byLabel=(left:BazelTaskV1,right:BazelTaskV1)=>left.label<right.label?-1:left.label>right.label?1:0,producers=new Map<string,BazelTaskV1[]>(),emitted=new Map<string,BazelActionV1>();
  const direct=(task:BazelTaskV1):BazelTaskV1[]=>{
   const known=producers.get(task.id);if(known)return known;
@@ -206,28 +260,72 @@ export function bazelActionsV1(graph:BuildGraphV1,plan:BazelTaskPlanV1,skipCache
   visit(task);found.sort(byLabel);producers.set(task.id,found);return found;
  };
  const closure=(task:BazelTaskV1):BazelTaskV1[]=>{const found=new Map<string,BazelTaskV1>(),pending=[...direct(task)];while(pending.length){const next=pending.pop()!;if(found.has(next.id))continue;found.set(next.id,next);pending.push(...direct(next));}return [...found.values()].sort(byLabel);};
- const transitive=(task:BazelTaskV1)=>bazelTaskInputsV1(graph,task).some(input=>typeof input==="object"&&input!==null&&"dependentTasksOutputFiles" in input&&(input as {transitive?:unknown}).transitive===true);
+ const transitive=(task:BazelTaskV1)=>bazelTaskInputsV1(graph,task,"ignore").some(input=>typeof input==="object"&&input!==null&&"dependentTasksOutputFiles" in input&&(input as {transitive?:unknown}).transitive===true);
  for(const task of Object.values(plan.tasks)){
   const continuous=task.definition.continuous===true,pure=!continuous&&task.definition.execution.kind==="noop";
   if(pure&&!plan.selected.includes(task.id))continue;
-  const kind=continuous?"launch":pure?"noop":"task",restore=kind!=="noop"&&transitive(task)?closure(task):direct(task);
-  emitted.set(task.id,{id:task.id,label:task.label,kind,restore:restore.map(row=>row.label),cache:bazelCacheDecisionV1(task,skipCache)});
+  const kind=continuous?"launch":pure?"noop":"task",restore=kind!=="noop"&&transitive(task)?closure(task):direct(task),cache=bazelCacheDecisionV1(task,skipCache),hermetic=kind==="task"&&execution.hermetic&&bazelHermeticDecisionV1(task,cache,()=>bazelTaskInputsV1(graph,task,"ignore")).hermetic;
+  const worker=kind==="task"&&!hermetic?bazelActionWorkerV1(task):undefined;
+  emitted.set(task.id,{id:task.id,label:task.label,kind:hermetic?"hermetic":kind,restore:restore.map(row=>row.label),cache,...(worker?{worker}:{}),...(kind==="task"&&!hermetic&&bazelCargoClassV1(task)?{exclusive:true as const}:{})});
  }
+ const consumed=new Set([...emitted.values()].flatMap(action=>action.restore));
+ const runfiles=!bazelPlatformRulesV1(process.platform).command.includes("--noenable_runfiles");
+ for(const action of emitted.values())if(runfiles&&action.kind==="task"&&!action.exclusive&&plan.selected.includes(action.id)&&!consumed.has(action.label)&&bazelTaskCoverageV1(plan.tasks[action.id]!,action.cache).disposition==="test"){action.kind="test";delete action.worker;}
  return emitted;
 }
 
-/** 🧷 Compiles one input pattern once and keeps a broad owner for unfamiliar syntax. */
-function inputMatcher(pattern:string,broad=true):(path:string)=>boolean{
+/** 🎯️ Classifies one planned task by tool family and neutral disposition from its manifest and cache decision; `script` is the optional entry script text that tells vitest from the Bun runner. */
+export function bazelTaskCoverageV1(task:BazelTaskV1,decision:BazelCacheDecisionV1,script?:string):TaskCoverageV1{
+ const execution=task.definition.execution as {kind:string;command?:string;commands?:readonly (string|{command:string})[]},row=execution.commands?.[0],first=execution.command??(typeof row==="string"?row:row?.command),outputs=task.definition.outputs;
+ return taskCoverageV1({project:task.project,target:task.target,root:task.root,kind:execution.kind==="noop"?"noop":"command",...(first!==undefined?{command:first}:{}),...(script!==undefined?{script}:{}),...(Array.isArray(outputs)?{outputs}:{}),cache:decision.cache?{cache:true}:{cache:false,reason:decision.reason!}});
+}
+
+/** 🎯️ Counts a planned selection by tool family and by how Bazel executes it: a task that runs as a Bazel test counts as `test`, a cached task named test that another action consumes counts as `action`. */
+export function bazelCoverageReportV1(plan:BazelTaskPlanV1,emitted:ReadonlyMap<string,BazelActionV1>,scripts?:ReadonlyMap<string,string>):TaskCoverageReportV1{
+ return taskCoverageReportV1([...emitted.values()].map(action=>{const row=bazelTaskCoverageV1(plan.tasks[action.id]!,action.cache,scripts?.get(action.id));return action.kind==="test"||row.disposition!=="test"?row:{...row,disposition:"action" as const};}));
+}
+
+/** 🧷 Compiles one input pattern once, keeps a broad owner for unfamiliar syntax and exposes the literal prefix every matching path starts with. */
+function inputMatcher(pattern:string,broad=true):{prefix:string;match:(path:string)=>boolean}{
  const normalized=pattern.replace(/^\//u,""),extended=normalized.search(/[+@?!*]\(/u),prefix=(extended<0?normalized:normalized.slice(0,extended).replace(/[^/]*$/u,"")).split(/[?*{[\\]/u)[0]??"";
- if(extended<0)try{const glob=new Bun.Glob(normalized);return path=>path.startsWith(prefix)&&glob.match(path);}catch{}
- return path=>broad&&path.startsWith(prefix);
+ if(extended<0)try{const glob=new Bun.Glob(normalized);return{prefix,match:path=>path.startsWith(prefix)&&glob.match(path)};}catch{}
+ return{prefix,match:path=>broad&&path.startsWith(prefix)};
+}
+
+/** 🔑️ One cacheable unit of a task's source selection: an include pattern minus exactly the exclusions that can overlap it, so every task and project that names the same pattern shares one cover. */
+export interface BazelSourceKeyV1{include:string;excludes:readonly string[]}
+
+/** 🧮️ A sorted workspace inventory whose distinct patterns each select by a binary-searched prefix range and are cached: `keys` splits a task's inputs into shareable units, `select` resolves one unit, `selectAll` resolves a whole task. */
+export interface BazelSourceIndexV1{readonly files:readonly string[];keys(inputs:readonly unknown[]):{keys:BazelSourceKeyV1[];extra:string[]};select(key:BazelSourceKeyV1):Uint32Array;selectAll(inputs:readonly unknown[]):{marks:Uint8Array;extra:string[]};}
+
+/** 🧮️ Indexes an inventory once. An exclusion can only remove files an include pattern matches when their literal prefixes are prefixes of one another, so a unit carries just those exclusions and equals the task-wide selection exactly; literal inputs and bundled manifests outside the inventory are reported as `extra`. */
+export function bazelSourceIndexV1(inventory:readonly string[]):BazelSourceIndexV1{
+ const files=[...new Set(inventory)].sort(),position=new Map(files.map((path,index)=>[path,index])),patterns=new Map<string,{prefix:string;match:(path:string)=>boolean;indices:Uint32Array}>(),selected=new Map<string,Uint32Array>(),literal=(value:string)=>!/[?*{[]/u.test(value);
+ const lower=(prefix:string)=>{let low=0,high=files.length;while(low<high){const middle=(low+high)>>>1;if(files[middle]!<prefix)low=middle+1;else high=middle;}return low;};
+ const compiled=(pattern:string,broad:boolean)=>{
+  const key=(broad?"+":"-")+pattern;let row=patterns.get(key);
+  if(!row){const{prefix,match}=inputMatcher(pattern,broad),found:number[]=[];for(let index=lower(prefix);index<files.length&&files[index]!.startsWith(prefix);index++)if(match(files[index]!))found.push(index);row={prefix,match,indices:Uint32Array.from(found)};patterns.set(key,row);}
+  return row;
+ };
+ const keys=(inputs:readonly unknown[])=>{
+  const strings=inputs.filter((value):value is string=>typeof value==="string"),included=[...new Set(strings.filter(value=>!value.startsWith("!")))],excluders=[...new Set(strings.filter(value=>value.startsWith("!")).map(value=>value.slice(1)))].map(pattern=>({pattern,...compiled(pattern,false)})),extra=new Set<string>();
+  const units:BazelSourceKeyV1[]=included.filter(include=>compiled(include,true).indices.length||literal(include)&&position.has(include)).map(include=>{const{prefix}=compiled(include,true);return{include,excludes:excluders.filter(row=>row.indices.length&&(row.prefix.startsWith(prefix)||prefix.startsWith(row.prefix))).map(row=>row.pattern).sort()};});
+  for(const value of included)if(literal(value)&&!position.has(value)&&!excluders.some(row=>row.match(value)))extra.add(value);
+  for(const value of inputs.some(input=>typeof input==="object"&&input!==null&&"externalDependencies" in input)?actions.sources.bundled:[])if(position.has(value))units.push({include:value,excludes:[]});else extra.add(value);
+  return{keys:[...new Map(units.map(unit=>[JSON.stringify(unit),unit])).values()],extra:[...extra].sort()};
+ };
+ const select=(unit:BazelSourceKeyV1):Uint32Array=>{
+  const text=JSON.stringify(unit);let known=selected.get(text);
+  if(!known){const excluders=unit.excludes.map(pattern=>compiled(pattern,false)),found=new Set<number>();for(const index of compiled(unit.include,true).indices)if(!excluders.some(row=>row.match(files[index]!)))found.add(index);const at=literal(unit.include)?position.get(unit.include):undefined;if(at!==undefined&&!excluders.some(row=>row.match(unit.include)))found.add(at);known=Uint32Array.from([...found].sort((left,right)=>left-right));selected.set(text,known);}
+  return known;
+ };
+ return{files,keys,select,selectAll(inputs){const{keys:units,extra}=keys(inputs),marks=new Uint8Array(files.length);for(const unit of units)for(const index of select(unit))marks[index]=1;return{marks,extra};}};
 }
 
 /** 🧿 Selects the workspace paths that declared input patterns, literal inputs and bundled dependency manifests name. */
 export function bazelTaskSourcePathsV1(inputs:readonly unknown[],files:readonly string[]):string[]{
- const strings=inputs.filter((value):value is string=>typeof value==="string"),included=strings.filter(value=>!value.startsWith("!")),include=included.map(value=>inputMatcher(value)),exclude=strings.filter(value=>value.startsWith("!")).map(value=>inputMatcher(value.slice(1),false));
- const bundled=inputs.some(input=>typeof input==="object"&&input!==null&&"externalDependencies" in input)?actions.sources.bundled:[],literals=[...included.filter(value=>!/[?*{[]/u.test(value)&&!exclude.some(match=>match(value))),...bundled];
- return [...new Set([...files.filter(path=>include.some(match=>match(path))&&!exclude.some(match=>match(path))),...literals])].sort();
+ const index=bazelSourceIndexV1(files),{marks,extra}=index.selectAll(inputs);
+ return [...new Set([...index.files.filter((_path,position)=>marks[position]),...extra])].sort();
 }
 
 /** 🚧️ Splits selected paths into files Bazel can declare by label and paths whose identity the fingerprint must hash instead. */
@@ -249,26 +347,70 @@ export async function bazelSourceClassesV1(root:string,paths:readonly string[],c
 /** 🏷️ Names a checkout file by the in-package Bazel label that reaches it through the source link, emoji and other non-ASCII names are valid Bazel target-name bytes, only package names must be ASCII. */
 export function bazelSourceLabelV1(path:string):string{return actions.sources.link+"/"+path;}
 
+/** 🗂️ One generated filegroup: nested groups and the individual files it lists. */
+export interface BazelSourceGroupV1{groups:readonly string[];files:readonly string[]}
+
+/** 🗂️ Covers selections of declarable files with per-directory filegroups. A directory whose every file is selected is one group (a project root is one group), a partly selected directory lists its selected files and recurses, and single-child chains collapse, so each file is listed once in its directory group however many tasks select it. `universe` is the sorted list of declarable files. `cover` turns a dense selection over it into the groups and loose files that expand to exactly that selection, `merge` unites covers, and `compose` names a cover as one shared group (`k` for a pattern unit shared by many tasks, `i` for a task), or returns the lone group a cover already is. */
+export function bazelSourceCoverV1(universe:readonly string[]):{groups:Map<string,BazelSourceGroupV1>;cover(selected:ArrayLike<number>):BazelSourceGroupV1;merge(covers:readonly BazelSourceGroupV1[]):BazelSourceGroupV1;compose(cover:BazelSourceGroupV1,kind:"i"|"k"):string|undefined}{
+ type Directory={path:string;low:number;high:number;files:number[];children:string[];rep?:Directory};
+ const directories=new Map<string,Directory>(),groups=new Map<string,BazelSourceGroupV1>(),prefix=new Int32Array(universe.length+1),order=(left:string,right:string)=>left<right?-1:left>right?1:0;
+ const ensure=(path:string,index:number):Directory=>{let row=directories.get(path);if(!row){row={path,low:index,high:index+1,files:[],children:[]};directories.set(path,row);if(path){const cut=path.lastIndexOf("/");ensure(cut<0?"":path.slice(0,cut),index).children.push(path);}}return row;};
+ universe.forEach((file,index)=>{const cut=file.lastIndexOf("/");let path=cut<0?"":file.slice(0,cut);ensure(path,index).files.push(index);for(;;){directories.get(path)!.high=index+1;if(!path)break;const up=path.lastIndexOf("/");path=up<0?"":path.slice(0,up);}});
+ for(const row of directories.values())row.children.sort(order);
+ const representative=(row:Directory):Directory=>row.rep??=!row.files.length&&row.children.length===1?representative(directories.get(row.children[0]!)!):row;
+ const define=(row:Directory):string=>{
+  const owner=representative(row),name="d_"+hash(owner.path).slice(0,16);
+  if(!groups.has(name))groups.set(name,{groups:owner.children.map(child=>define(directories.get(child)!)),files:owner.files.map(index=>universe[index]!)});
+  return name;
+ };
+ const sorted=(values:Iterable<string>)=>[...new Set(values)].sort(order);
+ return{groups,
+  cover(selected){
+   for(let index=0;index<universe.length;index++)prefix[index+1]=prefix[index]!+(selected[index]?1:0);
+   const names:string[]=[],files:string[]=[],visit=(row:Directory)=>{
+    const count=prefix[row.high]!-prefix[row.low]!;if(!count)return;
+    if(count===row.high-row.low){names.push(define(row));return;}
+    for(const index of row.files)if(selected[index])files.push(universe[index]!);
+    for(const child of row.children)visit(directories.get(child)!);
+   };
+   if(universe.length)visit(directories.get("")!);
+   return{groups:sorted(names),files:sorted(files)};
+  },
+  merge(covers){return{groups:sorted(covers.flatMap(cover=>cover.groups)),files:sorted(covers.flatMap(cover=>cover.files))};},
+  compose(cover,kind){
+   if(!cover.groups.length&&!cover.files.length)return undefined;
+   if(cover.groups.length===1&&!cover.files.length)return cover.groups[0]!;
+   const name=kind+"_"+hash(cover.groups.join("\0")+"\u0001"+cover.files.join("\0")).slice(0,16);groups.set(name,cover);return name;
+  }};
+}
+
 /** 📑 Renders the BUILD file whose declarations alone define every action, its inputs and its cache policy. */
-export function renderBazelBuildV1(input:{actions:readonly (BazelActionV1&{sources?:string})[];groups:ReadonlyMap<string,readonly string[]>;bun:string;sourceIdentity:string;extension:string}):string{
+export function renderBazelBuildV1(input:{actions:readonly (BazelActionV1&{sources?:string})[];groups:ReadonlyMap<string,BazelSourceGroupV1>;bun:string;sourceIdentity:string;extension:string;execution?:string;remote?:boolean}):string{
  const quote=(value:string)=>JSON.stringify(value),list=(values:readonly string[])=>values.length?"[\n"+values.map(value=>"        "+quote(value)+",").join("\n")+"\n    ]":"[]",labels=(values:readonly string[])=>list(values.map(value=>":"+value)),order=(left:string,right:string)=>left<right?-1:left>right?1:0;
- const lines=['load(":tasks.bzl", "repo_launch", "repo_noop", "repo_task")',""];
- for(const[name,sources]of [...input.groups].sort(([left],[right])=>order(left,right)))lines.push("filegroup(",`    name = ${quote(name)},`,`    srcs = ${list(sources.map(bazelSourceLabelV1))},`,")","");
+ const symbols=["repo_launch","repo_noop","repo_task",...(input.actions.some(action=>action.kind==="test")?["repo_test"]:[]),...(input.actions.some(action=>action.kind==="hermetic")?["repo_hermetic_task"]:[]),...(input.execution===undefined?[]:["repo_bun_toolchain"])].sort(order),lines=[`load(":tasks.bzl", ${symbols.map(quote).join(", ")})`,""];
+ if(input.execution!==undefined)lines.push(input.execution);
+ for(const[name,sources]of [...input.groups].sort(([left],[right])=>order(left,right)))lines.push("filegroup(",`    name = ${quote(name)},`,`    srcs = ${list([...sources.groups.map(group=>":"+group),...sources.files.map(bazelSourceLabelV1)])},`,")","");
  for(const action of [...input.actions].sort((left,right)=>order(left.label,right.label))){
   const attributes:[string,string][]=[["name",quote(action.label)]];
   if(action.kind==="noop")attributes.push(["deps",labels(action.restore)]);
-  else{
+  else if(action.kind==="hermetic"){
+   attributes.push(["manifest",quote(action.label+".json")]);
+   if(action.sources)attributes.push(["srcs",list([":"+action.sources])]);
+   attributes.push(["deps",labels(action.restore)],["runner",quote("hermetic-runner.mjs")],["identity",quote(action.id)]);
+   if(input.remote)attributes.push(["exec_compatible_with",'[":exec_pool_remote"]']);
+  }else{
    const launch=action.kind==="launch",reason=launch?actions.kinds.launcher.reason:actions.kinds.task.reason;
    attributes.push(["manifest",quote(action.label+".json")]);
    if(!launch)attributes.push(["fingerprint",quote(action.label+".input")]);
    if(action.sources)attributes.push(["srcs",list([":"+action.sources])]);
    attributes.push(["deps",labels(action.restore)],["runner",quote("📜️script.ts")],["source",quote("implementation.json")],["source_identity",quote(input.sourceIdentity)],["bun",quote(input.bun)]);
-   if(launch)attributes.push(["extension",quote(input.extension)]);else attributes.push(["identity",quote(action.id)]);
-   attributes.push(["cache",action.cache.cache?"True":"False"]);
+   if(launch)attributes.push(["extension",quote(input.extension)]);else{attributes.push(["identity",quote(action.id)]);if(action.worker)attributes.push(["mnemonic",quote(action.worker.mnemonic)],["multiplex",action.worker.multiplex?"True":"False"]);}
+   if(action.kind==="test")attributes.push(["extension",quote(input.extension)],["args",list(["📜️script.ts","implementation.json",input.sourceIdentity,"birth-test",action.label+".json",...action.restore.map(label=>label+".snapshot")])],["timeout",quote("eternal")]);
+   if(action.exclusive)attributes.push(["exclusive","True"]);attributes.push(["cache",action.cache.cache?"True":"False"]);
    if(action.cache.reason)attributes.push(["uncached_reason",quote(action.cache.reason)]);
    attributes.push(["host_state",quote(reason)]);
   }
-  lines.push(`${action.kind==="noop"?"repo_noop":action.kind==="launch"?"repo_launch":"repo_task"}(`,...attributes.map(([key,value])=>`    ${key} = ${value},`),")","");
+  lines.push(`${action.kind==="noop"?"repo_noop":action.kind==="launch"?"repo_launch":action.kind==="hermetic"?"repo_hermetic_task":action.kind==="test"?"repo_test":"repo_task"}(`,...attributes.map(([key,value])=>`    ${key} = ${value},`),")","");
  }
  return lines.join("\n");
 }
@@ -301,11 +443,19 @@ async function readBazelRuntimeV1(manifestPath:string,implementation:BazelImplem
  return value;
 }
 
-/** 🔌 Links the real checkout into the generated package so Bazel can name every declared source by an in-package label; the link is listed in `.bazelignore` so `//...` never crawls the checkout (its generated workspace lives inside it, an infinite symlink expansion otherwise). */
-async function linkBazelSources(root:string,workspace:string):Promise<void>{
- const link=join(workspace,actions.sources.link);await writeChanged(join(workspace,".bazelignore"),actions.sources.link+"\n");
+/** 🔌 Links the real checkout into the generated package so Bazel can name every declared source by an in-package label; no `.bazelignore` is written (listing the link there removes it from the execroot and disables Bazel caching); queries name the root package with `//:all`, which never crawls the checkout. */
+export async function linkBazelSourcesV1(root:string,workspace:string):Promise<void>{
+ const link=join(workspace,actions.sources.link);await rm(join(workspace,".bazelignore"),{force:true});
  try{if(await realpath(link)===await realpath(root))return;await rm(link,{force:true});}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}
- await symlink(root,link,process.platform==="win32"?"junction":"dir");
+ await symlink(root,link,bazelPlatformRulesV1(process.platform).sourceLink);
+}
+
+/** 🛂️ Renders the platform profile of the selected output base, prints its warnings and refuses before Bazel starts when this host cannot run it. */
+function requireBazelPlatformProfileV1(cache:{readonly startup:readonly string[]}){
+ const profile=bazelPlatformProfileV1({platform:process.platform,arch:process.arch,container:process.platform==="linux"&&process.env.DEVCONTAINER==="true",outputBase:cache.startup.find(flag=>flag.startsWith("--output_base="))!.slice("--output_base=".length),bun:process.execPath,longPaths:process.platform==="win32"?(readNativeWindowsLongPathsEnabledV1()?"enabled":"disabled"):"unprobed"});
+ for(const warning of profile.warnings)console.warn(`[bazel] warning: ${warning}`);
+ if(profile.refusals.length)throw new Error(`Bazel platform profile refused:\n${profile.refusals.join("\n")}`);
+ return profile;
 }
 
 /** 🧊️ Identifies the full bounded captured executable closure. */
@@ -329,9 +479,9 @@ export function bazelTaskBaseEnvironmentV1(workspace:string,task:BazelTaskV1,env
 }
 
 /** 🧮️ Fingerprints only what Bazel cannot read from declared files: host identity, declared environment and runtime commands (each command runs once per distinct text and build mode, like Nx's runtime hasher), and paths without a declarable label. */
-async function taskFingerprint(root:string,graph:BuildGraphV1,task:BazelTaskV1,files:string[],memo:Map<string,Promise<string>>,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,cached:boolean,implementation:string):Promise<string>{
- const inputs=cached&&task.definition.execution.kind!=="noop"?bazelTaskInputsV1(graph,task):[],digest=createHash("sha256");
- const original=issueBazelTaskEnvironmentV1(root,invocation,task,bazelTaskBaseEnvironmentV1(root,task,process.env));digest.update(JSON.stringify({platform:process.platform,arch:process.arch,bun:process.versions.bun,mode:original.SEMIO_BUILD_MODE}));digest.update(implementation);
+async function taskFingerprint(root:string,graph:BuildGraphV1,task:BazelTaskV1,files:string[],memo:Map<string,Promise<string>>,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,cached:boolean,implementation:string,exactClosures:BazelClosuresV1):Promise<string>{
+ const inputs=cached&&task.definition.execution.kind!=="noop"?bazelTaskInputsV1(graph,task,exactClosures):[],digest=createHash("sha256");
+ const original=issueBazelTaskEnvironmentV1(root,invocation,task,bazelTaskBaseEnvironmentV1(root,task,process.env));digest.update(JSON.stringify({platform:process.platform,arch:process.arch,bun:process.versions.bun,mode:original.SEMIO_BUILD_MODE}));digest.update(implementation);if(bazelCargoClassV1(task)){const key="\0toolchain";let known=memo.get(key);if(!known){known=bazelCargoToolchainDigestV1(root,original);memo.set(key,known);}digest.update(await known);}
  if(!cached)digest.update(randomUUID());
  for(const path of [...files].sort()){checkScriptInvocation(invocation);let identity=memo.get(path);if(!identity){identity=bazelSourceIdentityV1(join(root,path),invocation.control.signal);memo.set(path,identity);}digest.update(path+"\0"+await identity+"\0");}
  for(const input of inputs){if(typeof input!=="object"||!input)continue;const row=input as Record<string,unknown>;if(typeof row.runtime==="string"){const key="\0runtime\0"+row.runtime+"\0"+original.SEMIO_BUILD_MODE;let stdout=memo.get(key);if(!stdout){stdout=captureOwnedCommandV1(process.execPath,["exec",row.runtime],root,{signal:phaseControl.signal,control:phaseControl,env:original});memo.set(key,stdout);}digest.update(JSON.stringify({runtime:row.runtime,stdout:await stdout}));}else if(typeof row.env==="string")digest.update(JSON.stringify({env:row.env,value:original[row.env]??null}));}
@@ -359,8 +509,14 @@ export async function publishBazelImplementationV1(root:string,workspace:string,
  return value;
 }
 
-const STARLARK_RULES=`def _requirements(ctx):
+const STARLARK_RULES=`def _requirements(ctx, worker = False):
     requirements = {"no-remote-exec": "1"}
+    if worker:
+        requirements["supports-workers"] = "1"
+        requirements["requires-worker-protocol"] = "json"
+        requirements["supports-worker-cancellation"] = "1"
+        if ctx.attr.multiplex:
+            requirements["supports-multiplex-workers"] = "1"
     if ctx.attr.host_state:
         requirements["no-sandbox"] = "1"
     if not ctx.attr.cache:
@@ -372,11 +528,25 @@ const STARLARK_RULES=`def _requirements(ctx):
 def _task_impl(ctx):
     output = ctx.actions.declare_directory(ctx.label.name + ".snapshot")
     snapshots = [dep[DefaultInfo].files.to_list()[0] for dep in ctx.attr.deps]
-    args = [ctx.file.runner.path, ctx.file.source.path, ctx.attr.source_identity, "birth-action", ctx.file.manifest.path, output.path] + [snapshot.path for snapshot in snapshots]
-    ctx.actions.run(executable = ctx.attr.bun, arguments = args, inputs = depset([ctx.file.manifest, ctx.file.fingerprint, ctx.file.runner, ctx.file.source] + snapshots, transitive = [depset(ctx.files.srcs)]), outputs = [output], mnemonic = "RepoTask", progress_message = ctx.attr.identity, execution_requirements = _requirements(ctx), use_default_shell_env = True)
+    request = ctx.actions.args()
+    request.use_param_file("@%s", use_always = True)
+    request.set_param_file_format("multiline")
+    request.add(ctx.file.manifest.path)
+    request.add(output.path)
+    request.add_all([snapshot.path for snapshot in snapshots])
+    ctx.actions.run(executable = ctx.attr.bun, arguments = [ctx.file.runner.path, ctx.file.source.path, ctx.attr.source_identity, "work-action", request], inputs = depset([ctx.file.manifest, ctx.file.fingerprint] + snapshots, transitive = [src[DefaultInfo].files for src in ctx.attr.srcs]), tools = [ctx.file.runner, ctx.file.source], outputs = [output], mnemonic = ctx.attr.mnemonic, progress_message = ctx.attr.identity, execution_requirements = _requirements(ctx, True), use_default_shell_env = True, env = {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0"}, resource_set = cargo_resources if ctx.attr.exclusive else None)
     return [DefaultInfo(files = depset([output]))]
 
-repo_task = rule(implementation = _task_impl, attrs = {"manifest": attr.label(allow_single_file = True), "fingerprint": attr.label(allow_single_file = True), "srcs": attr.label_list(allow_files = True), "deps": attr.label_list(), "runner": attr.label(allow_single_file = True), "source": attr.label(allow_single_file = True), "source_identity": attr.string(mandatory = True), "bun": attr.string(mandatory = True), "identity": attr.string(mandatory = True), "cache": attr.bool(default = False), "uncached_reason": attr.string(), "host_state": attr.string()})
+repo_task = rule(implementation = _task_impl, attrs = {"manifest": attr.label(allow_single_file = True), "fingerprint": attr.label(allow_single_file = True), "srcs": attr.label_list(allow_files = True), "deps": attr.label_list(), "runner": attr.label(allow_single_file = True), "source": attr.label(allow_single_file = True), "source_identity": attr.string(mandatory = True), "bun": attr.string(mandatory = True), "identity": attr.string(mandatory = True), "mnemonic": attr.string(mandatory = True), "multiplex": attr.bool(default = False), "cache": attr.bool(default = False), "uncached_reason": attr.string(), "host_state": attr.string(), "exclusive": attr.bool(default = False)})
+
+def _test_impl(ctx):
+    launcher = ctx.actions.declare_file(ctx.label.name + ctx.attr.extension)
+    ctx.actions.run(executable = ctx.attr.bun, arguments = [ctx.file.runner.path, ctx.file.source.path, ctx.attr.source_identity, "birth-launcher", ctx.file.manifest.path, launcher.path], inputs = [ctx.file.manifest, ctx.file.runner, ctx.file.source], outputs = [launcher], mnemonic = "RepoTestLauncher", execution_requirements = _requirements(ctx), use_default_shell_env = True, env = {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0"})
+    dependencies = [dep[DefaultInfo].files.to_list()[0] for dep in ctx.attr.deps]
+    runfiles = ctx.runfiles(files = dependencies + [ctx.file.manifest, ctx.file.fingerprint, ctx.file.runner, ctx.file.source], transitive_files = depset(transitive = [src[DefaultInfo].files for src in ctx.attr.srcs]))
+    return [DefaultInfo(executable = launcher, runfiles = runfiles), testing.ExecutionInfo(_requirements(ctx))]
+
+repo_test = rule(implementation = _test_impl, test = True, attrs = {"manifest": attr.label(allow_single_file = True), "fingerprint": attr.label(allow_single_file = True), "srcs": attr.label_list(allow_files = True), "deps": attr.label_list(), "runner": attr.label(allow_single_file = True), "source": attr.label(allow_single_file = True), "source_identity": attr.string(mandatory = True), "bun": attr.string(mandatory = True), "identity": attr.string(mandatory = True), "extension": attr.string(default = ""), "cache": attr.bool(default = False), "uncached_reason": attr.string(), "host_state": attr.string()})
 
 def _noop_impl(ctx):
     marker = ctx.actions.declare_file(ctx.label.name + ".noop")
@@ -387,12 +557,19 @@ repo_noop = rule(implementation = _noop_impl, attrs = {"deps": attr.label_list()
 
 def _launch_impl(ctx):
     launcher = ctx.actions.declare_file(ctx.label.name + ctx.attr.extension)
-    ctx.actions.run(executable = ctx.attr.bun, arguments = [ctx.file.runner.path, ctx.file.source.path, ctx.attr.source_identity, "birth-launcher", ctx.file.manifest.path, launcher.path], inputs = [ctx.file.manifest, ctx.file.runner, ctx.file.source], outputs = [launcher], mnemonic = "RepoLauncher", execution_requirements = _requirements(ctx))
+    ctx.actions.run(executable = ctx.attr.bun, arguments = [ctx.file.runner.path, ctx.file.source.path, ctx.attr.source_identity, "birth-launcher", ctx.file.manifest.path, launcher.path], inputs = [ctx.file.manifest, ctx.file.runner, ctx.file.source], outputs = [launcher], mnemonic = "RepoLauncher", execution_requirements = _requirements(ctx), env = {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0"})
     dependencies = [dep[DefaultInfo].files.to_list()[0] for dep in ctx.attr.deps]
     return [DefaultInfo(executable = launcher, runfiles = ctx.runfiles(files = dependencies + [ctx.file.manifest, ctx.file.runner, ctx.file.source]))]
 
 repo_launch = rule(implementation = _launch_impl, executable = True, attrs = {"manifest": attr.label(allow_single_file = True), "deps": attr.label_list(), "bun": attr.string(mandatory = True), "runner": attr.label(allow_single_file = True), "source": attr.label(allow_single_file = True), "source_identity": attr.string(mandatory = True), "extension": attr.string(default = ""), "cache": attr.bool(default = False), "uncached_reason": attr.string(), "host_state": attr.string()})
 `;
+
+/** 🧭️ Resolves the provisioned bun executables the hermetic actions of a plan run under, or nothing when the plan has none; a missing executable fails closed before Bazel starts. */
+export function bazelExecutionPlanV1(toolsRoot:string,emitted:ReadonlyMap<string,BazelActionV1>,environment:Readonly<Record<string,string|undefined>>,host=bazelExecutionPlatformV1(process.platform,process.arch)):BazelExecutionPlanV1|undefined{
+ if(![...emitted.values()].some(action=>action.kind==="hermetic"))return undefined;
+ const remote=bazelRemoteExecutionV1(environment),ids=[...new Set([host.id,...(remote?[remote.platform]:[])])];
+ return{host:host.id,...(remote?{remote:{platform:remote.platform,properties:remote.properties}}:{}),tools:Object.fromEntries(ids.map(id=>{const path=bazelBunStorePathV1(toolsRoot,id);if(!existsSync(path))throw new Error(`Pinned Bun ${id} is not prepared for hermetic actions`);return [id,path];}))};
+}
 
 /** 📨️ Carries finite task data to the captured planner without granting authority through JSON. */
 export async function publishBazelGraphV1(root:string,graph:BuildGraphV1,request:BazelTaskRequestV1,invocation:ScriptInvocation,storage:BazelStorageV1,phaseControl:ResourceLeaseControl):Promise<{workspace:string;plan:BazelTaskPlanV1;implementation:BazelImplementationV1}>{
@@ -403,34 +580,52 @@ export async function publishBazelGraphV1(root:string,graph:BuildGraphV1,request
 async function publishCapturedBazelGraphV1(root:string,graph:BuildGraphV1,request:BazelTaskRequestV1,invocation:ScriptInvocation,storage:BazelStorageV1,phaseControl:ResourceLeaseControl,implementation:BazelImplementationV1,recheck:()=>void):Promise<{workspace:string;plan:BazelTaskPlanV1;implementation:BazelImplementationV1}>{
  requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);await requireBazelStorageV1(root,storage);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);
  const plan=planBazelTasksV1(graph,request),namespace=hash(JSON.stringify({selected:plan.selected,args:request.args,configuration:request.configuration})).slice(0,16),workspace=join(storage.paths.workspace,namespace);
- return generateBazelWorkspaceV1(root,graph,request,plan,workspace,invocation,phaseControl,implementation,recheck);
+ return generateBazelWorkspaceV1(root,graph,request,plan,workspace,invocation,phaseControl,implementation,recheck,undefined,bazelExecutionPlanV1(storage.tools.root,bazelActionsV1(graph,plan,request.skipCache===true,{hermetic:true}),process.env));
 }
 
 /** 🪡 Writes the complete Bazel package for a planned selection into a workspace directory: manifests, fingerprints, source links, rules and BUILD, independent of storage and of any Bazel server. */
-export async function generateBazelWorkspaceV1(root:string,graph:BuildGraphV1,request:BazelTaskRequestV1,plan:BazelTaskPlanV1,workspace:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,implementation:BazelImplementationV1,recheck:()=>void):Promise<{workspace:string;plan:BazelTaskPlanV1;implementation:BazelImplementationV1}>{
- const emitted=bazelActionsV1(graph,plan,request.skipCache===true),declared=[...emitted.values()].filter(action=>action.kind==="task"&&action.cache.cache),inputs=new Map(declared.map(action=>[action.id,bazelTaskInputsV1(graph,plan.tasks[action.id]!)])),bundled=(values:unknown[])=>values.some(input=>typeof input==="object"&&input!==null&&"externalDependencies" in input)?actions.sources.bundled:[];
+export async function generateBazelWorkspaceV1(root:string,graph:BuildGraphV1,request:BazelTaskRequestV1,plan:BazelTaskPlanV1,workspace:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,implementation:BazelImplementationV1,recheck:()=>void,closureFetch?:BazelClosureFetchV1,execution?:BazelExecutionPlanV1):Promise<{workspace:string;plan:BazelTaskPlanV1;implementation:BazelImplementationV1}>{
+ const emitted=bazelActionsV1(graph,plan,request.skipCache===true,{hermetic:true}),hasHermetic=[...emitted.values()].some(action=>action.kind==="hermetic"),exactClosures=await loadBazelClosuresV1(bazelClosureMarkersForPlanV1(graph,Object.values(plan.tasks)),closureFetch??managedBazelClosureFetchV1(root,phaseControl),workspaceBazelLockFilesV1(root)),declared=[...emitted.values()].filter(action=>(action.kind==="task"||action.kind==="hermetic"||action.kind==="test")&&action.cache.cache),inputs=new Map(declared.map(action=>[action.id,bazelTaskInputsV1(graph,plan.tasks[action.id]!,exactClosures)])),bundled=(values:unknown[])=>values.some(input=>typeof input==="object"&&input!==null&&"externalDependencies" in input)?actions.sources.bundled:[];
  const files=await sourceFiles(root,invocation,[...new Set([...inputs.values()].flatMap(values=>[...values.filter((value):value is string=>typeof value==="string"&&!value.startsWith("!")),...bundled(values)]))]);
- await mkdir(workspace,{recursive:true,mode:0o700});await chmod(workspace,0o700);if(dirname(implementation.snapshot)!==workspace)throw new Error("Captured Bazel planner workspace changed");recheck();await writeChanged(join(workspace,"MODULE.bazel"),BAZEL_MODULE);await writeChanged(join(workspace,"tasks.bzl"),STARLARK_RULES);await linkBazelSources(root,workspace);
- const selections=new Map<string,string[]>(),classes=new Map<string,Promise<"file"|"hash"|"absent">>(),boundaries=new Map<string,Promise<boolean>>(),memo=new Map<string,Promise<string>>(),groups=new Map<string,string[]>(),sources=new Map<string,string>(),hashed=new Map<string,string[]>();
+ if(hasHermetic&&!execution)throw new Error("Hermetic Bazel actions require an execution plan with provisioned toolchains");
+ await mkdir(workspace,{recursive:true,mode:0o700});await chmod(workspace,0o700);if(dirname(implementation.snapshot)!==workspace)throw new Error("Captured Bazel planner workspace changed");recheck();await writeChanged(join(workspace,"MODULE.bazel"),BAZEL_MODULE);await writeChanged(join(workspace,"tasks.bzl"),STARLARK_RULES+"\n"+BAZEL_CARGO_RULE_V1+(hasHermetic?BAZEL_HERMETIC_STARLARK:""));await linkBazelSourcesV1(root,workspace);
+ if(hasHermetic)await writeChanged(join(workspace,"hermetic-runner.mjs"),BAZEL_HERMETIC_RUNNER);
+ const index=bazelSourceIndexV1(files),union=new Uint8Array(index.files.length),literals=new Set<string>(),units=new Map<string,BazelSourceKeyV1>(),keyed=new Map<string,ReturnType<typeof index.keys>>(),classes=new Map<string,Promise<"file"|"hash"|"absent">>(),boundaries=new Map<string,Promise<boolean>>(),memo=new Map<string,Promise<string>>(),sources=new Map<string,string>(),hashed=new Map<string,string[]>();
+ for(const action of declared){checkScriptInvocation(invocation);const values=inputs.get(action.id)!,text=JSON.stringify(values);if(!keyed.has(text)){const row=index.keys(values);keyed.set(text,row);for(const unit of row.keys)units.set(JSON.stringify(unit),unit);for(const path of row.extra)literals.add(path);}}
+ for(const unit of units.values())for(const position of index.select(unit))union[position]=1;
+ const classified=await bazelSourceClassesV1(root,[...index.files.filter((_path,position)=>union[position]),...[...literals].sort()],classes,boundaries,invocation),declarable=new Set(classified.files),flagged=new Set(classified.hashed),universe=index.files.filter(path=>declarable.has(path)),compact=new Int32Array(index.files.length).fill(-1);
+ for(let position=0,next=0;position<index.files.length;position++)if(declarable.has(index.files[position]!))compact[position]=next++;
+ const tree=bazelSourceCoverV1(universe),shared=new Map<string,{cover:BazelSourceGroupV1;hashed:string[]}>(),composed=new Map<string,{source?:string;hashed:string[]}>();
+ const unitCover=(unit:BazelSourceKeyV1)=>{const text=JSON.stringify(unit);let row=shared.get(text);if(!row){const chosen=new Uint8Array(universe.length),hashing:string[]=[];for(const position of index.select(unit)){const path=index.files[position]!;if(compact[position]!>=0)chosen[compact[position]!]=1;else if(flagged.has(path))hashing.push(path);}const cover=tree.cover(chosen);row={cover:cover.groups.length+cover.files.length>2?{groups:[tree.compose(cover,"k")!],files:[]}:cover,hashed:hashing};shared.set(text,row);}return row;};
  for(const action of declared){
-  checkScriptInvocation(invocation);const values=inputs.get(action.id)!,key=JSON.stringify(values);let paths=selections.get(key);if(!paths){paths=bazelTaskSourcePathsV1(values,files);selections.set(key,paths);}
-  const classified=await bazelSourceClassesV1(root,paths,classes,boundaries,invocation);if(classified.files.length){const name="i_"+hash(classified.files.join("\0")).slice(0,16);groups.set(name,classified.files);sources.set(action.id,name);}hashed.set(action.id,classified.hashed);
+  checkScriptInvocation(invocation);const text=JSON.stringify(inputs.get(action.id)!);let row=composed.get(text);
+  if(!row){const{keys:units,extra}=keyed.get(text)!,parts=units.map(unitCover);row={source:tree.compose(tree.merge([...parts.map(part=>part.cover),{groups:[],files:extra.filter(path=>declarable.has(path))}]),"i"),hashed:[...new Set([...parts.flatMap(part=>part.hashed),...extra.filter(path=>flagged.has(path))])].sort()};composed.set(text,row);}
+  if(action.kind==="hermetic"&&row.hashed.length)throw new Error(`Hermetic task input cannot be declared as a file: ${action.id}: ${row.hashed[0]}`);
+  if(row.source)sources.set(action.id,row.source);hashed.set(action.id,row.hashed);
  }
  let authorized:Set<string>|undefined;
  for(const action of emitted.values()){
   if(action.kind==="noop")continue;
+  if(action.kind==="hermetic"){checkScriptInvocation(invocation);const task=plan.tasks[action.id]!;await writeChanged(join(workspace,task.label+".json"),JSON.stringify(bazelHermeticManifestV1(task,buildExecutionArgumentsV1({...task.definition.execution,forwardAllArgs:true},task.args))));continue;}
   checkScriptInvocation(invocation);const task=plan.tasks[action.id]!;const metadata=graph.projects[task.project]?.targets[task.target]?.metadata as {semio?:{execution?:{kind?:string;children?:unknown}}}|undefined,delegation=metadata?.semio?.execution,orchestration=delegation?.kind==="orchestration"&&delegation.children!==undefined?buildOrchestrationContextV1(graph.projects,{project:task.project,target:task.target,...(task.configuration?{configuration:task.configuration}:{})}):undefined;
   if(orchestration){if(!authorized){const caller=readIssuedScriptProcessEnvelopeV1(invocation).capabilities as any,{resolveBuildInvocationV1,parseBuildInvocationV1}=await import("../../🧭️invocation/🟦️.ts"),{selectBuildTasksV1}=await import("../../🧭️selection/🟦️.ts");if(caller.tool!=="bazel"||caller.selection?.[0]!=="repo")throw new Error("Original Bazel orchestration selection required");const selected=parseBuildInvocationV1(caller.selection.slice(1),{...process.env,SEMIO_BUILD_TOOL:caller.tool,SEMIO_BUILD_MODE:caller.buildMode}),resolved=resolveBuildInvocationV1(root,selected.args,{...process.env,SEMIO_BUILD_MODE:caller.buildMode}),request=await selectBuildTasksV1(root,graph,resolved.args,invocation);authorized=new Set(Object.keys(planBazelTasksV1(graph,request).tasks));}if(!authorized.has(task.id))throw new Error("Original Bazel orchestration task is unreachable");}
   await writeChanged(join(workspace,task.label+".json"),JSON.stringify(bazelManifestV1(task,implementation,orchestration)));
-  if(action.kind==="task"){const fingerprint=await taskFingerprint(root,graph,task,hashed.get(action.id)??[],memo,invocation,phaseControl,action.cache.cache,implementation.sha256+implementation.loaderSha256);await writeChanged(join(workspace,task.label+".input"),fingerprint);}
+  if(action.kind==="task"||action.kind==="test"){const fingerprint=await taskFingerprint(root,graph,task,hashed.get(action.id)??[],memo,invocation,phaseControl,action.cache.cache,implementation.sha256+implementation.loaderSha256,exactClosures);await writeChanged(join(workspace,task.label+".input"),fingerprint);}
  }
- recheck();checkScriptInvocation(invocation);await writeChanged(join(workspace,"BUILD.bazel"),renderBazelBuildV1({actions:[...emitted.values()].map(action=>({...action,...(sources.has(action.id)?{sources:sources.get(action.id)}:{})})),groups,bun:process.execPath,sourceIdentity:implementation.sha256,extension:process.platform==="win32"?".exe":""}));await writeBazelRuntimeV1(workspace,root,scriptInvocationEnvironment(invocation,process.env));return {workspace,plan,implementation};
+ const executionBuild=hasHermetic?(await linkBazelToolchainsV1(workspace,execution!.tools),renderBazelExecutionBuildV1(execution!)):undefined;
+ recheck();checkScriptInvocation(invocation);await writeChanged(join(workspace,"BUILD.bazel"),renderBazelBuildV1({actions:[...emitted.values()].map(action=>({...action,...(sources.has(action.id)?{sources:sources.get(action.id)}:{})})),groups:tree.groups,bun:process.execPath,sourceIdentity:implementation.sha256,extension:bazelPlatformRulesV1(process.platform).launcherExtension,...(executionBuild===undefined?{}:{execution:executionBuild,remote:execution!.remote!==undefined})}));await writeBazelRuntimeV1(workspace,root,scriptInvocationEnvironment(invocation,process.env));return {workspace,plan,implementation};
+}
+
+/** 🔒 Tells whether a declared output that a run did not produce is an error: a cached task must produce what it declares unless it declares `metadata.semio.optionalOutputs: true`, because an unproduced output is cached as present and lost on every cache hit. */
+export function bazelMissingOutputRefusedV1(definition:{cache?:unknown;metadata?:unknown}):boolean{
+ const semio=(definition.metadata as {semio?:{optionalOutputs?:unknown}}|undefined)?.semio;
+ return definition.cache===true&&semio?.optionalOutputs!==true;
 }
 
 /** 📦️ Flattens declared products so cache paths remain short on every host. */
 export async function captureBazelSnapshotV1(manifest:BazelSnapshotContextV1,output:string,invocation:ScriptInvocation):Promise<void>{
  const roots=new Set<string>(),entries:SnapshotEntryV1[]=[],environment=()=>issueBazelTaskEnvironmentV1(manifest.workspace,invocation,manifest.task,bazelTaskBaseEnvironmentV1(manifest.workspace,manifest.task,process.env));await mkdir(join(output,"files"),{recursive:true});
- for(const pattern of manifest.task.definition.outputs??[]){const absolute=interpolate(pattern,manifest.workspace,manifest.task,environment),path=slash(relative(manifest.workspace,resolve(manifest.workspace,absolute)));workspacePath(manifest.workspace,path);if(/[?*{[]/u.test(path)){for await(const match of new Bun.Glob(path).scan({cwd:manifest.workspace,onlyFiles:false,dot:true}))roots.add(slash(match));}else try{await lstat(workspacePath(manifest.workspace,path));roots.add(path);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}}
+ for(const pattern of manifest.task.definition.outputs??[]){const absolute=interpolate(pattern,manifest.workspace,manifest.task,environment),path=slash(relative(manifest.workspace,resolve(manifest.workspace,absolute)));workspacePath(manifest.workspace,path);if(/[?*{[]/u.test(path)){for await(const match of new Bun.Glob(path).scan({cwd:manifest.workspace,onlyFiles:false,dot:true}))roots.add(slash(match));}else try{await lstat(workspacePath(manifest.workspace,path));roots.add(path);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;if(bazelMissingOutputRefusedV1(manifest.task.definition))throw new Error(`Declared output of a replayed Bazel task was not produced: ${manifest.task.id} ${path}`);}}
  const visit=async(path:string):Promise<void>=>{checkScriptInvocation(invocation);await outputAncestry(manifest.workspace,path);const source=workspacePath(manifest.workspace,path),facts=await lstat(source),entry:SnapshotEntryV1={path,kind:facts.isSymbolicLink()?"symlink":facts.isDirectory()?"directory":"file",mode:facts.mode&0o777};if(entry.kind==="symlink"){entry.link=await readlink(source);const linked=await stat(source);checkScriptInvocation(invocation);if(!linked.isFile()&&!linked.isDirectory())throw new Error("Bazel snapshot link requires an existing file or directory target");entry.linkKind=linked.isDirectory()?"directory":"file";}else if(entry.kind==="directory")for(const child of await readdir(source))await visit(slash(join(path,child)));else{entry.file=hash(path).slice(0,32);await copyFile(source,join(output,"files",entry.file));entry.sha256=await fileHash(join(output,"files",entry.file),invocation.control.signal);}entries.push(entry);};
  for(const path of [...roots].sort().filter((path,_index,all)=>!all.some(parent=>parent!==path&&path.startsWith(parent+"/"))))await visit(path);
  await writeFile(join(output,"snapshot.json"),JSON.stringify({version:1,roots:[...roots].sort(),entries} satisfies SnapshotV1));
@@ -465,6 +660,9 @@ export async function restoreBazelSnapshotV1(root:string,snapshot:string,invocat
  });
 }
 
+/** 👷️ Gives the commands a persistent worker starts an empty standard input, because the worker's own standard input carries the protocol. */
+let workerChildInputV1:string|undefined;
+
 /** 🚀️ Executes the direct owner command with the original caller's native capabilities. */
 async function executeTask(manifest:BazelTaskManifestV1,workspace:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<void>{
  const {task}=manifest,execution=task.definition.execution;if(execution.kind==="noop")return;
@@ -473,7 +671,7 @@ async function executeTask(manifest:BazelTaskManifestV1,workspace:string,invocat
  if(manifest.orchestration){const context=manifest.orchestration as any,row=context.targets?.find((row:any)=>row.project===task.project&&row.target===task.target);if(JSON.stringify(row?.delegation)!==JSON.stringify((task.definition.metadata as any)?.semio?.execution))throw new Error("Original Bazel orchestration declaration changed");}
  const runTask=async(environment:NodeJS.ProcessEnv,actual:ResourceLeaseControl=phaseControl)=>{const cwd=execution.cwd?resolve(workspace,execution.program===undefined?interpolate(execution.cwd,workspace,task,()=>environment):execution.cwd):workspace;
  const operations=execution.program!==undefined?[execution.program]:execution.commands??(execution.command?[execution.command]:[]),args=buildExecutionArgumentsV1({...execution,forwardAllArgs:true},task.args);if(!operations.length)throw new Error(`Build command required: ${task.id}`);
- const controller=new AbortController(),signal=AbortSignal.any([actual.signal,controller.signal]),run=async(operation:string|{command:string;forwardAllArgs?:boolean})=>{const command=typeof operation==="string"?operation:operation.command,forward=typeof operation==="object"?operation.forwardAllArgs??execution.forwardAllArgs:execution.forwardAllArgs;let source=execution.program===undefined?interpolate(command,workspace,task,()=>environment):"'"+command.replaceAll("'","'\\''")+"'";if(!execution.ownerArguments&&forward!==false&&args.length)source+=" "+args.map(value=>"'"+value.replaceAll("'","'\\''")+"'").join(" ");await withIssuedResourceOperationV1(actual,()=>{checkResourceLeaseControl(actual);const remaining=actual.remainingMilliseconds();if(remaining!==null&&remaining<=0)throw new Error("Inherited Bazel task phase expired");return runOwnedCommand(process.execPath,["exec",source],cwd,task.id,compilerAdmissionBudgetV1(actual),{env:environment,signal});});};
+ const controller=new AbortController(),signal=AbortSignal.any([actual.signal,controller.signal]),run=async(operation:string|{command:string;forwardAllArgs?:boolean})=>{const command=typeof operation==="string"?operation:operation.command,forward=typeof operation==="object"?operation.forwardAllArgs??execution.forwardAllArgs:execution.forwardAllArgs;let source=execution.program===undefined?interpolate(command,workspace,task,()=>environment):"'"+command.replaceAll("'","'\\''")+"'";if(!execution.ownerArguments&&forward!==false&&args.length)source+=" "+args.map(value=>"'"+value.replaceAll("'","'\\''")+"'").join(" ");await withIssuedResourceOperationV1(actual,()=>{checkResourceLeaseControl(actual);const remaining=actual.remainingMilliseconds();if(remaining!==null&&remaining<=0)throw new Error("Inherited Bazel task phase expired");return runOwnedCommand(process.execPath,["exec",source],cwd,task.id,compilerAdmissionBudgetV1(actual),{env:environment,signal,...(workerChildInputV1===undefined?{}:{input:workerChildInputV1})});});};
  if(execution.parallel===false)for(const operation of operations)await run(operation);else{const pending=operations.map(run);try{await Promise.all(pending);}catch(error){controller.abort(error);await Promise.allSettled(pending);throw error;}}
  };
  const base=bazelTaskBaseEnvironmentV1(workspace,task,process.env);
@@ -505,8 +703,8 @@ async function bazelCancellationControl(invocation:ScriptInvocation,signal:Abort
 }
 
 /** 📻️ Keeps original process authority while receiving its owning Bazel invocation's cancellation. */
-async function withBazelCancellation<T>(environment:NodeJS.ProcessEnv,invocation:ScriptInvocation,run:(owned:ScriptInvocation)=>Promise<T>):Promise<T>{
- readIssuedScriptProcessEnvelopeV1(invocation);const url=environment.SEMIO_BAZEL_CONTROL_URL,match=url&&/^tcp:\/\/127\.0\.0\.1:(\d+)\/([a-f0-9-]+)$/u.exec(url);if(!match)throw new Error("Original loopback Bazel action cancellation control required");const cancelled=new AbortController(),socket=createConnection({host:"127.0.0.1",port:Number(match[1])});initializeBazelControlTextV1(socket);const token=match[2];let id:string|undefined,pending="",acknowledged=false,started=false,acceptJoin!:()=>void,refuseJoin!:(error:unknown)=>void,acceptClosed!:()=>void,refuseClosed!:(error:unknown)=>void;const joined=new Promise<void>((accept,refuse)=>{acceptJoin=accept;refuseJoin=refuse;}),terminated=new Promise<void>((accept,refuse)=>{acceptClosed=accept;refuseClosed=refuse;});void terminated.catch(()=>{});const fail=(error:unknown)=>{cancelled.abort(error);refuseJoin(error);refuseClosed(error);},interrupt=()=>{if(!started){const reason=invocation.control.signal.reason??Error("Original Bazel handshake cancelled");cancelled.abort(reason);refuseJoin(reason);if(!id)socket.destroy(reason);}},remaining=invocation.control.remainingMilliseconds(),handshake=remaining===null?undefined:setTimeout(()=>{refuseJoin(Error("Original Bazel handshake deadline exhausted"));if(!id)socket.destroy();},remaining);invocation.control.signal.addEventListener("abort",interrupt,{once:true});if(invocation.control.signal.aborted)interrupt();
+async function withBazelCancellation<T>(environment:NodeJS.ProcessEnv,invocation:ScriptInvocation,run:(owned:ScriptInvocation)=>Promise<T>,cancel?:AbortSignal):Promise<T>{
+ readIssuedScriptProcessEnvelopeV1(invocation);const url=environment.SEMIO_BAZEL_CONTROL_URL,match=url&&/^tcp:\/\/127\.0\.0\.1:(\d+)\/([a-f0-9-]+)$/u.exec(url);if(!match)throw new Error("Original loopback Bazel action cancellation control required");const cancelled=new AbortController(),socket=createConnection({host:"127.0.0.1",port:Number(match[1])});initializeBazelControlTextV1(socket);const token=match[2];let id:string|undefined,pending="",acknowledged=false,started=false,acceptJoin!:()=>void,refuseJoin!:(error:unknown)=>void,acceptClosed!:()=>void,refuseClosed!:(error:unknown)=>void;const joined=new Promise<void>((accept,refuse)=>{acceptJoin=accept;refuseJoin=refuse;}),terminated=new Promise<void>((accept,refuse)=>{acceptClosed=accept;refuseClosed=refuse;});void terminated.catch(()=>{});const fail=(error:unknown)=>{cancelled.abort(error);refuseJoin(error);refuseClosed(error);},interrupt=()=>{if(!started){const reason=invocation.control.signal.reason??Error("Original Bazel handshake cancelled");cancelled.abort(reason);refuseJoin(reason);if(!id)socket.destroy(reason);}},remaining=invocation.control.remainingMilliseconds(),handshake=remaining===null?undefined:setTimeout(()=>{refuseJoin(Error("Original Bazel handshake deadline exhausted"));if(!id)socket.destroy();},remaining);invocation.control.signal.addEventListener("abort",interrupt,{once:true});if(invocation.control.signal.aborted)interrupt();cancel?.addEventListener("abort",()=>cancelled.abort(cancel.reason??Error("Bazel work request cancelled")),{once:true});if(cancel?.aborted)cancelled.abort(cancel.reason);
  socket.on("error",fail);socket.once("close",()=>{if(!acknowledged)fail(Error("Original Bazel action control disconnected"));});socket.once("connect",()=>socket.write(JSON.stringify({version:1,event:"join",token})+"\n"));socket.on("data",chunk=>{pending+=chunk.toString();if(Buffer.byteLength(pending)>policy.maximumControlMessageBytes){fail(Error("Bazel action control exceeds its bounded message"));socket.destroy();return;}let end:number;while((end=pending.indexOf("\n"))>=0){let message;try{message=JSON.parse(pending.slice(0,end));}catch(error){fail(error);socket.destroy();return;}pending=pending.slice(end+1);if(!message||typeof message!=="object"||message.version!==1){fail(Error("Invalid Bazel action control"));socket.destroy();return;}if(message.event==="joined"&&typeof message.id==="string"&&!id){id=message.id;if(!cancelled.signal.aborted)socket.write(JSON.stringify({version:1,event:"start",token,id})+"\n");}else if(message.event==="started"&&id&&!started){started=true;if(handshake)clearTimeout(handshake);acceptJoin();}else if(message.event==="cancelled")cancelled.abort(Error("Original Bazel invocation cancelled"));else if(message.event==="acknowledged"){acknowledged=true;acceptClosed();}else{fail(Error("Invalid Bazel action control event"));socket.destroy();return;}}});
  return withBazelTaskCleanupV1(async()=>{await joined;return withScriptInvocationSignalV1(invocation,cancelled.signal,run);},async()=>{if(handshake)clearTimeout(handshake);invocation.control.signal.removeEventListener("abort",interrupt);const timer=setTimeout(()=>socket.destroy(Error("Bazel action termination receipt deadline exhausted")),policy.terminationReceiptMilliseconds);try{if(id&&!socket.destroyed)socket.write(JSON.stringify({version:1,event:"closed",token,id})+"\n");await terminated;}finally{clearTimeout(timer);socket.destroy();}});
 }
@@ -518,27 +716,31 @@ export async function runBazelTasksV1(root:string,graph:BuildGraphV1,request:Baz
 async function runBazelTasksInStorageV1(root:string,graph:BuildGraphV1,request:BazelTaskRequestV1,invocation:ScriptInvocation,storage:BazelStorageV1,phaseControl:ResourceLeaseControl,onStarted?:()=>void|Promise<void>):Promise<number>{
  await requireBazelStorageV1(root,storage);checkResourceLeaseControl(phaseControl);
  checkScriptInvocation(invocation);const signal=phaseControl.signal,original=issueBuildTaskEnvironmentV1(root,invocation,{kind:"noop"},[],process.env),bazel=await prepareBazel(root,storage.tools,phaseControl,event=>{if(event.phase!=="downloading")console.log(`[bazel] ${event.phase} ${event.bytes}/${event.total}`);},original.CARGO_NET_OFFLINE==="true"),modules=await prepareBazelModulesV1(root,bazel,invocation,storage,phaseControl);
+ const wanted=bazelActionsV1(graph,planBazelTasksV1(graph,request),request.skipCache===true,{hermetic:true}),hermetic=[...wanted.values()].some(action=>action.kind==="hermetic"),remote=hermetic?bazelRemoteExecutionV1(process.env):undefined;
+ if(hermetic)for(const id of new Set([bazelExecutionPlatformV1(process.platform,process.arch).id,...(remote?[remote.platform]:[])]))await prepareBazelBunV1(root,storage.tools,id,phaseControl,{offline:original.CARGO_NET_OFFLINE==="true",progress:event=>{if(event.phase!=="downloading")console.log(`[bazel] bun ${id} ${event.phase} ${event.bytes}/${event.total}`);}});
  const namespace=hash(JSON.stringify({selected:planBazelTasksV1(graph,request).selected,args:request.args,configuration:request.configuration})).slice(0,16),chain=(process.env.SEMIO_BAZEL_SELECTION_CHAIN??"").split(":").filter(Boolean);if(chain.includes(namespace))throw new Error("Recursive Bazel task selection refused");
  return withResourceLeases({directory:join(root,".cache/b/l/m/data"),signal,control:phaseControl,resources:[{resource:"bazel-workspace-"+namespace,mode:"exclusive"}]},async()=>{
-  const {workspace,plan,implementation}=await publishBazelGraphV1(root,graph,request,invocation,storage,phaseControl),emitted=bazelActionsV1(graph,plan,request.skipCache===true),outputRoot=join(storage.paths.outputs,hash(JSON.stringify({version:BAZEL_VERSION,platform:process.platform,arch:process.arch,idle:policy.serverIdleSeconds,jvm:"-Xmx2048m"})).slice(0,16)),cache=bazelCacheFlagsV1(storage.paths,workspace,{environment:process.env,skipCache:request.skipCache,skipRemoteCache:request.skipRemoteCache}),startup=[`--output_user_root=${outputRoot}`,`--max_idle_secs=${policy.serverIdleSeconds}`,`--install_base=${join(storage.paths.install,BAZEL_VERSION,process.platform+"-"+process.arch)}`,"--host_jvm_args=-Xmx2048m","--nosystem_rc","--nohome_rc",`--bazelrc=${join(root,".bazelrc")}`,...cache.startup],options=["--lockfile_mode=off","--incompatible_strict_action_env",...cache.command,`--jobs=${request.parallel??Math.max(1,Math.min(8,require("node:os").availableParallelism()))}`];
-  await writeChanged(join(workspace,"MODULE.bazel.lock"),modules.lock);options[0]="--lockfile_mode=error";options.push("--incompatible_autoload_externally=",`--repository_cache=${modules.repository}`,"--repository_disable_download");const environment={...storage.products.environment,SEMIO_BAZEL_SELECTION_CHAIN:[...chain,namespace].join(":"),...(process.platform==="darwin"?{LANG:"en_US.UTF-8",LC_ALL:"en_US.UTF-8"}:{})};await writeBazelRuntimeV1(workspace,root,scriptInvocationEnvironment(invocation,environment));
+  const {workspace,plan,implementation}=await publishBazelGraphV1(root,graph,request,invocation,storage,phaseControl),emitted=bazelActionsV1(graph,plan,request.skipCache===true,{hermetic:true}),workers=planWorkersV1(workerPolicy,currentWorkerHostV1(),{...(request.parallel?{jobs:request.parallel}:{}),...(request.workers===undefined?{}:{workers:request.workers})}),settings=bazelWorkerSettingsV1(workers),cache=bazelCacheFlagsV1(storage.paths,workspace,{environment:process.env,skipCache:request.skipCache,skipRemoteCache:request.skipRemoteCache}),profile=requireBazelPlatformProfileV1(cache),startup=[`--max_idle_secs=${policy.serverIdleSeconds}`,`--install_base=${join(storage.paths.install,BAZEL_VERSION,process.platform+"-"+process.arch)}`,"--host_jvm_args=-Xmx2048m","--nosystem_rc","--nohome_rc",`--bazelrc=${join(root,".bazelrc")}`,...cache.startup,...profile.startup],options=["--lockfile_mode=off","--incompatible_strict_action_env",...cache.command,...settings.flags];
+  if(cache.helper){await mkdir(dirname(cache.helper.path),{recursive:true});await writeChanged(cache.helper.path,cache.helper.content);await chmod(cache.helper.path,cache.helper.mode);}
+  if(hermetic){const execution=bazelExecutionFlagsV1({host:{platform:process.platform,arch:process.arch},hermetic,jobs:request.parallel??Math.max(1,Math.min(8,require("node:os").availableParallelism())),environment:process.env});options.push(...execution.command);if(execution.remote)options.push(`--jobs=${execution.jobs}`);}
+  await writeChanged(join(workspace,"MODULE.bazel.lock"),modules.lock);options[0]="--lockfile_mode=error";options.push(...profile.command,"--incompatible_autoload_externally=",`--repository_cache=${modules.repository}`,"--repository_disable_download");const environment={...storage.products.environment,SEMIO_BAZEL_SELECTION_CHAIN:[...chain,namespace].join(":"),SEMIO_BAZEL_WORKER_PLAN:JSON.stringify(workers),...profile.environment};await writeBazelRuntimeV1(workspace,root,scriptInvocationEnvironment(invocation,environment));const client=()=>({...environment,...cache.environment});
   if(request.bail!==true)options.push("--keep_going");if(request.verbose)options.push("--subcommands");
   const rendering=request.outputStyle?{outputStyle:request.outputStyle,output:(readIssuedScriptProcessEnvelopeV1(invocation).capabilities as NativeBuildCallerCapabilitiesV1).native.transport,control:phaseControl}:{};
-  const bin=resolve((await captureOwnedCommandV1(bazel,[...startup,"info","bazel-bin",...options.filter(option=>!option.startsWith("--jobs="))],workspace,{signal,control:phaseControl,env:environment})).trim().split("\n").at(-1)!);
+  const bin=resolve((await captureOwnedCommandV1(bazel,[...startup,"info","bazel-bin",...options.filter(option=>!settings.flags.includes(option))],workspace,{signal,control:phaseControl,env:client()})).trim().split("\n").at(-1)!);
   const controller=new AbortController(),cancel=()=>controller.abort(signal.reason),services:{task:BazelTaskV1;completion:Promise<void>}[]=[];let building:Promise<void>|undefined,rejectFailure!:(error:unknown)=>void;const failed=new Promise<never>((_resolve,reject)=>{rejectFailure=reject;});void failed.catch(()=>{});const fail=(error:unknown)=>{if(!controller.signal.aborted){rejectFailure(error);controller.abort(error);}};signal.addEventListener("abort",cancel,{once:true});if(signal.aborted)cancel();
-  if(!bin.includes(sep+"execroot"+sep))throw new Error("Original Bazel execution root required");const births=new Map<string,{digest:string;parameters:Readonly<Record<string,readonly (readonly string[])[]>>}>();for(const action of emitted.values()){if(action.kind==="noop")continue;checkScriptInvocation(invocation);const task=plan.tasks[action.id]!,source=await readFile(join(workspace,task.label+".json")),extension=process.platform==="win32"?".exe":"";births.set(task.id,{digest:hash(source),parameters:action.kind==="launch"?{launcher:[[join(bin,task.label+extension)]],launch:[action.restore.map(label=>join(bin,label+".snapshot"))]}:{action:[[join(bin,task.label+".snapshot"),...action.restore.map(label=>join(bin,label+".snapshot"))]]}});}const control=await bazelCancellationControl(invocation,controller.signal,births);Object.assign(environment,{SEMIO_BAZEL_CONTROL_URL:control.url});
+  if(!bin.includes(sep+"execroot"+sep))throw new Error("Original Bazel execution root required");const births=new Map<string,{digest:string;parameters:Readonly<Record<string,readonly (readonly string[])[]>>}>();for(const action of emitted.values()){if(action.kind==="noop"||action.kind==="hermetic")continue;checkScriptInvocation(invocation);const task=plan.tasks[action.id]!,source=await readFile(join(workspace,task.label+".json")),extension=bazelPlatformRulesV1(process.platform).launcherExtension;births.set(task.id,{digest:hash(source),parameters:action.kind==="launch"?{launcher:[[join(bin,task.label+extension)]],launch:[action.restore.map(label=>join(bin,label+".snapshot"))]}:{...(action.kind==="test"?{launcher:[[join(bin,task.label+extension)]],test:[action.restore.map(label=>join(bin,task.label+".runfiles","_main",label+".snapshot"))]}:{action:[[join(bin,task.label+".snapshot"),...action.restore.map(label=>join(bin,label+".snapshot"))]]})}});}const control=await bazelCancellationControl(invocation,controller.signal,births);Object.assign(environment,{SEMIO_BAZEL_CONTROL_URL:control.url});
   await withBazelTaskCleanupV1(async()=>{
    await writeBazelRuntimeV1(workspace,root,scriptInvocationEnvironment(invocation,environment));
    for(const task of Object.values(plan.tasks).filter(task=>task.definition.continuous)){
     let accept!:()=>void,refuse!:(error:unknown)=>void,observed=false;const ready=new Promise<void>((resolve,reject)=>{accept=resolve;refuse=reject;}),required=typeof task.definition.execution.readyWhen==="string"?[task.definition.execution.readyWhen]:Array.isArray(task.definition.execution.readyWhen)?task.definition.execution.readyWhen as string[]:[],seen=new Set<string>(),dependency=Object.values(plan.tasks).some(consumer=>consumer.dependencies.includes(task.id));
     const declaration=required.length?undefined:readReadinessDeclarationV1(task.definition.metadata,task.id),watch:ReadinessWatchV1|undefined=declaration?watchReadinessV1(resolveReadinessV1(declaration,{...process.env,...task.definition.execution.env},task.id),controller.signal):undefined;
     if(watch)void watch.ready.then(address=>{if(!observed){observed=true;console.log(`[bazel] task-ready ${task.id} ${address}`);accept();}});
-    const completion=runOwnedCommand(bazel,[...startup,"run",...options,"//:"+task.label,"--",implementation.runner,implementation.snapshot,implementation.sha256,"birth-launch",join(workspace,task.label+".json"),...emitted.get(task.id)!.restore.map(label=>join(bin,label+".snapshot"))],workspace,task.id,compilerAdmissionBudgetV1(phaseControl),{...rendering,signal:control.commandSignal,env:environment,onLine:line=>{if(watch){watch.observe(line+"\n");return;}for(const marker of required)if(line.includes(marker))seen.add(marker);if(required.length?seen.size===required.length:line.includes(`[bazel] task-started ${task.id}`)){observed=true;accept();}}});
+    const completion=runOwnedCommand(bazel,[...startup,"run",...options,"//:"+task.label,"--",implementation.runner,implementation.snapshot,implementation.sha256,"birth-launch",join(workspace,task.label+".json"),...emitted.get(task.id)!.restore.map(label=>join(bin,label+".snapshot"))],workspace,task.id,compilerAdmissionBudgetV1(phaseControl),{...rendering,signal:control.commandSignal,env:client(),onLine:line=>{if(watch){watch.observe(line+"\n");return;}for(const marker of required)if(line.includes(marker))seen.add(marker);if(required.length?seen.size===required.length:line.includes(`[bazel] task-started ${task.id}`)){observed=true;accept();}}});
     completion.then(()=>{watch?.stop();if(!controller.signal.aborted&&(!observed||dependency)){const error=Error(`Continuous task exited ${observed?"while required by selected tasks":"before readiness"}: ${task.id}`);refuse(error);fail(error);}},error=>{watch?.stop();refuse(error);fail(error);});services.push({task,completion});await Promise.race([ready,failed]);
    }
-   building=runOwnedCommand(bazel,[...startup,"build",...options,`--build_event_json_file=${bazelBuildEventsFileV1(storage.paths,workspace)}`,...plan.selected.map(id=>"//:"+plan.tasks[id]!.label)],workspace,"bazel:build",compilerAdmissionBudgetV1(phaseControl),{...rendering,signal:control.commandSignal,env:environment}).finally(()=>recordBazelBuildMetricsV1(root,storage.paths,workspace,phaseControl));
+   const tests=plan.selected.filter(id=>emitted.get(id)!.kind==="test");building=runOwnedCommand(bazel,[...startup,tests.length?"test":"build",...options,...(tests.length?[`--test_output=${tests.length===1?"all":"errors"}`,"--test_summary=short","--enable_runfiles"]:[]),`--build_event_json_file=${bazelBuildEventsFileV1(storage.paths,workspace)}`,...plan.selected.map(id=>"//:"+plan.tasks[id]!.label)],workspace,"bazel:build",compilerAdmissionBudgetV1(phaseControl),{...rendering,signal:control.commandSignal,env:client()}).finally(()=>recordBazelBuildMetricsV1(root,storage.paths,workspace,phaseControl));
    await Promise.race([building,failed]);
-   for(const id of plan.selected){const action=emitted.get(id)!;if(action.kind==="task")await restoreBazelSnapshotV1(root,join(bin,action.label+".snapshot"),invocation,phaseControl);}
+   for(const id of plan.selected){const action=emitted.get(id)!;if(action.kind==="task"||action.kind==="hermetic")await restoreBazelSnapshotV1(root,join(bin,action.label+".snapshot"),invocation,phaseControl);}
    await Promise.race([Promise.resolve(onStarted?.()),failed]);
    await Promise.race([Promise.all(services.filter(service=>plan.selected.includes(service.task.id)).map(service=>service.completion)),failed]);
   },async()=>{controller.abort(Error("Bazel selected task closure completed"));await withBazelTaskCleanupV1(()=>control.stop(),async()=>{await Promise.allSettled([...services.map(service=>service.completion),...(building?[building]:[])]);signal.removeEventListener("abort",cancel);});});
@@ -552,20 +754,66 @@ async function readBazelBirthFileV1(path:string,maximumBytes:number,deadline:()=
 }
 
 /** 🐣️ Obtains unchanged current authority from the live owned parent before the actual action child is born. */
-async function launchBazelActionBirthV1(kind:string,file:string,parameters:readonly string[],implementation:BazelImplementationV1):Promise<void>{
- const protocol=birthSchema.definitions.Protocol.const,started=performance.now(),initial=()=>{if(performance.now()-started>=protocol.maximumHandshakeMilliseconds)throw new Error("Bazel action birth handshake deadline exhausted");},manifestPath=await realpath(resolve(file)),manifestBytes=await readBazelBirthFileV1(manifestPath,protocol.maximumManifestBytes,initial),manifest=JSON.parse(manifestBytes.toString("utf8")) as BazelTaskManifestV1;requireBazelManifestV1(manifest,implementation);if(typeof manifest.task.id!=="string")throw new Error("Bazel birth rendezvous required");const environment=(await readBazelRuntimeV1(manifestPath,implementation,initial)).environment,expected=environment.SEMIO_SCRIPT_PROCESS_INVOCATION;if(typeof expected!=="string")throw new Error("Bazel birth wire expectation required");const envelope=readScriptProcessEnvelope(JSON.parse(expected),Date.now()),remaining=()=>{initial();if(envelope.deadlineEpochMilliseconds!==null&&envelope.deadlineEpochMilliseconds<=Date.now())throw new Error("Original Bazel action birth deadline exhausted");},match=/^tcp:\/\/127\.0\.0\.1:(\d+)\/([a-f0-9-]+)$/u.exec(environment.SEMIO_BAZEL_CONTROL_URL??"");if(!match)throw new Error("Owned Bazel birth rendezvous required");remaining();
+async function launchBazelActionBirthV1(kind:string,file:string,parameters:readonly string[],implementation:BazelImplementationV1,worker?:AbortSignal):Promise<void>{
+ const protocol=birthSchema.definitions.Protocol.const,started=performance.now(),initial=()=>{if(performance.now()-started>=protocol.maximumHandshakeMilliseconds)throw new Error("Bazel action birth handshake deadline exhausted");},manifestPath=await realpath(resolve(file)),manifestBytes=await readBazelBirthFileV1(manifestPath,protocol.maximumManifestBytes,initial),manifest=JSON.parse(manifestBytes.toString("utf8")) as BazelTaskManifestV1;requireBazelManifestV1(manifest,implementation);if(typeof manifest.task.id!=="string")throw new Error("Bazel birth rendezvous required");const environment=(await readBazelRuntimeV1(manifestPath,implementation,initial)).environment,expected=environment.SEMIO_SCRIPT_PROCESS_INVOCATION;if(typeof expected!=="string")throw new Error("Bazel birth wire expectation required");const inProcess=worker!==undefined&&bazelWorkerInProcessV1(manifest,environment);const envelope=readScriptProcessEnvelope(JSON.parse(expected),Date.now()),remaining=()=>{initial();if(envelope.deadlineEpochMilliseconds!==null&&envelope.deadlineEpochMilliseconds<=Date.now())throw new Error("Original Bazel action birth deadline exhausted");},match=/^tcp:\/\/127\.0\.0\.1:(\d+)\/([a-f0-9-]+)$/u.exec(environment.SEMIO_BAZEL_CONTROL_URL??"");if(!match)throw new Error("Owned Bazel birth rendezvous required");remaining();
  const birth={kind,task:manifest.task.id,manifestSha256:hash(manifestBytes),parameters:parameters.map(path=>resolve(path))};if(validateJsonSchemaSubset(birthSchema,birth).length||birth.parameters.some(path=>path.length>256))throw new Error("Closed Bazel action birth required");const controller=new AbortController(),socket=createConnection({host:"127.0.0.1",port:Number(match[1])});initializeBazelControlTextV1(socket);let id:string|undefined,pending="",acknowledged=false,issued=false,acceptJoin!:(wire:string)=>void,refuseJoin!:(error:unknown)=>void,acceptClosed!:()=>void,refuseClosed!:(error:unknown)=>void;const joined=new Promise<string>((accept,refuse)=>{acceptJoin=accept;refuseJoin=refuse;}),closed=new Promise<void>((accept,refuse)=>{acceptClosed=accept;refuseClosed=refuse;});void closed.catch(()=>{});const fail=(error:unknown)=>{controller.abort(error);refuseJoin(error);refuseClosed(error);},send=(value:object)=>{const message=JSON.stringify(value)+"\n";if(Buffer.byteLength(message)>policy.maximumControlMessageBytes)throw new Error("Bazel birth message exceeds finite control boundary");socket.write(message);},handshake=setTimeout(()=>fail(Error("Bazel action birth handshake deadline exhausted")),Math.max(1,Math.min(protocol.maximumHandshakeMilliseconds-(performance.now()-started),envelope.deadlineEpochMilliseconds===null?protocol.maximumHandshakeMilliseconds:envelope.deadlineEpochMilliseconds-Date.now())));
  socket.on("error",fail);socket.once("close",()=>{if(!acknowledged)fail(Error("Original Bazel birth parent disconnected"));});socket.once("connect",()=>{try{remaining();send({version:1,event:"join",token:match[2],birth});}catch(error){fail(error);}});socket.on("data",chunk=>{pending+=chunk.toString();if(Buffer.byteLength(pending)>policy.maximumControlMessageBytes){fail(Error("Bazel birth response exceeds finite control boundary"));return;}let end:number;while((end=pending.indexOf("\n"))>=0){try{const message=JSON.parse(pending.slice(0,end));pending=pending.slice(end+1);if(message.version!==1)throw new Error("Bazel birth response refused");if(message.event==="joined"&&!id&&typeof message.id==="string"&&message.wire===expected){remaining();id=message.id;send({version:1,event:"start",token:match[2],id});}else if(message.event==="started"&&id&&!issued){issued=true;clearTimeout(handshake);acceptJoin(expected);}else if(message.event==="cancelled")fail(Error("Original Bazel birth parent cancelled"));else if(message.event==="acknowledged"){acknowledged=true;acceptClosed();}else throw new Error("Bazel birth response refused");}catch(error){fail(error);}}});
- let primaryFailed=false;try{const wire=await joined;await withScriptProcessEnvelope(readScriptProcessEnvelope(JSON.parse(wire),Date.now()),original=>withScriptInvocationSignalV1(original,controller.signal,async invocation=>{await advanceScriptInvocation(invocation,"bazel:owned-action-child","running");await runOwnedCommand(process.execPath,[implementation.runner,implementation.snapshot,implementation.sha256,kind,manifestPath,...birth.parameters],process.cwd(),"bazel:owned-action-child",scriptInvocationBudget(invocation,0),{env:scriptInvocationEnvironment(invocation,{...environment,SEMIO_BAZEL_MANIFEST_SHA256:birth.manifestSha256}),signal:invocation.control.signal,onProgress:()=>advanceScriptInvocation(invocation,"bazel:owned-action-child","running")});checkScriptInvocation(invocation);}));}catch(error){primaryFailed=true;throw error;}finally{clearTimeout(handshake);const timer=setTimeout(()=>socket.destroy(Error("Bazel birth termination receipt deadline exhausted")),policy.terminationReceiptMilliseconds);try{if(id&&!socket.destroyed){send({version:1,event:"closed",token:match[2],id});await closed;}}catch(error){if(!primaryFailed)throw error;}finally{clearTimeout(timer);socket.destroy();}}
+ worker?.addEventListener("abort",()=>fail(worker.reason??Error("Bazel work request cancelled")),{once:true});if(worker?.aborted)fail(worker.reason??Error("Bazel work request cancelled"));
+ let primaryFailed=false;try{const wire=await joined;await withScriptProcessEnvelope(readScriptProcessEnvelope(JSON.parse(wire),Date.now()),original=>withScriptInvocationSignalV1(original,controller.signal,async invocation=>{await advanceScriptInvocation(invocation,"bazel:owned-action-child","running");const childEnvironment=scriptInvocationEnvironment(invocation,{...environment,SEMIO_BAZEL_MANIFEST_SHA256:birth.manifestSha256});if(inProcess)await inProcessLockV1(()=>runBazelActionInProcessV1([kind,manifestPath,...birth.parameters],implementation,childEnvironment,worker));else await runOwnedCommand(process.execPath,[implementation.runner,implementation.snapshot,implementation.sha256,kind,manifestPath,...birth.parameters],process.cwd(),"bazel:owned-action-child",scriptInvocationBudget(invocation,0),{env:childEnvironment,signal:invocation.control.signal,onProgress:()=>advanceScriptInvocation(invocation,"bazel:owned-action-child","running")});checkScriptInvocation(invocation);}));}catch(error){primaryFailed=true;throw error;}finally{clearTimeout(handshake);const timer=setTimeout(()=>socket.destroy(Error("Bazel birth termination receipt deadline exhausted")),policy.terminationReceiptMilliseconds);try{if(id&&!socket.destroyed){send({version:1,event:"closed",token:match[2],id});await closed;}}catch(error){if(!primaryFailed)throw error;}finally{clearTimeout(timer);socket.destroy();}}
 }
 
 /** 🏃️ Executes only the checksum-bound captured backend inside the actual child birth. */
 export async function runCapturedBuildSourceV1(argv:string[],proof?:{version:1;snapshot:string;sha256:string;loaderSha256?:string;recheck?:()=>void}):Promise<void>{
- if(!proof||proof.version!==1||import.meta.semioCapturedImplementationIdentity!==proof.sha256||import.meta.semioCapturedLoaderIdentity!==proof.loaderSha256||proof.loaderSha256!==hash(buildSourceClosureLoaderV1))throw new Error("Captured Bazel loader identity required");const implementation:BazelImplementationV1={version:1,snapshot:proof.snapshot,runner:join(dirname(proof.snapshot),"📜️script.ts"),sha256:proof.sha256,loaderSha256:proof.loaderSha256};requireBazelImplementationV1(implementation,implementation);if(argv[0]==="planner"){if(typeof proof.recheck!=="function")throw new Error("Captured planner Source recheck required");const recheck=proof.recheck;await receiveScriptProcessInvocation(process.env,async original=>{const[input,digest,output]=argv.slice(1);if(!input||!output||!isAbsolute(input)||!isAbsolute(output)||dirname(input)!==dirname(implementation.snapshot)||dirname(output)!==dirname(input))throw new Error("Owned captured planner data paths required");const bytes=await readBazelBirthFileV1(input,plannerSchema.definitions.Policy.const.maximumDataBytes,()=>checkScriptInvocation(original));if(hash(bytes)!==digest)throw new Error("Captured planner data changed");const value=JSON.parse(bytes.toString("utf8"));if(validateJsonSchemaSubset(plannerSchema,value).length)throw new Error("Closed captured planner data required");requireBazelImplementationV1(value.implementation,implementation);issueBuildTaskEnvironmentV1(value.root,original,{kind:"noop"},[],process.env);const graph=readBuildGraphV1(value.graph);recheck();await withBazelStorageV1(value.root,original,createIssuedResourceControlV1(original,"cache:entry",0),async(storage,actualPhase)=>{if(value.workspace!==dirname(implementation.snapshot)||!value.workspace.startsWith(storage.paths.workspace+sep))throw new Error("Declared captured planner workspace required");const result=await publishCapturedBazelGraphV1(value.root,graph,value.request,original,storage,actualPhase,implementation,recheck);if(validateJsonSchemaSubset(plannerSchema.definitions.Result,result).length)throw new Error("Closed captured Bazel planner result required");recheck();checkScriptInvocation(original);await writeBazelImmutableInputV1(output,JSON.stringify(result),plannerSchema.definitions.Policy.const.maximumDataBytes,original);checkScriptInvocation(original);});});return;}if(argv[0]?.startsWith("birth-")){await launchBazelActionBirthV1(argv[0].slice(6),argv[1]!,argv.slice(2),implementation);}else{
- const [command,file,...parameters]=argv,output=command==="launch"?undefined:parameters.shift(),dependencies=parameters;if(!["action","launch","launcher"].includes(command??"")||!file||command!=="launch"&&!output)throw new Error("Expected Bazel action manifest output [dependency snapshots]");
- const actualBirth=readScriptProcessEnvelope(JSON.parse(process.env.SEMIO_SCRIPT_PROCESS_INVOCATION??"null"),Date.now()),checkBirth=()=>{if(actualBirth.deadlineEpochMilliseconds!==null&&actualBirth.deadlineEpochMilliseconds<=Date.now())throw new Error("Original Bazel child deadline exhausted");},manifestPath=await realpath(resolve(file)),manifestBytes=await readBazelBirthFileV1(manifestPath,birthSchema.definitions.Protocol.const.maximumManifestBytes,checkBirth);if(!/^[a-f0-9]{64}$/u.test(process.env.SEMIO_BAZEL_MANIFEST_SHA256??"")||hash(manifestBytes)!==process.env.SEMIO_BAZEL_MANIFEST_SHA256)throw new Error("Original Bazel action birth manifest changed");const manifest=JSON.parse(manifestBytes.toString("utf8")) as BazelTaskManifestV1;requireBazelManifestV1(manifest,implementation);const runtime=await readBazelRuntimeV1(manifestPath,implementation,checkBirth),environment=runtime.environment;
- await receiveScriptProcessInvocation(environment,async original=>{if(command==="launcher"){await link(process.execPath,resolve(output!)).catch(()=>copyFile(process.execPath,resolve(output!)));await chmod(resolve(output!),0o755);return;}await withBazelCancellation(environment,original,async invocation=>{const actionPhase=createIssuedResourceControlV1(invocation,"bazel:task-admission",0),run=async()=>withRepositoryCacheStoreV1(runtime.workspace,"graph",invocation,actionPhase,async(_graph,graphPhase)=>{for(const dependency of dependencies)await restoreBazelSnapshotV1(runtime.workspace,resolve(dependency),invocation,actionPhase);const previous=process.env;process.env={...previous,...environment};try{await executeTask(manifest,runtime.workspace,invocation,graphPhase);if(command==="action")await captureBazelSnapshotV1({workspace:runtime.workspace,task:manifest.task},resolve(output!),invocation);}finally{process.env=previous;}});if(command==="launch")await run();else await withResourceLeases({directory:join(runtime.workspace,".cache/b/l/m/data"),signal:invocation.control.signal,control:actionPhase,resources:[{resource:"bazel-task-schedule-"+hash(dirname(manifestPath)).slice(0,16),mode:manifest.task.definition.parallelism===false?"exclusive":"shared"}]},run);});});
+ if(!proof||proof.version!==1||import.meta.semioCapturedImplementationIdentity!==proof.sha256||import.meta.semioCapturedLoaderIdentity!==proof.loaderSha256||proof.loaderSha256!==hash(buildSourceClosureLoaderV1))throw new Error("Captured Bazel loader identity required");const implementation:BazelImplementationV1={version:1,snapshot:proof.snapshot,runner:join(dirname(proof.snapshot),"📜️script.ts"),sha256:proof.sha256,loaderSha256:proof.loaderSha256};requireBazelImplementationV1(implementation,implementation);if(argv[0]==="planner"){if(typeof proof.recheck!=="function")throw new Error("Captured planner Source recheck required");const recheck=proof.recheck;await receiveScriptProcessInvocation(process.env,async original=>{const[input,digest,output]=argv.slice(1);if(!input||!output||!isAbsolute(input)||!isAbsolute(output)||dirname(input)!==dirname(implementation.snapshot)||dirname(output)!==dirname(input))throw new Error("Owned captured planner data paths required");const bytes=await readBazelBirthFileV1(input,plannerSchema.definitions.Policy.const.maximumDataBytes,()=>checkScriptInvocation(original));if(hash(bytes)!==digest)throw new Error("Captured planner data changed");const value=JSON.parse(bytes.toString("utf8"));if(validateJsonSchemaSubset(plannerSchema,value).length)throw new Error("Closed captured planner data required");requireBazelImplementationV1(value.implementation,implementation);issueBuildTaskEnvironmentV1(value.root,original,{kind:"noop"},[],process.env);const graph=readBuildGraphV1(value.graph);recheck();await withBazelStorageV1(value.root,original,createIssuedResourceControlV1(original,"cache:entry",0),async(storage,actualPhase)=>{if(value.workspace!==dirname(implementation.snapshot)||!value.workspace.startsWith(storage.paths.workspace+sep))throw new Error("Declared captured planner workspace required");const result=await publishCapturedBazelGraphV1(value.root,graph,value.request,original,storage,actualPhase,implementation,recheck);if(validateJsonSchemaSubset(plannerSchema.definitions.Result,result).length)throw new Error("Closed captured Bazel planner result required");recheck();checkScriptInvocation(original);await writeBazelImmutableInputV1(output,JSON.stringify(result),plannerSchema.definitions.Policy.const.maximumDataBytes,original);checkScriptInvocation(original);});});return;}if(argv[0]==="work-action"){await serveBazelWorkV1(argv.slice(1),implementation,proof.recheck);return;}if(argv[0]?.startsWith("birth-")){await launchBazelActionBirthV1(argv[0].slice(6),argv[1]!,argv.slice(2),implementation);}else await runBazelActionV1(argv,implementation);
 }
+
+/** 🏃️ Runs one captured action, launcher or launch under the original birth the caller holds. */
+async function runBazelActionV1(argv:string[],implementation:BazelImplementationV1,cancel?:AbortSignal):Promise<void>{
+ const [command,file,...parameters]=argv,output=command==="launch"||command==="test"?undefined:parameters.shift(),dependencies=parameters;if(!["action","launch","launcher","test"].includes(command??"")||!file||command!=="launch"&&command!=="test"&&!output)throw new Error("Expected Bazel action manifest output [dependency snapshots]");
+ const actualBirth=readScriptProcessEnvelope(JSON.parse(process.env.SEMIO_SCRIPT_PROCESS_INVOCATION??"null"),Date.now()),checkBirth=()=>{if(actualBirth.deadlineEpochMilliseconds!==null&&actualBirth.deadlineEpochMilliseconds<=Date.now())throw new Error("Original Bazel child deadline exhausted");},manifestPath=await realpath(resolve(file)),manifestBytes=await readBazelBirthFileV1(manifestPath,birthSchema.definitions.Protocol.const.maximumManifestBytes,checkBirth);if(!/^[a-f0-9]{64}$/u.test(process.env.SEMIO_BAZEL_MANIFEST_SHA256??"")||hash(manifestBytes)!==process.env.SEMIO_BAZEL_MANIFEST_SHA256)throw new Error("Original Bazel action birth manifest changed");const manifest=JSON.parse(manifestBytes.toString("utf8")) as BazelTaskManifestV1;requireBazelManifestV1(manifest,implementation);const runtime=await readBazelRuntimeV1(manifestPath,implementation,checkBirth),environment=runtime.environment;
+ await receiveScriptProcessInvocation(environment,async original=>{if(command==="launcher"){await link(process.execPath,resolve(output!)).catch(()=>copyFile(process.execPath,resolve(output!)));await chmod(resolve(output!),0o755);return;}await withBazelCancellation(environment,original,async invocation=>{const actionPhase=createIssuedResourceControlV1(invocation,"bazel:task-admission",0),run=async()=>withRepositoryCacheStoreV1(runtime.workspace,"graph",invocation,actionPhase,async(_graph,graphPhase)=>{for(const dependency of dependencies)await restoreBazelSnapshotV1(runtime.workspace,resolve(dependency),invocation,actionPhase);const previous=process.env;process.env={...previous,...environment};try{await executeTask(manifest,runtime.workspace,invocation,graphPhase);if(command==="action")await captureBazelSnapshotV1({workspace:runtime.workspace,task:manifest.task},resolve(output!),invocation);}finally{process.env=previous;}});if(command==="launch")await run();else await withResourceLeases({directory:join(runtime.workspace,".cache/b/l/m/data"),signal:invocation.control.signal,control:actionPhase,resources:[{resource:"bazel-task-schedule-"+hash(dirname(manifestPath)).slice(0,16),mode:manifest.task.definition.parallelism===false?"exclusive":"shared"}]},run);},cancel);});
+}
+
+/** 👷️ Runs the action body in this process under the environment its own child process would have received. */
+async function runBazelActionInProcessV1(argv:string[],implementation:BazelImplementationV1,environment:NodeJS.ProcessEnv,cancel?:AbortSignal):Promise<void>{
+ const previous=process.env;process.env={...environment};
+ try{await runBazelActionV1(argv,implementation,cancel);}finally{process.env=previous;}
+}
+
+let workerPlanV1:WorkerPlanV1|undefined,inProcessTailV1:Promise<unknown>=Promise.resolve();
+
+/** 👷️ Runs in-process action bodies one at a time, because they borrow the process environment; actions that run in child processes stay concurrent. */
+function inProcessLockV1<T>(run:()=>Promise<T>):Promise<T>{
+ const next=inProcessTailV1.then(run,run);inProcessTailV1=next.catch(()=>{});return next;
+}
+
+/** 👷️ Tells whether the plan of this invocation runs the task's action kind in the worker process. */
+function bazelWorkerInProcessV1(manifest:BazelTaskManifestV1,environment:NodeJS.ProcessEnv):boolean{
+ const encoded=environment.SEMIO_BAZEL_WORKER_PLAN;if(!encoded)return false;
+ const plan=JSON.parse(encoded);requireWorkerPlanV1(plan);workerPlanV1=plan;
+ return plan.kinds[workerActionKindV1(workerPolicy,manifest.task.target,manifest.task.definition.continuous===true)].inProcess;
+}
+
+/** 👷️ Handles one work request: manifest, output and dependency snapshots name one action birth. */
+async function runBazelWorkRequestV1(parameters:readonly string[],implementation:BazelImplementationV1,worker?:AbortSignal):Promise<void>{
+ const [manifest,output,...snapshots]=parameters;
+ if(!manifest||!output)throw new Error("Bazel work request requires a manifest and an output");
+ await launchBazelActionBirthV1("action",manifest,[output,...snapshots],implementation,worker);
+}
+
+/** 👷️ Serves a persistent Bazel worker over the JSON worker protocol, or runs the single request of one flagfile like any other action. Everything the actions print is returned in their responses, so standard output carries nothing but responses. */
+async function serveBazelWorkV1(args:readonly string[],implementation:BazelImplementationV1,recheck?:()=>void):Promise<void>{
+ if(!args.includes("--persistent_worker")){
+  const flagfile=args[0];if(args.length!==1||!flagfile?.startsWith("@"))throw new Error("Expected Bazel work-action --persistent_worker or one @flagfile");
+  await runBazelWorkRequestV1((await readFile(flagfile.slice(1),"utf8")).split("\n").filter(Boolean),implementation);return;
+ }
+ const capture=installWorkerOutputCaptureV1();workerChildInputV1="";
+ try{
+  await serveWorkerV1({input:readWorkerInputV1(),write:capture.writeProtocol,concurrency:1024,
+   handler:async(request,{signal})=>{const result=await capture.run(async()=>{try{recheck?.();await runBazelWorkRequestV1(request.arguments,implementation,signal);return 0;}catch(error){process.stderr.write(String((error as Error)?.stack??error)+"\n");return 1;}});return {exitCode:result.value,output:result.output};},
+   afterRequest:served=>{const plan=workerPlanV1;if(plan&&(served%plan.resetAfterRequests===0||process.memoryUsage.rss()>plan.memory.perWorkerMegabytes*1048576))Bun.gc(true);}
+  });
+ }finally{capture.restore();workerChildInputV1=undefined;}
 }
 
 if(import.meta.main)throw new Error("Bazel task entry requires its captured implementation loader");

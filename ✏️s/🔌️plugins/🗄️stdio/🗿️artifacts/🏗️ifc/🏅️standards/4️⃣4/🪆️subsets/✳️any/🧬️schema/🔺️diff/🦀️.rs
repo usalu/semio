@@ -652,9 +652,9 @@ pub fn diff_remove_entity_arg(id: u64, index: usize) -> IfcDiff {
 //#region 🔖️DemoCases
 /// 🧪️ Representative `IfcDiff` cases built declaratively — `diff_grammar_conformance_law` and `protocol_walk_law` fodder: the empty
 /// diff, header lanes with an entity row triple (removed/modified args/added), and a header-only diff.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<IfcDiff> {
+pub fn demo_diff_cases() -> Vec<IfcDiff> {
     let entities = IfcEntitiesDiff {
         removed: vec![2],
         modified: vec![IfcEntityModified { id: 1, diff: IfcEntityDiff { name: Some("IFCQUANTITYVOLUME".into()), args: Some(IfcArgsDiff { removed: vec![0], ..Default::default() }), complex: Some(Vec::new()) } }],

@@ -281,13 +281,13 @@ fn lowpoly_retained_reduce(
         LowpolyCommand::TranslateSelection(payload) => read_threaded!(|doc, cfg, ctx| translate_selection::handle(payload, doc, cfg, ctx)),
         LowpolyCommand::RotateSelection(payload) => read_threaded!(|doc, cfg, ctx| rotate_selection::handle(payload, doc, cfg, ctx)),
         LowpolyCommand::ScaleSelection(payload) => read_threaded!(|doc, cfg, ctx| scale_selection::handle(payload, doc, cfg, ctx)),
-        LowpolyCommand::PaintStroke(payload) => return paint::lowpoly_paint_step(payload.phase.as_deref(), payload.reason.as_deref(), payload.object_id.as_deref(), &payload.points(), true, snapshot, config, context, operation),
-        LowpolyCommand::PaintAt(payload) => return paint::lowpoly_paint_step(payload.phase.as_deref(), payload.reason.as_deref(), payload.object_id.as_deref(), &payload.points(), true, snapshot, config, context, operation),
-        LowpolyCommand::CanvasPointerDown(payload) => return paint::lowpoly_paint_step(Some("stream"), None, payload.object_id.as_deref(), &payload.points(), true, snapshot, config, context, operation),
-        LowpolyCommand::CanvasPointerMove(payload) => return paint::lowpoly_paint_step(Some("stream"), None, payload.object_id.as_deref(), &payload.points(), false, snapshot, config, context, operation),
+        LowpolyCommand::PaintStroke(payload) => return lowpoly_paint_step(payload.phase.as_deref(), payload.reason.as_deref(), payload.object_id.as_deref(), &payload.points(), true, snapshot, config, context, operation),
+        LowpolyCommand::PaintAt(payload) => return lowpoly_paint_step(payload.phase.as_deref(), payload.reason.as_deref(), payload.object_id.as_deref(), &payload.points(), true, snapshot, config, context, operation),
+        LowpolyCommand::CanvasPointerDown(payload) => return lowpoly_paint_step(Some("stream"), None, payload.object_id.as_deref(), &payload.points(), true, snapshot, config, context, operation),
+        LowpolyCommand::CanvasPointerMove(payload) => return lowpoly_paint_step(Some("stream"), None, payload.object_id.as_deref(), &payload.points(), false, snapshot, config, context, operation),
         LowpolyCommand::CanvasPointerUp(payload) => {
             let (phase, reason) = payload.phase();
-            return paint::lowpoly_paint_step(Some(phase), reason, None, &[], false, snapshot, config, context, operation);
+            return lowpoly_paint_step(Some(phase), reason, None, &[], false, snapshot, config, context, operation);
         }
         LowpolyCommand::AddPrimitive(payload) => threaded!(|doc, cfg, ctx| add_primitive::handle(payload, doc, cfg, ctx)),
         LowpolyCommand::DeleteSelection(payload) => threaded!(|doc, cfg, ctx| delete_selection::handle(payload, doc, cfg, ctx)),

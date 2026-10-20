@@ -1,0 +1,4 @@
+registerTests1 3 phases, keep=-, final return=false
+32-181 registerPlaygroundFlowWasmDevTests
+193-318 registerPlaygroundPlayBootHtmlTests
+335-409 registerSemioFaviconVitePluginTests

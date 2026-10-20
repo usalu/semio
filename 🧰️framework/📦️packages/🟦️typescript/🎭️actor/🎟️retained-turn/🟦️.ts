@@ -1,0 +1,3 @@
+/** 🧩️ Public `@semio-tech/framework/actor/retained-turn` entry: explicit re-exports of the source module that owns each member. */
+export { KernelOriginalOperationIssuer, KernelOriginalResourcePool, OriginalOperationReceiptRefusal, OriginalOperationSource, originalOperationWorkerSource, originalReceiptFromWit, originalRetainedReceiptSchema, originalTurnWit } from "@semio-tech/framework-actor/retained-turn";
+export type { OriginalOperationAdmission, OriginalOperationPhysicalSpent, OriginalOperationReceipt, OriginalOperationResources, OriginalOperationTurn, OriginalRetainedGrant, OriginalRetainedInput, OriginalRetainedProgress, OriginalWireGrant, OriginalWireInput, OriginalWireReceipt } from "@semio-tech/framework-actor/retained-turn";

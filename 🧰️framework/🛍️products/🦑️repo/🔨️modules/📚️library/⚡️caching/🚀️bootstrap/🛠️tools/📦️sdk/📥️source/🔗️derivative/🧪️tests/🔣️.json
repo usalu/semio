@@ -258,5 +258,154 @@
     "maximumConcurrent": 16,
     "failureStat": 3,
     "maximumFileStats": 1
-  }
+  },
+  "copyCheckpoints": [
+    {
+      "records": 16,
+      "barrier": "aligned",
+      "kind": "files",
+      "fault": "none",
+      "checkpoints": 0,
+      "peak": 0,
+      "outcome": "value"
+    },
+    {
+      "records": 127,
+      "barrier": "aligned",
+      "kind": "files",
+      "fault": "none",
+      "checkpoints": 0,
+      "peak": 0,
+      "outcome": "value"
+    },
+    {
+      "records": 128,
+      "barrier": "aligned",
+      "kind": "files",
+      "fault": "none",
+      "checkpoints": 1,
+      "peak": 1,
+      "outcome": "value"
+    },
+    {
+      "records": 256,
+      "barrier": "aligned",
+      "kind": "files",
+      "fault": "none",
+      "checkpoints": 2,
+      "peak": 1,
+      "outcome": "value"
+    },
+    {
+      "records": 256,
+      "barrier": "held",
+      "kind": "files",
+      "fault": "none",
+      "checkpoints": 2,
+      "peak": 1,
+      "outcome": "value"
+    },
+    {
+      "records": 128,
+      "barrier": "aligned",
+      "kind": "mixed",
+      "fault": "none",
+      "checkpoints": 1,
+      "peak": 1,
+      "outcome": "value"
+    },
+    {
+      "records": 256,
+      "barrier": "aligned",
+      "kind": "files",
+      "fault": "checkpoint-error",
+      "checkpoints": 1,
+      "peak": 1,
+      "outcome": "error"
+    },
+    {
+      "records": 256,
+      "barrier": "aligned",
+      "kind": "files",
+      "fault": "checkpoint-undefined",
+      "checkpoints": 1,
+      "peak": 1,
+      "outcome": "undefined-error"
+    },
+    {
+      "records": 128,
+      "barrier": "aligned",
+      "kind": "files",
+      "fault": "publish-cancel",
+      "checkpoints": 0,
+      "peak": 0,
+      "outcome": "error"
+    }
+  ],
+  "readCheckpoints": [
+    {
+      "operation": "capture",
+      "records": 256,
+      "fault": "none",
+      "checkpoints": 2,
+      "peak": 1,
+      "outcome": "value"
+    },
+    {
+      "operation": "capture",
+      "records": 256,
+      "fault": "checkpoint-error",
+      "checkpoints": 1,
+      "peak": 1,
+      "outcome": "error"
+    },
+    {
+      "operation": "capture",
+      "records": 256,
+      "fault": "checkpoint-undefined",
+      "checkpoints": 1,
+      "peak": 1,
+      "outcome": "undefined-error"
+    },
+    {
+      "operation": "capture",
+      "records": 256,
+      "fault": "publish-cancel",
+      "checkpoints": 0,
+      "peak": 0,
+      "outcome": "error"
+    },
+    {
+      "operation": "verification",
+      "records": 256,
+      "fault": "none",
+      "checkpoints": 2,
+      "peak": 1,
+      "outcome": "value"
+    },
+    {
+      "operation": "verification",
+      "records": 256,
+      "fault": "checkpoint-error",
+      "checkpoints": 1,
+      "peak": 1,
+      "outcome": "error"
+    },
+    {
+      "operation": "verification",
+      "records": 256,
+      "fault": "checkpoint-undefined",
+      "checkpoints": 1,
+      "peak": 1,
+      "outcome": "undefined-error"
+    },
+    {
+      "operation": "verification",
+      "records": 256,
+      "fault": "publish-cancel",
+      "checkpoints": 0,
+      "peak": 0,
+      "outcome": "error"
+    }
+  ]
 }

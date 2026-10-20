@@ -5,41 +5,41 @@ import { normWireArray, normWireDefault, normWireInteger, normWireNullable, norm
 import { type CoolingPlant, type Din18599Adjacency, type Din18599Attachment, type Din18599AutomationClass, type Din18599BuildingCategory, type Din18599CalculationMethod, type Din18599ElementKind, type Din18599UsageProfile, type Din18599UseClass, type EnvelopeElement, parseCoolingPlant, parseDin18599Adjacency, parseDin18599Attachment, parseDin18599AutomationClass, parseDin18599BuildingCategory, parseDin18599CalculationMethod, parseDin18599ElementKind, parseDin18599UsageProfile, parseDin18599UseClass, parseEnvelopeElement, parseThermalZone, type ThermalZone } from "../📸️snapshot/🟦️.ts";
 
 export interface Din18599Diff {
-  /** @state artifact */
+  /** 🏢️ @state artifact */
   buildingCategory: Din18599BuildingCategory | null;
-  /** @state artifact */
+  /** 🔄️ @state artifact */
   attachment: Din18599Attachment | null;
-  /** @state artifact */
+  /** ✏️ @state artifact */
   useClass: Din18599UseClass | null;
-  /** @state artifact */
+  /** 🪝️ @state artifact */
   method: Din18599CalculationMethod | null;
-  /** @state artifact */
+  /** 🌐️ @state artifact */
   netFloorAreaM2: number | null;
-  /** @state artifact */
+  /** 🌬️ @state artifact */
   heatedVolumeM3: number | null;
-  /** @state artifact */
+  /** 🔍️ @state artifact */
   gegQpFactor: number | null;
-  /** @state artifact */
+  /** 📝️ @state artifact */
   deltaUWbWM2k: number | null;
-  /** @state artifact */
+  /** 🏷️ @state artifact */
   automationClass: Din18599AutomationClass | null;
-  /** @state artifact */
+  /** 🛋️ @state artifact */
   zones: Din18599ZonesRows | null;
-  /** @state artifact */
+  /** 🔬️ @state artifact */
   elements: Din18599ElementsRows | null;
-  /** @state artifact */
+  /** ❄️ @state artifact */
   heating: Din18599HeatingPatch | null;
-  /** @state artifact */
+  /** 🧬️ @state artifact */
   dhw: Din18599DhwPatch | null;
-  /** @state artifact */
+  /** 💨️ @state artifact */
   ventilation: Din18599VentilationPatch | null;
-  /** @state artifact */
+  /** 🌋️ @state artifact */
   cooling: Din18599CoolingPatch | null;
-  /** @state artifact */
+  /** 💡️ @state artifact */
   lighting: Din18599LightingPatch | null;
-  /** @state artifact */
+  /** 📐️ @state artifact */
   renewables: Din18599RenewablesPatch | null;
-  /** @state artifact */
+  /** 🌡️ @state artifact */
   climate: Din18599ClimatePatch | null;
 }
 

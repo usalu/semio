@@ -1,6 +1,6 @@
 /// <reference types="vitest/importMeta" />
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
-import { MEDIA_TRANSPORT_EXTENSION_ID, parseMediaTransportProps, type MediaTransportProps } from "../../../../🔌️plugin/🪟️window-kits/🎬️media/🟦️.ts";
+import { MEDIA_TRANSPORT_EXTENSION_ID, parseMediaTransportProps, type MediaTransportProps } from "@semio-tech/plugin-window-kits/media";
 import { collectMediaTransportBytes, type MediaTransportPort } from "@semio-tech/framework/os/modules/renderer/engine/media/lifecycle";
 
 export { MEDIA_TRANSPORT_EXTENSION_ID };

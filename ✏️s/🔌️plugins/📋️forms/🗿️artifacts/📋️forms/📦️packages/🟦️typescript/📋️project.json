@@ -24,6 +24,7 @@
     },
     "test": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
@@ -33,6 +34,7 @@
     "verify-physical-codecs": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify physical-codecs"

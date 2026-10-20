@@ -13,7 +13,7 @@ export function readExactSourceFileV1(batch:ExactSourceReadBatchV1,name:string,m
 export function readExactSourceJsonV1(batch:ExactSourceReadBatchV1,name:string,maximumBytes?:number):Promise<ExactSourceMetadataV1|null>;
 export function readExactSourceTomlV1(batch:ExactSourceReadBatchV1,name:string):Promise<ExactSourceMetadataV1|null>;
 export function exactSourceReadBatchFactsV1(batch:ExactSourceReadBatchV1):Readonly<{files:number;sourceBytes:number;metadataBytes:number;readOperations:number;bytesRead:number}>;
-export function readExactSourceInventoryV1(batch:ManagedGraphSourceReadBatchV1,namespace:"build-input-closures"|"build-lock-closures",key:string):Promise<ExactSourceMetadataV1|null>;
+export function readExactSourceInventoryV1(batch:ManagedGraphSourceReadBatchV1,namespace:"build-input-closures"|"build-lock-closures",key:string,maximumBytes?:number):Promise<ExactSourceMetadataV1|null>;
 export function admitExactSourceExtentV1(input:unknown):Readonly<{sourceBytes:number;metadataBytes:number;inventories:number}>;
 
 export function requireCurrentExactSourceReadV1():void;

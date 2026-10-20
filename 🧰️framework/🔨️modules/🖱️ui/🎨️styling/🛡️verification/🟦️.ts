@@ -1,6 +1,6 @@
 import { lstatSync, readFileSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import { stylingSourceDataV1 } from "./📖️source-data/🟦️.ts";
 import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 

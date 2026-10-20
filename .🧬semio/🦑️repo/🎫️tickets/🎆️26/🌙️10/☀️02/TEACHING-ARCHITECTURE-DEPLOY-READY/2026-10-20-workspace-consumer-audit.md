@@ -1,0 +1,11 @@
+# Authored Workspace CJS Consumer Audit
+
+A repository-wide rg search covered authored TS/MTS/CTS/JS/MJS/CJS/JSON references to the three workspace CJS paths and literal relative requires, excluding dependency, generated, cache, target, dist and ticket trees. No additional outside-library policy-dependent singleton consumer was found. This is a bounded literal-reference search, not dynamic resolution proof.
+
+One concrete existing library test remains stale: dependency generation tests directly require the Bun CJS module as the old singleton at line18, then invoke withCurrentBunWorkspaceOwnershipV1 at42/311/328 and readListingProjection at62. Current CJS exports only createBunWorkspaceOwnershipV1 and the intentionally preserved pure readBunRepositoryMembership. The test must bind through the owned facade or explicit verified factory before those calls. No test was run and no Source was edited by this auditor.
+
+The dependency-direction bootstrap's standalone readBunRepositoryMembership consumer is legitimate and preserved. Other matches were Source inventories, fixtures, nested CJS dependencies or test Source inspection; they do not establish additional removed policy singleton consumers. The finding was sent to parent and release while release16 remained the sole managed invocation.
+
+Runtime subsequently established that the stale generation test is a host peer-created path absent from actual private overlay-twenty-four Source (ENOENT), with no captured preimage. It is therefore a host consumer-completeness finding, not a frozen private blocker. Parent explicitly excludes this peer feature test from private transfer; the focused repair remains host-only while release16 uses sealed overlay24.
+
+The final host-only repair independently hashes to `6e9112d9fc27a1b0ce69e64e270f6a7cbeb8e851e299df1660b95cccd3ac41f5` (37,085 bytes). It imports current owned TypeScript facade functions and replaces four stale singleton calls, without compatibility exports or runtime authority changes. The reviewed focused neutral proof reports three listings, four manifests, twenty-four path facts and progress observations with fast-glob/Python checks; it is not a full suite pass. Private overlay24 remains unchanged and this absent peer-created test is not transferred. No concrete blocker was found.

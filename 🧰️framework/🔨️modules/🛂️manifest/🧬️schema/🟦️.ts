@@ -163,3 +163,4 @@ export function parseInputLabelGlossary(value: unknown): InputLabelGlossary {
   if (Object.keys(labels).length < 200) throw new Error("InputLabelGlossary.labels must name at least 200 inputs");
   return { schema: "semio.manifest.input-label-glossary/v1", labels };
 }
+export { default as manifestSchema } from "./🔣️.json" with { type: "json" };

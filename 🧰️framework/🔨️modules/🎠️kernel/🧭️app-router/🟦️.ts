@@ -5,7 +5,7 @@
 
 import { type ArtifactDialect } from "@semio-tech/schema-ts/artifact-reference";
 import { dialectCoordinate } from "@semio-tech/framework-io-schema-ts";
-import { type AppRole, type AppRef } from "@semio-tech/framework/manifest/schema";
+import { type AppRole, type AppRef } from "@semio-tech/framework-manifest/schema";
 import { type PluginDependency } from "../🗂️plugin-registry/🟦️.ts";
 import { type Fault, type FaultScope } from "../🚨️fault/🟦️.ts";
 import { resolvePluginLoadOrder } from "../🕸️plugin-graph/🟦️.ts";

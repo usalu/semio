@@ -1,0 +1,67 @@
+[
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️package-implementation-admission/🟦️.ts",
+  "edits": [
+   {
+    "old": "entationAdmission | null | undefined, { relativePath: row.re",
+    "new": "entationAdmission | null, { relativePath: row.re",
+    "count": 1
+   },
+   {
+    "old": ".implementationAdmission ?? null).toBeNull();\n  });\n\n  t",
+    "new": ".implementationAdmission).toBeNull();\n  });\n\n  t",
+    "count": 1
+   },
+   {
+    "old": "eNull();\n  });\n\n  test(\"every rule of the unparsed taxonomy document answers the admission, whether or not it declares one\", () => {\n    const rul",
+    "new": "eNull();\n  });\n\n  test(\"the taxonomy reader normalises an absent implementationAdmission to null and every rule answers the admission\", () => {\n    const rul",
+    "count": 1
+   },
+   {
+    "old": ".implementationAdmission ?? null).toEqual(declared ?? nu",
+    "new": ".implementationAdmission).toEqual(declared ?? nu",
+    "count": 1
+   },
+   {
+    "old": " input)).not.toThrow();\n      if (declared === u",
+    "new": " input)).not.toThrow();\n      if (declared === undefined) expect(rule.implementationAdmission).toBeNull();\n      if (declared === u",
+    "count": 1
+   }
+  ]
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧱️package-implementation-admission/🔣️.json",
+  "edits": [
+   {
+    "old": "n-never-admits\",\n      \"admission\": null,\n      \"relativePath\": \"🧩️crate/🦀️.rs\",\n      \"kindId\": \"rust-source\",\n      \"directoryFiles\": [\n        \"Cargo.toml\"\n      ],\n      \"expected\": false\n    },\n    {\n      \"id\": \"omitted-admission-never-admits\",\n      \"relativePath\": \"🧩️crate/🦀️.rs\",\n      \"kindId\": \"rust-source\",\n      \"directoryFiles\": [\n        \"Cargo.toml\"\n      ],\n      \"expected\": false\n    }\n  ],\n  \"sourceCases\": [\n    {\n      \"id\": \"go-raw-string-with-backslash-is-balanced\",\n      \"language\": \"go\",\n      \"source\": [\n        \"package files\",\n        \"\",\n        \"var separato",
+    "new": "n-never-admits\",\n      \"admission\": null,\n      \"relativePath\": \"🧩️crate/🦀️.rs\",\n      \"kindId\": \"rust-source\",\n      \"directoryFiles\": [\n        \"Cargo.toml\"\n      ],\n      \"expected\": false\n    }\n  ],\n  \"sourceCases\": [\n    {\n      \"id\": \"go-raw-string-with-backslash-is-balanced\",\n      \"language\": \"go\",\n      \"source\": [\n        \"package files\",\n        \"\",\n        \"var separato",
+    "count": 1
+   }
+  ]
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧱️package-implementation-admission/🟦️.ts",
+  "edits": [
+   {
+    "old": "entationAdmission | null | undefined, input: PackageImplementationAdmissionInput): boolean {\n  if (admission == null || !input.relati",
+    "new": "entationAdmission | null, input: PackageImplementationAdmissionInput): boolean {\n  if (admission === null || !input.relati",
+    "count": 1
+   }
+  ]
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧭️workspace-taxonomy-locator/🟦️.ts",
+  "edits": [
+   {
+    "old": "rrent };\n}\n\nexport funct",
+    "new": "rrent };\n}\n\n/** 📖️ Reads the taxonomy document and normalises the optional `implementationAdmission` of every package boundary rule: a rule that declares none answers `null`. */\nexport funct",
+    "count": 1
+   },
+   {
+    "old": "return JSON.parse(readFileSync(authority.taxonomyPath, \"utf8\"))",
+    "new": "const document = JSON.parse(readFileSync(authority.taxonomyPath, \"utf8\")) as Taxonomy;\n  const packageBoundaryRules = Object.fromEntries(Object.entries(document.packageBoundaryRules ?? {}).map(([id, rule]) => [id, { ...rule, implementationAdmission: rule.implementationAdmission ?? null }]));\n  return { ...document, packageBoundaryRules }",
+    "count": 1
+   }
+  ]
+ }
+]

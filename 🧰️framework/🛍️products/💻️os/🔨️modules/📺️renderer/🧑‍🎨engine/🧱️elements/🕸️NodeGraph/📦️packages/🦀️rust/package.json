@@ -10,9 +10,14 @@
     },
     "./testing/fixtures/pick-target.json": "./🧪️testing/🧫️fixtures/🔣️json/pick-target/🟦️.ts",
     "./wasm-graph-surface": "./🧭️wasm-graph-surface/🟦️.tsx",
-    "./index": "./🟦️.tsx"
+    "./index": "./🟦️.tsx",
+    "./testing/source-text/wasm-graph-surface": "./🧪️testing/📖️source-text/🧭️wasm-graph-surface/🟦️.ts"
+  },
+  "dependencies": {
+    "@semio-tech/framework-trace": "workspace:*"
   },
   "devDependencies": {
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/process": "workspace:*",
+    "@semio-tech/ui": "workspace:*"
   }
 }

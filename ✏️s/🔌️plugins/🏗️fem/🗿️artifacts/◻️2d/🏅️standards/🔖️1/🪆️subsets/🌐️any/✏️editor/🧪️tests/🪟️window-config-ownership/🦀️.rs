@@ -139,10 +139,10 @@ fn fem2d_window_config_runtime_isolates_same_kind_instances_and_restores_packs()
         .spawn(|| {
             block_on_fem_window_ownership(Box::pin(async {
                 use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_active_example;
-                use crate::set_camera;
+                use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_camera;
                 use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_display;
                 use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model;
-                use semio_s_artifact_fem_2d_editor::editor::fem2d::modes::edit::windows::results;
+                use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results;
                 use semio_framework_plugin::artifact_app_laws;
                 use semio_framework_plugin::ActionMeta;
                 use semio_framework_plugin::App;

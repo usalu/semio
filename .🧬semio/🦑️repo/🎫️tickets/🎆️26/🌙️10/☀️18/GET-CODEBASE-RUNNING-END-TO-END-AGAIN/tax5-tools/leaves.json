@@ -1,0 +1,266 @@
+[
+ {
+  "subset": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/📐️geometry",
+  "owner": "➕️insert-point"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/📐️geometry",
+  "owner": "➖️remove-point"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/📐️geometry",
+  "owner": "🎯️move-points"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/📐️geometry",
+  "owner": "📌️set-point-positions"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph",
+  "owner": "✂️disconnect-nodes"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph",
+  "owner": "❌️delete-node"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph",
+  "owner": "➕️create-node"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph",
+  "owner": "🏷️change-node-label"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph",
+  "owner": "🔗️connect-nodes"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph",
+  "owner": "🕹️move-node"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph",
+  "owner": "🗑️delete-nodes"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph",
+  "owner": "🧭️change-graph-directed"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph",
+  "owner": "🧮️update-graph-algorithm"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "📋️register-row/♻️replace"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "📋️register-row/🏷️rename"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "📋️register-row/🗑️delete"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "↩️discard-response"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "📨️commit-response"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "🧊️create-brep"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "🧹delete-brep"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "🌦️update-climate"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "🗺️replace-zones"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "🧩replace-elements"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "➖remove-footing"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "➖️remove-layer"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "📤remove-pile"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "➖️remove-member"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "🔀️reorder-members"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "🗑️remove-anchor"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "✂️remove-geometry-connection"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "🗑️remove-product"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "✂️retire-subject"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "🔓️remove-selection-constraint"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "🗑️retire-product-class"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "🗑️retire-product-index"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "🗑️retire-product-series"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "🚫️retire-product"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "🧹️retire-product-group"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "🧽️retire-property-definition"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "⛔️remove-column"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "➖remove-slab"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "➖️remove-beam"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "➖remove-member"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style",
+  "owner": "🌀️set-layer-fill-rule"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style",
+  "owner": "📝️update-text"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style",
+  "owner": "🧩️set-group-isolation"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform",
+  "owner": "✏️update-path-geometry"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure",
+  "owner": "📥️import-image-asset"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure",
+  "owner": "🗑️remove-image-asset"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "🌈️apply-filter"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "🎛️change-layer-adjustment-parameter"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "🔄️transform-image"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "🔒️change-layer-locked"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "🖌️paint-stroke"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "🪣️fill-region"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "🫗️fill-selection"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document",
+  "owner": "📥️insert-other-segment"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document",
+  "owner": "🔲️replace-pixels"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document",
+  "owner": "🖼️replace-image"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document",
+  "owner": "🗑️remove-other-segment"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document",
+  "owner": "🪪️change-jfif-header"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document",
+  "owner": "🏷️replace-tag"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document",
+  "owner": "📤️remove-ifd"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document",
+  "owner": "📥️insert-ifd"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document",
+  "owner": "🗑️remove-tag"
+ },
+ {
+  "subset": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "owner": "🖌️update-part2d"
+ }
+]

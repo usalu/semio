@@ -4,7 +4,7 @@ import type { AreaState, DiscoveredPackage, RegistryCatalogInputView } from "@se
 import { canonicalPrimaryFilenameForKind, loadCatalogTaxonomy, registryCatalogInputView, declaredComponentKind, discoverCatalogPackages, declaredComponentDeploymentDirectoryV1 } from "@semio-tech/repo-lib/inventory";
 import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { decodeRegistryDescriptorV1, REGISTRY_HOST_APP_CHANNEL_VERSION, StaleChannelDescriptorError } from "../🧬️schema/🟦️.ts";
-import { runtimeComponentClosure } from "@semio-tech/repo-lib/inventory/tooling";
+import { closeProjectedPluginV1 } from "../📖️catalog-view/🟦️.ts";
 
 
 
@@ -528,8 +528,7 @@ export function isHostPluginFilter(pluginFilter?: string, repoRoot = findWorkspa
 /** 🎯️ Resolves aliases and runtime dependencies within the supplied catalog, or discovers an omitted catalog. */
 export function resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin: string, allEntries: readonly ComponentSourceOwnerV1[] = generateComponentSourceRegistry(findWorkspaceRoot()), playgrounds?: readonly { readonly variant: string; readonly aliases: readonly string[]; readonly pluginId: string; readonly app?: string }[]): readonly string[] {
   const variantRow = playgrounds?.find((p) => p.variant === filterPlaygroundPlugin || p.aliases.includes(filterPlaygroundPlugin)) ?? (playgrounds === undefined ? resolvePlaygroundFilterRow(filterPlaygroundPlugin) : undefined);
-  const targetPluginId = variantRow?.pluginId ?? filterPlaygroundPlugin;
-  return allEntries.some(row => row.pluginId === targetPluginId) ? runtimeComponentClosure(allEntries, [{ id: targetPluginId, appScoped: variantRow?.app !== undefined }]) : [];
+  return closeProjectedPluginV1(filterPlaygroundPlugin, allEntries, variantRow);
 }
 
 

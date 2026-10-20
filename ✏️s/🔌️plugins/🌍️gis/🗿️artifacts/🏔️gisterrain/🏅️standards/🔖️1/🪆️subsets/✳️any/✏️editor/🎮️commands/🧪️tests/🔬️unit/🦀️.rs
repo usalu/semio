@@ -81,7 +81,7 @@ async fn set_active_example_empty_then_demo_round_trips_and_undoes() {
 /// whatever a store round trip would make of it.
 #[semio_framework_async_macros::async_test]
 async fn the_reducer_emits_only_the_fields_that_differ() {
-    let document = crate::schema::default_terrain_document();
+    let document = semio_s_artifact_gis_gisterrain_inferences::standards::v1::subsets::any::io::text::snapshot::default_terrain_document();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = semio_framework_plugin::ArtifactView::new(&document, &history);
     let config = semio_framework_plugin::NoConfig {};

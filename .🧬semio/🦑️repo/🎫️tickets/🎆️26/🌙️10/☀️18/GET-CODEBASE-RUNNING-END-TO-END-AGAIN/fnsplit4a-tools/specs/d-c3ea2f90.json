@@ -1,0 +1,28 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🐾️pets/🧪️tests/⏲️frame-pacing/🟦️.tsx",
+ "describeLine": 94,
+ "shared": {
+  "dir": "🟠️shared",
+  "doc": "/** 🟠️ The shared declarations of the ⏲️ frame pacing suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️counts-sixty-four-ticks",
+   "doc": "/** 🔶️ The counts sixty four ticks tests of the ⏲️ frame pacing suite. */",
+   "name": "registerCountsSixtyFourTicksTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the counts sixty four ticks tests of the ⏲️ frame pacing suite.",
+   "from": 95,
+   "to": 246
+  },
+  {
+   "dir": "🔸️cancels-frame-timer-while",
+   "doc": "/** 🔸️ The cancels frame timer while tests of the ⏲️ frame pacing suite. */",
+   "name": "registerCancelsFrameTimerWhileTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the cancels frame timer while tests of the ⏲️ frame pacing suite.",
+   "from": 262,
+   "to": 397
+  }
+ ]
+}

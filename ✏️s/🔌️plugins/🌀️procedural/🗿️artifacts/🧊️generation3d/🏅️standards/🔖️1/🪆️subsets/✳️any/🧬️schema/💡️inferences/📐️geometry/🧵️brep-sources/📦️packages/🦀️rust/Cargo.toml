@@ -23,3 +23,6 @@ semio-framework-3d-brep-vector = { workspace = true }
 semio-s-artifact-procedural-3d-geometry-inputs = { workspace = true }
 semio-s-artifact-procedural-3d-geometry-value = { workspace = true }
 
+
+[dev-dependencies]
+semio-s-artifact-procedural-3d-geometry-compute = { workspace = true }

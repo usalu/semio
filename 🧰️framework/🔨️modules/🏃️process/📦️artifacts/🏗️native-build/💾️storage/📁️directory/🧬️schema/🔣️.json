@@ -339,6 +339,79 @@
           "minimum": 1
         }
       }
+    },
+    "ExchangeBindingLifecycleCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "binding",
+        "injected",
+        "status",
+        "errno",
+        "callFailure",
+        "flushFailure",
+        "actions",
+        "errors"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "binding": {
+          "enum": [
+            "available",
+            "unavailable",
+            "fail-first"
+          ]
+        },
+        "injected": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "integer"
+        },
+        "errno": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "callFailure": {
+          "type": "boolean"
+        },
+        "flushFailure": {
+          "type": "boolean"
+        },
+        "actions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "enum": [
+              "pending",
+              "recover",
+              "prepareVolume",
+              "flush",
+              "swap"
+            ]
+          }
+        },
+        "errors": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "enum": [
+              "none",
+              "binding",
+              "call",
+              "flush",
+              "unsupported",
+              "failed"
+            ]
+          }
+        }
+      }
     }
   }
 }

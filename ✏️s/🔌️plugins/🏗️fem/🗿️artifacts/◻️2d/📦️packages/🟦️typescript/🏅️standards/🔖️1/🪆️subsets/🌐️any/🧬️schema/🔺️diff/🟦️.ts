@@ -1,0 +1,2 @@
+/** 🧩️ Public `@semio-tech/fem-2d/standards/1/subsets/any/schema/diff` entry: explicit re-exports of the source module that owns each member. */
+export { parseFem2dCombinationPatch, parseFem2dLoadPatch, parseFem2dMaterialPatch, parseFem2dMaterialsDelta, parseFem2dNodePatch, parseFem2dRegionPatch, parseFem2dSectionPatch, parseFem2dSupportPatch } from "../../../../../../../../🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts";

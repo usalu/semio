@@ -104,7 +104,7 @@ test("native progress follows the declared owner and preserves independent child
 
 test("dashboard-selected owner tests allocate their output without manual environment setup", async () => {
   const corpus=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/📣️progress/🔣️.json"),"utf8")),ts=(await import("typescript")).default;
-  const script=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts"),source=ts.createSourceFile(script,readFileSync(script,"utf8"),ts.ScriptTarget.Latest,true);
+  const script=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️typescript-package-commands/🟦️.ts"),source=ts.createSourceFile(script,readFileSync(script,"utf8"),ts.ScriptTarget.Latest,true);
   const testScript=source.statements.find((node:Statement):node is ClassDeclaration=>ts.isClassDeclaration(node)&&node.name?.text==="TestScript"),runMethod=testScript?.members.find((node:ClassElement):node is MethodDeclaration=>ts.isMethodDeclaration(node)&&ts.isIdentifier(node.name)&&node.name.text==="run");
   const selected=runMethod?.body?.statements.find((node:Statement):node is IfStatement=>ts.isIfStatement(node)&&node.expression.getText(source)==='segments[0] === "native-owner-command-policy"');
   if(selected===undefined)throw new Error("The dashboard-selected owner-test route is missing");

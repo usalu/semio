@@ -7,6 +7,17 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 
+use semio_framework_dispatch_macros::dyn_enum_close;
+
+use semio_framework_plugin::plugin_app_close_prelude::*;
+
+dyn_enum_close! {
+    pub enum BinaryApps: PluginApp {
+        Editor(VcsArtifactApp<EditorApp<editor::binary::BinaryEditor>>),
+        Viewer(VcsArtifactApp<ViewerApp<viewer::binary::BinaryViewer>>),
+    }
+}
+
 pub use schema::mutations::BinaryMutation;
 pub use schema::snapshot::BinarySnapshot;
 pub use schema::diff::BinaryDiff;

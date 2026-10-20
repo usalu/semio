@@ -2,7 +2,7 @@
 
 import type { OpeningPreferences } from "../../🟦️.ts";
 import type { ArtifactDialect } from "@semio-tech/schema-ts/artifact-reference";
-import type { AppRole, AppRef } from "../../../../🛂️manifest/🧬️schema/🟦️.ts";
+import type { AppRole, AppRef } from "@semio-tech/framework-manifest/schema";
 import type { OpeningConfigMutation, SetDefaultApp } from "../📂️opening-config-mutation/🟦️.ts";
 import { clearDefaultApp, setDefaultApp } from "../📂️opening-config-mutation/🟦️.ts";
 

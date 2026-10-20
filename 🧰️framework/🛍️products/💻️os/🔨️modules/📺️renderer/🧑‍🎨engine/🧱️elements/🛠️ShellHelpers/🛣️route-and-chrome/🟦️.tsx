@@ -37,7 +37,7 @@ import {
   type WindowStackCorner
 } from "@semio-tech/framework";
 import { type CommandRejectionCodeV1, type CommandRejectionV1 } from "@semio-tech/framework/wire-contracts";
-import { decodeWorldProjectionTemplateId } from "@semio-tech/infinite-world-r3f";
+import { decodeWorldProjectionTemplateId } from "@semio-tech/framework/infinite/world/r3f";
 import {
   type Anchor,
   createEvenWindowLayout,

@@ -62,6 +62,7 @@ semio-s-artifact-stdio-semio-value-model = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }
 semio-s-artifact-stdio-xml = { workspace = true }
 semio-framework-ui-declaration = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+serde = { workspace = true }
 
 [dev-dependencies]
 serde.workspace = true

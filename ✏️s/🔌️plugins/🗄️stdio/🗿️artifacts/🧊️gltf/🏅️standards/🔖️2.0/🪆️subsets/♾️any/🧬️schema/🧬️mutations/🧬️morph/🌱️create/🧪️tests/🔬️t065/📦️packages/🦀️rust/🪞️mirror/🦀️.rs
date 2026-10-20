@@ -25,8 +25,8 @@ pub mod standards {
                         pub mod create_node {
                             pub use semio_s_artifact_stdio_gltf_mutations_mutations::standards::v2_0::subsets::any::schema::mutations::create_node::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🌳️node/🌱️create/🧪️tests/🌱️inserts-an-empty-e75eec/🦀️.rs"]
-                            pub mod case_inserts_an_empty_e75eec;
+                            #[path = "../../../../../../../🌳️node/🌱️create/🧪️tests/🌱️inserts/🦀️.rs"]
+                            pub mod case_inserts;
                         }
                         #[path = "."]
                         pub mod create_primitive {
@@ -39,29 +39,29 @@ pub mod standards {
                         pub mod create_sampler {
                             pub use semio_s_artifact_stdio_gltf_mutations_mut_any_2::standards::v2_0::subsets::any::schema::mutations::create_sampler::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🎛️sampler/🌱️create/🧪️tests/🎛️inserts-a-repeat-512dbe/🦀️.rs"]
-                            pub mod case_inserts_a_repeat_512dbe;
+                            #[path = "../../../../../../../🎛️sampler/🌱️create/🧪️tests/🎛️inserts/🦀️.rs"]
+                            pub mod case_inserts;
                         }
                         #[path = "."]
                         pub mod create_scene {
                             pub use semio_s_artifact_stdio_gltf_mutations_mutations::standards::v2_0::subsets::any::schema::mutations::create_scene::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🎬️scene/🌱️create/🧪️tests/🎞️inserts-an-empty-3bc9ce/🦀️.rs"]
-                            pub mod case_inserts_an_empty_3bc9ce;
+                            #[path = "../../../../../../../🎬️scene/🌱️create/🧪️tests/🎞️inserts/🦀️.rs"]
+                            pub mod case_inserts;
                         }
                         #[path = "."]
                         pub mod create_skin {
                             pub use semio_s_artifact_stdio_gltf_mutations_mutations::standards::v2_0::subsets::any::schema::mutations::create_skin::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🦴️skin/🌱️create/🧪️tests/🦴️inserts-an-empty-5b0798/🦀️.rs"]
-                            pub mod case_inserts_an_empty_5b0798;
+                            #[path = "../../../../../../../🦴️skin/🌱️create/🧪️tests/🦴️inserts/🦀️.rs"]
+                            pub mod case_inserts;
                         }
                         #[path = "."]
                         pub mod create_texture {
                             pub use semio_s_artifact_stdio_gltf_mutations_mut_any_2::standards::v2_0::subsets::any::schema::mutations::create_texture::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🎨️texture/🌱️create/🧪️tests/🎨️inserts-an-empty-736467/🦀️.rs"]
-                            pub mod case_inserts_an_empty_736467;
+                            #[path = "../../../../../../../🎨️texture/🌱️create/🧪️tests/🎨️inserts/🦀️.rs"]
+                            pub mod case_inserts;
                         }
                         #[path = "."]
                         pub mod delete_accessor {
@@ -77,8 +77,8 @@ pub mod standards {
                         pub mod delete_animation {
                             pub use semio_s_artifact_stdio_gltf_mutations_mut_any::standards::v2_0::subsets::any::schema::mutations::delete_animation::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🎞️animation/🗑️delete/🧪️tests/🚫️removes-the-bob-e4e346/🦀️.rs"]
-                            pub mod case_removes_the_bob_e4e346;
+                            #[path = "../../../../../../../🎞️animation/🗑️delete/🧪️tests/🚫️removes/🦀️.rs"]
+                            pub mod case_removes;
                             #[cfg(test)]
                             #[path = "../../../../../../../🎞️animation/🗑️delete/🧪️tests/🔬️middle-row/🦀️.rs"]
                             pub mod case_middle_row;
@@ -87,8 +87,8 @@ pub mod standards {
                         pub mod delete_buffer {
                             pub use semio_s_artifact_stdio_gltf_mutations_mut_any::standards::v2_0::subsets::any::schema::mutations::delete_buffer::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../💿️buffer/🗑️delete/🧪️tests/🚫️removes-the-two-156f9d/🦀️.rs"]
-                            pub mod case_removes_the_two_156f9d;
+                            #[path = "../../../../../../../💿️buffer/🗑️delete/🧪️tests/🚫️removes/🦀️.rs"]
+                            pub mod case_removes;
                             #[cfg(test)]
                             #[path = "../../../../../../../💿️buffer/🗑️delete/🧪️tests/🔬️middle-row/🦀️.rs"]
                             pub mod case_middle_row;
@@ -107,8 +107,8 @@ pub mod standards {
                         pub mod delete_camera {
                             pub use semio_s_artifact_stdio_gltf_mutations_mutations::standards::v2_0::subsets::any::schema::mutations::delete_camera::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🎥️camera/🗑️delete/🧪️tests/🚫️removes-the-2257c3/🦀️.rs"]
-                            pub mod case_removes_the_2257c3;
+                            #[path = "../../../../../../../🎥️camera/🗑️delete/🧪️tests/🚫️removes/🦀️.rs"]
+                            pub mod case_removes;
                             #[cfg(test)]
                             #[path = "../../../../../../../🎥️camera/🗑️delete/🧪️tests/🔬️middle-row/🦀️.rs"]
                             pub mod case_middle_row;
@@ -117,8 +117,8 @@ pub mod standards {
                         pub mod delete_image {
                             pub use semio_s_artifact_stdio_gltf_mutations_mut_any_2::standards::v2_0::subsets::any::schema::mutations::delete_image::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🖼️image/🗑️delete/🧪️tests/🖼️removes-the-6557fc/🦀️.rs"]
-                            pub mod case_removes_the_6557fc;
+                            #[path = "../../../../../../../🖼️image/🗑️delete/🧪️tests/🖼️removes/🦀️.rs"]
+                            pub mod case_removes;
                             #[cfg(test)]
                             #[path = "../../../../../../../🖼️image/🗑️delete/🧪️tests/🔬️middle-row/🦀️.rs"]
                             pub mod case_middle_row;
@@ -137,8 +137,8 @@ pub mod standards {
                         pub mod delete_mesh {
                             pub use semio_s_artifact_stdio_gltf_mutations_mutations::standards::v2_0::subsets::any::schema::mutations::delete_mesh::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🕸️mesh/🗑️delete/🧪️tests/🔗️removes-the-hull-b7a141/🦀️.rs"]
-                            pub mod case_removes_the_hull_b7a141;
+                            #[path = "../../../../../../../🕸️mesh/🗑️delete/🧪️tests/🔗️removes/🦀️.rs"]
+                            pub mod case_removes;
                             #[cfg(test)]
                             #[path = "../../../../../../../🕸️mesh/🗑️delete/🧪️tests/🔬️middle-row/🦀️.rs"]
                             pub mod case_middle_row;
@@ -147,8 +147,8 @@ pub mod standards {
                         pub mod delete_morph_target {
                             pub use semio_s_artifact_stdio_gltf_mutations_mut_any_2::standards::v2_0::subsets::any::schema::mutations::delete_morph_target::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../🗑️delete/🧪️tests/🚫️removes-the-db72f4/🦀️.rs"]
-                            pub mod case_removes_the_db72f4;
+                            #[path = "../../../../../../🗑️delete/🧪️tests/🚫️removes/🦀️.rs"]
+                            pub mod case_removes;
                             #[cfg(test)]
                             #[path = "../../../../../../🗑️delete/🧪️tests/🔬️middle-row/🦀️.rs"]
                             pub mod case_middle_row;
@@ -157,8 +157,8 @@ pub mod standards {
                         pub mod delete_node {
                             pub use semio_s_artifact_stdio_gltf_mutations_mutations::standards::v2_0::subsets::any::schema::mutations::delete_node::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🌳️node/🗑️delete/🧪️tests/🚫️removes-the-root-516263/🦀️.rs"]
-                            pub mod case_removes_the_root_516263;
+                            #[path = "../../../../../../../🌳️node/🗑️delete/🧪️tests/🚫️removes/🦀️.rs"]
+                            pub mod case_removes;
                             #[cfg(test)]
                             #[path = "../../../../../../../🌳️node/🗑️delete/🧪️tests/🔬️middle-row/🦀️.rs"]
                             pub mod case_middle_row;

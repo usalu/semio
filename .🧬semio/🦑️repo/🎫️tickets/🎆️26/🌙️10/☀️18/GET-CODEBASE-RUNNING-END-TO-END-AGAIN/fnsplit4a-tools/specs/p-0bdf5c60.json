@@ -1,0 +1,66 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗄️shell-uri-documents/🟦️.ts",
+ "function": "useShellUriAndDocuments",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟣️shared",
+  "doc": "/** 🟣️ The shared declarations of useShellUriAndDocuments. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️scope",
+   "doc": "/** 🔶️ The scope phase of useShellUriAndDocuments. */",
+   "phases": [
+    {
+     "name": "useScopeState",
+     "emoji": "🔷",
+     "doc": "Builds scope, localDocumentOwnerRegistry, hostConfig, hostMode of useShellUriAndDocuments.",
+     "from": 71,
+     "to": 191
+    }
+   ]
+  },
+  {
+   "dir": "🔸️open-document",
+   "doc": "/** 🔸️ The open document phase of useShellUriAndDocuments. */",
+   "phases": [
+    {
+     "name": "useOpenDocument",
+     "emoji": "🔹",
+     "doc": "Builds openDocument of useShellUriAndDocuments.",
+     "from": 207,
+     "to": 333
+    }
+   ]
+  },
+  {
+   "dir": "🟠️close-document",
+   "doc": "/** 🟠️ The close document phase of useShellUriAndDocuments. */",
+   "phases": [
+    {
+     "name": "useCloseDocumentState",
+     "emoji": "🟡",
+     "doc": "Builds closeDocument, localFolderBindings, setLocalFolderBindings, rememberLocalFolder of useShellUriAndDocuments.",
+     "from": 344,
+     "to": 521
+    }
+   ]
+  },
+  {
+   "dir": "🟢️spawn-program",
+   "doc": "/** 🟢️ The spawn program phase of useShellUriAndDocuments. */",
+   "phases": [
+    {
+     "name": "useSpawnProgram",
+     "emoji": "🔵",
+     "doc": "Builds spawnProgram of useShellUriAndDocuments.",
+     "from": 526,
+     "to": 526
+    }
+   ]
+  }
+ ]
+}

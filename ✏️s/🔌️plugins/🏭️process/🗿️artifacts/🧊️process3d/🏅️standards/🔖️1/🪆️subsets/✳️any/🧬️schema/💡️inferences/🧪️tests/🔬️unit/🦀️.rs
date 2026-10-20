@@ -10,7 +10,7 @@ use semio_framework_3d_brep_engine::{Brep, BrepKernel, GeometryHandle};
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
-use semio_s_artifact_process_process3d_model::{snapshot::ProcessStep, snapshot::StepOrigin};
+use semio_s_artifact_process_process3d_model::{snapshot::StepOrigin};
 
 //#region 🧪️InferenceLaws
 #[semio_framework_async_macros::async_test]

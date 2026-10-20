@@ -32,6 +32,26 @@
         }
       }
     },
+    "test-descriptor-lifetime": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": ["default", "^default", "testEnv", "reads", "{projectRoot}/🔒️leases/**/*"],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test descriptor-lifetime"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {"version": 1, "kind": "source"},
+          "dashboard": {
+            "title": {"en": "Verify Descriptor Lifetimes", "de": "Dateideskriptor-Lebensdauer Prüfen"},
+            "description": {"en": "Verify failure cleanup, descriptor custody and qualified POSIX kernel locks.", "de": "Fehlerbereinigung, Dateideskriptor-Verantwortung und unterstützte POSIX-Kernelsperren prüfen."}
+          }
+        }
+      }
+    },
     "test-process-progress": {
       "executor": "repo:script",
       "cache": false,
@@ -767,6 +787,27 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
         "command": "bun ./📜️script.ts test resource-lease-waits"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
+    },
+    "test-resource-lease-fairness": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test resource-lease-fairness"
       },
       "metadata": {
         "semio": {

@@ -1,7 +1,7 @@
 /** 🕹️ Shell store: the local interaction store, the root reducer, the selectors and the initial shell state. */
 import { type ElementsSurfaceDevice, type UiLocale } from "@semio-tech/ui-react";
 import { DEFAULT_MERGE_POLICY, type Conflict, type StoragePort } from "@semio-tech/framework";
-import { EMPTY_INTERACTION_STATE, type InteractionState } from "@semio-tech/framework/interaction";
+import { EMPTY_INTERACTION_STATE, type InteractionState } from "@semio-tech/framework-interaction";
 import { mergeRecordPreservingIdentity } from "../../🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
 import { EMPTY_APP_LABELS_OVERLAY, EMPTY_APP_CATALOGUE } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { readUiPreferences, resolveUiPreferences } from "../../🎚️UiPreferences/🟦️.ts";

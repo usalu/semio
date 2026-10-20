@@ -48,14 +48,14 @@ pub mod binary {
     pub use semio_s_artifact_reasoning_wires_snapshot_2::standards::v1::subsets::any::io::binary::*;
     pub use semio_s_artifact_reasoning_wires_inferences::standards::v1::subsets::any::io::binary::diff;
     pub use semio_s_artifact_reasoning_wires_inferences::standards::v1::subsets::any::io::binary::inferences;
-    pub use semio_s_artifact_reasoning_wires_schema::standards::v1::subsets::any::io::binary::mutations;
+    pub use crate::standards::v1::subsets::any::io::binary::mutations;
 }
 
 pub mod text {
     pub use semio_s_artifact_reasoning_wires_snapshot_2::standards::v1::subsets::any::io::text::*;
     pub use semio_s_artifact_reasoning_wires_inferences::standards::v1::subsets::any::io::text::diff;
     pub use semio_s_artifact_reasoning_wires_inferences::standards::v1::subsets::any::io::text::inferences;
-    pub use semio_s_artifact_reasoning_wires_schema::standards::v1::subsets::any::io::text::mutations;
+    pub use crate::standards::v1::subsets::any::io::text::mutations;
 }
 
 

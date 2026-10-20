@@ -1,6 +1,6 @@
 import{createHash}from"node:crypto";
 import{validateJsonSchemaSubset}from"../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import exportedSchema from"./🧬️schema/🔣️.json";
+import exportedSchema from"./🧬️schema/🔣️.json" with { type: "json" };
 const schema=JSON.parse(JSON.stringify(exportedSchema))as typeof exportedSchema,protocol=Object.freeze({...schema.definitions.Protocol.const,stages:Object.freeze([...schema.definitions.Protocol.const.stages]),directorySyncPlatforms:Object.freeze([...schema.definitions.Protocol.const.directorySyncPlatforms])});
 export type NativeCacheRetirementStageV1="requested"|"drained"|"child-empty"|"child-retired"|"parent-retired"|"complete";
 export interface NativeCacheRetirementIdentityV1{readonly version:1;readonly parentAllocation:string;readonly workspaceAllocation:string;readonly bindingSha256:string;readonly imageReceiptSha256:string;readonly policySha256:string;readonly kind:"compiler-state";}

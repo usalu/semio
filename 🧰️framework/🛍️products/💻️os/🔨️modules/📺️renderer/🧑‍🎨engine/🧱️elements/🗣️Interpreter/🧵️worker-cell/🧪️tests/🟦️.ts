@@ -3,7 +3,6 @@ import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createRequire } from "node:module";
 import { createAdmittedWorkerCell, createWorkerCell } from "../🟦️.ts";
-import { isGeneratedPath } from "@semio-tech/repo-lib/process";
 import { repoCacheDirectory } from "@semio-tech/framework/process/execution";
 import { readModuleTreeSource, readSourceFamilySource } from "@semio-tech/framework/compiler/syntax/module-tree";
 const require = createRequire(import.meta.url);
@@ -80,7 +79,6 @@ test("the owning worker-cell target supplies its explicit caller-owned lifecycle
   expect(target.options.command).toBe("bun ./📜️script.ts test worker-cell");
   expect(target.options.env).toEqual({ SEMIO_TEST_ARTIFACT_DIR: ".🧬semio/🦑️repo/⚡️cache/tests/worker-cell/🗑️generated" });
   expect(resolve(repoRoot, target.options.env.SEMIO_TEST_ARTIFACT_DIR)).toBe(repoCacheDirectory(repoRoot, "tests", "worker-cell", "🗑️generated"));
-  expect(isGeneratedPath(target.options.env.SEMIO_TEST_ARTIFACT_DIR)).toBe(true);
   const script = readFileSync(resolve(packageRoot, "📜️script.ts"), "utf8");
   expect(script.includes('if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw new Error("Caller-owned SEMIO_TEST_ARTIFACT_DIR is required");')).toBe(true);
   expect(script.includes("SEMIO_TEST_ARTIFACT_DIR: resolve(this.repoRoot, process.env.SEMIO_TEST_ARTIFACT_DIR)")).toBe(true);

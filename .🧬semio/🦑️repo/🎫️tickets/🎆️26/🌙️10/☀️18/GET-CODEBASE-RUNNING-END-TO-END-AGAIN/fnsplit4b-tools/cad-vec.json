@@ -1,0 +1,45 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/📐️geometry/🧪️tests/🧪️semio-tech-cad-js-core-vec/🟦️.ts",
+ "function": "registerTests1",
+ "kit": {
+  "dir": "🧰️vec-test-kit",
+  "doc": "/** 🧰️ The shared cad-js core test kit: the destructured vitest, the core dependencies, the Brepjs kernel and the precise spatial math. */",
+  "name": "createVecTestKit",
+  "emoji": "🏭",
+  "fdoc": "Creates the shared vec test kit of one registration from the injected dependencies.",
+  "typeName": "VecTestKit"
+ },
+ "groups": [
+  {
+   "dir": "📏️vec-and-model-definition-catalogs",
+   "doc": "/** 📏️ The vec and model definition catalog tests. */",
+   "name": "registerVecAndModelDefinitionCatalogTests",
+   "emoji": "📚",
+   "fdoc": "Registers the vec arithmetic tests and the model definition catalog tests.",
+   "from": 48,
+   "to": 53
+  },
+  {
+   "dir": "🔁️model-space-and-transformations",
+   "doc": "/** 🔁️ The model space, hashing and transformation tests. */",
+   "name": "registerModelSpaceAndTransformationTests",
+   "emoji": "🧮",
+   "fdoc": "Registers the model space and hashing tests and the transformation tests.",
+   "from": 235,
+   "to": 267
+  },
+  {
+   "dir": "🧊️validation-geometry-and-metadata",
+   "doc": "/** 🧊️ The attribute validation, edge and solid geometry, expr, model json, metadata and selection filter tests. */",
+   "name": "registerValidationGeometryAndMetadataTests",
+   "emoji": "🏷",
+   "fdoc": "Registers the attribute validation, edge and solid geometry, expr, model json, metadata and selection filter tests.",
+   "from": 465,
+   "to": 609
+  }
+ ],
+ "kitInit": [
+  42
+ ],
+ "rootKeep": []
+}

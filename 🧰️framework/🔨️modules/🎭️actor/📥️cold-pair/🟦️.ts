@@ -1,3 +1,4 @@
+/// <reference types="vitest/importMeta" />
 import { actorInstanceLifetimeEquals, type ActorInstanceLifetime } from "../🚪️lifetime/🟦️.ts";
 
 export const COLD_PAIR_MAXIMUM_PAGES = 64;

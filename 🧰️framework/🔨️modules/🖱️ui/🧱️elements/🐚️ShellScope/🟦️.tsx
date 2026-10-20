@@ -10,10 +10,10 @@ import * as React from "react";
 import { I18nextProvider } from "react-i18next";
 import i18next from "i18next";
 import { type StoragePort, createBrowserStoragePort } from "../../🔨️modules/🗄️storage-port/🟦️.ts";
-import { ephemeralBox, ephemeralSet } from "../../../🫧️transient/🟦️.ts";
+import { ephemeralBox, ephemeralSet } from "@semio-tech/framework-transient";
 import { type UiLocale } from "../📚️I18n/🟦️.tsx";
-import { createShellI18nInstance } from "@semio-tech/ui-react/i18n";
-import { type MergeMode } from "../../../🕹️interaction/🟦️.ts";
+import { createShellI18nInstance } from "../../🌐️i18n/🟦️.ts";
+import { type MergeMode } from "@semio-tech/framework-interaction";
 // #endregion 🔌️Adapters
 
 // #region 🐚️ShellScope

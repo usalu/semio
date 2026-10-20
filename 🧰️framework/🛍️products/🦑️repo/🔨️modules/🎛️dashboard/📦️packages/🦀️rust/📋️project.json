@@ -26,6 +26,31 @@
     ]
   },
   "targets": {
+    "test-dispatch": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test dispatch"
+      },
+      "metadata": {
+        "semio": {
+          "dashboard": {"verb":"test","title":{"en":"Check Test Dispatch","de":"Testauswahl prüfen"},"description":{"en":"Verify developer test dispatch and exact Rust law ownership through the Source tests.","de":"Entwicklertestauswahl und exakte Rust-Testzuständigkeit durch Source-Tests prüfen."},"parameters":[]},
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
+    },
     "test-source-freshness": {
       "executor": "repo:script",
       "inputs": ["default", "reads", "testEnv"],
@@ -70,6 +95,7 @@
     },
     "test": {
       "executor": "repo:script",
+      "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test"
@@ -162,6 +188,7 @@
     },
     "test-quick": {
       "executor": "repo:script",
+      "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test quick"
@@ -183,6 +210,7 @@
     },
     "test-long": {
       "executor": "repo:script",
+      "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test long"
@@ -204,6 +232,7 @@
     },
     "test-exhaustive": {
       "executor": "repo:script",
+      "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test exhaustive"
@@ -514,7 +543,7 @@
         "cargoToolchain"
       ],
       "outputs": [],
-      "cache": true,
+      "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts compile"
@@ -537,7 +566,8 @@
                 "build-script-run"
               ]
             }
-          }
+          },
+          "cache": { "version": 1, "class": "driver-owned", "reason": "freshness-owned-by-driver" }
         }
       }
     }

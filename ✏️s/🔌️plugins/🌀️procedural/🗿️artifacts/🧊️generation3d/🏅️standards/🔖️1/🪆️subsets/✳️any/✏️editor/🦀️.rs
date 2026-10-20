@@ -129,7 +129,7 @@ use semio_framework_plugin::WindowMeasure;
 use std::collections::HashMap;
 use semio_framework_2d_compute::EngineHandles;
 use semio_s_artifact_procedural_3d_model::{GENERATION3D_EDITOR_APP_ID, generation3d_action};
-use semio_s_artifact_procedural_3d_mode_edit::windows::preview::PreviewInteractionMarks;
+pub use semio_s_artifact_procedural_3d_mode_edit::windows::preview::PreviewInteractionMarks;
 use semio_s_artifact_procedural_3d_mode_edit::windows::preview::preview_selection_json;
 use semio_s_artifact_procedural_3d_export_document::export_mesh_from_session;
 use semio_s_artifact_procedural_3d_export_document::export_meshes_from_session;

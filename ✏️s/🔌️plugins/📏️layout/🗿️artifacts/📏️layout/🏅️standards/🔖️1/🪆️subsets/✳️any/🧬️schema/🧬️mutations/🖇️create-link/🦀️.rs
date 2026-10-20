@@ -3,7 +3,7 @@
 
 use crate::delete_link;
 use semio_s_artifact_layout_layout_diff::LayoutLinksDelta;
-use crate::standards::v1::subsets::any::schema::diff::LayoutLinkInsertion;
+use semio_s_artifact_layout_layout_diff::LayoutLinkInsertion;
 use semio_s_artifact_layout_layout_model::ImageLink;
 use semio_s_artifact_layout_layout_diff::LayoutDiff;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;

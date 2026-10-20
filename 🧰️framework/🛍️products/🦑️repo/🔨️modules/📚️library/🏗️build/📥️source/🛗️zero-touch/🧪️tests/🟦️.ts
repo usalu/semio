@@ -21,6 +21,16 @@ test("the fixture cases and the roster satisfy their schemas", () => {
   expect(readZeroTouchRosterV1(JSON.stringify(real)).closures.length).toBe(real.closures.length);
 });
 
+test("every declared bootstrap source has a full zero-touch closure", () => {
+ const tree=diskZeroTouchTreeV1(repoRoot),roster=readZeroTouchRosterV1(tree.read(ZERO_TOUCH_CLOSURES_FILE)!),declaration=JSON.parse(tree.read("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🌱️sources/🔣️.json")!);
+ for(const source of declaration.sources)expect(roster.closures.some(closure=>closure.entry===source.module&&closure.mode==="full"),source.id).toBe(true);
+});
+
+test("every native repository recovery owner has a full zero-touch closure", () => {
+ const roster=readZeroTouchRosterV1(diskZeroTouchTreeV1(repoRoot).read(ZERO_TOUCH_CLOSURES_FILE)!);
+ for(const entry of ["🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📜️script.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🟦️.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🐹️go-plan/🟦️.ts"])expect(roster.closures.some(closure=>closure.entry===entry&&closure.mode==="full"),entry).toBe(true);
+});
+
 type CaseRow = Readonly<{ name: string; roster: unknown; files: Readonly<Record<string, string>>; closureFiles: Readonly<Record<string, number>>; findings: readonly string[]; details?: Readonly<Record<string, string>> }>;
 
 for (const row of fixture.cases as unknown as readonly CaseRow[]) {

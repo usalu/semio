@@ -296,7 +296,7 @@ pub fn repository_server(repository: impl Repository + 'static, profile: Profile
     let mut server = Server::new(Config {
         server_name: profile.server_name().to_string(),
         server_version: "1.0.0".to_string(),
-        instructions: "Use repository tools and resources through their owned schemas.".to_string(),
+        instructions: "Use repository tools and resources through their owned schemas. Run build tasks with repo run <project>:<target> and provision tools with repo tools setup all. Nx remains the default; select Bazel with --tool=bazel. Nested tasks inherit SEMIO_BUILD_TOOL.".to_string(),
         limits,
     })?;
     for schema in tool_schemas(profile) {

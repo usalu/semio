@@ -7,7 +7,11 @@ import { clearWorldCatalogueDropPreview, clearWorldSelectionPreview, setWorldCat
 import type { WorldCore5 } from "../🔀️paint-and-projection/🟦️.ts";
 
 // #region World3dHost
-/** 🎛️ Wires the marquee preview, the gumball gesture and the relocate drag. */
+/**
+ * 🎛️ Wires the marquee preview, the gumball gesture and the relocate drag.
+ *
+ * 🧯️ Host aborts of a live gesture whose ticks opened the app's tool transaction: window blur and unmount.
+ */
 export function useWorldMarqueeAndGumball(core: WorldCore5) {
   const { cameraRef, dispatch, dispatchSettled, gestureRecognizer, gridFactor, gridSnapEnabled, gumballDragChainRef, gumballGestureRef, gumballLiveDispatch, hostRef, instances, instancesRef, marqueeCommitHold, marqueeCoverage, marqueeDragActive, marqueeMergeMode, marqueePath, marqueeStartRef, meshes, meshesRef, method, node, relocateMode, relocateSessionRef, selection, selectionArgs, selectionMode, setFaceDragSession, setMarqueeCommitHold, setMarqueePath, sharedSelectionPreview, windowInstanceId } = core;
   const marqueePreview = useMemo<{ readonly mergedComponentIds: readonly number[] | null; readonly mergedInstanceIds: readonly string[] | null }>(() => {

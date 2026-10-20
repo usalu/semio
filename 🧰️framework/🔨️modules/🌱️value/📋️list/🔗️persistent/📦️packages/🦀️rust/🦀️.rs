@@ -5,6 +5,7 @@ use semio_framework_value_derive::{RetainedEquality, RetireOwned, ToValue};
 use semio_framework_value_intrinsic::{DslValue, FromValue, ToValue, ValueShape};
 use semio_framework_value_native_encoding::NativeEncodeControl;
 use semio_framework_value_retained_clone::retained_clone;
+use semio_framework_value_snapshot_projection::snapshot_projection;
 #[cfg(test)]
 use semio_framework_value_retained_clone::{RetainedCloneGrant, RetainedCloneStep};
 use semio_framework_value_retirement::{retirement, RetirementDemand};
@@ -33,3 +34,6 @@ pub(crate) use allocation_testing::observe_retirement_allocations;
 pub(crate) mod value {
     pub(crate) use super::observe_retirement_allocations;
 }
+
+#[path = "../../🧬️clone/🦀️.rs"]
+pub mod immutable_clone;

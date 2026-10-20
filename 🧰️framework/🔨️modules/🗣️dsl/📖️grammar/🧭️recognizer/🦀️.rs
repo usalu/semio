@@ -202,10 +202,10 @@ impl Recognizer {
 
 /// 📏️ Which delimiter ends a P2-M1 "raw span" terminal capture.
 enum RawSpanEnd {
-    /// `LINE` — rest of the current physical line (up to the next `\n`, or EOF if none) — obj's
+    /// 🧾️ `LINE` — rest of the current physical line (up to the next `\n`, or EOF if none) — obj's
     /// `o`/`g` names, stl's `solid <name>`/`endsolid <name>`, dxf's opaque group-code value lines.
     Newline,
-    /// `REST` — everything remaining to end-of-document — txt's whole prose body.
+    /// 🍃️ `REST` — everything remaining to end-of-document — txt's whole prose body.
     Eof,
 }
 

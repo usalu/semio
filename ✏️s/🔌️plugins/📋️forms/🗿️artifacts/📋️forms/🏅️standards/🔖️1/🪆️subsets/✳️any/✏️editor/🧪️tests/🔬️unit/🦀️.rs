@@ -44,7 +44,7 @@ use semio_framework_plugin::MediaForm;
 use semio_framework_plugin::MediaPayload;
 use semio_framework_plugin::MediaType;
     use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members};
-    use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    use semio_framework_plugin::{App, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
     pub type FormsApp = VcsArtifactApp<EditorApp<FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
     

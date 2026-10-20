@@ -28,6 +28,10 @@
             {
               "id": "removes-the-first-skin-and-renumbers-the-bound-node",
               "directoryName": "🚫️removes"
+            },
+            {
+              "id": "middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },

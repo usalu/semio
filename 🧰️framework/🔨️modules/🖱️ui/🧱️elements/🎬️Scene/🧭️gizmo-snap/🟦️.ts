@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { uiSpacingPx } from "@semio-tech/ui-styling";
 
 /**
- * GizmoProps holds the data fields for a GizmoProps record.
+ * 🧭️ GizmoProps holds the data fields for a GizmoProps record.
  **/
 export interface GizmoProps {
   show?: boolean;
@@ -37,7 +37,7 @@ interface SceneGizmoViewportPlacement {
 }
 
 /**
- * resolveSceneGizmoSnapTarget holds the data fields for a resolveSceneGizmoSnapTarget record.
+ * 🗃️ resolveSceneGizmoSnapTarget holds the data fields for a resolveSceneGizmoSnapTarget record.
  **/
 export const resolveSceneGizmoSnapTarget = (direction: Pick<THREE.Vector3, "x" | "y" | "z">): SceneGizmoSnapTarget => {
   const dominantAxis = [
@@ -77,7 +77,7 @@ export const resolveSceneGizmoSnapTarget = (direction: Pick<THREE.Vector3, "x" |
 };
 
 /**
- * resolveSceneGizmoViewportPlacement holds the data fields for a resolveSceneGizmoViewportPlacement record.
+ * 📇️ resolveSceneGizmoViewportPlacement holds the data fields for a resolveSceneGizmoViewportPlacement record.
  **/
 export const resolveSceneGizmoViewportPlacement = (viewport: { width: number; height: number }): SceneGizmoViewportPlacement => {
   const chromeInset = Math.max(4, Math.round(uiSpacingPx(1)));

@@ -639,3 +639,5 @@ nul
 
 # Lockfile snapshots leaked by interrupted dependency installs: a dot plus seven hex digits, never source.
 .[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]
+
+/.workspace-events/

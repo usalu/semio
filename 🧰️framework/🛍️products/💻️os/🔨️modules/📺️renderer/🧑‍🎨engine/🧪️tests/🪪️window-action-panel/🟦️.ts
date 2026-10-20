@@ -1,10 +1,10 @@
 /** 🪪 Window action panel staging and the palette redirect and keybinding rule. */
 import utilityActionPolicy from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🧰️utility-action-policy/🔣️.json";
 import utilityAssignmentCases from "../../🧱️elements/🐚️Shell/🧰️utility-assignment/🧪️tests/🧫️fixtures/🔣️.json";
-import { manifestUtilitiesInitialFixture as initialWindowUtilityCases } from "@semio-tech/framework/manifest/testing/fixtures";
+import { manifestUtilitiesInitialFixture as initialWindowUtilityCases } from "@semio-tech/framework-manifest/testing/fixtures";
 import { resolveUtilityActivationV1 as resolveAssignmentPress } from "../../🧱️elements/🏛️ShellHost/🎯️input-ledger/🟦️.ts";
 import { createElement, useState, type ReactElement } from "react";
-import { parseResolvedPluginViewState, windowViewContext } from "@semio-tech/framework/modules/manifest/view-state-and-public-invocation";
+import { parseResolvedPluginViewState, windowViewContext } from "@semio-tech/framework-manifest/view-state-and-public-invocation";
 import Ajv2020 from "ajv/dist/2020";
 import chordKeyTokensFixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/⌨️chord-key-tokens.json";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
@@ -143,7 +143,7 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
   });
 
   it.each(["en", "de"] as const)("initial window utility decisions follow declared arms and preserve resolved registers (%s)", async (locale) => {
-    const { resolveInitialWindowUtility } = await import("@semio-tech/framework/manifest/utilities/initial");
+    const { resolveInitialWindowUtility } = await import("@semio-tech/framework-manifest/utilities/initial");
     const { createVersionedRegisterV1 } = await import("../../🧱️elements/🏛️ShellHost/🎯️input-ledger/🟦️.ts");
     const ajv = new Ajv2020({ strict: true, $data: true });
     const fixture = {...initialWindowUtilityCases,cases:initialWindowUtilityCases.cases.map(row=>{
@@ -195,7 +195,7 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
   });
 
   it("initial utility nullable admission preserves the resolved host context contract", async () => {
-    const { testResolvedHostContext } = await import("@semio-tech/framework/manifest/view-context/testing/resolved-host-context");
+    const { testResolvedHostContext } = await import("@semio-tech/framework-manifest/view-context/testing/resolved-host-context");
     testResolvedHostContext();
   });
 

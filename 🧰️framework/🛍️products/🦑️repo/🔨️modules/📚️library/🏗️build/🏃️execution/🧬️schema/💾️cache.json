@@ -10,7 +10,8 @@
     { "$ref": "#/definitions/SideEffecting" },
     { "$ref": "#/definitions/Live" },
     { "$ref": "#/definitions/Aggregate" },
-    { "$ref": "#/definitions/Diagnostic" }
+    { "$ref": "#/definitions/Diagnostic" },
+    { "$ref": "#/definitions/Unclassified" }
   ],
   "definitions": {
     "Deterministic": {
@@ -99,6 +100,17 @@
         "version": { "const": 1 },
         "class": { "const": "diagnostic" },
         "reason": { "enum": ["admission-refusal", "measures-environment"] }
+      }
+    },
+    "Unclassified": {
+      "description": "No policy row, declaration or verifying command classifies the target, so it never replays until the workspace policy names its kind.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "class", "reason"],
+      "properties": {
+        "version": { "const": 1 },
+        "class": { "const": "unclassified" },
+        "reason": { "enum": ["no-cache-classification"] }
       }
     }
   }

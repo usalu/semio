@@ -1,5 +1,6 @@
 //! 📄️ Canonical owned mesh document, topology, surface and conversion operations.
 
+#[cfg(test)]
 use semio_framework_test_fixtures::fixture_path;
 
 extern crate semio_framework_value_derive as value_derive;

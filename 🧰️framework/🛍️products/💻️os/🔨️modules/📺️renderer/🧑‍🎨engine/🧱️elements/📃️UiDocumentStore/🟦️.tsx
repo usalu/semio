@@ -19,8 +19,8 @@
 
 // #region 🔌️Adapters
 import { useCallback, useSyncExternalStore } from "react";
-import { DEFAULT_UI_DOCUMENT_LIMITS, numberLimitValues, numberRangeIsValid, snapsAreValid } from "@semio-tech/framework/modules/ui/contract/limits";
-export { DEFAULT_UI_DOCUMENT_LIMITS } from "@semio-tech/framework/modules/ui/contract/limits";
+import { DEFAULT_UI_DOCUMENT_LIMITS, numberLimitValues, numberRangeIsValid, snapsAreValid } from "@semio-tech/ui-contract/limits";
+export { DEFAULT_UI_DOCUMENT_LIMITS } from "@semio-tech/ui-contract/limits";
 import { RetainedUiPatchCursor, RetainedUiSnapshotCursor, RetainedUiSurfaceOwner, type RetainedUiTransaction, type RetainedUiState } from "@semio-tech/framework";
 import {
   type AccessibilitySpec,

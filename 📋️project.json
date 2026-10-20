@@ -340,6 +340,22 @@
             "command": ["bun", "repo", "cache", "clear"]
           },
           {
+            "id": "build-cache-remote-status",
+            "title": { "en": "Show the remote build cache", "de": "Remote-Build-Cache anzeigen" },
+            "description": { "en": "Report the remote cache contract, how the chosen backend uses it and whether the endpoint answers; nothing is stored.", "de": "Den Remote-Cache-Vertrag, die Umsetzung im gewählten Werkzeug und die Erreichbarkeit des Endpunkts melden; es wird nichts gespeichert." },
+            "verb": "inspect",
+            "command": ["bun", "repo", "cache", "remote", "status"]
+          },
+          {
+            "id": "build-cache-serve",
+            "title": { "en": "Serve the local remote build cache", "de": "Lokalen Remote-Build-Cache bereitstellen" },
+            "description": { "en": "Serve a bounded remote cache for Bazel and Nx on this machine until stopped; clients point SEMIO_REMOTE_CACHE_ENDPOINT at it.", "de": "Einen begrenzten Remote-Cache für Bazel und Nx auf diesem Rechner bereitstellen, bis er gestoppt wird; Clients richten SEMIO_REMOTE_CACHE_ENDPOINT darauf." },
+            "verb": "serve",
+            "command": ["bun", "repo", "cache", "serve", "--port", "{port}"],
+            "continuous": true,
+            "ready": { "port": 6090, "portEnv": "SEMIO_REMOTE_CACHE_PORT", "path": "/healthz" }
+          },
+          {
             "id": "build-exec",
             "title": { "en": "Run a command in projects or preview it", "de": "Befehl in Projekten ausführen oder vorprüfen" },
             "description": { "en": "Select projects, backend and optional dry run, then enter the command words in Arguments; the dry run prints the per-project plan and runs nothing.", "de": "Projekte, Werkzeug und optionalen Probelauf auswählen, dann die Befehlswörter unter Argumente eingeben; der Probelauf zeigt den Plan je Projekt und führt nichts aus." },
@@ -2060,7 +2076,7 @@
         "deps-tools",
         "setup-git",
         "prepare",
-        "repo-mcp:build",
+        "repo-mcp:install",
         "@semio-tech/framework-os-mcp-rs:build"
       ]
     },
@@ -2620,6 +2636,7 @@
       "executor": "repo:script",
       "dependsOn": [],
       "cache": true,
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test discover",
         "forwardAllArgs": true
@@ -2710,7 +2727,7 @@
     "test-report": {
       "executor": "repo:script",
       "dependsOn": [],
-      "cache": true,
+      "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test report",
         "forwardAllArgs": true
@@ -3010,6 +3027,7 @@
     },
     "verify-gate": {
       "executor": "repo:script",
+      "cache": false,
       "dependsOn": [
         "mutation-outcome-law"
       ],
@@ -3034,10 +3052,12 @@
         "command": "bun ./📜️script.ts verify taxonomy report",
         "forwardAllArgs": true
       },
-      "cache": true
+      "cache": true,
+      "outputs": []
     },
     "verify-taxonomy-enforce": {
       "executor": "repo:script",
+      "outputs": [],
       "dependsOn": [],
       "options": {
         "command": "bun ./📜️script.ts verify taxonomy enforce",
@@ -3050,10 +3070,12 @@
       "options": {
         "command": "bun ./📜️script.ts verify taxonomy implementation report"
       },
-      "cache": true
+      "cache": true,
+      "outputs": []
     },
     "verify-taxonomy-implementation-enforce": {
       "executor": "repo:script",
+      "outputs": [],
       "dependsOn": [],
       "options": {
         "command": "bun ./📜️script.ts verify taxonomy implementation enforce"
@@ -3107,6 +3129,7 @@
     },
     "verify-typescript-project": {
       "executor": "repo:script",
+      "cache": false,
       "dependsOn": [],
       "options": {
         "command": "bun ./📜️script.ts verify typescript project",
@@ -3115,6 +3138,7 @@
     },
     "verify-typescript": {
       "executor": "repo:script",
+      "outputs": [],
       "dependsOn": [],
       "options": {
         "command": "bun ./📜️script.ts verify typescript check",
@@ -3123,6 +3147,7 @@
     },
     "verify-interactivity": {
       "executor": "repo:script",
+      "outputs": [],
       "dependsOn": [],
       "options": {
         "command": "bun ./📜️script.ts verify interactivity"
@@ -3130,6 +3155,7 @@
     },
     "verify-dependencies-freeze": {
       "executor": "repo:script",
+      "outputs": [],
       "dependsOn": [],
       "options": {
         "command": "bun ./📜️script.ts verify dependencies"
@@ -3137,6 +3163,7 @@
     },
     "verify-dependencies-literal-external": {
       "executor": "repo:script",
+      "outputs": [],
       "dependsOn": [],
       "options": {
         "command": "bun ./📜️script.ts verify dependencies literal-external"
@@ -3323,6 +3350,7 @@
     },
     "verify-layering": {
       "executor": "repo:script",
+      "cache": false,
       "dependsOn": [],
       "options": {
         "command": "bun ./📜️script.ts verify layering"
@@ -3803,7 +3831,7 @@
     },
     "prepare": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "outputs": [],
       "dependsOn": [
         "@semio-tech/framework-schema:generate",
@@ -3814,6 +3842,11 @@
       ],
       "options": {
         "command": "bun ./📜️script.ts setup prepare"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "aggregate", "reason": "orders-prerequisites" }
+        }
       }
     },
     "setup-git": {
@@ -4011,6 +4044,7 @@
     "artifact-field-parity-test": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts verify artifact-field-parity test"
       }

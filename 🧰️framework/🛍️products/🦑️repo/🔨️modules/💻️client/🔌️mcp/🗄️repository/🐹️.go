@@ -283,7 +283,7 @@ func NewRepositoryServerWithLimitsFor(repository RepositoryHandlers, profile pro
 	if err != nil {
 		return nil, err
 	}
-	server, err := NewServer(Config{ServerInfo: Implementation{Name: providers.McpServerName(resolvedProfile), Version: "1.0.0"}, Instructions: "Use repository tools and resources through their owned schemas. Run build tasks with bun repo run <project>:<target> and provision tools with bun repo tools setup all. Nx remains the default; select Bazel with --tool=bazel. Nested tasks inherit SEMIO_BUILD_TOOL.", Limits: limits})
+	server, err := NewServer(Config{ServerInfo: Implementation{Name: providers.McpServerName(resolvedProfile), Version: "1.0.0"}, Instructions: "Use repository tools and resources through their owned schemas. Run build tasks with repo run <project>:<target> and provision tools with repo tools setup all. Nx remains the default; select Bazel with --tool=bazel. Nested tasks inherit SEMIO_BUILD_TOOL.", Limits: limits})
 	if err != nil {
 		return nil, err
 	}

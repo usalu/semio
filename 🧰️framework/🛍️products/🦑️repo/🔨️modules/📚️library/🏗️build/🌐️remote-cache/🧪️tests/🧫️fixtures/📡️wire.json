@@ -1,0 +1,652 @@
+{
+  "version": 1,
+  "digests": {
+    "hello": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+    "world": "486ea46224d1bb4fb680f34f7c9ad96a8f24ec88be73ea8e5a6c65260e9cb8a7",
+    "empty": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "scenarios": [
+    {
+      "name": "open server: Bazel content-addressed blobs verify their digest",
+      "server": {
+        "tokens": {}
+      },
+      "steps": [
+        {
+          "name": "unknown blob is a miss",
+          "request": {
+            "method": "GET",
+            "path": "/cas/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+          },
+          "response": {
+            "status": 404
+          }
+        },
+        {
+          "name": "blob with a matching digest is stored",
+          "request": {
+            "method": "PUT",
+            "path": "/cas/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+            "body": "hello"
+          },
+          "response": {
+            "status": 200
+          }
+        },
+        {
+          "name": "blob reads back byte for byte",
+          "request": {
+            "method": "GET",
+            "path": "/cas/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "content-type": "application/octet-stream",
+              "content-length": "5"
+            },
+            "body": "hello"
+          }
+        },
+        {
+          "name": "HEAD answers the length without a body",
+          "request": {
+            "method": "HEAD",
+            "path": "/cas/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "content-length": "5"
+            },
+            "body": ""
+          }
+        },
+        {
+          "name": "blob whose bytes do not match the digest is refused",
+          "request": {
+            "method": "PUT",
+            "path": "/cas/486ea46224d1bb4fb680f34f7c9ad96a8f24ec88be73ea8e5a6c65260e9cb8a7",
+            "body": "hello"
+          },
+          "response": {
+            "status": 400
+          }
+        },
+        {
+          "name": "the refused blob was not stored",
+          "request": {
+            "method": "GET",
+            "path": "/cas/486ea46224d1bb4fb680f34f7c9ad96a8f24ec88be73ea8e5a6c65260e9cb8a7"
+          },
+          "response": {
+            "status": 404
+          }
+        },
+        {
+          "name": "storing a blob again is idempotent",
+          "request": {
+            "method": "PUT",
+            "path": "/cas/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+            "body": "hello"
+          },
+          "response": {
+            "status": 200
+          }
+        },
+        {
+          "name": "the empty blob has the empty digest",
+          "request": {
+            "method": "PUT",
+            "path": "/cas/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "body": ""
+          },
+          "response": {
+            "status": 200
+          }
+        },
+        {
+          "name": "the empty blob reads back empty",
+          "request": {
+            "method": "GET",
+            "path": "/cas/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "content-length": "0"
+            },
+            "body": ""
+          }
+        },
+        {
+          "name": "digest must be 64 lower-case hex digits",
+          "request": {
+            "method": "GET",
+            "path": "/cas/2CF24DBA5FB0A30E26E83B2AC5B9E29E1B161E5C1FA7425E73043362938B9824"
+          },
+          "response": {
+            "status": 404
+          }
+        },
+        {
+          "name": "digest must not be short",
+          "request": {
+            "method": "GET",
+            "path": "/cas/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b982"
+          },
+          "response": {
+            "status": 404
+          }
+        }
+      ]
+    },
+    {
+      "name": "open server: Bazel action results are overwritten by the newest value",
+      "server": {
+        "tokens": {}
+      },
+      "steps": [
+        {
+          "name": "unknown action is a miss",
+          "request": {
+            "method": "GET",
+            "path": "/ac/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+          },
+          "response": {
+            "status": 404
+          }
+        },
+        {
+          "name": "action result is stored",
+          "request": {
+            "method": "PUT",
+            "path": "/ac/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+            "body": "result-1"
+          },
+          "response": {
+            "status": 200
+          }
+        },
+        {
+          "name": "action result reads back",
+          "request": {
+            "method": "GET",
+            "path": "/ac/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+          },
+          "response": {
+            "status": 200,
+            "body": "result-1"
+          }
+        },
+        {
+          "name": "action result is replaced",
+          "request": {
+            "method": "PUT",
+            "path": "/ac/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+            "body": "result-2"
+          },
+          "response": {
+            "status": 200
+          }
+        },
+        {
+          "name": "the newest value wins",
+          "request": {
+            "method": "GET",
+            "path": "/ac/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+          },
+          "response": {
+            "status": 200,
+            "body": "result-2"
+          }
+        },
+        {
+          "name": "blobs and actions are separate keyspaces",
+          "request": {
+            "method": "GET",
+            "path": "/cas/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+          },
+          "response": {
+            "status": 404
+          }
+        }
+      ]
+    },
+    {
+      "name": "open server: Nx task archives are write-once",
+      "server": {
+        "tokens": {}
+      },
+      "steps": [
+        {
+          "name": "unknown hash is a miss",
+          "request": {
+            "method": "GET",
+            "path": "/v1/cache/10625049053885554827"
+          },
+          "response": {
+            "status": 404
+          }
+        },
+        {
+          "name": "archive is stored",
+          "request": {
+            "method": "PUT",
+            "path": "/v1/cache/10625049053885554827",
+            "body": "archive-1"
+          },
+          "response": {
+            "status": 200
+          }
+        },
+        {
+          "name": "archive reads back as octet-stream",
+          "request": {
+            "method": "GET",
+            "path": "/v1/cache/10625049053885554827"
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "content-type": "application/octet-stream"
+            },
+            "body": "archive-1"
+          }
+        },
+        {
+          "name": "overwriting is a conflict",
+          "request": {
+            "method": "PUT",
+            "path": "/v1/cache/10625049053885554827",
+            "body": "archive-2"
+          },
+          "response": {
+            "status": 409
+          }
+        },
+        {
+          "name": "the first archive survives",
+          "request": {
+            "method": "GET",
+            "path": "/v1/cache/10625049053885554827"
+          },
+          "response": {
+            "status": 200,
+            "body": "archive-1"
+          }
+        },
+        {
+          "name": "the hash may not contain upper case",
+          "request": {
+            "method": "GET",
+            "path": "/v1/cache/ABC"
+          },
+          "response": {
+            "status": 404
+          }
+        },
+        {
+          "name": "the route needs a hash",
+          "request": {
+            "method": "GET",
+            "path": "/v1/cache/"
+          },
+          "response": {
+            "status": 404
+          }
+        },
+        {
+          "name": "other methods are refused",
+          "request": {
+            "method": "DELETE",
+            "path": "/v1/cache/10625049053885554827"
+          },
+          "response": {
+            "status": 405,
+            "headers": {
+              "allow": "GET, HEAD, PUT"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "namespaces partition every keyspace",
+      "server": {
+        "tokens": {}
+      },
+      "steps": [
+        {
+          "name": "store in the default namespace",
+          "request": {
+            "method": "PUT",
+            "path": "/v1/cache/10625049053885554827",
+            "body": "default"
+          },
+          "response": {
+            "status": 200
+          }
+        },
+        {
+          "name": "the same hash under another namespace is a miss",
+          "request": {
+            "method": "GET",
+            "path": "/team-a/v1/cache/10625049053885554827"
+          },
+          "response": {
+            "status": 404
+          }
+        },
+        {
+          "name": "store in the other namespace",
+          "request": {
+            "method": "PUT",
+            "path": "/team-a/v1/cache/10625049053885554827",
+            "body": "team-a"
+          },
+          "response": {
+            "status": 200
+          }
+        },
+        {
+          "name": "each namespace keeps its own value",
+          "request": {
+            "method": "GET",
+            "path": "/team-a/v1/cache/10625049053885554827"
+          },
+          "response": {
+            "status": 200,
+            "body": "team-a"
+          }
+        },
+        {
+          "name": "the default namespace is unchanged",
+          "request": {
+            "method": "GET",
+            "path": "/v1/cache/10625049053885554827"
+          },
+          "response": {
+            "status": 200,
+            "body": "default"
+          }
+        },
+        {
+          "name": "Bazel blobs honour namespaces too",
+          "request": {
+            "method": "PUT",
+            "path": "/team-a/cas/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+            "body": "hello"
+          },
+          "response": {
+            "status": 200
+          }
+        },
+        {
+          "name": "the default namespace has no such blob",
+          "request": {
+            "method": "GET",
+            "path": "/cas/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+          },
+          "response": {
+            "status": 404
+          }
+        },
+        {
+          "name": "a namespace may not be a protocol route",
+          "request": {
+            "method": "GET",
+            "path": "/status/cas/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+          },
+          "response": {
+            "status": 404
+          }
+        },
+        {
+          "name": "a namespace may not have upper case",
+          "request": {
+            "method": "GET",
+            "path": "/Team/cas/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+          },
+          "response": {
+            "status": 404
+          }
+        }
+      ]
+    },
+    {
+      "name": "tokens: read token reads, write token writes, nothing else passes",
+      "server": {
+        "tokens": {
+          "read": "read-secret",
+          "write": "write-secret"
+        }
+      },
+      "steps": [
+        {
+          "name": "no credentials",
+          "request": {
+            "method": "GET",
+            "path": "/v1/cache/10625049053885554827"
+          },
+          "response": {
+            "status": 401,
+            "headers": {
+              "content-type": "text/plain",
+              "www-authenticate": "Bearer"
+            }
+          }
+        },
+        {
+          "name": "wrong token",
+          "request": {
+            "method": "GET",
+            "path": "/v1/cache/10625049053885554827",
+            "headers": {
+              "authorization": "Bearer nope"
+            }
+          },
+          "response": {
+            "status": 401
+          }
+        },
+        {
+          "name": "basic scheme is not accepted",
+          "request": {
+            "method": "GET",
+            "path": "/v1/cache/10625049053885554827",
+            "headers": {
+              "authorization": "Basic cmVhZC1zZWNyZXQ="
+            }
+          },
+          "response": {
+            "status": 401
+          }
+        },
+        {
+          "name": "write token may write",
+          "request": {
+            "method": "PUT",
+            "path": "/v1/cache/10625049053885554827",
+            "headers": {
+              "authorization": "Bearer write-secret"
+            },
+            "body": "archive"
+          },
+          "response": {
+            "status": 200
+          }
+        },
+        {
+          "name": "read token may read",
+          "request": {
+            "method": "GET",
+            "path": "/v1/cache/10625049053885554827",
+            "headers": {
+              "authorization": "Bearer read-secret"
+            }
+          },
+          "response": {
+            "status": 200,
+            "body": "archive"
+          }
+        },
+        {
+          "name": "write token may read",
+          "request": {
+            "method": "GET",
+            "path": "/v1/cache/10625049053885554827",
+            "headers": {
+              "authorization": "Bearer write-secret"
+            }
+          },
+          "response": {
+            "status": 200,
+            "body": "archive"
+          }
+        },
+        {
+          "name": "read token may not write",
+          "request": {
+            "method": "PUT",
+            "path": "/v1/cache/106250490538855548270",
+            "headers": {
+              "authorization": "Bearer read-secret"
+            },
+            "body": "x"
+          },
+          "response": {
+            "status": 403
+          }
+        },
+        {
+          "name": "the refused write stored nothing",
+          "request": {
+            "method": "GET",
+            "path": "/v1/cache/106250490538855548270",
+            "headers": {
+              "authorization": "Bearer read-secret"
+            }
+          },
+          "response": {
+            "status": 404
+          }
+        },
+        {
+          "name": "Bazel blobs need the same token",
+          "request": {
+            "method": "PUT",
+            "path": "/cas/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+            "body": "hello"
+          },
+          "response": {
+            "status": 401
+          }
+        },
+        {
+          "name": "read token may not write blobs",
+          "request": {
+            "method": "PUT",
+            "path": "/cas/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+            "headers": {
+              "authorization": "Bearer read-secret"
+            },
+            "body": "hello"
+          },
+          "response": {
+            "status": 403
+          }
+        },
+        {
+          "name": "write token stores blobs",
+          "request": {
+            "method": "PUT",
+            "path": "/cas/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+            "headers": {
+              "authorization": "Bearer write-secret"
+            },
+            "body": "hello"
+          },
+          "response": {
+            "status": 200
+          }
+        },
+        {
+          "name": "health needs no token",
+          "request": {
+            "method": "GET",
+            "path": "/healthz"
+          },
+          "response": {
+            "status": 200
+          }
+        },
+        {
+          "name": "status needs a token",
+          "request": {
+            "method": "GET",
+            "path": "/status"
+          },
+          "response": {
+            "status": 401
+          }
+        },
+        {
+          "name": "status answers with a token",
+          "request": {
+            "method": "GET",
+            "path": "/status",
+            "headers": {
+              "authorization": "Bearer read-secret"
+            }
+          },
+          "response": {
+            "status": 200
+          }
+        }
+      ]
+    },
+    {
+      "name": "bounds: an entry above the entry bound is refused before it is stored",
+      "server": {
+        "tokens": {},
+        "maximumBytes": 4096,
+        "maximumEntryBytes": 16
+      },
+      "steps": [
+        {
+          "name": "a small archive fits",
+          "request": {
+            "method": "PUT",
+            "path": "/v1/cache/small",
+            "body": "0123456789abcdef"
+          },
+          "response": {
+            "status": 200
+          }
+        },
+        {
+          "name": "a larger archive is refused",
+          "request": {
+            "method": "PUT",
+            "path": "/v1/cache/large",
+            "body": "0123456789abcdefX"
+          },
+          "response": {
+            "status": 413
+          }
+        },
+        {
+          "name": "the refused archive was not stored",
+          "request": {
+            "method": "GET",
+            "path": "/v1/cache/large"
+          },
+          "response": {
+            "status": 404
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -3,7 +3,7 @@ import {existsSync, readFileSync, writeFileSync} from "node:fs";
 import {dirname, join, resolve} from "node:path";
 import {C} from "./vfs.ts";
 const REPO = "/Users/ueli/Documents/semio";
-const files = readFileSync(`${C}/🗑️generated/tax-stage/grep-files.txt`, "utf8").split("\n").filter(Boolean);
+const files = readFileSync(`${C}/tax-stage-tools/index/grep-files.txt`, "utf8").split("\n").filter(Boolean);
 const found = new Map<string, {file: string; line: number; spec: string}[]>();
 for (const rel of files) {
   if (!/\.(ts|tsx|mts|mjs|js|json)$/u.test(rel)) continue;

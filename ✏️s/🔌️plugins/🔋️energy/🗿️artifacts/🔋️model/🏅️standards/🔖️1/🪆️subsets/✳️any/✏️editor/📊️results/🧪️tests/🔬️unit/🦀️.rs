@@ -1,4 +1,5 @@
 use super::*;
+use crate::editor_config::EnergyModelConfig;
 use crate::session::{encode_surface_energy_payload, energy_surface_payload_bytes, ENERGY_SURFACE_PAYLOAD_MAXIMUM_ROWS};
 use crate::results::SurfaceEnergySummary;
 

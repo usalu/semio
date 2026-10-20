@@ -26,7 +26,7 @@ import { createPortal } from "react-dom";
 // #region 🔌️Ports
 // 🧱️core-extracted: ReactHostPort + reactHostPort moved to 🧱️elements/🔌️Ports/🟦️.tsx (a
 // module-top-level circular-import fix, see that file's header comment) — imported below, not redefined.
-import { sceneHostPort } from "../../🧱️elements/🔌️Ports/🟦️.tsx";
+import { sceneHostPort } from "@semio-tech/ui/elements/Ports";
 // #endregion 🔌️PortWiring
 
 // #region 🐚️ShellScope
@@ -308,7 +308,7 @@ export function usePaneSlot(pane: React.ReactElement): React.ReactPortal | null 
 // #endregion 📁️VirtualFileSystem
 
 
-import { usePaneHostContext } from "../../🧱️elements/📌️WindowPane/🟦️.tsx";
+import { usePaneHostContext } from "@semio-tech/ui/elements/WindowPane";
 import "./📤️adapter-exports/🟦️.ts";
 import "./🧱️window-chrome/🟦️.tsx";
 import "./🖥️fullscreen/🟦️.tsx";
@@ -344,5 +344,5 @@ export { DesktopTitlebar, NavbarTrailingChromeSlot, publishShellNavbarTrailingEn
 export { WINDOW_SEARCH_USER, engagementActionTokenEquals, isSearchSuggestionActionTarget, searchActiveCompletionSuffix, searchCompletionSuffix } from "./🔎️window-search/🟦️.ts";
 export { ChromeAwareWindowScrollSurface, shellChromeSectionTitleClassName, windowChromeControlButtonClass, windowControlsCapActiveSplitClass, windowEngagementMaxWidthPx, windowMeasureControlClass, windowMeasureGroupChildrenClass, windowMeasureGroupHeaderClass, windowMeasureLabelClass, windowMeasureSectionClass, windowMeasureTileClass, windowMeasureTileNestedClass, windowMeasureToggleClass, windowMeasureToggleCompactClass, windowMeasuresStackInnerClass, windowRailChromeLabelActionClass } from "./🧱️window-chrome/🟦️.tsx";
 
-export { CatalogIcon, type CatalogIconProps } from "../../🧱️elements/🔣️Icons/🟦️.tsx";
+export { CatalogIcon, type CatalogIconProps } from "@semio-tech/ui/elements/Icons";
 export { INTRODUCTION_DEMO_GESTURE_DEFAULT_CURSOR } from "./🎬️introduction-demo/🟦️.tsx";

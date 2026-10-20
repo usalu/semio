@@ -19,7 +19,8 @@
         "maximumMetadataNodes": 262144,
         "maximumMetadataDepth": 64,
         "maximumReadOperations": 1048576,
-        "maximumBatchFailures": 3
+        "maximumBatchFailures": 3,
+        "maximumInventoryRecordsPerYield": 128
       }
     },
     "Admission": {
@@ -108,6 +109,11 @@
           "maximum": 9007199254740991
         }
       }
+    },
+    "InventoryReadLimit": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 134217728
     }
   }
 }

@@ -94,7 +94,6 @@ use semio_framework_plugin::MediaClass;
 use semio_framework_plugin::MediaForm;
 use semio_framework_plugin::MediaType;
 use semio_framework_plugin::OsMediaCapability;
-use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
 use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitType;
 
 pub const BLOCK_3D_SCHEMA: &str = "block.3d";

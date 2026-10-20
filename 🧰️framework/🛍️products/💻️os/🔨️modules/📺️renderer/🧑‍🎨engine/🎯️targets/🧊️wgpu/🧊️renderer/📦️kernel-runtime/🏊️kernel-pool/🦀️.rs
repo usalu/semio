@@ -1,10 +1,6 @@
 //! 🏊️ Kernel pool: the kernel pool state implementation, request queue, pool futures and the pool runner.
 use super::*;
 
-#[path="🎟️task-ingress/🦀️.rs"]
-mod original_task_ingress;
-pub(crate) use original_task_ingress::{OriginalKernelTaskInput,OriginalKernelTaskProducer};
-
 #[path = "🏗️pool-construction-and-product-replay/🦀️.rs"]
 mod pool_construction_and_product_replay;
 

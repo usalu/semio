@@ -5,31 +5,31 @@ import { normWireArray, normWireDefault, normWireInteger, normWireNullable, norm
 import { type AnnexChoice, parseAnnexChoice, parsePile, parseRetainingWall, parseSlope, parseSoilLayer, parseSpreadFoundation, parseUpliftCase, type Pile, type RetainingWall, type Slope, type SoilLayer, type SpreadFoundation, type UpliftCase } from "../📸️snapshot/🟦️.ts";
 
 export interface En1997Diff {
-  /** @state artifact */
+  /** 🏗️ @state artifact */
   structureId: string | null;
-  /** @state artifact */
+  /** 🚦️ @state artifact */
   geotechnicalCategory: number | null;
-  /** @state artifact */
+  /** 🎨️ @state artifact */
   designSituation: string | null;
-  /** @state artifact */
+  /** 📐️ @state artifact */
   designApproach: string | null;
-  /** @state artifact */
+  /** 📑️ @state artifact */
   annex: AnnexChoice | null;
-  /** @state artifact */
+  /** 📶️ @state artifact */
   groundwaterLevel: number | null;
-  /** @state artifact */
+  /** 📏️ @state artifact */
   investigationDepth: number | null;
-  /** @state artifact */
+  /** 🥞️ @state artifact */
   layers: En1997LayersRows | null;
-  /** @state artifact */
+  /** 🏛️ @state artifact */
   footings: En1997FootingsRows | null;
-  /** @state artifact */
+  /** 🔄️ @state artifact */
   piles: En1997PilesRows | null;
-  /** @state artifact */
+  /** 🗄️ @state artifact */
   retainingWalls: En1997RetainingWallsRows | null;
-  /** @state artifact */
+  /** ✏️ @state artifact */
   slopes: En1997SlopesRows | null;
-  /** @state artifact */
+  /** 🧮️ @state artifact */
   upliftCases: En1997UpliftCasesRows | null;
 }
 

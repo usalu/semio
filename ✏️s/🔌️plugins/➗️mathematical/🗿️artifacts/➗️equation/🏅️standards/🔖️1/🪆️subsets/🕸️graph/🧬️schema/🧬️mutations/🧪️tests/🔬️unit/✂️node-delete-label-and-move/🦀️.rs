@@ -237,10 +237,10 @@ mod change_node_label {
 use crate::{EquationDiff, EquationMutation, EquationSnapshot};
 use semio_framework_value::ToValue;
 
-static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../🕸️graph/🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-node/🧪️rejects/📸️snapshot/⬅️before/🔣️.json"));
-static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../🕸️graph/🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-node/🧪️rejects/📸️snapshot/➡️after/🔣️.json"));
-static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../🕸️graph/🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-node/🧪️rejects/🦠️mutation/🔣️.json"));
-static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../🕸️graph/🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-node/🧪️rejects/🎯️outcome/🔣️.json"));
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../🕸️graph/🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-node-label/🧪️rejects/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../🕸️graph/🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-node-label/🧪️rejects/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../🕸️graph/🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-node-label/🧪️rejects/🦠️mutation/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../🕸️graph/🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-node-label/🧪️rejects/🎯️outcome/🔣️.json"));
 
 fn before() -> EquationSnapshot {
     semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")

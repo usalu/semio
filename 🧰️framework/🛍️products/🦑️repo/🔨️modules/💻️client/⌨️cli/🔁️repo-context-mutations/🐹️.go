@@ -36,7 +36,7 @@ func applySystemAutofixes(breachs []Breach) (int, error) {
 	return fixed, nil
 }
 
-// findMatchingSectionStartName locates the section start name for autofix helpers.
+// 🔍️findMatchingSectionStartName locates the section start name for autofix helpers.
 func findMatchingSectionStartName(lines []string, endLineIdx int, language LanguagePlugin) string {
 	depth := 0
 	for i := endLineIdx - 1; i >= 0; i-- {

@@ -24,7 +24,7 @@ import {
 import { type ArtifactSyncStatus } from "@semio-tech/framework/backbone";
 import { type Anchor, ANCHORS } from "@semio-tech/ui-react";
 import { useEffect } from "react";
-import type { DomainSelection, InteractionState } from "@semio-tech/framework/interaction";
+import type { DomainSelection, InteractionState } from "@semio-tech/framework-interaction";
 import type { ShellDialogV1 } from "../../🏛️ShellHost/🗨️dialog-origin/🟦️.ts";
 import { type ActiveSession } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import { type ShellState } from "../../🐚️Shell/🗃️state-shapes/🟦️.ts";

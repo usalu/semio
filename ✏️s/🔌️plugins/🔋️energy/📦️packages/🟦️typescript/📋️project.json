@@ -4,6 +4,7 @@
   "targets": {
     "test-toolchain-authority": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test toolchain-authority"
@@ -11,6 +12,7 @@
     },
     "test": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",

@@ -86,46 +86,7 @@ impl Process3dStoreInitializationAuthority {
                     store::ArtifactStoreInitializationEditAdmission::Oversized | store::ArtifactStoreInitializationEditAdmission::Duplicate => self.fail(b"process3d-store.initializer-duplicate-edit"),
                 }
             }
-            Process3dStoreInitializationPhase::CensusHistory { edit, mutation } => {
-                let envelope = self.envelope.as_ref().expect("Process3d envelope retained");
-                let Some(entry) = envelope.vcs.edits.get(edit) else {
-                    let initial_machines = envelope.vcs.genesis.facts().snapshot().workshop.machines.len();
-                    let machine_capacity = match initial_machines.checked_add(self.machine_growth) {
-                        Some(value) if value <= PROCESS3D_MAXIMUM_DOMAIN_ITEMS => value,
-                        _ => {
-                            self.fail(b"process3d-store.initializer-machine-growth");
-                            return Process3dTurn::Yield;
-                        }
-                    };
-                    if machine_capacity.checked_mul(size_of::<WorkshopMachine>()).is_none_or(|bytes| bytes > PROCESS3D_MAXIMUM_DOMAIN_BYTES) {
-                        self.fail(b"process3d-store.initializer-machine-bytes");
-                        return Process3dTurn::Yield;
-                    }
-                    self.phase = Process3dStoreInitializationPhase::Census;
-                    return Process3dTurn::Yield;
-                };
-                if let Some(operation) = entry.forwards.get(mutation) {
-                    self.history_items = match self.history_items.checked_add(1) {
-                        Some(value) if value <= PROCESS3D_MAXIMUM_DOMAIN_ITEMS => value,
-                        _ => {
-                            self.fail(b"process3d-store.initializer-history-capacity");
-                            return Process3dTurn::Yield;
-                        }
-                    };
-                    if matches!(operation, Process3dMutation::CreateMachine(_)) {
-                        self.machine_growth = match self.machine_growth.checked_add(1) {
-                            Some(value) => value,
-                            None => {
-                                self.fail(b"process3d-store.initializer-machine-growth-overflow");
-                                return Process3dTurn::Yield;
-                            }
-                        };
-                    }
-                    self.phase = Process3dStoreInitializationPhase::CensusHistory { edit, mutation: mutation + 1 };
-                } else {
-                    self.phase = Process3dStoreInitializationPhase::CensusHistory { edit: edit + 1, mutation: 0 };
-                }
-            }
+            Process3dStoreInitializationPhase::CensusHistory { edit, mutation } => self.turn_census_history(edit, mutation),
             Process3dStoreInitializationPhase::Census => {
                 let source = &self.envelope.as_ref().expect("Process3d envelope retained").vcs.genesis.facts().snapshot();
                 match self.census.as_mut().expect("Process3d census retained").step(source, cx) {
@@ -134,66 +95,8 @@ impl Process3dStoreInitializationAuthority {
                     Err(code) => self.fail(code.as_bytes()),
                 }
             }
-            Process3dStoreInitializationPhase::CloneInitial => {
-                let source = &self.envelope.as_ref().expect("Process3d envelope retained").vcs.genesis.facts().snapshot();
-                let complete = match self.clone_cursor.as_mut().expect("Process3d clone retained").step(source, cx) {
-                    Ok(value) => value,
-                    Err(code) => {
-                        self.fail(code.as_bytes());
-                        false
-                    }
-                };
-                if complete {
-                    let initial = self.clone_cursor.as_mut().expect("Process3d clone retained").take().expect("Process3d clone handoff");
-                    drop(self.clone_cursor.take());
-                    *self.census = None;
-                    match self.runtime.as_mut().expect("retained initializer runtime").adopt_current_owned(initial, process3d_snapshot_value_factory()) {
-                        Ok(()) => self.phase = self.resume_phase.take().expect("retained mutation resume phase"),
-                        Err(initial) => {
-                            *self.released = Some(Process3dReleased::Snapshot(initial));
-                            self.fail(b"initializer-owned-workspace-adoption");
-                        }
-                    }
-                }
-                return Process3dTurn::Yield;
-            }
-            Process3dStoreInitializationPhase::SeedHistory { edit, lane, index } => {
-                let envelope = self.envelope.as_ref().expect("Process3d history retained");
-                let Some(entry) = envelope.vcs.edits.get(edit) else {
-                    self.phase = Process3dStoreInitializationPhase::FoldSupersessions { transition: 0 };
-                    return Process3dTurn::Yield;
-                };
-                let runtime = self.runtime.as_mut().expect("Process3d runtime retained");
-                match lane {
-                    0 => match runtime.seed_mutation(protocol::MutationId(process3d_copy_string(&entry.id).unwrap_or_default())) {
-                        Ok(()) => {
-                            runtime.observe_sequence(entry.sequence_number);
-                            self.phase = Process3dStoreInitializationPhase::SeedHistory { edit, lane: 1, index: 0 };
-                        }
-                        Err(error) => {
-                            self.fault = Some(error.into_bytes());
-                            self.phase = Process3dStoreInitializationPhase::RetireFault;
-                        }
-                    },
-                    1 if index < entry.forwards.len() => {
-                        let id =
-                            entry.mutation_meta.get(index).and_then(|meta| meta.mutation_id.as_ref()).map_or_else(|| protocol::MutationId(format!("{}#{index}", entry.id)), |id| protocol::MutationId(process3d_copy_string(&id.0).unwrap_or_default()));
-                        match runtime.seed_edit_operation(&entry.id, id) {
-                            Ok(()) => self.phase = Process3dStoreInitializationPhase::SeedHistory { edit, lane, index: index + 1 },
-                            Err(error) => {
-                                self.fault = Some(error.into_bytes());
-                                self.phase = Process3dStoreInitializationPhase::RetireFault;
-                            }
-                        }
-                    }
-                    1 => self.phase = Process3dStoreInitializationPhase::SeedHistory { edit, lane: 2, index: 0 },
-                    2 if index < entry.mutation_meta.len() => {
-                        runtime.observe_timestamp(entry.mutation_meta[index].timestamp);
-                        self.phase = Process3dStoreInitializationPhase::SeedHistory { edit, lane, index: index + 1 };
-                    }
-                    _ => self.phase = Process3dStoreInitializationPhase::SeedHistory { edit: edit + 1, lane: 0, index: 0 },
-                }
-            }
+            Process3dStoreInitializationPhase::CloneInitial => self.turn_clone_initial(cx),
+            Process3dStoreInitializationPhase::SeedHistory { edit, lane, index } => self.turn_seed_history(edit, lane, index),
             Process3dStoreInitializationPhase::FoldSupersessions { transition } => {
                 let envelope = self.envelope.as_ref().expect("Process3d envelope remains retained while its supersessions fold");
                 match self.runtime.as_mut().expect("Process3d runtime remains retained while its supersessions fold").fold_supersession_step(envelope, transition) {
@@ -205,95 +108,10 @@ impl Process3dStoreInitializationAuthority {
                     }
                 }
             }
-            Process3dStoreInitializationPhase::FindApplied { position } => {
-                let Some(id) = self.applied_id(position) else {
-                    let checkpoint = self
-                        .envelope
-                        .as_ref()
-                        .and_then(|envelope| envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.as_ref()).or_else(|| envelope.vcs.checkpoints.last().map(|checkpoint| &checkpoint.id)))
-                        .and_then(|id| process3d_copy_string(id).ok());
-                    self.runtime.as_mut().expect("Process3d runtime retained").set_current_checkpoint_id(checkpoint);
-                    self.phase = Process3dStoreInitializationPhase::FindRedo { position: 0 };
-                    return Process3dTurn::Yield;
-                };
-                let scan = self.edit_index.position(&id).unwrap_or(usize::MAX);
-                let envelope = self.envelope.as_ref().expect("Process3d envelope retained");
-                match envelope.vcs.edits.get(scan) {
-                    Some(edit) if edit.id == id => {
-                        self.phase = Process3dStoreInitializationPhase::ApplyForward { position, edit: scan, mutation: 0 };
-                    }
-                    Some(_) => self.fail(b"process3d-store.initializer-applied-missing"),
-                    None => self.fail(b"process3d-store.initializer-applied-missing"),
-                }
-            }
-            Process3dStoreInitializationPhase::ApplyForward { position, edit, mutation } => {
-                let needs_workspace = {
-                    let envelope = self.envelope.as_ref().expect("retained initializer envelope");
-                    let runtime = self.runtime.as_ref().expect("retained initializer runtime");
-                    envelope.vcs.edits.get(edit).and_then(|entry| runtime.effective_forward(entry, mutation, &envelope.schema)).is_some_and(|effective| effective.operation().is_some())
-                };
-                if needs_workspace && self.runtime.as_mut().expect("retained initializer runtime").current_mut().is_none() {
-                    self.resume_phase = Some(self.phase);
-                    let capacity = self.envelope.as_ref().expect("retained genesis").vcs.genesis.facts().snapshot().workshop.machines.len() + self.machine_growth;
-                    *self.clone_cursor = Some(Process3dSnapshotCopyCursor::new(capacity));
-                    self.phase = Process3dStoreInitializationPhase::CloneInitial;
-                    cx.consume_fuel(1);
-                    return Process3dTurn::Yield;
-                }
-                let operation = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).and_then(|entry| entry.forwards.get(mutation));
-                let Some(_operation) = operation else {
-                    self.phase = Process3dStoreInitializationPhase::CommitApplied { position, edit };
-                    return Process3dTurn::Yield;
-                };
-                let envelope = self.envelope.as_ref().expect("Process3d envelope remains retained while its forwards fold");
-                let entry = envelope.vcs.edits.get(edit).expect("Process3d applied edit remains retained");
-                let effective = self.runtime.as_ref().and_then(|runtime| runtime.effective_forward(entry, mutation, &envelope.schema)).expect("Process3d applied forward remains retained");
-                if effective.operation().is_none() {
-                    drop(effective);
-                    self.phase = Process3dStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 };
-                    return Process3dTurn::Yield;
-                }
-                if effective.operation().is_some_and(|operation| Process3dTimelineCursor::target(operation).is_some()) {
-                    *self.timeline_cursor = Some(Process3dTimelineCursor::new());
-                    self.phase = Process3dStoreInitializationPhase::ApplyTimeline { position, edit, mutation };
-                    cx.consume_fuel(1);
-                    return Process3dTurn::Yield;
-                }
-                let current = self.runtime.as_mut().and_then(store::ArtifactStoreInitializationRuntime::current_mut).expect("Process3d runtime current retained");
-                let applied = effective.operation().map(|operation| process3d_apply_retained_mutation(current, operation));
-                drop(effective);
-                match applied {
-                    Some(Ok(retired)) => {
-                        *self.released = retired;
-                        self.phase = Process3dStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 };
-                    }
-                    None => self.phase = Process3dStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 },
-                    Some(Err(code)) => self.fail(code.as_bytes()),
-                }
-            }
+            Process3dStoreInitializationPhase::FindApplied { position } => self.turn_find_applied(position),
+            Process3dStoreInitializationPhase::ApplyForward { position, edit, mutation } => self.turn_apply_forward(position, edit, mutation, cx),
 
-            Process3dStoreInitializationPhase::ApplyTimeline { position, edit, mutation } => {
-                let envelope = self.envelope.as_ref().expect("retained timeline envelope");
-                let entry = envelope.vcs.edits.get(edit).expect("retained timeline edit");
-                let effective = self.runtime.as_ref().and_then(|runtime| runtime.effective_forward(entry, mutation, &envelope.schema)).expect("retained timeline forward");
-                let operation = effective.operation().expect("retained timeline operation");
-                let current = self.runtime.as_mut().and_then(store::ArtifactStoreInitializationRuntime::current_mut).expect("retained timeline workspace");
-                let advanced = self.timeline_cursor.as_mut().expect("retained timeline cursor").step(current, operation, cx);
-                drop(effective);
-                match advanced {
-                    Ok(true) => {
-                        *self.released = self.timeline_cursor.as_mut().expect("completed timeline cursor").commit(current);
-                        drop(self.timeline_cursor.take());
-                        self.phase = Process3dStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 };
-                    }
-                    Ok(false) => {}
-                    Err(code) => {
-                        self.fail(code.as_bytes());
-                        cx.consume_fuel(1);
-                        return Process3dTurn::Yield;
-                    }
-                }
-            }
+            Process3dStoreInitializationPhase::ApplyTimeline { position, edit, mutation } => self.turn_apply_timeline(position, edit, mutation, cx),
 
             Process3dStoreInitializationPhase::CommitApplied { position, edit } => {
                 let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Process3d applied retained");
@@ -309,21 +127,7 @@ impl Process3dStoreInitializationAuthority {
                     }
                 }
             }
-            Process3dStoreInitializationPhase::FindRedo { position } => {
-                let Some(id) = self.redo_id(position) else {
-                    self.edit_index.clear();
-                    self.phase = Process3dStoreInitializationPhase::AdmitOwners;
-                    return Process3dTurn::Yield;
-                };
-                let scan = self.edit_index.position(&id).unwrap_or(usize::MAX);
-                match self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(scan)) {
-                    Some(edit) if edit.id == id => {
-                        self.phase = Process3dStoreInitializationPhase::CommitRedo { position, edit: scan };
-                    }
-                    Some(_) => self.fail(b"process3d-store.initializer-redo-missing"),
-                    None => self.fail(b"process3d-store.initializer-redo-missing"),
-                }
-            }
+            Process3dStoreInitializationPhase::FindRedo { position } => self.turn_find_redo(position),
             Process3dStoreInitializationPhase::CommitRedo { position, edit } => {
                 let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Process3d redo edit retained");
                 match self.runtime.as_mut().expect("Process3d runtime retained").push_redo_edit(entry, self.envelope.as_ref().expect("retained history ledger").vcs.edits.key_at(edit).expect("authoritative retained edit key")) {
@@ -334,84 +138,10 @@ impl Process3dStoreInitializationAuthority {
                     }
                 }
             }
-            Process3dStoreInitializationPhase::AdmitOwners => {
-                match store::os_store::document_store_owners::bounded_artifact_store_owners::<Process3dSnapshot, Process3dMutation>(cx.retained_grant()) {
-                    Ok((owners, progress)) => {
-                        *self.owners = Some(owners);
-                        match cx.consume_retained(progress) {
-                            Ok(()) => self.phase = Process3dStoreInitializationPhase::ConstructOwners,
-                            Err(_) => self.fail(b"process3d-store.initializer-owners-receipt"),
-                        }
-                    }
-                    Err(refused) => {
-                        *self.owners = refused.owners;
-                        let _ = cx.consume_retained(refused.progress);
-                        self.fail(b"process3d-store.initializer-owners-admission");
-                    }
-                }
-            }
-            Process3dStoreInitializationPhase::ConstructOwners => {
-                let owners = self.owners.as_mut().expect("Process3d catalog retained while its constructor completes");
-                if owners.constructor_is_complete() {
-                    self.phase = Process3dStoreInitializationPhase::BuildCandidate;
-                } else {
-                    match owners.admit_constructor(cx.retained_grant()) {
-                        Ok(progress) => {
-                            if cx.consume_retained(progress).is_err() {
-                                self.fail(b"process3d-store.initializer-owners-receipt");
-                            }
-                        }
-                        Err((error, progress)) => {
-                            let _ = cx.consume_retained(progress);
-                            self.fault = Some(error.into_message().into_bytes());
-                            self.phase = Process3dStoreInitializationPhase::RetireFault;
-                        }
-                    }
-                }
-            }
-            Process3dStoreInitializationPhase::BuildCandidate => {
-                let authoritative = process3d_validate_publication_authority(self.operation, self.generation);
-                let publication_fresh =
-                    cx.operation() == self.operation && cx.generation() == self.generation && authoritative == Ok((self.base_revision, self.parent_revision)) && self.base_revision == self.parent_revision && self.parent_revision == self.generation.0;
-                let Some(candidate_generation) = self.parent_revision.checked_add(1) else {
-                    self.fail(b"process3d-store.initializer-generation-exhausted");
-                    return Process3dTurn::Yield;
-                };
-                if !publication_fresh {
-                    self.fail(b"process3d-store.initializer-parent-stale-aba");
-                    return Process3dTurn::Yield;
-                }
-                let envelope = self.envelope.take().expect("Process3d envelope retained until publication");
-                let runtime = self.runtime.take().expect("Process3d runtime retained until publication");
-                let owners = self.owners.take().expect("Process3d completed catalog retained until publication");
-                *self.candidate = Some(store::ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, candidate_generation, owners));
-                self.phase = Process3dStoreInitializationPhase::Complete;
-                return Process3dTurn::Complete;
-            }
-            Process3dStoreInitializationPhase::RetireCancelled | Process3dStoreInitializationPhase::RetireFault => match self.close_original(cx.retained_grant()) {
-                Ok(step) => {
-                    if let Err(error) = cx.consume_retained(step.progress()) {
-                        self.fault = Some(error.into_message().into_bytes());
-                    }
-                    if !matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
-                        cx.consume_fuel(1);
-                        return Process3dTurn::Yield;
-                    }
-                    process3d_release_app_publication_authority(self.operation);
-                    self.terminal_handoff = true;
-                    if self.phase == Process3dStoreInitializationPhase::RetireCancelled {
-                        self.phase = Process3dStoreInitializationPhase::Cancelled;
-                        return Process3dTurn::Cancelled;
-                    }
-                    self.phase = Process3dStoreInitializationPhase::Fault;
-                    self.fault.get_or_insert_with(|| process3d_fault_detail(b"process3d-store.initializer-fault"));
-                    return Process3dTurn::Fault;
-                }
-                Err(error) => {
-                    let _ = cx.consume_retained(error.retained_progress());
-                    self.fault = Some(error.into_message().into_bytes());
-                }
-            },
+            Process3dStoreInitializationPhase::AdmitOwners => self.turn_admit_owners(cx),
+            Process3dStoreInitializationPhase::ConstructOwners => self.turn_construct_owners(cx),
+            Process3dStoreInitializationPhase::BuildCandidate => self.turn_build_candidate(cx),
+            Process3dStoreInitializationPhase::RetireCancelled | Process3dStoreInitializationPhase::RetireFault => self.turn_retire_cancelled_or_retire_fault(cx),
             Process3dStoreInitializationPhase::Complete => {
                 return Process3dTurn::Complete;
             }
@@ -420,6 +150,311 @@ impl Process3dStoreInitializationAuthority {
         }
         cx.consume_fuel(1);
         Process3dTurn::Yield
+    }
+
+    /// 🧱️ Runs the `census history` phase of `turn`.
+    fn turn_census_history(&mut self, edit: usize, mutation: usize) -> Process3dTurn {
+        let envelope = self.envelope.as_ref().expect("Process3d envelope retained");
+        let Some(entry) = envelope.vcs.edits.get(edit) else {
+            let initial_machines = envelope.vcs.genesis.facts().snapshot().workshop.machines.len();
+            let machine_capacity = match initial_machines.checked_add(self.machine_growth) {
+                Some(value) if value <= PROCESS3D_MAXIMUM_DOMAIN_ITEMS => value,
+                _ => {
+                    self.fail(b"process3d-store.initializer-machine-growth");
+                    return Process3dTurn::Yield;
+                }
+            };
+            if machine_capacity.checked_mul(size_of::<WorkshopMachine>()).is_none_or(|bytes| bytes > PROCESS3D_MAXIMUM_DOMAIN_BYTES) {
+                self.fail(b"process3d-store.initializer-machine-bytes");
+                return Process3dTurn::Yield;
+            }
+            self.phase = Process3dStoreInitializationPhase::Census;
+            return Process3dTurn::Yield;
+        };
+        if let Some(operation) = entry.forwards.get(mutation) {
+            self.history_items = match self.history_items.checked_add(1) {
+                Some(value) if value <= PROCESS3D_MAXIMUM_DOMAIN_ITEMS => value,
+                _ => {
+                    self.fail(b"process3d-store.initializer-history-capacity");
+                    return Process3dTurn::Yield;
+                }
+            };
+            if matches!(operation, Process3dMutation::CreateMachine(_)) {
+                self.machine_growth = match self.machine_growth.checked_add(1) {
+                    Some(value) => value,
+                    None => {
+                        self.fail(b"process3d-store.initializer-machine-growth-overflow");
+                        return Process3dTurn::Yield;
+                    }
+                };
+            }
+            self.phase = Process3dStoreInitializationPhase::CensusHistory { edit, mutation: mutation + 1 };
+        } else {
+            self.phase = Process3dStoreInitializationPhase::CensusHistory { edit: edit + 1, mutation: 0 };
+        }
+    }
+
+    /// 🪵️ Runs the `clone initial` phase of `turn`.
+    fn turn_clone_initial(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Process3dTurn {
+        let source = &self.envelope.as_ref().expect("Process3d envelope retained").vcs.genesis.facts().snapshot();
+        let complete = match self.clone_cursor.as_mut().expect("Process3d clone retained").step(source, cx) {
+            Ok(value) => value,
+            Err(code) => {
+                self.fail(code.as_bytes());
+                false
+            }
+        };
+        if complete {
+            let initial = self.clone_cursor.as_mut().expect("Process3d clone retained").take().expect("Process3d clone handoff");
+            drop(self.clone_cursor.take());
+            *self.census = None;
+            match self.runtime.as_mut().expect("retained initializer runtime").adopt_current_owned(initial, process3d_snapshot_value_factory()) {
+                Ok(()) => self.phase = self.resume_phase.take().expect("retained mutation resume phase"),
+                Err(initial) => {
+                    *self.released = Some(Process3dReleased::Snapshot(initial));
+                    self.fail(b"initializer-owned-workspace-adoption");
+                }
+            }
+        }
+        return Process3dTurn::Yield;
+    }
+
+    /// 🔩️ Runs the `seed history` phase of `turn`.
+    fn turn_seed_history(&mut self, edit: usize, lane: u8, index: usize) -> Process3dTurn {
+        let envelope = self.envelope.as_ref().expect("Process3d history retained");
+        let Some(entry) = envelope.vcs.edits.get(edit) else {
+            self.phase = Process3dStoreInitializationPhase::FoldSupersessions { transition: 0 };
+            return Process3dTurn::Yield;
+        };
+        let runtime = self.runtime.as_mut().expect("Process3d runtime retained");
+        match lane {
+            0 => match runtime.seed_mutation(protocol::MutationId(process3d_copy_string(&entry.id).unwrap_or_default())) {
+                Ok(()) => {
+                    runtime.observe_sequence(entry.sequence_number);
+                    self.phase = Process3dStoreInitializationPhase::SeedHistory { edit, lane: 1, index: 0 };
+                }
+                Err(error) => {
+                    self.fault = Some(error.into_bytes());
+                    self.phase = Process3dStoreInitializationPhase::RetireFault;
+                }
+            },
+            1 if index < entry.forwards.len() => {
+                let id =
+                    entry.mutation_meta.get(index).and_then(|meta| meta.mutation_id.as_ref()).map_or_else(|| protocol::MutationId(format!("{}#{index}", entry.id)), |id| protocol::MutationId(process3d_copy_string(&id.0).unwrap_or_default()));
+                match runtime.seed_edit_operation(&entry.id, id) {
+                    Ok(()) => self.phase = Process3dStoreInitializationPhase::SeedHistory { edit, lane, index: index + 1 },
+                    Err(error) => {
+                        self.fault = Some(error.into_bytes());
+                        self.phase = Process3dStoreInitializationPhase::RetireFault;
+                    }
+                }
+            }
+            1 => self.phase = Process3dStoreInitializationPhase::SeedHistory { edit, lane: 2, index: 0 },
+            2 if index < entry.mutation_meta.len() => {
+                runtime.observe_timestamp(entry.mutation_meta[index].timestamp);
+                self.phase = Process3dStoreInitializationPhase::SeedHistory { edit, lane, index: index + 1 };
+            }
+            _ => self.phase = Process3dStoreInitializationPhase::SeedHistory { edit: edit + 1, lane: 0, index: 0 },
+        }
+    }
+
+    /// ⚙️ Runs the `find applied` phase of `turn`.
+    fn turn_find_applied(&mut self, position: usize) -> Process3dTurn {
+        let Some(id) = self.applied_id(position) else {
+            let checkpoint = self
+                .envelope
+                .as_ref()
+                .and_then(|envelope| envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.as_ref()).or_else(|| envelope.vcs.checkpoints.last().map(|checkpoint| &checkpoint.id)))
+                .and_then(|id| process3d_copy_string(id).ok());
+            self.runtime.as_mut().expect("Process3d runtime retained").set_current_checkpoint_id(checkpoint);
+            self.phase = Process3dStoreInitializationPhase::FindRedo { position: 0 };
+            return Process3dTurn::Yield;
+        };
+        let scan = self.edit_index.position(&id).unwrap_or(usize::MAX);
+        let envelope = self.envelope.as_ref().expect("Process3d envelope retained");
+        match envelope.vcs.edits.get(scan) {
+            Some(edit) if edit.id == id => {
+                self.phase = Process3dStoreInitializationPhase::ApplyForward { position, edit: scan, mutation: 0 };
+            }
+            Some(_) => self.fail(b"process3d-store.initializer-applied-missing"),
+            None => self.fail(b"process3d-store.initializer-applied-missing"),
+        }
+    }
+
+    /// 🧲️ Runs the `apply forward` phase of `turn`.
+    fn turn_apply_forward(&mut self, position: usize, edit: usize, mutation: usize, cx: &mut semio_framework_job::StepContext<'_>) -> Process3dTurn {
+        let needs_workspace = {
+            let envelope = self.envelope.as_ref().expect("retained initializer envelope");
+            let runtime = self.runtime.as_ref().expect("retained initializer runtime");
+            envelope.vcs.edits.get(edit).and_then(|entry| runtime.effective_forward(entry, mutation, &envelope.schema)).is_some_and(|effective| effective.operation().is_some())
+        };
+        if needs_workspace && self.runtime.as_mut().expect("retained initializer runtime").current_mut().is_none() {
+            self.resume_phase = Some(self.phase);
+            let capacity = self.envelope.as_ref().expect("retained genesis").vcs.genesis.facts().snapshot().workshop.machines.len() + self.machine_growth;
+            *self.clone_cursor = Some(Process3dSnapshotCopyCursor::new(capacity));
+            self.phase = Process3dStoreInitializationPhase::CloneInitial;
+            cx.consume_fuel(1);
+            return Process3dTurn::Yield;
+        }
+        let operation = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).and_then(|entry| entry.forwards.get(mutation));
+        let Some(_operation) = operation else {
+            self.phase = Process3dStoreInitializationPhase::CommitApplied { position, edit };
+            return Process3dTurn::Yield;
+        };
+        let envelope = self.envelope.as_ref().expect("Process3d envelope remains retained while its forwards fold");
+        let entry = envelope.vcs.edits.get(edit).expect("Process3d applied edit remains retained");
+        let effective = self.runtime.as_ref().and_then(|runtime| runtime.effective_forward(entry, mutation, &envelope.schema)).expect("Process3d applied forward remains retained");
+        if effective.operation().is_none() {
+            drop(effective);
+            self.phase = Process3dStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 };
+            return Process3dTurn::Yield;
+        }
+        if effective.operation().is_some_and(|operation| Process3dTimelineCursor::target(operation).is_some()) {
+            *self.timeline_cursor = Some(Process3dTimelineCursor::new());
+            self.phase = Process3dStoreInitializationPhase::ApplyTimeline { position, edit, mutation };
+            cx.consume_fuel(1);
+            return Process3dTurn::Yield;
+        }
+        let current = self.runtime.as_mut().and_then(store::ArtifactStoreInitializationRuntime::current_mut).expect("Process3d runtime current retained");
+        let applied = effective.operation().map(|operation| process3d_apply_retained_mutation(current, operation));
+        drop(effective);
+        match applied {
+            Some(Ok(retired)) => {
+                *self.released = retired;
+                self.phase = Process3dStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 };
+            }
+            None => self.phase = Process3dStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 },
+            Some(Err(code)) => self.fail(code.as_bytes()),
+        }
+    }
+
+    /// 🪛️ Runs the `apply timeline` phase of `turn`.
+    fn turn_apply_timeline(&mut self, position: usize, edit: usize, mutation: usize, cx: &mut semio_framework_job::StepContext<'_>) -> Process3dTurn {
+        let envelope = self.envelope.as_ref().expect("retained timeline envelope");
+        let entry = envelope.vcs.edits.get(edit).expect("retained timeline edit");
+        let effective = self.runtime.as_ref().and_then(|runtime| runtime.effective_forward(entry, mutation, &envelope.schema)).expect("retained timeline forward");
+        let operation = effective.operation().expect("retained timeline operation");
+        let current = self.runtime.as_mut().and_then(store::ArtifactStoreInitializationRuntime::current_mut).expect("retained timeline workspace");
+        let advanced = self.timeline_cursor.as_mut().expect("retained timeline cursor").step(current, operation, cx);
+        drop(effective);
+        match advanced {
+            Ok(true) => {
+                *self.released = self.timeline_cursor.as_mut().expect("completed timeline cursor").commit(current);
+                drop(self.timeline_cursor.take());
+                self.phase = Process3dStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 };
+            }
+            Ok(false) => {}
+            Err(code) => {
+                self.fail(code.as_bytes());
+                cx.consume_fuel(1);
+                return Process3dTurn::Yield;
+            }
+        }
+    }
+
+    /// 🔧️ Runs the `find redo` phase of `turn`.
+    fn turn_find_redo(&mut self, position: usize) -> Process3dTurn {
+        let Some(id) = self.redo_id(position) else {
+            self.edit_index.clear();
+            self.phase = Process3dStoreInitializationPhase::AdmitOwners;
+            return Process3dTurn::Yield;
+        };
+        let scan = self.edit_index.position(&id).unwrap_or(usize::MAX);
+        match self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(scan)) {
+            Some(edit) if edit.id == id => {
+                self.phase = Process3dStoreInitializationPhase::CommitRedo { position, edit: scan };
+            }
+            Some(_) => self.fail(b"process3d-store.initializer-redo-missing"),
+            None => self.fail(b"process3d-store.initializer-redo-missing"),
+        }
+    }
+
+    /// 🔨️ Runs the `admit owners` phase of `turn`.
+    fn turn_admit_owners(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Process3dTurn {
+        match store::os_store::document_store_owners::bounded_artifact_store_owners::<Process3dSnapshot, Process3dMutation>(cx.retained_grant()) {
+            Ok((owners, progress)) => {
+                *self.owners = Some(owners);
+                match cx.consume_retained(progress) {
+                    Ok(()) => self.phase = Process3dStoreInitializationPhase::ConstructOwners,
+                    Err(_) => self.fail(b"process3d-store.initializer-owners-receipt"),
+                }
+            }
+            Err(refused) => {
+                *self.owners = refused.owners;
+                let _ = cx.consume_retained(refused.progress);
+                self.fail(b"process3d-store.initializer-owners-admission");
+            }
+        }
+    }
+
+    /// 🪚️ Runs the `construct owners` phase of `turn`.
+    fn turn_construct_owners(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Process3dTurn {
+        let owners = self.owners.as_mut().expect("Process3d catalog retained while its constructor completes");
+        if owners.constructor_is_complete() {
+            self.phase = Process3dStoreInitializationPhase::BuildCandidate;
+        } else {
+            match owners.admit_constructor(cx.retained_grant()) {
+                Ok(progress) => {
+                    if cx.consume_retained(progress).is_err() {
+                        self.fail(b"process3d-store.initializer-owners-receipt");
+                    }
+                }
+                Err((error, progress)) => {
+                    let _ = cx.consume_retained(progress);
+                    self.fault = Some(error.into_message().into_bytes());
+                    self.phase = Process3dStoreInitializationPhase::RetireFault;
+                }
+            }
+        }
+    }
+
+    /// 🧰️ Runs the `build candidate` phase of `turn`.
+    fn turn_build_candidate(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Process3dTurn {
+        let authoritative = process3d_validate_publication_authority(self.operation, self.generation);
+        let publication_fresh =
+            cx.operation() == self.operation && cx.generation() == self.generation && authoritative == Ok((self.base_revision, self.parent_revision)) && self.base_revision == self.parent_revision && self.parent_revision == self.generation.0;
+        let Some(candidate_generation) = self.parent_revision.checked_add(1) else {
+            self.fail(b"process3d-store.initializer-generation-exhausted");
+            return Process3dTurn::Yield;
+        };
+        if !publication_fresh {
+            self.fail(b"process3d-store.initializer-parent-stale-aba");
+            return Process3dTurn::Yield;
+        }
+        let envelope = self.envelope.take().expect("Process3d envelope retained until publication");
+        let runtime = self.runtime.take().expect("Process3d runtime retained until publication");
+        let owners = self.owners.take().expect("Process3d completed catalog retained until publication");
+        *self.candidate = Some(store::ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, candidate_generation, owners));
+        self.phase = Process3dStoreInitializationPhase::Complete;
+        return Process3dTurn::Complete;
+    }
+
+    /// 🧪️ Runs the `retire cancelled` or `retire fault` phase of `turn`.
+    fn turn_retire_cancelled_or_retire_fault(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Process3dTurn {
+        match self.close_original(cx.retained_grant()) {
+            Ok(step) => {
+                if let Err(error) = cx.consume_retained(step.progress()) {
+                    self.fault = Some(error.into_message().into_bytes());
+                }
+                if !matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
+                    cx.consume_fuel(1);
+                    return Process3dTurn::Yield;
+                }
+                process3d_release_app_publication_authority(self.operation);
+                self.terminal_handoff = true;
+                if self.phase == Process3dStoreInitializationPhase::RetireCancelled {
+                    self.phase = Process3dStoreInitializationPhase::Cancelled;
+                    return Process3dTurn::Cancelled;
+                }
+                self.phase = Process3dStoreInitializationPhase::Fault;
+                self.fault.get_or_insert_with(|| process3d_fault_detail(b"process3d-store.initializer-fault"));
+                return Process3dTurn::Fault;
+            }
+            Err(error) => {
+                let _ = cx.consume_retained(error.retained_progress());
+                self.fault = Some(error.into_message().into_bytes());
+            }
+        }
     }
 }
 

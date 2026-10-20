@@ -2,7 +2,7 @@
 
 use crate::delete_page;
 use semio_s_artifact_layout_layout_diff::LayoutPagesDelta;
-use crate::standards::v1::subsets::any::schema::diff::LayoutPageInsertion;
+use semio_s_artifact_layout_layout_diff::LayoutPageInsertion;
 use semio_s_artifact_layout_layout_diff::LayoutDiff;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_s_artifact_layout_layout_model::Page;

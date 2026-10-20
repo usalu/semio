@@ -2,7 +2,7 @@ import { existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSyn
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
-import { canonicalFilenameForKind, loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { canonicalGoLanguageDirectoryV1, readCanonicalGoLayoutV1 as canonicalGoLayout, type CanonicalGoLayout } from "../../🔍️discovery/🐹️go-layout/🟦️.ts";
 import { runRepositoryTestCommand } from "../🎛️repository-command/🟦️.ts";
 import { type CompilerAdmissionControl, requestedCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
@@ -17,26 +17,8 @@ export type CanonicalGoPlan = Readonly<{
   testReplacements: Readonly<Record<string, string>>;
 }>;
 
-export type CanonicalGoLayout = Readonly<{
-  testsDirectory: string;
-  implementationFilename: string;
-  packagesDirectory: string;
-  languageDirectory: string;
-  opaqueDirectoryNames: readonly string[];
-  sourceDirectoryNames: readonly string[];
-}>;
-
-const GO_LANGUAGE_DIRECTORY = "🐹️go";
+const GO_LANGUAGE_DIRECTORY = canonicalGoLanguageDirectoryV1();
 const GO_HOST_ADAPTER_PACKAGE = "adapter";
-
-/** 🔣️Resolves Go compiler-input layout names from the repository taxonomy. */
-function canonicalGoLayout(): CanonicalGoLayout {
-  const taxonomy = loadCatalogTaxonomy();
-  const goKind = taxonomy.testAdapterFileKinds[GO_LANGUAGE_DIRECTORY];
-  const sourceDomains = taxonomy.semanticDirectoryMemberKinds["members-of-members-of-members-of-modules"];
-  if (!taxonomy.testsDirName || !taxonomy.testFixturesDirName || !taxonomy.testOraclesDirName || !taxonomy.packagesDirName || !goKind || !sourceDomains) throw new Error("The taxonomy must define Go inputs, tests, packages, oracle and fixture ownership.");
-  return { testsDirectory: taxonomy.testsDirName, implementationFilename: canonicalFilenameForKind(goKind, taxonomy), packagesDirectory: taxonomy.packagesDirName, languageDirectory: GO_LANGUAGE_DIRECTORY, opaqueDirectoryNames: [taxonomy.testFixturesDirName, taxonomy.testOraclesDirName, taxonomy.packagesDirName], sourceDirectoryNames: sourceDomains.memberNames };
-}
 
 /** 🧭️Reads the package clause that opens one Go source, skipping leading whitespace, line comments and block comments. */
 function goPackageClause(source: string): string | null {

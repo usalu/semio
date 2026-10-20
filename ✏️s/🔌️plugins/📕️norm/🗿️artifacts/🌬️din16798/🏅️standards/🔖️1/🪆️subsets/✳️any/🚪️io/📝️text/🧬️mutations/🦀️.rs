@@ -230,8 +230,8 @@ impl protocol::OpText for Din16798Mutation {
 //#endregion 🔖️OpText
 
 //#region 🔖️DemoCases
-#[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<Din16798Mutation> {
+#[cfg(any(test, feature = "testkit"))]
+pub fn demo_mutation_cases() -> Vec<Din16798Mutation> {
     vec![
         Din16798Mutation::ChangeAnnex(ChangeAnnex { new_annex: semio_s_plugin_norm_compliance::AnnexChoice::En }),
         Din16798Mutation::ChangeThetaRm(ChangeThetaRm { new_theta_rm_c: 1.0 }),

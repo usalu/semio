@@ -37,7 +37,7 @@ const EVERY_BUNDLED_EXAMPLE: &[&str] = &[
 /// 🕳️ `None` is "nothing picked", `Some("")` the picker's own `No example` row — two different
 /// states, and the whole point of the option on the config leaf.
 fn viewed_node_ids(example_id: Option<&str>) -> Vec<String> {
-    let snapshot = semio_s_artifact_procedural_3d_model::default_snapshot();
+    let snapshot = semio_s_artifact_procedural_3d_io_text::snapshot::default_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = semio_framework_plugin::ArtifactView::new(&snapshot, &history);
     let config = Generation3dViewConfig { active_example_id: example_id.map(str::to_string), ..Generation3dViewConfig::default() };

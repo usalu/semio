@@ -32,29 +32,29 @@ pub mod standards {
                         pub mod bind_default_scene {
                             pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::bind_default_scene::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🏠️default-scene/🔗️bind/🧪️tests/🎞️moves-the-0e42fe/🦀️.rs"]
-                            pub mod case_moves_the_0e42fe;
+                            #[path = "../../../../../../../🏠️default-scene/🔗️bind/🧪️tests/🎞️moves/🦀️.rs"]
+                            pub mod case_moves;
                         }
                         #[path = "."]
                         pub mod bind_morph_target_attribute {
                             pub use semio_s_artifact_stdio_gltf_mutations_mut_any_3::standards::v2_0::subsets::any::schema::mutations::bind_morph_target_attribute::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🎚️morph/🔗️bind/🧪️tests/🔗️binds-position-98e14f/🦀️.rs"]
-                            pub mod case_binds_position_98e14f;
+                            #[path = "../../../../../../../🎚️morph/🔗️bind/🧪️tests/🔗️binds/🦀️.rs"]
+                            pub mod case_binds;
                         }
                         #[path = "."]
                         pub mod bind_node_camera {
                             pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::bind_node_camera::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../📷️node-camera/🔗️bind/🧪️tests/🔗️binds-the-843e96/🦀️.rs"]
-                            pub mod case_binds_the_843e96;
+                            #[path = "../../../../../../../📷️node-camera/🔗️bind/🧪️tests/🔗️binds/🦀️.rs"]
+                            pub mod case_binds;
                         }
                         #[path = "."]
                         pub mod bind_node_child {
                             pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::bind_node_child::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🌿️node-child/🔗️bind/🧪️tests/🔗️adopts-the-child-aebf46/🦀️.rs"]
-                            pub mod case_adopts_the_child_aebf46;
+                            #[path = "../../../../../../../🌿️node-child/🔗️bind/🧪️tests/🔗️adopts/🦀️.rs"]
+                            pub mod case_adopts;
                             #[cfg(test)]
                             #[path = "../../../../../../../🌿️node-child/🔗️bind/📜️contract/🧪️tests/🔬️unit/🦀️.rs"]
                             pub mod contract;
@@ -63,15 +63,15 @@ pub mod standards {
                         pub mod bind_node_mesh {
                             pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::bind_node_mesh::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🏗️node-mesh/🔗️bind/🧪️tests/🔗️binds-the-hull-fe46fd/🦀️.rs"]
-                            pub mod case_binds_the_hull_fe46fd;
+                            #[path = "../../../../../../../🏗️node-mesh/🔗️bind/🧪️tests/🔗️binds/🦀️.rs"]
+                            pub mod case_binds;
                         }
                         #[path = "."]
                         pub mod bind_node_skin {
                             pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::bind_node_skin::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🩻️node-skin/🔗️bind/🧪️tests/🔗️binds-the-45cf18/🦀️.rs"]
-                            pub mod case_binds_the_45cf18;
+                            #[path = "../../../../../../../🩻️node-skin/🔗️bind/🧪️tests/🔗️binds/🦀️.rs"]
+                            pub mod case_binds;
                         }
                         #[path = "."]
                         pub mod bind_primitive_attribute {
@@ -84,22 +84,22 @@ pub mod standards {
                         pub mod bind_primitive_indices {
                             pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::bind_primitive_indices::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🔢️primitive/🔗️bind/🧪️tests/🔢️binds-the-scalar-2b0259/🦀️.rs"]
-                            pub mod case_binds_the_scalar_2b0259;
+                            #[path = "../../../../../../../🔢️primitive/🔗️bind/🧪️tests/🔢️binds/🦀️.rs"]
+                            pub mod case_binds;
                         }
                         #[path = "."]
                         pub mod bind_primitive_material {
                             pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::bind_primitive_material::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🧱️primitive/🔗️bind/🧪️tests/🔗️binds-the-steel-1cd6cc/🦀️.rs"]
-                            pub mod case_binds_the_steel_1cd6cc;
+                            #[path = "../../../../../../../🧱️primitive/🔗️bind/🧪️tests/🔗️binds/🦀️.rs"]
+                            pub mod case_binds;
                         }
                         #[path = "."]
                         pub mod bind_scene_root_node {
                             pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::bind_scene_root_node::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🌲️scene-root/🔗️bind/🧪️tests/📥️promotes-the-b86f40/🦀️.rs"]
-                            pub mod case_promotes_the_b86f40;
+                            #[path = "../../../../../../../🌲️scene-root/🔗️bind/🧪️tests/📥️promotes/🦀️.rs"]
+                            pub mod case_promotes;
                             #[cfg(test)]
                             #[path = "../../../../../../../🌲️scene-root/🔗️bind/📜️contract/🧪️tests/🔬️unit/🦀️.rs"]
                             pub mod contract;
@@ -129,8 +129,8 @@ pub mod standards {
                         pub mod change_asset_version {
                             pub use semio_s_artifact_stdio_gltf_mutations_mut_any::standards::v2_0::subsets::any::schema::mutations::change_asset_version::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🪪️asset/🔖️version/🧪️tests/🔖️raises-the-asset-f95b77/🦀️.rs"]
-                            pub mod case_raises_the_asset_f95b77;
+                            #[path = "../../../../../../../🪪️asset/🔖️version/🧪️tests/🔖️raises/🦀️.rs"]
+                            pub mod case_raises;
                         }
                         #[path = "."]
                         pub mod change_material_alpha_mode {

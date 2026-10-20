@@ -1,7 +1,7 @@
-import executionPolicy from "../🔣️policy.json";
-import nativeSchema from "../📥️invocation/🧬️schema/🔣️.json";
+import executionPolicy from "../🔣️policy.json" with { type: "json" };
+import nativeSchema from "../📥️invocation/🧬️schema/🔣️.json" with { type: "json" };
 import type {NativeOwnerCapabilities} from "../📥️invocation/🟦️.ts";
-import callerSchema from "../../../🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json";
+import callerSchema from "../../../🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json" with { type: "json" };
 import {canonicalArchitectureEnvironment} from "../../../🦀️cargo/🌿️environment/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {readScriptProcessEnvelope,scriptProcessEnvironment,type ScriptProcessEnvelope} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";

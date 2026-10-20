@@ -4,7 +4,7 @@ import {createRequire} from "node:module";
 import {requireIssuedResourceControlInvocationV1,checkScriptInvocation,createRequestedIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/process/leases";
 import {advanceScriptInvocation} from "@semio-tech/process/routing";
-import {parseCatalogBuildContributionV1,catalogBuildContributionForManifestV1} from "@semio-tech/plugin-registry/publication/build";
+import {parseCatalogBuildContributionV1,catalogBuildContributionForManifestV1} from "@semio-tech/plugin-registry-publication/build";
 import {frameworkOsEngineSourceOwnersV1,frameworkOsEnginePackageNameV1} from "@semio-tech/framework-os-dev/builder/vite/artifacts/engines";
 import {componentModelDirectoryKeyV1} from "@semio-tech/framework-plugin/model/contract";
 import {runtimeInputAdmissionV1,runtimeComponentClosure} from "../../../../🕸️dependencies/🧩️runtime/🟨️.mjs";

@@ -596,10 +596,16 @@ if (-not $SkipRepoBootstrap) {
     $bunPath = Get-CommandPathOrThrow -Label "bun" -Candidates @("bun.exe", "bun")
 
     Stop-RepoPythonProcesses -RepoRoot $repoRoot -Consent:$StopRepoPython
-    Invoke-RepoCommand -FilePath $bunPath -ArgumentList @("repo", "run", "workspace:setup") -WorkingDirectory $repoRoot
-    Invoke-RepoCommand -FilePath $bunPath -ArgumentList @("repo", "run", "@semio-tech/repo-developer-tools:setup-debugger") -WorkingDirectory $repoRoot
-    Write-Step "Building repo client binary…"
-    Invoke-RepoCommand -FilePath $bunPath -ArgumentList @("repo", "run", "@semio-tech/repo-client:build") -WorkingDirectory $repoRoot
+    Invoke-RepoCommand -FilePath $bunPath -ArgumentList @("repo", "run", "repo-mcp:install") -WorkingDirectory $repoRoot
+    $repoReceipt = Get-Content -Raw -LiteralPath (Join-Path $env:LOCALAPPDATA "Semio\repo\installed.json") | ConvertFrom-Json
+    if ($repoReceipt.version -ne 1 -or $repoReceipt.platform -ne "win32" -or -not (Test-Path -LiteralPath $repoReceipt.executable -PathType Leaf)) { throw "Verified native repo installation receipt required." }
+    Set-UserPathPriority -PreferredEntries @($repoReceipt.directory)
+    Refresh-CurrentProcessPath
+    $repoPath = Get-CommandPathOrThrow -Label "repo" -Candidates @("repo.exe")
+    if ([IO.Path]::GetFullPath($repoPath) -ine [IO.Path]::GetFullPath($repoReceipt.executable)) { throw "Current process PATH must select the installed native repository command." }
+    Invoke-RepoCommand -FilePath $repoPath -ArgumentList @("--help") -WorkingDirectory $repoRoot
+    Invoke-RepoCommand -FilePath $repoPath -ArgumentList @("run", "workspace:setup") -WorkingDirectory $repoRoot
+    Invoke-RepoCommand -FilePath $repoPath -ArgumentList @("run", "@semio-tech/repo-developer-tools:setup-debugger") -WorkingDirectory $repoRoot
     Configure-GitKrakenWorkspace -RepoRoot $repoRoot
 }
 #endregion 🧱️RepoBootstrap

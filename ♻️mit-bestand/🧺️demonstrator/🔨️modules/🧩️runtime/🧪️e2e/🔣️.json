@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "readyTimeoutMs": 600000,
+  "progressIntervalMs": 15000,
+  "evidence": {
+    "kind": "estimate",
+    "coldBootMs": { "minimum": 60000, "maximum": 180000 },
+    "warmBootMs": { "minimum": 30000, "maximum": 60000 },
+    "marginFactor": 3,
+    "source": "audit-e2e-readiness-1020.md section 4 and R1: demonstrator serve boot cold 1-3 min, warm 30-60 s (estimate, not yet measured); timeout = 3 x the 180 s cold maximum, rounded up to the audit's 600 s floor"
+  }
+}

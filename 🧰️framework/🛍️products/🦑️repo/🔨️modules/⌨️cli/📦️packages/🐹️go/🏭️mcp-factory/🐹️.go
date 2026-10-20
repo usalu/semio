@@ -24,7 +24,7 @@ import (
 
 // #region 🦀️McpServerFactory
 
-// wrapMcpToolHandler enforces a wall-clock budget on each MCP tool invocation.
+// 🪆️wrapMcpToolHandler enforces a wall-clock budget on each MCP tool invocation.
 func wrapMcpToolHandler(timeout time.Duration, handler func(context.Context, CallToolRequest) (*CallToolResult, error)) func(context.Context, CallToolRequest) (*CallToolResult, error) {
 	return func(ctx context.Context, request CallToolRequest) (*CallToolResult, error) {
 		if timeout <= 0 {
@@ -265,7 +265,7 @@ func CreateMcpServer(kind providers.McpClientKind, toolTimeout time.Duration) *M
 	return s
 }
 
-// RunMcpServerFor starts the MCP stdio server for the given kind.
+// 🏃️RunMcpServerFor starts the MCP stdio server for the given kind.
 func RunMcpServerFor(kind providers.McpClientKind, toolTimeout time.Duration) error {
 	if err := workspace.BindWorkingDirectory(); err != nil {
 		return err
@@ -296,7 +296,7 @@ func newTicketReopenHandler(kind providers.McpClientKind) func(context.Context, 
 	}
 }
 
-// RunHookFor runs a hook for the IDE kind (client is implied; stdin is hook JSON payload).
+// ▶️RunHookFor runs a hook for the IDE kind (client is implied; stdin is hook JSON payload).
 func RunHookFor(kind providers.McpClientKind, eventStr string, stdin []byte) error {
 	client := providers.HookClientForMcpKind(kind)
 	if client == "" {
@@ -315,7 +315,7 @@ func RunHookFor(kind providers.McpClientKind, eventStr string, stdin []byte) err
 	return hooks.RunHookExecutionCtx(ctx, client, eventStr, "", "", "", "", repoRoot, input, false, os.Stdout, os.Stderr)
 }
 
-// RunMCPFor starts the MCP stdio server for the given IDE kind.
+// 🚀️RunMCPFor starts the MCP stdio server for the given IDE kind.
 func RunMCPFor(kind providers.McpClientKind) error {
 	return RunMcpServerFor(kind, DefaultCommandTimeout)
 }

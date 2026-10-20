@@ -1,0 +1,10 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { build, report } from "./sim.ts";
+const plan = JSON.parse(readFileSync(resolve(import.meta.dir, process.argv[2]!), "utf8"));
+const who = process.argv[3]!; const mode = process.argv[4] ?? "runtime";
+const es = build(plan);
+const rows = es.filter(e => e.from === who && (mode === "all" || (mode === "runtime") === !e.test));
+const by = new Map<string, Set<string>>();
+for (const e of rows) (by.get(e.to) ?? by.set(e.to, new Set()).get(e.to)!).add(e.file);
+for (const [t, f] of [...by].sort((a, b) => b[1].size - a[1].size)) console.log(f.size, t, [...f].slice(0, 2).map(x => x.replace("🧰️framework/", "")).join(" | "));

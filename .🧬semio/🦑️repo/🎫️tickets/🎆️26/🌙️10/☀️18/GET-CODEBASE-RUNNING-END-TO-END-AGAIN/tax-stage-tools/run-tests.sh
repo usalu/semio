@@ -21,7 +21,7 @@ for T in "$@"; do
   OUT="$ART/$(echo "$T" | cksum | cut -d' ' -f1).log"
   SEMIO_SCRIPT_PROCESS_INVOCATION="$(bun "$MINT")" perl -e "alarm $SECS; exec @ARGV" -- bun test "$BASE/$T" --timeout 120000 > "$OUT" 2>&1
   RC=$?
-  PASS=$(command grep -E '^ *[0-9]+ pass' "$OUT" | tail -1 | awk '{print $1}'); FAIL=$(command grep -E '^ *[0-9]+ fail' "$OUT" | tail -1 | awk '{print $1}')
+  PASS=$(command grep -aE '^ *[0-9]+ pass' "$OUT" | tail -1 | awk '{print $1}'); FAIL=$(command grep -aE '^ *[0-9]+ fail' "$OUT" | tail -1 | awk '{print $1}')
   echo "$MODE rc=$RC pass=${PASS:-?} fail=${FAIL:-?} secs=$(( $(date +%s) - START )) $T"
-  command grep -E '^\(fail\)' "$OUT" | sed 's/ \[[0-9.]*ms\]//' | sort | head -${MAXFAIL:-30} | sed 's/^/    /'
+  command grep -aE '^\(fail\)' "$OUT" | sed 's/ \[[0-9.]*ms\]//' | sort | head -${MAXFAIL:-30} | sed 's/^/    /'
 done

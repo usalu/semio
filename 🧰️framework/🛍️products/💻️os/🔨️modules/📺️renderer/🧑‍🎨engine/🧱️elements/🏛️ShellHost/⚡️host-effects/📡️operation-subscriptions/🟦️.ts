@@ -10,7 +10,33 @@ import { operationProgressPartsV1, type OperationProgressV1 } from "../../../�
 import { logUnlessRetiredV1 } from "../../🧱️built-node-stores/🟦️.ts";
 import type { ShellCoreAfterSpawnedSession } from "../../🛫️spawned-session/🟦️.ts";
 
-/** 🛰️ Applies terminal operation publications and shows the operation diagnostics for the active and spawned receivers. */
+/**
+ * 🛰️ Applies terminal operation publications and shows the operation diagnostics for the active and spawned receivers.
+ *
+ * 🏁️ Applies one retained typed operation's terminal publication. The command that started the
+ * operation resolved on its FIRST reactor turn — its `InvocationResult` carries no outcome at all —
+ * so a selection like "open the Nakagin example" used to leave the outliner, the inspection panel
+ * and the History list showing the previous document forever. `PluginWasmHandle
+ * .subscribeOperationCompletions` is the only carrier of that outcome: the operation's own history
+ * delta, its final `UiDirtyScope`, and every host effect its continuation turns requested.
+ *
+ * 🫥️ What this pass is owed is decided by {@link typedOperationCompletionRefreshV1}, never by the
+ * admitting reply: an admission reports `mutationCount: 0` for every typed operation, and a completion
+ * that dirtied nothing, patched no history and requested no effect owes no pass at all — a retained
+ * operation completes on every drain poll, so paying for those is a refresh storm (wave B27 §2).
+ *
+ * 🏁️🪟️ The SAME terminal-publication subscription, for every spawned program. The session effect
+ * subscribes `session.pluginId`/`session.instanceId` and nothing else, so a spawned foreign editor's
+ * typed operations completed into the void: no history delta, no final `UiDirtyScope`, none of the
+ * continuation turns' effects — and `settleOperation` was never called, so every `onAction` on a
+ * spawned program waited out the full {@link OPERATION_SETTLE_WATCHDOG_MS} watchdog.
+ *
+ * 🧯️ Measured live inside `s`: `addLayer` on a spawned `draw` DID add the layer, and the window kept
+ * reading `1 layer · 0 selected` until the next unrelated interaction re-fetched it
+ * (`🗑️generated/s5-action-{8,11}.txt`, ticket 26/09/18 S5 §4.3). `applyHostEffects` on a spawned base
+ * session already routes to `refreshSpawnedUi`, so the completion pass needs no spawned-specific
+ * branch of its own — only an owner.
+ */
 export function useOperationCompletionSubscriptions({ session, loadedPluginsRef, settleOperation, applyHistoryPatch, captureProgramEffectOwner, applyLeftoverInteractionView, dropForRetiredInstance, isCurrentEffectOwner, hostMode, spawnedAppsRef, spawnedRosterKey, showTransientNoticeRef, applyHostEffects }: Pick<ShellCoreAfterSpawnedSession, "session" | "loadedPluginsRef" | "settleOperation" | "applyHistoryPatch" | "captureProgramEffectOwner" | "applyLeftoverInteractionView" | "dropForRetiredInstance" | "isCurrentEffectOwner" | "hostMode" | "spawnedAppsRef" | "spawnedRosterKey" | "showTransientNoticeRef"> & {
   readonly applyHostEffects: (effects: readonly Effect[], baseSession: ActiveSession, uiScope: UiDirtyScope | undefined, effectOwner: ReturnType<ShellCoreAfterSpawnedSession["captureEffectOwner"]>) => Promise<void>;
 }) {
@@ -77,7 +103,21 @@ export function useOperationCompletionSubscriptions({ session, loadedPluginsRef,
   }, [hostMode, session, spawnedRosterKey]);
 }
 
-/** 📈️ Renders a running operation's process through the ui-refresh lane for the session and every spawned program. */
+/**
+ * 📈️ Renders a running operation's process through the ui-refresh lane for the session and every spawned program.
+ *
+ * 🎞️ Renders a running operation's process while it runs: every mid-operation refresh a tool run asks for (its trace,
+ * provisional pieces, progress) goes through the ui-refresh lane, whose coalescer merges what arrives while a pass is in
+ * flight — the operation never waits on the renderer, and the renderer shows as much of the process as it keeps up with.
+ *
+ * 🎞️🪟️ The SAME mid-operation progress lane, for every spawned program. The session effect
+ * subscribes `session.instanceId` alone, so a spawned editor's running operation — a tool run's
+ * trace, a mounted analysis's provisional pieces, a fill plan's progress — reached no window at
+ * all: the human watched a frozen canvas until the terminal completion landed. Measured as
+ * still-session-only by S6 (§2, `🏛️ShellHost` `subscribeOperationProgress`/
+ * `subscribeSpawnedJobProgress`), which is the last of the six session-only decision sites S5
+ * started on.
+ */
 export function useOperationProgressSubscriptions({ session, loadedPluginsRef, applyHistoryPatch, captureProgramEffectOwner, dropForRetiredInstance, hostMode, spawnedAppsRef, spawnedRosterKey, applyHostEffects }: Pick<ShellCoreAfterSpawnedSession, "session" | "loadedPluginsRef" | "applyHistoryPatch" | "captureProgramEffectOwner" | "dropForRetiredInstance" | "hostMode" | "spawnedAppsRef" | "spawnedRosterKey"> & {
   readonly applyHostEffects: (effects: readonly Effect[], baseSession: ActiveSession, uiScope: UiDirtyScope | undefined, effectOwner: ReturnType<ShellCoreAfterSpawnedSession["captureEffectOwner"]>) => Promise<void>;
 }) {

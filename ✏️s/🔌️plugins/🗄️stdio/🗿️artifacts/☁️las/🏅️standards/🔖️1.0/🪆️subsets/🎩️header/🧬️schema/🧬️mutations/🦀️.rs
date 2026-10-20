@@ -15,9 +15,9 @@
 
 use crate::schema::diff::{self, LasDiff};
 use crate::schema::snapshot::{LasPoint, LasVlr};
-#[cfg(test)] use crate::schema::snapshot::{LasHeader};
-use crate::LasSnapshot;
+#[cfg(test)]use crate::LasSnapshot;
 use protocol::Mutation;
+use semio_s_artifact_stdio_las_snapshot::standards::v1_0::subsets::any::schema::snapshot::LasHeader;
 
 //#region 🔖️Mutations
 #[path = "➕insert-point/🦀️.rs"]

@@ -1,5 +1,5 @@
-import publicationSchema from "../../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🧬️schema/🔣️.json";
-import contributionSchema from "../../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🧬️schema/📣️contribution/🔣️.json";
+import publicationSchema from "@semio-tech/plugin-registry-publication/schema.json";
+import contributionSchema from "@semio-tech/plugin-registry-publication/build/schema/contribution.json";
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
@@ -8,7 +8,7 @@ import {join,resolve} from "node:path";
 import {createRequire} from "node:module";
 import ts from "typescript";
 import {createScriptProcessEnvelope,withScriptProcessEnvelope,createIssuedResourceControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {parseCatalogBuildContributionV1} from "../../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts";
+import {parseCatalogBuildContributionV1} from "@semio-tech/plugin-registry-publication/build";
 import fixture from "../🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 const require=createRequire(import.meta.url);

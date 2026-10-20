@@ -1,6 +1,7 @@
 import * as React from "react";
-import { ephemeralSet, type StoragePort } from "@semio-tech/framework";
-import { shellScopeStorageOrBrowserFallback, useShellScopeOptional } from "../../../🧱️elements/🐚️ShellScope/🟦️.tsx";
+import { ephemeralSet } from "@semio-tech/framework-transient";
+import type { StoragePort } from "@semio-tech/ui/modules/storage-port";
+import { shellScopeStorageOrBrowserFallback, useShellScopeOptional } from "@semio-tech/ui/elements/ShellScope";
 
 /** 🗣️ Id of the always-available default terminology (no term substitutions). */
 export const UI_TERMINOLOGY_NATIVE = "native";

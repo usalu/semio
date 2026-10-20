@@ -266,22 +266,18 @@ async function compareMeshes(expected: IndexedMesh, actual: IndexedMesh): Promis
   const relative = (x: number, y: number): number => (Math.abs(y) < Number.EPSILON ? Math.abs(x - y) : Math.abs(x - y) / Math.abs(y));
   const hausdorff = await symmetricHausdorff(expected, actual);
   return {
-    // 📐️Normalized by the bounding-box diagonal, so the bound is scale-free — one threshold means the
-    // same thing on a 0.02 mm part and on a 10 m building.
     normalizedSymmetricHausdorff: hausdorff.symmetricHausdorff / Math.max(diagonal, Number.EPSILON),
     symmetricHausdorff: hausdorff.symmetricHausdorff,
     hausdorffExpectedToActual: hausdorff.expectedToActual,
     hausdorffActualToExpected: hausdorff.actualToExpected,
     hausdorffSamples: hausdorff.samples,
     hausdorffSampling: "mesh vertices of both sides; exact at vertices, a lower bound between them",
-    // 🎯️The gating metric, normalized by the expected volume so it is scale-free.
     normalizedSymmetricDifferenceVolume: symmetricDifferenceVolume / Math.max(expectedVolume, Number.EPSILON),
     symmetricDifferenceVolume,
     relativeVolumeError: relative(b.volume(), expectedVolume),
     relativeAreaError: relative(b.surfaceArea(), a.surfaceArea()),
     connectedComponentsEqual: a.decompose().length === b.decompose().length,
     genusEqual: a.genus() === b.genus(),
-    // 🔺️A DIFFERENT TESSELLATION OF THE SAME SURFACE IS LEGITIMATE, so counts are reported, never asserted.
     expected: { volume: expectedVolume, area: a.surfaceArea(), genus: a.genus(), triangles: a.numTri(), vertices: a.numVert(), components: a.decompose().length },
     actual: { volume: b.volume(), area: b.surfaceArea(), genus: b.genus(), triangles: b.numTri(), vertices: b.numVert(), components: b.decompose().length },
     boundingBoxDiagonal: diagonal,
@@ -351,8 +347,6 @@ const PROBES: Record<string, Probe> = {
       const side = await asSolid(mesh);
       return { status: "ok", measurements: { manifold: true, weldedAway: side.weldedAway, degenerateTriangles: side.degenerate, genus: side.solid.genus(), components: side.solid.decompose().length, volumeIsPositive: side.solid.volume() > 0 } };
     } catch (error) {
-      // ✘️A mesh the kernel refuses is a REPORTED FACT, not a crash and not a skip: a carrier that cannot
-      // form a solid is exactly what several mutations are expected to produce or to avoid producing.
       return { status: "ok", measurements: { manifold: false, weldedAway: welded.weldedAway, degenerateTriangles: welded.degenerate }, diagnostics: [{ severity: "warning", message: "manifold refused the welded mesh", detail: String((error as Error).message ?? error) }] };
     }
   },
@@ -373,9 +367,6 @@ const PROBES: Record<string, Probe> = {
   "gltf-materials": async (inputs) => {
     requireInputs(inputs, 1, "gltf-materials");
     const extension = extname(inputs[0]!).toLowerCase();
-    // ✘️Asking a triangle-only carrier for PBR state is `unsupported`, never an empty `ok`. An empty
-    // material list reported as ok would let a roughness mutation pass against an STL that never
-    // carried roughness at all — a green result standing on the absence of the evidence.
     if (extension !== ".gltf" && extension !== ".glb") return { status: "unsupported", measurements: { reason: `${extension} carries triangles only; PBR material state is not encoded in it` } };
     const { scene } = await readCarrier(inputs[0]!);
     return { status: "ok", engine: PARSE_ENGINE, measurements: materialsOf(scene!) };
@@ -414,7 +405,6 @@ async function main(argv: readonly string[]): Promise<number> {
     process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
     return report.status === "failed" ? 1 : 0;
   };
-  // ⏱️A probe that hangs reports nothing, which is strictly worse than one that fails. Bound every run.
   const budgetMs = Number(process.env.SEMIO_PROBE_TIMEOUT_MS ?? 120_000);
   const watchdog = new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`probe exceeded ${budgetMs} ms`)), budgetMs).unref?.());
   const run = PROBES[probe];

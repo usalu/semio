@@ -27,3 +27,21 @@ Feature: Observable ordinary Cargo source admission
       | stop                |
       | observer rejection  |
       | original cancellation |
+
+  Scenario Outline: Storage settlement is requested at unit boundaries instead of per read
+    Given <units> workspace compiler units whose sources read <reads> files each
+    When source boundaries are admitted through a port that settles storage
+    Then storage settlement is requested once before each unit and once after the last unit
+    And no storage settlement happens between the reads of one unit
+    And SQLite independently produces the same event order
+
+    Examples:
+      | units | reads |
+      | 1     | 1     |
+      | 3     | 8     |
+
+  Scenario: Actual storage settlement is throttled
+    Given a settlement interval and a clock
+    When unit boundaries arrive faster than the interval
+    Then the actual port runs at most one durable storage recheck per interval
+    And the completion phase always rechecks

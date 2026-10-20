@@ -1,0 +1,155 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔨️modules/🏠️host/🧰️owned/🚀️store-initialization/🦀️.rs",
+ "function": "turn",
+ "nth": 0,
+ "match_line": 65,
+ "types": {},
+ "ret": "Process3dTurn",
+ "inline": true,
+ "arms": [
+  {
+   "line": 89,
+   "name": "turn_census_history",
+   "doc": "🧱️ Runs the `census history` phase of `turn`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "edit": "usize",
+    "mutation": "usize"
+   }
+  },
+  {
+   "line": 137,
+   "name": "turn_clone_initial",
+   "doc": "🪵️ Runs the `clone initial` phase of `turn`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 160,
+   "name": "turn_seed_history",
+   "doc": "🔩️ Runs the `seed history` phase of `turn`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "edit": "usize",
+    "lane": "u8",
+    "index": "usize"
+   }
+  },
+  {
+   "line": 208,
+   "name": "turn_find_applied",
+   "doc": "⚙️ Runs the `find applied` phase of `turn`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "position": "usize"
+   }
+  },
+  {
+   "line": 229,
+   "name": "turn_apply_forward",
+   "doc": "🧲️ Runs the `apply forward` phase of `turn`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "position": "usize",
+    "edit": "usize",
+    "mutation": "usize"
+   }
+  },
+  {
+   "line": 275,
+   "name": "turn_apply_timeline",
+   "doc": "🪛️ Runs the `apply timeline` phase of `turn`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "position": "usize",
+    "edit": "usize",
+    "mutation": "usize"
+   }
+  },
+  {
+   "line": 312,
+   "name": "turn_find_redo",
+   "doc": "🔧️ Runs the `find redo` phase of `turn`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "position": "usize"
+   }
+  },
+  {
+   "line": 337,
+   "name": "turn_admit_owners",
+   "doc": "🔨️ Runs the `admit owners` phase of `turn`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 353,
+   "name": "turn_construct_owners",
+   "doc": "🪚️ Runs the `construct owners` phase of `turn`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 372,
+   "name": "turn_build_candidate",
+   "doc": "🧰️ Runs the `build candidate` phase of `turn`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 391,
+   "name": "turn_retire_cancelled_or_retire_fault",
+   "doc": "🧪️ Runs the `retire cancelled` or `retire fault` phase of `turn`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  }
+ ],
+ "method": {
+  "self_param": "&mut self",
+  "call": "self.{name}({args})"
+ }
+}

@@ -3,7 +3,7 @@ import {type ResourceLeaseControl} from "@semio-tech/process/leases";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
-import { requestLocalBrokerSession } from "../../🟦️.ts";
+import { requestLocalBrokerSession } from "../../../../../🧑‍💻dev/🚀️local-hub/🎫️session/🗄️broker/🟦️.ts";
 import { parseLocalSessionBrokerRecordV1, parseLocalSessionRequestV1, parseLocalSessionV1 } from "../../🧬️schema/🟦️.ts";
 
 /** 🧪️ Shared contract cases and live loopback exchanges prove issuer/client ownership. */

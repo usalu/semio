@@ -4,6 +4,7 @@
 //! are the shared gate both sides must reproduce. Frame layout is `lane u8`, `frame tag u8`, then
 //! fields in declaration order — no length prefix, no per-field tags.
 
+/// <reference types="vitest/importMeta" />
 export { encodeScopedIdentity, decodeScopedIdentity, SCOPED_IDENTITY_MAX_BYTES, SCOPED_IDENTITY_MAX_SEGMENTS } from "./🧾️wire/🪪️scoped-identity/🟦️.ts";
 import { artifactBootstrapSha256, artifactBootstrapAggregateHash, ArtifactBootstrapAssembler } from "./🚪️io/📥️bootstrap/🟦️.ts";
 export { ARTIFACT_BOOTSTRAP_FORMAT_VERSION, ARTIFACT_BOOTSTRAP_CHUNK_BYTES, ARTIFACT_BOOTSTRAP_MAX_TOTAL_BYTES, ARTIFACT_BOOTSTRAP_MAX_CHUNKS, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, artifactBootstrapSha256, artifactBootstrapAggregateHash, ArtifactBootstrapAssembler } from "./🚪️io/📥️bootstrap/🟦️.ts";
@@ -16,7 +17,7 @@ export type { DocumentBackboneBatchLimits } from "./🚪️io/💾️binary/🔗
 import { writeVecEnvelope, readVecEnvelope } from "./🚪️io/💾️binary/🔗️causal/🟦️.ts";
 export { writeVecStr, readVecStr, writeVecEnvelope, readVecEnvelope, decodeCausalEnvelopeBatch, encodeCausalEnvelopeBatch, mutationEnvelopeToWire, mutationEnvelopeFromWire } from "./🚪️io/💾️binary/🔗️causal/🟦️.ts";
 export type { ReplicationPackCodec } from "./🚪️io/💾️binary/🔗️causal/🟦️.ts";
-import { blake3Hex } from "@semio-tech/framework/hash";
+import { blake3Hex } from "@semio-tech/framework-hash";
 import { encodePresencePeer, decodePresencePeer } from "./🚪️io/💾️binary/👥️presence/🟦️.ts";
 export { encodePresencePeer, PRESENCE_PEER_WIRE_LIMITS_V1, decodePresencePeer, encodePresenceToolRun, decodePresenceToolRun, encodePresenceHistoryEdit, decodePresenceHistoryEdit, readU8, encodePresenceInteraction, decodePresenceInteraction } from "./🚪️io/💾️binary/👥️presence/🟦️.ts";
 import { writeVarintU64, writeStr, writeBytes } from "./🚪️io/💾️binary/🟦️.ts";

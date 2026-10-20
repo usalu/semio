@@ -54,9 +54,9 @@ mod conformance_laws {
     fn demo_mutation_cases() -> Vec<JpgMutation> {
         let mut cases = vec![];
         for text in [
-            fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪪️change-jfif/🎯️direct/🦠️mutation/🔣️.json"),
-            fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📥️insert-other/🎯️direct/🦠️mutation/🔣️.json"),
-            fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-other/🎯️direct/🦠️mutation/🔣️.json"),
+            fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪪️change-jfif-header/🎯️direct/🦠️mutation/🔣️.json"),
+            fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📥️insert-other-segment/🎯️direct/🦠️mutation/🔣️.json"),
+            fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-other-segment/🎯️direct/🦠️mutation/🔣️.json"),
             fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔲️replace-pixels/🎯️direct/🦠️mutation/🔣️.json"),
             fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖼️replace-image/🎯️direct/🦠️mutation/🔣️.json"),
         ] {

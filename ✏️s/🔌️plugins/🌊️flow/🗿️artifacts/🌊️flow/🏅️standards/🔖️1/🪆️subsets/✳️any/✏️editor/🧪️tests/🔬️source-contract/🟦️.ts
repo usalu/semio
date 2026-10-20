@@ -66,7 +66,7 @@ assert.deepEqual(JSON.parse(stableStringify(`${repeatedPrefix}_${repeatedSerial}
 
 const addWidgetSource = await Bun.file(new URL("../../🎮️commands/➕️add-widget/🦀️.rs", import.meta.url)).text();
 assert(addWidgetSource.includes("let child_id = &doc.snapshot.content.child_id") && addWidgetSource.includes('typed_read::<SemioFlowSnapshot>("content", child_id)'), "addWidget must start from the admitted typed child");
-assert(addWidgetSource.includes('ChildEmit::of::<SemioFlowSnapshot, _>("content"'), "addWidget must emit a typed Semio Flow child mutation");
+assert(addWidgetSource.includes('ChildEmitPreparation::of::<SemioFlowSnapshot, _>("content"'), "addWidget must emit a typed Semio Flow child mutation");
 assert(addWidgetSource.includes("SemioFlowMutation::InsertNode"), "addWidget must produce one typed insert-node mutation");
 assert(!addWidgetSource.includes("host_operations(doc.snapshot"), "addWidget must not route content through the parent FlowDiff");
 //#endregion 🧒️ChildAddWidget
@@ -92,7 +92,7 @@ for (const row of treeProjection.cases) {
   else assert.deepEqual(JSON.parse(stableStringify(project(row.input, 0))), row.expected);
 }
 
-const treeFixtureSource = await Bun.file(frameworkSourceUrl("🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs")).text();
+const treeFixtureSource = readModuleTreeSource(fileURLToPath(frameworkSourceUrl("🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧪️artifact-app-laws/🦀️.rs")));
 assert(treeFixtureSource.includes("pub fn project_and_retire_fixture_tree("), "shared retained tree fixture observer is not implemented");
 assert(treeFixtureSource.includes("FIXTURE_TREE_MAX_NODES * (semio_framework_ui_contract::UI_BUILT_CHILDREN_MAX + 1)"), "retirement must cover every retained page, including unobserved rejected descendants");
 

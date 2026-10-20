@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.repo.cli.entrypoint/1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "buildVerbs",
+    "dashboardArguments",
+    "vectors",
+    "rootScriptPrefixes"
+  ],
+  "properties": {
+    "buildVerbs": {
+      "const": [
+        "run",
+        "run-many",
+        "affected",
+        "exec",
+        "watch",
+        "dependencies",
+        "cargo",
+        "tools",
+        "reset",
+        "cache",
+        "preflight",
+        "show",
+        "graph"
+      ]
+    },
+    "dashboardArguments": {
+      "const": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:run",
+        "--output=stream",
+        "--"
+      ]
+    },
+    "vectors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "argv",
+          "kind",
+          "arguments"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "argv": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "kind": {
+            "enum": [
+              "domain",
+              "build",
+              "mcp",
+              "workspace"
+            ]
+          },
+          "arguments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "rootScriptPrefixes": {
+      "const": [
+        [
+          "dev",
+          "mcp",
+          "stdio",
+          "os"
+        ]
+      ]
+    }
+  }
+}

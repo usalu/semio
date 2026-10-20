@@ -9,7 +9,7 @@ import{validateJsonSchemaSubset}from"../../../🧬️schema/✅️validator/📦
 import type{NativeStorageAllocationV1}from"../../📦️artifacts/🏗️native-build/💾️storage/📜️journal/🟦️.ts";
 import{persistentStatePolicyV1}from"../📋️layout/🟦️.ts";
 import{readPersistentStateRecordV1,writePersistentStateRecordV1,syncPersistentDirectoryV1}from"../🧾️records/🟦️.ts";
-import publicSchema from"../🧬️schema/🔣️.json";
+import publicSchema from"../🧬️schema/🔣️.json" with { type: "json" };
 const schema=JSON.parse(JSON.stringify(publicSchema))as typeof publicSchema,policy=persistentStatePolicyV1(),policyDigest=createHash("sha256").update(JSON.stringify(policy)).digest("hex"),bindingName=schema.definitions.RecordTransaction.const.dataBinding;
 type Identity=Stats;
 /** 📸️ Carries finite first-party directory identity DATA without exporting Node filesystem types. */

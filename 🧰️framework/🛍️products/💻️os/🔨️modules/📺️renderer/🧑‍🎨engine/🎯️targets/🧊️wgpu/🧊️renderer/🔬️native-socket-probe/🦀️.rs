@@ -44,6 +44,7 @@ impl pack::snapshot::ArtifactPack for NativeSocketProbeSnapshot {
         Some(semio_framework_dsl_record::RecordSpec::new(Some("native-socket-probe"), semio_framework_dsl_record::RecordLayout::Inline, vec![semio_framework_dsl_record::FieldSpec::new(0, "value", semio_framework_dsl_record::Shape::Value)]))
     }
 }
+#[cfg(not(target_arch = "wasm32"))]
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for NativeSocketProbeSnapshot {
 fn native_snapshot_registration()->Option<(semio_framework_artifact_reference::Dialect,store::os_store::serialization::ArtifactCodec)>{
         Some((native_socket_sqlite::DIALECT,store::os_store::artifact_codec::<Self,NativeSocketProbeMutation>(native_socket_sqlite::SCHEMA)))

@@ -29,6 +29,7 @@ semio-s-artifact-block-5d-io = { workspace = true }
 semio-s-artifact-block-5d-model = { workspace = true }
 semio-s-artifact-block-5d-schema = { workspace = true }
 semio-s-artifact-block-5d-viewer = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
 
 [dev-dependencies]
 pack = { workspace = true }
@@ -43,3 +44,10 @@ semio-s-artifact-block-5d-mutations = { workspace = true }
 semio-s-plugin-block = { workspace = true, features = ["test-serde"] }
 serde_json = { workspace = true }
 semio-framework-test-original-snapshot-owners = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }
+semio-s-artifact-block-5d-mut-part-kind = { workspace = true }
+semio-s-artifact-block-5d-mut-representations = { workspace = true }
+semio-s-artifact-block-5d-mut-grip-kinds = { workspace = true }
+semio-s-artifact-block-5d-mut-grips = { workspace = true }
+semio-s-artifact-block-5d-mut-meta = { workspace = true }
+semio-s-artifact-block-5d-mut-cameras = { workspace = true }
+semio-framework-schema-state = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }

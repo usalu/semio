@@ -5,7 +5,7 @@ import Ajv from "ajv";
 import { testInputRootFixture } from "../../🪪️root/🧪️tests/🔬️input-root/🟦️.ts";
 import { testInputWriterFixture } from "../../✍️writer/🧪️tests/🔬️input-writer/🟦️.ts";
 import { testInputCommitObserverFixture } from "../../🔗️commit/🧪️tests/🔬️input-commit-observer/🟦️.ts";
-import { testWatchdogTailFixture } from "../../../../../../⏱️trace/⏱️clock/🏁️tail/🧪️tests/🔬️watchdog-tail/🟦️.ts";
+import { testWatchdogTailFixture } from "@semio-tech/framework-trace/clock/tail/testing/watchdog-tail";
 import { valueSchemaUrl } from "@semio-tech/value-ts/testing/fixtures";
 
 /** 🎟️ The input-admission ledger: which pointer and key turns are admitted, refused or coalesced. */

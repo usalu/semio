@@ -35,6 +35,8 @@ semio-s-artifact-block-3d-mut-vortices = { workspace = true }
 semio-s-artifact-block-3d-mutations = { workspace = true }
 semio-s-artifact-block-3d-schema = { workspace = true }
 semio-s-plugin-block = { workspace = true }
+semio-s-artifact-block-3d-mut-object-kind = { workspace = true }
+semio-framework-async = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

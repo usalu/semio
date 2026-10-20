@@ -130,10 +130,6 @@
           "mutationDirectoryName": "➖delete-generation",
           "scenarios": [
             {
-              "id": "removes-the-selected-generation-2-and-falls-back-to-generation-1",
-              "directoryName": "🚫️removes-the-selected-generation-2-and-falls-back-to-generation-1"
-            },
-            {
               "id": "removes-a-middle-generation",
               "directoryName": "📍️removes-a-middle-row"
             },

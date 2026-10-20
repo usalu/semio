@@ -6,7 +6,7 @@ import type { FetchTimeoutResponse } from "@semio-tech/framework";
 import type { PackValue } from "../../../../🟦️";
 import { BROWSER_ACTOR_UI_PATCH_SURFACE_MAXIMUM } from "@semio-tech/framework/browser-bundle/patch-handoff";
 import { isPackInteger, decodePackValue, encodePackValue, packUIntSafeOrNull, noteAuthoredEnvelopeIds } from "../../../../🟦️";
-import { panelTabKindId, type PanelTabKind } from "@semio-tech/framework/manifest";
+import { panelTabKindId, type PanelTabKind } from "@semio-tech/framework-manifest";
 import { type SurfaceArtifactKindV1, type SurfaceKindAppV1, surfaceOpensArtifactKindV1 } from "@semio-tech/framework/directory/schema";
 import { DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 } from "@semio-tech/framework/directory/schema";
 import { type DocumentActorLossCauseV1, documentActorRecoveryStepV1, DOCUMENT_ACTOR_RECOVERY_V1 } from "../🚑️actor-recovery/🟦️.ts";

@@ -1,4 +1,4 @@
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import {checkScriptInvocation, scriptInvocationBudget, type ScriptInvocation} from "../../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 

@@ -1,7 +1,7 @@
 /** 📦️ Request: module exporting `SelectedCargoCompilationV1`, `captureSelectedRustProducerDataV1`. */
 import{types}from"node:util";
 import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import schema from"../🧬️schema/🔣️.json";
+import schema from"../🧬️schema/🔣️.json" with { type: "json" };
 const requestSchema=structuredClone(schema),policy=Object.freeze({...schema.$defs.DataPolicy.const});
 /** 🎯️ Immutable compilation DATA; the actual compiler factory supplies authority separately. */
 export interface SelectedCargoCompilationV1{readonly version:1;readonly manifest:string;readonly cwd:string;readonly arguments:readonly string[];readonly mode:"prototype"|"release"}

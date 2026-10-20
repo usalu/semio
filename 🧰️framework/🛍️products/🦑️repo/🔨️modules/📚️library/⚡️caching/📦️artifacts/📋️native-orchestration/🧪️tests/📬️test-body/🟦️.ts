@@ -1,5 +1,5 @@
 import {Database} from "bun:sqlite";
-import {receiveScriptProcessInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
 import {checkResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { SCRIPT_PROCESS_INVOCATION_ENV, scriptInvocationEnvironment, checkScriptInvocation } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type { ScriptInvocation } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -153,7 +153,7 @@ test("current Cargo relay physical authority retains cancellation through public
   const execute=new Function(...Object.keys(bindings),compile(source.replace(edge,"await provenanceOwner()"))+";return cargoStreamingStatus;")(...Object.values(bindings));
   try{
    await expect(execute(fixture.provenanceRelay.args,root,env,undefined)).rejects.toThrow("Original Cargo relay operation required");expect(events).toEqual([]);
-   if(row.published)expect(await receiveScriptProcessInvocation(process.env,invocation=>execute(fixture.provenanceRelay.args,root,env,{invocation,policy})),row.id).toBe(row.status);else await expect(receiveScriptProcessInvocation(process.env,invocation=>execute(fixture.provenanceRelay.args,root,env,{invocation,policy}))).rejects.toThrow();
+   if(row.published)expect(await withBuildTestInvocationV1(invocation=>execute(fixture.provenanceRelay.args,root,env,{invocation,policy})),row.id).toBe(row.status);else await expect(withBuildTestInvocationV1(invocation=>execute(fixture.provenanceRelay.args,root,env,{invocation,policy}))).rejects.toThrow();
    const receipts=fs.readdirSync(receiptRoot);expect(receipts.length,row.id).toBe(row.published?1:0);expect(signals.listenerCount("SIGINT")).toBe(0);expect(signals.listenerCount("SIGTERM")).toBe(0);expect(events[0]).toBe("prepare");expect(events.some(event=>event.phase==="read")).toBe(true);
    if(row.published){const receipt=decodeCargoProvenanceV1(fs.readFileSync(join(receiptRoot,receipts[0]),"utf8")),unit=receipt.units[0],input=unit.inputs.find((entry:any)=>entry.path===original),bytes=fs.readFileSync(original),digest=createHash("sha256").update(bytes).digest("hex");expect(input.sha256).toBe(digest);expect(input.sha256).toBe(Buffer.from(await crypto.subtle.digest("SHA-256",bytes)).toString("hex"));expect(unit.artifacts[0].sha256).toBe(createHash("sha256").update(fs.readFileSync(artifact)).digest("hex"));expect(receipt.status).toBe(row.status);expect(receipt.args).toEqual(compilerArgs);expect(receipt.cancelled).toBe(false);}
   }finally{fs.rmSync(root,{recursive:true,force:true});}

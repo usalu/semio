@@ -1,0 +1,132 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🔨️modules/🏠️host/🧰️retained-mutation-owner-accept/🦀️.rs",
+ "function": "accept",
+ "nth": 0,
+ "match_line": 9,
+ "types": {},
+ "ret": "Result<(), &'static str>",
+ "inline": true,
+ "arms": [
+  {
+   "line": 48,
+   "name": "accept_begin_table",
+   "doc": "🧱️ Opens a table container of the retained record.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "count": "u64"
+   }
+  },
+  {
+   "line": 65,
+   "name": "accept_begin_list_or_tuple",
+   "doc": "🪵️ Opens a list or tuple container of the retained record.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "count": "u64"
+   }
+  },
+  {
+   "line": 89,
+   "name": "accept_field_id",
+   "doc": "🔩️ Binds the field id of the retained record.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "value": "u64"
+   }
+  },
+  {
+   "line": 134,
+   "name": "accept_f64",
+   "doc": "⚙️ Accepts the bits of one float of the retained record.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "bits": "u64"
+   }
+  },
+  {
+   "line": 179,
+   "name": "accept_inline_tag",
+   "doc": "🧲️ Accepts the inline tag of a retained flag or bit mask.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 206,
+   "name": "accept_wire_node_presence",
+   "doc": "🪛️ Accepts the presence marker of one wire node.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "presence": "u8"
+   }
+  },
+  {
+   "line": 237,
+   "name": "accept_end",
+   "doc": "🔧️ Closes the innermost container of the retained record.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "kind": "store::mounted_pack_rt::RetainedValueContainer"
+   }
+  },
+  {
+   "line": 308,
+   "name": "accept_complete",
+   "doc": "🔨️ Completes the retained record and publishes its destination.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  }
+ ],
+ "method": {
+  "self_param": "&mut self",
+  "call": "self.{name}({args})"
+ },
+ "fall_tail": "Ok(())",
+ "ensure_semicolon": true,
+ "call_suffix": "?",
+ "prelude_ifs": [
+  {
+   "regex": "\\bContainer\\b",
+   "line": "use store::mounted_pack_rt::RetainedValueContainer as Container;"
+  },
+  {
+   "regex": "\\bRole\\b",
+   "line": "use store::mounted_pack_rt::RetainedValueRole as Role;"
+  },
+  {
+   "regex": "\\bToken\\b",
+   "line": "use store::mounted_pack_rt::RetainedValueToken as Token;"
+  }
+ ]
+}

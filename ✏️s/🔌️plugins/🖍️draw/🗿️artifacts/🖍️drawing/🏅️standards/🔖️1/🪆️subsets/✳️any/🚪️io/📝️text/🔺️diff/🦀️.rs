@@ -17,7 +17,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[path="🧪️tests/🔬️typed-patches/🦀️.rs"]
 mod typed_patches;
 
-impl semio_framework_os_kernel::DiffText for semio_s_artifact_draw_drawing_diff::DrawingDiff {
+impl semio_framework_os_kernel::DiffText for crate::DrawingDiff {
     fn print_diff(&self) -> String {
         semio_framework_pack_json::to_json_string(self)
     }

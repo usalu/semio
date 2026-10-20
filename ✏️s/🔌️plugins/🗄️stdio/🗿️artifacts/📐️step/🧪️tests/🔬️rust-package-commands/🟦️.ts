@@ -1,4 +1,4 @@
-import type { ScriptInvocation } from "@semio-tech/process/routing";
+import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { resolve as scriptDirectoryResolve } from "node:path";

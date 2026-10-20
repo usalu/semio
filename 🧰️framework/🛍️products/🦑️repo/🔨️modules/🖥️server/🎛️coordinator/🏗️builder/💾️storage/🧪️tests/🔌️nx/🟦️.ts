@@ -10,7 +10,7 @@ import {withRepositoryTestArtifactsV1,repositoryTestArtifactRootV1} from "@semio
 import fixture from "./🔣️.json" with {type:"json"};
 import {withSelectedNextBuildGraphV1} from "../../../📥️inputs/🔌️nx/🟦️.ts";
 import {withNextStorageV1} from "../../🟦️.ts";
-import {receiveScriptProcessInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
 import {withResourceLeases} from "@semio-tech/process/leases";
 import { withRepositoryBuildGraphArtifactV1, runOwnedNxInvocationV1, NX_OUTPUT_LOG_ENV, withRepositoryCacheStoreV1, boundedNxNamespaceV1, repositoryStrictStorageV1 } from "@semio-tech/repo-lib/storage";
 import {nativeImageRootV1} from "@semio-tech/process/artifacts/native-build/storage/platform/contract";
@@ -23,7 +23,7 @@ function inventory(directory:string):{files:number;bytes:number;digest:string}{c
 
 test("ordinary Nx retains and restores the actual bounded coordinator Next artifact",async()=>{
  const workspace=process.cwd(),mode=process.env.SEMIO_BUILD_MODE,artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts||mode!=="prototype"&&mode!=="release")throw Error("Original Next Nx proof resources required");if(process.platform!=="darwin")return;
- await receiveScriptProcessInvocation(process.env,rootOriginal=>withRepositoryTestArtifactsV1(workspace,rootOriginal,createIssuedResourceControlV1(rootOriginal,"next:fixture",0),async artifactHostPhase=>{
+ await withBuildTestInvocationV1(rootOriginal=>withRepositoryTestArtifactsV1(workspace,rootOriginal,createIssuedResourceControlV1(rootOriginal,"next:fixture",0),async artifactHostPhase=>{
  const directory=mkdtempSync(join(repositoryTestArtifactRootV1(workspace),"nn-")),input=join(directory,"request.json"),owner="🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript",compilerOwner="🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/🏃️execution/📜️script.ts",args=["run","@semio-tech/repo-coordinator:build","--configuration="+mode,"--parallel=1","--output-style=static","--verbose"],keys=["SEMIO_BUILD_GRAPH_PATH","SEMIO_BUILD_GRAPH_DIGEST","SEMIO_BUILD_REUSE_GRAPH","SEMIO_BUILD_MODE","NX_DAEMON",NX_OUTPUT_LOG_ENV],previous=Object.fromEntries(keys.map(key=>[key,process.env[key]]));
  try{writeFileSync(input,JSON.stringify({version:fixture.version,mode}));await withNextStorageV1(workspace,mode,rootOriginal,artifactHostPhase,async(store,layout,_temporary,nextStorePhase)=>{
  const declaration=repositoryStrictStorageV1(workspace),control=nextStorePhase,identity=JSON.parse(readFileSync(join(workspace,".nx/installation/.semio-nx-tooling.json"),"utf8")).digest,graphRoot=await withRepositoryCacheStoreV1(workspace,"graph",rootOriginal,createIssuedResourceControlV1(rootOriginal,"cache:store-entry",0),async graph=>graph.root),namespace=boundedNxNamespaceV1(nativeImageRootV1(declaration.directory),graphRoot,identity,workspace,null,(await import("@semio-tech/repo-lib/build/inference")).nxBuildDependencyImplementationV1()),invocation=rootOriginal,oracle=new Database(":memory:");let originalInventory:ReturnType<typeof inventory>|undefined,originalHash:string|undefined,originalState:string[]|undefined;

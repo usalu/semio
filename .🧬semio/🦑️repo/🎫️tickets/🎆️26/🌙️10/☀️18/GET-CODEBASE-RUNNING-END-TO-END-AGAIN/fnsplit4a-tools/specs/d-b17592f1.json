@@ -1,0 +1,46 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/🟦️.ts",
+ "describeLine": 22,
+ "shared": {
+  "dir": "🟣️shared",
+  "doc": "/** 🟣️ The shared declarations of the transaction plan journal v2 aggregate suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️keeps-language-neutral-golden",
+   "doc": "/** 🔶️ The keeps language neutral golden tests of the transaction plan journal v2 aggregate suite. */",
+   "name": "registerKeepsLanguageNeutralGoldenTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the keeps language neutral golden tests of the transaction plan journal v2 aggregate suite.",
+   "from": 23,
+   "to": 23
+  },
+  {
+   "dir": "🔸️rejects-incomplete-plans-plan",
+   "doc": "/** 🔸️ The rejects incomplete plans plan tests of the transaction plan journal v2 aggregate suite. */",
+   "name": "registerRejectsIncompletePlansPlanTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the rejects incomplete plans plan tests of the transaction plan journal v2 aggregate suite.",
+   "from": 182,
+   "to": 340
+  },
+  {
+   "dir": "🟠️rejects-stale-baseline-source",
+   "doc": "/** 🟠️ The rejects stale baseline source tests of the transaction plan journal v2 aggregate suite. */",
+   "name": "registerRejectsStaleBaselineSourceTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the rejects stale baseline source tests of the transaction plan journal v2 aggregate suite.",
+   "from": 351,
+   "to": 469
+  },
+  {
+   "dir": "🟢️keeps-double-plan-bytes",
+   "doc": "/** 🟢️ The keeps double plan bytes tests of the transaction plan journal v2 aggregate suite. */",
+   "name": "registerKeepsDoublePlanBytesTests",
+   "emoji": "🔵",
+   "fdoc": "Registers the keeps double plan bytes tests of the transaction plan journal v2 aggregate suite.",
+   "from": 500,
+   "to": 528
+  }
+ ]
+}

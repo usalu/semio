@@ -72,6 +72,8 @@ semio-s-artifact-stdio-pdf = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }
 semio-s-artifact-stdio-xml = { workspace = true }
 serde_json = { workspace = true, optional = true }
+semio-s-artifact-bim-model-schema = { path = "../../../../📦️packages/🦀️rust" }
+semio-s-artifact-stdio-svg-snapshot = { path = "../../../../../../../../../../../../🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
 
 [features]
 testkit = ["dep:serde_json", "dep:quick-xml", "dep:gltf", "dep:semio-framework-test-fixtures", "semio-framework-plugin/artifact-app-testing", "semio-framework-os-kernel/protocol-laws", "semio-framework-os-kernel/mutation-testing", "semio-s-artifact-bim-model-examples/testkit", "semio-s-artifact-bim-model-formula/testkit", "semio-s-artifact-bim-model-snapshot/testkit", "semio-s-artifact-bim-model-authored/testkit", "semio-s-artifact-bim-model-storey-levels/testkit", "semio-s-artifact-bim-model-diff/testkit", "semio-s-artifact-bim-model-ramp-runs/testkit", "semio-s-artifact-bim-model-wall-layout/testkit", "semio-s-artifact-bim-model-spaces/testkit", "semio-s-artifact-bim-model-curtain-walls/testkit", "semio-s-artifact-bim-model-components/testkit", "semio-s-artifact-bim-model-quantities/testkit", "semio-s-artifact-bim-model-plan-linework/testkit", "semio-s-artifact-bim-model-incremental-tests/testkit", "semio-s-artifact-bim-model-inferences/testkit"]
@@ -101,3 +103,4 @@ semio-s-artifact-bim-model-snapshot = { path = "../../../../📸️snapshot/📦
 semio-s-artifact-bim-model-spaces = { path = "../../../../💡️inferences/🏠️spaces/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-bim-model-storey-levels = { path = "../../../../💡️inferences/🏢️storey-levels/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-bim-model-wall-layout = { path = "../../../../💡️inferences/🧱️wall-layout/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-tests-2 = { path = "../../../../📏️authored/🔗️references/🧪️tests/🔬️unit/📦️packages/🦀️rust" }

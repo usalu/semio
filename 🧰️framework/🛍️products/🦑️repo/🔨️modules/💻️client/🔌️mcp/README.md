@@ -1,6 +1,6 @@
 # Summary
 
-MCP server exposing the repo CLI's GraphQL surface to agent clients.
+The unified native `repo` executable serves MCP through `repo mcp`. `SEMIO_REPO_MCP_CLIENT` selects the client profile. Ordinary repository and build commands use the same binary; protocol traffic is confined to the explicit MCP route.
 
 # Docs
 

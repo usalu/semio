@@ -5,25 +5,25 @@ import { normWireArray, normWireDefault, normWireInteger, normWireNullable, norm
 import { type Anchor, type AnnexChoice, type BarLayer, type ConcreteGrade, type ExposureClass, type FireRating, type LoadCaseActions, parseAnchor, parseAnnexChoice, parseBarLayer, parseConcreteGrade, parseExposureClass, parseFireRating, parseLoadCaseActions, parsePrestressSteel, parseRcMember, parseReinforcementGrade, type PrestressSteel, type RcMember, type ReinforcementGrade } from "../📸️snapshot/🟦️.ts";
 
 export interface En1992Diff {
-  /** @state artifact */
+  /** 📑️ @state artifact */
   annex: AnnexChoice | null;
-  /** @state artifact */
+  /** 📛️ @state artifact */
   title: string | null;
-  /** @state artifact */
+  /** 🎨️ @state artifact */
   designWorkingLifeYears: number | null;
-  /** @state artifact */
+  /** 🔄️ @state artifact */
   deltaCDev: number | null;
-  /** @state artifact */
+  /** ✏️ @state artifact */
   cementType: string | null;
-  /** @state artifact */
+  /** 🧱️ @state artifact */
   concreteGrades: En1992ConcreteGradesRows | null;
-  /** @state artifact */
+  /** 📝️ @state artifact */
   reinforcementGrades: En1992ReinforcementGradesRows | null;
-  /** @state artifact */
+  /** 🔩️ @state artifact */
   prestressSteels: En1992PrestressSteelsRows | null;
-  /** @state artifact */
+  /** 👤️ @state artifact */
   members: En1992MembersRows | null;
-  /** @state artifact */
+  /** 📍️ @state artifact */
   anchors: En1992AnchorsRows | null;
 }
 

@@ -4,7 +4,7 @@ import {compileJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import { createHash } from "node:crypto";
 import { lstatSync, mkdirSync, writeFileSync, existsSync, realpathSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
-import {observePhysicalFileV1,readPhysicalFileV1,type PhysicalFileClaimV1,type FileObservationControlV1} from "@semio-tech/framework/filesystem/observation";
+import {observePhysicalFileV1,readPhysicalFileV1,type PhysicalFileClaimV1,type FileObservationControlV1} from "@semio-tech/framework-filesystem/observation";
 import {readCompletedCargoPublicationReferenceV1,type CompletedCargoPublicationReferenceV1} from "@semio-tech/process/artifacts/native-build/receipt/retention/reference";
 
 const generationContract=compileJsonSchemaSubset(producerSchema.$defs.GenerationProducerV1,producerSchema,[cargoReferenceSchema]);

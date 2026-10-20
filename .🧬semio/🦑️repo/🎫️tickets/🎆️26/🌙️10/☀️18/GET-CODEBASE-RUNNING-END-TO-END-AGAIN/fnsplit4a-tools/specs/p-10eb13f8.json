@@ -1,0 +1,29 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx",
+ "function": "World3dHost",
+ "keep": [
+  76
+ ],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🔸️shared",
+  "doc": "/** 🔸️ The shared declarations of World3dHost. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️core",
+   "doc": "/** 🔶️ The core phase of World3dHost. */",
+   "phases": [
+    {
+     "name": "useCoreState",
+     "emoji": "🔷",
+     "doc": "Builds core, activeUtility, altHeldRef, publishWorldPresenceView of World3dHost.",
+     "from": 66,
+     "to": 74
+    }
+   ]
+  }
+ ]
+}

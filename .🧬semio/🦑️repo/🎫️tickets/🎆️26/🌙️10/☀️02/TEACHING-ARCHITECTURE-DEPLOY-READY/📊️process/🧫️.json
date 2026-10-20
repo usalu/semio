@@ -1,0 +1,337 @@
+{
+  "version": 1,
+  "fields": [
+    "pid",
+    "ppid",
+    "comm",
+    "state",
+    "utime",
+    "stime",
+    "starttime",
+    "rssPages"
+  ],
+  "parserCases": [
+    {
+      "id": "simple",
+      "text": "42 (bun) R 1 0 0 0 0 0 0 0 0 0 10 20 0 0 0 0 0 0 300 0 40\n",
+      "accepted": true,
+      "expected": {
+        "pid": 42,
+        "ppid": 1,
+        "comm": "bun",
+        "state": "R",
+        "utime": "10",
+        "stime": "20",
+        "starttime": "300",
+        "rssPages": "40"
+      }
+    },
+    {
+      "id": "comm-spaces-close-paren",
+      "text": "43 (node worker) io) R 1 0 0 0 0 0 0 0 0 0 10 20 0 0 0 0 0 0 300 0 40\n",
+      "accepted": true,
+      "expected": {
+        "pid": 43,
+        "ppid": 1,
+        "comm": "node worker) io",
+        "state": "R",
+        "utime": "10",
+        "stime": "20",
+        "starttime": "300",
+        "rssPages": "40"
+      }
+    },
+    {
+      "id": "truncated",
+      "text": "42 (bun) R 1\n",
+      "accepted": false
+    },
+    {
+      "id": "non-number",
+      "text": "42 (bun) R 1 0 0 0 0 0 0 0 0 0 x 20 0 0 0 0 0 0 300 0 40\n",
+      "accepted": false
+    },
+    {
+      "id": "wrong-pid",
+      "text": "0 (bun) R 1 0 0 0 0 0 0 0 0 0 10 20 0 0 0 0 0 0 300 0 40\n",
+      "accepted": false
+    },
+    {
+      "id": "negative-rss",
+      "text": "42 (bun) R 1 0 0 0 0 0 0 0 0 0 10 20 0 0 0 0 0 0 300 0 -1\n",
+      "accepted": false
+    }
+  ],
+  "observerCases": [
+    {
+      "id": "normal",
+      "accepted": true
+    },
+    {
+      "id": "gone-before",
+      "accepted": true
+    },
+    {
+      "id": "gone-after",
+      "accepted": true
+    },
+    {
+      "id": "pid-reused",
+      "accepted": true
+    },
+    {
+      "id": "comm-changed",
+      "accepted": true
+    },
+    {
+      "id": "nonselected",
+      "accepted": true
+    },
+    {
+      "id": "title-renamed",
+      "accepted": true
+    },
+    {
+      "id": "exec-race",
+      "accepted": true
+    },
+    {
+      "id": "numeric-cap",
+      "accepted": false
+    },
+    {
+      "id": "selected-cap",
+      "accepted": false
+    },
+    {
+      "id": "stat-cap",
+      "accepted": false
+    },
+    {
+      "id": "stat-symlink",
+      "accepted": false
+    },
+    {
+      "id": "stat-growth",
+      "accepted": false
+    },
+    {
+      "id": "stat-identity",
+      "accepted": false
+    },
+    {
+      "id": "comm-mismatch",
+      "accepted": true
+    },
+    {
+      "id": "exe-cap",
+      "accepted": false
+    },
+    {
+      "id": "deadline",
+      "accepted": false
+    },
+    {
+      "id": "numeric-exact-cap",
+      "accepted": true
+    },
+    {
+      "id": "selected-exact-cap",
+      "accepted": true
+    },
+    {
+      "id": "stat-exact-cap",
+      "accepted": true
+    },
+    {
+      "id": "inventory-generic",
+      "mode": "inventory",
+      "accepted": true
+    },
+    {
+      "id": "inventory-runtime-opaque",
+      "mode": "inventory",
+      "accepted": true
+    },
+    {
+      "id": "inventory-control",
+      "mode": "inventory",
+      "accepted": false
+    },
+    {
+      "id": "inventory-name-cap",
+      "mode": "inventory",
+      "accepted": false
+    },
+    {
+      "id": "inventory-exact-name-cap",
+      "mode": "inventory",
+      "accepted": true
+    },
+    {
+      "id": "inventory-cap",
+      "mode": "inventory",
+      "accepted": false
+    },
+    {
+      "id": "inventory-exact-cap",
+      "mode": "inventory",
+      "accepted": true
+    }
+  ],
+  "identityCases": [
+    {
+      "id": "normal",
+      "accepted": true
+    },
+    {
+      "id": "wrong-id",
+      "accepted": false
+    },
+    {
+      "id": "wrong-image",
+      "accepted": false
+    },
+    {
+      "id": "wrong-token",
+      "accepted": false
+    },
+    {
+      "id": "wrong-mount",
+      "accepted": false
+    },
+    {
+      "id": "extra-mount",
+      "accepted": false
+    },
+    {
+      "id": "not-running",
+      "accepted": false
+    },
+    {
+      "id": "paused",
+      "accepted": false
+    },
+    {
+      "id": "restarting",
+      "accepted": false
+    },
+    {
+      "id": "created-change",
+      "accepted": false
+    }
+  ],
+  "transportCases": [
+    {
+      "id": "normal",
+      "accepted": true
+    },
+    {
+      "id": "wrong-identity",
+      "accepted": false
+    },
+    {
+      "id": "observer-overflow",
+      "accepted": false
+    },
+    {
+      "id": "inspect-overflow",
+      "accepted": false
+    },
+    {
+      "id": "cancel",
+      "accepted": false
+    },
+    {
+      "id": "read-failure",
+      "accepted": false
+    },
+    {
+      "id": "inventory-frame",
+      "mode": "inventory",
+      "accepted": true
+    }
+  ],
+  "receiptCases": [
+    {
+      "id": "first",
+      "label": "first",
+      "collision": false,
+      "accepted": true,
+      "name": "2026-10-20-runtime-process-observation-first.json"
+    },
+    {
+      "id": "second",
+      "label": "second",
+      "collision": false,
+      "accepted": true,
+      "name": "2026-10-20-runtime-process-observation-second.json"
+    },
+    {
+      "id": "default",
+      "collision": false,
+      "accepted": true,
+      "name": "2026-10-20-runtime-process-observation-first.json"
+    },
+    {
+      "id": "bad-label",
+      "label": "third",
+      "collision": false,
+      "accepted": false
+    },
+    {
+      "id": "first-collision",
+      "label": "first",
+      "collision": true,
+      "accepted": false
+    },
+    {
+      "id": "second-collision",
+      "label": "second",
+      "collision": true,
+      "accepted": false
+    },
+    {
+      "id": "inventory-receipt",
+      "mode": "inventory",
+      "collision": false,
+      "accepted": true,
+      "name": "2026-10-20-runtime-process-observation-inventory.json"
+    },
+    {
+      "id": "inventory-collision",
+      "mode": "inventory",
+      "collision": true,
+      "accepted": false
+    },
+    {
+      "id": "inventory-second",
+      "mode": "inventory",
+      "label": "second",
+      "collision": false,
+      "accepted": true,
+      "name": "2026-10-20-runtime-process-observation-inventory-second.json"
+    },
+    {
+      "id": "inventory-second-collision",
+      "mode": "inventory",
+      "label": "second",
+      "collision": true,
+      "accepted": false
+    },
+    {
+      "id": "inventory-first-refused",
+      "mode": "inventory",
+      "label": "first",
+      "collision": false,
+      "accepted": false
+    },
+    {
+      "id": "inventory-unknown-refused",
+      "mode": "inventory",
+      "label": "third",
+      "collision": false,
+      "accepted": false
+    }
+  ]
+}

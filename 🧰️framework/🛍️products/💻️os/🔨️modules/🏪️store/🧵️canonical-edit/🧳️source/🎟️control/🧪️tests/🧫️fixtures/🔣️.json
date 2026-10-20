@@ -80,7 +80,7 @@
     "releasedBytes": 0
   },
   "requiredReceivingPorts": [
-    "pub fn advance(&mut self, grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>)",
+    "pub fn advance(&mut self, grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)",
     "pub fn ownership_progress(&self)->RetainedCloneProgress"
   ],
   "forbiddenAuthority": [

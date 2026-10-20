@@ -1,15 +1,39 @@
 //! 🖍️ Authored Draw forest entities, paint relationships and exact scalar words.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use semio_s_artifact_draw_drawing_model::{DrawingArtboard, DrawingAttributes, DrawingBooleanBody, DrawingCircle, DrawingEllipse, DrawingGroupBody, DrawingImageAsset, DrawingImageBody, DrawingLayerBase, DrawingLayerNode, DrawingLine, DrawingPathBody, DrawingPolygon, DrawingRect, DrawingShapeBody, DrawingTextBody, DrawingTraceBody, FillStyle, GradientStop, PathSegment, StrokeStyle};
-use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
-use semio_s_artifact_draw_drawing_model::fill_rule::FillRule;
+use crate::DrawingArtboard;
+use crate::DrawingAttributes;
+use crate::DrawingBooleanBody;
+use crate::DrawingCircle;
+use crate::DrawingEllipse;
+use crate::DrawingGroupBody;
+use crate::DrawingImageAsset;
+use crate::DrawingImageBody;
+use crate::DrawingLayerBase;
+use crate::DrawingLayerNode;
+use crate::DrawingLine;
+use crate::DrawingPathBody;
+use crate::DrawingPolygon;
+use crate::DrawingRect;
+use crate::DrawingShapeBody;
+use crate::DrawingTextBody;
+use crate::DrawingTraceBody;
+use crate::FillStyle;
+use crate::GradientStop;
+use crate::PathSegment;
+use crate::StrokeStyle;
+use crate::snapshot::DrawingSnapshot;
+use crate::fill_rule::FillRule;
 use semio_framework_value::ValueError;
 use semio_framework_value::ValueRefusalKind;
-use semio_s_artifact_draw_drawing_model::snapshot::{DrawingSnapshot, retire_decoded_drawing_snapshot};
+use crate::snapshot::retire_decoded_drawing_snapshot;
 use store::sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,Projection,Reconstruction,FloatColumn,FloatRow,insert_ieee754}};
 use std::collections::BTreeMap;
 use crate::DrawingTransform;
 use crate::DrawingTraceParams;
+use crate::stroke::StrokeCap;
+use crate::stroke::StrokeJoin;
+use crate::font_family::DrawingFontFamily;
+use pack::snapshot::ArtifactDsl;
 const SCHEMA:&str=include_str!("🗄️.sql");
 fn ordinal(value:usize)->Result<i64,ValueError>{i64::try_from(value).map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))}
 fn scalar(p:&mut Projection<'_,'_>,value:f64)->Result<i64,ValueError>{insert_ieee754(p,"draw_scalar",&[Cell::Real(value)],&[FloatColumn::Binary64(1)])}

@@ -17,7 +17,8 @@
     "vitest": "^4.0.17",
     "@semio-tech/framework": "workspace:*",
     "@semio-tech/cad-cad-ts": "workspace:*",
-    "@semio-tech/s-spatial-kernel-ts": "workspace:*"
+    "@semio-tech/s-spatial-kernel-ts": "workspace:*",
+    "@semio-tech/ui-react": "workspace:*"
   },
   "bundleKind": "library",
   "exports": {

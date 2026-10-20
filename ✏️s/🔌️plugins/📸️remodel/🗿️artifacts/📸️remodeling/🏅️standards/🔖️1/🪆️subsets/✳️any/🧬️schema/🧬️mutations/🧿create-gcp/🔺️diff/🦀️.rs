@@ -5,7 +5,7 @@ use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any:
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::CreateGcp, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
+pub fn diff(payload: &crate::standards::v1::subsets::any::schema::mutations::create_gcp::component::CreateGcp, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
     if base.gcps.iter().any(|gcp| gcp.id == payload.gcp.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A GCP with id \"{}\" already exists.", payload.gcp.id), [payload.gcp.id.clone()]);
     }

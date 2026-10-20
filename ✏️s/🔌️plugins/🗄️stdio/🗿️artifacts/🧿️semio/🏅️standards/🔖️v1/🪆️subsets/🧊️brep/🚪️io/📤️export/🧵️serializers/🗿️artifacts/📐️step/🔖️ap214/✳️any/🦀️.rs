@@ -23,7 +23,7 @@ use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_referen
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
 use semio_s_artifact_stdio_semio_brep::schema::snapshot::{BrepCurve, BrepSurface, SemioBrepSnapshot};
 use semio_s_artifact_stdio_contract::part21::{Part21Builder, Part21Header, Part21Value};
-use semio_s_artifact_stdio_step::schema::snapshot::StepSnapshot;
+use semio_s_artifact_stdio_step::StepSnapshot;
 
 //#region 🔖️ValueBuild
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

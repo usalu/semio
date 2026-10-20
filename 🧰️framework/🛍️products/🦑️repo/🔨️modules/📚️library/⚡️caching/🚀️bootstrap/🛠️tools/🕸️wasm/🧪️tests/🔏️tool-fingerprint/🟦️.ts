@@ -6,11 +6,11 @@ import { spawnSync } from "node:child_process";
 
 /** 🔏️ Proves hashing works without application dependencies or acquired tools and matches native version output. */
 export async function testWasmToolFingerprint(workspace: string, output: string): Promise<void> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔏️tool-fingerprint/🔣️.json"), "utf8")), script = resolve(import.meta.dir, "../../📜️script.ts");
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔏️tool-fingerprint/🔣️.json"), "utf8")), script = resolve(import.meta.dir, "../../🟦️.ts");
   const built = await require("esbuild").build({ entryPoints: [script], absWorkingDir: workspace, bundle: true, write: false, platform: "node", format: "esm", packages: "external", metafile: true, logLevel: "silent" });
   assert.ok(Object.keys(built.metafile.inputs).length <= fixture.maximumImports);
   assert.ok(Object.keys(built.metafile.inputs).every(path => !/🧪️tests|📦️packages\/🟦️typescript\/🟦️.ts/.test(path)));
-  const { binaryenIdentity, preparedBinaryen, binaryenDirectory } = await import("../../📜️script.ts");
+  const { binaryenIdentity, preparedBinaryen, binaryenDirectory } = await import("../../🟦️.ts");
   const directory = mkdtempSync(join(output, "tool-fingerprint-"));
   const environment = { ...process.env, PATH: "", SEMIO_WASM_BINDGEN_BIN: "", SEMIO_WASM_OPT_BIN: "", REPO_ROOT: workspace, NX_WORKSPACE_ROOT: workspace };
   try {

@@ -7,7 +7,7 @@ use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::sche
 use crate::standards::v1::subsets::any::schema::mutations::replace_trajectory::component::ReplaceTrajectory;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::ReplaceTrajectory, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
+pub fn diff(payload: &crate::standards::v1::subsets::any::schema::mutations::replace_trajectory::component::ReplaceTrajectory, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
     if payload.trajectory.is_none() && base.results.trajectory.is_none() {
         return protocol::MutationOutcome::error("mutation.target-missing", "There is no trajectory to clear.".to_string(), [base.id.clone()]);
     }

@@ -87,12 +87,12 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod replace_saved_camera_view {
-                            #[path = "../../../🎞️replace-saved/🦀️.rs"]
+                            #[path = "../../../🎞️replace-saved-camera-view/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "../../../🎞️replace-saved/🔺️diff/🦀️.rs"]
+                            #[path = "../../../🎞️replace-saved-camera-view/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "../../../🎞️replace-saved/↩️inverse/🦀️.rs"]
+                            #[path = "../../../🎞️replace-saved-camera-view/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                         }
                         #[path = "."]

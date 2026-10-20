@@ -1,6 +1,6 @@
 import { runArtifactRustTests } from "@semio-tech/framework/process/cargo-test";
 import { BundleScript, scriptInvocationBudget } from "@semio-tech/framework/process/routing";
-import { resolveTypescriptCompilerV1 } from "@semio-tech/process/execution";
+import { resolveTypescriptCompilerV1 } from "@semio-tech/framework/process/execution";
 import { runBudgetedTestCommand } from "@semio-tech/framework/process/test-execution";
 import { resolve } from "node:path";
 

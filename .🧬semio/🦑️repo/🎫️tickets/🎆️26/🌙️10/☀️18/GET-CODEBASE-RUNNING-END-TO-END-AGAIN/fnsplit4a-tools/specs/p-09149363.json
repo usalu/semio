@@ -1,0 +1,65 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/🟦️.tsx",
+ "function": "Paint2dCanvasSurface",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "shared": {
+  "dir": "🟣️shared",
+  "doc": "/** 🟣️ The shared declarations of Paint2dCanvasSurface. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️window-instance-id",
+   "doc": "/** 🔶️ The window instance id phase of Paint2dCanvasSurface. */",
+   "phases": [
+    {
+     "name": "useWindowInstanceIdState",
+     "emoji": "🔷",
+     "doc": "Builds windowInstanceId, isNavigator, containerRef, sessionRef of Paint2dCanvasSurface.",
+     "from": 220,
+     "to": 377
+    }
+   ]
+  },
+  {
+   "dir": "🔸️client-point",
+   "doc": "/** 🔸️ The client point phase of Paint2dCanvasSurface. */",
+   "phases": [
+    {
+     "name": "useClientPointState",
+     "emoji": "🔹",
+     "doc": "Builds clientPoint, pickInteraction, selectionMethod, updateMarqueeOverlay of Paint2dCanvasSurface.",
+     "from": 381,
+     "to": 486
+    }
+   ]
+  },
+  {
+   "dir": "🟠️pointer-move",
+   "doc": "/** 🟠️ The pointer move phase of Paint2dCanvasSurface. */",
+   "phases": [
+    {
+     "name": "usePointerMoveState",
+     "emoji": "🟡",
+     "doc": "Builds onPointerMove, onPointerUp, onPointerCancel, onWheel of Paint2dCanvasSurface.",
+     "from": 522,
+     "to": 631
+    }
+   ]
+  },
+  {
+   "dir": "🟢️context-menu",
+   "doc": "/** 🟢️ The context menu phase of Paint2dCanvasSurface. */",
+   "phases": [
+    {
+     "name": "useContextMenu",
+     "emoji": "🔵",
+     "doc": "Builds onContextMenu of Paint2dCanvasSurface.",
+     "from": 654,
+     "to": 654
+    }
+   ]
+  }
+ ]
+}

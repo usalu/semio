@@ -2,7 +2,7 @@ import type { ScriptInvocation } from "../🏃️process/📦️packages/🟦️
 import { runOwnedCommand } from "../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { cmdBudgetMs } from "../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { join } from "node:path";
-import taskDescriptor from "./🧪️testing/🧭️ownership/🔣️.json";
+import taskDescriptor from "./🧪️testing/🧭️ownership/🔣️.json" with { type: "json" };
 import { readPixelsTaskDescriptorV1 } from "./🧪️testing/🧭️ownership/🟦️.ts";
 
 /** 🏃️ Runs the `TestScript` command under the caller's roots and invocation. */

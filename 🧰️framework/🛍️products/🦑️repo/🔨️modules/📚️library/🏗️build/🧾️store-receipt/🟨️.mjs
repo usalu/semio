@@ -1,9 +1,10 @@
+import{capturePhysicalSourceTextV1,physicalSourceOriginV1}from"../📥️inputs/🔏️revision/🟨️.mjs";
 import {createHash} from "node:crypto";
-import {createReadStream,readFileSync,rmSync} from "node:fs";
+import {createReadStream,rmSync} from "node:fs";
 import {lstat,mkdir,readdir,readFile,realpath,rename,rm,writeFile} from "node:fs/promises";
 import {dirname,isAbsolute,join,relative,resolve,sep} from "node:path";
 
-const schema=JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json",import.meta.url),"utf8")),policy=schema.definitions.Policy.const,repair=schema.definitions.Repair.const,entryPath=new RegExp(schema.definitions.Entry.properties.path.pattern,"u"),targetName=new RegExp(schema.definitions.Target.pattern,"u"),repairTask=new RegExp(repair.task,"u"),digestPattern=new RegExp(schema.definitions.Entry.properties.sha256.pattern,"u");
+const schema=JSON.parse(capturePhysicalSourceTextV1(new URL("./🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),65536)),policy=schema.definitions.Policy.const,repair=schema.definitions.Repair.const,entryPath=new RegExp(schema.definitions.Entry.properties.path.pattern,"u"),targetName=new RegExp(schema.definitions.Target.pattern,"u"),repairTask=new RegExp(repair.task,"u"),digestPattern=new RegExp(schema.definitions.Entry.properties.sha256.pattern,"u");
 const posix=value=>value.split(sep).join("/"),text=value=>Buffer.from(value,"utf8");
 
 /** 🧾️ Names the declared receipt output of one target, relative to its project root. */
@@ -14,7 +15,7 @@ export function storeReceiptOutputV1(target){
 
 /** 🔎️ Resolves the absolute receipt path a task declares among its outputs, or nothing when it declares none. */
 export function declaredStoreReceiptV1({workspaceRoot,projectRoot,target,outputs}){
- if(!Array.isArray(outputs)||!outputs.includes(storeReceiptOutputV1(target)))return undefined;
+ if(!Array.isArray(outputs)||!outputs.some(output=>typeof output==="string"&&output.startsWith(policy.projectRootToken+"/"+policy.directory+"/"))||!outputs.includes(storeReceiptOutputV1(target)))return undefined;
  if(typeof workspaceRoot!=="string"||!isAbsolute(workspaceRoot)||typeof projectRoot!=="string"||isAbsolute(projectRoot))throw Error("Workspace root and relative project root required");
  const path=resolve(workspaceRoot,projectRoot,policy.directory,target+policy.extension),inside=relative(workspaceRoot,path);
  if(!inside||inside===".."||inside.startsWith(".."+sep)||isAbsolute(inside)||inside.length>policy.maximumPathLength)throw Error("Store receipt must lie inside the workspace");

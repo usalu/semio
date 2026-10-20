@@ -1,0 +1,40 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🏘️space-administration/🟦️.ts",
+ "function": "registerSpaceAdministrationTests",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟠️shared",
+  "doc": "/** 🟠️ The shared declarations of registerSpaceAdministrationTests. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️before",
+   "doc": "/** 🔶️ The before phase of registerSpaceAdministrationTests. */",
+   "phases": [
+    {
+     "name": "buildBeforeState",
+     "emoji": "🔷",
+     "doc": "Builds beforeEach, describe, expect, it of registerSpaceAdministrationTests.",
+     "from": 11,
+     "to": 13
+    }
+   ]
+  },
+  {
+   "dir": "🔸️backbone-worker-space-administration",
+   "doc": "/** 🔸️ The backbone worker space administration phase of registerSpaceAdministrationTests. */",
+   "phases": [
+    {
+     "name": "registerBackboneWorkerSpaceAdministrationTests",
+     "emoji": "🔹",
+     "doc": "Registers the backbone worker space administration tests of registerSpaceAdministrationTests.",
+     "from": 15,
+     "to": 15
+    }
+   ]
+  }
+ ]
+}

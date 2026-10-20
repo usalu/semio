@@ -1,5 +1,5 @@
-import {RustUnitScript} from "../../📜️script.ts";
-import {ScriptRouter,receiveScriptProcessInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {RustUnitScript} from "../../🧪️tests/🔬️script-commands/🟦️.ts";
+import { receiveScriptProcessInvocation, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 const router=new ScriptRouter(import.meta.dir).register("unit",RustUnitScript);
 /** 🏃️ Program of the sibling router: the former top-level body of its `📜️script.ts`, kept verbatim. */

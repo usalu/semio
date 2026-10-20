@@ -20,6 +20,7 @@
     "test": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test",
         "cwd": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📦️packages/🦀️rust",
@@ -29,6 +30,7 @@
     "test-surface": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test-surface",
         "cwd": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📦️packages/🦀️rust",

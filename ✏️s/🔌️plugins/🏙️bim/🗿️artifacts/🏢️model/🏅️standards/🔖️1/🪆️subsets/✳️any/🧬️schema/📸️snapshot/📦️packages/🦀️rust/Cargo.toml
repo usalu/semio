@@ -75,3 +75,5 @@ semio-framework-plugin = { path = "../../../../../../../../../../../../../🧰�
 semio-framework-test-original-snapshot-owners = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }
 semio-s-artifact-bim-model-examples = { path = "../../../../📚️examples/🏡️house/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-bim-model-schema = { path = "../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-gltf-model-snapshot-root = { path = "../../../../../../../../../../../🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/🧳️snapshot-root/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gltf-model-snapshot = { path = "../../../../../../../../../../../🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }

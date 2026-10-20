@@ -1,6 +1,5 @@
-import { readFileSync } from "node:fs";
+import{capturePhysicalSourceTextV1,physicalSourceOriginV1,type PhysicalSourceModuleMetaV1}from"../🏗️build/📥️inputs/🔏️revision/🟨️.mjs";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
 
 let generatedDirectories: ReadonlySet<string> | undefined;
 
@@ -11,7 +10,7 @@ export function repoCacheDirectory(repoRoot: string, ...segments: string[]): str
 
 /** 📁️ True when one directory name is a policy-declared generated directory (`dist`, `🗑️generated`, …). */
 export function isGeneratedDirectoryName(name: string): boolean {
-  generatedDirectories ??= new Set(JSON.parse(readFileSync(fileURLToPath(new URL("./🔣️policy.json", import.meta.url)), "utf8")).generatedDirectories);
+  generatedDirectories ??= new Set(JSON.parse(capturePhysicalSourceTextV1(new URL("./🔣️policy.json", physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),65536)).generatedDirectories);
   return generatedDirectories.has(name);
 }
 

@@ -50,10 +50,13 @@ export const javascriptDependencyGenerationAmbientV1=():JavascriptDependencyGene
 /** 🎯️ Names the live subject: this checkout's closure entries and the process ambient. */
 export const javascriptDependencyGenerationSubjectV1=():JavascriptDependencyGenerationSubjectV1=>Object.freeze({root:repositoryRoot,entries:protocol.implementation.entries,ambient:javascriptDependencyGenerationAmbientV1(),loadedAtMs:Date.now()-process.uptime()*1000});
 const configFile=(path:string,workspace:string,storeRoot:string):GenerationProducerFileV1=>{
- const location=generationLocationV1(path,workspace,storeRoot),facts=statSync(path,{throwIfNoEntry:false});
- if(!facts)return Object.freeze({path:location,kind:"missing",bytes:0,sha256:null});
- if(!facts.isFile()||facts.size>protocol.producer.maximumFileBytes)return Object.freeze({path:location,kind:"other",bytes:0,sha256:null});
- const bytes=readFileSync(path);return Object.freeze({path:location,kind:"file",bytes:bytes.length,sha256:generationSha256V1(bytes)});
+ const location=generationLocationV1(path,workspace,storeRoot),other=Object.freeze({path:location,kind:"other"as const,bytes:0,sha256:null});
+ try{
+  const facts=statSync(path,{throwIfNoEntry:false});
+  if(!facts)return Object.freeze({path:location,kind:"missing",bytes:0,sha256:null});
+  if(!facts.isFile()||facts.size>protocol.producer.maximumFileBytes)return other;
+  const bytes=readFileSync(path);return Object.freeze({path:location,kind:"file",bytes:bytes.length,sha256:generationSha256V1(bytes)});
+ }catch(error){return (error as NodeJS.ErrnoException).code==="ENOTDIR"?Object.freeze({path:location,kind:"missing",bytes:0,sha256:null}):other;}
 };
 /** 🧪️ Observes every producer-side input outside the Source bytes: installer configuration at each level an installer could read (scope, ambient, Store-fixed) and the ambient variables that select registries, caches or transport. */
 export function observeJavascriptDependencyGenerationProducerV1(workspace:string,storeRoot:string,scopes:readonly string[],ambient:JavascriptDependencyGenerationAmbientV1=javascriptDependencyGenerationAmbientV1()):GenerationProducerV1{

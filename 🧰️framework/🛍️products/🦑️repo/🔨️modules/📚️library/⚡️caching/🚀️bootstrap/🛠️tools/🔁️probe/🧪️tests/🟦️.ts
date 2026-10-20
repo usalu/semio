@@ -5,11 +5,13 @@ import {join} from "node:path";
 import Ajv from "ajv";
 import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import probeSchema from "../../../../🔁️verification/🧬️schema/🔣️.json" with {type:"json"};
-import probeSpecification from "../../../../🔁️verification/🔣️probe.json" with {type:"json"};
+import probeDocument from "../../../../🔁️verification/🔣️probe.json" with {type:"json"};
 import {openNxSdkV1} from "../../🔌️sdk/🟦️.ts";
 import {nxCacheProbeV1} from "../🟦️.ts";
+import type {CacheProbeSpecV1} from "../../../../../🏗️build/⚙️operations/🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 
+const probeSpecification=probeDocument as CacheProbeSpecV1;
 const root=join(import.meta.dir,"../../../../../../../../../..").replace(/[\\/]+$/u,"");
 
 test("the neutral cache probe specification is schema-valid and renders the exact Nx workspace",()=>{

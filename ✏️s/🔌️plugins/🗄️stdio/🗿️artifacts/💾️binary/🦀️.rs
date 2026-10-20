@@ -11,16 +11,7 @@ extern crate semio_framework_value_derive as value_derive;
 
 pub use semio_s_artifact_stdio_contract::{apply_mutation, apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
 
-use semio_framework_dispatch_macros::dyn_enum_close;
-
-use semio_framework_plugin::plugin_app_close_prelude::*;
-
-dyn_enum_close! {
-    pub enum BinaryApps: PluginApp {
-        Editor(VcsArtifactApp<EditorApp<editor::binary::BinaryEditor>>),
-        Viewer(VcsArtifactApp<ViewerApp<viewer::binary::BinaryViewer>>),
-    }
-}
+pub use semio_s_artifact_stdio_binary_io_registry::BinaryApps;
 
 pub use schema::diff::BinaryDiff;
 pub use schema::mutations::BinaryMutation;

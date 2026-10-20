@@ -70,7 +70,7 @@ mod tests;
 //#region 🔖️ComplianceReport
 /// 📋️ `En1996Snapshot -> CheckReport` — full masonry-building evaluation.
 pub fn evaluate(document: &En1996Snapshot) -> semio_s_plugin_norm_compliance::CheckReport {
-    semio_s_artifact_norm_en1996_schema::evaluate_building(
+    semio_s_artifact_norm_en1996_schema::checks::masonry::evaluate_building(
         document.annex,
         document.masonry_class,
         document.design_situation,

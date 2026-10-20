@@ -47,7 +47,7 @@ semio-s-artifact-mathematical-equation-mut-family = { path = "../../../../../�
 semio-s-artifact-mathematical-equation-examples = { path = "../../../../📚️examples/🎬️demo/📦️packages/🦀️rust" }
 semio-s-artifact-mathematical-equation-inferences = { path = "../../../💡️inferences/📦️packages/🦀️rust" }
 semio-s-artifact-mathematical-equation-snapshot = { path = "../../../📸️snapshot/📦️packages/🦀️rust" }
-semio-s-artifact-mathematical-equation-update-graph-algorithm = { path = "../../../../../🕸️graph/🧬️schema/🧬️mutations/🧮️update-graph/📦️packages/🦀️rust" }
+semio-s-artifact-mathematical-equation-update-graph-algorithm = { path = "../../../../../🕸️graph/🧬️schema/🧬️mutations/🧮️update-graph-algorithm/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-csv = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-md = { workspace = true }

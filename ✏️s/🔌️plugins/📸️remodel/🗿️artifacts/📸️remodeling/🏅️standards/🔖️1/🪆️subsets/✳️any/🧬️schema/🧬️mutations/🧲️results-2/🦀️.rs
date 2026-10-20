@@ -19,6 +19,7 @@ pub mod standards {
                         pub mod replace_sparse {
                             #[path = "../⭐replace-sparse/🦀️.rs"]
                             mod component;
+                            pub use component::*;
                             #[path = "../⭐replace-sparse/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../⭐replace-sparse/↩️inverse/🦀️.rs"]
@@ -28,6 +29,7 @@ pub mod standards {
                         pub mod replace_mesh_result {
                             #[path = "../🧱replace-mesh-result/🦀️.rs"]
                             mod component;
+                            pub use component::*;
                             #[path = "../🧱replace-mesh-result/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../🧱replace-mesh-result/↩️inverse/🦀️.rs"]
@@ -37,6 +39,7 @@ pub mod standards {
                         pub mod replace_tracks {
                             #[path = "../🚂replace-tracks/🦀️.rs"]
                             mod component;
+                            pub use component::*;
                             #[path = "../🚂replace-tracks/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../🚂replace-tracks/↩️inverse/🦀️.rs"]
@@ -46,6 +49,7 @@ pub mod standards {
                         pub mod replace_qc {
                             #[path = "../🧾replace-qc/🦀️.rs"]
                             mod component;
+                            pub use component::*;
                             #[path = "../🧾replace-qc/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../🧾replace-qc/↩️inverse/🦀️.rs"]

@@ -78,7 +78,7 @@ Feature: Apply every typed block3d object-kind mutation twice — once in Rust, 
       | rename-object-kind                    | ✏️rename-object-kind/🧪️renames                      |
       | change-object-kind-label              | 🏷️change-object-kind-label/🧪️relabels                      |
       | change-object-kind-variant            | 🔀️change-object-kind-variant/🧪️switches                   |
-      | change-object-kind-description        | 📃️change-object-kind/🧪️rewrites    |
+      | change-object-kind-description        | 📃️change-object-kind-description/🧪️rewrites    |
       | change-object-kind-icon               | 🖼️change-object-kind-icon/🧪️repoints                  |
       | change-object-kind-unit               | 📐change-object-kind-unit/🧪️switches                 |
       | create-representation                 | 🧱create-representation/🧪️appends                  |
@@ -135,7 +135,7 @@ Feature: Apply every typed block3d object-kind mutation twice — once in Rust, 
       | rename-object-kind                    | ✏️rename-object-kind/🧪️renames                      |
       | change-object-kind-label              | 🏷️change-object-kind-label/🧪️relabels                      |
       | change-object-kind-variant            | 🔀️change-object-kind-variant/🧪️switches                   |
-      | change-object-kind-description        | 📃️change-object-kind/🧪️rewrites    |
+      | change-object-kind-description        | 📃️change-object-kind-description/🧪️rewrites    |
       | change-object-kind-icon               | 🖼️change-object-kind-icon/🧪️repoints                  |
       | change-object-kind-unit               | 📐change-object-kind-unit/🧪️switches                 |
       | create-representation                 | 🧱create-representation/🧪️appends                  |

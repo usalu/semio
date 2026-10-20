@@ -27,6 +27,7 @@
         "^default",
         "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/Cargo.lock"
       ],
+      "outputs": [],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts source-check",
@@ -37,6 +38,7 @@
     "native-check": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts native-check",
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
@@ -132,6 +134,7 @@
         "^default",
         "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/Cargo.lock"
       ],
+      "outputs": [],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts native cargo check --manifest ✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/Cargo.toml --bin semio-s-gis-services-mcp",
@@ -378,6 +381,7 @@
         "^default",
         "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/Cargo.lock"
       ],
+      "outputs": [],
       "cache": true,
       "dependsOn": [
         {
@@ -400,6 +404,7 @@
         "^default",
         "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/Cargo.lock"
       ],
+      "outputs": [],
       "cache": true,
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",

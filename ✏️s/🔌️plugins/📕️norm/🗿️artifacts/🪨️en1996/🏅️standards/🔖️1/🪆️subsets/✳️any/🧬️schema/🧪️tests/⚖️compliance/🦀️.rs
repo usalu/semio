@@ -2,7 +2,7 @@
 
 use semio_framework_test_fixtures::fixture_path;
 use semio_s_plugin_norm_app_surface::{get_value_at_path, parse_path, set_value_at_path};
-use semio_s_artifact_norm_en1996_schema::{evaluate_building, f_k_pa, fire_min_thickness_m, fk_factors, phi_m, phi_s, rho_n, slenderness};
+use semio_s_artifact_norm_en1996_schema::checks::masonry::{evaluate_building, f_k_pa, fire_min_thickness_m, fk_factors, phi_m, phi_s, rho_n, slenderness};
 use semio_s_artifact_norm_en1996_io::text::snapshot::parse_dsl;
 use semio_s_plugin_norm_compliance::{AnnexChoice, CheckReport, CheckStatus};
 use semio_s_artifact_norm_en1996_model::{En1996Snapshot, MasonryClass, UnitMaterial};

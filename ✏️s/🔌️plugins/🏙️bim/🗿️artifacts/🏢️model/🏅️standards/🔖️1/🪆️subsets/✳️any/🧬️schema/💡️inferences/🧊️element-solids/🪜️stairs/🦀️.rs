@@ -250,7 +250,7 @@ pub fn stair_geometry_of(stair: &Stair, run: StairRun) -> StairGeometry {
 }
 
 /// 🪜️ The geometry of a stair from the levels of the storeys it is resolved by (tests only: the graph passes the run of the `StairRun` node to [`stair_geometry_of`]).
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn stair_geometry(stair: &Stair, own: &StoreyLevel, target: Option<&StoreyLevel>) -> StairGeometry {
     stair_geometry_of(stair, run_of(stair, own, target))
 }

@@ -73,14 +73,14 @@ export interface WindowConfig {
 }
 
 /**
- * WindowProps holds the data fields for a WindowProps record.
+ * 🪟️ WindowProps holds the data fields for a WindowProps record.
  **/
 interface WindowProps extends WindowConfig {
   isVisible?: boolean;
 }
 
 /**
- * DefaultErrorDisplay holds the data fields for a DefaultErrorDisplay record.
+ * 🚨️ DefaultErrorDisplay holds the data fields for a DefaultErrorDisplay record.
  **/
 const DefaultErrorDisplay: React.FC<{ error: Error }> = ({ error }) => {
   const bgClass = "bg-transparent";
@@ -97,7 +97,7 @@ const DefaultErrorDisplay: React.FC<{ error: Error }> = ({ error }) => {
 };
 
 /**
- * Window holds the data fields for a Window record.
+ * 🖼️ Window holds the data fields for a Window record.
  **/
 function useWindowUtilityBarMaxHeightPx(enabled: boolean, bodyRef: React.RefObject<HTMLDivElement | null>): number {
   const [maxHeightPx, setMaxHeightPx] = reactHostPort.useState(0);

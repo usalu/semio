@@ -180,17 +180,20 @@ export function parsePathProjections({ allDirectoryContextIds, semanticDirectory
 /** 📚 Parses the projection reference consumer contracts and the mutation catalog projection. */
 function parseMutationFixtureCoverage(value: unknown): MutationFixtureCoverageContract {
   const row = requireRecord(value, "mutationCatalogProjection.fixtureCoverage");
-  requireExactKeys(row, ["implementationCase", "exhaustiveCase", "fixtureRunner"], "mutationCatalogProjection.fixtureCoverage");
+  requireExactKeys(row, ["implementationCase", "exhaustiveCase", "fixtureRunner", "leafCaseTable"], "mutationCatalogProjection.fixtureCoverage");
   const exhaustive = requireRecord(row.exhaustiveCase, "mutationCatalogProjection.fixtureCoverage.exhaustiveCase");
   requireExactKeys(exhaustive, ["featureFileKindId", "stepUriPrefix", "bundleFacetDirectoryNames"], "mutationCatalogProjection.fixtureCoverage.exhaustiveCase");
   const runner = requireRecord(row.fixtureRunner, "mutationCatalogProjection.fixtureCoverage.fixtureRunner");
   requireExactKeys(runner, ["relativePath"], "mutationCatalogProjection.fixtureCoverage.fixtureRunner");
+  const table = requireRecord(row.leafCaseTable, "mutationCatalogProjection.fixtureCoverage.leafCaseTable");
+  requireExactKeys(table, ["fileKindId", "casesField"], "mutationCatalogProjection.fixtureCoverage.leafCaseTable");
   const facets = requireStringArray(exhaustive.bundleFacetDirectoryNames, "mutationCatalogProjection.fixtureCoverage.exhaustiveCase.bundleFacetDirectoryNames");
   if (facets.length === 0) throw new Error("Taxonomy v7 mutationCatalogProjection.fixtureCoverage.exhaustiveCase.bundleFacetDirectoryNames must not be empty");
   return {
     implementationCase: requireString(row.implementationCase, "mutationCatalogProjection.fixtureCoverage.implementationCase"),
     exhaustiveCase: { featureFileKindId: requireString(exhaustive.featureFileKindId, "mutationCatalogProjection.fixtureCoverage.exhaustiveCase.featureFileKindId"), stepUriPrefix: requireString(exhaustive.stepUriPrefix, "mutationCatalogProjection.fixtureCoverage.exhaustiveCase.stepUriPrefix"), bundleFacetDirectoryNames: [...facets] },
     fixtureRunner: { relativePath: requireString(runner.relativePath, "mutationCatalogProjection.fixtureCoverage.fixtureRunner.relativePath") },
+    leafCaseTable: { fileKindId: requireString(table.fileKindId, "mutationCatalogProjection.fixtureCoverage.leafCaseTable.fileKindId"), casesField: requireString(table.casesField, "mutationCatalogProjection.fixtureCoverage.leafCaseTable.casesField") },
   };
 }
 

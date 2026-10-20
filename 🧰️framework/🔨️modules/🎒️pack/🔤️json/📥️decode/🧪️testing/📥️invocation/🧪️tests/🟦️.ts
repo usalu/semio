@@ -37,7 +37,7 @@ test("JSON source owner requires its original finite child capability before eff
 });
 
 test("JSON source command consumes its mandatory admitted child ceiling",()=>{
-  const source=readFileSync(resolve(import.meta.dir,"../../../../📦️packages/🦀️rust/📜️script.ts"),"utf8");
-  expect(source.includes("admitJsonReadSourceOwner(this.invocation")).toBe(true);
+  const source=readFileSync(resolve(import.meta.dir,"../../../../🧪️tests/🔬️rust-package-commands/🟦️.ts"),"utf8");
+  expect(source.includes("admitJsonReadSourceOwner(context.invocation")).toBe(true);
   expect(source.includes("owner.childBudgetMilliseconds()")).toBe(true);
 });

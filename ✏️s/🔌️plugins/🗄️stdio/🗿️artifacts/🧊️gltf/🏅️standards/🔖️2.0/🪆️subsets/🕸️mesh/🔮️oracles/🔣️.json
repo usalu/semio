@@ -55,8 +55,8 @@
         },
         {
           "mutationId": "change-mesh-extension-data",
-          "sourceMutationDirectoryName": "🧩️change",
-          "mutationDirectoryName": "🧩️change",
+          "sourceMutationDirectoryName": "🧩️change-extensions",
+          "mutationDirectoryName": "🧩️change-extensions",
           "scenarios": [
             {
               "id": "attaches-an-unlit-extension-object-to-the-mesh",
@@ -66,8 +66,8 @@
         },
         {
           "mutationId": "change-mesh-extra-data",
-          "sourceMutationDirectoryName": "📝️change",
-          "mutationDirectoryName": "📝️change",
+          "sourceMutationDirectoryName": "📝️change-extras",
+          "mutationDirectoryName": "📝️change-extras",
           "scenarios": [
             {
               "id": "attaches-an-author-extras-object-to-the-mesh",
@@ -77,8 +77,8 @@
         },
         {
           "mutationId": "change-mesh-morph-weights",
-          "sourceMutationDirectoryName": "⚖️change",
-          "mutationDirectoryName": "⚖️change",
+          "sourceMutationDirectoryName": "⚖️change-weights",
+          "mutationDirectoryName": "⚖️change-weights",
           "scenarios": [
             {
               "id": "sets-the-two-mesh-morph-weights-to-a-half-and-a-quarter",
@@ -99,8 +99,8 @@
         },
         {
           "mutationId": "change-primitive-extension-data",
-          "sourceMutationDirectoryName": "🧩️change",
-          "mutationDirectoryName": "🧩️change",
+          "sourceMutationDirectoryName": "🧩️change-extensions",
+          "mutationDirectoryName": "🧩️change-extensions",
           "scenarios": [
             {
               "id": "attaches-a-draco-extension-object-to-the-primitive",
@@ -110,8 +110,8 @@
         },
         {
           "mutationId": "change-primitive-extra-data",
-          "sourceMutationDirectoryName": "📝️change",
-          "mutationDirectoryName": "📝️change",
+          "sourceMutationDirectoryName": "📝️change-extras",
+          "mutationDirectoryName": "📝️change-extras",
           "scenarios": [
             {
               "id": "attaches-a-lod-extras-object-to-the-primitive",
@@ -121,8 +121,8 @@
         },
         {
           "mutationId": "change-primitive-topology-mode",
-          "sourceMutationDirectoryName": "📐️change",
-          "mutationDirectoryName": "📐️change",
+          "sourceMutationDirectoryName": "📐️change-topology",
+          "mutationDirectoryName": "📐️change-topology",
           "scenarios": [
             {
               "id": "switches-primitive-from-triangles-to-triangle-strip",
@@ -182,6 +182,10 @@
             {
               "id": "removes-the-index-accessor-and-renumbers-the-position-attribute",
               "directoryName": "🔬️t055"
+            },
+            {
+              "id": "middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -193,6 +197,10 @@
             {
               "id": "removes-the-hull-mesh-and-renumbers-the-node-binding",
               "directoryName": "🔗️removes"
+            },
+            {
+              "id": "middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -204,6 +212,10 @@
             {
               "id": "removes-the-first-of-two-morph-targets",
               "directoryName": "🚫️removes"
+            },
+            {
+              "id": "middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -215,6 +227,10 @@
             {
               "id": "removes-the-trailing-empty-primitive",
               "directoryName": "🚫️removes"
+            },
+            {
+              "id": "middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -358,6 +374,10 @@
             {
               "id": "unbinds-normal-from-the-first-morph-target",
               "directoryName": "🔗️unbinds"
+            },
+            {
+              "id": "middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -369,6 +389,10 @@
             {
               "id": "unbinds-normal-from-the-primitive",
               "directoryName": "🔗️unbinds"
+            },
+            {
+              "id": "middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },

@@ -11,7 +11,7 @@ import { browserArtifactVitePlugin } from "@semio-tech/framework-plugin/browser-
 import { builtPluginModulesRootIn } from "../../♻️activation/🟦️.ts";
 import { componentModuleOwnerV1 } from "@semio-tech/plugin-registry/deployment";
 import { COMPONENT_PROFILE_POLICIES, COMPONENT_RECEIPT_FILE, readComponentReceiptV1 } from "@semio-tech/framework-plugin/describe/component-receipt";
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 export type ProductionBrowserComponents = {
   readonly version: 1;

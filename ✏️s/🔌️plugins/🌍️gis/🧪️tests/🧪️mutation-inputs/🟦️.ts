@@ -3,7 +3,7 @@ import { expect, test } from "bun:test";
 import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { Validator } from "jsonschema";
-import { argControl, mutationInputAudit } from "@semio-tech/framework/manifest";
+import { argControl, mutationInputAudit } from "@semio-tech/framework-manifest";
 import fixture from "../🧫️fixtures/🎛️mutation-inputs/🔣️.json";
 
 const root = resolve(import.meta.dir, "../..");

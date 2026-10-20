@@ -1,4 +1,4 @@
-import{captureBoundedSourceRevisionV1}from"../../📥️inputs/🔏️revision/🟨️.mjs";
+import{captureBoundedSourceRevisionV1,physicalSourceOriginV1}from"../../📥️inputs/🔏️revision/🟨️.mjs";
 import{fileURLToPath}from"node:url";
 import{readdirSync,statSync}from"node:fs";
 import{resolve}from"node:path";
@@ -8,7 +8,7 @@ import{requireIssuedResourceControlV1}from"../../../../../../../🔨️modules/�
 import{checkResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{withManagedGraphSourceReadBatchV1,readExactSourceInventoryV1}from"../../📥️inputs/🧮️digest/📥️read/🟨️.mjs";
 import{captureSourceInputInventoryV1,captureCargoLockInventoryV1}from"../../📥️inputs/📋️data/📥️load/🟨️.mjs";
-const epochURLs=[new URL(import.meta.url),new URL("./🧬️schema/🔣️.json",import.meta.url),new URL("../../📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json",import.meta.url)],epochCaptures=epochURLs.map((url,index)=>index===0?captureBoundedSourceRevisionV1(fileURLToPath(url),8388608):captureBoundedSourceRevisionV1(fileURLToPath(url),65536,true)),loadedEpoch=epochCaptures.map(row=>row.sha256),revision=(url,index)=>captureBoundedSourceRevisionV1(fileURLToPath(url),index===0?8388608:65536).sha256,policy=Object.freeze({...JSON.parse(epochCaptures[1].text??"").definitions.Policy.const}),readPolicy=Object.freeze({...JSON.parse(epochCaptures[2].text??"").definitions.Policy.const});
+const epochURLs=[new URL(physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),new URL("./🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),new URL("../../📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL))],epochCaptures=epochURLs.map((url,index)=>index===0?captureBoundedSourceRevisionV1(fileURLToPath(url),8388608):captureBoundedSourceRevisionV1(fileURLToPath(url),65536,true)),loadedEpoch=epochCaptures.map(row=>row.sha256),revision=(url,index)=>captureBoundedSourceRevisionV1(fileURLToPath(url),index===0?8388608:65536).sha256,policy=Object.freeze({...JSON.parse(epochCaptures[1].text??"").definitions.Policy.const}),readPolicy=Object.freeze({...JSON.parse(epochCaptures[2].text??"").definitions.Policy.const});
 const reference=/^SEMIO_(?:SOURCE_CLOSURE|CARGO_LOCK)_[a-f0-9]{64}$/u,prefix=/^SEMIO_(?:SOURCE_CLOSURE|CARGO_LOCK)_/u;
 
 /** 🧷️ Rejects a retained helper whose Source or privately captured policies changed. */
@@ -27,7 +27,16 @@ export function captureInferenceInventoryReferencesV1(value){
 }
 
 /** 🧮️ Refuses the next cohort's maximum possible bytes before any metadata allocation. */
-export function admitInferenceInventoryCohortV1(usedBytes,records){const width=Math.min(readPolicy.maximumInventories,Math.floor(readPolicy.maximumMetadataBytes/readPolicy.maximumClosureBytes)),maximum=records*readPolicy.maximumClosureBytes;if(!Number.isSafeInteger(usedBytes)||usedBytes<0||!Number.isSafeInteger(records)||records<1||records>width||!Number.isSafeInteger(maximum)||usedBytes>policy.maximumInventoryBytes-maximum)throw Error("Inference inventory aggregate bytes exceeded before allocation");return maximum;}
+export function admitInferenceInventoryCohortV1(usedBytes,records,maximumBytes=readPolicy.maximumClosureBytes){if(!Number.isSafeInteger(usedBytes)||usedBytes<0||!Number.isSafeInteger(records)||records<1||records>readPolicy.maximumInventories||!Number.isSafeInteger(maximumBytes)||maximumBytes<1||maximumBytes>readPolicy.maximumClosureBytes)throw Error("Finite reducing inventory cohort required");const maximum=records*maximumBytes;if(!Number.isSafeInteger(maximum)||maximum>readPolicy.maximumMetadataBytes||usedBytes>policy.maximumInventoryBytes-maximum)throw Error("Inference inventory aggregate bytes exceeded before allocation");return maximum;}
+
+/** 📦️ Captures finite size hints into cohorts whose uniform descriptor caps fit the unchanged metadata budget. */
+export function planInferenceInventoryCohortsV1(extents){
+ if(!Array.isArray(extents)||types.isProxy(extents)||Object.getPrototypeOf(extents)!==Array.prototype||extents.length>policy.maximumReferences||Reflect.ownKeys(extents).length!==extents.length+1)throw Error("Finite inventory extent roster required");
+ const cohorts=[];let offset=0,records=0,maximumBytes=0;
+ const flush=()=>{if(records)cohorts.push(Object.freeze({offset,records,maximumBytes}));offset+=records;records=0;maximumBytes=0;};
+ for(let index=0;index<extents.length;index++){const row=Object.getOwnPropertyDescriptor(extents,String(index)),size=row&&"value"in row&&row.enumerable?row.value:undefined;if(!Number.isSafeInteger(size)||size<1||size>readPolicy.maximumClosureBytes)throw Error("Finite reducing inventory extent required");const cap=Math.max(maximumBytes,size);if(records&&(records>=readPolicy.maximumInventories||(records+1)*cap>readPolicy.maximumMetadataBytes))flush();records++;maximumBytes=Math.max(maximumBytes,size);}
+ flush();return Object.freeze(cohorts);
+}
 
 /** 📋️ Validates inert exact-record DATA independently of its descriptor or managed custody. */
 export function inferenceInventoryRecordHoldsV1(root,name,file){if(typeof name!=="string"||!reference.test(name))throw Error("Closed compact inventory name required");const source=name.startsWith("SEMIO_SOURCE_CLOSURE_"),key=name.slice(source?"SEMIO_SOURCE_CLOSURE_".length:"SEMIO_CARGO_LOCK_".length);if(!file||file.sha256!==key)return false;if(source)captureSourceInputInventoryV1(file.value,root);else captureCargoLockInventoryV1(file.value,root);return true;}

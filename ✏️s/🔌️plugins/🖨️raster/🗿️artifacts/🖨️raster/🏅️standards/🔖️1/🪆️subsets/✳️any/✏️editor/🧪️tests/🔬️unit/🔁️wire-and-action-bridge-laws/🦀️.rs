@@ -21,8 +21,8 @@ fn every_command() -> Vec<RasterCommand> {
         RasterCommand::SetMaskValue(semio_s_artifact_raster_raster_editor::commands::set_mask_value::SetMaskValue{value:96}),
         RasterCommand::SetPixelSelection(semio_s_artifact_raster_raster_editor::commands::set_pixel_selection::SetPixelSelection{selection:Some(semio_s_artifact_raster_raster_editor::selection::RasterPixelSelection{layer_id:"l1".into(),target:"pixels".into(),width:2,height:2,spans:vec![]}),expected_image_key:None}),
         RasterCommand::SetCompositeViewport(semio_s_artifact_raster_raster_editor::commands::set_composite_viewport::SetCompositeViewport { width: 640.0, height: 480.0 }),
-        RasterCommand::SetCamera(semio_s_artifact_raster_raster_editor::commands::set_camera::SetCamera { camera: semio_s_artifact_raster_raster_model::RasterCamera { x: 1.0, y: 2.0, zoom: 1.5 } }),
-        RasterCommand::SetCameraZoom(semio_s_artifact_raster_raster_editor::commands::set_camera_zoom::SetCameraZoom { zoom: 2.0 }),
+        RasterCommand::SetCamera(semio_s_artifact_raster_raster_editor::commands::camera::set_camera::SetCamera { camera: semio_s_artifact_raster_raster_model::RasterCamera { x: 1.0, y: 2.0, zoom: 1.5 } }),
+        RasterCommand::SetCameraZoom(semio_s_artifact_raster_raster_editor::commands::camera::set_camera_zoom::SetCameraZoom { zoom: 2.0 }),
         RasterCommand::SetActiveExample(semio_s_artifact_raster_raster_editor::commands::set_active_example::SetActiveExample { example_id: semio_s_artifact_raster_raster_examples::art_raster_demo::ID.into() }),
         RasterCommand::ExportPng(semio_s_artifact_raster_raster_editor::commands::export_png::ExportPng {}),
         RasterCommand::FlattenLayers(semio_s_artifact_raster_raster_editor::commands::flatten_layers::FlattenLayers {name:"Flattened Image".into()}),
@@ -244,7 +244,7 @@ fn command_from_action_bridges_host_spellings() {
     let bridge = |action: &str, json: &str| <RasterPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action(action, Some((args(json)).clone()), None).expect(action);
     assert_eq!(bridge("setActiveExample", r#"{"exampleId":"demo"}"#), RasterCommand::SetActiveExample(semio_s_artifact_raster_raster_editor::commands::set_active_example::SetActiveExample { example_id: "demo".into() }));
     assert_eq!(bridge("deleteLayer", r#"{"id":"layer-1"}"#), RasterCommand::DeleteLayer(semio_s_artifact_raster_raster_editor::commands::delete_layer::DeleteLayer { layer_id: "layer-1".into() }));
-    assert_eq!(bridge("setCamera", r#"{"camera":{"x":1,"y":2,"zoom":3}}"#), RasterCommand::SetCamera(semio_s_artifact_raster_raster_editor::commands::set_camera::SetCamera { camera: semio_s_artifact_raster_raster_model::RasterCamera { x: 1.0, y: 2.0, zoom: 3.0 } }));
+    assert_eq!(bridge("setCamera", r#"{"camera":{"x":1,"y":2,"zoom":3}}"#), RasterCommand::SetCamera(semio_s_artifact_raster_raster_editor::commands::camera::set_camera::SetCamera { camera: semio_s_artifact_raster_raster_model::RasterCamera { x: 1.0, y: 2.0, zoom: 3.0 } }));
     assert_eq!(bridge("setCompositeViewport", r#"{"width":640,"height":480}"#), RasterCommand::SetCompositeViewport(semio_s_artifact_raster_raster_editor::commands::set_composite_viewport::SetCompositeViewport { width: 640.0, height: 480.0 }));
     assert_eq!(bridge("addLayer", r#"{"kind":"pixel"}"#), RasterCommand::AddLayer(semio_s_artifact_raster_raster_editor::commands::add_layer::AddLayer { kind: "pixel".into() }));
 }

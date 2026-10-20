@@ -1,0 +1,40 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️owned-locale-detector-retirement/📦️control-chrome-1/🟦️.tsx",
+ "function": "registerControlChrome1Tests",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟠️shared",
+  "doc": "/** 🟠️ The shared declarations of registerControlChrome1Tests. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️border-normal-bottom",
+   "doc": "/** 🔶️ The border normal bottom phase of registerControlChrome1Tests. */",
+   "phases": [
+    {
+     "name": "buildBorderNormalBottomState",
+     "emoji": "🔷",
+     "doc": "Builds borderNormalBottomClass, borderNormalClass, borderNormalTopClass, Button of registerControlChrome1Tests.",
+     "from": 7,
+     "to": 8
+    }
+   ]
+  },
+  {
+   "dir": "🔸️control-chrome",
+   "doc": "/** 🔸️ The control chrome phase of registerControlChrome1Tests. */",
+   "phases": [
+    {
+     "name": "registerControlChromeTests",
+     "emoji": "🔹",
+     "doc": "Registers the control chrome tests of registerControlChrome1Tests.",
+     "from": 10,
+     "to": 10
+    }
+   ]
+  }
+ ]
+}

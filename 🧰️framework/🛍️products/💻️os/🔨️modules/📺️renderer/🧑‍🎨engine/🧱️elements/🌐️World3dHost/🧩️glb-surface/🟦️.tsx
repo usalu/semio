@@ -26,7 +26,7 @@ import {
 } from "@semio-tech/ui-react";
 // #endregion 🔌️Adapters
 import { world3dGlbSubElementMeshData, type World3dSubElementPaint } from "../📏️modelling/🟦️.tsx";
-import { GLB_MESH_FRAME_ROTATION_X, WORLD_MESH_OUTLINE_USER_DATA_KEY } from "@semio-tech/infinite-world-r3f";
+import { GLB_MESH_FRAME_ROTATION_X, WORLD_MESH_OUTLINE_USER_DATA_KEY } from "@semio-tech/framework/infinite/world/r3f";
 import { type WorldEnvironmentMaterialRecord, type WorldMeshData, type WorldSelectionTargets } from "../🔭️scene-schema/🟦️.ts";
 import { useFrame, useLoader, useThree } from "../🎨️mesh-render/🟦️.tsx";
 import { type MeshStyleKind } from "../🎨️mesh-render/🖌️mesh-style-palette/🟦️.ts";

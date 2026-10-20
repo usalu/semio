@@ -192,7 +192,7 @@ function ResizablePanelGroup({ className, orientation = "horizontal", resizeTarg
 }
 
 /**
- * ResizablePanel holds the data fields for a ResizablePanel record.
+ * 🔲️ ResizablePanel holds the data fields for a ResizablePanel record.
  **/
 function ResizablePanel({ ...props }: React.ComponentProps<typeof ResizablePrimitive.Panel>) {
   return <ResizablePrimitive.Panel data-slot="resizable-panel" {...props} />;

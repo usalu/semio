@@ -30,7 +30,8 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧪️tests/🧫️fixtures/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧬️schema/**/*",
         "{workspaceRoot}/bun.lock"
-      ]
+      ],
+      "outputs": []
     },
     "test-renderer-contract": {
       "executor": "repo:script",
@@ -38,6 +39,7 @@
         "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/**/*",
         "{workspaceRoot}/🧰️framework/**/*"
       ],
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test renderer-contract",

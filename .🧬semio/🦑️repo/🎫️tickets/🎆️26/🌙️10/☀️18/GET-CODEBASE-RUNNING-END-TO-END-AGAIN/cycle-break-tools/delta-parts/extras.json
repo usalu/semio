@@ -1,0 +1,210 @@
+{
+ "schema": "cycle-break/delta@1",
+ "stagedAt": "2026-10-20T03:04:21.634Z",
+ "manifestOps": [
+  {
+   "op": "remove",
+   "packageJson": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/repo-coordinator",
+   "field": "dependencies",
+   "key": "@semio-tech/framework",
+   "value": "workspace:*",
+   "wave": "extras-stale-declarations",
+   "why": "only tests, stories or scripts use @semio-tech/framework: demoted to devDependencies"
+  },
+  {
+   "op": "add",
+   "packageJson": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/repo-coordinator",
+   "field": "devDependencies",
+   "key": "@semio-tech/framework",
+   "value": "workspace:*",
+   "wave": "extras-stale-declarations",
+   "why": "tests, stories or scripts of @semio-tech/repo-coordinator import @semio-tech/framework"
+  },
+  {
+   "op": "remove",
+   "packageJson": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/framework-replication",
+   "field": "dependencies",
+   "key": "@semio-tech/framework",
+   "value": "workspace:*",
+   "wave": "extras-stale-declarations",
+   "why": "only tests, stories or scripts use @semio-tech/framework: demoted to devDependencies"
+  },
+  {
+   "op": "add",
+   "packageJson": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/framework-replication",
+   "field": "devDependencies",
+   "key": "@semio-tech/framework",
+   "value": "workspace:*",
+   "wave": "extras-stale-declarations",
+   "why": "tests, stories or scripts of @semio-tech/framework-replication import @semio-tech/framework"
+  },
+  {
+   "op": "remove",
+   "packageJson": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/schema-ts",
+   "field": "dependencies",
+   "key": "@semio-tech/framework",
+   "value": "workspace:*",
+   "wave": "extras-stale-declarations",
+   "why": "only tests, stories or scripts use @semio-tech/framework: demoted to devDependencies"
+  },
+  {
+   "op": "add",
+   "packageJson": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/schema-ts",
+   "field": "devDependencies",
+   "key": "@semio-tech/framework",
+   "value": "workspace:*",
+   "wave": "extras-stale-declarations",
+   "why": "tests, stories or scripts of @semio-tech/schema-ts import @semio-tech/framework"
+  },
+  {
+   "op": "remove",
+   "packageJson": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/framework-kernel",
+   "field": "dependencies",
+   "key": "@semio-tech/framework",
+   "value": "workspace:*",
+   "wave": "extras-stale-declarations",
+   "why": "only tests, stories or scripts use @semio-tech/framework: demoted to devDependencies"
+  },
+  {
+   "op": "add",
+   "packageJson": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/framework-kernel",
+   "field": "devDependencies",
+   "key": "@semio-tech/framework",
+   "value": "workspace:*",
+   "wave": "extras-stale-declarations",
+   "why": "tests, stories or scripts of @semio-tech/framework-kernel import @semio-tech/framework"
+  },
+  {
+   "op": "remove",
+   "packageJson": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/framework-actor",
+   "field": "dependencies",
+   "key": "@semio-tech/framework",
+   "value": "workspace:*",
+   "wave": "extras-stale-declarations",
+   "why": "only tests, stories or scripts use @semio-tech/framework: demoted to devDependencies"
+  },
+  {
+   "op": "add",
+   "packageJson": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/framework-actor",
+   "field": "devDependencies",
+   "key": "@semio-tech/framework",
+   "value": "workspace:*",
+   "wave": "extras-stale-declarations",
+   "why": "tests, stories or scripts of @semio-tech/framework-actor import @semio-tech/framework"
+  },
+  {
+   "op": "remove",
+   "packageJson": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/framework-actor",
+   "field": "dependencies",
+   "key": "@semio-tech/framework-kernel",
+   "value": "workspace:*",
+   "wave": "extras-stale-declarations",
+   "why": "no source file of @semio-tech/framework-actor imports @semio-tech/framework-kernel any more"
+  },
+  {
+   "op": "remove",
+   "packageJson": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/ui-styling",
+   "field": "dependencies",
+   "key": "@semio-tech/framework",
+   "value": "workspace:*",
+   "wave": "extras-stale-declarations",
+   "why": "no source file of @semio-tech/ui-styling imports @semio-tech/framework any more"
+  },
+  {
+   "op": "remove",
+   "packageJson": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/ui-styling",
+   "field": "dependencies",
+   "key": "@semio-tech/ui-react",
+   "value": "workspace:*",
+   "wave": "extras-stale-declarations",
+   "why": "only tests, stories or scripts use @semio-tech/ui-react: demoted to devDependencies"
+  },
+  {
+   "op": "add",
+   "packageJson": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/ui-styling",
+   "field": "devDependencies",
+   "key": "@semio-tech/ui-react",
+   "value": "workspace:*",
+   "wave": "extras-stale-declarations",
+   "why": "tests, stories or scripts of @semio-tech/ui-styling import @semio-tech/ui-react"
+  },
+  {
+   "op": "remove",
+   "packageJson": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/ui-react",
+   "field": "dependencies",
+   "key": "@semio-tech/framework",
+   "value": "workspace:*",
+   "wave": "extras-stale-declarations",
+   "why": "no source file of @semio-tech/ui-react imports @semio-tech/framework any more"
+  },
+  {
+   "op": "remove",
+   "packageJson": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/assets",
+   "field": "dependencies",
+   "key": "@semio-tech/framework",
+   "value": "workspace:*",
+   "wave": "extras-stale-declarations",
+   "why": "only tests, stories or scripts use @semio-tech/framework: demoted to devDependencies"
+  },
+  {
+   "op": "add",
+   "packageJson": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/assets",
+   "field": "devDependencies",
+   "key": "@semio-tech/framework",
+   "value": "workspace:*",
+   "wave": "extras-stale-declarations",
+   "why": "tests, stories or scripts of @semio-tech/assets import @semio-tech/framework"
+  },
+  {
+   "op": "remove",
+   "packageJson": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/assets",
+   "field": "dependencies",
+   "key": "@semio-tech/ui-react",
+   "value": "workspace:*",
+   "wave": "extras-stale-declarations",
+   "why": "no source file of @semio-tech/assets imports @semio-tech/ui-react any more"
+  },
+  {
+   "op": "remove",
+   "packageJson": "🧰️framework/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/framework",
+   "field": "dependencies",
+   "key": "@semio-tech/repo-coordinator",
+   "value": "workspace:*",
+   "wave": "extras-stale-declarations",
+   "why": "no source file of @semio-tech/framework imports @semio-tech/repo-coordinator any more"
+  },
+  {
+   "op": "remove",
+   "packageJson": "🧰️framework/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/framework",
+   "field": "dependencies",
+   "key": "@semio-tech/ui-react",
+   "value": "workspace:*",
+   "wave": "extras-stale-declarations",
+   "why": "no source file of @semio-tech/framework imports @semio-tech/ui-react any more"
+  }
+ ],
+ "newFiles": [],
+ "edits": [],
+ "fileOps": [],
+ "flags": []
+}

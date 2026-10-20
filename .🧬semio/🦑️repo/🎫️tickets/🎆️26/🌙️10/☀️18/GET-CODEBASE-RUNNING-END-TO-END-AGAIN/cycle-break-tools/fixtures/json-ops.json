@@ -1,0 +1,55 @@
+{
+  "cases": [
+    {
+      "name": "retarget re-sorts a sorted list, dedupes and keeps an unsorted list in place",
+      "doc": { "sorted": ["a/1", "b/2", "c/3"], "loose": ["z", "b/2", "a"], "scalar": "b/2" },
+      "ops": [{ "kind": "retarget", "map": { "b/2": "d/4" } }],
+      "expected": { "sorted": ["a/1", "c/3", "d/4"], "loose": ["z", "d/4", "a"], "scalar": "d/4" },
+      "problems": []
+    },
+    {
+      "name": "retarget merging into an existing entry dedupes",
+      "doc": { "xs": ["a", "b", "c"] },
+      "ops": [{ "kind": "retarget", "map": { "a": "c" } }],
+      "expected": { "xs": ["b", "c"] },
+      "problems": []
+    },
+    {
+      "name": "renameKeys keeps a sorted dictionary sorted and merges fields",
+      "doc": { "m": { "@x/a": { "p": "1", "q": "2" }, "@x/c": { "p": "3" } } },
+      "ops": [{ "kind": "renameKeys", "pointer": ["m"], "map": { "@x/a": { "to": "@x/d", "set": { "p": "9" } } } }],
+      "expected": { "m": { "@x/c": { "p": "3" }, "@x/d": { "p": "9", "q": "2" } } },
+      "problems": []
+    },
+    {
+      "name": "arrayRemove and arrayInsert place values after an anchor and skip present ones",
+      "doc": { "roles": { "ui": { "paths": ["p1", "p2", "p3"] } } },
+      "ops": [
+        { "kind": "arrayRemove", "pointer": ["roles", "ui", "paths"], "values": ["p2"] },
+        { "kind": "arrayInsert", "pointer": ["roles", "ui", "paths"], "after": "p1", "values": ["n1", "p3"] }
+      ],
+      "expected": { "roles": { "ui": { "paths": ["p1", "n1", "p3"] } } },
+      "problems": []
+    },
+    {
+      "name": "dropRows removes the first matching row",
+      "doc": { "cases": [{ "id": "a", "v": 1 }, { "id": "b", "v": 2 }] },
+      "ops": [{ "kind": "dropRows", "pointer": ["cases"], "where": { "id": "a" } }],
+      "expected": { "cases": [{ "id": "b", "v": 2 }] },
+      "problems": []
+    },
+    {
+      "name": "absent sources are reported, never ignored",
+      "doc": { "xs": ["a"], "m": { "k": {} } },
+      "ops": [
+        { "kind": "retarget", "map": { "nope": "x" } },
+        { "kind": "renameKeys", "pointer": ["m"], "map": { "gone": { "to": "x" } } },
+        { "kind": "arrayRemove", "pointer": ["xs"], "values": ["zzz"] },
+        { "kind": "arrayInsert", "pointer": ["xs"], "after": "missing", "values": ["n"] },
+        { "kind": "dropRows", "pointer": ["nope"], "where": { "id": "a" } }
+      ],
+      "expected": { "xs": ["a"], "m": { "k": {} } },
+      "problems": ["retarget source absent: nope", "key to rename is absent: gone", "value to remove is absent: zzz", "insert anchor absent: missing", "pointer absent: nope"]
+    }
+  ]
+}

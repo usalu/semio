@@ -39,9 +39,27 @@ export function buildRelativeImportProjectV1(owners:readonly {name:string;root:s
  let selected:{name:string;root:string}|undefined;for(const owner of owners)if(owner.root!==admissionSchema.$defs.relativeImportOwnership.const.workspaceRoot&&contains(owner.root,path)&&(!selected||owner.root.length>selected.root.length||owner.root.length===selected.root.length&&owner.name.localeCompare(selected.name)<0))selected=owner;return selected?.name;
 }
 
-/** 📥️ Distinguishes byte freshness observation from a task or explicitly declared compilation entry. */
-export function buildInputSourceRoleV1(selected:boolean,declared=false):"compile"|"freshness"{
- const roles=admissionSchema.$defs.sourceInputObservation.const;return (declared?roles.declaredEntry:selected?roles.selectedTask:roles.namedInputOnly) as "compile"|"freshness";
+/** 📥️ Applies authored roles to matching named inputs while retaining explicit compilation entries. */
+export function buildInputSourceRoleV1(selected:boolean,declared=false,observations:readonly unknown[]=[]):"compile"|"freshness"{
+ const roles=admissionSchema.$defs.sourceInputObservation.const,allowed:readonly unknown[]=admissionSchema.$defs.sourceInputRole.enum;if(observations.some(value=>value!==undefined&&!allowed.includes(value)))throw Error("Closed target input observation role required");return (declared?roles.declaredEntry:selected&&(!observations.length||observations.some(value=>value!==roles.namedInputOnly))?roles.selectedTask:roles.namedInputOnly) as "compile"|"freshness";
+}
+
+/** 🪜️ Retains the strongest actual demand when a runtime Source later becomes a compiler input. */
+export function buildSourceDemandV1(previous:unknown,requested:unknown):"runtime"|"compile"{
+ const roles:readonly unknown[]=admissionSchema.$defs.sourceDemandRole.enum,priority=admissionSchema.$defs.sourceDemand.const.priority;if(!roles.includes(requested)||previous!==undefined&&!roles.includes(previous))throw Error("Closed source demand role required");const role=requested as keyof typeof priority,prior=previous as keyof typeof priority|undefined;return prior!==undefined&&priority[prior]>priority[role]?prior:role;
+}
+
+/** 🧭️ Selects contract terminals through actual normalized own input references without reading Source. */
+export function buildSourceContractGroupsV1(project:{name:string;targets?:Record<string,{inputs?:readonly unknown[]}>;namedInputs?:Record<string,readonly unknown[]>;metadata?:{sourceInputs?:Record<string,unknown>}},defaults:Record<string,readonly unknown[]>,requested:readonly unknown[]=[]):string[]{
+ const policy=admissionSchema.$defs.sourceContractScope.const,contracts=project.metadata?.sourceInputs??{},named={...defaults,...project.namedInputs},selected=new Set<string>(),active=new Set<string>(),complete=new Set<string>();let references=0;
+ if(Object.keys(contracts).some(name=>(policy.reservedGroups as readonly string[]).includes(name)))throw Error("Reserved source input contract group");
+ const visit=(values:readonly unknown[],depth=0)=>{if(!Array.isArray(values)||depth>policy.maximumDepth)throw Error("Finite selected source input closure required");for(const value of values){if(++references>policy.maximumReferences)throw Error("Finite selected source input closure required");if(typeof value!=="string"){
+  if(!value||typeof value!=="object"||Array.isArray(value))throw Error("Closed selected source input required");const row=value as Record<string,unknown>,keys=Object.keys(row);
+  if(typeof row.input==="string"&&row.input&&keys.every(key=>["input","projects","dependencies"].includes(key))){if(row.projects!==undefined){if(!Array.isArray(row.projects)||row.projects.some(name=>typeof name!=="string"||!name)||row.dependencies!==undefined)throw Error("Canonical named input projects required");if(row.projects.includes(project.name))visit([row.input],depth+1);}else if(row.dependencies===undefined||row.dependencies===false)visit([row.input],depth+1);else if(row.dependencies!==true)throw Error("Closed named input dependency required");}
+  else if(keys.length===1&&typeof row.fileset==="string"||keys.length===1&&typeof(row.env??row.runtime)==="string"||keys.length===1&&Array.isArray(row.externalDependencies)&&row.externalDependencies.every(name=>typeof name==="string")||typeof row.dependentTasksOutputFiles==="string"&&keys.every(key=>["dependentTasksOutputFiles","transitive"].includes(key))&&(row.transitive===undefined||typeof row.transitive==="boolean"))continue;
+  else throw Error("Unsupported selected source input object");continue;
+ }if(!value)throw Error("Named source input required");if(value.startsWith("^")){if(value.length===1)throw Error("Named dependency input required");continue;}if(value.includes("{workspaceRoot}")||value.includes("{projectRoot}"))continue;const contract=Object.hasOwn(contracts,value);if(contract)selected.add(value);if(complete.has(value))continue;if(active.has(value))throw Error("Selected named source input cycle: "+value);const inputs=named[value];if(inputs===undefined){if(contract)continue;throw Error("Unknown selected named source input: "+value);}active.add(value);visit(inputs,depth+1);active.delete(value);complete.add(value);}};
+ for(const target of Object.values(project.targets??{}))visit(target.inputs??policy.defaultInputs);visit(requested);return[...selected].sort();
 }
 
 /** 🔑️ Names the complete immutable selection and registry declaration independently of whole graph state. */

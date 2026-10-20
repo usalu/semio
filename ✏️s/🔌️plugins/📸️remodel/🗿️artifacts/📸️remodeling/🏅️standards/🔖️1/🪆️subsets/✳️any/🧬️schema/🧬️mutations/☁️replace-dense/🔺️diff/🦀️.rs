@@ -6,7 +6,7 @@ use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any:
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::ReplaceDense, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
+pub fn diff(payload: &crate::standards::v1::subsets::any::schema::mutations::replace_dense::component::ReplaceDense, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
     if payload.dense == base.results.dense {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Dense results already have this value.");
     }

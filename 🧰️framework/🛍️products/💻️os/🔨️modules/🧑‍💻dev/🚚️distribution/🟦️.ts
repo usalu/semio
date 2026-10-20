@@ -2,7 +2,7 @@ import {isAbsolute,join,relative,resolve} from "node:path";
 import {frameworkOsEngineDeliveriesV1} from "../🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts";
 import {flowBrowserPackageRequestV1} from "@semio-tech/framework-os/modules/flow/wasm/browser/publication/contract";
 import { runtimeFixturePathV1 } from "@semio-tech/repo-lib/inventory";
-import catalog from "./📇️layout.json";
+import catalog from "./📇️layout.json" with { type: "json" };
 import { installationDirectoryEmoji } from "@semio-tech/framework/identity/installation";
 
 export type DistributionChunkOwner = { readonly kind: "facade" | "module"; readonly source: string; readonly output: string };

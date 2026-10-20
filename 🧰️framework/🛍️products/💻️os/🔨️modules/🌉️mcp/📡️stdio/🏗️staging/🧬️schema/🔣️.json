@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "platform",
+          "command",
+          "arguments"
+        ],
+        "properties": {
+          "platform": {
+            "enum": [
+              "darwin",
+              "linux",
+              "win32"
+            ]
+          },
+          "command": {
+            "const": "repo"
+          },
+          "arguments": {
+            "const": [
+              "run",
+              "@semio-tech/framework-os-mcp-rs:build",
+              "--output=stream"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

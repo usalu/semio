@@ -85,7 +85,7 @@ Feature: Apply every typed cad composition mutation twice — once in Rust, once
       | delete-building-model          | 💥delete-building-model/🏚️vacates                               |
       | create-energy-model            | ⚡create-energy-model/⚡️rehandles                        |
       | delete-energy-model            | 🔌delete-energy-model/🔌️vacates                                   |
-      | create-structure-classic-model | 🏛️create-structure-classic/🏛️rehandles  |
+      | create-structure-classic-model | 🏛️create-structure-classic-model/🏛️rehandles  |
       | delete-structure-classic-model | 💣delete-structure-classic-model/🏚️vacates             |
       | create-drawing                 | 📐️create-drawing/📐️appends-drawing-2                                             |
       | delete-drawing                 | 🧹delete-drawing/🚫️removes-drawing-1                                              |
@@ -124,7 +124,7 @@ Feature: Apply every typed cad composition mutation twice — once in Rust, once
       | delete-building-model          | 💥delete-building-model/🏚️vacates                               |
       | create-energy-model            | ⚡create-energy-model/⚡️rehandles                        |
       | delete-energy-model            | 🔌delete-energy-model/🔌️vacates                                   |
-      | create-structure-classic-model | 🏛️create-structure-classic/🏛️rehandles  |
+      | create-structure-classic-model | 🏛️create-structure-classic-model/🏛️rehandles  |
       | delete-structure-classic-model | 💣delete-structure-classic-model/🏚️vacates             |
       | create-drawing                 | 📐️create-drawing/📐️appends-drawing-2                                             |
       | delete-drawing                 | 🧹delete-drawing/🚫️removes-drawing-1                                              |

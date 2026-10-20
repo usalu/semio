@@ -1,0 +1,37 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🎤️presentation/🧪️tests/📄️pdf-and-figure-interaction/🟦️.tsx",
+ "describeLine": 10,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of the presentation interaction dom suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️scales-pdf-pages-cover",
+   "doc": "/** 🔶️ The scales pdf pages cover tests of the presentation interaction dom suite. */",
+   "name": "registerScalesPdfPagesCoverTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the scales pdf pages cover tests of the presentation interaction dom suite.",
+   "from": 11,
+   "to": 76
+  },
+  {
+   "dir": "🔸️shows-center-bottom-pdf",
+   "doc": "/** 🔸️ The shows center bottom pdf tests of the presentation interaction dom suite. */",
+   "name": "registerShowsCenterBottomPdfTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the shows center bottom pdf tests of the presentation interaction dom suite.",
+   "from": 141,
+   "to": 141
+  },
+  {
+   "dir": "🟠️navigates-only-within-pdf",
+   "doc": "/** 🟠️ The navigates only within pdf tests of the presentation interaction dom suite. */",
+   "name": "registerNavigatesOnlyWithinPdfTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the navigates only within pdf tests of the presentation interaction dom suite.",
+   "from": 221,
+   "to": 312
+  }
+ ]
+}

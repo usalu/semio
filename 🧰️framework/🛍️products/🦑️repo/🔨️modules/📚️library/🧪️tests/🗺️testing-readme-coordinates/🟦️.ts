@@ -135,13 +135,13 @@ test("documentation gate registration matches the declared Nx route", () => {
   expect(parseJson(projectSource, errors, { disallowComments: true, allowTrailingComma: false })).toEqual(project);
   expect(errors).toEqual([]);
   expect(project.targets[expected.target]).toMatchObject({ executor: "repo:script", options: { cwd: packagePath, command: expected.command } });
-  const router = readOwned(packagePath + "/📜️script.ts").toString("utf8"), tree = ts.createSourceFile("router.ts", router, ts.ScriptTarget.Latest, true), branches: ts.IfStatement[] = [];
+  const router = readOwned(relative(root, libraryRoot).split("\\").join("/") + "/🧪️tests/🔬️typescript-package-commands/🔗️reference-authority-routes/🟦️.ts").toString("utf8"), tree = ts.createSourceFile("router.ts", router, ts.ScriptTarget.Latest, true), branches: ts.IfStatement[] = [];
   const visit = (node: ts.Node): void => {
     if (ts.isIfStatement(node) && ts.isBinaryExpression(node.expression) && node.expression.operatorToken.kind === ts.SyntaxKind.EqualsEqualsEqualsToken && node.expression.left.getText(tree) === "segments[0]" && ts.isStringLiteral(node.expression.right) && node.expression.right.text === expected.route) branches.push(node);
     ts.forEachChild(node, visit);
   };
   visit(tree);
   expect(branches).toHaveLength(1);
-  expect(branches[0]!.thenStatement.getText(tree)).toContain("join(this.repoRoot, " + JSON.stringify(expected.source) + ")");
-  expect(branches[0]!.thenStatement.getText(tree)).toContain('await runRepositoryTestCommand(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });');
+  expect(branches[0]!.thenStatement.getText(tree)).toContain("join(context.repoRoot, " + JSON.stringify(expected.source) + ")");
+  expect(branches[0]!.thenStatement.getText(tree)).toContain('await runRepositoryTestCommand(process.execPath, ["test", source, ...segments.slice(1)], { cwd: context.repoRoot });');
 });

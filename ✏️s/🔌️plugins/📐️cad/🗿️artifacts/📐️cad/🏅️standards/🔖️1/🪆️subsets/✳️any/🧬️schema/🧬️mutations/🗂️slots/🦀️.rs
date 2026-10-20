@@ -66,12 +66,12 @@ pub mod delete_energy_model {
 }
 #[path = "."]
 pub mod create_structure_classic_model {
-    #[path = "../🏛️create-structure-classic/🦀️.rs"]
+    #[path = "../🏛️create-structure-classic-model/🦀️.rs"]
     mod component;
     pub use component::*;
-    #[path = "../🏛️create-structure-classic/🔺️diff/🦀️.rs"]
+    #[path = "../🏛️create-structure-classic-model/🔺️diff/🦀️.rs"]
     pub mod diff;
-    #[path = "../🏛️create-structure-classic/↩️inverse/🦀️.rs"]
+    #[path = "../🏛️create-structure-classic-model/↩️inverse/🦀️.rs"]
     pub mod inverse;
 }
 #[path = "."]

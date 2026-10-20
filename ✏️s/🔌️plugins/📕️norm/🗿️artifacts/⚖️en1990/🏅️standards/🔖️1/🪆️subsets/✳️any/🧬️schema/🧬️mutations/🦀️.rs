@@ -7,6 +7,7 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
+extern crate semio_framework_os_kernel as vcs;
 
 use semio_s_artifact_norm_en1990_diff::En1990Diff;
 use semio_s_artifact_norm_en1990_model::En1990Snapshot;

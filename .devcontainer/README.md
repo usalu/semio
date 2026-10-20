@@ -16,7 +16,7 @@ On macOS, Docker Desktop must be allowed to read the folder the repository lives
 
 Compose stack for the devcontainer: one service, **`semio`**. It sets no project, image or container name, so the devcontainer CLI names the project after the checkout folder and two checkouts run side by side.
 
-The service declares no `privileged`, capability or device; the `docker-in-docker` feature of `devcontainer.json` is applied by the devcontainer CLI with the feature's own metadata, which was not examined, so the cache partitions need no privilege but the container as a whole is not proven unprivileged. The native cache partitions (`tools`, `dependencies`, `products`, also used by Bazel) are directories exchanged atomically with `renameat2(RENAME_EXCHANGE)`, which needs neither `CAP_SYS_ADMIN` nor `/dev/loop-control`; they must live on a case-sensitive filesystem with atomic exchange, which is why `.cache` is a named volume (see Devcontainer Persistence) and not part of the bind-mounted checkout. `bun repo preflight` probes the exchange and case sensitivity and refuses a case-insensitive host mount with the exact probe error.
+The service declares no `privileged`, capability or device; the `docker-in-docker` feature of `devcontainer.json` is applied by the devcontainer CLI with the feature's own metadata, which was not examined, so the cache partitions need no privilege but the container as a whole is not proven unprivileged. The native cache partitions (`tools`, `dependencies`, `products`, also used by Bazel) are directories exchanged atomically with `renameat2(RENAME_EXCHANGE)`, which needs neither `CAP_SYS_ADMIN` nor `/dev/loop-control`; they must live on a case-sensitive filesystem with atomic exchange, which is why `.cache` is a named volume (see Devcontainer Persistence) and not part of the bind-mounted checkout. `bun repo preflight` probes the exchange and case sensitivity and refuses a case-insensitive host mount with the exact probe error. The partitions hold the dependency generation receipt (`.cache/b/d/m/generation`) and the Bazel disk cache (`.cache/b/p/m/bazel/actions`), so a container that keeps the `.cache` volume starts warm; the macOS-only image silencing (`.fseventsd`) does not apply on Linux.
 
 ## Dockerfile
 
@@ -38,7 +38,7 @@ Optional steps report and continue; a start never runs a destructive source-cont
 
 Headless agent client configurations (`.mcp.json`, `.codex/config.toml`) consume dashboard-owned server declarations. Choose **New Task**, search `agents write` and start `workspace:agents-write` to derive them. The container lifecycle prepares the environment; developer operations remain dashboard tasks.
 
-The dashboard is the exclusive developer control plane for development, debugging, tests and builds. `bun run dashboard run workspace:generate-config` keeps cargo-nextest scope files equal to the root `.config/nextest.toml` plus their own overrides and checks that every `.github/dependabot.yml` directory exists and holds its manifest.
+The dashboard is the exclusive developer control plane for development, debugging, tests and builds. `bun run dashboard run workspace:generate-config` keeps cargo-nextest scope files equal to the root `.config/nextest.toml` plus their own overrides and checks that every `.github/dependabot.yml` directory exists and holds its manifest. It is the `repo dashboard` of `AGENTS.md`; there is no `bun repo dashboard` verb, and agents and automation use `bun repo …` instead.
 
 ## Daily Development
 

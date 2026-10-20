@@ -40,6 +40,7 @@
     },
     "test": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -57,6 +58,7 @@
     "verify-note-empty-config-ownership": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify note-empty-config-ownership",
@@ -74,6 +76,7 @@
     "verify-sqlite-snapshot-guest": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify sqlite-snapshot-guest",
@@ -99,6 +102,7 @@
     "verify-snapshot-guest": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify snapshot-guest",
@@ -124,6 +128,7 @@
     "verify-sqlite-snapshot-native": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify sqlite-snapshot-native",

@@ -144,7 +144,7 @@ fn paged_original_mutation_sources_keep_genuine_refs_and_exact_issuer_through_al
 }      
 #[test]
 fn paged_failed_seal_keeps_actual_returned_edit_post_and_exact_issuer_pair_until_funded_close(){
-    use semio_framework_os_store_one_item_batch::paged_one_item::{retain_seal_returns,returned_edit_demands,close_returned_edit,returned_post_demands,close_returned_post};
+    use semio_framework_os_store_one_item_batch::paged_one_item::test_support::{retain_seal_returns,returned_edit_demands,close_returned_edit,returned_post_demands,close_returned_post};
     let law=law();let maximum=law["maximumTurns"].as_u64().unwrap() as usize;
     CALLS.set(0);SNAPSHOT_CALLS.set(0);REFUSE_ISSUER.set(false);
     let authority=Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(1),semio_framework_job::Generation(1),[0;32],0,1,semio_framework_os_spr::HybridLogicalTimestamp::new(1,0),"actor".into(),None,None,None));

@@ -5,7 +5,7 @@ use crate::standards::v1::subsets::any::schema::mutations::replace_stream_source
 use crate::standards::v1::subsets::any::schema::mutations::replace_stream_source::component::replace_stream_source;
 
 //#region 🔖️Inverse
-pub fn inverse<Op: From<ReplaceStreamSource>>(payload: &super::ReplaceStreamSource, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<ReplaceStreamSource>>(payload: &crate::standards::v1::subsets::any::schema::mutations::replace_stream_source::component::ReplaceStreamSource, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     match base.streams.iter().find(|stream| stream.id == payload.id) {
         Some(stream) => vec![super::replace_stream_source(payload.id.clone(), stream.source.clone())],

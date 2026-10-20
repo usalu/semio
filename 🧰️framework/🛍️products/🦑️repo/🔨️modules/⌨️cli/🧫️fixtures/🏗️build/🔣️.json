@@ -1,7 +1,20 @@
 {
   "project": "@semio-tech/repo-cli-go",
   "command": "bun ./📜️script.ts build",
-  "entryPoint": "./🚀️bin",
-  "artifacts": { "windows": ".🧬semio/🦑️repo/⚡️cache/🗃️bin/semio-repo.exe", "unix": ".🧬semio/🦑️repo/⚡️cache/🗃️bin/semio-repo" },
-  "declaration": { "verb": "build", "title": { "en": "Build Go Repository Commands", "de": "Go-Repository-Befehle Bauen" }, "description": { "en": "Build the current Go implementation used by repository tasks in the dashboard.", "de": "Die aktuelle Go-Implementierung für Repository-Aufgaben im Dashboard bauen." } }
+  "entryPoint": ".",
+  "artifacts": {
+    "directory": "{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/🗃️bin/{options.env.SEMIO_BUILD_MODE}/repo"
+  },
+  "declaration": {
+    "verb": "build",
+    "title": {
+      "en": "Build Go Repository Commands",
+      "de": "Go-Repository-Befehle Bauen"
+    },
+    "description": {
+      "en": "Build the current Go implementation used by repository tasks in the dashboard.",
+      "de": "Die aktuelle Go-Implementierung für Repository-Aufgaben im Dashboard bauen."
+    }
+  },
+  "module": "../../../💻️client/🔌️mcp"
 }

@@ -32,7 +32,7 @@ func loadDocumentVectors(ctx *host.Context) (documentVectors, error) {
 	return vectors, err
 }
 
-// memberNames returns the top-level member names of a JSON object, in document order.
+// 👤️memberNames returns the top-level member names of a JSON object, in document order.
 func memberNames(text string) []string {
 	decoder := json.NewDecoder(strings.NewReader(text))
 	token, err := decoder.Token()
@@ -183,7 +183,7 @@ func aDocumentWithoutAStatusIsRefused(ctx *host.Context) (host.Outcome, error) {
 
 // region 🔖️Registration
 
-// Adapter is the registration entry point the generated host calls.
+// 🌉️Adapter is the registration entry point the generated host calls.
 func Adapter() *host.Adapter {
 	return host.NewAdapter("go").
 		Subject("real-documents-decode-to-the-same-ticket", realDocumentsDecodeToTheSameTicket).

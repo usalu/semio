@@ -82,7 +82,7 @@ test("original receiving keeps all five simultaneous causes and actual effects",
  assert(projection.includes("impl super::OriginalDomainProjection for OriginalReceivingPrimary"),"the defining Receiving owner lends its exact nested projection");
  const receivingOwner=readFileSync(resolve(repo,"🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧾️result/🛬️receiving/🦀️.rs"),"utf8"),jobFacade=readFileSync(resolve(import.meta.dirname,"../🛬️receiving/🦀️.rs"),"utf8");
  assert(receivingOwner.includes("pub struct OriginalReceivingPrimary"),"native construction owns all three inline causes below Job");
- assert(jobFacade.includes("pub use semio_framework_value::native_decoding::OriginalReceivingPrimary")&&!jobFacade.includes("pub struct OriginalReceivingPrimary"),"Job reexports the actual lower cause without duplicating its body");
+ assert(jobFacade.includes("pub use semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary")&&!jobFacade.includes("pub struct OriginalReceivingPrimary"),"Job reexports the actual lower cause without duplicating its body");
  assert(invoke.includes("Some(receiving as &dyn FieldProjectionSource)"),"actual extension failure output borrows the defining Receiving source");
  assert(invoke.includes('("original.receiving",receiving.primary.as_ref()')&&invoke.includes('Self::Progress(error.retained_progress())'),"normal extension wire keeps Receiving code and its own physical effects");
  console.log("[DEBUG] receiving primaryQuoteAllocationReceiptContext=true distinctOriginalFields=true actualProgress=true independentSQLite=true");

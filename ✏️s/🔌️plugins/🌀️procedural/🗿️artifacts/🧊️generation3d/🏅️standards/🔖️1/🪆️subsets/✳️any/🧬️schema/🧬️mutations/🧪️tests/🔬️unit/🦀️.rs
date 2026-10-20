@@ -1,11 +1,11 @@
 use semio_s_artifact_procedural_3d_mutations::*;
 use semio_s_artifact_procedural_3d_model::default_generation3d_snapshot;
-use change_generation_value::ChangeGenerationValue;
+use semio_s_artifact_procedural_3d_mut_generations::change_generation_value::ChangeGenerationValue;
 use change_schema::ChangeSchema;
 use connect_synapse::ConnectSynapse;
-use create_generation::CreateGeneration;
+use semio_s_artifact_procedural_3d_mut_generations::create_generation::CreateGeneration;
 use create_widget::CreateWidget;
-use delete_generation::DeleteGeneration;
+use semio_s_artifact_procedural_3d_mut_generations::delete_generation::DeleteGeneration;
 use delete_widget::DeleteWidget;
 use delete_widget_position::DeleteWidgetPosition;
 use disconnect_synapse::DisconnectSynapse;

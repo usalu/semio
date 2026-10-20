@@ -10,7 +10,7 @@ import {requireNativeStoragePathV1} from "../../../../../../../../../🔨️modu
 import {repositoryCachePartitionRootV1,repositoryLeaseDirectoryV1} from "../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import type {RepositoryToolingStoreV1} from "../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import {rustupToolchainSealV1,type RustupToolchainSealEntryV1} from "../🟦️.ts";
-import schema from "../🧬️schema/🔣️.json";
+import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 /** 🗄️ Bounds lease metadata to a closed conservative generation shard set. */
 export function rustupGenerationResourceV1(directory:string):string{return schema.definitions.Protocol.const.generationResourcePrefix+(createHash("sha256").update(requireMaterializedPathV1(directory)).digest()[0]!%schema.definitions.Protocol.const.generationLeaseShards);}
 function unchanged(a:BigIntStats,b:BigIntStats):boolean{return a.dev===b.dev&&a.ino===b.ino&&a.mode===b.mode&&a.size===b.size&&a.nlink===b.nlink&&a.mtimeNs===b.mtimeNs&&a.ctimeNs===b.ctimeNs;}

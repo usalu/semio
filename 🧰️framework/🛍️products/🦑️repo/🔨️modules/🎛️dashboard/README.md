@@ -15,7 +15,7 @@ registry command (below); the interactive view and its native command-line clien
 through the same workspace daemon, so a task started in one is the task the other shows. Choose **New Task**
 to select a declared command, fill its typed form and inspect the preview before starting.
 
-Start with `bun run dashboard`; it builds and installs the native executable `semio` when needed.
+Start with `repo dashboard`; it builds and installs the native executable `semio` when needed.
 Commands, typed parameters, arguments, environment, output, progress and
 cancellation are controlled through the dashboard. No IDE workspace, solution, task, launch or IDE MCP configuration is generated or required.
 Headless agent client files are derived from registered dashboard declarations by
@@ -31,7 +31,7 @@ artifact reader leases; a current installation needs no compilation or build gra
 differs, the start first rebuilds and reinstalls with the same visible progress and says why; a failed or
 cancelled rebuild stops the start instead of running an outdated executable, except for the verbs that only observe or
 end what already runs (`tasks`, `logs`, `stop`, `kill`, `open`, `daemon stop`, `daemon status`): a broken working
-tree must never keep a developer from stopping the daemon. `bun repo run @semio-tech/repo-dashboard-rs:build --exclude-dependencies --skip-cache --output=stream` republishes on demand and
+tree must never keep a developer from stopping the daemon. `repo run @semio-tech/repo-dashboard-rs:build --exclude-dependencies --skip-cache --output=stream` republishes on demand and
 prints the executable path for direct native invocation.
 
 The first view immediately shows task controls. Dark appearance, native terminology,
@@ -52,6 +52,8 @@ an owner target or typed dashboard declaration.
 
 | Work | Search or command | Next action |
 | --- | --- | --- |
+| Browse and edit source | **Workspace Files** (`Ctrl+B F`) | Filter a directory or file name, press Enter to open it, and edit in the native document tab. `Ctrl+B S` saves; `Ctrl+B R` reloads a clean document. |
+| Use a workspace shell | `@semio-tech/repo-developer-tools:terminal` | Choose the directory and platform shell. Input, output and cancellation stay in the task view. |
 | Prepare the checkout | `workspace:setup` | Start the setup task; read progress in its output. For native toolchain repair choose `workspace:setup-native`. |
 | Inspect build commands | `tool:workspace/build-help` | Read the current runner's help in retained task output. |
 | Test affected projects | `tool:workspace/build-affected` | Choose target names, backend and optional prototype/release configuration. |
@@ -65,7 +67,6 @@ an owner target or typed dashboard declaration.
 | Retry or cancel | Selected task menu | **Restart** (`Ctrl+B r`), **Stop** (`Ctrl+B c`) or **Kill** (`Ctrl+B k`) controls the task and descendants. Closing its view keeps it running. |
 | Set up native debugging | `@semio-tech/repo-developer-tools:setup-debugger` | **Set Up Native Debugger** verifies LLDB and its Python runtime before installing anything, then repairs the fixed host packages when required. |
 | Debug interactively | `@semio-tech/repo-developer-tools:debug` | Check `debuggers` for installed tools, then select Node.js Inspector, Python Pdb, GDB or LLDB, a workspace program, working directory and literal program argument list. Toggle task input with `Ctrl+B t` to set breakpoints and step; stop or restart with the task menu. Node uses a fresh local inspector port. Windows GDB currently accepts ASCII target and working-directory paths; use verified LLDB for Unicode native targets. |
-| Open code at a line | `@semio-tech/repo-developer-tools:open-source` | Fill in file, optional line and installed editor; edit the source, then return to the task controls. |
 | Inspect repository changes | `@semio-tech/repo-developer-tools:git-status`, `git-diff`, `git-history` | Choose path, change area or revision in the form; staged diffs take one base revision. |
 | Inspect a revision or line history | `@semio-tech/repo-developer-tools:git-show`, `@semio-tech/repo-developer-tools:git-blame` | For Show choose one revision, path and summary/patch view. For Blame choose file, optional revision, starting line and up to 500 lines. |
 | Manage tickets and goals | `repo` plus `ticket`, `goal`, `analyze`, `tree` or `statute` | Select the domain action, fill in its typed parameters and confirm any state-changing action. |
@@ -75,13 +76,28 @@ an owner target or typed dashboard declaration.
 | Show or clear the build cache | `tool:workspace/build-cache-status`, `tool:workspace/build-cache-clear` | The backend axis selects Nx or Bazel; status reports directory, files and size, clear removes only that backend's task results. |
 | Run a scoped authored operation | `tool:workspace/run-script` | Search canonical script suggestions and inspect the selected owner and working directory; override the directory when the operation requires it. Put command words in **Arguments**. |
 
+Native documents support multiline Unicode text, combining clusters, emoji, tab indentation,
+keyboard or mouse selection, `Ctrl+A` select all, `Ctrl+C` copy, `Ctrl+Z` undo and `Ctrl+Y` redo.
+The visible cursor and line/column status follow the document. Existing CRLF line endings are
+preserved. Files above 1 MiB, unsupported binary text, symbolic-link escapes and paths above
+256 UTF-16 units are refused with a visible reason. Loading, listing and saving run outside
+the UI loop; `Ctrl+B C` requests cancellation.
+
+A dirty close, reload, detach or shutdown keeps the buffer and shows a save/discard decision.
+`Ctrl+B D` explicitly discards after that decision; using it directly asks for confirmation first.
+Saving compares the version loaded and retains a conflicting local buffer. A race during atomic
+publication reports its actual outcome and preserves the exchanged predecessor or draft in the
+workspace event history. `Ctrl+B V` opens that retained version in a separate read-only native tab.
+The history has a fixed storage bound and refuses further saves when full. All controls above are
+customizable through the same keymap and use the selected English or German labels.
+
 Initial host provisioning installs the fixed native debugger packages. A healthy macOS LLDB needs no additional installation. Later Linux repair requires root or noninteractive `sudo`; machine-wide LLVM on Windows uses the elevated host bootstrap. Setup and debugging retain the dashboard task's output, cancellation and process time limit.
 
 The task overview and context menus offer these controls without memorizing keys.
 Settings (`Ctrl+B p`) changes language, appearance and bindings. English and
 German labels are available throughout. A detached view reconnects to the same
-running tasks on the next dashboard start. For automation, `semio tasks`,
-`semio logs <task> --follow`, `semio restart <task>` and `semio stop <task>` use
+running tasks on the next dashboard start. For automation, `repo dashboard tasks`,
+`repo dashboard logs <task> --follow`, `repo dashboard restart <task>` and `repo dashboard stop <task>` use
 the same handles and output as those controls.
 
 ### 🪟️ Window System
@@ -147,7 +163,7 @@ file and never hides a valid command):
 - A service port belongs to one owner: the project of a target or tool, the ticket of a ticket tool, the
   playground itself. Commands of one owner that share a port are alternatives of the same service (the
   scoped storybooks, the hub variants, the inspector tool beside its targets); two owners claiming the same
-  port are a problem of `semio commands --check`, which compares the default ready ports of long-running
+  port are a problem of `repo dashboard commands --check`, which compares the default ready ports of long-running
   commands with every playground port (react, wgpu, user slots). `--check` also reports a playground
   renderer whose build target is missing from the graph and every plugin error recorded in the published
   graph (a partial graph is not healthy).
@@ -159,8 +175,8 @@ Authored scripts use `tool:workspace/run-script`: `script` is the workspace-rela
 (default the workspace root). Extra arguments follow `--`, and explicit environment values use
 `--env KEY=value`. This entry invokes the authored script through the build runner; named recurring workflows
 belong in their owner's target or typed declaration.
-Everything resolves to plain argument lists. Dashboard task launches use `bun repo run` and
-`bun repo run-many`. The selected build adapter owns backend flags, environment and graph discovery.
+Everything resolves to plain argument lists. Dashboard task launches use `repo run` and
+`repo run-many`. The selected build adapter owns backend flags, environment and graph discovery.
 The dashboard reads the versioned neutral publication at `.cache/b/g/m/canonical.json`. Its shared Rust path derives from the neutral cache partition policy, the native mounted namespace and the publication-location schema; `graph.json` in that partition remains the storage charge receipt.
 Finite tasks request graph reuse only while the publication and its manifest content remain current.
 `SEMIO_BUILD_TERMINAL=false` delegates terminal rendering and lifecycle to the dashboard daemon.
@@ -168,50 +184,47 @@ Independent daemon tasks clear the inherited `SEMIO_BUILD_INVOCATION_PID` before
 
 ### ⌨️ The Command Line
 
-The binary `semio` drives the same registry and daemon without a view (`semio` without a verb is the
-dashboard; `semio --help` prints the usage). `semio …` is shorthand for `bun repo run @semio-tech/repo-dashboard-rs:run --output=stream -- …`: the devcontainer
-puts a `semio` shim on `PATH`, a native host does not, so there `semio run os-hub:dev --detach --wait-ready` is typed
-`bun repo run @semio-tech/repo-dashboard-rs:run --output=stream -- run os-hub:dev --detach --wait-ready`; the tables below use the short form.
+Humans use `repo dashboard [arguments]` for the registry, daemon and viewer. With no arguments it opens the interactive viewer; `repo dashboard --help` prints usage. The native frontend expands this route to the authored dashboard run target and lazily prepares its executable when needed. Agents use declared owner tests and commands through `repo run`; they never start `repo dashboard`.
 
 | Verb | Does |
 | --- | --- |
-| `semio commands [words…] [--json] [--all] [--check] [--refresh] [--root PATH] [--snapshot PATH]` | list or search the registry; `--check` proves every declaration and reference and fails on any problem |
-| `semio run <id> [--param k=v\|flag]… [--env K=V]… [--detach] [--wait-ready] [--dry-run] [--json] [--raw] [--timeout S] [--refresh] [--root PATH] [--snapshot PATH] [-- args…]` | run a command as a daemon task |
-| `semio tasks [--json] [--root PATH]` | list the tasks of the daemon (or of the journal while no daemon runs) |
-| `semio logs <task> [--follow] [--raw] [--root PATH]` | print the output of a task, then optionally follow it |
-| `semio stop\|restart\|kill <task> [--group] [--timeout S] [--root PATH]` | control a task and wait until it left its state |
-| `semio open <task> [--print] [--root PATH]` | open the ready address of a task in the system browser |
-| `semio daemon start\|status\|stop\|attach\|serve [--root PATH]` | manage the workspace daemon |
-| `semio dashboard [--language L] [--appearance A] [--terminology T] [--renderer R] [--layout L] [--prefix KEY] [--bindings JSON] [--root PATH] [--config JOURNAL] [--workspace] [--help]` | the interactive dashboard (also plain `semio`); `--help` prints its keyboard help |
-| `semio preferences show\|set [--language L] [--appearance A] [--terminology T] [--renderer R] [--layout L] [--prefix KEY] [--bindings JSON] [--root PATH] [--config JOURNAL] [--workspace]` | read or record preferences |
-| `semio catalog [--json]` | list the playground catalog |
-| `semio plugin registry generate\|check` | generate or check the plugin registry |
-| `semio command-tree [--dump-tree] [--root PATH]` | print the command tree |
+| `repo dashboard commands [words…] [--json] [--all] [--check] [--refresh] [--root PATH] [--snapshot PATH]` | list or search the registry; `--check` proves every declaration and reference and fails on any problem |
+| `repo dashboard run <id> [--param k=v\|flag]… [--env K=V]… [--detach] [--wait-ready] [--dry-run] [--json] [--raw] [--timeout S] [--refresh] [--root PATH] [--snapshot PATH] [-- args…]` | run a command as a daemon task |
+| `repo dashboard tasks [--json] [--root PATH]` | list the tasks of the daemon (or of the journal while no daemon runs) |
+| `repo dashboard logs <task> [--follow] [--raw] [--root PATH]` | print the output of a task, then optionally follow it |
+| `repo dashboard stop\|restart\|kill <task> [--group] [--timeout S] [--root PATH]` | control a task and wait until it left its state |
+| `repo dashboard open <task> [--print] [--root PATH]` | open the ready address of a task in the system browser |
+| `repo dashboard daemon start\|status\|stop\|attach\|serve [--root PATH]` | manage the workspace daemon |
+| `repo dashboard dashboard [--language L] [--appearance A] [--terminology T] [--renderer R] [--layout L] [--prefix KEY] [--bindings JSON] [--root PATH] [--config JOURNAL] [--workspace] [--help]` | the interactive dashboard (also plain `repo dashboard`); `--help` prints its keyboard help |
+| `repo dashboard preferences show\|set [--language L] [--appearance A] [--terminology T] [--renderer R] [--layout L] [--prefix KEY] [--bindings JSON] [--root PATH] [--config JOURNAL] [--workspace]` | read or record preferences |
+| `repo dashboard catalog [--json]` | list the playground catalog |
+| `repo dashboard plugin registry generate\|check` | generate or check the plugin registry |
+| `repo dashboard command-tree [--dump-tree] [--root PATH]` | print the command tree |
 
-`semio run`: attached, it streams the output of the launch's last process and exits with that process's
+`repo dashboard run`: attached, it streams the output of the launch's last process and exits with that process's
 exit code (Ctrl-C leaves the task running); `--detach` returns once the daemon accepted the launch;
 `--wait-ready` returns once every process that declares readiness printed its address, which is printed as
 the last lines of stdout; `--dry-run` prints the resolved launch (processes, environment, ready address,
 requirements) as JSON, starts nothing and needs no daemon. A task already running with the same command is
 reused. `--param id=value` chooses a parameter (`--param id` alone switches a `flag` on); `--env KEY=value`
 adds free environment to every process of the launch (`{workspace}`, `{port}` and chosen `{parameter}` tokens
-expand) and words after `--` are appended after `--` of the command. The retired `semio dev <variant>` is
-`semio run playground:<variant> --param renderer=…`; free build switches are `--env SKIP_PLUGIN_BUILD=1`. A task has one handle, its session id, which `run`, `tasks`, `logs`, `stop`,
+expand) and words after `--` are appended after `--` of the command. The retired `repo dashboard dev <variant>` is
+`repo dashboard run playground:<variant> --param renderer=…`; free build switches are `--env SKIP_PLUGIN_BUILD=1`. A task has one handle, its session id, which `run`, `tasks`, `logs`, `stop`,
 `restart`, `kill` and `open` all print and accept and which never changes; they also take a group id (all
 members of a launch), a command id (its live session, else its latest) or a unique part of a session or
 command id, and an ambiguous name is refused with the candidates. A position in a listing is no handle. A selection the declarations do not allow exits with status 2 and
 names the problem on stderr.
 
-`semio --help` prints the usage with every flag (`semio dashboard --help` the keyboard help). Semio has no other
+`repo dashboard --help` prints the usage with every flag (`repo dashboard dashboard --help` the keyboard help). Semio has no other
 verbs and forwards nothing to another script: every task of the monorepo is a registry command. The routes of
-the root script are targets of the root project, so `semio run workspace:test`, `semio run workspace:verify
---param check=taxonomy`, `semio run workspace:dev-storybook`, `semio run workspace:os -- run <bundle>.studio`,
-`semio run workspace:semio -- inspect <path>` and `semio run workspace:examples -- list` start them as daemon
-tasks (`semio commands workspace` lists them). Agent skills use registered dashboard commands for authored operations. Any other verb is an
+the root script are targets of the root project, so `repo dashboard run workspace:test`, `repo dashboard run workspace:verify
+--param check=taxonomy`, `repo dashboard run workspace:dev-storybook`, `repo dashboard run workspace:os -- run <bundle>.studio`,
+`repo dashboard run workspace:semio -- inspect <path>` and `repo dashboard run workspace:examples -- list` start them as daemon
+tasks (`repo dashboard commands workspace` lists them). Agent skills use declared repository owner targets for authored operations. Any other verb is an
 error that prints the usage and exits with status 2.
 
-Agents and editors start servers with `bun repo run @semio-tech/repo-dashboard-rs:run --output=stream -- run <id> --detach --wait-ready`, read the printed
-address and attach browser previews to it; find ids with `bun repo run @semio-tech/repo-dashboard-rs:run --output=stream -- commands <words> --json`.
+Automation tests start servers with `repo run @semio-tech/repo-dashboard-rs:run --output=stream -- run <id> --detach --wait-ready`, read the printed
+address and attach browser previews to it; find ids with `repo run @semio-tech/repo-dashboard-rs:run --output=stream -- commands <words> --json`.
 
 The bootstrap preserves the original process envelope through native preparation and cancels its build
 subprocess tree on interruption or deadline expiry. Cancelling a view ends that view and retains the
@@ -243,11 +256,14 @@ pending until their visible Start action is activated.
 The keyboard is data: a prefix key and bindings in three scopes (`prefix`, `window`, `view`), each binding an
 action id and its keys, defaults in `⚙️preferences/⌨️keymap/🔣️.json`. Preference events override single
 bindings (`--prefix`, `--bindings`); a collision, an unknown action or a typing key is ignored and named,
-never silent. The footer, the help window (`Ctrl+B ?`) and `semio --help` are generated from the keymap and
+never silent. The footer, the help window (`Ctrl+B ?`) and `repo dashboard --help` are generated from the keymap and
 the label catalogue (English and German), so this table is only the default state:
 
 | Key after `Ctrl+B` | Action |
 | --- | --- |
+| `F` | Browse workspace files and edit a document |
+| `S` / `R` / `D` | Save / reload / explicitly discard document changes |
+| `C` / `V` | Cancel a file operation / inspect a retained version read-only |
 | `n` | Search and start a task |
 | `h` | Task overview, including statuses and exit codes |
 | `p` | Optional settings |
@@ -267,7 +283,7 @@ the label catalogue (English and German), so this table is only the default stat
 | `Q` | Shut down the daemon and every task (waits for it) |
 | `Esc` | Cancel the armed prefix |
 
-Without the prefix, `Tab` / `Shift+Tab` select windows and `Ctrl+W` closes one. A focused terminal receives
+Outside document editors and terminals, `Tab` / `Shift+Tab` select windows. In a document, `Tab` inserts indentation. `Ctrl+W` closes a window after any required dirty-document decision. A focused terminal receives
 every key except the prefix (`Ctrl+B Ctrl+B` sends it), encoded for the child's mode; paste, mouse (click,
 drag, wheel), text selection and copy go through the engine, and a right-click opens a context menu for the
 window, tab or terminal. Closing windows or detaching leaves tasks running. Reattaching restores their
@@ -283,8 +299,8 @@ view can select workspace-shared changes. Startup precedence is defaults → wor
 it starts, and restart preserves that task's environment. Interactive changes take effect in the
 current view; subsequent launches resolve stored events with their own environment and arguments.
 
-Query with `semio preferences show`. Customize with
-`semio preferences set --language de --appearance light --terminology reuse`.
+Query with `repo dashboard preferences show`. Customize with
+`repo dashboard preferences set --language de --appearance light --terminology reuse`.
 Add `--workspace` to record a shared change; `--prefix` and `--bindings '{…}'` record keymap changes. Native
 launch accepts `--language`, `--appearance`, `--terminology`, `--renderer`, `--layout`, `--prefix`, `--root` and
 `--config`; `--help` lists their values.
@@ -299,15 +315,15 @@ file locks, and each journal has a 1 MiB admission limit. Task output and view s
 
 ### 🌀️ The Daemon
 
-`semio daemon start`, `semio daemon status` and `semio daemon stop` manage the workspace daemon without an
-attached view; `semio run` starts it when none runs. One daemon serves one workspace and owns every task
+`repo dashboard daemon start`, `repo dashboard daemon status` and `repo dashboard daemon stop` manage the workspace daemon without an
+attached view; `repo dashboard run` starts it when none runs. One daemon serves one workspace and owns every task
 independently of the views attached to it. Windows uses a named pipe (stable name from the XXH3 of the
 canonical root, current user only, remote clients rejected, a second daemon for the same root refused)
 and a kernel job object; Unix a private per-user socket directory and process groups.
 
 - **Handshake.** A connection says hello with its protocol revision, the build id of its executable and its
   own environment, which is the base environment of every task it starts (the daemon's is not). A different
-  protocol cannot be served and is reported with the way out (`semio daemon stop` once the tasks finish); a
+  protocol cannot be served and is reported with the way out (`repo dashboard daemon stop` once the tasks finish); a
   different build is served and reported, never silently. A request before hello is refused.
 - **Starting.** A launch is one group message: the services it requires first (started or reused, each
   awaited until ready), then its processes in order, each after the previous one is ready when it declares
@@ -318,7 +334,7 @@ and a kernel job object; Unix a private per-user socket directory and process gr
   `--wait-ready` only consume it.
 - **Output.** Each session keeps a 2 MiB ring in memory and rotating log files (2 x 8 MiB) under
   `.🧬semio/🦑️repo/⚡️cache/🎛️dashboard/logs`; a replay restores the terminal modes the child was in and, for
-  a full-screen program, the screen from the moment it took the screen. `semio logs` reads the same files,
+  a full-screen program, the screen from the moment it took the screen. `repo dashboard logs` reads the same files,
   also when no daemon runs.
 - **Flow control.** Every view reads at its own cursor; a view that cannot keep up resynchronises from the
   log instead of being disconnected, and never slows another view or a task. Input to a task is queued and
@@ -333,13 +349,13 @@ and a kernel job object; Unix a private per-user socket directory and process gr
   `_` `-` only (others become `_`), at most 32 characters; unset or empty is the default instance.
 - **Connections.** Up to 64 connections are served and at most 16 of them are attached views (`Attach`);
   command-line verbs (`tasks`, `run`, `logs`, `stop` …) never need a view slot. A refused view gets the error
-  `view_limit`, which the view shows in its language in the status line before it retries. `semio tasks` reads the
+  `view_limit`, which the view shows in its language in the status line before it retries. `repo dashboard tasks` reads the
   journal without a daemon only when none runs; a running daemon's journal is never shown as interrupted.
 - **Windows programs.** A bare program name resolves to a real executable (`bun.exe`) on the task's `PATH`
   before a `.cmd`/`.bat` shim. `cmd /c "<string>"` is started as `cmd /s /c "<string>"`, so the string reaches the
   shell exactly as written. Interrupting a batch job answers its "Terminate batch job (Y/N)?" prompt.
 - **Stopping.** Interrupt, then terminate (Ctrl+Break on Windows) after two seconds, then kill after four;
-  `Ctrl+B Q` or `semio daemon stop` shuts the daemon down after ending every task. Closing or detaching a
+  `Ctrl+B Q` or `repo dashboard daemon stop` shuts the daemon down after ending every task. Closing or detaching a
   view never ends a task, and a disconnection does not transfer process ownership to a view.
 
 ## 📦️ Packages
@@ -373,13 +389,13 @@ workspace `./🧪️tests/🧫️fixtures/🎮️registry/🏗️workspace.json`
 `commands --check`, `run --dry-run`) and compares every result with an independent TypeScript resolver
 written from the declaration rules, validates declarations and outputs with Ajv against the registry schema,
 and checks the XXH3 vectors of the graph-reuse decision against Bun's own hash:
-`bun repo run @semio-tech/repo-dashboard-rs:test` builds the debug binary and runs it. The scenarios of
+`repo run @semio-tech/repo-dashboard-rs:test` builds the debug binary and runs it. The scenarios of
 `🧫️fixtures/🎮️registry/🥒️.feature` are mapped to Rust tests of `🎮️registry`.
 
 `🌀️control-plane` defines language-neutral lifecycle scenarios and protocol vectors. The owned
 Rust codec and the existing Ajv library validate the same vectors. The quick suite runs actual
 Bun PTYs, Nx server/build/test targets, output replay, cancellation, restart, process-tree
-termination, singleton enforcement and reattachment: `bun repo run @semio-tech/repo-dashboard-rs:test -- quick`.
+termination, singleton enforcement and reattachment: `repo run @semio-tech/repo-dashboard-rs:test -- quick`.
 
 `🧊️execution` pins the native launch vectors of `./🧪️tests/🧫️fixtures/🧊️execution`, the build-runner scheduling of
 `run` and `install`, the immutable installation that keeps a running executable's bytes while

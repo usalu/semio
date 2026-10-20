@@ -20,7 +20,7 @@ pub mod native_decoding {
 }
 
 #[cfg(test)]
-pub use semio_framework_value_derive::{NativeReceive, RetireOwned};
+pub use semio_framework_value_derive::{NativeReceive, RetireOwned, ToValue};
 #[cfg(test)]
 pub use semio_framework_value_intrinsic::{DecodedValue, FromValue, NativeEncodeControl, ToValue, ValueEdit, ValueShape};
 #[cfg(test)]

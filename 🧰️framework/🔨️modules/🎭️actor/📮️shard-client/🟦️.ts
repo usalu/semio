@@ -10,10 +10,9 @@ import { ShardWatchdog } from "./⏱️watchdog/🟦️.ts";
 import { ShardClientState } from "./🗃️state/🟦️.ts";
 import { SHARD_LIVENESS_POLICY } from "./🫀️liveness/🟦️.ts";
 import { OwnedResidentLedger, OwnedResidentRetirement, type ResidentGrant, type ResidentStep } from "@semio-tech/value-ts/resident";
-import { OwnedKernelReturnContent } from "@semio-tech/framework-kernel/return/content/input";
-import { OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement, OwnedUiPatchInputRetirement } from "@semio-tech/framework/modules/ui/contract/retained/instance";
-import { OwnedUiResidentPool } from "@semio-tech/framework/ui/contract/retained/resident";
-import { uiResidentMetadataEnvelope } from "@semio-tech/framework/modules/ui/contract/retained/resident/metadata";
+import { OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement, OwnedUiPatchInputRetirement } from "@semio-tech/ui-contract/retained/instance";
+import { OwnedUiResidentPool } from "@semio-tech/ui-contract/retained/resident";
+import { uiResidentMetadataEnvelope } from "@semio-tech/ui-contract/retained/resident/metadata";
 import { ACTOR_BYTE_PAGE_BYTES, createActorBytePage } from "../📃️page/🟦️.ts";
 import { encodeActorInstanceLifecycle } from "../🚪️lifetime/🟦️.ts";
 import { encodeActorUiPatchReceipt } from "../🚪️lifetime/🩹️patch/🟦️.ts";
@@ -24,7 +23,7 @@ import { NO_RESIDENT_FAULT, OwnedShardReturn, OwnedShardReturnPage, RETRYABLE_LI
 import { OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt } from "./🩹️ui-patch/🟦️.ts";
 import type { ShardClientOptions } from "./⚙️options/🟦️.ts";
 import type { ShardClientHubPort } from "./🧩️hub/🟦️.ts";
-import { bindUiResidentComposition } from "../../🖱️ui/🧬️contract/🧵️retained/🔌️host/🏦️composition/🟦️.ts";
+import { bindUiResidentComposition } from "@semio-tech/ui-contract/retained/host/composition";
 import { SHARD_JSPI_FAULT_CODE, ShardJspiUnavailableError, assertShardJspiAvailable, describeShardMessageError, describeShardSilence, describeShardWorkerError, evaluateShardLiveness, isShardLostError, settleFailedInstanceOpen, shardJspiAvailable } from "./💓️heartbeat/🟦️.ts";
 import type { OutboundMessage } from "./📨️messages/🟦️.ts";
 import { MAINTENANCE_LANE_DEFAULT_BUDGET, SHARD_COMMAND_MAXIMUM_PAGES, SHARD_FRAME_VARIANT_FIELDS, type ShardAsset, type ShardBudget, type ShardCapabilityGrant, type ShardCommandIngressPage, type ShardEnvelope, type ShardEventEnvelope, type ShardJobBudget, type ShardJobStep, type ShardMetricsSample, createGrantedBudgetTracker, createShardCommandIngressPages, interpretShardFrame, orderEnvelopesByLane } from "./📜️wire/🟦️.ts";
@@ -213,7 +212,7 @@ export class ShardClient {
 //#endregion 🧵️ShardClient
 
 export type ShardClientTestDependenciesV1 = ReturnType<typeof shardClientTestDependenciesV1>;
-export const shardClientTestDependenciesV1 = () => ({ ACTOR_BYTE_PAGE_BYTES, SHARD_COMMAND_MAXIMUM_PAGES, MAINTENANCE_LANE_DEFAULT_BUDGET, NO_RESIDENT_FAULT, SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL, admitSegmentedDownloadChunk, OwnedActorTurnOutput, OwnedActorTurnOutputs, OwnedKernelReturnContent, OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, OwnedResidentLedger, OwnedResidentRetirement, OwnedShardReturn, OwnedShardReturnPage, OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement, OwnedUiPatchInputRetirement, OwnedUiResidentPool, SHARD_FRAME_VARIANT_FIELDS, SHARD_JSPI_FAULT_CODE, SHARD_LIVENESS_POLICY, ShardClient, ShardJspiUnavailableError, assertShardJspiAvailable, capturedReturnState, createActorBytePage, createGrantedBudgetTracker, createShardCommandIngressPages, describeShardMessageError, describeShardSilence, describeShardWorkerError, encodeActorInstanceLifecycle, encodeActorUiPatchReceipt, evaluateShardLiveness, interpretShardFrame, isShardLostError, orderEnvelopesByLane, poolControllerEnvelope, poolUiEnvelope, settleFailedInstanceOpen, shardJspiAvailable, uiResidentMetadataEnvelope });
+export const shardClientTestDependenciesV1 = () => ({ ACTOR_BYTE_PAGE_BYTES, SHARD_COMMAND_MAXIMUM_PAGES, MAINTENANCE_LANE_DEFAULT_BUDGET, NO_RESIDENT_FAULT, SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL, admitSegmentedDownloadChunk, OwnedActorTurnOutput, OwnedActorTurnOutputs, OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, OwnedResidentLedger, OwnedResidentRetirement, OwnedShardReturn, OwnedShardReturnPage, OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement, OwnedUiPatchInputRetirement, OwnedUiResidentPool, SHARD_FRAME_VARIANT_FIELDS, SHARD_JSPI_FAULT_CODE, SHARD_LIVENESS_POLICY, ShardClient, ShardJspiUnavailableError, assertShardJspiAvailable, capturedReturnState, createActorBytePage, createGrantedBudgetTracker, createShardCommandIngressPages, describeShardMessageError, describeShardSilence, describeShardWorkerError, encodeActorInstanceLifecycle, encodeActorUiPatchReceipt, evaluateShardLiveness, interpretShardFrame, isShardLostError, orderEnvelopesByLane, poolControllerEnvelope, poolUiEnvelope, settleFailedInstanceOpen, shardJspiAvailable, uiResidentMetadataEnvelope });
 export type ShardClientRetryableLifecycleTestDependenciesV1 = ReturnType<typeof shardClientRetryableLifecycleTestDependenciesV1>;
 export const shardClientRetryableLifecycleTestDependenciesV1 = () => ({ RETRYABLE_LIFECYCLE_TURN, RETRYABLE_LIFECYCLE_TURN_ATTEMPTS, graftWorkerStack, isRetryableLifecycleTurn });
 if (import.meta.vitest) {

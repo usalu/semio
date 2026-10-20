@@ -1,8 +1,8 @@
 /** 📥️ The kernel binds the UI input host and the return content seam when its input module loads, and both refuse objects that are not the kernel's. */
 import {expect,test} from "vitest";
 import "../../🟦️.ts";
-import {uiInputHost} from "../../../../../../🖱️ui/🧬️contract/🧵️retained/🔌️host/📥️input/🟦️.ts";
-import {returnContentMatches} from "../../../../../../🖱️ui/🧬️contract/🧵️retained/🔌️host/📦️return-content/🟦️.ts";
+import {uiInputHost} from "@semio-tech/ui-contract/retained/host/input";
+import {returnContentMatches} from "@semio-tech/ui-contract/retained/host/return-content";
 
 const lifetime={activationGeneration:1n,instanceId:1,guestLifetime:1n},activation={actorId:"seam-actor",activationGeneration:1n,assertActive(){}};
 

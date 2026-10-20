@@ -3,6 +3,7 @@ use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::layer_transform;
 use semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_transform::*;
 use protocol::Mutation;
+use semio_s_artifact_raster_raster_model::RasterTransform;
 #[semio_framework_async_macros::async_test]
 async fn layer_transforms_preserve_exact_inverse_and_sequential_moves(){
     use semio_s_artifact_raster_raster_model::{create_layer_of_kind, layer_node_id};

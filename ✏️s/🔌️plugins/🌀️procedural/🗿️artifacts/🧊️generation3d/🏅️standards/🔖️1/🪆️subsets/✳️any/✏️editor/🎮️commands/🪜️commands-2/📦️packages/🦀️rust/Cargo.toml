@@ -41,6 +41,7 @@ semio-s-artifact-procedural-3d-node-graph-edit = { workspace = true }
 semio-s-artifact-procedural-3d-preview-eval = { workspace = true }
 semio-s-artifact-procedural-3d-set-widget-input = { workspace = true }
 semio-s-artifact-procedural-3d-transforms = { workspace = true }
+semio-framework-async = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework = { workspace = true }

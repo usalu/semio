@@ -5,7 +5,7 @@
 
 import { type AppEvent, type KernelMutation, type UndoGroup } from "../🧬️mutation-vocabulary/🟦️.ts";
 import { type Diagnostic } from "../🚨️fault/🟦️.ts";
-import { type Effect } from "../⚡️effect/🟦️.ts";
+import { type Effect } from "@semio-tech/framework-effect";
 import { type UiDirtyScope } from "../🎯️ui-dirty-scope/🟦️.ts";
 import { type HistoryPatch } from "../🕰️history/🟦️.ts";
 

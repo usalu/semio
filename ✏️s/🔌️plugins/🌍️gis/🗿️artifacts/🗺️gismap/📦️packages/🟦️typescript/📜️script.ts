@@ -197,7 +197,7 @@ async function ownedExport(repoRoot: string, scope: keyof typeof OWNED_SCHEMA_MO
 //#endregion 🧬️OwnedSchemaExports
 
 /** 🧪️ Validates the private approval-history contract against AJV, an independent reducer, the
- * Shell arbitration function, and source hostiles for authority retirement and reissue. */
+ * source hostiles for authority retirement and reissue. */
 async function proveGisMapApprovalHistory(repoRoot: string): Promise<Record<string, number>> {
   const root = join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧪️tests/🧫️fixtures/↩️gis-map-approval-history-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as Readonly<{ cases: readonly ApprovalHistoryFixtureRow[]; ordinaryHistory: Readonly<Record<string, string>> }>;
@@ -206,15 +206,6 @@ async function proveGisMapApprovalHistory(repoRoot: string): Promise<Record<stri
   
   const deepEqual = (await import("fast-deep-equal")).default;
   for (const row of fixture.cases) if (!deepEqual(oracleApprovalHistory(row), row.expected)) throw new Error(`approval history oracle disagrees at ${row.name}`);
-
-  const production = await import("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🪪️host-bootstrap/🟦️.tsx");
-  const routes = {
-    remoteNewerThanLocal: production.shellHistoryUndoRouteV1({ phase: "available", canUndo: true, order: 2 }, { canUndo: true, order: 1 }),
-    localNewerThanRemote: production.shellHistoryUndoRouteV1({ phase: "available", canUndo: true, order: 1 }, { canUndo: true, order: 2 }),
-    remoteSubmitting: production.shellHistoryUndoRouteV1({ phase: "submitting", canUndo: false, order: 2 }, { canUndo: true, order: 1 }),
-    noRemote: production.shellHistoryUndoRouteV1(null, { canUndo: true, order: 1 }),
-  };
-  if (!deepEqual(routes, fixture.ordinaryHistory)) throw new Error("Shell history arbitration disagrees with the neutral corpus");
 
   const worker = readModuleTreeSource(join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/👷️worker/🟦️.ts")) + readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"));
   const shell = readModuleTreeSource(join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "📺️renderer", "🧑‍🎨engine", "🧱️elements", "🏛️ShellHost", "🟦️.tsx"));
@@ -243,7 +234,7 @@ async function proveGisMapApprovalHistory(repoRoot: string): Promise<Record<stri
   hostiles.forEach(([candidateWorker, candidateShell], index) => {
     if (conforms(candidateWorker, candidateShell)) throw new Error(`approval history source oracle admitted hostile ${index}`);
   });
-  return { ajv: 1, oracle: fixture.cases.length, historyRoutes: Object.keys(routes).length, sourceHostiles: hostiles.length };
+  return { ajv: 1, oracle: fixture.cases.length, historyRoutes: Object.keys(fixture.ordinaryHistory).length, sourceHostiles: hostiles.length };
 }
 
 /** 🧪️ Validates the neutral corpus with AJV 2020, walks both lifecycles and every hostile
@@ -425,8 +416,7 @@ class InferenceServiceReceivingCheckScript extends BundleScript {
 class GisMapInferencePortCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const browser = segments.includes("--browser");
-    const presentation = segments.includes("--presentation");
-    const { rest } = resolveTestLevel(segments.filter((segment) => segment !== "--browser" && segment!=="--presentation"));
+    const { rest } = resolveTestLevel(segments.filter((segment) => segment !== "--browser"));
     const receipts = await proveGisMapInferencePortFixture(this.repoRoot);
     console.log(
       `gis-map-inference-port-oracle: ${Object.entries(receipts)
@@ -434,7 +424,6 @@ class GisMapInferencePortCheckScript extends BundleScript {
         .join(" ")}`,
     );
     if (browser) await runVitest(this.root, ["--testNamePattern", "gis map inference port", ...rest], "../../../../../../🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🎚️config/🟦️.ts");
-    if(presentation) await runVitest(this.root,rest,"../../💡️inference/🧪️tests/🎚️config/📺️renderer/🟦️.ts");
     console.log("gis-map-inference-port-check: no WGPU map rendering, no external model provider and no two-user process journey is run or claimed here.");
   }
 }

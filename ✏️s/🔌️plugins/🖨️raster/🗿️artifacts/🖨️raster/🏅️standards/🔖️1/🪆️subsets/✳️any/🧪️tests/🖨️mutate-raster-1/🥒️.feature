@@ -139,7 +139,7 @@ Feature: Apply every typed raster-document mutation twice — once in Rust, once
       | move-layer                   | applied | ↔️move-layer                     | 📍️slides   |
       | resize-layer                 | applied | 📐resize-layer                   | 📐️resizes |
       | change-layer-pixels | applied | 🎨️change-layer-pixels | 🎨️preserves |
-      | change-layer-adjustment-kind | applied | 🎚️change-layer-adjustment   | 📈️switches  |
+      | change-layer-adjustment-kind | applied | 🎚️change-layer-adjustment-kind   | 📈️switches  |
       | add-layer-asset              | noop    | 🖇️add-layer-asset                | 🖼️declines        |
       | remove-layer-asset           | refused | 🗂️remove-layer-asset             | 🖼️rejects   |
 

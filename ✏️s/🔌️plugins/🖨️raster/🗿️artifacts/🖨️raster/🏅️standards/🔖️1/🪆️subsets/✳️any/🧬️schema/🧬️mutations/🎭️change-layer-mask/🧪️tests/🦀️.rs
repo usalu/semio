@@ -1,6 +1,7 @@
 //! 🎭️ Mask events match independent JSON edits and undo exactly through both wire formats.
 use crate::RasterMutation;
 use protocol::{Mutation,MutationDiff,OpText,OpBinary};
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 
 fn fixture()->serde_json::Value {serde_json::from_str(include_str!("🔣️.json")).unwrap()}
 fn normalized(value:serde_json::Value)->serde_json::Value {

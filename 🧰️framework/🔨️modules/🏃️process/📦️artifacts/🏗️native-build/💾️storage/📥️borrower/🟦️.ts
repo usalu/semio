@@ -1,4 +1,4 @@
-import{requireArtifactDescriptorClosureV1}from"../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import{requireArtifactDescriptorClosureV1}from"../../../../../📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import{AsyncLocalStorage}from"node:async_hooks";
 import{resolve}from"node:path";
 import{requireResourceLeaseReadCustodyV1,captureResourceLeaseWriterProofV1,requireResourceLeaseWriterProofV1,resourceLeasePathV1,acceptResourceLeaseCleanupV1,requireAcceptedResourceLeaseRetainedCleanupV1,type AcceptedResourceLeaseCleanupV1,type ResourceLease,type ResourceLeaseControl}from"../../../../🔒️leases/🟦️.ts";

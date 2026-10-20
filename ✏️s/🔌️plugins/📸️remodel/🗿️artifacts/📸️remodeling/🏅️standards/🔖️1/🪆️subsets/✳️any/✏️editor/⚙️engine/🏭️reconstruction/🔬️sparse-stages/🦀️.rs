@@ -281,9 +281,6 @@ impl ReconstructionEngine {
                 }
             }
             FeaturePhase::Detect => {
-                // ⏱️ One band is about DETECTION_PIXELS_PER_STEP pixels of the level: each of the
-                // streamed passes costs a few dozen operations per pixel, FAST + suppression a
-                // few hundred per corner.
                 let rows = (DETECTION_PIXELS_PER_STEP / (image.width as usize).max(1)).max(1);
                 let detection = preparation.detection.as_mut().expect("bounded detection");
                 if detection.advance(rows) {
@@ -335,14 +332,6 @@ impl ReconstructionEngine {
                 self.match_pair_j = self.match_pair_i.saturating_add(1);
             }
         }
-        // 🔁️ Loop-closure candidates beyond the window: every frame against every `stride`-th later
-        // frame, at most ~24 per frame. A candidate that does not share a view (40°–180° apart on
-        // the orbit fixture) is dropped whole by the pair's geometric verification, so the cost of a
-        // miss is one bounded match + solve; a hit — the orbit's last views against its first — is
-        // the constraint that lets the bundle adjustment close a loop instead of accumulating a
-        // sequential chain's drift (6° over the fixture's 36 views without it). The old `(0, f)` /
-        // `(1, f)` anchors are gone: with real descriptors those pairs were noise, and every wrong
-        // match unioned two good tracks into one no triangulation could validate.
         let stride = (n.saturating_sub(window)).div_ceil(LOOP_CLOSURE_PARTNERS_PER_FRAME).max(2);
         while self.match_pair_i >= n && self.match_anchor_frame < n && work < pair_budget {
             let frame = self.match_anchor_frame;
@@ -361,9 +350,6 @@ impl ReconstructionEngine {
 
     /// 🤝️ Consumes at most `COMPARISONS_PER_STEP` Hamming comparisons across a resumable pair match.
     pub fn step_matching_features(&mut self) -> bool {
-        // ⏱️ A debug-profile unit of 2 048 comparisons measured 8.2–9.5 ms against the 8 ms ceiling
-        // (`every_bounded_unit_stays_under_the_interactive_ceiling_on_every_example`); half that
-        // leaves the headroom the law wants.
         const COMPARISONS_PER_STEP: usize = 1_024;
         if self.pair_cursor >= self.match_pairs.len() {
             return false;
@@ -503,14 +489,6 @@ impl ReconstructionEngine {
             let threshold = PAIR_VERIFICATION_THRESHOLD_PX / intrinsics.fx.max(intrinsics.fy).max(1.0);
             if verification.attempts < PAIR_VERIFICATION_STEPS {
                 if let Some(candidate) = semio_s_artifact_remodel_remodeling_sfm_geometry::editor::remodeling::engine::sfm::geometry::estimate_essential_five_point_bounded(&verification.correspondences, &intrinsics, &intrinsics, threshold, seed, PAIR_VERIFICATION_HYPOTHESES_PER_STEP, 0) {
-                    // A raw five-point fit through five integer-pixel keypoints explains only a
-                    // handful of correspondences at a pixel's tolerance, and its raw MSAC score
-                    // does not rank the true model above a wrong one reliably enough to polish only
-                    // improvements: on a marginal pair (two thirds true matches) the true draws
-                    // lost to earlier wrong ones by raw score and the pair was dropped whole. So
-                    // every unit polishes its batch's best (the unit's one costlier part) and the
-                    // comparison is between refined models, by explained correspondences; the
-                    // survivor set at the end is the refined one.
                     let polished = semio_s_artifact_remodel_remodeling_sfm_geometry::editor::remodeling::engine::sfm::geometry::polish_essential(candidate, &verification.correspondences, &intrinsics, threshold);
                     if verification.best.as_ref().is_none_or(|best| polished.inliers.len() > best.inliers.len()) {
                         verification.best = Some(polished);
@@ -547,8 +525,6 @@ impl ReconstructionEngine {
 
     /// 🧵️ Consumes at most 4,096 union/group observations or 64 finalized groups.
     pub fn step_build_tracks(&mut self) -> Option<semio_s_artifact_remodel_remodeling_sfm_geometry::editor::remodeling::engine::sfm::geometry::FeatureTracks> {
-        // ⏱️ A union is two hashed node lookups; a thousand per step keeps a debug-profile step
-        // inside the worker law with room for the host's scheduling jitter.
         const OBSERVATIONS_PER_STEP: usize = 1_024;
         const GROUPS_PER_STEP: usize = 64;
         let pairwise_matches = &self.pairwise_matches;
@@ -664,9 +640,6 @@ impl ReconstructionEngine {
         }
         let n = self.registration_order.len();
         let sfm = self.sfm.as_mut().expect("initialized SfM");
-        // 🎯️ A local adjustment in flight finishes before anything else is decided — including the
-        // camera cap below, or the last admitted camera would leave the stage half-refined with the
-        // adjustment state still armed for the global pass to pick up.
         if let Some(bundle) = self.bundle_iterations.as_mut() {
             if sfm.advance_bundle_adjustment(bundle, BUNDLE_TERMS_PER_STEP) {
                 self.bundle_iterations = None;
@@ -695,8 +668,6 @@ impl ReconstructionEngine {
         match result {
             Ok(true) => {
                 let local = registered.and_then(|_| {
-                    // 🎯️ Refine the newest cameras and their points before the next registration
-                    // draws on them; the registration is announced once the refinement settles.
                     let frames = sfm.local_bundle_frames(LOCAL_BUNDLE_WINDOW);
                     sfm.begin_bundle_adjustment(&frames, &frames[..frames.len().min(2)], sfm.robust_loss(), LOCAL_BUNDLE_ITERATIONS)
                 });
@@ -748,9 +719,6 @@ impl ReconstructionEngine {
                         Some(factor) => semio_s_artifact_remodel_remodeling_optimize::standards::v1::subsets::any::schema::optimize_internals::RobustLoss::Huber(self.params.sfm.ransac_threshold_px * factor),
                         None => sfm.robust_loss(),
                     };
-                    // 📌️ Only the first camera is held: holding the seed pair's second camera too
-                    // would pin the reconstruction to the seed's five-point baseline (a few degrees
-                    // off), and every other camera would bend to fit it. Scale is left to the damping.
                     let frames = sfm.registered_frames();
                     self.bundle_iterations = sfm.begin_bundle_adjustment(&frames, &frames[..frames.len().min(1)], loss, self.params.sfm.ba_max_iterations);
                     if self.bundle_iterations.is_none() {

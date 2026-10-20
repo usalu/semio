@@ -23,6 +23,7 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-vdi3805-diff = { workspace = true }
 semio-s-artifact-norm-vdi3805-model = { workspace = true }
 semio-s-artifact-norm-vdi3805-mutations = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
 
 [dev-dependencies]
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

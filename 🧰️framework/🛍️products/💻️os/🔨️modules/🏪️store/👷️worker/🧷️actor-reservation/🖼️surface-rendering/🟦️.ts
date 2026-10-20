@@ -1,7 +1,7 @@
 import type { ReservationSession } from "../🗃️state/🟦️.ts";
 import type { ReservationHub } from "../🧩️hub/🟦️.ts";
 import type { ActorInstanceLifetime } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
-import { type ResolvedPluginViewState, windowViewContext, panelViewContext, sectionViewContext } from "@semio-tech/framework/manifest";
+import { type ResolvedPluginViewState, windowViewContext, panelViewContext, sectionViewContext } from "@semio-tech/framework-manifest";
 import type { BrowserActorChildValue } from "@semio-tech/framework-plugin/browser-bundle/child";
 import { encodePackValue } from "../../../../../🟦️";
 import { type BrowserActorVisibleTurnV1, browserActorVisibleSurfacesV1 } from "../../🪟️visible-surfaces/🟦️.ts";

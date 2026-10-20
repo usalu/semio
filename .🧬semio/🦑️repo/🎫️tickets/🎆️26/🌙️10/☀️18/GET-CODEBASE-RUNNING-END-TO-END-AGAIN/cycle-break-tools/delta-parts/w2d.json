@@ -1,0 +1,147 @@
+{
+ "schema": "cycle-break/delta@1",
+ "stagedAt": "2026-10-20T03:02:27.208Z",
+ "manifestOps": [
+  {
+   "op": "remove",
+   "packageJson": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/framework-os",
+   "field": "exports",
+   "key": "./modules/directory/local-session/broker",
+   "value": "./🔨️modules/📇️directory/🎫️local-session/🗄️broker/🟦️.ts",
+   "wave": "w2d-broker-client",
+   "why": "the key moved with the module"
+  },
+  {
+   "op": "remove",
+   "packageJson": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/framework-os-dev",
+   "field": "exports",
+   "key": "./local-hub/session/data",
+   "value": "./🚀️local-hub/🎫️session/📋️data/🟦️.ts",
+   "wave": "w2d-broker-client",
+   "why": "the key moved with the module"
+  },
+  {
+   "op": "remove",
+   "packageJson": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/framework-os-dev",
+   "field": "exports",
+   "key": "./local-hub/session/io",
+   "value": "./🚀️local-hub/🎫️session/📥️io/🟦️.ts",
+   "wave": "w2d-broker-client",
+   "why": "the key moved with the module"
+  },
+  {
+   "op": "remove",
+   "packageJson": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/framework-os",
+   "field": "dependencies",
+   "key": "@semio-tech/framework-os-dev",
+   "value": "workspace:*",
+   "wave": "w2d-broker-client",
+   "why": "the OS core no longer imports os-dev at runtime"
+  },
+  {
+   "op": "add",
+   "packageJson": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/framework-os",
+   "field": "devDependencies",
+   "key": "@semio-tech/framework-os-dev",
+   "value": "workspace:*",
+   "wave": "w2d-broker-client",
+   "why": "renderer and directory tests drive the dev host"
+  }
+ ],
+ "newFiles": [],
+ "edits": [
+  {
+   "file": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/📇️directory/🎫️local-session/🗄️broker/🟦️.ts",
+   "from": "../../../../../../🔨️modules/📇️directory/🎫️local-session/🗄️broker/🟦️.ts",
+   "to": "../../../../../../🔨️modules/🧑‍💻dev/🚀️local-hub/🎫️session/🗄️broker/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2d-broker-client",
+   "why": "the broker client belongs to the dev server that talks to the hub"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🎫️local-session/🗄️broker/🧪️tests/🔬️contract/🟦️.ts",
+   "from": "../../🟦️.ts",
+   "to": "../../../../../🧑‍💻dev/🚀️local-hub/🎫️session/🗄️broker/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2d-broker-client",
+   "why": "the broker client belongs to the dev server that talks to the hub"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🎫️local-session/🗄️broker/🟦️.ts",
+   "from": "@semio-tech/framework-os-dev/local-hub/session/io",
+   "to": "../📥️io/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2d-broker-client",
+   "why": "same package after the move"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🎫️local-session/🗄️broker/🟦️.ts",
+   "from": "@semio-tech/framework-os-dev/local-hub/session/data",
+   "to": "../📋️data/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2d-broker-client",
+   "why": "same package after the move"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🎫️local-session/🗄️broker/🟦️.ts",
+   "from": "./🧬️schema/🟦️.ts",
+   "to": "@semio-tech/framework-os/modules/directory/local-session/broker/schema",
+   "mode": "specifier",
+   "wave": "w2d-broker-client",
+   "why": "the protocol schema stays with the OS core"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🎫️local-session/🗄️broker/🟦️.ts",
+   "from": "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "to": "@semio-tech/process/routing",
+   "mode": "specifier",
+   "wave": "w2d-broker-client",
+   "why": "bare key of the process package"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚀️local-hub/🎫️session/🟦️.ts",
+   "from": "@semio-tech/framework-os/modules/directory/local-session/broker",
+   "to": "./🗄️broker/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2d-broker-client",
+   "why": "the client is a module of the dev session now"
+  }
+ ],
+ "fileOps": [
+  {
+   "op": "move",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🎫️local-session/🗄️broker/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚀️local-hub/🎫️session/🗄️broker/🟦️.ts",
+   "sha256": "b0433eae2efa14e15598ad41c40f72064f51c15c842b8e9bad89de73a7c79a8a",
+   "wave": "w2d-broker-client",
+   "why": "the broker client belongs to the dev server that talks to the hub"
+  },
+  {
+   "op": "delete",
+   "path": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/📇️directory/🎫️local-session/🗄️broker/🟦️.ts",
+   "sha256": "07e2edcf5a1aece60b6183923b18443b456c97982356a48a0c2156f55e75c831",
+   "wave": "w2d-broker-client",
+   "why": "dead glue"
+  },
+  {
+   "op": "delete",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🚀️local-hub/🎫️session/📋️data/🟦️.ts",
+   "sha256": "86d2516588d7b254405d9bd8f32c8749de2a7814f744f3d4ad71f13cdfee52b2",
+   "wave": "w2d-broker-client",
+   "why": "dead glue"
+  },
+  {
+   "op": "delete",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🚀️local-hub/🎫️session/📥️io/🟦️.ts",
+   "sha256": "d4fa736efbe60e4aaa50d19b624e0b0ae0e55b0980eedcc9cf70595ce04a930f",
+   "wave": "w2d-broker-client",
+   "why": "dead glue"
+  }
+ ],
+ "flags": []
+}

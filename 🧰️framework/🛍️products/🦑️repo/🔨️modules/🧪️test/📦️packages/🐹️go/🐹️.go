@@ -29,13 +29,13 @@ type TestInput struct {
 	Digest string `json:"digest"`
 }
 
-// Step is one Given/When/Then step of a planned scenario.
+// 🪜️Step is one Given/When/Then step of a planned scenario.
 type Step struct {
 	Keyword string `json:"keyword"`
 	Text    string `json:"text"`
 }
 
-// Scenario is one planned scenario, already expanded and level-filtered by the coordinator.
+// 🎬️Scenario is one planned scenario, already expanded and level-filtered by the coordinator.
 type Scenario struct {
 	ID        string `json:"id"`
 	Name      string `json:"name"`
@@ -46,7 +46,7 @@ type Scenario struct {
 	OutlineOf string `json:"outlineOf"`
 }
 
-// SubsetTarget is the smallest owning subset a case is scoped to. A case with no target is
+// 🏠️SubsetTarget is the smallest owning subset a case is scoped to. A case with no target is
 // UNSCOPED, and Protocol v2 reports that rather than letting a host widen itself to the artifact.
 type SubsetTarget struct {
 	Artifact string `json:"artifact"`
@@ -54,7 +54,7 @@ type SubsetTarget struct {
 	Subset   string `json:"subset"`
 }
 
-// Plan is the owned execution plan one host receives.
+// 🗓️Plan is the owned execution plan one host receives.
 type Plan struct {
 	SchemaVersion         int           `json:"schemaVersion"`
 	BaselineSha           string        `json:"baselineSha"`
@@ -79,14 +79,14 @@ type Plan struct {
 	Scenarios             []Scenario    `json:"scenarios"`
 }
 
-// Diagnostic is one message attached to a result.
+// 🩺️Diagnostic is one message attached to a result.
 type Diagnostic struct {
 	Severity string `json:"severity"`
 	Message  string `json:"message"`
 	Detail   string `json:"detail,omitempty"`
 }
 
-// Output is the artifact half of a result: hashes, cache-relative paths, and the projection.
+// 🎲️Output is the artifact half of a result: hashes, cache-relative paths, and the projection.
 type Output struct {
 	RawHash        string `json:"rawHash"`
 	ProjectionHash string `json:"projectionHash"`
@@ -95,7 +95,7 @@ type Output struct {
 	Projection     any    `json:"projection"`
 }
 
-// ResultArtifact is one file a host produced, addressed by ROLE so no comparison stage names a path.
+// 📄️ResultArtifact is one file a host produced, addressed by ROLE so no comparison stage names a path.
 type ResultArtifact struct {
 	Role      string `json:"role"`
 	Path      string `json:"path"`
@@ -104,7 +104,7 @@ type ResultArtifact struct {
 	Bytes     int64  `json:"bytes"`
 }
 
-// ProductionDispatch is proof a SUBJECT handler reached production dispatch. Its ABSENCE is how a
+// 📱️ProductionDispatch is proof a SUBJECT handler reached production dispatch. Its ABSENCE is how a
 // vector-replay adapter is detected — a replayed expectation and a computed one are otherwise
 // indistinguishable on the wire.
 type ProductionDispatch struct {
@@ -113,7 +113,7 @@ type ProductionDispatch struct {
 	BridgeVersion int    `json:"bridgeVersion"`
 }
 
-// Result is the single record shape every native host emits, one per (scenario, implementation, role).
+// ☝️Result is the single record shape every native host emits, one per (scenario, implementation, role).
 type Result struct {
 	SchemaVersion      int                 `json:"schemaVersion"`
 	TestID             string              `json:"testId"`
@@ -139,13 +139,13 @@ type Result struct {
 
 //#region 🔖️Digest
 
-// Digest is the coordinator's content digest: sha256, hex, truncated to 32 characters.
+// 🎰️Digest is the coordinator's content digest: sha256, hex, truncated to 32 characters.
 func Digest(input []byte) string {
 	sum := sha256.Sum256(input)
 	return hex.EncodeToString(sum[:])[:32]
 }
 
-// ContentDigest is the FULL "sha256:<64 hex>" content address of a produced file. Protocol v2
+// 📦️ContentDigest is the FULL "sha256:<64 hex>" content address of a produced file. Protocol v2
 // addresses fixture blobs and result artifacts by content, and a truncated digest is not a content
 // address — the store's whole safety argument is that a blob's name IS its content.
 func ContentDigest(path string) (string, int64, error) {
@@ -161,7 +161,7 @@ func ContentDigest(path string) (string, int64, error) {
 
 //#region 🔖️Adapter
 
-// Context is everything one scenario handler is given.
+// 📋️Context is everything one scenario handler is given.
 type Context struct {
 	Plan        *Plan
 	Scenario    *Scenario
@@ -171,7 +171,7 @@ type Context struct {
 	ArtifactDir string
 }
 
-// Artifact is the absolute path this handler writes one named result artifact to — <ArtifactDir>/<scenario id>/<role>/<filename>,
+// 📍️Artifact is the absolute path this handler writes one named result artifact to — <ArtifactDir>/<scenario id>/<role>/<filename>,
 // so a scenario's artifacts never overwrite another's — creating parents.
 func (c *Context) Artifact(role string, filename string) (string, error) {
 	dir := filepath.Join(c.ArtifactDir, c.Scenario.ID, role)
@@ -181,7 +181,7 @@ func (c *Context) Artifact(role string, filename string) (string, error) {
 	return filepath.Join(dir, filename), nil
 }
 
-// Target is the smallest owning subset this case is scoped to; a handler must not invent one.
+// 🔒️Target is the smallest owning subset this case is scoped to; a handler must not invent one.
 func (c *Context) Target() (*SubsetTarget, error) {
 	if c.Plan.Target == nil {
 		return nil, fmt.Errorf("case %s declares no subset target — Protocol v2 scopes every mutation case to its smallest owning subset", c.Plan.Case)
@@ -189,7 +189,7 @@ func (c *Context) Target() (*SubsetTarget, error) {
 	return c.Plan.Target, nil
 }
 
-// Fixture resolves a declared fixture URI to an absolute path; an undeclared URI is an error.
+// ✅️Fixture resolves a declared fixture URI to an absolute path; an undeclared URI is an error.
 func (c *Context) Input(uri string) (string, error) {
 	for _, fixture := range c.Plan.Inputs {
 		if fixture.URI == uri {
@@ -199,7 +199,7 @@ func (c *Context) Input(uri string) (string, error) {
 	return "", fmt.Errorf("fixture %s is not part of this plan — declare it in the feature file", uri)
 }
 
-// InputBytes reads a declared fixture.
+// 💾️InputBytes reads a declared fixture.
 func (c *Context) InputBytes(uri string) ([]byte, error) {
 	path, err := c.Input(uri)
 	if err != nil {
@@ -208,7 +208,7 @@ func (c *Context) InputBytes(uri string) ([]byte, error) {
 	return os.ReadFile(path)
 }
 
-// CopyInput copies an immutable fixture into the work directory and returns the mutable copy.
+// 🐑️CopyInput copies an immutable fixture into the work directory and returns the mutable copy.
 func (c *Context) CopyInput(uri string, as string) (string, error) {
 	bytes, err := c.InputBytes(uri)
 	if err != nil {
@@ -225,13 +225,13 @@ func (c *Context) CopyInput(uri string, as string) (string, error) {
 	return target, os.WriteFile(target, bytes, 0o644)
 }
 
-// Seed is the scenario's deterministic seed.
+// 🌱️Seed is the scenario's deterministic seed.
 func (c *Context) Seed() int64 {
 	value, _ := strconv.ParseInt(c.Scenario.Seed, 10, 64)
 	return value
 }
 
-// Row is the Examples row id this scenario expands, or an error for a plain scenario.
+// 🧾️Row is the Examples row id this scenario expands, or an error for a plain scenario.
 func (c *Context) Row() (string, error) {
 	prefix := c.Scenario.OutlineOf + "-"
 	if c.Scenario.OutlineOf == "" || !strings.HasPrefix(c.Scenario.ID, prefix) {
@@ -240,7 +240,7 @@ func (c *Context) Row() (string, error) {
 	return strings.TrimPrefix(c.Scenario.ID, prefix), nil
 }
 
-// Outcome is what a scenario handler returns: an artifact BUNDLE plus the compared projection.
+// 📬️Outcome is what a scenario handler returns: an artifact BUNDLE plus the compared projection.
 type Outcome struct {
 	Raw                []byte
 	Projection         any
@@ -249,46 +249,46 @@ type Outcome struct {
 	Diagnostics        []Diagnostic
 }
 
-// Artifact adds one produced file to the bundle under its role.
+// ➕️Artifact adds one produced file to the bundle under its role.
 func (o Outcome) Artifact(role string, path string, mediaType string) Outcome {
 	o.Artifacts = append(o.Artifacts, ResultArtifact{Role: role, Path: path, MediaType: mediaType})
 	return o
 }
 
-// Dispatched records that this outcome came out of PRODUCTION dispatch, not a committed vector.
+// 📡️Dispatched records that this outcome came out of PRODUCTION dispatch, not a committed vector.
 func (o Outcome) Dispatched(operation string, bridgeVersion int) Outcome {
 	o.ProductionDispatch = &ProductionDispatch{Invoked: true, Operation: operation, BridgeVersion: bridgeVersion}
 	return o
 }
 
-// Handler runs one scenario in one role.
+// 🪝️Handler runs one scenario in one role.
 type Handler func(ctx *Context) (Outcome, error)
 
-// Adapter is one implementation's registration for a case.
+// 🌉️Adapter is one implementation's registration for a case.
 type Adapter struct {
 	Implementation string
 	handlers       map[string]Handler
 }
 
-// NewAdapter starts a registration for the given implementation id.
+// 🔌️NewAdapter starts a registration for the given implementation id.
 func NewAdapter(implementation string) *Adapter {
 	return &Adapter{Implementation: implementation, handlers: map[string]Handler{}}
 }
 
-// Oracle registers the reference-implementation handler for one scenario id, or for a Scenario
+// 🔬️Oracle registers the reference-implementation handler for one scenario id, or for a Scenario
 // Outline's base id (`@id-<base>`), which then serves every row the feature expands.
 func (a *Adapter) Oracle(scenario string, handler Handler) *Adapter {
 	a.handlers[scenario+"::oracle"] = handler
 	return a
 }
 
-// Subject registers this repository's handler for one scenario id, or for a Scenario Outline's base id.
+// 🗃️Subject registers this repository's handler for one scenario id, or for a Scenario Outline's base id.
 func (a *Adapter) Subject(scenario string, handler Handler) *Adapter {
 	a.handlers[scenario+"::subject"] = handler
 	return a
 }
 
-// handler is the one registered for the scenario's own id, else for its outline's base id.
+// ⚙️handler is the one registered for the scenario's own id, else for its outline's base id.
 func (a *Adapter) handler(scenario *Scenario, role string) (Handler, bool) {
 	if exact, registered := a.handlers[scenario.ID+"::"+role]; registered {
 		return exact, true
@@ -338,7 +338,7 @@ func repoRootFrom(start string) (string, error) {
     return "", fmt.Errorf("workspace root with paired build and package markers was not found")
 }
 
-// RunMain is the Go host entry: load the plan, execute every planned scenario, emit JSONL.
+// 🏃️RunMain is the Go host entry: load the plan, execute every planned scenario, emit JSONL.
 // A missing registration and an error are both results — never a silent skip.
 func RunMain(adapter *Adapter) {
 	argv := os.Args[1:]

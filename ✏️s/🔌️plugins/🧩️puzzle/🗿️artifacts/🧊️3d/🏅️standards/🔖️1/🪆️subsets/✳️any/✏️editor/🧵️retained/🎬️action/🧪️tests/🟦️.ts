@@ -2,7 +2,7 @@
 import { expect, test } from "bun:test";
 import { create, all } from "mathjs";
 import fixture from "./🧫️fixtures/🔣️.json";
-import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { readModuleTreeSource } from "@semio-tech/framework/compiler/syntax/module-tree";
 const math = create(all, {});
 test("Puzzle3D borrowed focus preserves independent Set membership", async () => {
   for (const row of fixture.selectionCases) {

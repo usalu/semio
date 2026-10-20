@@ -11,7 +11,7 @@ import ts from "typescript";
 import {readRepositoryCargoLaunchV1,withRepositoryCargoIsolatedStoreV1,REPOSITORY_CARGO_LAUNCH_POLICY_V1} from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🔣️.json" with {type:"json"};
-import {receiveScriptProcessInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
 import {openNativeImageStorageV1,retireNativeImageStorageV1} from "@semio-tech/process/artifacts/native-build/storage/image";
 import {acquireNativeStorageV1,nativeStorageRetirementPortV1} from "@semio-tech/process/artifacts/native-build/storage";
@@ -35,15 +35,15 @@ test("repository Cargo launch arguments agree with commander, Ajv and an indepen
 });
 
 test("cache TestScript admits every branch through one original diagnostics callback",()=>{
- const text=readFileSync(new URL("../../../../⚡️caching/📜️script.ts",import.meta.url),"utf8"),source=ts.createSourceFile("script.ts",text,ts.ScriptTarget.Latest,true),owner=source.statements.find(node=>ts.isClassDeclaration(node)&&node.name?.text==="TestScript") as ts.ClassDeclaration|undefined;expect(owner).toBeDefined();
+ const text=readFileSync(new URL("../../../../⚡️caching/🧪️tests/🔬️script-commands/🟦️.ts",import.meta.url),"utf8"),source=ts.createSourceFile("script.ts",text,ts.ScriptTarget.Latest,true),owner=source.statements.find(node=>ts.isClassDeclaration(node)&&node.name?.text==="TestScript") as ts.ClassDeclaration|undefined;expect(owner).toBeDefined();
  const run=owner!.members.find(node=>ts.isMethodDeclaration(node)&&node.name.getText(source)==="run") as ts.MethodDeclaration|undefined,calls:string[]=[];const visit=(node:ts.Node):void=>{if(ts.isCallExpression(node))calls.push(node.expression.getText(source));ts.forEachChild(node,visit);};if(run)visit(run);expect(calls.includes("withRepositoryTestArtifactsV1")).toBe(fixture.diagnostics.allCacheTestBranches);expect(calls.includes("this.runTests")).toBe(true);expect(owner!.getText(source)).not.toContain("repoCacheDirectory(");expect(!owner!.getText(source).includes("runCmd(")).toBe(fixture.diagnostics.asyncChildren);const imports=source.statements.filter(ts.isImportDeclaration).map(node=>(node.moduleSpecifier as ts.StringLiteral).text);expect(!imports.includes("../📦️packages/🟦️typescript/🟦️.ts")).toBe(fixture.diagnostics.specificHelpers);
  const database=new Database(":memory:");try{expect((database.query("SELECT ? = 'diagnostics' AND ? = 1 AS admitted").get(fixture.diagnostics.partition,Number(fixture.diagnostics.allCacheTestBranches)) as {admitted:number}).admitted).toBe(1);}finally{database.close();}
 });
 
 test("isolated Cargo stores are removed on every owner settlement and swept only after their kernel claim is released",async()=>{
- await receiveScriptProcessInvocation(process.env,original=>withRepositoryTestArtifactsV1(process.cwd(),original,artifactEntryControlV1(original,"test:artifact-entry",0),async artifactPhase=>{const artifacts=repositoryTestArtifactRootV1(process.cwd());const bounded=join(process.cwd(),fixture.diagnostics.directory),selected=relative(bounded,artifacts);expect(!isAbsolute(selected)&&selected!==".."&&!selected.startsWith("..\\")&&!selected.startsWith("../")).toBe(true);expect(lstatSync(artifacts).dev===lstatSync(bounded).dev).toBe(fixture.diagnostics.sameFilesystem);
+ await withBuildTestInvocationV1(original=>withRepositoryTestArtifactsV1(process.cwd(),original,artifactEntryControlV1(original,"test:artifact-entry",0),async artifactPhase=>{const artifacts=repositoryTestArtifactRootV1(process.cwd());const bounded=join(process.cwd(),fixture.diagnostics.directory),selected=relative(bounded,artifacts);expect(!isAbsolute(selected)&&selected!==".."&&!selected.startsWith("..\\")&&!selected.startsWith("../")).toBe(true);expect(lstatSync(artifacts).dev===lstatSync(bounded).dev).toBe(fixture.diagnostics.sameFilesystem);
  const parent=mkdtempSync(join(artifacts,"cl-")),directory=join(parent,"v"),leaseDirectory=join(process.cwd(),".cache/b/l/m/data");
- await receiveScriptProcessInvocation(process.env,async original=>{
+ await withBuildTestInvocationV1(async original=>{
   const control=scriptCompilerAdmissionControlV1(original,"repo:cargo:isolated-law",60000),options={directory,leaseDirectory,filesystemBytes:33554432,maximumPhysicalBytes:34603008,control};const image=await openNativeImageStorageV1(options),policy={version:1 as const,root:image.root,leaseDirectory,capacityBytes:34603008,maximumWorkspaceBytes:8388608,maximumArtifactBytes:8388608};
   const storage=await acquireNativeStorageV1({policy,control,port:nativeStorageRetirementPortV1(image.port,async()=>{}),owner:"repo:cargo:isolated-law",kind:"compiler-workspace",bytes:8388608}),base=join(image.root,"cargo","prototype"),isolated=join(base,REPOSITORY_CARGO_LAUNCH_POLICY_V1.isolatedDirectory);
   const db=new Database(":memory:");db.exec("CREATE TABLE expected(name TEXT PRIMARY KEY, removed_after_owner INTEGER NOT NULL, removed_by_sweep INTEGER NOT NULL)");

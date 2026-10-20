@@ -21,6 +21,47 @@ macro_rules! dashboard_labels {
 dashboard_labels! {
     nav_brand: "semio", "semio";
     nav_mode: "dashboard", "Übersicht";
+    source_read_only: "read only", "schreibgeschützt";
+    action_inspect_recovery: "inspect retained version", "aufbewahrte Version prüfen";
+    title_files: "Workspace Files", "Arbeitsbereich-Dateien";
+    source_listing: "listing", "auflisten";
+    source_reading: "reading", "lesen";
+    source_staging: "preparing save", "Speichern vorbereiten";
+    source_checking: "checking current version", "aktuelle Version prüfen";
+    source_publishing: "saving", "speichern";
+    source_complete: "complete", "abgeschlossen";
+    source_worker_failed: "File worker ended unexpectedly; buffer retained", "Dateiarbeiter wurde unerwartet beendet; Puffer bleibt erhalten";
+    source_busy: "File operation is settling; latest request queued", "Dateivorgang wird beendet; letzte Anfrage wartet";
+    source_path_error: "An owned relative file path is required", "Ein zugehöriger relativer Dateipfad ist erforderlich";
+    source_boundary_error: "The path crosses the workspace or a symbolic link", "Der Pfad überschreitet den Arbeitsbereich oder einen symbolischen Link";
+    source_not_file: "The selected path is not a regular file", "Der gewählte Pfad ist keine reguläre Datei";
+    source_too_large: "The file exceeds the editable byte limit", "Die Datei überschreitet das bearbeitbare Bytelimit";
+    source_too_many: "The directory exceeds the entry limit", "Das Verzeichnis überschreitet das Eintragslimit";
+    source_not_text: "The file is not supported UTF8 text", "Die Datei ist kein unterstützter UTF8-Text";
+    source_partial_publication: "Save could not settle. Retained bytes are available at {path}; local buffer is retained. Inspect the retained version before continuing.", "Speichern konnte nicht abgeschlossen werden. Aufbewahrte Bytes liegen unter {path}; der lokale Puffer bleibt erhalten. Vor dem Fortfahren die aufbewahrte Version prüfen.";
+    source_publication_race: "Save raced with another writer; your version was published and the predecessor is retained at {path}. Buffer retained.", "Speichern kollidierte mit anderem Schreiber; Ihre Version wurde veröffentlicht und die Vorgängerversion liegt unter {path}. Puffer bleibt erhalten.";
+    source_conflict: "File changed elsewhere; buffer retained. Reload after saving your changes elsewhere or explicitly discard.", "Datei wurde andernorts geändert; Puffer bleibt erhalten. Änderungen anderweitig sichern oder ausdrücklich verwerfen und neu laden.";
+    source_locked: "Another writer owns the file; try again after it finishes", "Ein anderer Schreiber besitzt die Datei; nach dessen Ende erneut versuchen";
+    source_io_error: "Filesystem access failed", "Dateisystemzugriff fehlgeschlagen";
+    source_unsupported: "Safe file publication is unavailable on this filesystem", "Sichere Dateiveröffentlichung ist auf diesem Dateisystem nicht verfügbar";
+    source_starting: "File operation starting; {cancel} cancels", "Dateivorgang startet; {cancel} bricht ab";
+    source_history_full: "Document history reached its safe storage limit; file and local buffer are retained", "Der Dokumentverlauf hat sein sicheres Speicherlimit erreicht; Datei und lokaler Puffer bleiben erhalten";
+    source_loading: "File operation: {stage} {completed}/{total} · {cancel} cancels", "Dateivorgang: {stage} {completed}/{total} · {cancel} bricht ab";
+    source_failed: "File operation failed: {problem}", "Dateivorgang fehlgeschlagen: {problem}";
+    source_dirty: "unsaved", "ungespeichert";
+    source_saved: "saved", "gespeichert";
+    source_cancelled: "File cancellation requested; buffer retained", "Dateiabbruch angefordert; Puffer bleibt erhalten";
+    source_confirm_discard: "Unsaved changes retained. Save with {save}, or press {discard} again to discard.", "Ungespeicherte Änderungen bleiben erhalten. Mit {save} speichern oder zum Verwerfen erneut {discard} drücken.";
+    source_reloaded: "File loaded", "Datei geladen";
+    source_empty: "No matching files", "Keine passenden Dateien";
+    source_filter: "Filter", "Filter";
+    source_position: "line {line} · column {column}", "Zeile {line} · Spalte {column}";
+    source_limit: "Document byte limit reached; edit refused", "Dokument-Bytelimit erreicht; Bearbeitung abgelehnt";
+    action_show_files: "browse workspace files", "Arbeitsbereich-Dateien durchsuchen";
+    action_save_document: "save document", "Dokument speichern";
+    action_reload_document: "reload document", "Dokument neu laden";
+    action_discard_document: "discard document changes", "Dokumentänderungen verwerfen";
+    action_cancel_source: "cancel file operation", "Dateivorgang abbrechen";
     title_tasks: "Tasks", "Aufgaben";
     title_commands: "Commands", "Befehle";
     title_settings: "Settings", "Einstellungen";
@@ -248,6 +289,8 @@ impl DashboardLabels {
     /// 🔎️ What an action does, or `None` for an id this catalogue has no text for.
     pub fn try_action(&self, id: &str) -> Option<&'static str> {
         let text = match id {
+            "inspect-recovery" => self.action_inspect_recovery,
+            "show-files" => self.action_show_files, "save-document" => self.action_save_document, "reload-document" => self.action_reload_document, "discard-document" => self.action_discard_document, "cancel-source" => self.action_cancel_source,
             "new-task" => self.action_new_task, "show-tasks" => self.action_show_tasks, "show-settings" => self.action_show_settings, "show-help" => self.action_show_help,
             "show-hidden-tasks" => self.action_show_hidden_tasks, "refresh-commands" => self.action_refresh_commands, "cancel-discovery" => self.action_cancel_discovery,
             "search-output" => self.action_search_output, "restart-task" => self.action_restart_task, "stop-task" => self.action_stop_task, "kill-task" => self.action_kill_task, "copy-selection" => self.action_copy_selection,

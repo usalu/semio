@@ -226,7 +226,7 @@ impl ArtifactEditor for RemodelingPlayApp {
                 let asset = ImageAsset { mime: "image/png".into(), data: json.clone(), width, height };
                 let mut mutations = vec![semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_asset::create_asset(asset_key.clone(), asset)];
                 match scene.streams.iter().any(|stream| stream.id == stream_id) {
-                    true => mutations.push(semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::add_stream_frame::add_stream_frame(stream_id.to_string(), FrameRef { index: frame_index, timestamp_ms: f64::from(frame_index) * 1000.0 / 30.0, asset_id: asset_key }, MediaKind::ImageSequence)),
+                    true => mutations.push(semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::add_stream_frame(stream_id.to_string(), FrameRef { index: frame_index, timestamp_ms: f64::from(frame_index) * 1000.0 / 30.0, asset_id: asset_key }, MediaKind::ImageSequence)),
                     false => mutations.push(semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_stream::create_stream(MediaStream {
                         id: stream_id.to_string(),
                         name: "Workflow Photos".into(),

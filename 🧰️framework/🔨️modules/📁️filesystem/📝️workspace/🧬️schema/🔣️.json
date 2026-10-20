@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Source Workspace Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "policy",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "policy": {
+      "const": {
+        "maximumFileBytes": 1048576,
+        "maximumDirectoryEntries": 4096,
+        "maximumPathUnits": 256,
+        "maximumJournalBytes": 67108864,
+        "existingFilesOnly": true,
+        "encoding": "utf-8",
+        "stateDirectory": ".workspace-events",
+        "publication": "preserved-predecessor",
+        "cancellation": "before-publication"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "path",
+          "text",
+          "valid"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "valid": {
+            "type": "boolean"
+          },
+          "code": {
+            "enum": [
+              "invalid-path",
+              "not-text",
+              "too-large"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

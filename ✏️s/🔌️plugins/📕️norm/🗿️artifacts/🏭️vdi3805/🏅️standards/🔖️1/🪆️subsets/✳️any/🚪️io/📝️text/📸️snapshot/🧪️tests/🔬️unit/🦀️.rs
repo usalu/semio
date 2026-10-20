@@ -18,14 +18,14 @@ async fn regenerate_example_dsl_assets_when_env_set() {
         return;
     }
     use crate::snapshot::encode_vdi3805_dsl;
-    use crate::{conforming_valve_dataset, nonconforming_valve_dataset};
+    use semio_s_artifact_norm_vdi3805_model::{conforming_valve_dataset, nonconforming_valve_dataset};
     let root = manifest_dir!();
     let assets = root.join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets");
     let demo = assets.join("🎬️demo/🗣️.dsl.semio");
     let non = assets.join("🌶️nonconforming/🗣️.dsl.semio");
     std::fs::write(&demo, encode_vdi3805_dsl(&conforming_valve_dataset())).expect("write demo dsl");
     std::fs::write(&non, encode_vdi3805_dsl(&nonconforming_valve_dataset())).expect("write nonconforming dsl");
-    use crate::{conforming_blatt_dataset, nonconforming_blatt_dataset, ASSESSED_BLATT_SHEETS};
+    use semio_s_artifact_norm_vdi3805_model::{conforming_blatt_dataset, nonconforming_blatt_dataset, ASSESSED_BLATT_SHEETS};
     for sheet in ASSESSED_BLATT_SHEETS {
         if *sheet == 2 {
             continue;
@@ -44,7 +44,9 @@ async fn regenerate_mutation_fixtures_when_env_set() {
     if std::env::var_os("SEMIO_VDI_REGEN_FIXTURES").is_none() {
         return;
     }
-    use crate::{Vdi3805Diff, Vdi3805Mutation, Vdi3805Snapshot};
+    use semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff;
+    use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
+    use semio_s_artifact_norm_vdi3805_mutations::Vdi3805Mutation;
     use protocol::Mutation;
     let root = manifest_dir!();
     let fixtures = root.join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations");

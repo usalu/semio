@@ -1,5 +1,5 @@
 /** 📺️ CAD renderer REPL: the host-controlled chrome state, the projection and gumball preview state, the refs, the derived pick targets and the scene and selection toggles of the REPL view. */
-import { reactHostPort, type ThreeCamera } from "@semio-tech/framework/ui/targets/react";
+import { reactHostPort, type ThreeCamera } from "@semio-tech/ui-react";
 import { worldProjectionFamily, type WorldProjectionSpec } from "../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/♾️infinite/🌍️world/🎨️r3f/🟦️.ts";
 import { defaultModelDefinitionId, listModelDefinitionManifests } from "@semio-tech/s-spatial-kernel-ts/geometry/definition-catalog";
 import { listTransformationsFromModelDefinition, listTransformationsIntoModelDefinition } from "@semio-tech/s-spatial-kernel-ts/geometry/transformation-spec";

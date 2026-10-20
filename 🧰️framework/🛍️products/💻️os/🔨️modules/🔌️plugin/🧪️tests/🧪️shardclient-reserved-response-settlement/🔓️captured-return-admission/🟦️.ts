@@ -1,13 +1,14 @@
 /** 🔓️ The captured return admission, response admission and construction tests. */
 import { loadInstanceOutputAdmissionFixture, loadActivationReturnRetirementFixture, loadActivationReturnAdmissionFixture, loadActivationReturnAdmissionContract, loadInstanceOutputAdmissionContract, loadInstanceOutputFaultFixture, loadActorActivationReturnFixture } from "@semio-tech/framework-actor/testing/fixtures";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { OwnedKernelReturnContent } from "@semio-tech/framework-kernel/return/content/input";
 import { shardClientInternals } from "../🧰️settlement-test-kit/🟦️.ts";
 import type { OwnedResidentLedger, OwnedResidentRecord, OwnedShardReturn, ShardClientSettlementTestKit, ShardInstanceOwner, ShardReturnAdmission } from "../🧰️settlement-test-kit/🟦️.ts";
 import type { CapturedReturnHelpers } from "../🛠️captured-return-helpers/🟦️.ts";
 
 /** 🗝 Registers the unused return retirement, return admission, response admission and return construction tests. */
 export function registerCapturedReturnAdmissionTests(kit: ShardClientSettlementTestKit, helpers: CapturedReturnHelpers): void {
-  const { BUDGET, NO_RESIDENT_FAULT, OwnedKernelReturnContent, OwnedResidentLedger, OwnedShardReturn, capturedReturnState, expect, it, testSource, vi } = kit;
+  const { BUDGET, NO_RESIDENT_FAULT, OwnedResidentLedger, OwnedShardReturn, capturedReturnState, expect, it, testSource, vi } = kit;
   const { captured, deliveredInput, fixtureCapturedReturn, fixtureResponse } = helpers;
   it("CapturedUnusedReturnRetirement releases each original admission prefix without posting or retaining stale authority", async () => {
     const fixture = await loadActivationReturnRetirementFixture();

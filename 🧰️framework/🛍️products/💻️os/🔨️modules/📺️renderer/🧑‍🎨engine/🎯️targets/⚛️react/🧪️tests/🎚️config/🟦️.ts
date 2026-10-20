@@ -277,6 +277,7 @@ export default defineConfig({
       { find: exactPackage("@semio-tech/framework-os"), replacement: resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts") },
       { find: packageTree("@semio-tech/framework-os-node-graph-rs"), replacement: wasmEngineStub },
       { find: packageTree("@semio-tech/framework-surface-rs"), replacement: wasmEngineStub },
+      { find: exactPackage("@semio-tech/framework-editor-rs/testing/fixtures"), replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/✍️editor/🧪️tests/🧫️fixtures/🟦️.ts") },
       { find: packageTree("@semio-tech/framework-editor-rs"), replacement: wasmEngineStub },
       { find: exactPackage("@semio-tech/framework"), replacement: resolve(repoRoot, "./🧰️framework/📦️packages/🟦️typescript/🟦️.ts") },
       { find: exactPackage("@semio-tech/canvas-react-renderer"), replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/🟦️.tsx") },

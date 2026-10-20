@@ -16,12 +16,12 @@ pub trait ArtifactCanonicalJsonTree: Sync + 'static {
     fn canonical_tree_key(&self, _ordinal: usize) -> Result<ArtifactCanonicalJsonText<'_>, ValueError> { Err(refusal("canonical tree node has no key")) }
 }
 
-impl<T: ArtifactCanonicalJsonTree + Send> ArtifactCanonicalJsonTree for semio_framework_value::retirement::shared::sealed::SealedShared<T> {
+impl<T: ArtifactCanonicalJsonTree + Send> ArtifactCanonicalJsonTree for semio_framework_value::shared_issuance::SealedShared<T> {
  fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{self.get().canonical_tree_node()}
  fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{self.get().canonical_tree_child(ordinal)}
  fn canonical_tree_key(&self,ordinal:usize)->Result<ArtifactCanonicalJsonText<'_>,ValueError>{self.get().canonical_tree_key(ordinal)}
 }
-impl<T: ArtifactCanonicalJsonTree + Send> ArtifactCanonicalJsonTree for semio_framework_value_persistent::list::persistent::PersistentList<T> {
+impl<T: ArtifactCanonicalJsonTree + semio_framework_value::retirement::RetireOwned + Send> ArtifactCanonicalJsonTree for semio_framework_value_persistent::list::persistent::PersistentList<T> {
  fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{Ok(Node::Array(self.len()))}
  fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{self.get(ordinal).map(|row|row as&dyn ArtifactCanonicalJsonTree).ok_or_else(||refusal("canonical immutable row ordinal is absent"))}
 }

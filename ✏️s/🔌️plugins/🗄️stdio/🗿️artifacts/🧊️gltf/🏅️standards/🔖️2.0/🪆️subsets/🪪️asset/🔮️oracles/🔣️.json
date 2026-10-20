@@ -11,8 +11,8 @@
       "vectors": [
         {
           "mutationId": "change-asset-descriptive-metadata",
-          "sourceMutationDirectoryName": "📝️change",
-          "mutationDirectoryName": "📝️change",
+          "sourceMutationDirectoryName": "📝️change-description",
+          "mutationDirectoryName": "📝️change-description",
           "scenarios": [
             {
               "id": "restamps-generator-copyright-and-min-version",
@@ -22,8 +22,8 @@
         },
         {
           "mutationId": "change-asset-extension-data",
-          "sourceMutationDirectoryName": "🧩️change",
-          "mutationDirectoryName": "🧩️change",
+          "sourceMutationDirectoryName": "🧩️change-extensions",
+          "mutationDirectoryName": "🧩️change-extensions",
           "scenarios": [
             {
               "id": "attaches-an-xmp-extension-object-to-the-asset-block",
@@ -55,8 +55,8 @@
         },
         {
           "mutationId": "change-document-extension-data",
-          "sourceMutationDirectoryName": "🧩️change",
-          "mutationDirectoryName": "🧩️change",
+          "sourceMutationDirectoryName": "🧩️change-extensions",
+          "mutationDirectoryName": "🧩️change-extensions",
           "scenarios": [
             {
               "id": "attaches-punctual-lights-extension-to-document-root",
@@ -66,8 +66,8 @@
         },
         {
           "mutationId": "change-document-extra-data",
-          "sourceMutationDirectoryName": "📝️change",
-          "mutationDirectoryName": "📝️change",
+          "sourceMutationDirectoryName": "📝️change-extras",
+          "mutationDirectoryName": "📝️change-extras",
           "scenarios": [
             {
               "id": "attaches-an-exporter-extras-object-to-the-document-root",
@@ -149,6 +149,10 @@
             {
               "id": "relaxes-the-unlit-requirement-while-keeping-the-declaration",
               "directoryName": "🔬️t042"
+            },
+            {
+              "id": "middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -160,6 +164,10 @@
             {
               "id": "withdraws-the-unlit-declaration-that-nothing-requires",
               "directoryName": "🔬️t057"
+            },
+            {
+              "id": "middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         }

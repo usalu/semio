@@ -14,8 +14,8 @@ import { useEffect, useState, type ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { directoryCommandRequestJson, parseDirectoryCommandReceiptV1, parseDirectoryCommandV1, sealDirectoryCommandRequestV1 } from "@semio-tech/framework/directory/io/text";
 import { type DirectoryCommandReceiptV1, type DirectorySpaceListEntryV1, type DirectoryCommand } from "@semio-tech/framework/directory/schema";
-import { directorySpacesFixture as fixture } from "@semio-tech/framework/os/modules/directory/testing/fixtures";
-import receiptFixture from "@semio-tech/framework/os/testing/fixtures/directory/command-receipt-v1.json";
+import { directorySpacesFixture as fixture } from "@semio-tech/framework-os/modules/directory/testing/fixtures";
+import receiptFixture from "@semio-tech/framework-os/testing/fixtures/directory/command-receipt-v1.json";
 import {
   INVITE_TTL_CHOICES_SECS_V1,
   archiveSpaceCommandV1,

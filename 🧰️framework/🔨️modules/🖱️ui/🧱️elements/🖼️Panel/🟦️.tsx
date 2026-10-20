@@ -170,7 +170,7 @@ export function useNativeDragAndDrop<TElement extends HTMLElement = HTMLDivEleme
 export const PANEL_DEFAULT_SIZE_PX = 300;
 
 /**
- * Props interface for the Panel component.
+ * 🔲️ Props interface for the Panel component.
  **/
 export interface PanelProps {
   anchor: Anchor;

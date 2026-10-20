@@ -24,7 +24,7 @@ fn tab_position(dashboard: &Dashboard, tui: &Tui, id: &str) -> Pos {
     panic!("no visible tab for {id}")
 }
 
-fn docking_ghost(tui: &mut Tui, placement: semio_framework_ui_tui_core::docking::DockPlacement) -> (ui_tui::tui::geometry::Rect, semio_framework_ui_tui_core::cell::CellBuffer) {
+fn docking_ghost(tui: &mut Tui, placement: semio_framework_ui_tui_core::docking::DockPlacement) -> (semio_framework_ui_tui_core::geometry::Rect, semio_framework_ui_tui_core::cell::CellBuffer) {
     let (actual, rect) = tui.docking_preview().expect("destination tab preview");
     assert_eq!(actual, placement);
     assert!(rect.width > 0 && rect.height > 0);
@@ -32,9 +32,9 @@ fn docking_ghost(tui: &mut Tui, placement: semio_framework_ui_tui_core::docking:
     (rect, tui.frame().clone())
 }
 
-fn assert_committed_ghost(dashboard: &Dashboard, tui: &mut Tui, source: &str, ghost: &(ui_tui::tui::geometry::Rect, semio_framework_ui_tui_core::cell::CellBuffer)) {
+fn assert_committed_ghost(dashboard: &Dashboard, tui: &mut Tui, source: &str, ghost: &(semio_framework_ui_tui_core::geometry::Rect, semio_framework_ui_tui_core::cell::CellBuffer)) {
     use semio_framework_ui_tui_frame::chrome::WindowHit;
-    use ui_tui::tui::geometry::Rect;
+    use semio_framework_ui_tui_core::geometry::Rect;
     tui.render();
     let chrome = dashboard.windows.iter().find(|window| window.id == source).unwrap().chrome;
     let rect = tui.scene.rect(chrome);
@@ -168,7 +168,7 @@ fn docking_corner_pointer_moves_between_groups_and_orders_within_the_chosen_corn
 fn docking_corner_contract_covers_cross_group_and_sole_tab_moves() {
     use semio_framework_ui_tui_frame::layout::{create_default_layout, dock_window, stack_hosting};
     use semio_framework_ui_tui_core::docking::{DockPlacement};
-    use ui_tui::tui::geometry::Rect;
+    use semio_framework_ui_tui_core::geometry::Rect;
     let vectors = docking_vectors();
     let area = Rect::new(10, 4, 80, 40);
     for vector in vectors["corners"].as_array().unwrap() {
@@ -260,7 +260,7 @@ fn docking_fullscreen_and_close_on_an_inactive_tab_target_its_identity() {
 
 #[test]
 fn docking_preview_matches_the_committed_split_geometry_in_every_zone() {
-    use ui_tui::tui::geometry::Rect;
+    use semio_framework_ui_tui_core::geometry::Rect;
     use semio_framework_ui_tui_frame::layout::{create_default_layout, dock_window, push_window_to_stack, solve_window_layout, WindowLayoutWindowNode};
     use semio_framework_ui_tui_core::docking::{DockPlacement};
     let vectors = docking_vectors();
@@ -440,7 +440,7 @@ fn docking_survives_zoom_and_removing_the_held_window_cancels_its_preview() {
 
 #[test]
 fn nested_splits_preserve_the_weight_of_their_existing_sibling_slot() {
-    use ui_tui::tui::geometry::Rect;
+    use semio_framework_ui_tui_core::geometry::Rect;
     use semio_framework_ui_tui_frame::layout::{create_default_layout, solve_window_layout, split_window};
     let mut layout = create_default_layout(&["a".into(), "b".into()], "row", Some(&[4.0, 1.0]), None);
     let area = Rect::new(0, 0, 160, 48);

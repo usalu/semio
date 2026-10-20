@@ -77,8 +77,8 @@
         },
         {
           "mutationId": "change-node-extension-data",
-          "sourceMutationDirectoryName": "🧩️change",
-          "mutationDirectoryName": "🧩️change",
+          "sourceMutationDirectoryName": "🧩️change-extensions",
+          "mutationDirectoryName": "🧩️change-extensions",
           "scenarios": [
             {
               "id": "attaches-a-punctual-light-extension-to-the-root-node",
@@ -88,8 +88,8 @@
         },
         {
           "mutationId": "change-node-extra-data",
-          "sourceMutationDirectoryName": "📝️change",
-          "mutationDirectoryName": "📝️change",
+          "sourceMutationDirectoryName": "📝️change-extras",
+          "mutationDirectoryName": "📝️change-extras",
           "scenarios": [
             {
               "id": "attaches-a-unit-extras-object-to-the-root-node",
@@ -99,8 +99,8 @@
         },
         {
           "mutationId": "change-node-morph-weights",
-          "sourceMutationDirectoryName": "⚖️change",
-          "mutationDirectoryName": "⚖️change",
+          "sourceMutationDirectoryName": "⚖️change-weights",
+          "mutationDirectoryName": "⚖️change-weights",
           "scenarios": [
             {
               "id": "sets-the-node-morph-weights-to-a-half-and-a-quarter",
@@ -121,8 +121,8 @@
         },
         {
           "mutationId": "change-scene-extension-data",
-          "sourceMutationDirectoryName": "🧩️change",
-          "mutationDirectoryName": "🧩️change",
+          "sourceMutationDirectoryName": "🧩️change-extensions",
+          "mutationDirectoryName": "🧩️change-extensions",
           "scenarios": [
             {
               "id": "attaches-an-xmp-extension-object-to-the-main-scene",
@@ -132,8 +132,8 @@
         },
         {
           "mutationId": "change-scene-extra-data",
-          "sourceMutationDirectoryName": "📝️change",
-          "mutationDirectoryName": "📝️change",
+          "sourceMutationDirectoryName": "📝️change-extras",
+          "mutationDirectoryName": "📝️change-extras",
           "scenarios": [
             {
               "id": "attaches-a-units-extras-object-to-the-main-scene",
@@ -182,6 +182,10 @@
             {
               "id": "removes-the-root-node-and-drops-it-from-the-scene",
               "directoryName": "🚫️removes"
+            },
+            {
+              "id": "middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -193,6 +197,10 @@
             {
               "id": "removes-the-first-scene-and-remaps-the-default-scene",
               "directoryName": "🚫️removes"
+            },
+            {
+              "id": "middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -336,6 +344,10 @@
             {
               "id": "releases-the-child-node-from-the-parent-node",
               "directoryName": "✂️releases"
+            },
+            {
+              "id": "middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -369,6 +381,10 @@
             {
               "id": "demotes-the-root-node-out-of-the-main-scene",
               "directoryName": "📤️demotes"
+            },
+            {
+              "id": "middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         }

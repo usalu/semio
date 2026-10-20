@@ -12,7 +12,7 @@ import { withDescriptorEmitterV1, withDescriptorEmitterTaskV1 } from "@semio-tec
 import { type CompilerAdmissionControl } from "@semio-tech/process/compiler-capacity";
 import { withRequestedIssuedResourceControlV1 } from "@semio-tech/process/routing";
 import { trustedCatalogByteClaimV1, createTrustedCatalogProvenanceDirectoryV1, type ActorProducerV1, type PackageProducerV1, type GenerationProducerV1 } from "../../🟦️.ts";
-import { observePhysicalFileV1 } from "@semio-tech/framework/filesystem/observation";
+import { observePhysicalFileV1 } from "@semio-tech/framework-filesystem/observation";
 import { buildBudgetMs } from "@semio-tech/process/budget";
 import { createHash, randomBytes } from "node:crypto";
 import { chmodSync, existsSync, lstatSync, mkdirSync, renameSync, rmSync } from "node:fs";

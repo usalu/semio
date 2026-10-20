@@ -5,7 +5,7 @@
 
 import { decodeDagHoverJson } from "@semio-tech/framework/infinite/board/io/text/dag-input";
 import { useCallback, useRef } from "react";
-import { hopTrace } from "@semio-tech/framework/trace";
+import { hopTrace } from "@semio-tech/framework-trace";
 import { flowBoolean, flowJsonText, nodeGraphInputDecodeControl } from "../🧰️graph-core/🟦️.ts";
 import {
   computeDagMarqueeOverlay,

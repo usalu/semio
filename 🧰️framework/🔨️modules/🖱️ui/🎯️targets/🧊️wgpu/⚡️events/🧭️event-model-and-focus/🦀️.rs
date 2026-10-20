@@ -99,7 +99,7 @@ pub enum AccessibilityUiEvent {
 #[derive(Clone, Debug, PartialEq)]
 pub enum ImeEvent {
     Start,
-    /// `cursor` is the IME's own preedit-relative cursor, informational only (not routed into
+    /// 🔺️ `cursor` is the IME's own preedit-relative cursor, informational only (not routed into
     /// `EditState::caret` — the composition is still uncommitted).
     Update {
         text: String,

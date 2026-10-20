@@ -12,7 +12,7 @@ import {acquireResourceLease,acquireQueuedResourceLease,checkResourceLeaseContro
 import {acquireCompilerCapacityLeaseV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import type {ScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import policy from "./🔣️policy.json";
+import policy from "./🔣️policy.json" with { type: "json" };
 
 const originalRustCodes=new AsyncLocalStorage<ReadonlyMap<ScriptInvocation,{live:boolean;code:RustUnitCodeV1;control:ResourceLeaseControl}>>();
 /** 🧷️ Exposes code facts only inside their genuine original reader lifetime. */

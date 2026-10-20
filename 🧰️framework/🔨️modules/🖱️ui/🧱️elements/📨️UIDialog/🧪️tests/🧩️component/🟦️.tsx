@@ -1,7 +1,7 @@
 import * as React from "react";
 import { createMemoryStoragePort } from "../../../../🔨️modules/🗄️storage-port/🟦️.ts";
-import { dialogChoiceArgs, type DialogChoice } from "../../../../../🛂️manifest/🔘️definitions-action-ids-and-shell-brand/🟦️.ts";
-import { SHELL_LOCALES, type ShellLocale } from "@semio-tech/framework/manifest/generated/ui-axes";
+import { dialogChoiceArgs, type DialogChoice } from "@semio-tech/framework-manifest/definitions-action-ids-and-shell-brand";
+import { SHELL_LOCALES, type ShellLocale } from "@semio-tech/framework-manifest/generated/ui-axes";
 import { computeAccessibleDescription, computeAccessibleName } from "dom-accessibility-api";
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Popover, PopoverContent, PopoverTrigger } from "../../../🗨️Popover/🟦️.tsx";
 import { createShellScope, ShellScopeProvider } from "../../../🐚️ShellScope/🟦️.tsx";
 import fixture from "../🧫️fixtures/♿️modal/🔣️.json";
-import { manifestDialogChoicesFixture as dialogChoices } from "../../../../../🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
+import { manifestDialogChoicesFixture as dialogChoices } from "@semio-tech/framework-manifest/testing/fixtures";
 
 
 const isShellLocale = (value: string): value is ShellLocale => (SHELL_LOCALES as readonly string[]).includes(value);

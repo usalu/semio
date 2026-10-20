@@ -38,6 +38,7 @@
     "test": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🧱️block/🗂️catalog/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -51,6 +52,7 @@
         "^default",
         "{workspaceRoot}/✏️s/🔌️plugins/🧱️block/Cargo.lock"
       ],
+      "outputs": [],
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🧱️block/🗂️catalog/📦️packages/🦀️rust",

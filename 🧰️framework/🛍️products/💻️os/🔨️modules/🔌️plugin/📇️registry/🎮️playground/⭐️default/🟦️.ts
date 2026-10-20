@@ -1,4 +1,4 @@
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 const selection = schema.$defs.SelectionV1;
 const variantSpec = selection.items.properties.variant;

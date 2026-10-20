@@ -3,7 +3,7 @@
  * @see ../../../🧬️schema/🔣️.json
  */
 
-import chartSchema from "../../🔣️.json";
+import chartSchema from "../../🔣️.json" with { type: "json" };
 
 /** 📐️ Native axis geometry uses millimetres and typography uses TeX points. */
 export const VIZ_AXIS_DEFAULTS: Readonly<{scale:string;orient:string;tickSize:number;tickSizeOuter:number;tickPadding:number;titleGap:number;labelSize:number;titleSize:number;labelFont:string;titleFont:string;strokeRole:string;strokeColorRole:string;minorStrokeColorRole:string;gridStrokeColorRole:string;textColorRole:string;minorOpacity:number;gridOpacity:number}> = Object.freeze({...chartSchema.$defs.ChartGuide["x-semio-guide-defaults"].axis});

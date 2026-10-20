@@ -24,7 +24,7 @@ use std::{marker::PhantomData, mem::{size_of, ManuallyDrop}, sync::Arc};
 
 #[path = "🧬️mutation-apply/🦀️.rs"]
 mod mutation_apply;
-pub use mutation_apply::{mutation_apply_preparation_factory, MutationApplyEdit, Stage};
+pub use mutation_apply::{mutation_apply_preparation_factory, MutationApplyEdit};
 
 
 fn original_mutation_factory<'a, M: Send + Sync + 'static>(
@@ -36,66 +36,81 @@ fn original_mutation_factory<'a, M: Send + Sync + 'static>(
     if let Some(authority) = captured.as_ref() { return Ok(authority.factory().as_ref()); }
     source.as_ref().ok_or_else(|| fault("structural", "mutation-source-issuer"))?.try_authority().map(|authority| authority.factory().as_ref())
 }
-pub fn retain_seal_returns<S,M>(
-    authority:&mut Option<Arc<ArtifactStoreOneItemLiveAuthority>>,edit:&mut Option<Edit<M>>,post:&mut Option<Arc<S>>,
-    mutations:&mut Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>,snapshots:&mut Option<Arc<dyn SnapshotRetirementFactory<S>>>,
-    returned:(Arc<ArtifactStoreOneItemLiveAuthority>,Edit<M>,Arc<S>,Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,Arc<dyn SnapshotRetirementFactory<S>>),
-){
-    let(original_authority,original_edit,original_post,original_mutations,original_snapshots)=returned;
-    *authority=Some(original_authority);*edit=Some(original_edit);*post=Some(original_post);*mutations=Some(original_mutations);*snapshots=Some(original_snapshots);
-}
+/// 🔐️ The returned-custody ladder of a failed seal: the original edit, post and exact issuer pair stay held until a funded close retires them.
+mod returned_custody {
+    use super::*;
 
-pub fn returned_edit_demands<M:Send+'static>(original:&Option<Edit<M>>,close:&Option<semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement<M>>,body:usize)->Result<RetirementDemand,ValueError>{
-    if let Some(owner)=close.as_ref(){
-        return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement<M>>(),depth:1,..Default::default()})}else{Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?})};
+    pub fn retain_seal_returns<S,M>(
+        authority:&mut Option<Arc<ArtifactStoreOneItemLiveAuthority>>,edit:&mut Option<Edit<M>>,post:&mut Option<Arc<S>>,
+        mutations:&mut Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>,snapshots:&mut Option<Arc<dyn SnapshotRetirementFactory<S>>>,
+        returned:(Arc<ArtifactStoreOneItemLiveAuthority>,Edit<M>,Arc<S>,Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,Arc<dyn SnapshotRetirementFactory<S>>),
+    ){
+        let(original_authority,original_edit,original_post,original_mutations,original_snapshots)=returned;
+        *authority=Some(original_authority);*edit=Some(original_edit);*post=Some(original_post);*mutations=Some(original_mutations);*snapshots=Some(original_snapshots);
     }
-    Ok(if original.is_some(){RetirementDemand{copy_bytes:size_of::<semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement<M>>(),depth:1,..Default::default()}}else{Default::default()})
-}
 
-pub fn close_returned_edit<M:Send+'static>(original:&mut Option<Edit<M>>,close:&mut Option<semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement<M>>,factory:&mut Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,ValueError>{
-    if original.is_none()&&close.is_none(){return Ok(None);}
-    let demand=returned_edit_demands(original,close,grant.maximum_copy_bytes)?;
-    if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
-    if let Some(owner)=close.as_mut(){
-        if owner.terminal_is_empty(){*close=None;return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})));}
-        let step=owner.close_step(grant)?;
-        let receipt=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,owner.terminal_is_empty(),"returned structural edit exact issuer")?.progress();
-        return Ok(Some(RetainedCloneStep::Progress(receipt)));
-    }
-    if factory.is_none(){return Err(fault("structural","returned-edit-issuer"));}
-    let edit=original.take().ok_or_else(||fault("structural","returned-edit"))?;
-    let issuer=factory.take().ok_or_else(||fault("structural","returned-edit-issuer"))?;
-    *close=Some(semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement::new(edit,issuer));
-    Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))
-}
-
-pub fn returned_post_demands<S>(original:&Option<Arc<S>>,factory:&Option<Arc<dyn SnapshotRetirementFactory<S>>>)->Result<RetirementDemand,ValueError>{
-    let Some(post)=original.as_ref()else{return Ok(Default::default());};
-    let issuer=factory.as_ref().ok_or_else(||fault("structural","returned-post-issuer"))?;
-    Ok(RetirementDemand{copy_bytes:2*size_of::<Arc<S>>(),capacity_bytes:issuer.retirement_birth_bytes(post),depth:1,..Default::default()})
-}
-
-pub fn close_returned_post<S>(original:&mut Option<Arc<S>>,factory:&Option<Arc<dyn SnapshotRetirementFactory<S>>>,active:&mut Option<Box<dyn ErasedSnapshotRetirement>>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,ValueError>{
-    if original.is_none(){return Ok(None);}
-    let demand=returned_post_demands(original,factory)?;
-    if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
-    let issuer=factory.as_ref().ok_or_else(||fault("structural","returned-post-issuer"))?;
-    let post=original.take().ok_or_else(||fault("structural","returned-post"))?;
-    let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-demand.copy_bytes,..grant};
-    match issuer.retire(post,child){
-        Ok((owner,mut receipt))=>{
-            *active=Some(owner);
-            receipt.copied_bytes=receipt.copied_bytes.checked_add(demand.copy_bytes).ok_or_else(||fault("structural","returned-post-copy"))?;
-            if receipt.retained_capacity_bytes!=demand.capacity_bytes{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"returned snapshot issuer changed its admitted frame extent").with_retained_progress(receipt));}
-            semio_framework_value::retained_clone::admit_retained_clone_progress(grant,receipt,"returned structural post exact issuer")?;
-            Ok(Some(RetainedCloneStep::Progress(receipt)))
+    pub fn returned_edit_demands<M:Send+'static>(original:&Option<Edit<M>>,close:&Option<semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement<M>>,body:usize)->Result<RetirementDemand,ValueError>{
+        if let Some(owner)=close.as_ref(){
+            return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement<M>>(),depth:1,..Default::default()})}else{Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?})};
         }
-        Err((error,post))=>{
-            *original=Some(post);let mut receipt=error.retained_progress();receipt.copied_items=receipt.copied_items.max(1);receipt.copied_bytes=receipt.copied_bytes.checked_add(demand.copy_bytes).ok_or_else(||fault("structural","returned-post-refusal-copy"))?;
-            Err(error.with_retained_progress(receipt))
+        Ok(if original.is_some(){RetirementDemand{copy_bytes:size_of::<semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement<M>>(),depth:1,..Default::default()}}else{Default::default()})
+    }
+
+    pub fn close_returned_edit<M:Send+'static>(original:&mut Option<Edit<M>>,close:&mut Option<semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement<M>>,factory:&mut Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,ValueError>{
+        if original.is_none()&&close.is_none(){return Ok(None);}
+        let demand=returned_edit_demands(original,close,grant.maximum_copy_bytes)?;
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
+        if let Some(owner)=close.as_mut(){
+            if owner.terminal_is_empty(){*close=None;return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})));}
+            let step=owner.close_step(grant)?;
+            let receipt=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,owner.terminal_is_empty(),"returned structural edit exact issuer")?.progress();
+            return Ok(Some(RetainedCloneStep::Progress(receipt)));
+        }
+        if factory.is_none(){return Err(fault("structural","returned-edit-issuer"));}
+        let edit=original.take().ok_or_else(||fault("structural","returned-edit"))?;
+        let issuer=factory.take().ok_or_else(||fault("structural","returned-edit-issuer"))?;
+        *close=Some(semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement::new(edit,issuer));
+        Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))
+    }
+
+    pub fn returned_post_demands<S>(original:&Option<Arc<S>>,factory:&Option<Arc<dyn SnapshotRetirementFactory<S>>>)->Result<RetirementDemand,ValueError>{
+        let Some(post)=original.as_ref()else{return Ok(Default::default());};
+        let issuer=factory.as_ref().ok_or_else(||fault("structural","returned-post-issuer"))?;
+        Ok(RetirementDemand{copy_bytes:2*size_of::<Arc<S>>(),capacity_bytes:issuer.retirement_birth_bytes(post),depth:1,..Default::default()})
+    }
+
+    pub fn close_returned_post<S>(original:&mut Option<Arc<S>>,factory:&Option<Arc<dyn SnapshotRetirementFactory<S>>>,active:&mut Option<Box<dyn ErasedSnapshotRetirement>>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,ValueError>{
+        if original.is_none(){return Ok(None);}
+        let demand=returned_post_demands(original,factory)?;
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
+        let issuer=factory.as_ref().ok_or_else(||fault("structural","returned-post-issuer"))?;
+        let post=original.take().ok_or_else(||fault("structural","returned-post"))?;
+        let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-demand.copy_bytes,..grant};
+        match issuer.retire(post,child){
+            Ok((owner,mut receipt))=>{
+                *active=Some(owner);
+                receipt.copied_bytes=receipt.copied_bytes.checked_add(demand.copy_bytes).ok_or_else(||fault("structural","returned-post-copy"))?;
+                if receipt.retained_capacity_bytes!=demand.capacity_bytes{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"returned snapshot issuer changed its admitted frame extent").with_retained_progress(receipt));}
+                semio_framework_value::retained_clone::admit_retained_clone_progress(grant,receipt,"returned structural post exact issuer")?;
+                Ok(Some(RetainedCloneStep::Progress(receipt)))
+            }
+            Err((error,post))=>{
+                *original=Some(post);let mut receipt=error.retained_progress();receipt.copied_items=receipt.copied_items.max(1);receipt.copied_bytes=receipt.copied_bytes.checked_add(demand.copy_bytes).ok_or_else(||fault("structural","returned-post-refusal-copy"))?;
+                Err(error.with_retained_progress(receipt))
+            }
         }
     }
 }
+use returned_custody::{close_returned_edit, close_returned_post, retain_seal_returns, returned_edit_demands, returned_post_demands};
+
+/// 🧪️ The seams this crate's own `[[test]]` targets drive from outside: the failed-seal custody ladder and the mutation-apply stage. Compiled only with `test-support`, never part of the production API.
+#[cfg(feature = "test-support")]
+#[doc(hidden)]
+pub mod test_support {
+    pub use super::mutation_apply::Stage;
+    pub use super::returned_custody::{close_returned_edit, close_returned_post, retain_seal_returns, returned_edit_demands, returned_post_demands};
+}
+
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct PagedOneItemPreparationFactory<S, M, E>(PhantomData<fn() -> (S, M, E)>);
 

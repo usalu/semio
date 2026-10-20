@@ -1,8 +1,8 @@
-import type { IntroductionGesture, IntroductionCursor, IntroductionKeyModifier, IntroductionDemonstration, IntroductionPoint } from "../../../../🎓️onboarding/🏷️declaration/🟦️.ts";
+import type { IntroductionGesture, IntroductionCursor, IntroductionKeyModifier, IntroductionDemonstration, IntroductionPoint } from "@semio-tech/framework-onboarding/declaration";
 import * as React from "react";
-import { reactHostPort } from "../../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
-import { useShellScopeOptional } from "../../../🧱️elements/🐚️ShellScope/🟦️.tsx";
-import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
+import { reactHostPort } from "@semio-tech/ui/elements/Ports/react";
+import { useShellScopeOptional } from "@semio-tech/ui/elements/ShellScope";
+import { cn } from "@semio-tech/ui/modules/class-name-composition";
 import { INTRODUCTION_DEMO_IDLE_THRESHOLD_MS, type IntroductionResolvedPoint, resolveIntroductionPoint, useIntroductionPointerIdle } from "../🧭️introduction-resolve/🟦️.ts";
 import { introductionPointRelativeToHost } from "../📐️introduction-geometry/🟦️.ts";
 
@@ -26,7 +26,7 @@ type IntroductionDemoVisual = {
   readonly showDoubleChip: boolean;
 };
 
-/** @emoji 🖱️ Resolves the mini-mouse highlight, modifier chips, and press/trail family for a gesture. */
+/** 🖱️ Resolves the mini-mouse highlight, modifier chips, and press/trail family for a gesture. */
 export function introductionDemoResolveVisual(gesture: IntroductionGesture): IntroductionDemoVisual {
   switch (gesture.kind) {
     case "leftClick":
@@ -58,7 +58,7 @@ function introductionDemoRippleClass(feedback: IntroductionDemoFeedbackKind, dou
   return double ? `${base} introduction-demo-ripple--double` : base;
 }
 
-/** @emoji 🌐️ A point along the quadratic-bezier arc from `from` to `to`, bulged perpendicular to the
+/** 🌐️ A point along the quadratic-bezier arc from `from` to `to`, bulged perpendicular to the
  * straight line between them — an `orbit` gesture reads as a curved rotation around a pivot, visually
  * distinct from `drag`'s straight-line pan/reposition. */
 export function introductionDemoArcPoint(from: IntroductionResolvedPoint, to: IntroductionResolvedPoint, t: number): IntroductionResolvedPoint {
@@ -109,7 +109,7 @@ function introductionDemoLerp(a: number, b: number, t: number): number {
 
 const INTRODUCTION_DEMO_APPEAR_OFFSET = { x: -32, y: -32 } as const;
 
-/** @emoji 🎬️ Ghost-cursor gesture demonstration(s) for an introduction step, mounted by `UIIntroduction`
+/** 🎬️ Ghost-cursor gesture demonstration(s) for an introduction step, mounted by `UIIntroduction`
  * whenever it has one or more effective demonstrations. Plays them in order, one full gesture-loop each,
  * then wraps back to the first — e.g. a viewport step showing zoom, then pan, then orbit, repeating.
  * Plays only while {@link useIntroductionPointerIdle} is true — any real pointer movement hides it and
@@ -436,7 +436,7 @@ export const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstration
   );
 };
 
-/** @emoji 🎬️ The default demonstration for a purely informational step (`interactions.length === 0`, the
+/** 🎬️ The default demonstration for a purely informational step (`interactions.length === 0`, the
  * Next/Done button is the only way to continue) — clicking `ui.introduction.next`, the stable id every
  * such button renders under regardless of its Next/Done label. Used by `UIIntroduction` whenever the step
  * doesn't declare its own `demonstration`, so authors never have to spell this out per step. */

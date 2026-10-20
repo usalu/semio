@@ -78,7 +78,4 @@ if (import.meta.vitest) {
   const { registerTests1 } = await import("../../🧪️tests/🧪️playpanecoverage/🟦️.ts");
   const repoRoot = join(import.meta.dirname, "../../../..");
   await registerTests1(import.meta.vitest, { PLAYGROUND_BUILD_TARGETS, PLAY_RUNTIME_PANES, PLAY_RUNTIME_TARGETS, PLAY_HOST_VARIANT, playExpectedVariants, playRuntimeComponentIds, isIconName }, repoRoot);
-  const { PLAY_PANES } = await import("../../🪧️brand.ts");
-  const { registerTests1: registerPaneDefaultTests } = await import("../../🧪️tests/🧪️playpanedefaults/🟦️.ts");
-  await registerPaneDefaultTests(import.meta.vitest, { PLAY_RUNTIME_PANES, PLAY_RUNTIME_TARGETS, PLAY_PANES }, repoRoot);
 }

@@ -171,8 +171,6 @@ function weld(mesh: IndexedMesh): { vertices: number[]; triangles: number[]; wel
     const a = remap[mesh.triangles[t]!]!;
     const b = remap[mesh.triangles[t + 1]!]!;
     const c = remap[mesh.triangles[t + 2]!]!;
-    // 🚫️A triangle whose corners welded together has zero area and no orientation; keeping it would
-    // hand the kernel a degenerate face it must then reject.
     if (a === b || b === c || a === c) continue;
     triangles.push(a, b, c);
   }
@@ -204,9 +202,6 @@ async function asSolid(mesh: IndexedMesh): Promise<{ solid: ManifoldSolid; welde
 async function symmetricHausdorff(expected: IndexedMesh, actual: IndexedMesh): Promise<{ symmetricHausdorff: number; expectedToActual: number; actualToExpected: number; samples: number }> {
   const THREE = await import("three");
   const { MeshBVH } = await import("three-mesh-bvh");
-  // 🧭️`BufferGeometry`'s attribute map is generic, and `MeshBVH` narrows it further than the default
-  // instantiation does. The BVH only ever reads `position` and the index, both of which are plain
-  // `BufferAttribute`s here, so the boundary is crossed once, deliberately, in one place.
   const geometry = (mesh: IndexedMesh): never => {
     const g = new THREE.BufferGeometry();
     g.setAttribute("position", new THREE.BufferAttribute(Float32Array.from(mesh.vertices), 3));
@@ -262,32 +257,20 @@ async function compareMeshes(expected: IndexedMesh, actual: IndexedMesh): Promis
   const relative = (x: number, y: number): number => (Math.abs(y) < Number.EPSILON ? Math.abs(x - y) : Math.abs(x - y) / Math.abs(y));
   const hausdorff = await symmetricHausdorff(expected, actual);
   return {
-    // 📐️Normalized by the bounding-box diagonal, so the bound is scale-free — the same threshold means
-    // the same thing on a 0.02 mm part and on a 10 m building.
     normalizedSymmetricHausdorff: hausdorff.symmetricHausdorff / Math.max(diagonal, Number.EPSILON),
     symmetricHausdorff: hausdorff.symmetricHausdorff,
     hausdorffExpectedToActual: hausdorff.expectedToActual,
     hausdorffActualToExpected: hausdorff.actualToExpected,
     hausdorffSamples: hausdorff.samples,
     hausdorffSampling: "mesh vertices of both sides; exact at vertices, a lower bound between them",
-    // 📏️THE GATING FORM, and the reason a bare constant is the wrong shape here. Two tessellations of
-    // ONE solid differ by their chord error, which is bounded by the tessellation tolerance they were
-    // built at — so the honest question is not "how far apart are these meshes" but "are they further
-    // apart than tessellation alone could explain". MEASURED: `cut-sphere-from-box` at tolerance 1e-1
-    // against the same solid at 1e-3 — a 90× triangle-count difference, 398 vs 35 716 — gives a
-    // Hausdorff of 0.0903 mm against a declared tolerance of 1e-1, i.e. 0.90 tolerances. A constant
-    // gate sized for that case would have to sit at 2e-3 normalized, which is looser than the flat-face
-    // cases need by four orders of magnitude; expressed this way one threshold serves both.
     hausdorffInTessellationTolerances: hausdorff.symmetricHausdorff / Math.max(expected.tolerance ?? actual.tolerance ?? 1, actual.tolerance ?? expected.tolerance ?? 1, Number.EPSILON),
     tessellationTolerance: { expected: expected.tolerance ?? null, actual: actual.tolerance ?? null },
-    // 🎯️The gating metric: normalized by the expected volume so it is scale-free.
     normalizedSymmetricDifferenceVolume: symmetricDifferenceVolume / reference,
     symmetricDifferenceVolume,
     relativeVolumeError: relative(actualVolume, expectedVolume),
     relativeAreaError: relative(b.surfaceArea(), a.surfaceArea()),
     connectedComponentsEqual: a.decompose().length === b.decompose().length,
     genusEqual: a.genus() === b.genus(),
-    // 🔺️Tessellation is EXPECTED to differ, so the counts are reported and never asserted.
     expected: { volume: expectedVolume, area: a.surfaceArea(), genus: a.genus(), triangles: a.numTri(), vertices: a.numVert(), components: a.decompose().length },
     actual: { volume: actualVolume, area: b.surfaceArea(), genus: b.genus(), triangles: b.numTri(), vertices: b.numVert(), components: b.decompose().length },
     boundingBoxDiagonal: diagonal,
@@ -489,8 +472,6 @@ async function main(argv: readonly string[]): Promise<number> {
     }
     process.stdout.write(`${JSON.stringify(report)}\n`);
   };
-  // ⚙️A mesh probe reports the MESH engine family, not the exact kernel's — independence accounting
-  // reads this field, and mislabelling it would make two different engines look like one.
   const meshSide = probe === "mesh-compare" || probe === "step-mesh-compare";
   const base = { schema: "semio.repository-test.probe-report/v2", probe, probeVersion: meshSide ? MESH_PROBE_VERSION : PROBE_VERSION, engine: meshSide ? MESH_ENGINE : ENGINE } as const;
   if (handler === undefined) {
@@ -502,8 +483,6 @@ async function main(argv: readonly string[]): Promise<number> {
     emit({ ...base, ...outcome, durationMs: Date.now() - started });
     return outcome.status === "ok" ? 0 : 1;
   } catch (error) {
-    // 🔬️A probe that cannot measure reports `failed` WITH the kernel's own message. Silence here would
-    // let an unmeasured assertion read as green, which is the failure mode the pipeline exists to stop.
     emit({ ...base, status: "failed", durationMs: Date.now() - started, measurements: {}, diagnostics: [{ severity: "error", message: (error as Error).message, detail: (error as Error).stack ?? "" }] });
     return 1;
   }

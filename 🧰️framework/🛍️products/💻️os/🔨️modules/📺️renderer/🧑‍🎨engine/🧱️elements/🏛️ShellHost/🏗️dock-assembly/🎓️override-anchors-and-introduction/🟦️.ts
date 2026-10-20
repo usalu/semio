@@ -100,7 +100,12 @@ export function useOverrideAnchorsAndIntroductionIds({ hostMode, session, hostAp
   return { introductionToolId, introductionToolPickIds, activeIntroductionStep, introductionPanelTabId, introductionPanelTabAnchor, hostOverrideTabId, studioOverrideAnchor, detailsOverrideTabId, detailsOverrideAnchor, introductionUtilityId, introductionActionWindowSegment, introductionUtilityWindowId, introductionMeasureWindowId };
 }
 
-/** 🎬 Reveals the introduction tool, tool pick, panel tab and expand targets as the steps advance. */
+/**
+ * 🎬 Reveals the introduction tool, tool pick, panel tab and expand targets as the steps advance.
+ *
+ * 🎓️ Panel interactions complete when their named panel tab is open and visible — checked for every
+ * `panel` interaction of the active step, not just the first, so a step can require opening several.
+ */
 export function useIntroductionRevealEffects({ introductionToolId, session, activeToolIdRef, onActionStable, introductionToolPickIds, activeIntroductionStep, mobile, mobilePanelTabs, dispatch, dock, introductionPanelTabId, introductionPanelTabAnchor, panels, completeIntroductionInteraction, treeOpenStates }: Pick<ReturnType<typeof useOverrideAnchorsAndIntroductionIds>, "introductionToolId" | "introductionToolPickIds" | "activeIntroductionStep" | "introductionPanelTabId" | "introductionPanelTabAnchor"> & Pick<ReturnType<typeof useDockModel>, "session" | "activeToolIdRef" | "onActionStable" | "mobile" | "mobilePanelTabs" | "dispatch" | "dock" | "panels" | "completeIntroductionInteraction" | "treeOpenStates">) {
   const lastIntroductionToolIdRef = useRef<string | null>(null);
   useEffect(() => {

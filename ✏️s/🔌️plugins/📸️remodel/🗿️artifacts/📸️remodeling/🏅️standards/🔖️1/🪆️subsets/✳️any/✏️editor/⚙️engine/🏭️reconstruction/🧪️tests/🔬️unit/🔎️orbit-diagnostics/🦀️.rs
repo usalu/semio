@@ -1,6 +1,12 @@
 //! 🔎️ Orbit diagnostics of the staged reconstruction engine: the ignored stage trace, geometry audit and dense audit against the ground truth of the synthetic orbit. See [`super`].
 
 use super::*;
+use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::images as remodeling_image;
+use semio_s_artifact_remodel_remodeling_feature::editor::remodeling::engine::feature as remodeling_feature;
+use semio_s_artifact_remodel_remodeling_camera::editor::remodeling::engine::camera as remodeling_camera;
+use semio_s_artifact_remodel_remodeling_dense::editor::remodeling::engine::dense as remodeling_dense;
+use semio_s_artifact_remodel_remodeling_sfm::editor::remodeling::engine::sfm as remodeling_sfm;
+use semio_s_artifact_remodel_remodeling_mesh::editor::remodeling::engine::mesh as remodeling_mesh;
 
 /// 🔭️ Stage-by-stage trace of the shipped `synthetic-orbit` example through the bare engine (pair
 /// table, registered cameras, fused-cloud extent, terminal mesh census). Diagnostic, therefore

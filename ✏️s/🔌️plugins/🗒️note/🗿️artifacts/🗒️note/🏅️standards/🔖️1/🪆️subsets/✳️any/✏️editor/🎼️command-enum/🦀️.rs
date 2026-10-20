@@ -12,7 +12,7 @@ use crate::editor::note::commands::{set_grid_opacity, set_grid_spacing, set_grid
 use crate::editor::note::commands::{set_snap_enabled, set_snap_grid_spacing};
 use crate::editor::note::dispatch_ctx::NoteDispatchCtx;
 use crate::op::NoteMutation;
-use crate::NoteSnapshot;
+use semio_s_artifact_note_note_schema::NoteSnapshot;
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 
 semio_framework_plugin::app_commands! {

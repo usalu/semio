@@ -1,7 +1,7 @@
 /// <reference types="@webgpu/types" />
 /** 🎨️ Actual Three/WebGPU pixel comparison for the shared World3d shading fixture. */
 import { join } from "node:path";
-import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runReferenceVisualOracle } from "./🔭️reference-visual-oracle/🟦️.ts";
 import { runGridVisualOracle } from "./🕸️grid-visual-oracle/🟦️.ts";
 import { runSceneShadingOracle } from "./📐️scene-shading-oracle/🟦️.ts";
@@ -72,3 +72,7 @@ export class SceneShadingPixelCheckScript extends BundleScript {
     for (const command of ["shading-oracle", "shading-wgpu"] as const) await runSceneShadingOracle(this.repoRoot, command, artifacts ? join(artifacts, "world3d-scene-shading", command) : undefined);
   }
 }
+
+const router = new ScriptRouter(import.meta.dir).register("scene-shading-pixel-check", SceneShadingPixelCheckScript);
+
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

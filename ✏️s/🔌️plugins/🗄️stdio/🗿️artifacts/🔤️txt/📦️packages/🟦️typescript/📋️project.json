@@ -64,11 +64,13 @@
         "{projectRoot}/../../📜️artifact-definition.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
-      ]
+      ],
+      "outputs": []
     },
     "verify-physical-codecs": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify physical-codecs"

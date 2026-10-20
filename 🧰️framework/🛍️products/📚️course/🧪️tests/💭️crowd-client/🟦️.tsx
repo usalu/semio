@@ -69,7 +69,7 @@ import {
 } from "@semio-tech/course-react";
 import { RunScreen } from "@semio-tech/course-react/modules/run/.tsx";
 import { ResultsScreen } from "@semio-tech/course-react/modules/results/.tsx";
-import palette from "../../../../🔨️modules/🖱️ui/🎨️styling/🎨️palette/🎨️.css?raw";
+import { paletteCssText as palette } from "@semio-tech/ui-styling/palette/text";
 import { quizStylesheet as stylesheet } from "@semio-tech/course-react/stylesheet";
 import vectors from "../🧫️fixtures/💭️crowd-client/🔣️.json";
 

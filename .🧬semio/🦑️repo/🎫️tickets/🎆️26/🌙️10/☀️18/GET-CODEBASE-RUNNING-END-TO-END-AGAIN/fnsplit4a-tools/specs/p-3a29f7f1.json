@@ -1,0 +1,53 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️actorreturnresponseframing-uses-canonical-vectors-with-no-payload-copies/🟦️.ts",
+ "function": "registerTests1",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of registerTests1. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️actor-return-response-framing",
+   "doc": "/** 🔶️ The actor return response framing phase of registerTests1. */",
+   "phases": [
+    {
+     "name": "registerActorReturnResponseFramingTests",
+     "emoji": "🔷",
+     "doc": "Registers the actor return response framing tests of registerTests1.",
+     "from": 6,
+     "to": 88
+    }
+   ]
+  },
+  {
+   "dir": "🔸️actor-worker-inbox-inventory",
+   "doc": "/** 🔸️ The actor worker inbox inventory phase of registerTests1. */",
+   "phases": [
+    {
+     "name": "registerActorWorkerInboxInventoryTests",
+     "emoji": "🔹",
+     "doc": "Registers the actor worker inbox inventory tests of registerTests1.",
+     "from": 148,
+     "to": 232
+    }
+   ]
+  },
+  {
+   "dir": "🟠️actor-return-response-credit",
+   "doc": "/** 🟠️ The actor return response credit phase of registerTests1. */",
+   "phases": [
+    {
+     "name": "registerActorReturnResponseCreditTests",
+     "emoji": "🟡",
+     "doc": "Registers the actor return response credit tests of registerTests1.",
+     "from": 253,
+     "to": 377
+    }
+   ]
+  }
+ ]
+}

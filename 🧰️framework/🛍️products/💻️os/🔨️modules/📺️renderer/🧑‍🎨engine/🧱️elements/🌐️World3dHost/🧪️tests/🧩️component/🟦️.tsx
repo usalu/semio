@@ -90,9 +90,9 @@ import { buildMeshVisuals, disposeMeshVisuals } from "../../🎨️mesh-render/�
 import { world3dComponentInteractionTarget } from "../../🔗️instance-selection/🟦️.ts";
 import { world3dGumballSelectionArgsV1, getWorldGumballTransformPreview } from "../../🧮️gumball-math/🟦️.ts";
 import { WindowInstanceIdContext } from "../../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
-import { loadComponentSelectionMergesFixture, loadSceneComponentSourceFixture } from "@semio-tech/framework/ui/testing/fixtures";
-import { loadEngineVertexProvenanceFixture } from "@semio-tech/framework/3d/testing/fixtures";
-import { loadPrimaryGeometryStyleFixture } from "@semio-tech/framework/os/modules/infinite/testing/fixtures";
+import { loadComponentSelectionMergesFixture, loadSceneComponentSourceFixture } from "@semio-tech/ui/testing/fixtures";
+import { loadEngineVertexProvenanceFixture } from "@semio-tech/framework-3d-js/testing/fixtures";
+import { loadPrimaryGeometryStyleFixture } from "@semio-tech/framework-os/modules/infinite/testing/fixtures";
 
 type Batch = { readonly mesh: number; readonly verdict: string; readonly count: number };
 

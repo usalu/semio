@@ -1,6 +1,6 @@
 import { createElement } from "react";
 import { createRoot } from "react-dom/client";
-import { mediaTransportLabels } from "../../../../../../../🔌️plugin/🪟️window-kits/🎬️media/🟦️.ts";
+import { mediaTransportLabels } from "@semio-tech/plugin-window-kits/media";
 import { MediaTransportHost, MediaTransportOwnerContext, type MediaTransportPort } from "../../../🟦️.tsx";
 
 /** 🧫️ The lifecycle fixture fields the Chromium oracle mounts, as `🧬️schema/♻️lifecycle/🔣️.json` admits them. */

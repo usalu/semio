@@ -29,7 +29,7 @@ type Config struct {
 	Timeout time.Duration
 }
 
-// DefaultCommandTimeout is the wall-clock budget for MCP tool calls, hooks, and other repo CLI work when --timeout is not set.
+// 🎮️DefaultCommandTimeout is the wall-clock budget for MCP tool calls, hooks, and other repo CLI work when --timeout is not set.
 const DefaultCommandTimeout = 5 * time.Minute
 
 // 📋️IsJSON MUST return true only when the condition is met.

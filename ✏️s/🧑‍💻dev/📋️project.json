@@ -20,6 +20,7 @@
     "composition-check": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts composition-check",
         "cwd": "✏️s/🧑‍💻dev",
@@ -47,6 +48,7 @@
     "source-check": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts source-check",
         "cwd": "✏️s/🧑‍💻dev",
@@ -56,6 +58,7 @@
     "catalog-check": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts catalog-check",
         "cwd": "✏️s/🧑‍💻dev",
@@ -65,6 +68,7 @@
     "jack-graph-check": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts jack-graph-check",
         "cwd": "✏️s/🧑‍💻dev",
@@ -92,7 +96,6 @@
         "@semio-tech/space-home:build",
         "@semio-tech/space-space:build",
         "@semio-tech/stdio-docx:build",
-        "@semio-tech/trinity-jack-lsp:wasm",
         "@semio-tech/puzzle-plugin:wasm"
       ],
       "outputs": [],
@@ -134,6 +137,7 @@
     "verify-catalog": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev",
         "command": "bun ./📜️script.ts catalog-publication verify"
@@ -142,6 +146,7 @@
     "test-catalog-publication": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev",
         "command": "bun ./📜️script.ts catalog-publication-test"
@@ -161,6 +166,7 @@
     "check-generated": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev",
         "command": "bun ./📜️script.ts catalog-publication check"
@@ -168,7 +174,7 @@
     },
     "preview-generated": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "options": {
         "cwd": "✏️s/🧑‍💻dev",
         "command": "bun ./📜️script.ts catalog-publication preview"

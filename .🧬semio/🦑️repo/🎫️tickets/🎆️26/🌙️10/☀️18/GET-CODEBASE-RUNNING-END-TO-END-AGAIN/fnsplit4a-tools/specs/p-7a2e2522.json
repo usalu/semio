@@ -1,0 +1,53 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📤️document-transfer-tabs/🟦️.tsx",
+ "function": "useDocumentTransferAndTabs",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of useDocumentTransferAndTabs. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️scope",
+   "doc": "/** 🔶️ The scope phase of useDocumentTransferAndTabs. */",
+   "phases": [
+    {
+     "name": "buildScopeState",
+     "emoji": "🔷",
+     "doc": "Builds scope, localDocumentOwnerRegistry, hostMode, dispatch of useDocumentTransferAndTabs.",
+     "from": 103,
+     "to": 226
+    }
+   ]
+  },
+  {
+   "dir": "🔸️document-transfer-ref",
+   "doc": "/** 🔸️ The document transfer ref phase of useDocumentTransferAndTabs. */",
+   "phases": [
+    {
+     "name": "useDocumentTransferRefState",
+     "emoji": "🔹",
+     "doc": "Builds documentTransferRef, revealAgentApproval, revealedApprovalIdsRef, handleAppKeydown of useDocumentTransferAndTabs.",
+     "from": 261,
+     "to": 424
+    }
+   ]
+  },
+  {
+   "dir": "🟠️workbench-left-tabs",
+   "doc": "/** 🟠️ The workbench left tabs phase of useDocumentTransferAndTabs. */",
+   "phases": [
+    {
+     "name": "useWorkbenchLeftTabsState",
+     "emoji": "🟡",
+     "doc": "Builds workbenchLeftTabs, detailsRightTabs, appTabsForBottomAnchor, displayBottomLeftTabs of useDocumentTransferAndTabs.",
+     "from": 426,
+     "to": 502
+    }
+   ]
+  }
+ ]
+}

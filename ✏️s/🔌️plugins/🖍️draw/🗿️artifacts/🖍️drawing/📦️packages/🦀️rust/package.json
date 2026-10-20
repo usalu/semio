@@ -9,5 +9,9 @@
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"
+  },
+  "dependencies": {
+    "@semio-tech/framework-hash": "workspace:*",
+    "@semio-tech/framework-interaction": "workspace:*"
   }
 }

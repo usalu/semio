@@ -1,6 +1,6 @@
 #[semio_framework_async_macros::async_test]
 async fn cad_imported_geometry_members_install_exact_typed_publication_authority() {
-    use semio_framework_os_kernel::{ArtifactStore, os_store::document_store_owners::MemberStoreOwner, MemberStoreOwnedBatch, MemberStoreOwnedBatchRequest, SpaceMember};
+    use semio_framework_os_kernel::{ArtifactStore, MemberStoreOwnedBatch, MemberStoreOwnedBatchRequest, SpaceMember};
     use semio_framework_value::retained_clone::RetainedCloneGrant;
     use {semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot, semio_s_artifact_stdio_semio_model::schema::mutations::SemioModelMutation, semio_s_artifact_stdio_semio_model::schema::mutations::insert_element::InsertElement, semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot, semio_s_artifact_stdio_semio_brep::schema::mutations::SemioBrepMutation, semio_s_artifact_stdio_semio_brep::schema::mutations::create_vertex::CreateVertex};
     let corpus: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
@@ -18,7 +18,7 @@ async fn cad_imported_geometry_members_install_exact_typed_publication_authority
             let (mutations,_) = MemberStoreOwnedBatch::try_new(original,grant).unwrap_or_else(|_| panic!("exact original imported mutation owner"));
             let envelope = semio_framework_os_kernel::os_store::document_materialize::create_document_envelope("stdio.semio","neutral-member",<$snapshot>::default(),None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
             let mut store = ArtifactStore::<$snapshot,$mutation>::new(envelope,protocol::ActorId("fixture-member".into())).await.unwrap();
-            store.install_document_store_owners_exact(<$snapshot as MemberStoreOwner<$mutation>>::member_store_owners());
+            store::install_funded_member_store_owners(&mut store, &semio_s_artifact_stdio_semio_base::SemioMemberStoreProducer::<$snapshot,$mutation>::new()).expect("funded member catalog");
             let (generation,revision) = store.one_item_publication_identity();
             let mut request = MemberStoreOwnedBatchRequest { operation: semio_framework_job::OperationId(9131),expected_generation:generation,expected_revision:revision,actor:"fixture-member".into(),group_id:Some("neutral-imported-group".into()),transaction:None,mutations };
             let admission = store.owned_publication_birth_bytes(&request);

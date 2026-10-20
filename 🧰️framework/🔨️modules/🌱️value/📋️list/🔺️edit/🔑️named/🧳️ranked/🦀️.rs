@@ -1,5 +1,5 @@
 //! 🧳️ Ranked key sources lend actual original field projections through funded row observations.
-use crate::{RetirementDemand,ValueError,ValueRefusalKind,list::persistent::PersistentList,retained_clone::{RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,retained_clone_grant_admits}};
+use crate::{retirement::RetireOwned,RetirementDemand,ValueError,ValueRefusalKind,list::persistent::PersistentList,retained_clone::{RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,retained_clone_grant_admits}};
 use std::mem::size_of;
 /// 📎️ Actual original roots and key selectors define one stable ranked key coordinate source.
 pub trait NamedRankedSource{
@@ -21,8 +21,8 @@ impl<T:Sync> NamedRankedSource for VecRankedKeys<'_,T>{
  fn observe_key(&self,ordinal:usize,grant:RetainedCloneGrant)->Result<Option<(RetainedCloneRef<'_,str>,RetainedCloneProgress)>,ValueError>{let d=self.rank_demand(ordinal)?;if !retained_clone_grant_admits(grant,d){return Ok(None);}let row=self.original.project(ordinal,|root|&root[ordinal]);let key=row.project(self.key as usize,self.key);Ok(Some((key,RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))}
 }
 /// 🌳️ Immutable key rows are observed through the original private page owner's paid ranked path.
-pub struct PersistentRankedKeys<'a,T:Send+Sync+'static>{pub original:RetainedCloneRef<'a,PersistentList<T>>,pub key:fn(&T)->&str}
-impl<T:Send+Sync+'static> NamedRankedSource for PersistentRankedKeys<'_,T>{
+pub struct PersistentRankedKeys<'a,T:RetireOwned+Send+Sync+'static>{pub original:RetainedCloneRef<'a,PersistentList<T>>,pub key:fn(&T)->&str}
+impl<T:RetireOwned+Send+Sync+'static> NamedRankedSource for PersistentRankedKeys<'_,T>{
  type Root=PersistentList<T>;
  fn original(&self)->RetainedCloneRef<'_,Self::Root>{self.original}
  fn len(&self)->usize{self.original.get().len()}

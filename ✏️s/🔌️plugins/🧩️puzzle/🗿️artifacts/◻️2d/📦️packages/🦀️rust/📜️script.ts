@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
+import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/framework/process/compiler-capacity";
 import { GenerateScript as GraphGenerateScript, PreviewGeneratedScript as GraphPreviewScript, OwnerGraphWireCheckScript } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts";
 /** 📦️ puzzle-2d Rust artifact package router. */
 import { runArtifactRustPackageMain, runArtifactRustTests } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
@@ -8,9 +8,9 @@ import {BundleScript, ScriptRouter} from "../../../../../../../🧰️framework/
 
 import { runRepositoryCommand } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 import { resolve } from "node:path";
-import {readCargoTestPolicyV1} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
-import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
-import { runAdmittedExactCargoLawsV1 as runExactCargoLaws } from "@semio-tech/process/cargo-test";
+import {readCargoTestPolicyV1} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️laws/🟦️.ts";
+import { runAdmittedExactCargoLawsV1 as runExactCargoLaws } from "@semio-tech/framework/process/cargo-test";
 import { runOwnedVerifyScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 
 /** 🔍️ Checks this owner and its independent consumer through the public facade. */
@@ -31,9 +31,6 @@ class StoreCloseScript extends BundleScript {
 class PresenceScript extends BundleScript{
  async run(segments:string[]):Promise<void>{
   if(segments.length!==1||!["source","native"].includes(segments[0]!))throw new Error("test-presence requires source or native");
-  const camera=resolve(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️presence/📷️camera/🧪️tests/🟦️.ts");
-  await runRepositoryCommand(this.invocation,process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",camera],this.repoRoot,"puzzle2d-presence-source-types",{version:1,maximumElapsedMilliseconds:120000,output:{maximumBytes:8388608,maximumLines:65536}});
-  const {testCameraPresenceContract}=await import("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️presence/📷️camera/🧪️tests/🟦️.ts");
   await runRepositoryCommand(this.invocation,"rustfmt",["--check","--edition","2021","--config","disable_all_formatting=true,skip_children=true",resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs"),resolve(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🦀️.rs")],this.repoRoot,"puzzle2d-presence-rust-source",{version:1,maximumElapsedMilliseconds:120000,output:{maximumBytes:8388608,maximumLines:65536}});
   if(segments[0]==="source")return;const policy=readCargoTestPolicyV1(process.env);const manifest=resolve(this.root,"Cargo.toml");if(resolve(policy.manifestPath)!==manifest)throw new Error("Puzzle presence requires its original native manifest");
   await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:policy.buildBudgetMs,lawMilliseconds:policy.assertionBudgets[policy.level]},cwd:this.repoRoot,nativeEnv:{RUST_MIN_STACK:policy.rustMinStack},manifestPaths:{"semio-s-artifact-puzzle-2d":manifest},groups:[{package:"semio-s-artifact-puzzle-2d",target:{kind:"lib",name:"semio_s_artifact_puzzle_2d"},cargoArgs:["--locked","--features","component-app-assembly"],laws:["editor::puzzle2d::component::unit_tests::mounted_camera_and_interaction_presence_reaches_peers_without_document_edits"]}]});

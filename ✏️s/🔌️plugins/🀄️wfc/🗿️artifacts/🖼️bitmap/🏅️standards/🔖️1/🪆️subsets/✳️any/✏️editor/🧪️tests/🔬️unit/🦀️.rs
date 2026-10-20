@@ -298,7 +298,7 @@ fn a_contradiction_transient_paints_a_distinct_overlay() {
 #[test]
 fn the_python_oracle_vector_matches_the_rust_payload_shape() {
     use crate::editor::bitmap::modes::edit::tools::fill::{payload_from_assignment, BitmapFillPayload};
-    let text = fixture_text!("../../../../🎭️modes/✏️edit/🛠️tools/🌡fill/🧪️tests/🧫️fixtures/🐍️python-fill-oracle/🔣️.json");
+    let text = fixture_text!("../../../../🎭️modes/✏️edit/🛠️tools/🌡️fill/🧪️tests/🧫️fixtures/🐍️python-fill-oracle/🔣️.json");
     let payload = BitmapFillPayload::decode_json(text).expect("vector decodes");
     assert_eq!(payload.width, 2);
     assert_eq!(payload.height, 2);

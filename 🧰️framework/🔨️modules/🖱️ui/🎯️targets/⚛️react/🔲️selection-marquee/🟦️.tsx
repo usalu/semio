@@ -1,6 +1,6 @@
 import * as React from "react";
-import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import type { MergeMode } from "@semio-tech/framework/interaction";
+import { cn } from "@semio-tech/ui/modules/class-name-composition";
+import type { MergeMode } from "@semio-tech/framework-interaction";
 
 /** 👉️ ⬚️ Canonical area-select overlay coverage (drag right-to-left = partial). */
 export type SelectionMarqueeCoverage = "partial" | "full";

@@ -18,6 +18,7 @@ use semio_framework_value::ToValue;
 use semio_framework_io_ports::{EmbeddedChildSlotV1, VectorScene};
 use protocol::{MutationKind, SemanticDescriptor};
 use schema::ArtifactSchema;
+use semio_framework_artifact_reference::schema::SubsetId;
 //#region 🔖️Artifact
 /// 🧬️ layout document artifact state.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]

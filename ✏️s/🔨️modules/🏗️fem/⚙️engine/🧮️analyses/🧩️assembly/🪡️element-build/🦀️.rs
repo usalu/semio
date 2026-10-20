@@ -23,14 +23,14 @@ impl AssemblyJob<'static> {
     }
 }
 
-pub(super) struct UnfactoredSystem {
+pub struct UnfactoredSystem {
     pub(super) plan: AssemblyPlan,
     pub(super) k_full_coo: Coo,
     pub(super) k_ff_coo: Coo,
 }
 
 /// 🧮️ Persistent per-element assembly with worker-local triplets and a stable k-way merge.
-pub(super) enum AnalysisModelOwner<'model> {
+pub enum AnalysisModelOwner<'model> {
     Borrowed(&'model AnalysisModel),
     Owned(Arc<AnalysisModel>),
     Mounted(MountedAnalysisModel),

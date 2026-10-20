@@ -56,3 +56,6 @@ pub mod toggle;
 
 #[path = "../../🧱️elements/🧙️Wizard/🎯️targets/⌨️tui/🦀️.rs"]
 pub mod wizard;
+
+#[path = "../../🧱️elements/🔤️Textarea/🎯️targets/⌨️tui/🦀️.rs"]
+pub mod editor;

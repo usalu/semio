@@ -57,6 +57,7 @@
     },
     "test": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -69,6 +70,7 @@
     "verify-jack-document-contract": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify jack-document-contract",
@@ -86,6 +88,7 @@
     "verify-jack-query-ownership": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify jack-query-ownership",
@@ -103,6 +106,7 @@
     "verify-jack-graph-query": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify jack-graph-query",
@@ -120,6 +124,7 @@
     "verify-jack-child-selection": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify jack-child-selection",
@@ -174,6 +179,7 @@
     "test-snapshot-sqlite": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite",
@@ -183,6 +189,7 @@
     "test-snapshot-sqlite-native": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite native",
@@ -192,6 +199,7 @@
     "test-snapshot-sqlite-source": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite source",
@@ -215,6 +223,7 @@
     "verify-physical-codecs": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify physical-codecs"
@@ -222,6 +231,7 @@
     },
     "verify-jack-native-composition": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts verify jack-native-composition",
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust"

@@ -7,15 +7,15 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { actionArgRequiresChoice, effectiveActionArgs, invalidActionChoiceArgs, unresolvedActionArgs, unresolvedDialogChoiceArgs } from "../../../🧩️action-argument-resolution/🟦️.ts";
-import { dialogChoiceArgs, type DialogChoice, type DialogDefinition } from "../../../🛂️manifest/🔘️definitions-action-ids-and-shell-brand/🟦️.ts";
-import { type ActionArgDef } from "../../../🛂️manifest/🎬️action-types-and-semantics/🟦️.ts";
+import { actionArgRequiresChoice, effectiveActionArgs, invalidActionChoiceArgs, unresolvedActionArgs, unresolvedDialogChoiceArgs } from "@semio-tech/framework-action-argument-resolution";
+import { dialogChoiceArgs, type DialogChoice, type DialogDefinition } from "@semio-tech/framework-manifest/definitions-action-ids-and-shell-brand";
+import { type ActionArgDef } from "@semio-tech/framework-manifest/action-types-and-semantics";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { keyboardEventMatchesOwnedHotkey, parseOwnedHotkeyChords, resolveControlKeybindingRaw, SHELL_KEYBINDINGS, useUiKeybindingsByControlId } from "../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { Dialog, DialogContent, DialogDescription, DialogOverlay, DialogPortal, DialogTitle } from "../💬️Dialog/🟦️.tsx";
-import { detectShellLocale, uiI18n } from "@semio-tech/ui-react/i18n";
+import { detectShellLocale, uiI18n } from "../../🌐️i18n/🟦️.ts";
 import { useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
 import { resolveUiLocalizedText, useUiTerminology } from "../../🔨️modules/🗣️ui-terminology/🟦️.tsx";
 import { GLASS_OVERLAY_BOX_CLASS } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";

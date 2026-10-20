@@ -5,7 +5,7 @@ import { cleanup, render, screen } from "@semio-tech/ui-react/test";
 import { Mode, uiDataLabel, type WindowLayoutNode } from "@semio-tech/ui-react";
 import { createMemoryStoragePort } from "@semio-tech/framework";
 import { isIconName } from "@semio-tech/framework/assets";
-import { createWorldProjectionTemplates, decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId, worldProjectionSpecIconId, worldProjectionSpecLabel, worldProjectionTemplateApplySpec, worldProjectionTemplateSelectionId, type WorldProjectionSpec, type WorldProjectionTemplateDescriptor } from "@semio-tech/infinite-world-r3f";
+import { createWorldProjectionTemplates, decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId, worldProjectionSpecIconId, worldProjectionSpecLabel, worldProjectionTemplateApplySpec, worldProjectionTemplateSelectionId, type WorldProjectionSpec, type WorldProjectionTemplateDescriptor } from "@semio-tech/framework/infinite/world/r3f";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { resolveFrameworkLayoutSeed, retitleWindowLayoutNode } from "../../🛣️route-and-chrome/🟦️.tsx";
 import fixture from "../🧫️fixtures/🌐️instance-title/🔣️.json" with { type: "json" };

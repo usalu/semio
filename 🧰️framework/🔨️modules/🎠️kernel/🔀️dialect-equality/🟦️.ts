@@ -4,7 +4,7 @@
  */
 
 import { type ArtifactDialect } from "@semio-tech/schema-ts/artifact-reference";
-import { type AppRef } from "@semio-tech/framework/manifest/schema";
+import { type AppRef } from "@semio-tech/framework-manifest/schema";
 
 // #region 🎠️Kernel
 //#region 🔖️AppRouter

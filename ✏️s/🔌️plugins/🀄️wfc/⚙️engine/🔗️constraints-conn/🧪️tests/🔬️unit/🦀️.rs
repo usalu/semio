@@ -28,7 +28,6 @@ fn connectivity_accepts_single_connected_component() {
     let model = floor_wall_model();
     let adjacency = hub_adjacency();
     let c = ConnectivityConstraint::new(model, PatternSelector::Pattern(PatternId(0)));
-    // floor at 0,1,2 (connected through the semio_hub), wall elsewhere.
     let assignment = vec![PatternId(0), PatternId(0), PatternId(0), PatternId(1), PatternId(1)];
     assert!(c.validate_complete(&assignment, &adjacency).is_ok());
 }
@@ -38,7 +37,6 @@ fn connectivity_rejects_split_components() {
     let model = floor_wall_model();
     let adjacency = hub_adjacency();
     let c = ConnectivityConstraint::new(model, PatternSelector::Pattern(PatternId(0)));
-    // floor at 0 and at 3+4, split by wall at the semio_hub (node2) and node1.
     let assignment = vec![PatternId(0), PatternId(1), PatternId(1), PatternId(0), PatternId(0)];
     assert!(c.validate_complete(&assignment, &adjacency).is_err());
 }
@@ -66,7 +64,6 @@ fn reachability_rejects_blocked_path() {
     let model = floor_wall_model();
     let adjacency = hub_adjacency();
     let c = ReachabilityConstraint::new(model, vec![NodeId(0)], vec![NodeId(3)], PatternSelector::Pattern(PatternId(0)));
-    // Wall at the semio_hub (node2) blocks the only path from 0 to 3.
     let assignment = vec![PatternId(0), PatternId(0), PatternId(1), PatternId(0), PatternId(0)];
     assert!(c.validate_complete(&assignment, &adjacency).is_err());
 }

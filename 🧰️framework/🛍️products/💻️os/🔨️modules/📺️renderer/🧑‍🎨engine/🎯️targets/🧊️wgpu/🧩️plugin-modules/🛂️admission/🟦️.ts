@@ -1,4 +1,4 @@
-import schema from "../../../../🧬️schema/🧩️plugin-modules/🔣️.json";
+import schema from "../../../../🧬️schema/🧩️plugin-modules/🔣️.json" with { type: "json" };
 
 export type WgpuPluginRegistrySelection = "variant" | "all";
 export type WgpuPluginModule = { readonly pluginId: string; readonly moduleUrl: string };

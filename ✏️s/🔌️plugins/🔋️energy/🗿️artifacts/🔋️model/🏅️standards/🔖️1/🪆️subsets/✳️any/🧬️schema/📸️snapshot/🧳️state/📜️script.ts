@@ -1,7 +1,7 @@
 
-import { BundleScript, ScriptRouter } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {receiveScriptProcessInvocation} from '../../../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts';
-import {runScriptMain} from '../../../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts';
+import { BundleScript, ScriptRouter } from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import {receiveScriptProcessInvocation} from '../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts';
+import {runScriptMain} from '../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts';
 import { runEnergyRetainedModelStateScript } from "./🟦️.ts";
 /** 🧳️ Verifies Energy typed original model authority, sparse inverses and bounded immutable row ownership. */
 class EnergyRetainedModelStateScript extends BundleScript {

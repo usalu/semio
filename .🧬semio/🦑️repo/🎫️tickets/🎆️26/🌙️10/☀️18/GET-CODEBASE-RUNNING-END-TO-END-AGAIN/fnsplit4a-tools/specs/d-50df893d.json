@@ -1,0 +1,37 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🎤️presentation/🧪️tests/📐️interaction-geometry/🟦️.tsx",
+ "describeLine": 12,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of the presentation interaction geometry suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️detects-disposition-ephemeral-layout",
+   "doc": "/** 🔶️ The detects disposition ephemeral layout tests of the presentation interaction geometry suite. */",
+   "name": "registerDetectsDispositionEphemeralLayoutTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the detects disposition ephemeral layout tests of the presentation interaction geometry suite.",
+   "from": 13,
+   "to": 165
+  },
+  {
+   "dir": "🔸️detects-flow-pixel-offset",
+   "doc": "/** 🔸️ The detects flow pixel offset tests of the presentation interaction geometry suite. */",
+   "name": "registerDetectsFlowPixelOffsetTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the detects flow pixel offset tests of the presentation interaction geometry suite.",
+   "from": 185,
+   "to": 345
+  },
+  {
+   "dir": "🟠️keeps-reveal-morph-data",
+   "doc": "/** 🟠️ The keeps reveal morph data tests of the presentation interaction geometry suite. */",
+   "name": "registerKeepsRevealMorphDataTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the keeps reveal morph data tests of the presentation interaction geometry suite.",
+   "from": 360,
+   "to": 406
+  }
+ ]
+}

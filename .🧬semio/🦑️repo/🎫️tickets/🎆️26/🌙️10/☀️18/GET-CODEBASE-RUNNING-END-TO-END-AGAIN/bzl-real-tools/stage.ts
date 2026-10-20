@@ -1,0 +1,22 @@
+// 🧩 Stages a scratch-host variant of the Bazel adapter next to the harness: relative specifiers re-pointed, plus an exported storage-free owner entry (the library is frozen).
+import {existsSync,readFileSync,writeFileSync} from "node:fs";
+import {dirname,join,relative,resolve} from "node:path";
+const findRoot=(from:string):string=>{for(let at=from;;at=dirname(at)){if(existsSync(join(at,"bunfig.toml"))&&existsSync(join(at,"bun.lock")))return at;if(dirname(at)===at)throw Error("repository root not found");}};
+const root=findRoot(import.meta.dir),B=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel"),out=join(import.meta.dir,"staged","adapter.ts");
+let text=readFileSync(join(B,"📜️script.ts"),"utf8");
+text=text.replace(/(from\s*|import\()(["'])(\.{1,2}\/[^"']+)\2/gu,(_m,head,quote,path)=>{let target=relative(dirname(out),resolve(B,path));if(!target.startsWith("."))target="./"+target;return head+quote+target+quote;});
+const replaceOnce=(from:string,to:string)=>{const parts=text.split(from);if(parts.length!==2)throw Error("anchor count "+(parts.length-1)+": "+from.slice(0,60));text=parts.join(to);};
+replaceOnce("the link is listed in `.bazelignore` so `//...` never crawls the checkout (its generated workspace lives inside it, an infinite symlink expansion otherwise)","no `.bazelignore` is written (listing the link there removes it from the execroot and disables Bazel caching); queries name the root package with `//:all`, which never crawls the checkout");
+replaceOnce("async function writeBazelRuntimeV1(","export async function writeBazelRuntimeV1(");
+replaceOnce("async function bazelCancellationControl(","export async function bazelCancellationControl(");
+replaceOnce('const link=join(workspace,actions.sources.link);await writeChanged(join(workspace,".bazelignore"),actions.sources.link+"\\n");','const link=join(workspace,actions.sources.link);await rm(join(workspace,".bazelignore"),{force:true});');
+const receiptSource=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧾️store-receipt"),receiptOut=join(import.meta.dir,"staged","store-receipt.mjs");
+let receipt=readFileSync(join(receiptSource,"🟨️.mjs"),"utf8");
+const patch=(from:string,to:string)=>{const parts=receipt.split(from);if(parts.length!==2)throw Error("receipt anchor count "+(parts.length-1)+": "+from.slice(0,60));receipt=parts.join(to);};
+patch('new URL("./🧬️schema/🔣️.json",import.meta.url)','new URL('+JSON.stringify(relative(dirname(receiptOut),join(receiptSource,"🧬️schema/🔣️.json")).split("\\").join("/"))+',import.meta.url)');
+patch('if(!Array.isArray(outputs)||!outputs.includes(storeReceiptOutputV1(target)))return undefined;','if(!Array.isArray(outputs)||!outputs.some(output=>typeof output==="string"&&output.startsWith(policy.projectRootToken+"/"+policy.directory+"/"))||!outputs.includes(storeReceiptOutputV1(target)))return undefined;');
+writeFileSync(receiptOut,receipt);
+replaceOnce('from "'+relative(dirname(out),join(receiptSource,"🟨️.mjs"))+'"','from "./store-receipt.mjs"');
+text+=readFileSync(join(import.meta.dir,"scratch-host.part.ts"),"utf8");
+writeFileSync(out,text);
+console.log(out,text.length);

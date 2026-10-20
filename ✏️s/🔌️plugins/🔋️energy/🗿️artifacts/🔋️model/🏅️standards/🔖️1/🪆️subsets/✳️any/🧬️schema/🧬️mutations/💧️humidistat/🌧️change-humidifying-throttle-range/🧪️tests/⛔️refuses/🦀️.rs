@@ -30,7 +30,7 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
 
 fn case() -> Case {
     Case {
-        kind: "change-humidistat-humidifying-throttle-range", directory: "🌧️change-humidistat/⛔️refuses", before: BEFORE, after: AFTER, mutation: MUTATION, diff: DIFF, outcome: OUTCOME, scenario
+        kind: "change-humidistat-humidifying-throttle-range", directory: "💧️humidistat/🌧️change-humidifying-throttle-range/⛔️refuses", before: BEFORE, after: AFTER, mutation: MUTATION, diff: DIFF, outcome: OUTCOME, scenario
     }
 }
 

@@ -25,5 +25,5 @@ test("controlled signatures and retained faults use the actual Value owner witho
  for(const signature of ["fn admit(&mut self,bytes:usize)->Result<(),ValueError>","fn checkpoint(&mut self,progress:DeflateEncodeProgress)->Result<(),ValueError>","pub fn deflate_controlled<C:DeflateEncodeControl>(raw:&[u8],control:&mut C)->Result<Vec<u8>,ValueError>","pub kind: ValueRefusalKind,"])expect(source).toContain(signature);
  expect(source).not.toContain("into_message()");
  const manifestSource=readFileSync(resolve(owner,"📦️packages/🦀️rust/Cargo.toml"),"utf8");const manifest=Bun.TOML.parse(manifestSource) as {dependencies:Record<string,unknown>};
- expect(manifest).toEqual(TOML.parse(manifestSource) as typeof manifest);expect(Object.keys(manifest.dependencies)).toEqual(["semio-framework-value"]);
+ expect(manifest).toEqual(TOML.parse(manifestSource) as typeof manifest);expect(Object.keys(manifest.dependencies)).toEqual(["semio-framework-value","semio-framework-value-persistent"]);
 });

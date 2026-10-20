@@ -10,6 +10,10 @@ use store::{
     os_store::serialization::ArtifactSqliteSnapshotHost,
 };
 use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_s_plugin_block::BlockKindIdentity;
+use semio_s_plugin_block::BlockAttribute;
+use semio_s_plugin_block::BlockAuthor;
+use semio_s_plugin_block::BlockCompatibilityRule;
 fn invalid(message: &'static str) -> ValueError {
     ValueError::new(ValueRefusalKind::InvalidValue, message)
 }

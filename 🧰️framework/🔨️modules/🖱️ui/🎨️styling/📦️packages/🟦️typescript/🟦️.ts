@@ -1,4 +1,4 @@
-export { default as stylingSchema } from "../../🔣️.json";
+export { default as stylingSchema } from "../../🔣️.json" with { type: "json" };
 export * from "../../🌓️theme/🟦️.ts";
 export { STYLING_COMPACT_ROOT_PX, STYLING_DOM, STYLING_SIZE_VAR, domSizePx, readSizeVarPx, sizeVar, uiSpacingLen, uiSpacingPx } from "../../🌓️theme/📏️size/🟦️.ts";
 export { SPATIAL_AXIS_COLOR_REFS, blendTokenHex, clearColorResolveCache, hexToThreeColor, resolveBackgroundColorHex, resolveColorHex, resolveColorRgba, resolveSemanticColorHex, resolveSpatialAxisColors, resolveThreeColor, semanticVar, themeColorVar, tokenHex, tokenVar } from "../../🌓️theme/🌈️color/🟦️.ts";

@@ -1,13 +1,13 @@
 /** 📂️ Staging: module exporting `rustUnitDescriptorStageProtocolV1`, `RustUnitDescriptorStageObservationV1`, `observeRustUnitDescriptorStageV1`, `publishRustUnitDescriptorStageV1` and more. */
 import{lstat,open,mkdir,rename,rm,unlink}from"node:fs/promises";
 import{join,dirname}from"node:path";
-import schema from"./🧬️schema/🔣️.json";
+import schema from"./🧬️schema/🔣️.json" with { type: "json" };
 import{requireRustUnitDescriptorCatalogWriterV3,type RustUnitDescriptorCatalogContextV2}from"../🗄️catalog/🟦️.ts";
 import{rustUnitDescriptorNodeArtifactV2,type RustUnitDescriptorNodeV2}from"../../../🕸️nodes/🟦️.ts";
 import{requireRustUnitDescriptorExclusiveV2}from"../../../🔒️namespace/🟦️.ts";
 import{checkResourceLeaseControl}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{requireNativeStoragePathV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import{withArtifactDescriptorV1,requireArtifactDescriptorClosureV1}from"../../../../../../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import{withArtifactDescriptorV1,requireArtifactDescriptorClosureV1}from"../../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import{withExactSourceReadBatchV1,readExactSourceFileV1}from"../../../../../../../🏗️build/📥️inputs/🧮️digest/📥️read/🟨️.mjs";
 
 export const rustUnitDescriptorStageProtocolV1=Object.freeze({...schema.definitions.Protocol.const});

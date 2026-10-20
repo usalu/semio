@@ -7,7 +7,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import * as TOML from "@iarna/toml";
-import axes from "../../🎚️axes/🔣️.json";
+import axes from "@semio-tech/ui/axes.json";
 import fixture from "./🧫️fixtures/🔣️.json";
 import retirementFixture from "../🏷️label/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json";
 import labelSchema from "../🧬️schema/🏷️localized-label/🔣️.json";

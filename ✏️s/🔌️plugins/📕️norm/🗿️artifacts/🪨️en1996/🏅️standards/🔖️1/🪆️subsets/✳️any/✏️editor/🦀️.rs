@@ -287,11 +287,6 @@ pub fn create_en1996_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("applyRemedy", InteractiveJobClassification::Migrated)
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
-            // 🚧️ SDK GAP (contract §2.4): `EditorBuilder` takes a bare `AppDefinition` — there is no
-            // `.example(...)`/`.workflow(...)` on this builder (see the pilot's w2-cad-report.md "SDK
-            // gaps" #4), so the old app-level example/workflow registration is dropped here, not
-            // silently: the subset's own `📚️examples/🎬️demo-session` facet (real content, moved
-            // verbatim below) is the modern role-agnostic replacement surface for this.
             .action_describe("evaluate", LocalizedLabel::native("Recomputes every EN 1996 (Eurocode 6, masonry structures) check from the document's inputs and refreshes the results window; the document is not changed.", "Berechnet alle Nachweise nach EN 1996 (Eurocode 6, Mauerwerksbau) aus den Eingaben des Dokuments neu und aktualisiert das Ergebnisfenster; das Dokument ändert sich nicht."))
             .action_describe("setSelectedCheckIndex", LocalizedLabel::native("Points the inspection panel at one computed check by its index in the results list; only the view changes.", "Richtet das Inspektionspanel anhand seines Index in der Ergebnisliste auf einen berechneten Nachweis aus; nur die Ansicht ändert sich."))
             .build_definition()

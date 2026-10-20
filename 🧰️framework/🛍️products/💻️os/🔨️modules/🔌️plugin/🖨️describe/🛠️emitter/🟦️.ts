@@ -3,7 +3,7 @@ import type {NativeStorageReservationV1} from "@semio-tech/process/artifacts/nat
 import {readCompletedCargoRetainedIndexV1} from "@semio-tech/process/artifacts/native-build/receipt/retention/reading";
 import type {RetainedCompilationFileV1} from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📁️copy/🟦️.ts";
 import type {CompletedCargoCompilationViewV1} from "@semio-tech/process/artifacts/native-build/receipt/retention/snapshot";
-import {CurrentPhysicalOwnerV1} from "@semio-tech/framework/filesystem";
+import {CurrentPhysicalOwnerV1} from "@semio-tech/framework-filesystem/observation";
 import {cargoProvenancePhysicalControlV1} from "@semio-tech/process/native-build";
 import {checkResourceLeaseControl} from "@semio-tech/process/leases";
 import compilerInventory from "@semio-tech/process/artifacts/publication/sources/schema.json";

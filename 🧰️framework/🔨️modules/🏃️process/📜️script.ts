@@ -42,9 +42,11 @@ class TestScript extends BundleScript {
       return;
     }
     const suites: Readonly<Record<string, { source: string; budgetMs: number; testNamePattern?: string }>> = {
+      "descriptor-lifetime": {source:"🔒️leases/📁️physical/🧪️tests/📂️descriptors/🟦️.ts",budgetMs:TEST_LEVEL_BUDGET_MS.quick},
       "process-progress": {source:"🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️progress/🟦️.ts",budgetMs:TEST_LEVEL_BUDGET_MS.quick},
       "cargo-source-admission": {source:"📦️artifacts/🏗️native-build/📥️source/🎟️admission/🧪️tests/🟦️.ts",budgetMs:TEST_LEVEL_BUDGET_MS.quick},
       "resource-lease-waits": {source:"🔒️leases/⏳️wait/🧪️tests/🟦️.ts",budgetMs:TEST_LEVEL_BUDGET_MS.quick},
+      "resource-lease-fairness": {source:"🔒️leases/⚖️fairness/🧪️tests/🟦️.ts",budgetMs:TEST_LEVEL_BUDGET_MS.quick},
       "exact-cargo-storage": {source:"🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts",budgetMs:TEST_LEVEL_BUDGET_MS.fundamental,testNamePattern:"exact Cargo refuses missing|actual exact Cargo bounded|exact Cargo preparation|Cargo execution|Declared command tails"},
       "compiler-state": { source: "🏗️build/🟦️typescript/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.quick },
       "runtime-environment": { source: "🏗️build/🎛️environment/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.quick },

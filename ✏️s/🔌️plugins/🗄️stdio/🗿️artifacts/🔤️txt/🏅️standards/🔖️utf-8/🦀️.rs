@@ -51,9 +51,11 @@ pub fn native_codec() -> store::os_store::serialization::ArtifactCodec {
 
 //#region 🧩️ArtifactItems6
 pub mod artifact_items_6 {
+    use semio_framework_plugin::declarations;
 use crate::{formats};
 use crate::{STDIO_TXT_DOCUMENT_SCHEMA};
 use crate::{native_codec};
+use crate::TxtApps;
 use crate::{ARTIFACT_DEFINITION_SCHEMA};
 use semio_framework_plugin::{ArtifactDeclaration, ArtifactDefinition, ArtifactDefinitionError, PluginAssemblyError};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};

@@ -14,7 +14,7 @@ const REPO_MCP_PROFILE_ENV = "SEMIO_REPO_MCP_CLIENT";
  * rebuilding it inline — a continuous `dev` session must stay thin and consume cached deliverables. */
 function requireRepoMcpBinary(root: string): string {
   const bin = resolveMcpBin(root);
-  if (!existsSync(bin) || !statSync(bin).isFile()) throw new Error(`repo MCP client binary is missing at ${bin}; run: bun repo run repo-mcp:build`);
+  if (!existsSync(bin) || !statSync(bin).isFile()) throw new Error(`repo MCP client binary is missing at ${bin}; run: repo run repo-mcp:build`);
   return bin;
 }
 
@@ -33,7 +33,7 @@ export class DevScript extends Script {
       await this.runMcp(segments.slice(1));
       return;
     }
-    console.error(`[dev] unknown route ${JSON.stringify(segments.join(" "))}: expected storybook, storybook-static or mcp. Playgrounds are dashboard commands: \`bun run dashboard run playground:<variant> --param renderer=react\` (list them with \`bun run dashboard commands playground\`).`);
+    console.error(`[dev] unknown route ${JSON.stringify(segments.join(" "))}: expected storybook, storybook-static or mcp. Playgrounds are dashboard commands: \`repo dashboard run playground:<variant> --param renderer=react\` (list them with \`repo dashboard commands playground\`).`);
     process.exit(1);
   }
 
@@ -128,7 +128,7 @@ export class DevScript extends Script {
     }
     const profile = (slugs[0] ?? "client").trim().toLowerCase();
     const bin = requireRepoMcpBinary(this.root);
-    runCmd(bin, [], { cwd: this.root, ...daemonBudgetOpts({ GOWORK: join(this.root, "go.work"), [REPO_MCP_PROFILE_ENV]: profile }) });
+    runCmd(bin, ["mcp"], { cwd: this.root, ...daemonBudgetOpts({ GOWORK: join(this.root, "go.work"), [REPO_MCP_PROFILE_ENV]: profile }) });
   }
 }
 //#endregion 🔖️DevScript

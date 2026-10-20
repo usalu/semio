@@ -256,3 +256,20 @@ async fn the_store_folds_a_stroke_like_the_leaf() {
     store::os_store::test_support::close_plain_test_store(&mut store);
 }
 //#endregion 🏪️Store
+
+//#region 🗂️CaseTable
+/// 🗂️ The leaf's case table `🔣️.cases.json` names exactly the scenarios `cases()` prints, so this runner, the TypeScript twin and the committed quintets cannot disagree about which scenarios exist.
+#[test]
+fn the_case_table_names_every_scenario_of_the_leaf() {
+    let table: serde_json::Value = serde_json::from_str(include_str!("🔣️.cases.json")).expect("the case table is JSON");
+    let mut listed: Vec<&str> = table["cases"].as_array().expect("the case table lists cases").iter().map(|case| case.as_str().expect("a case is a directory name")).collect();
+    let mut printed = Vec::new();
+    for (case, before, _mutation) in cases() {
+        printed.push(case);
+        retire(before);
+    }
+    listed.sort_unstable();
+    printed.sort_unstable();
+    assert_eq!(listed, printed);
+}
+//#endregion 🗂️CaseTable

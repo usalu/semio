@@ -13,7 +13,7 @@
  * @see ../../../🧰️framework/🛍️products/📚️course/README.md — the quiz domain model */
 import "./🎨️.css";
 import { mountCourse } from "@semio-tech/course-react/app";
-import logo from "../../../🧰️framework/🔨️modules/🖼️assets/🪧️logos/🛡️emblem/🌘️dark-round/🖋️vector.svg?url";
+import { darkRoundEmblemSvgUrl as logo } from "@semio-tech/assets/logos/emblem/dark-round";
 import { ARCHITECTURE_COURSE_MATERIAL } from "./📚️course/🟦️.ts";
 import { site } from "./🚀️deploy/🔣️.json";
 

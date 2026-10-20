@@ -5,7 +5,7 @@ import{types}from"node:util";
 import{mkdir,lstat,open}from"node:fs/promises";
 import{join}from"node:path";
 import{withRustUnitDescriptorWorkingSetV2,rustUnitDescriptorWorkingSetNodesV2,type RustUnitDescriptorWorkingSetV2}from"../../🧺️set/🟦️.ts";
-import schema from"./🧬️schema/🔣️.json";
+import schema from"./🧬️schema/🔣️.json" with { type: "json" };
 import{captureRustUnitDescriptorCatalogSnapshotV2,captureRustUnitDescriptorCatalogStateV2,planRustUnitDescriptorWorkingSetAdmissionV3,rustUnitDescriptorCacheLimitsV1,type RustUnitDescriptorCacheBoundsV1,type RustUnitDescriptorAdmissionV2}from'../../🟦️.ts';
 import{rustUnitDescriptorNodesV2,rustUnitDescriptorNodeArtifactV2,type RustUnitDescriptorGraphV2}from'../../../🕸️nodes/🟦️.ts';
 import{withRustUnitDescriptorNamespaceV2,requireRustUnitDescriptorExclusiveV2}from'../../../🔒️namespace/🟦️.ts';
@@ -13,7 +13,7 @@ import{requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1,w
 import{withResourceLeases,checkResourceLeaseControl,type ResourceLeaseControl}from'../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts';
 import{finishResourceLeaseCleanupV1}from'../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/♻️retirement/🟦️.ts';
 import{requireNativeStoragePathV1}from'../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts';
-import{withArtifactDescriptorV1,artifactReadFlagsV1}from'../../../../../../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts';
+import{withArtifactDescriptorV1,artifactReadFlagsV1}from'../../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts';
 
 /** 🗄️ Uses only repository-owned row, statement and lifetime ports around system SQLite. */
 interface CatalogDatabase{exec(sql:string):void;read(sql:string,...values:(string|number)[]):Record<string,unknown>|undefined;run(sql:string,...values:(string|number)[]):number;rows(sql:string,...values:(string|number)[]):readonly Record<string,unknown>[];close():Promise<void>}

@@ -1,6 +1,6 @@
 import{withNativeArtifactCacheProducerV1,withNativeArtifactCacheVictimV1,type NativeArtifactCacheProducerV1}from"../🏗️producer/🟦️.ts";
-import producerSchema from"../🏗️producer/🧬️schema/🔣️.json";
-import nativeSchema from"../../🏗️native-build/💾️storage/🧬️schema/🔣️.json";
+import producerSchema from"../🏗️producer/🧬️schema/🔣️.json" with { type: "json" };
+import nativeSchema from"../../🏗️native-build/💾️storage/🧬️schema/🔣️.json" with { type: "json" };
 import{NativeArtifactCacheReceiverLedgerV1}from"../📋️model/📨️receiver/🟦️.ts";
 import{mkdirSync,lstatSync,existsSync,openSync,closeSync,writeFileSync,fsyncSync,renameSync,rmSync}from"node:fs";
 import{randomBytes,createHash}from"node:crypto";

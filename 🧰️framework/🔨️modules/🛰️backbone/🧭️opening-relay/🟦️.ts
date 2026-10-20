@@ -1,7 +1,9 @@
 /** 🧭️ Artifact opening relay: resolves the opening preferences, role and router a relayed artifact opening carries. */
 
 import type { AppRef, AppRole, AppRouter, ArtifactDialect, OpeningPreferences } from "@semio-tech/framework";
-import { dialectCoordinate, parseDialectCoordinate, parseSurfaceAppId, resolveOpeningApp } from "@semio-tech/framework";
+import { dialectCoordinate, parseDialectCoordinate } from "../../🚪️io/🧬️schema/🟦️.ts";
+import { parseSurfaceAppId } from "@semio-tech/framework-manifest/schema";
+import { resolveOpeningApp } from "../../🎠️kernel/📖️opening-resolver/🟦️.ts";
 
 //#region 🔖️ArtifactOpeningRelay
 /** 📂️ Canonical shell relay after parsing role aliases, validating an exact "Open with…"

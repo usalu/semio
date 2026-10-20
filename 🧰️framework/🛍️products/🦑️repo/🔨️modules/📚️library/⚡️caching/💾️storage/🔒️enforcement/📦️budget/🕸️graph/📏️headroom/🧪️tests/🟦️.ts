@@ -8,7 +8,8 @@ import {Database} from "bun:sqlite";
 import {createHash} from "node:crypto";
 import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,lstatSync,statfsSync,existsSync,rmSync,utimesSync} from "node:fs";
 import {join} from "node:path";
-import {scriptInvocationEnvironment,receiveScriptProcessInvocation} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {scriptInvocationEnvironment} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
 import {openNativeImageStorageV1,retireNativeImageStorageV1} from "@semio-tech/process/artifacts/native-build/storage/image";
 import {repositoryLeaseDirectoryV1} from "../../../📥️opening/🟦️.ts";
@@ -22,7 +23,7 @@ test("portable graph headroom request is bounded before physical work",async()=>
  try{for(const row of fixture.requests){let accepted=true;try{api.readBuildGraphHeadroomRequestV1(row.value);}catch{accepted=false;}expect(accepted).toBe(row.accepted);expect(validate(row.value)).toBe(row.accepted);const independent=oracle.query("select json_type(?1,'$.wait') in ('true','false') and (select count(*) from json_each(?1))=2 and json_type(?1,'$.minimumAvailableBytes')='integer' and json_extract(?1,'$.minimumAvailableBytes') between 0 and 2684354560 admitted").get(JSON.stringify(row.value))as{admitted:number|null};expect(Boolean(independent.admitted)).toBe(row.accepted);}}finally{oracle.close();}
 });
 
-test.skipIf(process.platform!=="darwin")("actual graph headroom pressure, reader, integrity and deadline custody",async()=>receiveScriptProcessInvocation(process.env,async original=>{for(const scenario of["pressure","reader","queued","queued-cancel","corrupt","invalid-request"]as const)await withRepositoryTestArtifactsV1(process.cwd(),original,artifactEntryControlV1(original,"test:artifact-entry",0),async artifactPhase=>{
+test.skipIf(process.platform!=="darwin")("actual graph headroom pressure, reader, integrity and deadline custody",async()=>withBuildTestInvocationV1(async original=>{for(const scenario of["pressure","reader","queued","queued-cancel","corrupt","invalid-request"]as const)await withRepositoryTestArtifactsV1(process.cwd(),original,artifactEntryControlV1(original,"test:artifact-entry",0),async artifactPhase=>{
  const api=await import("../🟦️.ts"),row=fixture.physical,parent=mkdtempSync(join(repositoryTestArtifactRootV1(process.cwd()),"gh-")),directory=join(parent,"i"),leaseDirectory=repositoryLeaseDirectoryV1(process.cwd()),control=scriptCompilerAdmissionControlV1(original,"graph:headroom:"+scenario,60000),options={directory,leaseDirectory,filesystemBytes:row.filesystemBytes,maximumPhysicalBytes:row.maximumPhysicalBytes,control};let image=await openNativeImageStorageV1(options),reader:typeof image|undefined;
  const root=image.root,snapshots=join(root,"snapshots"),unknown=join(root,"unknown.input"),canonical=join(root,"canonical.json"),authority=join(root,"authority.json"),paths:string[]=[];
  try{

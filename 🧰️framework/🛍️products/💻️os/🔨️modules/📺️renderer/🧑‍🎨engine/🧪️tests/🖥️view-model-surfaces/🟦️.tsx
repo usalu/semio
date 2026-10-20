@@ -2,7 +2,7 @@
 import type { UiNodeRecord } from "@semio-tech/framework";
 import type { RetainedSurface } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 import { type PluginRuntimeVitest, type PluginRuntimeDependencies, type PluginRuntimeSource } from "../🛠️plugin-runtime-helpers/🟦️.tsx";
-import { loadUiRefreshSectionFixture, loadPagedTextCarrierFixture } from "@semio-tech/framework/manifest/testing/fixtures";
+import { loadUiRefreshSectionFixture, loadPagedTextCarrierFixture } from "@semio-tech/framework-manifest/testing/fixtures";
 import { loadValueResidentSchema } from "@semio-tech/value-ts/testing/fixtures";
 
 /** 🧩️ One packed text leaf of a paged text carrier: slice 0 in `value`, slices 1..32 as

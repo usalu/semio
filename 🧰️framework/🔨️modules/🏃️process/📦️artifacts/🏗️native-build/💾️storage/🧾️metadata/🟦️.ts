@@ -1,7 +1,7 @@
 import{lstat,open}from"node:fs/promises";
 import{constants}from"node:fs";
 import{dirname,resolve,relative,isAbsolute,sep}from"node:path";
-import{withArtifactDescriptorV1}from"../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import{withArtifactDescriptorV1}from"../../../../../📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import{checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseControl}from"../../../../🔒️leases/🟦️.ts";
 import{requireIssuedResourceControlV1}from"../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import{flushNativeDirectoryV1}from"../📁️directory/🟦️.ts";

@@ -1,10 +1,11 @@
-import {readFileSync} from "node:fs";
+import{fileURLToPath}from"node:url";
+import{captureBoundedSourceRevisionV1,capturePhysicalSourceTextV1,physicalSourceOriginV1}from"../📥️inputs/🔏️revision/🟨️.mjs";
 import {createHash} from "node:crypto";
 import {resolve,relative,isAbsolute,sep} from "node:path";
-const schemaSource=readFileSync(new URL("./🧬️schema/🔣️.json",import.meta.url)),schema=JSON.parse(schemaSource.toString("utf8"));
-const nativeSchemaSource=readFileSync(new URL("../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",import.meta.url)),nativeSchema=JSON.parse(nativeSchemaSource.toString("utf8"));
+const schemaSource=Buffer.from(capturePhysicalSourceTextV1(new URL("./🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),65536)),schema=JSON.parse(schemaSource.toString("utf8"));
+const nativeSchemaSource=Buffer.from(capturePhysicalSourceTextV1(new URL("../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),65536)),nativeSchema=JSON.parse(nativeSchemaSource.toString("utf8"));
 const key="SEMIO_OWNER_ARGUMENTS";
-const argumentSourceIdentity=(captured=false)=>createHash("sha256").update(JSON.stringify([readFileSync(new URL(import.meta.url)),captured?schemaSource:readFileSync(new URL("./🧬️schema/🔣️.json",import.meta.url)),captured?nativeSchemaSource:readFileSync(new URL("../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",import.meta.url))].map(bytes=>createHash("sha256").update(bytes).digest("hex")))).digest("hex"),loadedArgumentSourceIdentity=import.meta.semioFrozenAuthorizers?undefined:argumentSourceIdentity(true);
+const argumentSourceIdentity=(captured=false)=>createHash("sha256").update(JSON.stringify([captureBoundedSourceRevisionV1(fileURLToPath(new URL(physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL))),8388608).sha256,...[captured?schemaSource:Buffer.from(capturePhysicalSourceTextV1(new URL("./🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),65536)),captured?nativeSchemaSource:Buffer.from(capturePhysicalSourceTextV1(new URL("../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),65536))].map(bytes=>createHash("sha256").update(bytes).digest("hex"))])).digest("hex"),loadedArgumentSourceIdentity=import.meta.semioFrozenAuthorizers?undefined:argumentSourceIdentity(true);
 
 /** 🔏️ Binds the evaluated argument owner to its own unchanged physical implementation and contracts. */
 export function ownerArgumentsSourceIdentityV1(){if(!loadedArgumentSourceIdentity)throw Error("Live private Nx argument Source identity required");if(argumentSourceIdentity()!==loadedArgumentSourceIdentity)throw Error("Loaded private Nx argument Source changed");return loadedArgumentSourceIdentity;}

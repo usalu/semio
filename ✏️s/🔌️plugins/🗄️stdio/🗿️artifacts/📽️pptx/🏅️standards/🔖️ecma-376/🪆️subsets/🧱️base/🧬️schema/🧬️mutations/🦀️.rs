@@ -266,9 +266,9 @@ pub(crate) fn demo_fixture() -> PptxSnapshot {
     }))
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<PptxMutation> {
+pub fn demo_mutation_cases() -> Vec<PptxMutation> {
     let fixture = demo_fixture();
     let slides = semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::xml_address::pptx_slides(&fixture).expect("canonical demo slides");
     let first_shape = slides[0].shapes[0].address.clone();

@@ -1,0 +1,211 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🗺️plan/🧮️pack/🟦️.ts",
+ "function": "planArtifactCratesOnce",
+ "keep": [],
+ "typeOverrides": {
+  "options": "PlanOptions"
+ },
+ "resolve": true,
+ "typesFromProducers": true,
+ "shared": {
+  "dir": "📚️pack-types",
+  "doc": "/** 📚️ The shared types of the artifact crate pack planner: the crate under construction and the moved root item unit. */"
+ },
+ "files": [
+  {
+   "dir": "📥️source-and-slices",
+   "doc": "/** 📥️ The crate source folding, the carve slices and the root item index of the artifact crate pack planner. */",
+   "phases": [
+    {
+     "name": "readCrateSource",
+     "emoji": "📖",
+     "doc": "Reads the manifest and the crate root source, folds the mount trees and applies the test, lift and inline transforms.",
+     "from": 43,
+     "to": 62
+    },
+    {
+     "name": "buildCarveSlices",
+     "emoji": "🍰",
+     "doc": "Converts mutation leaves, collects the declaration tree and builds the carvable slices with their gates and wrappers.",
+     "from": 68,
+     "to": 87
+    },
+    {
+     "name": "indexRootItems",
+     "emoji": "🗂",
+     "doc": "Indexes the crate root items: extern rows, gated uses, use targets, regions and the measurement root.",
+     "from": 91,
+     "to": 122
+    }
+   ]
+  },
+  {
+   "dir": "🧲️slice-ownership",
+   "doc": "/** 🧲️ The mirror measurement closures, the slice infos and the chain ownership lookups of the artifact crate pack planner. */",
+   "phases": [
+    {
+     "name": "defineMirrorMeasurement",
+     "emoji": "📐",
+     "doc": "Defines the unit, cut overlay, wrapper spec and measurement closures that mirror one set of slices as a crate.",
+     "from": 123,
+     "to": 155
+    },
+    {
+     "name": "collectSliceInfos",
+     "emoji": "🧮",
+     "doc": "Collects the coherence types, trait names, type definitions and one info per carvable slice.",
+     "from": 161,
+     "to": 167
+    },
+    {
+     "name": "defineChainOwnership",
+     "emoji": "🧭",
+     "doc": "Indexes the owners of declaration paths and defines the member visibility, source text and shim lookups of path chains.",
+     "from": 175,
+     "to": 236
+    }
+   ]
+  },
+  {
+   "dir": "🔗️edges-and-closures",
+   "doc": "/** 🔗️ The slice edge resolution and the root item closures of the artifact crate pack planner. */",
+   "phases": [
+    {
+     "name": "resolveSliceEdges",
+     "emoji": "🕸",
+     "doc": "Resolves the library and test edges, root references and coherence of every slice info.",
+     "from": 237,
+     "to": 312
+    },
+    {
+     "name": "closeRootItemReferences",
+     "emoji": "🔁",
+     "doc": "Computes the transitive closure of the root items every slice references and picks the closest owners.",
+     "from": 318,
+     "to": 351
+    }
+   ]
+  },
+  {
+   "dir": "🧵️weave-merge-and-blockers",
+   "doc": "/** 🧵️ The root item weaving, the component merging and the blockers of the artifact crate pack planner. */",
+   "phases": [
+    {
+     "name": "planRootItemWeaving",
+     "emoji": "🧶",
+     "doc": "Plans which root module items are woven into the slices and which tests are dropped.",
+     "from": 366,
+     "to": 386
+    },
+    {
+     "name": "mergeCoupledComponents",
+     "emoji": "🧩",
+     "doc": "Merges slices that are coupled by coherence, import cycles and file chains into components.",
+     "from": 394,
+     "to": 455
+    },
+    {
+     "name": "collectComponentBlockers",
+     "emoji": "🚧",
+     "doc": "Groups the merged slices into components and collects the blockers that keep a component from being carved.",
+     "from": 456,
+     "to": 460
+    }
+   ]
+  },
+  {
+   "dir": "🗜️packing",
+   "doc": "/** 🗜️ The component layering and the packing of components into crates of the artifact crate pack planner. */",
+   "phases": [
+    {
+     "name": "prepareComponentPacking",
+     "emoji": "🪜",
+     "doc": "Layers the components by dependency depth and defines the group, acyclicity and mirror validity helpers.",
+     "from": 502,
+     "to": 536
+    },
+    {
+     "name": "packComponents",
+     "emoji": "🧳",
+     "doc": "Packs the components into crate groups by the measured budget.",
+     "from": 540,
+     "to": 540
+    }
+   ]
+  },
+  {
+   "dir": "🚚️moved-items",
+   "doc": "/** 🚚️ The root items that move into crates and their hosting in the artifact crate pack planner. */",
+   "phases": [
+    {
+     "name": "findMovedRootItems",
+     "emoji": "🔎",
+     "doc": "Finds the root items that move into the crates the groups reference.",
+     "from": 573,
+     "to": 583
+    },
+    {
+     "name": "pieceMovedRootItems",
+     "emoji": "🧱",
+     "doc": "Cuts the moved items into pieces and computes their dependencies.",
+     "from": 602,
+     "to": 624
+    },
+    {
+     "name": "buildMovedUnits",
+     "emoji": "📋",
+     "doc": "Builds the moved units from the strongly connected pieces.",
+     "from": 625,
+     "to": 662
+    },
+    {
+     "name": "hostMovedUnits",
+     "emoji": "🏠",
+     "doc": "Assigns every moved unit a hosting crate.",
+     "from": 676,
+     "to": 718
+    }
+   ]
+  },
+  {
+   "dir": "🏗️crate-drafts",
+   "doc": "/** 🏗️ The crate drafts, their names and their mirrored files of the artifact crate pack planner. */",
+   "phases": [
+    {
+     "name": "draftCrates",
+     "emoji": "🏷",
+     "doc": "Drafts one crate per group and labels the drafts.",
+     "from": 719,
+     "to": 745
+    },
+    {
+     "name": "nameAndPlaceCrates",
+     "emoji": "📛",
+     "doc": "Names every draft crate, picks its directory and plans its dependencies.",
+     "from": 752,
+     "to": 755
+    },
+    {
+     "name": "renderCrateMirrors",
+     "emoji": "🪞",
+     "doc": "Renders the mirrored files of every planned crate and resolves their moved item appends.",
+     "from": 827,
+     "to": 830
+    }
+   ]
+  },
+  {
+   "dir": "🖇️root-edits",
+   "doc": "/** 🖇️ The root edits and the final plan of the artifact crate pack planner. */",
+   "phases": [
+    {
+     "name": "collectRootEditsAndPlan",
+     "emoji": "✂",
+     "doc": "Collects the root edits, file cuts and woven exports and assembles the crate plan.",
+     "from": 891,
+     "to": 936
+    }
+   ]
+  }
+ ]
+}

@@ -173,27 +173,7 @@ pub struct TypedOperationScan {
 /// ⏱️ Wall milliseconds one turn may spend driving typed-operation units — the reactor executor's
 /// own slice, so the continuation phase and the executor phase cost an interactive turn the same.
 pub const TYPED_OPERATION_SLICE_MS: u64 = 8;
-/// 🔁️ Units one turn may drive before it hands the host its turn back regardless of the clock.
-/// A guest whose host clock is missing still terminates; 256 covers every staged work this
-/// runtime admits (the heaviest measured is a 5.7 KB `registerBrushMesh` at ~84).
-pub const TYPED_OPERATION_UNITS_PER_TURN: u32 = 256;
-/// 📄️ Result pages ONE turn may hand the host, and therefore the widest acknowledgement batch the
-/// shell posts back in one crossing.
-///
-/// 🐛️ A turn used to carry EXACTLY ONE page: [`advance_typed_operation_output`] took a single page
-/// and [`TypedOperationGrant::spent`] ended the drive the instant it existed, so every
-/// acknowledgeable publication unit of every live operation cost its own host round trip. Measured
-/// on the React door of 🧊️generation3d (`📓️shard-message-crossings-2026-09-15.md` §2): **200 ack
-/// crossings over 69 operations, every single one carrying exactly ONE ack** — 10.0 of a
-/// `flowEvalTick` hop's 36.2 worker crossings, each a full structured-clone round trip to retire 53
-/// bytes. A page's ACK is per-page by protocol; the CROSSING that carries it never had to be.
-/// `Event::Message` is a list on the wire and the reactor's poll already acknowledges every entry of
-/// it, so N presentable pages retire in ONE crossing — the same cardinality change
-/// `📓️ui-turn-patch-batching-2026-09-15.md` made for `patch-ack`.
-///
-/// Each operation still retains exactly one unacknowledged page (`queue_page`), so this bound is
-/// over DISTINCT live operations, never over one operation's own sequence.
-pub const TYPED_OPERATION_PAGES_PER_TURN_MAXIMUM: usize = 8;
+pub use semio_framework_plugin_reactor_lifecycle::result_publication::{TYPED_OPERATION_PAGES_PER_TURN_MAXIMUM, TYPED_OPERATION_UNITS_PER_TURN};
 /// 🔁️ What one turn may spend continuing typed operations, and what stops it early.
 ///
 /// [`plugin_continue_typed_operations`] advanced EXACTLY ONE publication unit per call and the

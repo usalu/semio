@@ -105,7 +105,7 @@ pub struct LdltPreview {
 }
 
 #[derive(Clone, PartialEq)]
-struct LdltCheckpoint {
+pub struct LdltCheckpoint {
     pub(super) identity: NumericalCheckpointIdentity,
     pub(super) a: CscSym,
     pub(super) columns: SparseColumns,

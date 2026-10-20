@@ -35,10 +35,6 @@ impl semio_framework_os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMuta
 
     })())
 }
-}
-
-impl semio_framework_os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for CommitSpaceCheckpoint {
-    const SEMANTICS: semio_framework_os_spr::SemanticDescriptor = semio_framework_os_spr::SemanticDescriptor { verb: "commit", entity: "space-checkpoint", kind: "commit-space-checkpoint", record: "CommittedSpaceCheckpoint" };
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Commit space checkpoint {}", self.checkpoint.id), &format!("Space-Sicherungspunkt {} festschreiben", self.checkpoint.id))
     }

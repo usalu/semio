@@ -1,6 +1,6 @@
 //! 📇️ One original key admission publishes immutable sorted ranks for repeated sparse planning.
 use super::{NamedEditPlan,NamedEditSource,NamedEditLane,NamedEditStep,NamedEditFault,NamedRankedSource,invalid};
-use crate::{IndexedEditShape,RetirementDemand,ValueError,ValueRefusalKind,retirement::{RetireOwned,RetirementCursor,RetirementStep,shared::sealed::{SealedShared,SharedIssuer}},retained_clone::{RetainedCloneBinding,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
+use crate::{IndexedEditShape,RetirementDemand,ValueError,ValueRefusalKind,retirement::{RetireOwned,RetirementCursor,RetirementStep},shared_issuance::{SealedShared,SharedIssuer},retained_clone::{RetainedCloneBinding,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
 use std::mem::{ManuallyDrop,size_of};
 #[path="♻️transfer/🦀️.rs"]mod transfer;
 pub use transfer::KeyPreservingPersistentSet;

@@ -3,9 +3,9 @@ import{types}from"node:util";
 import{compileJsonSchemaSubset,jsonSchemaSubsetValueEquals}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import{readRustUnitV1,isRustUnitPathV1,type RustUnitV1}from"../🧬️definition/🟦️.ts";
 import{rustUnitCompilerContextV1,type RustUnitCompilerContextV1}from"../🧭️context/🟦️.ts";
-import unitSchema from"../🧬️schema/🔣️.json";
-import contextSchema from"../🧭️context/🧬️schema/🔣️.json";
-import schema from"./🧬️schema/🔣️.json";
+import unitSchema from"../🧬️schema/🔣️.json" with { type: "json" };
+import contextSchema from"../🧭️context/🧬️schema/🔣️.json" with { type: "json" };
+import schema from"./🧬️schema/🔣️.json" with { type: "json" };
 import{normalizeRustUnitV1,rustUnitPlanDigestV1,rustUnitPlanSlotV1}from"./🔏️identity/🟦️.ts";
 /** 📋️ One immutable compiler plan: the unit, its compiler context, its identity digest, its output directory and the digests of the plans it depends on. */
 export interface RustUnitPlanV1 {unit:RustUnitV1;context:RustUnitCompilerContextV1;digest:string;outputDirectory:string;dependencyDigests:{unit:string;semanticDigest:string;artifactDigest:string|null}[]}

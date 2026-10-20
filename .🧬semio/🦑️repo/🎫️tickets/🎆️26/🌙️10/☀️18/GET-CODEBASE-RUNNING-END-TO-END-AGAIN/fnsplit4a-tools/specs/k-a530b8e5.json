@@ -1,0 +1,69 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️owned-locale-detector-retirement/📦️control-chrome-1/🟦️.tsx",
+ "function": "registerControlChrome1Tests",
+ "kit": {
+  "dir": "💠️test-kit",
+  "doc": "/** 💠️ The shared test kit of registerControlChrome1Tests: the destructured dependencies and the shared fixtures. */",
+  "name": "createControlChrome1Kit",
+  "emoji": "🔰",
+  "fdoc": "Creates the shared test kit of registerControlChrome1Tests from the injected dependencies.",
+  "typeName": "ControlChrome1Kit"
+ },
+ "groups": [
+  {
+   "dir": "🔶️control-chrome",
+   "doc": "/** 🔶️ The control chrome describe block of registerControlChrome1Tests: its wrapper and parts. */",
+   "name": "registerControlChromeSuite",
+   "emoji": "🔷",
+   "fdoc": "Registers the control chrome describe block from its parts.",
+   "describeLine": 10,
+   "parts": [
+    {
+     "dir": "🟠️shows-inline-labels-buttons",
+     "doc": "/** 🟠️ The shows inline labels buttons tests of registerControlChrome1Tests. */",
+     "name": "registerShowsInlineLabelsButtonsTests",
+     "emoji": "🟡",
+     "fdoc": "Registers the shows inline labels buttons tests of registerControlChrome1Tests.",
+     "from": 12,
+     "to": 163
+    },
+    {
+     "dir": "🟢️resolves-ribbon-collection-ids",
+     "doc": "/** 🟢️ The resolves ribbon collection ids tests of registerControlChrome1Tests. */",
+     "name": "registerResolvesRibbonCollectionIdsTests",
+     "emoji": "🔵",
+     "fdoc": "Registers the resolves ribbon collection ids tests of registerControlChrome1Tests.",
+     "from": 170,
+     "to": 305
+    },
+    {
+     "dir": "🟣️uses-normal-shell-edges",
+     "doc": "/** 🟣️ The uses normal shell edges tests of registerControlChrome1Tests. */",
+     "name": "registerUsesNormalShellEdgesTests",
+     "emoji": "🟤",
+     "fdoc": "Registers the uses normal shell edges tests of registerControlChrome1Tests.",
+     "from": 312,
+     "to": 433
+    },
+    {
+     "dir": "⭐️panel-window-variant-tabs",
+     "doc": "/** ⭐️ The panel window variant tabs tests of registerControlChrome1Tests. */",
+     "name": "registerPanelWindowVariantTabsTests",
+     "emoji": "🌟",
+     "fdoc": "Registers the panel window variant tabs tests of registerControlChrome1Tests.",
+     "from": 461,
+     "to": 461
+    }
+   ],
+   "helpers": {
+    "dir": "🔸️helpers",
+    "doc": "/** 🔸️ The callback-local helpers shared by the parts of the control chrome describe block. */",
+    "name": "createControlChromeHelpers",
+    "emoji": "🔹",
+    "fdoc": "Creates the callback-local helpers shared by the parts of the control chrome describe block.",
+    "typeName": "ControlChromeHelpers"
+   }
+  }
+ ],
+ "rootKeep": []
+}

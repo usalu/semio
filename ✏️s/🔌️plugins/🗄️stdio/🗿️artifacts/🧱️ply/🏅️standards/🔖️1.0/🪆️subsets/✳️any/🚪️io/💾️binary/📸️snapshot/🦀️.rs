@@ -5,7 +5,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 
 
 
-pub(crate) use semio_s_artifact_stdio_ply_inferences::standards::v1_0::subsets::any::io::binary::snapshot::native_pack;
+pub use semio_s_artifact_stdio_ply_inferences::standards::v1_0::subsets::any::io::binary::snapshot::native_pack;
 
 #[allow(unused_imports)]
 mod diff_codec {

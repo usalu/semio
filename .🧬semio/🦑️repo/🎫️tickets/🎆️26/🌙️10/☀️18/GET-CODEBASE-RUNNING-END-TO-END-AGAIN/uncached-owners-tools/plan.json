@@ -1,0 +1,41 @@
+{
+ "version": 1,
+ "entries": [
+  {
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧬️schema/💾️cache.json",
+   "base": "cache-fix-staged",
+   "baseSha256": "dfb1c27d146f65059f34aebfda27bf236aba751a80fce4a40d4f1fc1e46baf85",
+   "stagedSha256": "d4deab3fb359cec34d52b80a1e4be4bb0441ee4d6abd200d199cf0ffe0b356fd"
+  },
+  {
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔒️cache-correctness/🟦️.ts",
+   "base": "cache-fix-staged",
+   "baseSha256": "13555b80bab62d80966005c901e20dd20c4ce1800346ede25bcf90b2df803aa5",
+   "stagedSha256": "a5a208de79bdef4360a540e79ad0e9a6ab722d6e21065def90e5be4865dba22a"
+  },
+  {
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔒️cache-correctness/🧪️tests/🔒️rules/🧬️schema/🔣️.json",
+   "base": "cache-fix-staged",
+   "baseSha256": "8a687d06b634dbbcfd8a0be267c7a3aa6422e83c3ca66c680151a95925f145f3",
+   "stagedSha256": "527bda18982a7af4ca53abb6fdad7036f6c0c6be814fb42ec1762399170c3648"
+  },
+  {
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔒️cache-correctness/🧪️tests/🔒️rules/🔣️.json",
+   "base": "cache-fix-staged",
+   "baseSha256": "0fcf5236b1476cd7a9ab04b84443f9084938b0439bfe6b0b4fb7d402e264293b",
+   "stagedSha256": "c65df28d143318bbd7f855f206a1d8014959a826526792fedfc35e9138fd21c5"
+  },
+  {
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️actions/🔣️.json",
+   "base": "cache-fix-staged",
+   "baseSha256": "cc1207c7b0ddaea59aaff24eaf3900d7607623a112bc1b169b2d115c526a80aa",
+   "stagedSha256": "da1d779bc60682fa325c02113f5b1bfa1fc2e6c4ec0c958cb0d6996876c19f52"
+  },
+  {
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/💾️cache/🔣️.json",
+   "base": "cache-fix-staged",
+   "baseSha256": "a0660c9ee098931b635b903eec28f3e072509c4ca89ab81519c7a6beff72f616",
+   "stagedSha256": "a91bb33b8fb35c45c09ec9ba154d4b1d8578816eeaa674f00705aa98e428daef"
+  }
+ ]
+}

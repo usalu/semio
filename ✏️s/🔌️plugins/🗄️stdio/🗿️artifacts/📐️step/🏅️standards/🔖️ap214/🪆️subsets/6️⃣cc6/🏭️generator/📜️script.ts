@@ -237,16 +237,6 @@ async function blobText(value: unknown): Promise<string> {
  * `handcrafted-tetrahedron`, whose own `FILE_NAME` timestamp is already a fixed constant.
  */
 function canonicalizeStep(text: string): string {
-  // 🧼️OCCT stamps three PROCESS-GLOBAL values into every export: a wall-clock timestamp, a translator
-  // counter on PRODUCT, and an occurrence counter on NEXT_ASSEMBLY_USAGE_OCCURRENCE. All three depend on
-  // how many exports ran earlier in the same process, never on the shape, so two byte-identical solids
-  // exported at different points in a batch differ in them and nowhere else.
-  //
-  // The third one is why generating the whole corpus twice is NOT a sufficient reproducibility test:
-  // both runs export in the same order, so the counters agree and the corpus looks stable. Regenerating
-  // ONE fixture on its own — which is what `test fixture reproduce` does — starts the counter from a
-  // different place and exposes it. That check found 23 of 119 fixtures still differing after the first
-  // two were normalized, every difference confined to these counters and none to geometry.
   return text
     .replace(/(FILE_NAME\('[^']*',')[^']*(',)/, "$11970-01-01T00:00:00$2")
     .replace(/(Open CASCADE STEP translator [0-9.]+) \d+/g, "$1")
@@ -306,12 +296,9 @@ async function generateOne(b: Kernel, recipe: Recipe, outDir: string): Promise<R
 
   const solids = (b.getSolids as unknown as (s: unknown) => unknown[])(result) ?? [];
   const empty = solids.length === 0;
-  // 📥️Export FIRST, then measure what was written — see `reimport` above.
   const exportedText = empty ? "" : canonicalizeStep(await blobText(call(b, "exportSTEP", result)));
   const measured = empty ? null : await reimport(b, exportedText);
 
-  // 🫙️An EMPTY result has no STEP body to export and no volume to measure. Writing a placeholder shape
-  // would turn "correctly nothing" into "something", so the bundle records emptiness as the fact it is.
   const measurements: Record<string, unknown> = { declaredOutcome: recipe.outcome, solids: solids.length, empty };
   if (!empty && measured !== null) {
     write(join(dir, "🎯️expected.step"), exportedText);
@@ -364,12 +351,6 @@ async function generateOne(b: Kernel, recipe: Recipe, outDir: string): Promise<R
     provenance: { source: "generated", license: "Apache-2.0", attribution: "Generated with brepjs (Apache-2.0) over brepjs-opencascade (LGPL-2.1-only, OpenCASCADE 8.0 WASM)", security: "scanned-clean", privacy: "no-personal-data" },
     comparisonProfile: "semantic-brep-solid-v1",
     toleranceProfile: recipe.tolerance,
-    // 🏭️`reproducible: true` is a MEASURED fact, not a shrug: the qualification spike found exactly two
-    // fields OCCT's STEP writer draws from process state rather than from the shape — the `FILE_NAME`
-    // wall-clock timestamp and an incrementing translator counter stamped into the root `PRODUCT` — and
-    // `canonicalizeStep` above strips both before this bundle is written or hashed. Two independent
-    // full-corpus regenerations produced byte-identical output on every fixture once that ran; nothing
-    // here reorders entities or renumbers ids.
     reproducible: true,
     family: recipe.family,
     notes: recipe.notes,
@@ -401,19 +382,12 @@ async function main(argv: readonly string[]): Promise<number> {
         manifests.push(await generateOne(b, recipe, outDir));
         console.error(`[generator] ${recipe.id} (${recipe.family}, ${recipe.outcome})`);
       } catch (error) {
-        // 🧭️A recipe the kernel refuses is REPORTED, never dropped: a corpus that quietly shrank to
-        // whatever happened to build would read as complete coverage of a smaller matrix.
         failed += 1;
         console.error(`[generator] ${recipe.id} FAILED — ${(error as Error).message}`);
       }
     }
     if (command === "manifests") process.stdout.write(`${JSON.stringify(manifests, null, 2)}\n`);
     else {
-      // 🧬️A NARROWED run MERGES into the manifest index; it does not replace it. Writing only what this
-      // invocation produced meant `generate --only <one>` silently reduced the index to that single
-      // entry, so a sequence of narrowed runs — the natural way to develop a recipe — destroyed every
-      // other fixture's record while leaving its files on disk. The bug was invisible from the command
-      // itself: it reported success for exactly the fixture asked for.
       const indexPath = join(outDir, "🔣️.json");
       const previous = (() => {
         if (only === null || !existsSync(indexPath)) return [];

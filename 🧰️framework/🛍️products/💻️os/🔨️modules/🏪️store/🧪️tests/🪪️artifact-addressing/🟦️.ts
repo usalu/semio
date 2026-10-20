@@ -5,15 +5,15 @@ import { createHash } from "node:crypto";
 import Ajv from "ajv";
 import fixture from "../🧫️fixtures/🪪️artifact-addressing/🔣️.json" with { type: "json" };
 import { ioSchema } from "@semio-tech/framework/io/testing/fixtures";
-import { manifestSchema } from "@semio-tech/framework/manifest/testing/fixtures";
+import { manifestSchema } from "@semio-tech/framework-manifest/testing/fixtures";
 import { dialectCoordinate, parseDialectCoordinate, artifactRefUri, parseArtifactRefUri } from "@semio-tech/framework-io-schema-ts";
 import { artifactChildSchema as childSchema, artifactLinkSchema as linkSchema, blobRefSchema as blobSchema, contentId, parseArtifactChild, parseArtifactLink } from "@semio-tech/framework/schema/artifact-reference";
-import { sha256Hex } from "@semio-tech/framework/hash";
+import { sha256Hex } from "@semio-tech/framework-hash";
 
 import openingSchema from "../../../../🎚️config/🧬️schema/🔣️.json" with { type: "json" };
 import setDefaultSchema from "../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🧬️schema/🔣️.json" with { type: "json" };
 import clearDefaultSchema from "../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🧬️schema/🔣️.json" with { type: "json" };
-import { surfaceAppId, parseSurfaceAppId } from "@semio-tech/framework/manifest/schema";
+import { surfaceAppId, parseSurfaceAppId } from "@semio-tech/framework-manifest/schema";
 
 /** 🔢️ Projects the exact-JSON integer carrier of a committed fixture row into the typed 64-bit `size` the TypeScript admission requires. */
 function exactBlobSizes(value: unknown): unknown {

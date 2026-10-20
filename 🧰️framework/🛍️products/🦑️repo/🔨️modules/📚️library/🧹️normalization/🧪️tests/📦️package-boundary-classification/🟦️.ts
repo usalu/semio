@@ -361,6 +361,10 @@ function ecmaDispositionOracle(content: string, analyzer: "typescript" | "javasc
       }
       if (!ts.isIdentifier(callee)) return false;
       const binding = scope.resolve(callee.text);
+      if (mainGuard && binding?.kind === "import-value" && binding.imported === "runScriptProgram" && /^\.{1,2}\/(?:[^/]+\/)*🟦️\.ts$/u.test(binding.module ?? "") && expression.arguments.length === 0) {
+        terminals++;
+        return true;
+      }
       if (binding?.kind !== "import-value" || !["runScriptMain", "runRepoScriptMain", "runWorkspaceScriptMain", "runPolicyOnlyMain", "runArtifactRustPackageMain", "runArtifactTypeScriptPackageMain"].includes(binding.imported ?? "")) return false;
       if (!expression.arguments.every((row) => router(row, scope) || ["data", "finite"].includes(value(row, scope)))) return false;
       terminals++;

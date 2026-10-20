@@ -5,6 +5,7 @@
 /// `Generation3dPlayApp::examples` and stamped by `.editor`, must
 /// carry the same ids, in the same order, as the `setActiveExample` select options this app
 /// declares — otherwise the navbar dropdown and the action's own arg picker disagree.
+#[cfg(test)] use semio_s_artifact_procedural_3d_mode_edit::windows::preview::PreviewInteractionMarks;
 #[test]
 fn examples_match_set_active_example_select_options() {
     let definition = create_generation3d_app();
@@ -50,7 +51,7 @@ fn every_window_and_panel_surface_fits_the_resident_surface_bound() {
     let config = Generation3dConfig::default();
     let view_state = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for example_id in examples().into_iter().map(|source| source.id().to_string()) {
-        let snapshot = semio_s_artifact_procedural_3d_model::example_snapshot(&example_id).unwrap_or_else(|| panic!("{example_id}: missing projection"));
+        let snapshot = semio_s_artifact_procedural_3d_io_text::snapshot::example_snapshot(&example_id).unwrap_or_else(|| panic!("{example_id}: missing projection"));
         for body_key in GENERATION3D_BODY_KEYS {
             let session = FlowEvalSession::new();
             let tree = generation3d_render_body(body_key, &snapshot, &config, None, &view_state, &PreviewInteractionMarks::default(), &session, None).expect("render");
@@ -77,7 +78,7 @@ async fn the_first_turn_sequence_retires_every_flow_host_it_builds() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app_with_registry().await;
 
-    let snapshot = semio_s_artifact_procedural_3d_model::default_snapshot();
+    let snapshot = semio_s_artifact_procedural_3d_io_text::snapshot::default_snapshot();
     let config = Generation3dConfig::default();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);

@@ -1,4 +1,13 @@
 use crate::*;
+use semio_s_artifact_norm_vdi3805_model::BuildingSystemNumber;
+use semio_s_artifact_norm_vdi3805_model::SecurityLimits;
+use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
+use semio_s_artifact_norm_vdi3805_model::VdiUnit;
+use semio_s_artifact_norm_vdi3805_model::VdiQuantityKind;
+use semio_s_artifact_norm_vdi3805_model::BoundingBox;
+use semio_s_artifact_norm_vdi3805_model::SchemaStatus;
+use semio_s_artifact_norm_vdi3805_model::Domain;
+use semio_s_artifact_norm_vdi3805_model::RecordFamilyId;
 
 #[semio_framework_async_macros::async_test]
 async fn building_system_number_parse_render() {

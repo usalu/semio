@@ -31,6 +31,7 @@ pub use assessment_vocabulary::*;
 
 #[path = "🏗️structure-and-members/🦀️.rs"]
 mod structure_and_members;
+pub use structure_and_members::*;
 
 #[path = "🌉️bridge-and-connections/🦀️.rs"]
 mod bridge_and_connections;

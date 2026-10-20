@@ -348,7 +348,7 @@ func replaceSectionContent(content, sectionHeading, newContent string) string {
 	return strings.TrimRight(before, "\n") + "\n\n" + sectionHeading + "\n\n" + newContent + rest
 }
 
-// Requirements: Accept repo-relative paths, absolute paths, repo file URIs, and file artifact IDs.
+// 📏️Requirements: Accept repo-relative paths, absolute paths, repo file URIs, and file artifact IDs.
 // Docs: Used by ticket close to map file identifiers to repo paths.
 // 📝️normalizeTicketFileInput holds the data fields for a normalizeTicketFileInput record.
 func normalizeTicketFileInput(filePath string) string {

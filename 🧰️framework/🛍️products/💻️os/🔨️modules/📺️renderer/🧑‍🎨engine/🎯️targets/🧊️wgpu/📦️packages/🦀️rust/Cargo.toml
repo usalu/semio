@@ -276,6 +276,7 @@ web-sys = { version = "0.3.98", features = [
 semio-framework-os-renderer-wgpu-browser-worker = { path = "../../🌍️browser-worker/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-os-renderer-wgpu-host-plumbing = { path = "../../🔧️host-plumbing/📦️packages/🦀️rust", features = ["testkit"] }
 # read) must answer the roles, names, actions and focus the language-agnostic fixture declares.
 # ♿️ The third-party oracle of the accessibility bridge's laws: AccessKit's own consumer tree (the one its platform adapters
 semio-framework-job = { workspace = true, features = ["testkit"] }

@@ -1,11 +1,11 @@
 import { createHash } from "node:crypto";
 import { lstatSync, readFileSync, realpathSync } from "node:fs";
 import { dirname, isAbsolute, join } from "node:path";
-import {nxAuthorizerReceiptHoldsV1} from "@semio-tech/nx-bootstrap-tools/authorizers/receipt";
+import {nxAuthorizerReceiptHoldsV1} from "../../../../../🚀️bootstrap/🛠️tools/🔏️authorizers/📤️receipt/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
-import neutralSchema from "@semio-tech/framework/modules/filesystem/observation/journal/schema.json";
-import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
-import type { FilesystemJournalScopeV1, FilesystemJournalWitnessV1 } from "@semio-tech/framework/filesystem/observation/journal";
+import neutralSchema from "../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📥️journal/🧬️schema/🔣️.json";
+import { validateJsonSchemaSubset } from "../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import type { FilesystemJournalScopeV1, FilesystemJournalWitnessV1 } from "@semio-tech/framework-filesystem/observation/journal";
 
 /** 📥️ A closed journal request remains independent of Nx transport envelopes. */
 export type FilesystemJournalRpcRequestV1 = Readonly<{ type: "GET_SEMIO_FILESYSTEM_JOURNAL"; version: 1; scope: FilesystemJournalScopeV1; deadlineUnixMilliseconds:number|null }>;

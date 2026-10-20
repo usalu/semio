@@ -524,12 +524,7 @@ impl BoundedDetectionPreparation {
                 }
                 let height = self.levels[level].height;
                 let end = (row + rows).min(height);
-                // The band's corners plus a suppression-radius halo, so an interior corner is
-                // judged against its neighbours across the band edge too.
                 let (halo_first, halo_last) = (row.saturating_sub(CORNER_HALO_ROWS), end.saturating_add(CORNER_HALO_ROWS).min(height));
-                // Dense score grid of those rows: a corner survives when no corner within the
-                // suppression radius outscores it (ties go to the earlier row, then column), a
-                // fixed 7×7 look per corner however dense the corners are.
                 let width = self.levels[level].width as usize;
                 let grid_rows = (halo_last - halo_first) as usize;
                 let mut grid = vec![0.0f32; grid_rows * width];
@@ -565,10 +560,6 @@ impl BoundedDetectionPreparation {
                         }
                     }
                 }
-                // No per-band cap: the suppression already bounds a level's candidates to one per
-                // `(radius + 1)²` pixels whatever the image (a cap sized from the band count once
-                // cut dense rows of real corners at one-row bands and changed the keypoints with
-                // the step size), and the spread below is linear in that count.
                 self.candidates[level].extend(found);
                 if end == height {
                     self.harris = None;

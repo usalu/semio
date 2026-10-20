@@ -230,7 +230,7 @@ impl ComposedMapCommitBindingV1 for GisMapInferenceBindingV1 {
     }
 
     fn derived_members(parent: &GisMapSnapshot) -> (SemioDrawingSnapshot, SemioValueSnapshot) {
-        use semio_s_artifact_gis_gismap::schema::{gis_map_descriptor_json, gis_map_snapshot_to_drawing};
+        use semio_s_artifact_gis_gismap::{schema::gis_map_snapshot_to_drawing, standards::v1::subsets::any::io::text::snapshot::gis_map_descriptor_json};
         (gis_map_snapshot_to_drawing(parent), semio_s_artifact_gis_gismap::gis_map_value_from_descriptor_json(&gis_map_descriptor_json(parent)))
     }
 

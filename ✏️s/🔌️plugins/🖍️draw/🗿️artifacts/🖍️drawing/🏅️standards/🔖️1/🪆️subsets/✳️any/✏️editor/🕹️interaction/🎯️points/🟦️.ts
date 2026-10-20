@@ -1,5 +1,5 @@
 /** 🎯️ Snapshot-bound point references for framework-owned node selection. */
-import { Blake3Hasher } from "@semio-tech/framework/hash";
+import { Blake3Hasher } from "@semio-tech/framework-hash";
 import { parsePathGeometrySegment, type PathGeometrySegment } from "../../../🧬️schema/🟦️.ts";
 import type { PathPoint } from "../../../🧬️schema/🧮️geometry/✏️editing/🟦️.ts";
 

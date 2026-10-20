@@ -58,18 +58,18 @@ struct Vector {
 fn vector(kind: &str) -> Vector {
     match kind {
         "change-graph-directed" => Vector {
-            before: include_str!("../🧫️fixtures/🧬️mutations/🧭️change-graph/🧪️keeps/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../🧫️fixtures/🧬️mutations/🧭️change-graph/🧪️keeps/🦠️mutation/🔣️.json"),
-            after: include_str!("../🧫️fixtures/🧬️mutations/🧭️change-graph/🧪️keeps/📸️snapshot/➡️after/🔣️.json"),
-            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/🧭️change-graph/🧪️keeps/🔺️diff/🔣️.json")),
-            outcome: include_str!("../🧫️fixtures/🧬️mutations/🧭️change-graph/🧪️keeps/🎯️outcome/🔣️.json"),
+            before: include_str!("../🧫️fixtures/🧬️mutations/🧭️change-graph-directed/🧪️keeps/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🧭️change-graph-directed/🧪️keeps/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🧭️change-graph-directed/🧪️keeps/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/🧭️change-graph-directed/🧪️keeps/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🧭️change-graph-directed/🧪️keeps/🎯️outcome/🔣️.json"),
         },
         "update-graph-algorithm" => Vector {
-            before: include_str!("../🧫️fixtures/🧬️mutations/🧮️update-graph/🧪️restates/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../🧫️fixtures/🧬️mutations/🧮️update-graph/🧪️restates/🦠️mutation/🔣️.json"),
-            after: include_str!("../🧫️fixtures/🧬️mutations/🧮️update-graph/🧪️restates/📸️snapshot/➡️after/🔣️.json"),
-            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/🧮️update-graph/🧪️restates/🔺️diff/🔣️.json")),
-            outcome: include_str!("../🧫️fixtures/🧬️mutations/🧮️update-graph/🧪️restates/🎯️outcome/🔣️.json"),
+            before: include_str!("../🧫️fixtures/🧬️mutations/🧮️update-graph-algorithm/🧪️restates/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🧮️update-graph-algorithm/🧪️restates/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🧮️update-graph-algorithm/🧪️restates/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/🧮️update-graph-algorithm/🧪️restates/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🧮️update-graph-algorithm/🧪️restates/🎯️outcome/🔣️.json"),
         },
         "create-node" => Vector {
             before: include_str!("../🧫️fixtures/🧬️mutations/➕️create-node/🧪️rejects/📸️snapshot/⬅️before/🔣️.json"),
@@ -93,11 +93,11 @@ fn vector(kind: &str) -> Vector {
             outcome: include_str!("../🧫️fixtures/🧬️mutations/🗑️delete-nodes/🧪️rejects/🎯️outcome/🔣️.json"),
         },
         "change-node-label" => Vector {
-            before: include_str!("../🧫️fixtures/🧬️mutations/🏷️change-node/🧪️rejects/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../🧫️fixtures/🧬️mutations/🏷️change-node/🧪️rejects/🦠️mutation/🔣️.json"),
-            after: include_str!("../🧫️fixtures/🧬️mutations/🏷️change-node/🧪️rejects/📸️snapshot/➡️after/🔣️.json"),
+            before: include_str!("../🧫️fixtures/🧬️mutations/🏷️change-node-label/🧪️rejects/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🏷️change-node-label/🧪️rejects/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🏷️change-node-label/🧪️rejects/📸️snapshot/➡️after/🔣️.json"),
             diff: None,
-            outcome: include_str!("../🧫️fixtures/🧬️mutations/🏷️change-node/🧪️rejects/🎯️outcome/🔣️.json"),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🏷️change-node-label/🧪️rejects/🎯️outcome/🔣️.json"),
         },
         "move-node" => Vector {
             before: include_str!("../🧫️fixtures/🧬️mutations/🕹️move-node/🧪️rejects/📸️snapshot/⬅️before/🔣️.json"),

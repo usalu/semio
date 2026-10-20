@@ -25,3 +25,4 @@ semio-s-artifact-stdio-dwg-read-records = { workspace = true }
 semio-s-artifact-stdio-dwg-snapshot = { workspace = true }
 semio-s-artifact-stdio-dwg-snapshot-drawing = { workspace = true }
 semio-s-artifact-stdio-dwg-snapshot-objects = { workspace = true }
+semio-framework-pack = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }

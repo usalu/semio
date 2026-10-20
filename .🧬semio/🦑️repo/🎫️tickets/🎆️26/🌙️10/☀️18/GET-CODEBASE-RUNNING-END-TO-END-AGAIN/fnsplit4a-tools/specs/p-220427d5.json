@@ -1,0 +1,39 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🟦️.ts",
+ "function": "createCachePolicyTests",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "shared": {
+  "dir": "🟠️shared",
+  "doc": "/** 🟠️ The shared declarations of createCachePolicyTests. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️assert",
+   "doc": "/** 🔶️ The assert phase of createCachePolicyTests. */",
+   "phases": [
+    {
+     "name": "buildAssertState",
+     "emoji": "🔷",
+     "doc": "Builds assert, cacheInternals, chmodSync, copyFileSync of createCachePolicyTests.",
+     "from": 37,
+     "to": 37
+    }
+   ]
+  },
+  {
+   "dir": "🔸️test-cache-contracts",
+   "doc": "/** 🔸️ The test cache contracts phase of createCachePolicyTests. */",
+   "phases": [
+    {
+     "name": "buildTestCacheContracts",
+     "emoji": "🔹",
+     "doc": "Builds testCacheContracts of createCachePolicyTests.",
+     "from": 40,
+     "to": 40
+    }
+   ]
+  }
+ ]
+}

@@ -78,7 +78,7 @@ func ResolvePlanSource(kind McpClientKind, id string) (absPath string, isDir boo
 	}
 }
 
-// planClientTag returns the value stored in ticket.json for the plan attachment.
+// 🗓️planClientTag returns the value stored in ticket.json for the plan attachment.
 func planClientTag(kind McpClientKind) string {
 	switch kind {
 	case McpClientCursor:
@@ -96,7 +96,7 @@ func planClientTag(kind McpClientKind) string {
 	}
 }
 
-// ApplyTicketPlanFromIDs resolves plan_id or spec_id and attaches it to the ticket before save.
+// 📱️ApplyTicketPlanFromIDs resolves plan_id or spec_id and attaches it to the ticket before save.
 func ApplyTicketPlanFromIDs(ticket *Ticket, kind McpClientKind, planID, specID string) error {
 	planID = strings.TrimSpace(planID)
 	specID = strings.TrimSpace(specID)

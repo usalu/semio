@@ -44,45 +44,45 @@ export type En1990RowOp = "Insert" | "Remove" | "Replace";
 export interface En1990EffectEdit { op: En1990RowOp; index: number; id: string; value: En1990MemberEffect | null; }
 
 export interface En1990Diff {
-  /** @state artifact */
+  /** 📑️ @state artifact */
   annex: ("En" | "De") | null;
-  /** @state artifact */
+  /** 🏗️ @state artifact */
   projectId: string | null;
-  /** @state artifact */
+  /** 🏛️ @state artifact */
   structureKind: string | null;
-  /** @state artifact */
+  /** 🔄️ @state artifact */
   altitudeM: number | null;
-  /** @state artifact */
+  /** 🏷️ @state artifact */
   consequenceClass: number | null;
-  /** @state artifact */
+  /** 🗂️ @state artifact */
   reliabilityClass: number | null;
-  /** @state artifact */
+  /** 🎨️ @state artifact */
   designWorkingLifeCategory: number | null;
-  /** @state artifact */
+  /** 📐️ @state artifact */
   designWorkingLifeYears: number | null;
-  /** @state artifact */
+  /** 🔗️ @state artifact */
   referencePeriodYears: number | null;
-  /** @state artifact */
+  /** 📶️ @state artifact */
   supervisionLevel: string | null;
-  /** @state artifact */
+  /** 🪜️ @state artifact */
   inspectionLevel: string | null;
-  /** @state artifact */
+  /** ✏️ @state artifact */
   kFiDeclared: number | null;
-  /** @state artifact */
+  /** 🧮️ @state artifact */
   betaComputed: number | null;
-  /** @state artifact */
+  /** 📝️ @state artifact */
   permanents: En1990PermanentDelta;
-  /** @state artifact */
+  /** 🔣️ @state artifact */
   variables: En1990VariableDelta;
-  /** @state artifact */
+  /** 💥️ @state artifact */
   accidentals: En1990AccidentalDelta;
-  /** @state artifact */
+  /** 🌬️ @state artifact */
   seismics: En1990SeismicDelta;
-  /** @state artifact */
+  /** 👤️ @state artifact */
   members: En1990MemberDelta;
-  /** @state artifact */
+  /** 🌉️ @state artifact */
   bridgeSls: En1990BridgeSlsDelta;
-  /** @state artifact */
+  /** 🧬️ @state artifact */
   effects: En1990EffectEdit[];
 }
 

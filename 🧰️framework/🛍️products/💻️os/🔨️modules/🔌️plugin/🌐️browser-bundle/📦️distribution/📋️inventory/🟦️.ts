@@ -1,5 +1,5 @@
 import {withArtifactDescriptorSlotV1} from "@semio-tech/process/artifacts/publication/sources";
-import {withArtifactDescriptorV1,artifactReadFlagsV1} from "@semio-tech/framework/filesystem/observation/descriptor";
+import {withArtifactDescriptorV1,artifactReadFlagsV1} from "@semio-tech/framework-filesystem/observation/descriptor";
 import {createHash} from "node:crypto";
 import {opendirSync,lstatSync,type Dir} from "node:fs";
 import {lstat,open} from "node:fs/promises";

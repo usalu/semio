@@ -13,7 +13,7 @@ import { UI_NUMBER_PRECISION_MAX, uiNumberDisplay, uiNumberDisplayText } from ".
  *
  * Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
  */
-import type { AccessibilitySpec, Component, ContainerRole, Liveness, UiNodeRecord } from "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
+import type { AccessibilitySpec, Component, ContainerRole, Liveness, UiNodeRecord } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
 
 //#region ♿️Projection
 

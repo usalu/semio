@@ -14,8 +14,8 @@ import { ShardClient } from "@semio-tech/framework/actor/shard-client";
 import { type ShardActorActivationLease, type ShardInstanceLifecycleLease } from "@semio-tech/framework/actor/shard-client/activation";
 import { type ShardCommandIngressPage, type ShardEventEnvelope } from "@semio-tech/framework/actor/shard-client/wire";
 // #endregion 🔌️Adapters
-import { OwnedUiInstance, type OwnedUiInstanceRetirement, type OwnedUiInstanceSurface } from "@semio-tech/framework/modules/ui/contract/retained/instance";
-import { type Lane } from "../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts";
+import { OwnedUiInstance, type OwnedUiInstanceRetirement, type OwnedUiInstanceSurface } from "@semio-tech/ui-contract/retained/instance";
+import { type Lane } from "@semio-tech/framework/actor";
 import { ActorDocumentBindingV1 } from "@semio-tech/framework/backbone/binding";
 import { type WireTurnResult } from "../🪝️wire-codec/🟦️.ts";
 import { forgetInstanceForRecovery, getShardClient } from "../🛰️runtime-singletons/🟦️.ts";

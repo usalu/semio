@@ -15,7 +15,7 @@ import (
 
 // region 🔖️Tree
 
-// goldenTree is the data table of the-golden-tree-breaches, as the feature file states it.
+// 🌳️goldenTree is the data table of the-golden-tree-breaches, as the feature file states it.
 var goldenTree = []string{
 	"shared://📁️some/📁️folder/🟦️.tsx",
 	"shared://📁️some/📁️folder/🧪️file/🐍️.py",
@@ -33,7 +33,7 @@ var goldenTree = []string{
 	"shared://📁️some/📁️folder/🧪️file-invalid/🟦️.tsx",
 }
 
-// cleanTree is the data table of the-clean-sources-are-clean, as the feature file states it.
+// ➖️cleanTree is the data table of the-clean-sources-are-clean, as the feature file states it.
 var cleanTree = []string{
 	"shared://📁️some/📁️folder/🧪️file-fixable-expected/🟦️.tsx",
 	"shared://📁️some/📁️folder/🧪️file-fixed/🐍️.py",
@@ -42,7 +42,7 @@ var cleanTree = []string{
 	"shared://📁️some/📁️folder/🧪️file-fixed/🟦️.tsx",
 }
 
-// tree reads the declared fixture URIs as repository-relative sources, ordered by path.
+// 🌲️tree reads the declared fixture URIs as repository-relative sources, ordered by path.
 func tree(ctx *host.Context, uris []string) (*statutes.SourceSet, error) {
 	files := make([]statutes.SourceFile, 0, len(uris))
 	for _, uri := range uris {
@@ -60,12 +60,12 @@ func tree(ctx *host.Context, uris []string) (*statutes.SourceSet, error) {
 	return statutes.NewSourceSet(files), nil
 }
 
-// render renders one breach as the tuple both implementations must agree on.
+// 🌐️render renders one breach as the tuple both implementations must agree on.
 func render(breach model.Breach) string {
 	return fmt.Sprintf("%s|%s|%s|%d|%d|%t|%s", breach.ID, string(breach.Kind), breach.Scope, breach.Line, breach.Column, statutes.IsAutofixable(breach.Kind), breach.Summary)
 }
 
-// renderAll renders every breach of one analysis.
+// 🖥️renderAll renders every breach of one analysis.
 func renderAll(breachs []model.Breach) []string {
 	rows := make([]string, 0, len(breachs))
 	for _, breach := range breachs {
@@ -121,7 +121,7 @@ func theCleanSourcesAreClean(ctx *host.Context) (host.Outcome, error) {
 
 // region 🔖️Registration
 
-// Adapter is the registration entry point the generated host calls.
+// 🌉️Adapter is the registration entry point the generated host calls.
 func Adapter() *host.Adapter {
 	return host.NewAdapter("go").
 		Subject("the-golden-tree-breaches", theGoldenTreeBreaches).

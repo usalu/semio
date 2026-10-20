@@ -1,0 +1,49 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/📦️objects/🦀️.rs",
+ "function": "decode_r2004_object_records",
+ "if_line": 83,
+ "ret": "Result<(), String>",
+ "types": {
+  "handle": "u64",
+  "payload_size": "usize",
+  "payload": "&[u8]",
+  "data_end_bit": "usize",
+  "data": "DwgBitReader<'_>",
+  "handle_reader": "DwgBitReader<'_>",
+  "type_code": "u16",
+  "object": "semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject",
+  "block_names": "Vec<(u64, String)>"
+ },
+ "modes": {
+  "data": "mut",
+  "handle_reader": "mut",
+  "object": "mut",
+  "block_names": "mut",
+  "handle": "val",
+  "payload_size": "val",
+  "data_end_bit": "val",
+  "type_code": "val"
+ },
+ "branches": [
+  {
+   "pos": 0,
+   "name": "read_block_object_frame",
+   "doc": "Reads the string stream, common data and handles of a BLOCK or ENDBLK object frame."
+  },
+  {
+   "pos": 1,
+   "name": "read_insert_object_frame",
+   "doc": "Reads the string stream, common data and handles of an INSERT object frame."
+  },
+  {
+   "pos": 2,
+   "name": "read_dimension_object_frame",
+   "doc": "Reads the string stream, common data and handles of a linear DIMENSION object frame."
+  },
+  {
+   "pos": 3,
+   "name": "read_viewport_object_frame",
+   "doc": "Reads the string stream, common data and handles of a VIEWPORT object frame."
+  }
+ ]
+}

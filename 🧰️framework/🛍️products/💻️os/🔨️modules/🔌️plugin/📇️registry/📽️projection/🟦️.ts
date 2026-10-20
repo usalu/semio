@@ -1,7 +1,7 @@
-import nativeCatalogSchema from "../📥️runtime/🧬️schema/🔣️.json";
+import nativeCatalogSchema from "../📥️runtime/🧬️schema/🔣️.json" with { type: "json" };
 import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
-import neutralPublication from "../📣️publication/🔣️.json";
-import {parseCatalogPublicationV1,publicationIncludesPackageV1,publicationPackageRootsV1,type CatalogPublicationV1} from "../📣️publication/🟦️.ts";
+import neutralPublication from "@semio-tech/plugin-registry-publication/publication.json" with { type: "json" };
+import {parseCatalogPublicationV1,publicationIncludesPackageV1,publicationPackageRootsV1,type CatalogPublicationV1} from "@semio-tech/plugin-registry-publication";
 import type { ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { defaultPlaygroundVariant } from "../🎮️playground/⭐️default/🟦️.ts";
 import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, readSync, rmSync, writeFileSync } from "node:fs";

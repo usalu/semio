@@ -21,7 +21,7 @@
   "targets": {
     "prepare-prototype": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "outputs": [],
       "inputs": [
         "activationSources",
@@ -53,11 +53,16 @@
           "SEMIO_BUILD_MODE": "prototype"
         }
       },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "driver-owned", "reason": "freshness-owned-by-driver" }
+        }
+      },
       "defaultConfiguration": "prototype"
     },
     "prepare-release": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "outputs": [],
       "inputs": [
         "activationSources",
@@ -87,6 +92,11 @@
         "forwardAllArgs": false,
         "env": {
           "SEMIO_BUILD_MODE": "release"
+        }
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "driver-owned", "reason": "freshness-owned-by-driver" }
         }
       },
       "defaultConfiguration": "release"
@@ -154,7 +164,7 @@
     },
     "activate-prototype": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "outputs": [
         "{projectRoot}/dist/♻️activation/prototype"
       ],
@@ -177,11 +187,16 @@
           "SEMIO_BUILD_MODE": "prototype"
         }
       },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "driver-owned", "reason": "freshness-owned-by-driver" }
+        }
+      },
       "defaultConfiguration": "prototype"
     },
     "activate-lanes-prototype": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "outputs": [],
       "inputs": [
         {
@@ -200,6 +215,11 @@
         "forwardAllArgs": false,
         "env": {
           "SEMIO_BUILD_MODE": "prototype"
+        }
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "driver-owned", "reason": "freshness-owned-by-driver" }
         }
       },
       "defaultConfiguration": "prototype"

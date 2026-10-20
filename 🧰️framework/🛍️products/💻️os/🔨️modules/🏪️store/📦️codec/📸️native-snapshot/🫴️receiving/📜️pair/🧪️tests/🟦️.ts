@@ -14,8 +14,8 @@ test("original Pack and SPR pair source laws use exact neutral document identity
  console.log("[DEBUG] original pair strictSchema=true actualNativeInputs=true independentSQLite=true exactUnicodeIdentity=true editorSubstitutionRefused=true");
 });
 
-import {Blake3Hasher} from "@semio-tech/framework/hash";
-import vectors from "../../../../../../../../../🔨️modules/🔏️hash/🧪️tests/🧫️fixtures/🧮️blake3/🔣️.json";
+import {Blake3Hasher} from "@semio-tech/framework-hash";
+import vectors from "@semio-tech/framework-hash/testing/fixtures/blake3.json";
 
 /** 🔏️ Native Pair genesis digest uses the same bounded first-party hash with independent BLAKE3-team vectors. */
 test("original Pack digest bounded input chunks match independent published vectors",()=>{

@@ -1,4 +1,12 @@
 use super::*;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaKind;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::VideoCodec;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RigExtrinsic;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::Float32Buffer;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ByteBuffer;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MeshSource;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::TrackClass;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 /// 🏗️ Shared fixture for both the JSON and the `.remodeling` DSL round-trip tests: a scene that
 /// exercises every optional/collection field at least once, so `assert_dsl_round_trip` (and the

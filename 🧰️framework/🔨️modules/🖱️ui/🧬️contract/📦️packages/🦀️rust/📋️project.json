@@ -73,6 +73,11 @@
     },
     "generate": {
       "executor": "repo:script",
+      "metadata": {
+        "semio": {
+          "sourceInputObservation": "freshness"
+        }
+      },
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",

@@ -114,8 +114,8 @@
         },
         {
           "mutationId": "change-handle-kind-default-wire-kind",
-          "sourceMutationDirectoryName": "🔌️change-handle-kind-default-wire",
-          "mutationDirectoryName": "🔌️change-handle-kind-default-wire",
+          "sourceMutationDirectoryName": "🔌️change-handle-kind-default-wire-kind",
+          "mutationDirectoryName": "🔌️change-handle-kind-default-wire-kind",
           "scenarios": [
             {
               "id": "swaps-power-default-wire-kind",

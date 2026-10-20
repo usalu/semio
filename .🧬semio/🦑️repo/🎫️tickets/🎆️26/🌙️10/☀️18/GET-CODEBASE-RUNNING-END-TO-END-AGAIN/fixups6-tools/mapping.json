@@ -1,0 +1,660 @@
+{
+ "base": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts",
+ "tests": [
+  {
+   "title": "selected graph admission closes canonical source and producer owners without reading unrelated malformed or deleted sources",
+   "group": "🛂️admission",
+   "line": 81,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🛂️admission/🟦️.ts"
+  },
+  {
+   "title": "selected graph admission agrees with independent Nx task prerequisites",
+   "group": "🛂️admission",
+   "line": 93,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🛂️admission/🟦️.ts"
+  },
+  {
+   "title": "selected resource ownership agrees with independent Nx prerequisite edges",
+   "group": "🛂️admission",
+   "line": 98,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🛂️admission/🟦️.ts"
+  },
+  {
+   "title": "selected production admission keeps resource owners outside prerequisite source groups",
+   "group": "🛂️admission",
+   "line": 103,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🛂️admission/🟦️.ts"
+  },
+  {
+   "title": "selected Source discovery yields original control inside imports, directory entries and cache replay",
+   "group": "🛂️admission",
+   "line": 112,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🛂️admission/🟦️.ts"
+  },
+  {
+   "title": "selected compiler closure observes defining declaration companions and runtime source",
+   "group": "🛂️admission",
+   "line": 124,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🛂️admission/🟦️.ts"
+  },
+  {
+   "title": "selected graph admission reads complete actual type-only and uncached command source inputs",
+   "group": "🛂️admission",
+   "line": 129,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🛂️admission/🟦️.ts"
+  },
+  {
+   "title": "selected graph admission propagates dependency input groups without scheduling absent dependency targets",
+   "group": "🛂️admission",
+   "line": 138,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🛂️admission/🟦️.ts"
+  },
+  {
+   "title": "selected graph admission resolves configured original command sources and refuses configured identity overrides",
+   "group": "🛂️admission",
+   "line": 143,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🛂️admission/🟦️.ts"
+  },
+  {
+   "title": "script build requirements admit body changes while retaining compiler selection",
+   "group": "🛂️admission",
+   "line": 499,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🛂️admission/🟦️.ts"
+  },
+  {
+   "title": "catalog provider imports bind actual source revisions across repeated admission",
+   "group": "🛂️admission",
+   "line": 506,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🛂️admission/🟦️.ts"
+  },
+  {
+   "title": "selected Rust aggregate scheduling stays invariant across selectable modes",
+   "group": "🛂️admission",
+   "line": 519,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🛂️admission/🟦️.ts"
+  },
+  {
+   "title": "configured command sources preserve every recipe through read-only production source inference and Nx inputs",
+   "group": "🛂️admission",
+   "line": 525,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🛂️admission/🟦️.ts"
+  },
+  {
+   "title": "stored graph admission selections retain the shared closed schema",
+   "group": "🛂️admission",
+   "line": 681,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🛂️admission/🟦️.ts"
+  },
+  {
+   "title": "selected owner inference validates complete generator ownership before pruning source recipes",
+   "group": "🛂️admission",
+   "line": 696,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🛂️admission/🟦️.ts"
+  },
+  {
+   "title": "playground preparation shares native prerequisites and observes original cancellation",
+   "group": "🛂️admission",
+   "line": 746,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🛂️admission/🟦️.ts"
+  },
+  {
+   "title": "selected configured source admission retains all recipe owners and dependency mode inputs",
+   "group": "🛂️admission",
+   "line": 759,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🛂️admission/🟦️.ts"
+  },
+  {
+   "title": "selected playground augmentation requires the real global staging producer only for admitted site tasks",
+   "group": "🛂️admission",
+   "line": 772,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🛂️admission/🟦️.ts"
+  },
+  {
+   "title": "per-inventory native memo shares exact root modes and replays current Source observations",
+   "group": "🛂️admission",
+   "line": 783,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🛂️admission/🟦️.ts"
+  },
+  {
+   "title": "selected generator producer validation distinguishes full authored ownership from execution pruning",
+   "group": "🛂️admission",
+   "line": 865,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🛂️admission/🟦️.ts"
+  },
+  {
+   "title": "portable CLI keeps backend selection separate from literal task arguments",
+   "group": "🧭️portable-cli",
+   "line": 157,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧭️portable-cli/🟦️.ts"
+  },
+  {
+   "title": "language-neutral task selections preserve configurations, tags and exclusions",
+   "group": "🧭️portable-cli",
+   "line": 165,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧭️portable-cli/🟦️.ts"
+  },
+  {
+   "title": "portable native caller preserves exact original resources and literal task arguments",
+   "group": "🧭️portable-cli",
+   "line": 177,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧭️portable-cli/🟦️.ts"
+  },
+  {
+   "title": "portable selection refuses original cancellation before graph execution",
+   "group": "🧭️portable-cli",
+   "line": 199,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧭️portable-cli/🟦️.ts"
+  },
+  {
+   "title": "source watch filters owned projects, debounces events and returns on original cancellation",
+   "group": "🧭️portable-cli",
+   "line": 267,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧭️portable-cli/🟦️.ts"
+  },
+  {
+   "title": "neutral prebirth grants derive only exact implementation launches ($tool $arguments)",
+   "group": "🧭️portable-cli",
+   "line": 353,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧭️portable-cli/🟦️.ts"
+  },
+  {
+   "title": "explicit editor grants retain their original native resource bounds before the CLI envelope",
+   "group": "🧭️portable-cli",
+   "line": 364,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧭️portable-cli/🟦️.ts"
+  },
+  {
+   "title": "relative initial declarations preserve exact GUI resources through original orchestration and native task issuance ($name)",
+   "group": "🧭️portable-cli",
+   "line": 373,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧭️portable-cli/🟦️.ts"
+  },
+  {
+   "title": "dashboard target selection preserves the portable initial authority corpus",
+   "group": "🧭️portable-cli",
+   "line": 408,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧭️portable-cli/🟦️.ts"
+  },
+  {
+   "title": "neutral arguments admit literal arrays and refuse scalar shell fragments before execution",
+   "group": "🧭️portable-cli",
+   "line": 553,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧭️portable-cli/🟦️.ts"
+  },
+  {
+   "title": "portable graph fixture agrees with the independent JSON Schema implementation",
+   "group": "📐️portable-model",
+   "line": 72,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📐️portable-model/🟦️.ts"
+  },
+  {
+   "title": "portable configuration and Nx projection preserve command semantics",
+   "group": "📐️portable-model",
+   "line": 148,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📐️portable-model/🟦️.ts"
+  },
+  {
+   "title": "portable models compile under the independent bundler without Nx runtime",
+   "group": "📐️portable-model",
+   "line": 171,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📐️portable-model/🟦️.ts"
+  },
+  {
+   "title": "canonical graph refuses competing identities at one physical root",
+   "group": "📐️portable-model",
+   "line": 234,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📐️portable-model/🟦️.ts"
+  },
+  {
+   "title": "portable relative GUI declarations survive Windows and POSIX JSON path serialization",
+   "group": "📐️portable-model",
+   "line": 397,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📐️portable-model/🟦️.ts"
+  },
+  {
+   "title": "configuration options preserve task identity and command form under both schema oracles",
+   "group": "📐️portable-model",
+   "line": 493,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📐️portable-model/🟦️.ts"
+  },
+  {
+   "title": "authored command shorthand normalizes to the complete portable execution",
+   "group": "📐️portable-model",
+   "line": 512,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📐️portable-model/🟦️.ts"
+  },
+  {
+   "title": "private Nx source bridge binds complete literals to immutable bytes and original control",
+   "group": "📌️pinned-publication",
+   "line": 240,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📌️pinned-publication/🟦️.ts"
+  },
+  {
+   "title": "nested consumers reuse the exact pinned authority and reject a changed publication",
+   "group": "📌️pinned-publication",
+   "line": 257,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📌️pinned-publication/🟦️.ts"
+  },
+  {
+   "title": "a pinned Nx publication is the only plugin authority",
+   "group": "📌️pinned-publication",
+   "line": 283,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📌️pinned-publication/🟦️.ts"
+  },
+  {
+   "title": "private Nx nodes and dependencies require exact immutable publication pins",
+   "group": "📌️pinned-publication",
+   "line": 288,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📌️pinned-publication/🟦️.ts"
+  },
+  {
+   "title": "loaded graph implementation and publication source changes refuse current authority",
+   "group": "📌️pinned-publication",
+   "line": 308,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📌️pinned-publication/🟦️.ts"
+  },
+  {
+   "title": "each pinned publication receives a distinct Nx cache and never forces an older graph",
+   "group": "📌️pinned-publication",
+   "line": 317,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📌️pinned-publication/🟦️.ts"
+  },
+  {
+   "title": "public pinned graph reuse preserves ordinary nested metadata and execution arrays",
+   "group": "📌️pinned-publication",
+   "line": 442,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📌️pinned-publication/🟦️.ts"
+  },
+  {
+   "title": "public pinned graph expands only compact tokens with shared bounded content reads",
+   "group": "📌️pinned-publication",
+   "line": 447,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📌️pinned-publication/🟦️.ts"
+  },
+  {
+   "title": "neutral graph reset selects owned publication files and preserves storage receipts and pinned facts",
+   "group": "📌️pinned-publication",
+   "line": 575,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📌️pinned-publication/🟦️.ts"
+  },
+  {
+   "title": "public pinned graph reuse requires the exact closed all or task admission",
+   "group": "📌️pinned-publication",
+   "line": 686,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📌️pinned-publication/🟦️.ts"
+  },
+  {
+   "title": "nested graph handoff validates ancestor pins before fresh source admission under original control",
+   "group": "📌️pinned-publication",
+   "line": 719,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📌️pinned-publication/🟦️.ts"
+  },
+  {
+   "title": "graph registry authority refuses a stale caller before provider consumption",
+   "group": "📌️pinned-publication",
+   "line": 739,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📌️pinned-publication/🟦️.ts"
+  },
+  {
+   "title": "test owner inference names only the current declared fact namespace without storage admission",
+   "group": "🔭️observed-facts",
+   "line": 303,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔭️observed-facts/🟦️.ts"
+  },
+  {
+   "title": "the defining graph fact module exposes its declared writer port under original custody",
+   "group": "🔭️observed-facts",
+   "line": 414,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔭️observed-facts/🟦️.ts"
+  },
+  {
+   "title": "observed authority ignores unread body edits and identical rewrites while retaining consumed bytes and physical membership",
+   "group": "🔭️observed-facts",
+   "line": 422,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔭️observed-facts/🟦️.ts"
+  },
+  {
+   "title": "failed reads retain precise facts for transient retry while stable malformed sources remain stable",
+   "group": "🔭️observed-facts",
+   "line": 433,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔭️observed-facts/🟦️.ts"
+  },
+  {
+   "title": "a captured descendant whose ancestor becomes a file provides membership retry evidence",
+   "group": "🔭️observed-facts",
+   "line": 461,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔭️observed-facts/🟦️.ts"
+  },
+  {
+   "title": "same receiver observed replay retains exact facts and original control across validation frames",
+   "group": "🔭️observed-facts",
+   "line": 887,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔭️observed-facts/🟦️.ts"
+  },
+  {
+   "title": "same receiver observed replay awaits actual command closure cancellation in production frames",
+   "group": "🔭️observed-facts",
+   "line": 908,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔭️observed-facts/🟦️.ts"
+  },
+  {
+   "title": "portable source glob matching agrees with the installed Nx implementation",
+   "group": "🔌️nx-engine",
+   "line": 193,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔌️nx-engine/🟦️.ts"
+  },
+  {
+   "title": "Nx projects exactly the common graph into its independent task graph implementation",
+   "group": "🔌️nx-engine",
+   "line": 206,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔌️nx-engine/🟦️.ts"
+  },
+  {
+   "title": "policy facets retain six physical owners and ordinary lint scheduling in both backends",
+   "group": "🔌️nx-engine",
+   "line": 215,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔌️nx-engine/🟦️.ts"
+  },
+  {
+   "title": "private Nx engine bytes affect real native task hashes while invocation staging does not",
+   "group": "🔌️nx-engine",
+   "line": 563,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔌️nx-engine/🟦️.ts"
+  },
+  {
+   "title": "private engine references distinguish directory URLs from real module imports",
+   "group": "🔌️nx-engine",
+   "line": 590,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔌️nx-engine/🟦️.ts"
+  },
+  {
+   "title": "private engine references keep actual directory-index imports and missing-file refusals",
+   "group": "🔌️nx-engine",
+   "line": 606,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔌️nx-engine/🟦️.ts"
+  },
+  {
+   "title": "private engine references load explicit plugin files without full workspace package inference",
+   "group": "🔌️nx-engine",
+   "line": 616,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔌️nx-engine/🟦️.ts"
+  },
+  {
+   "title": "private engine references admit complete Source membership through bounded concurrent physical reads",
+   "group": "🔌️nx-engine",
+   "line": 629,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔌️nx-engine/🟦️.ts"
+  },
+  {
+   "title": "private engine references retain nested structural Source owners and newly admitted ignored leaves",
+   "group": "🔌️nx-engine",
+   "line": 641,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔌️nx-engine/🟦️.ts"
+  },
+  {
+   "title": "private engine references admit only closed original inference dataset identities",
+   "group": "🔌️nx-engine",
+   "line": 675,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔌️nx-engine/🟦️.ts"
+  },
+  {
+   "title": "private Nx dependency projection preserves portable authority with indexed provenance",
+   "group": "🔌️nx-engine",
+   "line": 920,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔌️nx-engine/🟦️.ts"
+  },
+  {
+   "title": "private Nx implementation authority retains evaluated closure identity and current Source guards",
+   "group": "🔌️nx-engine",
+   "line": 930,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔌️nx-engine/🟦️.ts"
+  },
+  {
+   "title": "private Nx engine named inputs preserve real native hash plans and reduce projection bytes",
+   "group": "🔌️nx-engine",
+   "line": 940,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔌️nx-engine/🟦️.ts"
+  },
+  {
+   "title": "build bootstrap receives the defining dependency module while its executable preserves the original header",
+   "group": "🚀️dependency-bootstrap",
+   "line": 650,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🚀️dependency-bootstrap/🟦️.ts"
+  },
+  {
+   "title": "original direct dependency CLI admits explicit whole or scoped selections and refuses installer overrides",
+   "group": "🚀️dependency-bootstrap",
+   "line": 659,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🚀️dependency-bootstrap/🟦️.ts"
+  },
+  {
+   "title": "registered JavaScript dependency initial callers enter direct finite online preparation before graph bootstrap",
+   "group": "🚀️dependency-bootstrap",
+   "line": 666,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🚀️dependency-bootstrap/🟦️.ts"
+  },
+  {
+   "title": "ordinary immutable graph readers do not inventory optional accelerator caches",
+   "group": "🧊️optional-cache",
+   "line": 63,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧊️optional-cache/🟦️.ts"
+  },
+  {
+   "title": "optional graph cache quota accounts exact peaks before retained bytes with independent SQLite",
+   "group": "🧊️optional-cache",
+   "line": 797,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧊️optional-cache/🟦️.ts"
+  },
+  {
+   "title": "optional record publication reserves pack and index peaks and bounds denied pending records",
+   "group": "🧊️optional-cache",
+   "line": 813,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧊️optional-cache/🟦️.ts"
+  },
+  {
+   "title": "optional graph denial retains actual Source facts and mandatory producer publications under original custody",
+   "group": "🧊️optional-cache",
+   "line": 822,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧊️optional-cache/🟦️.ts"
+  },
+  {
+   "title": "optional graph cache paths exclude mandatory publications inside every admitted namespace",
+   "group": "🧊️optional-cache",
+   "line": 836,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧊️optional-cache/🟦️.ts"
+  },
+  {
+   "title": "optional graph cache cleanup closes every original handle when an earlier closer fails",
+   "group": "🧊️optional-cache",
+   "line": 843,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧊️optional-cache/🟦️.ts"
+  },
+  {
+   "title": "optional graph contender isolates accepted cancellation in its actual receiver",
+   "group": "🧊️optional-cache",
+   "line": 850,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧊️optional-cache/🟦️.ts"
+  },
+  {
+   "title": "optional graph writers serialize distinct originals and reuse only the exact active invocation",
+   "group": "🧊️optional-cache",
+   "line": 856,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧊️optional-cache/🟦️.ts"
+  },
+  {
+   "title": "nested graph writers defer optional pressure maintenance while an original immutable pin remains held",
+   "group": "🧊️optional-cache",
+   "line": 876,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧊️optional-cache/🟦️.ts"
+  },
+  {
+   "title": "Cargo edges resolve inherited paths against their actual nested workspace",
+   "group": "🌐️source-discovery",
+   "line": 327,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🌐️source-discovery/🟦️.ts"
+  },
+  {
+   "title": "portable source discovery excludes generated dependency sources before graph admission",
+   "group": "🌐️source-discovery",
+   "line": 342,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🌐️source-discovery/🟦️.ts"
+  },
+  {
+   "title": "bounded manifest discovery delegates original progress, continuation and cancellation",
+   "group": "🌐️source-discovery",
+   "line": 471,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🌐️source-discovery/🟦️.ts"
+  },
+  {
+   "title": "primary native owner discovery retains its original phase cancellation before any fact write",
+   "group": "🌐️source-discovery",
+   "line": 483,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🌐️source-discovery/🟦️.ts"
+  },
+  {
+   "title": "relative import resources retain physical bytes and source-only closure with bundler suffixes",
+   "group": "🌐️source-discovery",
+   "line": 706,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🌐️source-discovery/🟦️.ts"
+  },
+  {
+   "title": "catalog native candidates distinguish source owners from explicit and actual Cargo manifests",
+   "group": "🌐️source-discovery",
+   "line": 731,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🌐️source-discovery/🟦️.ts"
+  },
+  {
+   "title": "authored data producers retain freshness-only matched input authority",
+   "group": "🎯️source-demand",
+   "line": 953,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts"
+  },
+  {
+   "title": "target matched-input roles retain compiler defaults and explicit freshness authority",
+   "group": "🎯️source-demand",
+   "line": 957,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts"
+  },
+  {
+   "title": "selected configurations cannot override target input observation identity",
+   "group": "🎯️source-demand",
+   "line": 963,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts"
+  },
+  {
+   "title": "named input scans preserve per-target compile matches and scoped exclusions",
+   "group": "🎯️source-demand",
+   "line": 968,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts"
+  },
+  {
+   "title": "runtime module projection preserves bare values while erasing type-only demand",
+   "group": "🎯️source-demand",
+   "line": 973,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts"
+  },
+  {
+   "title": "runtime module facts remain bound to the admitted parser and compiler revision",
+   "group": "🎯️source-demand",
+   "line": 978,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts"
+  },
+  {
+   "title": "actual source demand revisits runtime modules when compilation later requires them",
+   "group": "🎯️source-demand",
+   "line": 983,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts"
+  },
+  {
+   "title": "source demand phase upgrades preserve compiler authority",
+   "group": "🎯️source-demand",
+   "line": 988,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts"
+  },
+  {
+   "title": "semantic type consumers bind directly to their authored leaf owners",
+   "group": "🎯️source-demand",
+   "line": 992,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts"
+  },
+  {
+   "title": "normalized source contracts bind actual workspace named input policy",
+   "group": "🎯️source-demand",
+   "line": 999,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts"
+  },
+  {
+   "title": "source contract revisions retain selector and schema byte authority",
+   "group": "🎯️source-demand",
+   "line": 1008,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts"
+  },
+  {
+   "title": "source input contracts expand only demanded normalized own groups",
+   "group": "🎯️source-demand",
+   "line": 1012,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts"
+  },
+  {
+   "title": "semantic runtime values retain their canonical leaf binding without facade bootstrap",
+   "group": "🎯️source-demand",
+   "line": 1019,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts"
+  },
+  {
+   "title": "exported library script helpers resolve their authored semantic Source",
+   "group": "🎯️source-demand",
+   "line": 1024,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts"
+  },
+  {
+   "title": "demanded workspace package entries retain runtime generators and declaration closure",
+   "group": "🎯️source-demand",
+   "line": 1029,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts"
+  },
+  {
+   "title": "declared compilation entries override resource-only observations",
+   "group": "🎯️source-demand",
+   "line": 1035,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts"
+  },
+  {
+   "title": "input-only freshness remains distinct from demanded compilation entries",
+   "group": "🎯️source-demand",
+   "line": 1040,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts"
+  },
+  {
+   "title": "finite relative Source ownership does not promote the workspace ancestor to a project dependency",
+   "group": "🎯️source-demand",
+   "line": 1044,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts"
+  },
+  {
+   "title": "extensionless generated compile imports require unique exact authored file candidates",
+   "group": "🎯️source-demand",
+   "line": 1053,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts"
+  },
+  {
+   "title": "declared generated compile outputs preserve producer task ordering without materialized Source",
+   "group": "🎯️source-demand",
+   "line": 1061,
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts"
+  }
+ ],
+ "support": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧰️support/🟦️.ts",
+ "groups": [
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🛂️admission/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧭️portable-cli/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📐️portable-model/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📌️pinned-publication/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔭️observed-facts/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔌️nx-engine/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🚀️dependency-bootstrap/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧊️optional-cache/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🌐️source-discovery/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts"
+ ]
+}

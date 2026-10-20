@@ -1,4 +1,4 @@
-import { normalizeEngagementActionText, type SearchPossible, searchInlineCompletion, searchActiveInlineCompletion } from "../../../🧱️elements/🔍️WindowSearch/🟦️.tsx";
+import { normalizeEngagementActionText, type SearchPossible, searchInlineCompletion, searchActiveInlineCompletion } from "@semio-tech/ui/elements/WindowSearch";
 
 /** 🏷️ Default English copy for the window search pane (matches `ui.windowSearch.*` en bundle) — for standalone REPL surfaces that build a {@link SearchSpec} outside {@link Search}'s own `useLabel` resolution. */
 export const WINDOW_SEARCH_USER = {

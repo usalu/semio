@@ -23,7 +23,7 @@ import (
 
 // #region 🪄️Handlers
 
-// Request handler functions for CLI and MCP operations.
+// 🌐️Request handler functions for CLI and MCP operations.
 // ⏹️renderPromptTemplate holds the data fields for a renderPromptTemplate record.
 func renderPromptTemplate(name string, data map[string]string) (string, error) {
 	path := workspace.GetRepoMetaPath(filepath.Join("💬️prompts", name+".tpl"))

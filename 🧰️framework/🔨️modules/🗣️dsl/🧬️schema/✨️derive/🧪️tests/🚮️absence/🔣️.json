@@ -1,6 +1,7 @@
 {
   "version": 1,
   "entry": "📦️packages/🦀️rust/📜️script.ts",
+  "commands": "🧪️tests/🔬️rust-package-commands/🟦️.ts",
   "removedRoots": ["🧰️framework/🛍️products", "✏️s", "🌎️hub"],
   "removedPackages": ["@semio-tech/repo", "@semio-tech/s", "@semio-tech/hub"],
   "packages": ["semio-framework-dsl-record-derive", "semio-framework-dsl-record"],

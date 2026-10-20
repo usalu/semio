@@ -106,9 +106,9 @@ pub enum RasterMutationDsl {
         #[dsl(key="id")]
         layer_id:String,
         #[dsl(block)]
-        expected:crate::RasterTransform,
+        expected:semio_s_artifact_raster_raster_model::RasterTransform,
         #[dsl(block)]
-        transform:crate::RasterTransform,
+        transform:semio_s_artifact_raster_raster_model::RasterTransform,
     },
     ChangeLayerMask {
         #[dsl(key = "id")]

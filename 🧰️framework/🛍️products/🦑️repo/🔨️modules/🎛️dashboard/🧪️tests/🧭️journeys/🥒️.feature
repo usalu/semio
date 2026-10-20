@@ -294,3 +294,23 @@ Feature: The dashboard is the only control plane for developer processes
     When the developer selects the repository goal list action and submits its visible form
     Then the independent terminal shows the exact goal line and successful exit
     And the goal document bytes are unchanged
+
+  @pty
+  Scenario: Native files browse edit Unicode save reopen conflict and discard without an external editor
+    Given a real file in a nested isolated workspace directory
+    When the developer browses it with the native Files action and filters the directory and file names
+    And edits combining text and an emoji using the visible multiline hardware cursor
+    And saves with the configurable native document action
+    Then an independent filesystem read contains the exact Unicode document
+    When a foreign writer replaces the file and the developer attempts another save
+    Then the native view shows a conflict and preserves both the foreign file and local buffer
+    And closing the dirty document retains it until explicit discard
+    When the developer discards and reopens the file
+    Then the native editor shows the foreign writer's document
+
+  @pty
+  Scenario: German native files use customized controls and retain unsaved changes on close
+    Given a German dashboard with customized file and save keys
+    When the developer browses and edits a real UTF8 file
+    Then the native view shows German file status and follows the configured save key
+    And closing unsaved changes requests explicit localized discard

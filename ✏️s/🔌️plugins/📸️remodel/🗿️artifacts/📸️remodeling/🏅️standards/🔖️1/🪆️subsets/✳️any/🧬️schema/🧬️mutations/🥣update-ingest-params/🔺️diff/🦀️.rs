@@ -7,7 +7,7 @@ use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::sche
 use crate::standards::v1::subsets::any::schema::mutations::update_ingest_params::component::UpdateIngestParams;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::UpdateIngestParams, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
+pub fn diff(payload: &crate::standards::v1::subsets::any::schema::mutations::update_ingest_params::component::UpdateIngestParams, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
     if !payload.params.min_sharpness.is_finite() || payload.params.min_sharpness < 0.0 || payload.params.max_frames == 0 || payload.params.frame_sample_stride == 0 {
         return protocol::MutationOutcome::fatal(
             "mutation.invariant",

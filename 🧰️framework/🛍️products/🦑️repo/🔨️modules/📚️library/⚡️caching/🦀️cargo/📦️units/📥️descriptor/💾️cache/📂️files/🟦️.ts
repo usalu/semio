@@ -9,7 +9,7 @@ import{readRustUnitDescriptorNodeFileMatchesV3,rustUnitDescriptorReadBatchLimits
 import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{withResourceLeases,checkResourceLeaseControl,type ResourceLeaseControl}from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{requireNativeStoragePathV1}from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import{withArtifactDescriptorV1,requireArtifactDescriptorClosureV1}from"../../../../../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import{withArtifactDescriptorV1,requireArtifactDescriptorClosureV1}from"../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import{withExactSourceReadBatchV1,readExactSourceFileV1}from "../../../../../../🏗️build/📥️inputs/🧮️digest/📥️read/🟨️.mjs";
 import{withRustUnitDescriptorExclusiveV2}from"../../🔒️namespace/🟦️.ts";
 import{captureRustUnitDescriptorCatalogSnapshotV2,rustUnitDescriptorCacheLimitsV1,type RustUnitDescriptorCacheBoundsV1,type RustUnitDescriptorCatalogSnapshotV2,type RustUnitDescriptorAdmissionV2}from"../🟦️.ts";

@@ -45,7 +45,7 @@ fn sibling_load_commands_preserve_independent_intent(){
     let second=emit(&base,PatchLoad{id:semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_load_target("lc1", "l1").unwrap(),field:"nodeId".into(),value:"n2".into()}).unwrap().artifact_mutations.remove(0);
     let combined=vcs::apply_mutation(&vcs::apply_mutation(&base,&first).unwrap().0,&second).unwrap().0;
     assert_eq!(combined,vcs::apply_mutation(&vcs::apply_mutation(&base,&second).unwrap().0,&first).unwrap().0);
-    let crate::FemLoad::Nodal{node_id,value,..}=&combined.load_cases[0].loads[0] else{panic!("nodal variant preserved")};
+    let FemLoad::Nodal{node_id,value,..}=&combined.load_cases[0].loads[0] else{panic!("nodal variant preserved")};
     assert_eq!(node_id,"n2");assert_eq!(*value,20.0);
     let mut undone=combined.clone();for inverse in protocol::Mutation::inverse(&first,&base).unwrap().iter().rev(){undone=vcs::apply_mutation(&undone,inverse).unwrap().0;}
     assert_eq!(undone,vcs::apply_mutation(&base,&second).unwrap().0);

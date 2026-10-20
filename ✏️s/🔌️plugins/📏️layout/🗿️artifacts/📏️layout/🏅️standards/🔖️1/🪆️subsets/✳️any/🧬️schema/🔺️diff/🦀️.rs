@@ -14,9 +14,8 @@ use semio_s_artifact_layout_layout_model::set_frame_layer;
 use semio_s_artifact_layout_layout_model::{CharacterStyle, Frame, GridSettings, ImageLink, Layer, LayoutDrawingChild, LayoutRect, Page, PageOverride, ParagraphStyle, ParentPage, Spread, TextStory, TextStyleRun};
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::list_delta::RowPatch;
-use protocol::{ApplyCapability, DiffAlgebra, MutationApplyError, MutationApplyResult, MutationDiff, Patchable};
+use protocol::{ApplyCapability, DiffAlgebra, MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
-use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Diff
 /// 🔺️ Sparse delta for the layout artifact: id-keyed collection rows, owned-field patches and positional list rows.

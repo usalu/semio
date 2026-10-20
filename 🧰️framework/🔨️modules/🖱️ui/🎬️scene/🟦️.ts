@@ -24,3 +24,6 @@ import type { SceneLaneRef } from "./🚚️lane-contract/🟦️.ts";
 // #endregion 🎬️Scene
 
 export { fitCanvasFrame, type Canvas2dFraming, type Canvas2dFrameCamera } from "./📷️framing/🟦️.ts";
+export { PAINT2D_SCENE_LANES, paint2dSceneFromLanes } from "./🛤️lanes/🟦️.ts";
+export type { Paint2dScene, TableScene } from "./📄️documents/🟦️.ts";
+export type { World3dScene } from "./🌐️world3d/🟦️.ts";

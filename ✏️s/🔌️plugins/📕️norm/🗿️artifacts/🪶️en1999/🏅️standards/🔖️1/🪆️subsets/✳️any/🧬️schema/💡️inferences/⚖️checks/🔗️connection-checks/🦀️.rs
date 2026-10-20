@@ -29,7 +29,6 @@ pub fn check_connection(conn: &AluminiumConnection, material: &AluminiumMaterial
     let part = "DIN EN 1999-1-1";
     let mut out = Vec::new();
     let kind = conn.kind.to_ascii_lowercase();
-
     let gov = if conn.actions.is_empty() {
         member.map(|m| part_en1990::governing_member_effects(m, annex)).unwrap_or(part_en1990::GoverningEffects {
             action_id: "G".into(), combination: "uls-g", n_ed: 0.0, v_y_ed: 0.0, v_z_ed: 0.0, m_y_ed: 0.0, m_z_ed: 0.0,
@@ -65,7 +64,43 @@ pub fn check_connection(conn: &AluminiumConnection, material: &AluminiumMaterial
         ))
         .build()];
     }
+    check_bolted_connection(conn, annex, &params, &alloy, part, &mut out, &kind, combo, action_id, n_ed, v_ed, m_ed, &conn_dig);
+    check_welded_connection(conn, annex, &params, &alloy, part, &mut out, &kind, combo, action_id, n_ed, v_ed, m_ed, &conn_dig);
+    check_connection_serviceability(conn, annex, &params, &alloy, part, &mut out, &kind, lever, &conn_dig);
+    if out.is_empty() {
+        out.push(
+            CheckResult::assess(
+                format!("en1999.8.na.{}", conn.id),
+                part,
+                ClauseId::new("EN 1999-1-1", "§8", "8"),
+                SubjectRef::new(&conn.id, format!("connections[id={}].kind", conn.id), conn_label(&conn.id)),
+                loc("Connection check", "Anschlussnachweis"),
+            )
+            .not_applicable(loc("Connection kind not bolted/welded.", "Anschlussart weder geschraubt noch geschweißt."))
+            .annex(annex)
+            .build(),
+        );
+    }
+    out
+}
 
+/// 🧱️ Checks the bearing, shear, tension and interaction resistance of the bolts of a connection.
+#[allow(clippy::too_many_arguments, reason = "the extracted check keeps the connection values of its original function as explicit parameters")]
+fn check_bolted_connection(
+    conn: &AluminiumConnection,
+    annex: AnnexChoice,
+    params: &na_de::AnnexParams,
+    alloy: &part_1_1::AlloyProps,
+    part: &str,
+    out: &mut Vec<CheckResult>,
+    kind: &String,
+    combo: &str,
+    action_id: &str,
+    n_ed: f64,
+    v_ed: f64,
+    m_ed: f64,
+    conn_dig: &String,
+) {
     if kind == "bolted" || kind == "combined" {
         if part_1_1::bolt_fu_pa(&conn.bolts.material) <= 0.0 {
             out.push(CheckResult::assess(
@@ -178,7 +213,25 @@ pub fn check_connection(conn: &AluminiumConnection, material: &AluminiumMaterial
             remedies,
         ));
     }
+}
 
+/// 🪵️ Checks the weld resistance of a connection.
+#[allow(clippy::too_many_arguments, reason = "the extracted check keeps the connection values of its original function as explicit parameters")]
+fn check_welded_connection(
+    conn: &AluminiumConnection,
+    annex: AnnexChoice,
+    params: &na_de::AnnexParams,
+    alloy: &part_1_1::AlloyProps,
+    part: &str,
+    out: &mut Vec<CheckResult>,
+    kind: &String,
+    combo: &str,
+    action_id: &str,
+    n_ed: f64,
+    v_ed: f64,
+    m_ed: f64,
+    conn_dig: &String,
+) {
     if kind == "welded" || kind == "combined" {
         let f_w = part_1_1::weld_resistance(&conn.welds, alloy.f_u_pa, params.gamma_m2) * (alloy.rho_u_haz.min(alloy.rho_o_haz) / (1.0 + part_1_1::haz_extent_m(&conn.welds, conn.bolts.plate_thickness).max(conn.welds.throat) * 10.0)).clamp(0.2, 1.0);
         let mut remedies = Vec::new();
@@ -249,7 +302,21 @@ pub fn check_connection(conn: &AluminiumConnection, material: &AluminiumMaterial
             remedies,
         ));
     }
+}
 
+/// 🔩️ Checks the serviceability of a connection under its frequent actions.
+#[allow(clippy::too_many_arguments, reason = "the extracted check keeps the connection values of its original function as explicit parameters")]
+fn check_connection_serviceability(
+    conn: &AluminiumConnection,
+    annex: AnnexChoice,
+    params: &na_de::AnnexParams,
+    alloy: &part_1_1::AlloyProps,
+    part: &str,
+    out: &mut Vec<CheckResult>,
+    kind: &String,
+    lever: f64,
+    conn_dig: &String,
+) {
     if !conn.actions.is_empty() && (kind == "bolted" || kind == "welded" || kind == "combined") {
         let sls = part_en1990::sls_connection_effects(conn, annex, "frequent");
         let n_ed_s = sls.n_ed.abs() + 0.25 * (sls.m_y_ed.abs() + sls.m_z_ed.abs()) / lever;
@@ -335,21 +402,5 @@ pub fn check_connection(conn: &AluminiumConnection, material: &AluminiumMaterial
             rem_s,
         ));
     }
-
-    if out.is_empty() {
-        out.push(
-            CheckResult::assess(
-                format!("en1999.8.na.{}", conn.id),
-                part,
-                ClauseId::new("EN 1999-1-1", "§8", "8"),
-                SubjectRef::new(&conn.id, format!("connections[id={}].kind", conn.id), conn_label(&conn.id)),
-                loc("Connection check", "Anschlussnachweis"),
-            )
-            .not_applicable(loc("Connection kind not bolted/welded.", "Anschlussart weder geschraubt noch geschweißt."))
-            .annex(annex)
-            .build(),
-        );
-    }
-    out
 }
 //#endregion 🔖️ComplianceHelpers

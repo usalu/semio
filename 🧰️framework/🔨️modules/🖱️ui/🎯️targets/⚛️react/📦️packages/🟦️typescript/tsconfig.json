@@ -16,7 +16,7 @@
     "incremental": true,
     "tsBuildInfoFile": "node_modules/.cache/tsconfig.tsbuildinfo",
     "noEmit": true,
-    "types": ["bun", "node", "react", "react-dom", "vite/client"],
+    "types": ["bun", "node", "react", "react-dom", "vite/client", "vitest/importMeta"],
     "baseUrl": ".",
     "paths": {
       "@semio-tech/ui-react": ["./🟦️.tsx"],

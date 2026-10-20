@@ -4,7 +4,6 @@
   "exports": {
     "./package.json": "./package.json",
     "./bazel/script": "./🏗️bazel/📜️script.ts",
-    "./script": "./📜️script.ts",
     "./use/schema/witness.json": "./📥️use/🧬️schema/📥️witness.json",
     "./use": "./📥️use/🟦️.ts",
     "./sdk/material": "./📦️sdk/📊️material/🟦️.ts",
@@ -18,7 +17,7 @@
     "./authorizers/snapshot": "./🔏️authorizers/📦️snapshot/🟦️.ts",
     "./authorizers/workspace": "./🔏️authorizers/📦️workspace/🟦️.ts",
     "./authorizers": "./🔏️authorizers/🟦️.ts",
-    "./wasm/script": "./🕸️wasm/📜️script.ts",
+    "./wasm": "./🕸️wasm/🟦️.ts",
     "./wasm/testing/tool-fingerprint": "./🕸️wasm/🧪️tests/🔏️tool-fingerprint/🟦️.ts",
     "./wasm/testing/binaryen-toolchain": "./🕸️wasm/🧪️tests/🛠️binaryen-toolchain/🟦️.ts",
     "./rustup/installation": "./🦀️rustup/📥️installation/🟦️.ts",
@@ -30,14 +29,20 @@
     "./retention/generation": "./🧹️retention/📦️generation/🟦️.ts",
     "./patch": "./🩹️patch/🟦️.ts",
     "./bun/script": "./🟦️bun/🟦️.ts",
-    "./bun/schema.json": "./🟦️bun/🧬️schema/🔣️.json"
+    "./bun/schema.json": "./🟦️bun/🧬️schema/🔣️.json",
+    ".": "./🟦️.ts",
+    "./bazel/readiness": "./🏗️bazel/🩺️readiness/🟦️.ts",
+    "./operations": "./⚙️operations/🟦️.ts",
+    "./probe": "./🔁️probe/🟦️.ts",
+    "./sdk": "./🔌️sdk/🟦️.ts"
   },
   "packageManager": "bun@1.4.2",
   "dependencies": {
     "nx": "23.2.0",
     "@nx/js": "23.2.0",
     "@nxlv/python": "23.0.2",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "@semio-tech/framework-filesystem": "workspace:*"
   },
   "semio": {
     "toolPatches": {
@@ -45,9 +50,12 @@
     }
   },
   "devDependencies": {
+    "@iarna/toml": "2.2.5",
+    "@semio-tech/framework-filesystem": "workspace:*",
     "@semio-tech/process": "workspace:*",
     "ajv": "8.20.0",
     "diff": "8.0.4",
+    "iconv-lite": "0.7.3",
     "tree-sitter-wasms": "0.1.13"
   }
 }

@@ -2,7 +2,7 @@ use crate::NoteSnapshot;
 use protocol::Mutation;
 use semio_framework_value_derive::ToValue;
 #[allow(unused_imports)]
-use crate::NoteDiff;
+use semio_s_artifact_note_note_diff::standards::v1::subsets::any::schema::diff::NoteDiff;
 #[allow(unused_imports)]
 use semio_framework_value_derive::FromValue;
 use crate::standards::v1::subsets::any::schema::mutations::*;

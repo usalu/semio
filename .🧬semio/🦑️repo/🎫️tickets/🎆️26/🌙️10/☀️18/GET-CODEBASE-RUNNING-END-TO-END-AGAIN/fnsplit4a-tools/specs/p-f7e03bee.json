@@ -1,0 +1,66 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️tests/🌊️actor-import/🟦️.ts",
+ "function": "testCanonicalActorAsyncImport",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟣️shared",
+  "doc": "/** 🟣️ The shared declarations of testCanonicalActorAsyncImport. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️fixture-root",
+   "doc": "/** 🔶️ The fixture root phase of testCanonicalActorAsyncImport. */",
+   "phases": [
+    {
+     "name": "buildFixtureRootState",
+     "emoji": "🔷",
+     "doc": "Builds fixtureRoot, fixture, schemaDocument, ajv of testCanonicalActorAsyncImport.",
+     "from": 26,
+     "to": 127
+    }
+   ]
+  },
+  {
+   "dir": "🔸️runtime",
+   "doc": "/** 🔸️ The runtime phase of testCanonicalActorAsyncImport. */",
+   "phases": [
+    {
+     "name": "buildRuntimeState",
+     "emoji": "🔹",
+     "doc": "Builds runtime, observation, closedLaws of testCanonicalActorAsyncImport.",
+     "from": 128,
+     "to": 225
+    }
+   ]
+  },
+  {
+   "dir": "🟠️part3",
+   "doc": "/** 🟠️ The part3 phase of testCanonicalActorAsyncImport. */",
+   "phases": [
+    {
+     "name": "buildPart3",
+     "emoji": "🟡",
+     "doc": "Runs the effects and registrations of testCanonicalActorAsyncImport.",
+     "from": 226,
+     "to": 226
+    }
+   ]
+  },
+  {
+   "dir": "🟢️part4",
+   "doc": "/** 🟢️ The part4 phase of testCanonicalActorAsyncImport. */",
+   "phases": [
+    {
+     "name": "buildPart4",
+     "emoji": "🔵",
+     "doc": "Runs the effects and registrations of testCanonicalActorAsyncImport.",
+     "from": 449,
+     "to": 449
+    }
+   ]
+  }
+ ]
+}

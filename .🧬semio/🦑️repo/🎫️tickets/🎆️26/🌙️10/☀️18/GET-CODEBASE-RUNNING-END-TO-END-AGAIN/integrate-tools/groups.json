@@ -1,0 +1,55 @@
+[
+ {
+  "id": "A",
+  "title": "contracts: cache classification and fail-closed outputs (cache-fix), remote cache contract and server (rcache), hermetic execution contract (rexec), worker pool contract (bworkers)",
+  "sets": [
+   "cache-fix",
+   "rcache",
+   "rexec",
+   "bworkers"
+  ],
+  "verify": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🧪️tests/🟦️.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/💾️storage/🧪️tests/🟦️.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🧪️tests/🟦️.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/👷️workers/🧪️tests/🟦️.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👷️workers/🧪️tests/🟦️.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/👷️workers/🧪️tests/🟦️.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/🧪️tests/🟦️.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🧪️tests/🟦️.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔒️cache-correctness/🧪️tests/🔒️rules/🟦️.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/💾️cache/🟦️.ts"
+  ]
+ },
+ {
+  "id": "B",
+  "title": "adapter: task dispositions and repo_test (bzl-coverage), Cargo/wasm actions (bzl-rust), platform profiles (bzl-xplat), strict declared outputs",
+  "sets": [
+   "bzl-coverage",
+   "bzl-rust",
+   "bzl-xplat"
+  ],
+  "verify": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️actions/🟦️.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️coverage/🟦️.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️platform/🟦️.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️outputs/🟦️.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🦀️cargo/🧪️tests/🟦️.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧪️tests/🎯️coverage/🟦️.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/🧪️tests/📥️pins/🟦️.ts"
+  ]
+ },
+ {
+  "id": "C",
+  "title": "closure and taxonomy: zero-touch tools-setup closure and readiness budgets (zt-e2e-fix), taxonomy repairs (tax6), vitest/browser fixes (vit4)",
+  "sets": [
+   "zt-e2e-fix",
+   "tax6",
+   "vit4"
+  ],
+  "verify": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️tests/📦️package-implementation-destination/🟦️.ts"
+  ],
+  "commands": []
+ }
+]

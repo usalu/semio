@@ -12,8 +12,8 @@ import{withArtifactScratchV1,withArtifactDestinationWriterV1}from"../../../⚡�
 import{withRepositoryArtifactDestinationV1,stageRepositoryArtifacts}from"../../../⚡️caching/📦️artifacts/🟦️.ts";
 import{withRepositoryArtifactV1,withRepositoryArtifactTaskV1}from"../../../⚡️caching/📦️artifacts/👓️reading/🟦️.ts";
 import{readNativeCallerAuthorityV1}from"../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import{withArtifactDescriptorV1}from"../../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
-import{readPhysicalFileV1,observePhysicalFileV1,type PhysicalFileClaimV1}from"../../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/🟦️.ts";
+import{withArtifactDescriptorV1}from"@semio-tech/framework-filesystem/observation/descriptor";
+import{readPhysicalFileV1,observePhysicalFileV1,type PhysicalFileClaimV1}from"@semio-tech/framework-filesystem/observation";
 import{createHash,randomBytes}from"node:crypto";
 import{lstat,mkdir,opendir,realpath,rename,unlink,writeFile}from"node:fs/promises";
 import{dirname,isAbsolute,join}from"node:path";

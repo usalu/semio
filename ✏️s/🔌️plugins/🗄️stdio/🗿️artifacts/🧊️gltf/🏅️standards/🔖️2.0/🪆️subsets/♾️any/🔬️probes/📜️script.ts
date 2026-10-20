@@ -101,14 +101,7 @@ async function projectResources(absPath: string): Promise<Record<string, unknown
   const root = document.getRoot();
   return {
     accessors: root.listAccessors().map((a) => ({ name: a.getName(), type: a.getType(), componentType: a.getComponentType(), count: a.getCount(), normalized: a.getNormalized() })),
-    // 🚫️`getURI()` is NOT projected for either: it carries the OUTPUT FILENAME the writer chose
-    // (`before.bin` against `after.bin`), so projecting it would report a difference on every pair
-    // regardless of what the mutation did — a gate that always fires is a gate nobody reads. Only
-    // resource identity and payload shape are semantic here.
     buffers: root.listBuffers().map((b) => ({ name: b.getName() })),
-    // 🛡️`getSize()` DECODES the image to read its dimensions and throws on a payload it cannot parse.
-    // A reader probe must report what it could not measure, never die on it — otherwise a malformed
-    // image inside a fixture is indistinguishable from a broken probe.
     textures: root.listTextures().map((t) => ({ name: t.getName(), mimeType: t.getMimeType() ?? null, size: sizeOrNull(t), imageBytes: t.getImage()?.byteLength ?? null })),
     materialTextureBindings: root.listMaterials().map((m) => ({ name: m.getName(), baseColor: m.getBaseColorTexture()?.getName() ?? null })),
     counts: { accessors: root.listAccessors().length, buffers: root.listBuffers().length, textures: root.listTextures().length, materials: root.listMaterials().length, meshes: root.listMeshes().length, nodes: root.listNodes().length },
@@ -191,8 +184,6 @@ function projectDocument(gltf: ParsedGltf): Record<string, unknown> {
     cameras: (json.cameras ?? []).map((c: Record<string, unknown>) => c),
     skins: (json.skins ?? []).map((s: Record<string, unknown>) => ({ joints: s.joints ?? [], skeleton: s.skeleton ?? null })),
     animations: (json.animations ?? []).map((a: Record<string, unknown>) => ({ name: a.name ?? null, channelTargets: (a.channels as Record<string, unknown>[]).map((c) => (c.target as Record<string, unknown>)) })),
-    // 🎥️Camera and skin SEMANTICS as three actually interpreted them — independent confirmation that a
-    // camera-bearing/skin-bearing node round-trips as the right kind of THREE object, not just a JSON blob.
     sceneCameraCount: countCameras(gltf.scene),
     sceneSkinnedMeshCount: countSkinned(gltf.scene),
     animationClipNames: gltf.animations.map((a) => a.name).sort(),

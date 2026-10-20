@@ -3,8 +3,8 @@
  * 🧱️ Child module of `🎠️kernel`; importers import this module directly, and the kernel package entry {@link ../📦️packages/🟦️typescript/🟦️.ts} lists its public names.
  */
 
-import { type VideoRenderProgram } from "../🎥️video-render-program/🟦️.ts";
-import { type JobPlacement } from "../🛠️spawned-job/🟦️.ts";
+import { type VideoRenderProgram } from "./🎥️video-render-program/🟦️.ts";
+import { type JobPlacement } from "./🛠️spawned-job/🟦️.ts";
 
 // #region 🎠️Kernel
 //#region InvocationResponse

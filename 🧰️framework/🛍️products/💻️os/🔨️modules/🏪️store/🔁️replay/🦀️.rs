@@ -40,8 +40,8 @@ use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 mod effective_operations_and_folds;
 pub use effective_operations_and_folds::{
     admit_replacement, apply_outcome, effective_forwards, effective_operation,
-    effective_operation_with_supersession, fold_effective_edit, fold_operation, fold_recorded,
-    EffectiveOperation, PairMerge,
+    effective_operation_with_supersession, fold_effective_edit, fold_operation, fold_operation_into, fold_recorded,
+    ColdFoldProjection, EffectiveOperation, PairMerge,
 };
 
 #[path = "🔢️prefix-digests-replay-progress-and-edit-replay/🦀️.rs"]
@@ -72,4 +72,4 @@ pub use pending::{PendingLocalStep,PendingReprojection,ReprojectionAdvance,TailS
 #[path="⏱️budget/🦀️.rs"]
 mod budget;
 pub use budget::ReplayTurnBudget;
-pub use semio_framework_os_store_ledger::lifted_replay::{EffectiveSupersessions, FoldProjection, edit_supersession_digest, supersession_digest};
+pub use semio_framework_os_store_ledger::lifted_replay::{EffectiveSupersessions, edit_supersession_digest, supersession_digest};

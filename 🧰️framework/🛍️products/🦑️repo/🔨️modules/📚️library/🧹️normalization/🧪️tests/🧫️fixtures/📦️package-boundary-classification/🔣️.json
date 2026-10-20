@@ -1497,6 +1497,96 @@
       "expectedFinding": "fixed-source-disposition-unresolved"
     },
     {
+      "id": "owned-program-bare-entry",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { runScriptProgram } from \"./🟦️.ts\";\nif (import.meta.main) await runScriptProgram();\n",
+      "expectedDispositionRole": "tool-metadata",
+      "expectedFinding": null
+    },
+    {
+      "id": "owned-program-nested-module",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { runScriptProgram } from \"./🧪️tests/🔬️script-commands/🟦️.ts\";\nif (import.meta.main) await runScriptProgram();\n",
+      "expectedDispositionRole": "tool-metadata",
+      "expectedFinding": null
+    },
+    {
+      "id": "owned-program-outside-main",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { runScriptProgram } from \"./🟦️.ts\";\nawait runScriptProgram();\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "owned-program-with-argument",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { runScriptProgram } from \"./🟦️.ts\";\nif (import.meta.main) await runScriptProgram(process.argv);\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "owned-program-type-only",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import type { runScriptProgram } from \"./🟦️.ts\";\nif (import.meta.main) await runScriptProgram();\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "owned-program-foreign-module",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { runScriptProgram } from \"@semio/process\";\nif (import.meta.main) await runScriptProgram();\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "owned-program-non-module-slot",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { runScriptProgram } from \"./owner.ts\";\nif (import.meta.main) await runScriptProgram();\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "owned-program-other-name",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { runProgram } from \"./🟦️.ts\";\nif (import.meta.main) await runProgram();\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "owned-program-two-terminals",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { runScriptProgram } from \"./🟦️.ts\";\nif (import.meta.main) await runScriptProgram();\nif (import.meta.main) await runScriptProgram();\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "owned-program-else-branch",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { runScriptProgram } from \"./🟦️.ts\";\nif (import.meta.main) await runScriptProgram(); else await runScriptProgram();\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
       "id": "vitest-registration-bound-callback",
       "placement": "domain",
       "manifest": "not-applicable",

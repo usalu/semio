@@ -62,14 +62,19 @@ export function readStoreSourceText(): string {
   return [root, ...found].map(file => readFileSync(file, "utf8")).join("\n");
 }
 
-/** 🪞️ The resolved targets of a fixture facade entry: a TypeScript file inside a `🧫️fixtures` folder whose every statement is an `export … from "<relative>"` re-export, so it carries no data of its own and only names fixtures an owner keeps under its `🧪️tests` tree. `undefined` for any other file (data, code, or a re-export of something that is not a file).
+/** 🪞️ The resolved targets of a fixture facade entry: a TypeScript file inside a `🧫️fixtures` folder whose every statement is an `export … from "<relative>"` re-export (or the JSON document import and its default re-export), so it carries no data of its own and only names fixtures an owner keeps under its `🧪️tests` tree. `undefined` for any other file (data, code, or a re-export of something that is not a file).
  * @see ./🧪️tests/🟦️.ts */
 export function fixtureFacadeTargets(path: string): readonly string[] | undefined {
   if (!/[\\/]🧫️fixtures(?:[\\/][^\\/]+)*[\\/]🟦️\.ts$/u.test(path)) return undefined;
   const code = readFileSync(path, "utf8").replace(/\/\*[\s\S]*?\*\//gu, "").replace(/(^|[^:])\/\/[^\n]*/gu, "$1");
   const statements = code.split(";").map(statement => statement.trim()).filter(statement => statement.length > 0);
   const targets: string[] = [];
+  const documents = new Set<string>();
   for (const statement of statements) {
+    const document = /^import\s+([A-Za-z_$][\w$]*)\s+from\s*"([^"]+\.json)"\s+with\s*\{\s*type\s*:\s*"json"\s*\}$/u.exec(statement);
+    if (document !== null) { documents.add(document[1]!); targets.push(resolve(dirname(path), document[2]!)); continue; }
+    const reexported = /^export\s+default\s+([A-Za-z_$][\w$]*)$/u.exec(statement);
+    if (reexported !== null && documents.has(reexported[1]!)) continue;
     const match = /^export\s+(?:type\s+)?(?:\*|\{[^}]*\})\s*from\s*"([^"]+)"(?:\s+with\s*\{[^}]*\})?$/u.exec(statement);
     if (match === null) return undefined;
     targets.push(resolve(dirname(path), match[1]!));

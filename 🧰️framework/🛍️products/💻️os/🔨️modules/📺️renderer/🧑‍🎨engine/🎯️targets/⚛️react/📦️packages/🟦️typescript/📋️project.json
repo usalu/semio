@@ -397,7 +397,7 @@
       ],
       "options": {
         "command": "bun ./📜️script.ts scene-shading-pixel-check",
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/🎨️world3d-scene-shading"
       },
       "outputs": []
     },

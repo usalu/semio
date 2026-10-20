@@ -11,8 +11,8 @@ import { useCallback, useEffect, useMemo, useState, type ReactElement } from "re
 import { Board2dHost } from "@semio-tech/framework-renderer-react";
 import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framework-renderer-react";
 
-import concreteForestFixtureDsl from "../../../../🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🗣️.dsl.semio?raw";
-import nakaginCapsuleTowerFixtureDsl from "../../../../🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio?raw";
+import { puzzle2dConcreteForestDsl as concreteForestFixtureDsl } from "@semio-tech/puzzle-2d/examples/concrete-forest/assets/forest";
+import { puzzle2dNakaginCapsuleTowerDsl as nakaginCapsuleTowerFixtureDsl } from "@semio-tech/puzzle-2d/examples/nakagin-capsule-tower/assets/tower";
 
 //#region WasmFixtureLoader
 /** 🧵️ Lazily loads+inits `@semio-tech/puzzle-wasm`'s wasm module once (mirrors the renderer react target's `createEngineSession` caching), then exposes `parse_dsl`'d fixture JSON via the crate's `puzzle2dParseDslJson` free export. */

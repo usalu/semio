@@ -1,8 +1,8 @@
-import type { ScriptInvocation } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { defineLint, type BundleLinter } from "../📚️library/📦️packages/🟦️typescript/🚨️policy/🟦️.ts";
-import { getWorkspaceRoot } from "../📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
+import { defineLint, type BundleLinter } from "@semio-tech/repo-lib/policy";
+import { getWorkspaceRoot } from "@semio-tech/repo-lib/inventory";
 
 export const policy = defineLint("repo-client-bundle", (l: BundleLinter) => {
   const root = getWorkspaceRoot();

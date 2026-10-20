@@ -4,6 +4,7 @@ use semio_framework_os_kernel::io::io_mechanism::{io_register,io_begin_owned_ser
 use semio_framework_job::{OperationId,Generation,StepBudget,root_cancel_token};
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
+use semio_framework_job::StepOutcome;
 
 /// 🎟️ Unbounded retained grant: the pre-migration step budget carried no retained limit.
 const UNBOUNDED_STEP_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };

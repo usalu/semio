@@ -92,7 +92,7 @@ test("actual neutral packages expose canonical lexical and diagnostic ownership"
   const manifest = read("🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust/Cargo.toml");
   const own = TOML.parse(manifest) as {dependencies: Record<string, unknown>};
   expect(Bun.TOML.parse(manifest)).toEqual(own);
-  expect(Object.keys(own.dependencies).sort()).toEqual(["semio-framework-diagnostic", "semio-framework-dsl-lexical", "semio-framework-dsl-syntax", "semio-framework-dsl-token", "semio-framework-value"]);
+  expect(Object.keys(own.dependencies).sort()).toEqual(["semio-framework-diagnostic", "semio-framework-dsl-lexical", "semio-framework-dsl-syntax", "semio-framework-dsl-token", "semio-framework-value", "semio-framework-value-native-owned"]);
   const library = read("🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust/🦀️.rs");
   for (const mount of ["semio_framework_dsl_token as token", "semio_framework_dsl_lexical::{lexer,trust}", "📖️grammar/🦀️.rs", "🗣️idiom/🦀️.rs"]) expect(library).toContain(mount);
   expect(library).toContain("pub use semio_framework_diagnostic::{TextError,Limits,TextSpan");

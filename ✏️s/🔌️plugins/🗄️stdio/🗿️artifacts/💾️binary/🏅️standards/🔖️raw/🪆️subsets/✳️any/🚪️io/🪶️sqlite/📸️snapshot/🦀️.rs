@@ -4,7 +4,7 @@ use crate::standards::v_raw::subsets::any::schema::snapshot::{BinarySnapshot};
 use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SnapshotEncoding,ValueError}};
 #[path="💰️backing/🦀️.rs"] mod backing;
 pub(crate)fn semantic(snapshot:&BinarySnapshot,control:&mut SqliteSnapshotControl<'_>,phase:semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase)->Result<(),ValueError>{backing::semantic(snapshot,control,phase)}
-pub(crate)fn native_cells(schema:&str,count:usize,bytes:impl IntoIterator<Item=Result<u8,ValueError>>,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{backing::native_cells(schema,count,bytes,control)}
+pub fn native_cells(schema:&str,count:usize,bytes:impl IntoIterator<Item=Result<u8,ValueError>>,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{backing::native_cells(schema,count,bytes,control)}
 impl ArtifactSqliteSnapshotHost for BinarySnapshot{
  
  fn to_sqlite_database_receiving(&self,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<SqliteDatabase,ValueError>{receiving::project_receiving(self,control,owner)}

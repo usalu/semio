@@ -94,22 +94,22 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod drag_rule_nodes {
-                            #[path = "../../../../🧬️mutations/🫳️drag-rule/🦀️.rs"]
+                            #[path = "../../../../🧬️mutations/🫳️drag-rule-nodes/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "../../../../🧬️mutations/🫳️drag-rule/🔺️diff/🦀️.rs"]
+                            #[path = "../../../../🧬️mutations/🫳️drag-rule-nodes/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "../../../../🧬️mutations/🫳️drag-rule/↩️inverse/🦀️.rs"]
+                            #[path = "../../../../🧬️mutations/🫳️drag-rule-nodes/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                         }
                         #[path = "."]
                         pub mod set_rule_layout_points {
-                            #[path = "../../../../🧬️mutations/📍️set-rule-layout/🦀️.rs"]
+                            #[path = "../../../../🧬️mutations/📍️set-rule-layout-points/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "../../../../🧬️mutations/📍️set-rule-layout/🔺️diff/🦀️.rs"]
+                            #[path = "../../../../🧬️mutations/📍️set-rule-layout-points/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "../../../../🧬️mutations/📍️set-rule-layout/↩️inverse/🦀️.rs"]
+                            #[path = "../../../../🧬️mutations/📍️set-rule-layout-points/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                         }
                     }

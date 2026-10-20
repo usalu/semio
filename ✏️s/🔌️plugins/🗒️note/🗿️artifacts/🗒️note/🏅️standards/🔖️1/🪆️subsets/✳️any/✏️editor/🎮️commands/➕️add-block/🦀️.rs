@@ -2,7 +2,7 @@
 
 use crate::op::NoteMutation;
 use crate::schema::create_block_by_kind;
-use crate::NoteSnapshot;
+use semio_s_artifact_note_note_schema::NoteSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

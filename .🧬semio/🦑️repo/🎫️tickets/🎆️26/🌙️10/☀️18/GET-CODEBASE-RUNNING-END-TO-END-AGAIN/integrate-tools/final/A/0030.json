@@ -1,0 +1,65 @@
+{
+  "name": "@semio-tech/fixture-generator-stdio-tiff-6-0-document",
+  "targets": {
+    "🏭️generator": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator",
+        "command": "bun ./📜️script.ts generate",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      },
+      "outputs": []
+    },
+    "🏭️generator-manifests": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator",
+        "command": "bun ./📜️script.ts manifests",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      },
+      "outputs": []
+    },
+    "🧪️test": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "🧪️test-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator",
+        "command": "bun ./📜️script.ts test-oracle",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "🧪️test-conformance-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator",
+        "command": "bun ./📜️script.ts test-conformance-oracle",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    }
+  }
+}

@@ -1,5 +1,5 @@
 //! 🔬️ Actual enclosing typed SQL ownership is measured against full system allocator requests.
-use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::io::sqlite::snapshot::tests::*;
+use super::*;
 use semio_framework_io_sqlite_snapshot_testing_backing as observed;
 #[test]
 fn sqlite_snapshot_pptx_relational_owned_requests_match_actual_allocator() {

@@ -1,0 +1,107 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🚀️apply/🟦️.ts",
+ "function": "applyTaxonomyPlan",
+ "keep": [
+  487
+ ],
+ "allowLets": [
+  "journal"
+ ],
+ "resolve": true,
+ "typesFromProducers": true,
+ "files": [
+  {
+   "dir": "📜️plan-checks",
+   "doc": "/** 📜️ The plan and transaction name checks of the taxonomy plan apply. */",
+   "phases": [
+    {
+     "name": "bindTransactionNames",
+     "emoji": "🏷",
+     "doc": "Verifies the plan against the options and binds the canonical transaction, attempt, lease and preparation names.",
+     "from": 38,
+     "to": 78
+    },
+    {
+     "name": "checkPlanAuthority",
+     "emoji": "🛡",
+     "doc": "Captures the plan bytes, checks the plan and cancellation file stay outside the transaction and reads the transaction ancestors.",
+     "from": 79,
+     "to": 126
+    }
+   ]
+  },
+  {
+   "dir": "🔎️attempt-discovery",
+   "doc": "/** 🔎️ The existing attempt discovery and validation of the taxonomy plan apply. */",
+   "phases": [
+    {
+     "name": "discoverTransactionAttempts",
+     "emoji": "🔭",
+     "doc": "Reads the existing and unpublished attempt directories of the plan transaction.",
+     "from": 127,
+     "to": 185
+    },
+    {
+     "name": "defineAttemptValidators",
+     "emoji": "✅",
+     "doc": "Validates the unpublished and terminal attempts and closes the terminal ones.",
+     "from": 191,
+     "to": 274
+    }
+   ]
+  },
+  {
+   "dir": "🎯️attempt-selection",
+   "doc": "/** 🎯️ The attempt selection and lease handling of the taxonomy plan apply. */",
+   "phases": [
+    {
+     "name": "selectAttempt",
+     "emoji": "🧭",
+     "doc": "Selects the resumed attempt or allocates the next attempt ordinal and binds its journal paths.",
+     "from": 306,
+     "to": 325
+    },
+    {
+     "name": "defineLeaseAndPreChecks",
+     "emoji": "🔑",
+     "doc": "Defines the lease acquisition and release and checks the symlink targets, baseline commit and cancellation.",
+     "from": 326,
+     "to": 351
+    }
+   ]
+  },
+  {
+   "dir": "🛫️preflight-and-lock",
+   "doc": "/** 🛫️ The preflight reference basis and the resume snapshot lock of the taxonomy plan apply. */",
+   "phases": [
+    {
+     "name": "capturePreflight",
+     "emoji": "🧪",
+     "doc": "Captures the preflight reference basis and verifies the pre-state of every planned operation.",
+     "from": 352,
+     "to": 352
+    },
+    {
+     "name": "lockResumeSnapshot",
+     "emoji": "🔒",
+     "doc": "Validates the selected resume snapshot and locks the owned lease for it.",
+     "from": 433,
+     "to": 475
+    }
+   ]
+  },
+  {
+   "dir": "🪪️journal-preparation",
+   "doc": "/** 🪪️ The journal preparation of the taxonomy plan apply. */",
+   "phases": [
+    {
+     "name": "prepareAttemptJournal",
+     "emoji": "📒",
+     "doc": "Loads the resumed journal or publishes the initial journal and lease of a new attempt.",
+     "from": 493,
+     "to": 627
+    }
+   ]
+  }
+ ]
+}

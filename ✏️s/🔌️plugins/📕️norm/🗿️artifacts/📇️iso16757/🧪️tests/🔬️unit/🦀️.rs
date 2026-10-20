@@ -1,4 +1,7 @@
 use crate::*;
+use semio_s_artifact_norm_iso16757_model::Cardinality;
+use semio_s_artifact_norm_iso16757_model::part_2;
+use semio_s_artifact_norm_iso16757_model::part_5;
 
 #[semio_framework_async_macros::async_test]
 async fn dimension_signature_compatible_checks_equality() {

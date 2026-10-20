@@ -1,3 +1,7 @@
+use semio_framework_plugin::ArtifactDefinition;
+use semio_framework_plugin::ArtifactCapability;
+use semio_framework_plugin::ArtifactIdentity;
+use semio_framework_plugin::ArtifactCapabilityKind;
 mod artifact_definition_contract_tests {
     use super::super::*;
     use semio_framework_plugin::ArtifactDefinitionRegistry;

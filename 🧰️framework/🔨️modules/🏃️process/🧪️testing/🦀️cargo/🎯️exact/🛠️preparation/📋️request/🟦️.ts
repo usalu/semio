@@ -1,4 +1,4 @@
-import schema from"./🧬️schema/🔣️.json";
+import schema from"./🧬️schema/🔣️.json" with { type: "json" };
 /** 🛠️ The exact cargo law preparation descriptor: command, arguments, working directory, bounded environment and output budget. */
 export type ExactCargoLawPreparationV1=Readonly<{version:1;command:string;args:readonly string[];cwd:string;environment:Readonly<Record<string,string>>;maximumOutputLines:number}>;
 const boundedKeys=Object.freeze([...schema.definitions.BoundedEnvironmentKeys.const]);

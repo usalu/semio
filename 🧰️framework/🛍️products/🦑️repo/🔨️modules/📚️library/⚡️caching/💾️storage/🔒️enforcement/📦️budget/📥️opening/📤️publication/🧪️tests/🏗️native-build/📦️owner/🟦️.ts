@@ -26,7 +26,7 @@ test("actual publisher lifecycle keeps pending crash prefixes and arbitrary fail
 import{mkdtemp,mkdir,writeFile,rm,open as openFile,opendir as openDirectory,rename as renameFile,rmdir as removeDirectory,unlink as unlinkFile}from"node:fs/promises";
 import{lstatSync,constants,type BigIntStats}from"node:fs";
 import{createHash}from"node:crypto";
-import{withArtifactDescriptorV1,requireArtifactDescriptorClosureV1}from"../../../../../../../../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import{withArtifactDescriptorV1,requireArtifactDescriptorClosureV1}from"@semio-tech/framework-filesystem/observation/descriptor";
 import{observeNativeImageMountDirectoryV1,requireEmptyNativeImageMountDirectoryV1}from"@semio-tech/process/artifacts/native-build/storage/platform/contract/mount";
 import mountSchema from"@semio-tech/process/artifacts/native-build/storage/platform/contract/mount/schema.json";
 import{syncNativeDirectoryMetadataV1}from"@semio-tech/process/artifacts/native-build/storage/metadata";

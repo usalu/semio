@@ -1,4 +1,4 @@
-import{captureBoundedSourceRevisionV1}from"../🔏️revision/🟨️.mjs";
+import{captureBoundedSourceRevisionV1,physicalSourceOriginV1}from"../🔏️revision/🟨️.mjs";
 import{fileURLToPath}from"node:url";
 import {join,resolve,dirname,relative,sep,isAbsolute} from "node:path";
 import {randomBytes,createHash} from "node:crypto";
@@ -12,7 +12,7 @@ import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬
 import {acquireQueuedResourceLease,checkResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {openRepositoryCachePartitionV1,repositoryLeaseDirectoryV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-const graphConsumerURLsV1=[new URL(import.meta.url),new URL("./🧬️schema/🔣️.json",import.meta.url),new URL("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json",import.meta.url)],graphConsumerCapturesV1=graphConsumerURLsV1.map((url,index)=>index===0?captureBoundedSourceRevisionV1(fileURLToPath(url),8388608):captureBoundedSourceRevisionV1(fileURLToPath(url),65536,true)),graphConsumerRevisionsV1=graphConsumerCapturesV1.map(row=>row.sha256),schema=JSON.parse(graphConsumerCapturesV1[1].text??""),policy=JSON.parse(graphConsumerCapturesV1[2].text??"");
+const graphConsumerURLsV1=[new URL(physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),new URL("./🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),new URL("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL))],graphConsumerCapturesV1=graphConsumerURLsV1.map((url,index)=>index===0?captureBoundedSourceRevisionV1(fileURLToPath(url),8388608):captureBoundedSourceRevisionV1(fileURLToPath(url),65536,true)),graphConsumerRevisionsV1=graphConsumerCapturesV1.map(row=>row.sha256),schema=JSON.parse(graphConsumerCapturesV1[1].text??""),policy=JSON.parse(graphConsumerCapturesV1[2].text??"");
 /** 🧷️ Refuses stale Graph mapping, privately captured policies or its defining Store owner. */
 export function requireCurrentRepositoryBuildGraphConsumerV1(){requireCurrentRepositoryCacheStoreV1();if(graphConsumerURLsV1.some((url,index)=>captureBoundedSourceRevisionV1(fileURLToPath(url),index===0?8388608:65536).sha256!==graphConsumerRevisionsV1[index]))throw Error("Stale loaded Graph consumer implementation; restart required");}
 const ledgerSchema=schema.definitions.OptionalLedger,quotaSchema=schema.definitions.OptionalQuota,datasetSchema=schema.definitions.InferenceDataset;

@@ -117,5 +117,5 @@ fn admit_strings(b:&mut NativeEncodingBound<'_,'_>,values:&[&String],bytes:usize
 fn admit_forces(b:&mut NativeEncodingBound<'_,'_>,rows:&mut usize,values:&[ForceAction])->Result<(), ValueError>{admit_rows(b,rows,values.len())?;for a in values{admit_strings(b,&[&a.id,&a.load_case_id],8192)?;}Ok(())}
 
 #[path="🛂️admission/🦀️.rs"]
-pub(crate)mod admission;
+pub mod admission;
 

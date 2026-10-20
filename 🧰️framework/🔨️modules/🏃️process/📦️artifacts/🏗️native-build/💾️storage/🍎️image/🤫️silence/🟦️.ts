@@ -1,8 +1,8 @@
 import{accessSync,chmodSync,constants,lstatSync,mkdirSync,mkdtempSync,opendirSync,rmSync,unlinkSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
-import imageSchema from"../../🧬️schema/🔣️.json";
-import schema from"./🧬️schema/🔣️.json";
+import imageSchema from"../../🧬️schema/🔣️.json" with { type: "json" };
+import schema from"./🧬️schema/🔣️.json" with { type: "json" };
 const protocol=schema.definitions.Protocol.const,logPattern=new RegExp(protocol.logPattern,"u");
 /** 🤫️ Names the closed observable state of the macOS volume services that must stay silent on one mounted image. */
 export type NativeImageVolumeSilenceFactsV1=Readonly<{directory:"absent"|"directory"|"other";writable:boolean;marker:"absent"|"file"|"other";spotlightMarker:"absent"|"file"|"other";logFiles:number;logBytes:number}>;

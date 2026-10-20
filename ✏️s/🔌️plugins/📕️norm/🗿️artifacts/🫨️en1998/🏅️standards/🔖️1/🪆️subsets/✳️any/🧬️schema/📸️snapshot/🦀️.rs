@@ -160,7 +160,7 @@ impl En1998Snapshot {
         for st in &mut b.storeys {
             st.shear_resistance_n = 50_000.0;
         }
-        s.site.a_gr = 0.6; // matches zone 2
+        s.site.a_gr = 0.6;
         s
     }
 
@@ -359,7 +359,6 @@ impl En1998Snapshot {
             st.stiffness_x = 5.0e6;
             st.stiffness_y = 5.0e6;
         }
-        // Soft upper storey for elevation irregularity
         if let Some(top) = s.buildings[0].storeys.last_mut() {
             top.stiffness_x = 5.0e5;
             top.stiffness_y = 5.0e5;

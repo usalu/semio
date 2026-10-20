@@ -381,25 +381,8 @@ impl Mp4EncodeCursor {
                 let size = mp4_box_size(mp4_box_size(8 + track.metadata.edits.len() * 12)?)?;
                 self.emit_owned(mp4_box_header(b"edts", size)?, maximum_bytes, Mp4EmitPhase::ElstHeader)
             }
-            Mp4EmitPhase::ElstHeader => {
-                let track = self.track(snapshot)?;
-                let size = mp4_box_size(8 + track.metadata.edits.len() * 12)?;
-                let mut bytes = mp4_box_header(b"elst", size)?;
-                bytes.extend_from_slice(&[0; 4]);
-                bytes.extend_from_slice(&(track.metadata.edits.len() as u32).to_be_bytes());
-                self.item_index = 0;
-                self.emit_owned(bytes, maximum_bytes, Mp4EmitPhase::Edit)
-            }
-            Mp4EmitPhase::Edit => {
-                let Some(edit) = self.track(snapshot)?.metadata.edits.get(self.item_index) else { self.emit = Mp4EmitPhase::MdiaHeader; return Ok(Mp4EncodeAdvance::Progress); };
-                let mut bytes = Vec::with_capacity(12);
-                bytes.extend_from_slice(&(edit.segment_duration as u32).to_be_bytes());
-                bytes.extend_from_slice(&(edit.media_time as i32).to_be_bytes());
-                bytes.extend_from_slice(&edit.media_rate_integer.to_be_bytes());
-                bytes.extend_from_slice(&edit.media_rate_fraction.to_be_bytes());
-                self.item_index += 1;
-                self.emit_owned(bytes, maximum_bytes, Mp4EmitPhase::Edit)
-            }
+            Mp4EmitPhase::ElstHeader => self.emit_elst_header(snapshot, maximum_bytes),
+            Mp4EmitPhase::Edit => self.emit_edit(snapshot, maximum_bytes),
             Mp4EmitPhase::MdiaHeader => {
                 let track = self.track(snapshot)?;
                 let edts = if track.metadata.edits.is_empty() { 0 } else { mp4_box_size(mp4_box_size(8 + track.metadata.edits.len() * 12)?)? };
@@ -433,15 +416,7 @@ impl Mp4EncodeCursor {
             Mp4EmitPhase::Vmhd => self.emit_owned(build_vmhd(), maximum_bytes, Mp4EmitPhase::Dinf),
             Mp4EmitPhase::Dinf => self.emit_owned(build_dinf(), maximum_bytes, Mp4EmitPhase::StblHeader),
             Mp4EmitPhase::StblHeader => self.emit_owned(mp4_box_header(b"stbl", self.plan()?.stbl_bytes)?, maximum_bytes, Mp4EmitPhase::StsdHeader),
-            Mp4EmitPhase::StsdHeader => {
-                let track = self.track(snapshot)?;
-                let codec = if track.codec.format.is_jpeg() { 0 } else { mp4_box_size(self.plan()?.codec_bytes)? };
-                let entry = mp4_box_size(78 + codec + mp4_codec_extension_bytes(track))?;
-                let mut bytes = mp4_box_header(b"stsd", mp4_box_size(8 + entry)?)?;
-                bytes.extend_from_slice(&[0; 4]);
-                bytes.extend_from_slice(&1u32.to_be_bytes());
-                self.emit_owned(bytes, maximum_bytes, Mp4EmitPhase::SampleEntryHeader)
-            }
+            Mp4EmitPhase::StsdHeader => self.emit_stsd_header(snapshot, maximum_bytes),
             Mp4EmitPhase::SampleEntryHeader => {
                 let track = self.track(snapshot)?;
                 let codec = if track.codec.format.is_jpeg() { 0 } else { mp4_box_size(self.plan()?.codec_bytes)? };
@@ -461,28 +436,8 @@ impl Mp4EncodeCursor {
                 let kind = if track.codec.format.is_avc() { b"avcC" } else { b"hvcC" };
                 self.emit_owned(mp4_box_header(kind, mp4_box_size(self.plan()?.codec_bytes)?)?, maximum_bytes, Mp4EmitPhase::CodecFixed)
             }
-            Mp4EmitPhase::CodecFixed => {
-                let track = self.track(snapshot)?;
-                self.item_index = 0;
-                self.sub_index = 0;
-                if track.codec.format.is_avc() {
-                    let (profile, compatibility, level) = track.codec.sps.first().and_then(|sps| sps.get(1..4)).map_or((66, 0, 30), |bytes| (bytes[0], bytes[1], bytes[2]));
-                    self.emit_owned(vec![1, profile, compatibility, level, 0xfc | (track.codec.nal_length_size.saturating_sub(1) & 3), 0xe0 | (track.codec.sps.len() as u8 & 0x1f)], maximum_bytes, Mp4EmitPhase::CodecNalLength)
-                } else {
-                    let bytes = mp4_hevc_fixed(&track.codec);
-                    self.emit_owned(bytes, maximum_bytes, Mp4EmitPhase::CodecHevcArray)
-                }
-            }
-            Mp4EmitPhase::CodecNalLength => {
-                let track = self.track(snapshot)?;
-                let list = match self.sub_index { 0 => &track.codec.sps, 1 => &track.codec.pps, 2 => &track.codec.extension.as_ref().ok_or("mp4.encode.avc-extension-missing")?.sps_ext, _ => return Err("mp4.encode.avc-list-invalid".into()) };
-                let Some(nal) = list.get(self.item_index) else {
-                    self.item_index = 0;
-                    self.emit = match self.sub_index { 0 => Mp4EmitPhase::CodecCount, 1 if track.codec.extension.is_some() => Mp4EmitPhase::CodecExtensionFixed, 1 | 2 => Mp4EmitPhase::CodecExtensions, _ => return Err("mp4.encode.avc-list-invalid".into()) };
-                    return Ok(Mp4EncodeAdvance::Progress);
-                };
-                self.emit_owned((nal.len() as u16).to_be_bytes().to_vec(), maximum_bytes, Mp4EmitPhase::CodecNalData)
-            }
+            Mp4EmitPhase::CodecFixed => self.emit_codec_fixed(snapshot, maximum_bytes),
+            Mp4EmitPhase::CodecNalLength => self.emit_codec_nal_length(snapshot, maximum_bytes),
             Mp4EmitPhase::CodecNalData => {
                 let track = self.track(snapshot)?;
                 let list = match self.sub_index { 0 => &track.codec.sps, 1 => &track.codec.pps, 2 => &track.codec.extension.as_ref().ok_or("mp4.encode.avc-extension-missing")?.sps_ext, _ => return Err("mp4.encode.avc-list-invalid".into()) };
@@ -501,15 +456,7 @@ impl Mp4EncodeCursor {
                 self.item_index = 0;
                 self.emit_owned(vec![0xfc | (extension.chroma_format & 3), 0xf8 | (extension.bit_depth_luma_minus8 & 7), 0xf8 | (extension.bit_depth_chroma_minus8 & 7), extension.sps_ext.len() as u8], maximum_bytes, Mp4EmitPhase::CodecNalLength)
             }
-            Mp4EmitPhase::CodecHevcArray => {
-                let Some(config) = self.track(snapshot)?.codec.hevc.as_ref() else { self.emit = Mp4EmitPhase::CodecExtensions; return Ok(Mp4EncodeAdvance::Progress); };
-                let Some(array) = config.arrays.get(self.item_index) else { self.emit = Mp4EmitPhase::CodecExtensions; return Ok(Mp4EncodeAdvance::Progress); };
-                self.sub_index = 0;
-                let mut bytes = vec![(u8::from(array.array_completeness) << 7) | (array.nal_unit_type & 0x3f)];
-                bytes.extend_from_slice(&(array.nal_units.len() as u16).to_be_bytes());
-                let next = if array.nal_units.is_empty() { self.item_index += 1; Mp4EmitPhase::CodecHevcArray } else { Mp4EmitPhase::CodecHevcNalLength };
-                self.emit_owned(bytes, maximum_bytes, next)
-            }
+            Mp4EmitPhase::CodecHevcArray => self.emit_codec_hevc_array(snapshot, maximum_bytes),
             Mp4EmitPhase::CodecHevcNalLength => {
                 let array = self.track(snapshot)?.codec.hevc.as_ref().and_then(|config| config.arrays.get(self.item_index)).ok_or("mp4.encode.hevc-array-missing")?;
                 let Some(nal) = array.nal_units.get(self.sub_index) else { self.item_index += 1; self.emit = Mp4EmitPhase::CodecHevcArray; return Ok(Mp4EncodeAdvance::Progress); };
@@ -565,16 +512,7 @@ impl Mp4EncodeCursor {
                 bytes.extend_from_slice(&[0; 4]); bytes.extend_from_slice(&(self.plan()?.stsc_entries as u32).to_be_bytes()); self.item_index = 0; self.previous_chunk_count = None;
                 self.emit_owned(bytes, maximum_bytes, Mp4EmitPhase::StscEntry)
             }
-            Mp4EmitPhase::StscEntry => {
-                if self.item_index >= self.plan()?.chunk_count { self.emit = Mp4EmitPhase::StszHeader; return Ok(Mp4EncodeAdvance::Progress); }
-                let count = self.chunk_count(snapshot, self.item_index)?;
-                let first_chunk = self.item_index as u32 + 1;
-                self.item_index += 1;
-                if self.previous_chunk_count == Some(count) { return Ok(Mp4EncodeAdvance::Progress); }
-                self.previous_chunk_count = Some(count);
-                let mut bytes = first_chunk.to_be_bytes().to_vec(); bytes.extend_from_slice(&count.to_be_bytes()); bytes.extend_from_slice(&1u32.to_be_bytes());
-                self.emit_owned(bytes, maximum_bytes, Mp4EmitPhase::StscEntry)
-            }
+            Mp4EmitPhase::StscEntry => self.emit_stsc_entry(snapshot, maximum_bytes),
             Mp4EmitPhase::StszHeader => {
                 let track = self.track(snapshot)?;
                 let uniform = self.plan()?.uniform_sample_size.filter(|_| !track.samples.is_empty());
@@ -651,6 +589,89 @@ impl Mp4EncodeCursor {
             }
             Mp4EmitPhase::Complete => Ok(Mp4EncodeAdvance::Complete),
         }
+    }
+
+    /// 🧱️ Runs the `elst header` phase of `emit`.
+    fn emit_elst_header(&mut self, snapshot: &Mp4Snapshot, maximum_bytes: usize) -> Result<Mp4EncodeAdvance, String> {
+        let track = self.track(snapshot)?;
+        let size = mp4_box_size(8 + track.metadata.edits.len() * 12)?;
+        let mut bytes = mp4_box_header(b"elst", size)?;
+        bytes.extend_from_slice(&[0; 4]);
+        bytes.extend_from_slice(&(track.metadata.edits.len() as u32).to_be_bytes());
+        self.item_index = 0;
+        self.emit_owned(bytes, maximum_bytes, Mp4EmitPhase::Edit)
+    }
+
+    /// 🪵️ Runs the `edit` phase of `emit`.
+    fn emit_edit(&mut self, snapshot: &Mp4Snapshot, maximum_bytes: usize) -> Result<Mp4EncodeAdvance, String> {
+        let Some(edit) = self.track(snapshot)?.metadata.edits.get(self.item_index) else { self.emit = Mp4EmitPhase::MdiaHeader; return Ok(Mp4EncodeAdvance::Progress); };
+        let mut bytes = Vec::with_capacity(12);
+        bytes.extend_from_slice(&(edit.segment_duration as u32).to_be_bytes());
+        bytes.extend_from_slice(&(edit.media_time as i32).to_be_bytes());
+        bytes.extend_from_slice(&edit.media_rate_integer.to_be_bytes());
+        bytes.extend_from_slice(&edit.media_rate_fraction.to_be_bytes());
+        self.item_index += 1;
+        self.emit_owned(bytes, maximum_bytes, Mp4EmitPhase::Edit)
+    }
+
+    /// 🔩️ Runs the `stsd header` phase of `emit`.
+    fn emit_stsd_header(&mut self, snapshot: &Mp4Snapshot, maximum_bytes: usize) -> Result<Mp4EncodeAdvance, String> {
+        let track = self.track(snapshot)?;
+        let codec = if track.codec.format.is_jpeg() { 0 } else { mp4_box_size(self.plan()?.codec_bytes)? };
+        let entry = mp4_box_size(78 + codec + mp4_codec_extension_bytes(track))?;
+        let mut bytes = mp4_box_header(b"stsd", mp4_box_size(8 + entry)?)?;
+        bytes.extend_from_slice(&[0; 4]);
+        bytes.extend_from_slice(&1u32.to_be_bytes());
+        self.emit_owned(bytes, maximum_bytes, Mp4EmitPhase::SampleEntryHeader)
+    }
+
+    /// ⚙️ Runs the `codec fixed` phase of `emit`.
+    fn emit_codec_fixed(&mut self, snapshot: &Mp4Snapshot, maximum_bytes: usize) -> Result<Mp4EncodeAdvance, String> {
+        let track = self.track(snapshot)?;
+        self.item_index = 0;
+        self.sub_index = 0;
+        if track.codec.format.is_avc() {
+            let (profile, compatibility, level) = track.codec.sps.first().and_then(|sps| sps.get(1..4)).map_or((66, 0, 30), |bytes| (bytes[0], bytes[1], bytes[2]));
+            self.emit_owned(vec![1, profile, compatibility, level, 0xfc | (track.codec.nal_length_size.saturating_sub(1) & 3), 0xe0 | (track.codec.sps.len() as u8 & 0x1f)], maximum_bytes, Mp4EmitPhase::CodecNalLength)
+        } else {
+            let bytes = mp4_hevc_fixed(&track.codec);
+            self.emit_owned(bytes, maximum_bytes, Mp4EmitPhase::CodecHevcArray)
+        }
+    }
+
+    /// 🧲️ Runs the `codec nal length` phase of `emit`.
+    fn emit_codec_nal_length(&mut self, snapshot: &Mp4Snapshot, maximum_bytes: usize) -> Result<Mp4EncodeAdvance, String> {
+        let track = self.track(snapshot)?;
+        let list = match self.sub_index { 0 => &track.codec.sps, 1 => &track.codec.pps, 2 => &track.codec.extension.as_ref().ok_or("mp4.encode.avc-extension-missing")?.sps_ext, _ => return Err("mp4.encode.avc-list-invalid".into()) };
+        let Some(nal) = list.get(self.item_index) else {
+            self.item_index = 0;
+            self.emit = match self.sub_index { 0 => Mp4EmitPhase::CodecCount, 1 if track.codec.extension.is_some() => Mp4EmitPhase::CodecExtensionFixed, 1 | 2 => Mp4EmitPhase::CodecExtensions, _ => return Err("mp4.encode.avc-list-invalid".into()) };
+            return Ok(Mp4EncodeAdvance::Progress);
+        };
+        self.emit_owned((nal.len() as u16).to_be_bytes().to_vec(), maximum_bytes, Mp4EmitPhase::CodecNalData)
+    }
+
+    /// 🪛️ Runs the `codec hevc array` phase of `emit`.
+    fn emit_codec_hevc_array(&mut self, snapshot: &Mp4Snapshot, maximum_bytes: usize) -> Result<Mp4EncodeAdvance, String> {
+        let Some(config) = self.track(snapshot)?.codec.hevc.as_ref() else { self.emit = Mp4EmitPhase::CodecExtensions; return Ok(Mp4EncodeAdvance::Progress); };
+        let Some(array) = config.arrays.get(self.item_index) else { self.emit = Mp4EmitPhase::CodecExtensions; return Ok(Mp4EncodeAdvance::Progress); };
+        self.sub_index = 0;
+        let mut bytes = vec![(u8::from(array.array_completeness) << 7) | (array.nal_unit_type & 0x3f)];
+        bytes.extend_from_slice(&(array.nal_units.len() as u16).to_be_bytes());
+        let next = if array.nal_units.is_empty() { self.item_index += 1; Mp4EmitPhase::CodecHevcArray } else { Mp4EmitPhase::CodecHevcNalLength };
+        self.emit_owned(bytes, maximum_bytes, next)
+    }
+
+    /// 🔧️ Runs the `stsc entry` phase of `emit`.
+    fn emit_stsc_entry(&mut self, snapshot: &Mp4Snapshot, maximum_bytes: usize) -> Result<Mp4EncodeAdvance, String> {
+        if self.item_index >= self.plan()?.chunk_count { self.emit = Mp4EmitPhase::StszHeader; return Ok(Mp4EncodeAdvance::Progress); }
+        let count = self.chunk_count(snapshot, self.item_index)?;
+        let first_chunk = self.item_index as u32 + 1;
+        self.item_index += 1;
+        if self.previous_chunk_count == Some(count) { return Ok(Mp4EncodeAdvance::Progress); }
+        self.previous_chunk_count = Some(count);
+        let mut bytes = first_chunk.to_be_bytes().to_vec(); bytes.extend_from_slice(&count.to_be_bytes()); bytes.extend_from_slice(&1u32.to_be_bytes());
+        self.emit_owned(bytes, maximum_bytes, Mp4EmitPhase::StscEntry)
     }
 
     pub(super) fn track<'a>(&self, snapshot: &'a Mp4Snapshot) -> Result<&'a Mp4Track, String> { snapshot.tracks.get(self.track_index).ok_or_else(|| "mp4.encode.track-missing".into()) }

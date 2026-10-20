@@ -19,6 +19,7 @@ pub mod standards {
                         pub mod update_match_params {
                             #[path = "../🪢update-match-params/🦀️.rs"]
                             mod component;
+                            pub use component::*;
                             #[path = "../🪢update-match-params/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../🪢update-match-params/↩️inverse/🦀️.rs"]
@@ -26,11 +27,12 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod update_motion_params {
-                            #[path = "../🏎️update-motion/🦀️.rs"]
+                            #[path = "../🏎️update-motion-params/🦀️.rs"]
                             mod component;
-                            #[path = "../🏎️update-motion/🔺️diff/🦀️.rs"]
+                            pub use component::*;
+                            #[path = "../🏎️update-motion-params/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "../🏎️update-motion/↩️inverse/🦀️.rs"]
+                            #[path = "../🏎️update-motion-params/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                         }
                     }

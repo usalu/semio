@@ -5,7 +5,23 @@ use semio_framework_value::DslValue;
 use semio_framework_artifact_flow_flow::{CameraJson, FlowHostSnapshot, SynapseSpec, Widget, WidgetLayout};
 use semio_framework_artifact_playbook_playbook::{FormGeneration, GenerationPlayRoot};
 use std::collections::BTreeMap;
-#[cfg(test)] use semio_s_artifact_procedural_3d_mutations::{create_widget, update_widget, delete_widget, connect_synapse, update_synapse, disconnect_synapse, move_widget, delete_widget_position, update_camera, change_schema, create_generation, delete_generation, rename_generation, change_generation_value, change_slider_value, drag_transforms, rotate_transforms, scale_transforms, move_nodes, change_widget_input, select_generation, change_generation_preview};
+#[cfg(test)] use semio_s_artifact_procedural_3d_mut_generations::{rename_generation, select_generation};
+#[cfg(test)] use semio_s_artifact_procedural_3d_mut_transforms::{drag_transforms, rotate_transforms, scale_transforms};
+#[cfg(test)] use semio_s_artifact_procedural_3d_mut_widgets::{change_slider_value, change_widget_input, move_nodes};
+use semio_s_artifact_procedural_3d_mut_widgets::create_widget;
+use semio_s_artifact_procedural_3d_mut_widgets::update_widget;
+use semio_s_artifact_procedural_3d_mut_widgets::delete_widget;
+use semio_s_artifact_procedural_3d_mut_synapses::connect_synapse;
+use semio_s_artifact_procedural_3d_mut_synapses::update_synapse;
+use semio_s_artifact_procedural_3d_mut_synapses::disconnect_synapse;
+use semio_s_artifact_procedural_3d_mut_widgets::move_widget;
+use semio_s_artifact_procedural_3d_mut_widgets::delete_widget_position;
+use semio_s_artifact_procedural_3d_mut_document::update_camera;
+use semio_s_artifact_procedural_3d_mut_document::change_schema;
+use semio_s_artifact_procedural_3d_mut_generations::create_generation;
+use semio_s_artifact_procedural_3d_mut_generations::delete_generation;
+use semio_s_artifact_procedural_3d_mut_generations::change_generation_value;
+use semio_s_artifact_procedural_3d_mut_generations::change_generation_preview;
 
 fn is_false(value: &bool) -> bool { !value }
 

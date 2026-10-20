@@ -2,7 +2,7 @@
 
 use crate::create_story;
 use semio_s_artifact_layout_layout_diff::LayoutStoriesDelta;
-use crate::standards::v1::subsets::any::schema::diff::LayoutStoryRemoval;
+use semio_s_artifact_layout_layout_diff::LayoutStoryRemoval;
 use semio_s_artifact_layout_layout_diff::LayoutDiff;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};

@@ -126,12 +126,12 @@ Feature: Apply every typed graph-rewrite-rule mutation twice — once in Rust, o
       | edit-working-graph       | 🖼️edit-working-graph        | 🕸️swaps              |
       | edit-lhs                  | 👈️edit-lhs                  | 👈️narrows  |
       | edit-rhs                  | 👉️edit-rhs                  | 👉️rewrites     |
-      | change-parameter-binding  | 🔧️change-parameter  | 🏷️retitles                  |
+      | change-parameter-binding  | 🔧️change-parameter-binding  | 🏷️retitles                  |
       | remove-parameter-binding  | 🧹️remove-parameter-binding  | ✂️drops                      |
-      | change-rule-layout-point  | 📐️change-rule-layout  | 📍️nudges          |
-      | remove-rule-layout-point  | 🗑️remove-rule-layout  | 📐️clears                 |
-      | drag-rule-nodes           | 🫳️drag-rule  | 🫳️moves  |
-      | set-rule-layout-points    | 📍️set-rule-layout  | 📍️places  |
+      | change-rule-layout-point  | 📐️change-rule-layout-point  | 📍️nudges          |
+      | remove-rule-layout-point  | 🗑️remove-rule-layout-point  | 📐️clears                 |
+      | drag-rule-nodes           | 🫳️drag-rule-nodes  | 🫳️moves  |
+      | set-rule-layout-points    | 📍️set-rule-layout-points  | 📍️places  |
 
   @id-identity-round-trip
   @level-long

@@ -1,4 +1,4 @@
-import {receiveScriptProcessInvocation,readIssuedScriptProcessEnvelopeV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { receiveScriptProcessInvocation, readIssuedScriptProcessEnvelopeV1 } from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {readOwnedBuildInvocationV1} from "../../../../../📥️caller/🟦️.ts";
 
 /** 🏃️ Program of the sibling router: the former top-level body of its `📜️script.ts`, kept verbatim. */

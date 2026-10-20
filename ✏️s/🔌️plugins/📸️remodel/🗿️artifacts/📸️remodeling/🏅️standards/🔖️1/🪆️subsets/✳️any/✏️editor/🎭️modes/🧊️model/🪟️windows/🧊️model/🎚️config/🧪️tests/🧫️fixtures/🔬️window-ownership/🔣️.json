@@ -74,19 +74,28 @@
       "windowId": "remodel-model-left",
       "windowKindId": "remodeling-main",
       "mutation": {
-        "kind": "set-camera",
-        "camera": {
-          "position": [
-            12,
-            -8,
-            4
-          ],
-          "target": [
-            1,
-            2,
-            3
-          ],
-          "zoom": 1.25
+        "kind": "snapshot",
+        "config": {
+          "camera": {
+            "position": [
+              12,
+              -8,
+              4
+            ],
+            "target": [
+              1,
+              2,
+              3
+            ],
+            "zoom": 1.25
+          },
+          "layers": {
+            "mesh": true,
+            "dense": true,
+            "sparse": true,
+            "cameras": true,
+            "gcps": true
+          }
         }
       }
     },
@@ -95,13 +104,28 @@
       "windowId": "remodel-model-left",
       "windowKindId": "remodeling-main",
       "mutation": {
-        "kind": "set-layers",
-        "layers": {
-          "mesh": true,
-          "dense": false,
-          "sparse": true,
-          "cameras": false,
-          "gcps": true
+        "kind": "snapshot",
+        "config": {
+          "camera": {
+            "position": [
+              0,
+              0,
+              5
+            ],
+            "target": [
+              0,
+              0,
+              0
+            ],
+            "zoom": 1
+          },
+          "layers": {
+            "mesh": true,
+            "dense": false,
+            "sparse": true,
+            "cameras": false,
+            "gcps": true
+          }
         }
       }
     },
@@ -110,24 +134,33 @@
       "windowId": "remodel-model-right",
       "windowKindId": "remodeling-main",
       "mutation": {
-        "kind": "set-camera",
-        "camera": {
-          "position": [
-            -4,
-            6,
-            18
-          ],
-          "target": [
-            -1,
-            0,
-            2
-          ],
-          "zoom": 0.75,
-          "up": [
-            0,
-            0,
-            1
-          ]
+        "kind": "snapshot",
+        "config": {
+          "camera": {
+            "position": [
+              -4,
+              6,
+              18
+            ],
+            "target": [
+              -1,
+              0,
+              2
+            ],
+            "zoom": 0.75,
+            "up": [
+              0,
+              0,
+              1
+            ]
+          },
+          "layers": {
+            "mesh": true,
+            "dense": true,
+            "sparse": true,
+            "cameras": true,
+            "gcps": true
+          }
         }
       }
     },
@@ -136,13 +169,28 @@
       "windowId": "remodel-model-right",
       "windowKindId": "remodeling-main",
       "mutation": {
-        "kind": "set-layers",
-        "layers": {
-          "mesh": false,
-          "dense": true,
-          "sparse": false,
-          "cameras": true,
-          "gcps": false
+        "kind": "snapshot",
+        "config": {
+          "camera": {
+            "position": [
+              0,
+              0,
+              5
+            ],
+            "target": [
+              0,
+              0,
+              0
+            ],
+            "zoom": 1
+          },
+          "layers": {
+            "mesh": false,
+            "dense": true,
+            "sparse": false,
+            "cameras": true,
+            "gcps": false
+          }
         }
       }
     },
@@ -151,10 +199,12 @@
       "windowId": "remodel-frames-left",
       "windowKindId": "remodeling-frames",
       "mutation": {
-        "kind": "set-frame-cursor",
-        "frameCursor": {
-          "streamId": "stream-left",
-          "frameIndex": 3
+        "kind": "snapshot",
+        "config": {
+          "frameCursor": {
+            "streamId": "stream-left",
+            "frameIndex": 3
+          }
         }
       }
     },
@@ -163,10 +213,12 @@
       "windowId": "remodel-frames-right",
       "windowKindId": "remodeling-frames",
       "mutation": {
-        "kind": "set-frame-cursor",
-        "frameCursor": {
-          "streamId": "stream-right",
-          "frameIndex": 9
+        "kind": "snapshot",
+        "config": {
+          "frameCursor": {
+            "streamId": "stream-right",
+            "frameIndex": 9
+          }
         }
       }
     },
@@ -175,8 +227,10 @@
       "windowId": "remodel-report-left",
       "windowKindId": "remodeling-report",
       "mutation": {
-        "kind": "set-report-table",
-        "reportTable": "cameras"
+        "kind": "snapshot",
+        "config": {
+          "reportTable": "cameras"
+        }
       }
     },
     {
@@ -184,8 +238,10 @@
       "windowId": "remodel-report-right",
       "windowKindId": "remodeling-report",
       "mutation": {
-        "kind": "set-report-table",
-        "reportTable": "quality"
+        "kind": "snapshot",
+        "config": {
+          "reportTable": "quality"
+        }
       }
     }
   ],

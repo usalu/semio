@@ -1,5 +1,5 @@
 //#region 🧬️OwnedGenericPackContract
-import { NumericIndex, type NumericIndexEdit, type NumericIndexReader } from "../../../../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
+import { NumericIndex, type NumericIndexEdit, type NumericIndexReader } from "@semio-tech/value-ts/ordered/numeric";
 import { OwnedUiPackedSceneField } from "../🔤️base64/🟦️.ts";
 import type { RetainedUiWireStep } from "../../../../📦️wire/🟦️.ts";
 

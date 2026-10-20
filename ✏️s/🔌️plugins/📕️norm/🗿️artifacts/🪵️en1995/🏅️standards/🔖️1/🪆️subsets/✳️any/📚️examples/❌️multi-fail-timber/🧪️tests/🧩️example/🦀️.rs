@@ -1,4 +1,4 @@
-use semio_s_artifact_norm_en1995_schema::evaluate_structure;
+use semio_s_artifact_norm_en1995_schema::checks::timber::evaluate_structure;
 use semio_s_artifact_norm_en1995_io::text::snapshot::decode_en1995_dsl;
 use semio_s_plugin_norm_compliance::CheckReport;
 use semio_s_artifact_norm_en1995_model::En1995Snapshot;

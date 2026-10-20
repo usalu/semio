@@ -146,12 +146,12 @@ async fn assert_editor<E: ArtifactEditor + SnapshotEditingEditor>(definition: Ap
         assert_eq!(E::Mutation::decode_op(&binary).expect("native mutation binary replay").encode_op().unwrap(), binary);
         assert_eq!(E::Mutation::parse_op(&mutation.print_op()).expect("native mutation text replay").encode_op().unwrap(), binary);
         inverses.push(mutation.inverse(&projected).expect("valid native detail inverse"));
-        projected = semio_framework_os_kernel::apply_diff(mutation.diff(&projected).diff(), &projected).expect("native detail diff applies");
+        projected = semio_framework_os_kernel::apply_diff_cold(mutation.diff(&projected).diff(), &projected).expect("native detail diff applies");
     }
     assert_eq!(snapshot_json(&projected), after, "{} native event must preserve every other detail", definition.id);
     for mutations in inverses.into_iter().rev() {
         for mutation in mutations {
-            projected = semio_framework_os_kernel::apply_diff(mutation.diff(&projected).diff(), &projected).expect("native inverse applies");
+            projected = semio_framework_os_kernel::apply_diff_cold(mutation.diff(&projected).diff(), &projected).expect("native inverse applies");
         }
     }
     assert_eq!(snapshot_json(&projected), before, "{} inverse restores the complete snapshot", definition.id);

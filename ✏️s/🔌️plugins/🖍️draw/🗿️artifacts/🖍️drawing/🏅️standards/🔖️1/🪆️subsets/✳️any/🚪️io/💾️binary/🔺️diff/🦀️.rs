@@ -2,7 +2,7 @@
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 
-impl semio_framework_os_kernel::DiffBinary for semio_s_artifact_draw_drawing_diff::DrawingDiff {
+impl semio_framework_os_kernel::DiffBinary for crate::DrawingDiff {
     fn encode_diff(&self) -> Result<Vec<u8>, semio_framework_os_kernel::ProtocolError> {
         Ok(semio_framework_os_kernel::os_pack::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(self)))
     }

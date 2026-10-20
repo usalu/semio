@@ -21,9 +21,32 @@ function progressLanguage(environment:Readonly<Record<string,string|undefined>>)
  return (declaration.systemVariables.map(name=>environment[name]?.split(/[_.@-]/u)[0]?.toLowerCase()).find(value=>value!==undefined&&Object.hasOwn(declaration.labels,value))??declaration.fallback[0])as"en"|"de";
 }
 
+function sourceProviderCounterV1(progress:ScriptProgress):number|null{
+ const policy=progressSchema.const.sourceProvider,activity=progress.activity;
+ if(progress.stage!=="running"||!activity||activity.mode!=="shared"||!Number.isFinite(activity.elapsedMs)||activity.elapsedMs<0||activity.resource.length>policy.maximumResourceCharacters||!activity.resource.startsWith(policy.resourcePrefix)||progress.command.length>policy.maximumCommandCharacters||!new RegExp(policy.commandPattern,"u").test(progress.command)||typeof progress.owner!=="string"||progress.owner.length>policy.maximumCommandCharacters||Object.keys(progress).sort().join(",")!=="activity,command,owner,stage"||Object.keys(activity).sort().join(",")!=="elapsedMs,mode,resource")return null;
+ const text=activity.resource.slice(policy.resourcePrefix.length),count=Number(text);
+ return new RegExp(policy.counterPattern,"u").test(text)&&Number.isSafeInteger(count)&&count<=policy.maximumCompleted?count:null;
+}
+
+/** 📉️ Coalesces only provider progress presentation while retaining every original publication and final counter. */
+function createScriptProcessProgressWriterV1(write:(line:string)=>void,environment:Readonly<Record<string,string|undefined>>,now:()=>number=()=>performance.now()){
+ type Row={raw:string;message:string|null};let pending:Row|undefined,key:string|undefined,lastAt:number|undefined,lastClock:number|undefined,lastCount:number|undefined,lastElapsed:number|undefined;
+ const emit=(row:Row)=>{write(row.raw);if(row.message!==null)write(`[script] ${row.message}\n`);},flush=()=>{if(pending){const row=pending;pending=undefined;emit(row);}};
+ return Object.freeze({flush,publish:(progress:ScriptProgress)=>{
+  const row={raw:`[script] ${JSON.stringify(progress)}\n`,message:formatScriptProcessActivityV1(progress,environment)},count=sourceProviderCounterV1(progress);
+  if(count===null){flush();key=undefined;lastAt=undefined;lastClock=undefined;lastCount=undefined;lastElapsed=undefined;emit(row);return;}
+  const current=now(),identity=progress.owner+"\0"+progress.command,elapsed=progress.activity!.elapsedMs,reset=identity!==key||lastCount!==undefined&&count<lastCount||lastElapsed!==undefined&&elapsed<lastElapsed||!Number.isFinite(current)||lastClock!==undefined&&current<lastClock;
+  if(reset){flush();lastAt=undefined;}
+  key=identity;lastClock=Number.isFinite(current)?current:undefined;lastCount=count;lastElapsed=elapsed;
+  if(lastAt===undefined||current-lastAt>=progressSchema.const.sourceProvider.minimumPublicationMilliseconds){pending=undefined;emit(row);lastAt=Number.isFinite(current)?current:undefined;}else pending=row;
+ }});
+}
+
 /** 📈️ Describes long resource activity without inferring whether work or contention caused it. */
 export function formatScriptProcessActivityV1(progress:ScriptProgress,environment:Readonly<Record<string,string|undefined>>=process.env):string|null{
  const activity=progress.activity;if(!activity)return null;const declaration=progressSchema.const.sourceAdmission;
+ const provider=progressSchema.const.sourceProvider;
+ if(activity.resource.startsWith(provider.resourcePrefix)){const count=sourceProviderCounterV1(progress);return count===null?null:provider.labels[progressLanguage(environment)].replace("{command}",progress.command).replace("{completed}",String(count));}
  const parser=progressSchema.const.parserSource;
  if(activity.resource.startsWith(parser.resourcePrefix)){
   if(activity.elapsedMs!==0||activity.mode!=="shared"||activity.resource.length>parser.maximumResourceCharacters||progress.command.length>parser.maximumCommandCharacters||!new RegExp(parser.commandPattern,"u").test(progress.command))return null;
@@ -33,6 +56,15 @@ export function formatScriptProcessActivityV1(progress:ScriptProgress,environmen
   return labels.template.replace(/\{([A-Za-z]+)\}/gu,(_token,key:string)=>fields[key]!);
  }
 
+ const queue=progressSchema.const.queueWait;
+ if(activity.resource.startsWith(queue.resourcePrefix)){
+  if(activity.elapsedMs!==0||activity.resource.length>queue.maximumResourceCharacters||progress.command.length>queue.maximumCommandCharacters||!new RegExp(queue.commandPattern,"u").test(progress.command))return null;
+  let value:unknown;try{value=JSON.parse(activity.resource.slice(queue.resourcePrefix.length));}catch{return null;}
+  if(validateJsonSchemaSubset(progressSchema.definitions.QueueWait,value).length)return null;
+  const row=value as {position:number;queued:number;holderMode:"shared"|"exclusive";holderPid:number;holderSeconds:number;resource:string};if(row.position>row.queued)return null;
+  const labels=queue.labels[progressLanguage(environment)],fields:Record<string,string>={command:progress.command,resource:row.resource,mode:labels.modes[activity.mode],position:String(row.position),queued:String(row.queued),holderPid:String(row.holderPid),holderMode:labels.modes[row.holderMode],holderSeconds:String(row.holderSeconds)};
+  return labels.template.replace(/\{([A-Za-z]+)\}/gu,(_token,key:string)=>fields[key]!);
+ }
  if(activity.resource.startsWith(declaration.resourcePrefix)){
   if(activity.elapsedMs!==0||activity.mode!=="shared"||activity.resource.length>declaration.maximumResourceCharacters||progress.command.length>declaration.maximumCommandCharacters||!/^[A-Za-z0-9:_/.-]+$/u.test(progress.command))return null;
   let value:unknown;try{value=JSON.parse(activity.resource.slice(declaration.resourcePrefix.length));}catch{return null;}
@@ -100,9 +132,10 @@ export function withScriptProcessEnvelope<T>(envelope:ScriptProcessEnvelope,run:
  if(incoming){const birth=admit(incoming);if(JSON.stringify(admitted)!==JSON.stringify(birth.envelope))throw Error("Nested Original process envelope must preserve its actual parent");return track(birth,()=>run(incoming as IssuedScriptInvocationV1));}
  const started=performance.now(),deadline=admitted.deadlineEpochMilliseconds,initial=deadline===null?null:deadline-Date.now(),controller=new AbortController(),interrupt=()=>controller.abort(Error("Original Script process interrupted")),terminate=()=>controller.abort(Error("Original Script process terminated"));
  const stopTimeout=initial===null?undefined:startProcessDeadlineV1(()=>Math.min(deadline!-Date.now(),initial-(performance.now()-started)),()=>controller.abort(Error("Original Script process deadline exhausted")),true);process.once("SIGINT",interrupt);process.once("SIGTERM",terminate);
- const invocation:ScriptInvocation=Object.freeze({policy:admitted.policy,capabilities:admitted.capabilities,control:Object.freeze({signal:controller.signal,remainingMilliseconds:()=>deadline===null||initial===null?null:Math.max(0,Math.floor(Math.min(deadline-Date.now(),initial-(performance.now()-started)))),publish:(progress:Parameters<ScriptInvocation["control"]["publish"]>[0])=>{process.stderr.write(`[script] ${JSON.stringify(progress)}\n`);const message=formatScriptProcessActivityV1(progress);if(message!==null)process.stderr.write(`[script] ${message}\n`);},yieldContinuation:()=>new Promise<void>(done=>setImmediate(done))})});
+ const presentation=createScriptProcessProgressWriterV1(line=>{process.stderr.write(line);},process.env);
+ const invocation:ScriptInvocation=Object.freeze({policy:admitted.policy,capabilities:admitted.capabilities,control:Object.freeze({signal:controller.signal,remainingMilliseconds:()=>deadline===null||initial===null?null:Math.max(0,Math.floor(Math.min(deadline-Date.now(),initial-(performance.now()-started)))),publish:presentation.publish,yieldContinuation:()=>new Promise<void>(done=>setImmediate(done))})});
  const birth:Birth={...scope(),invocation:invocation as IssuedScriptInvocationV1,envelope:admitted};invocations.set(invocation,birth);
- return observe(context.run(invocation,()=>settle(birth,async()=>{requireIssuedScriptInvocationV1(invocation);return await run(invocation);}).then(value=>{checkScriptInvocation(invocation);return value;}).finally(()=>{stopTimeout?.();process.removeListener("SIGINT",interrupt);process.removeListener("SIGTERM",terminate);})));
+ return observe(context.run(invocation,()=>settle(birth,async()=>{requireIssuedScriptInvocationV1(invocation);return await run(invocation);}).then(value=>{presentation.flush();checkScriptInvocation(invocation);return value;},error=>{try{presentation.flush();}catch{}throw error;}).finally(()=>{stopTimeout?.();process.removeListener("SIGINT",interrupt);process.removeListener("SIGTERM",terminate);})));
  }catch(error){return observe(Promise.reject(error));}
 }
 /** 📥️ Receives the real process envelope or reuses its exact live in-process parent. */

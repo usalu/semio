@@ -47,12 +47,12 @@ pub mod rename_object {
 }
 #[path = "."]
 pub mod change_object_smooth_shading {
-    #[path = "../🔘️change-object-smooth/🦀️.rs"]
+    #[path = "../🔘️change-object-smooth-shading/🦀️.rs"]
     mod component;
     pub use component::*;
-    #[path = "../🔘️change-object-smooth/🔺️diff/🦀️.rs"]
+    #[path = "../🔘️change-object-smooth-shading/🔺️diff/🦀️.rs"]
     pub mod diff;
-    #[path = "../🔘️change-object-smooth/↩️inverse/🦀️.rs"]
+    #[path = "../🔘️change-object-smooth-shading/↩️inverse/🦀️.rs"]
     pub mod inverse;
 }
 #[path = "."]

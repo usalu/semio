@@ -1,0 +1,1042 @@
+{
+ "verify": [
+  {
+   "i": 0,
+   "law": "verify architect-program-snapshot-sqlite-source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 1,
+   "law": "verify architect-program-test-snapshot-sqlite",
+   "rc": null,
+   "skip": "cargo repository-tests lease",
+   "guard": false
+  },
+  {
+   "i": 2,
+   "law": "verify architect-program-test-snapshot-sqlite-native",
+   "rc": null,
+   "skip": "native: cargo",
+   "guard": false
+  },
+  {
+   "i": 3,
+   "law": "verify architect-program-test-snapshot-sqlite-source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 4,
+   "law": "verify architect-window-ownership",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 5,
+   "law": "verify artifact-reference-retained-equality native",
+   "rc": null,
+   "skip": "native: cargo",
+   "guard": false
+  },
+  {
+   "i": 6,
+   "law": "verify artifact-reference-retained-equality source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 7,
+   "law": "verify cad-activation-source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 8,
+   "law": "verify cad-document-contract",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 9,
+   "law": "verify cad-owned-target",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 10,
+   "law": "verify cad-reference-owner-syntax",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 11,
+   "law": "verify cad-snapshot-sqlite-source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 12,
+   "law": "verify cad-test-snapshot-sqlite",
+   "rc": null,
+   "skip": "cargo repository-tests lease",
+   "guard": false
+  },
+  {
+   "i": 13,
+   "law": "verify cad-test-snapshot-sqlite-native",
+   "rc": null,
+   "skip": "native: cargo",
+   "guard": false
+  },
+  {
+   "i": 14,
+   "law": "verify cad-test-snapshot-sqlite-source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 15,
+   "law": "verify contributions-receiver",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 16,
+   "law": "verify contributions-syntax",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 17,
+   "law": "verify curation-document-contract",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 18,
+   "law": "verify dag-document-contract",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 19,
+   "law": "verify dag-test-snapshot-sqlite",
+   "rc": null,
+   "skip": "cargo repository-tests lease",
+   "guard": false
+  },
+  {
+   "i": 20,
+   "law": "verify dag-test-snapshot-sqlite-native",
+   "rc": null,
+   "skip": "native: cargo",
+   "guard": false
+  },
+  {
+   "i": 21,
+   "law": "verify dag-test-snapshot-sqlite-source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 22,
+   "law": "verify drawing-canvas-window-ownership",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 23,
+   "law": "verify fem-assembly-physical-owners",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 24,
+   "law": "verify fem-combination-stress",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 25,
+   "law": "verify fem-live-visual-publication",
+   "rc": 1,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 26,
+   "law": "verify fem-mesh-preparation-owners",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 27,
+   "law": "verify fem-numerical-microcursor",
+   "rc": 1,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 28,
+   "law": "verify fem-numerical-page-owners",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 29,
+   "law": "verify fem-pcg-publication-owners",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 30,
+   "law": "verify fem-scalar-owners-native",
+   "rc": 1,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 31,
+   "law": "verify fem2d-invariants mounted",
+   "rc": 1,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 32,
+   "law": "verify fem2d-invariants native",
+   "rc": null,
+   "skip": "native: cargo",
+   "guard": false
+  },
+  {
+   "i": 33,
+   "law": "verify fem2d-invariants numerical",
+   "rc": 1,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 34,
+   "law": "verify fem2d-invariants presence",
+   "rc": 1,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 35,
+   "law": "verify fem2d-invariants source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 36,
+   "law": "verify fem2d-material native",
+   "rc": null,
+   "skip": "native: cargo",
+   "guard": false
+  },
+  {
+   "i": 37,
+   "law": "verify fem2d-material source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 38,
+   "law": "verify fem2d-window-config-contract",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 39,
+   "law": "verify fem3d-material native",
+   "rc": null,
+   "skip": "native: cargo",
+   "guard": false
+  },
+  {
+   "i": 40,
+   "law": "verify fem3d-material source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 41,
+   "law": "verify fem3d-numerical-child-native",
+   "rc": 1,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 42,
+   "law": "verify fem3d-numerical-child-source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 43,
+   "law": "verify fem3d-results native",
+   "rc": null,
+   "skip": "native: cargo",
+   "guard": false
+  },
+  {
+   "i": 44,
+   "law": "verify fem3d-results source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 45,
+   "law": "verify fem3d-transform-intent native",
+   "rc": null,
+   "skip": "native: cargo",
+   "guard": false
+  },
+  {
+   "i": 46,
+   "law": "verify fem3d-transform-intent source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 47,
+   "law": "verify fem3d-window-config-contract",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 48,
+   "law": "verify flow-window-ownership",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 49,
+   "law": "verify forms-document-contract",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 50,
+   "law": "verify forms-test-snapshot-sqlite",
+   "rc": null,
+   "skip": "cargo repository-tests lease",
+   "guard": false
+  },
+  {
+   "i": 51,
+   "law": "verify forms-test-snapshot-sqlite-native",
+   "rc": null,
+   "skip": "native: cargo",
+   "guard": false
+  },
+  {
+   "i": 52,
+   "law": "verify forms-test-snapshot-sqlite-source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 53,
+   "law": "verify forms-try-window-ownership",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 54,
+   "law": "verify framework-flow-physical-retirement",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 55,
+   "law": "verify framework-ui-protocol-ownership",
+   "rc": -1,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 56,
+   "law": "verify generation2d-window-camera-ownership",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 57,
+   "law": "verify generation3d-document-io",
+   "rc": -1,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 58,
+   "law": "verify generation3d-preview-window-transient",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 59,
+   "law": "verify generation3d-widget-inputs",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 60,
+   "law": "verify generation3d-widget-inputs native",
+   "rc": null,
+   "skip": "native: cargo",
+   "guard": false
+  },
+  {
+   "i": 61,
+   "law": "verify geometry-context",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 62,
+   "law": "verify gis-inference-discovery-oracle",
+   "rc": 1,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 63,
+   "law": "verify gis-map-window-ownership",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 64,
+   "law": "verify gis-terrain-window-config",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 65,
+   "law": "verify home-host-panel-owner",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 66,
+   "law": "verify inference-client",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 67,
+   "law": "verify inference-client native",
+   "rc": null,
+   "skip": "native: cargo",
+   "guard": false
+  },
+  {
+   "i": 68,
+   "law": "verify inference-mcp",
+   "rc": 1,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 69,
+   "law": "verify inference-native-service",
+   "rc": 1,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 70,
+   "law": "verify jack-child-selection",
+   "rc": 1,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 71,
+   "law": "verify jack-document-contract",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 72,
+   "law": "verify jack-graph-query",
+   "rc": 1,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 73,
+   "law": "verify jack-query-ownership",
+   "rc": 1,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 74,
+   "law": "verify layout-document-contract",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 75,
+   "law": "verify layout-frame-selection",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 76,
+   "law": "verify layout-window-ownership",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 77,
+   "law": "verify map-document-contract",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 78,
+   "law": "verify native-receiving-original-source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 79,
+   "law": "verify norm-document-contract",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 80,
+   "law": "verify norm-results-window-ownership",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 81,
+   "law": "verify note-document-contract",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 82,
+   "law": "verify note-empty-config-ownership",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 83,
+   "law": "verify note-snapshot-guest",
+   "rc": 1,
+   "skip": null,
+   "guard": true
+  },
+  {
+   "i": 84,
+   "law": "verify note-sqlite-snapshot-guest",
+   "rc": -1,
+   "skip": null,
+   "guard": true
+  },
+  {
+   "i": 85,
+   "law": "verify operation-diagnostic-host-check",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 86,
+   "law": "verify playbook-document-contract",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 87,
+   "law": "verify presentation-document-contract",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 88,
+   "law": "verify procedure-document-contract",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 89,
+   "law": "verify program-document-contract",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 90,
+   "law": "verify puzzle-fill-policy-self-tests",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 91,
+   "law": "verify remodel-remodeling-test-snapshot-sqlite",
+   "rc": null,
+   "skip": "cargo repository-tests lease",
+   "guard": false
+  },
+  {
+   "i": 92,
+   "law": "verify remodel-remodeling-test-snapshot-sqlite-native",
+   "rc": null,
+   "skip": "native: cargo",
+   "guard": false
+  },
+  {
+   "i": 93,
+   "law": "verify remodel-remodeling-test-snapshot-sqlite-source",
+   "rc": 0,
+   "skip": null,
+   "guard": true
+  },
+  {
+   "i": 94,
+   "law": "verify remodel-window-ownership",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 95,
+   "law": "verify retained-pack-encoding",
+   "rc": 1,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 96,
+   "law": "verify rewriting-document-contract",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 97,
+   "law": "verify rewriting-map-ownership",
+   "rc": 1,
+   "skip": null,
+   "guard": true
+  },
+  {
+   "i": 98,
+   "law": "verify rewriting-window-config",
+   "rc": 1,
+   "skip": null,
+   "guard": true
+  },
+  {
+   "i": 99,
+   "law": "verify semio-member-store-producer-source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 100,
+   "law": "verify sequence-window-ownership",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 101,
+   "law": "verify sqlite-snapshot-native",
+   "rc": -1,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 102,
+   "law": "verify staged-payload-funding",
+   "rc": 1,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 103,
+   "law": "verify stdio-document-contract",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 104,
+   "law": "verify terrain-document-contract",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 105,
+   "law": "verify trinity-rewriting-test-snapshot-sqlite",
+   "rc": null,
+   "skip": "cargo repository-tests lease",
+   "guard": false
+  },
+  {
+   "i": 106,
+   "law": "verify trinity-rewriting-test-snapshot-sqlite-native",
+   "rc": null,
+   "skip": "native: cargo",
+   "guard": false
+  },
+  {
+   "i": 107,
+   "law": "verify trinity-rewriting-test-snapshot-sqlite-source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 108,
+   "law": "verify value-admission-check",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 109,
+   "law": "verify value-admission-check --native",
+   "rc": null,
+   "skip": "native: cargo",
+   "guard": false
+  },
+  {
+   "i": 110,
+   "law": "verify value-retained-equality native",
+   "rc": null,
+   "skip": "native: cargo",
+   "guard": false
+  },
+  {
+   "i": 111,
+   "law": "verify value-retained-equality source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 112,
+   "law": "verify viewport-presence-check",
+   "rc": 0,
+   "skip": null,
+   "guard": true
+  },
+  {
+   "i": 113,
+   "law": "verify window-utility-check",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 114,
+   "law": "verify window-utility-native",
+   "rc": 1,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 115,
+   "law": "verify wires-document-contract",
+   "rc": 1,
+   "skip": null,
+   "guard": true
+  },
+  {
+   "i": 116,
+   "law": "verify wires-window-transient",
+   "rc": 1,
+   "skip": null,
+   "guard": true
+  },
+  {
+   "i": 117,
+   "law": "verify writer-window-state",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  }
+ ],
+ "nonverify": [
+  {
+   "i": 1,
+   "law": "flow add-widget-retained-check",
+   "rc": 1,
+   "skip": null,
+   "guard": true
+  },
+  {
+   "i": 2,
+   "law": "flow child-edit-check",
+   "rc": 1,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 3,
+   "law": "flow child-identity-check",
+   "rc": 1,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 4,
+   "law": "flow test-source",
+   "rc": 1,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 5,
+   "law": "schema runtime-graph",
+   "rc": 1,
+   "skip": null,
+   "guard": true
+  },
+  {
+   "i": 6,
+   "law": "stdio package-contract",
+   "rc": 1,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 7,
+   "law": "stdio package-graph",
+   "rc": 1,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 9,
+   "law": "test source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 11,
+   "law": "test-camera-presence source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 13,
+   "law": "test-close-demand source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 15,
+   "law": "test-exact-key-lookup source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 17,
+   "law": "test-fixed-dofs source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 19,
+   "law": "test-fixed-key-slots source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 21,
+   "law": "test-fixed-request-owners source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 23,
+   "law": "test-immutable-root-clone source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 25,
+   "law": "test-indexed-edit source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 27,
+   "law": "test-named-edit source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 29,
+   "law": "test-named-key-index source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 31,
+   "law": "test-named-root-receive source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 33,
+   "law": "test-native-persistent-receive source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 35,
+   "law": "test-native-retirement-loan source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 37,
+   "law": "test-native-shared-receive source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 39,
+   "law": "test-operation-diagnostics source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 41,
+   "law": "test-owned-projection source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 43,
+   "law": "test-persistent-build source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 45,
+   "law": "test-persistent-canonical source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 47,
+   "law": "test-result-publication source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 49,
+   "law": "test-retained-diff-receiving source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 51,
+   "law": "test-sealed-frontier source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  },
+  {
+   "i": 53,
+   "law": "test-slice-equality source",
+   "rc": 0,
+   "skip": null,
+   "guard": false
+  }
+ ]
+}

@@ -12,7 +12,7 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 test("neutral value roots mount the owned decode laws", () => {
   expect(read(witness.packageSource)).toContain('#[path = "../../🦀️.rs"]');
   expect(read(witness.packageManifest)).toContain('semio-framework-value-native-decoding = { path="../../🛬️decode/📦️packages/🦀️rust" }');
-  expect(read(witness.controlSource)).toContain(witness.nativeMount);
+  expect(read(witness.testPackageSource)).toContain(witness.nativeMount);
   const native = read(witness.nativeSource);
   expect(native).not.toContain("semio_framework_os_kernel");
   expect([...native.matchAll(/#\[test\]\s*fn ([a-z_]+)\(/gmu)].map(match => match[1])).toEqual(expect.arrayContaining(witness.nativeLaws));

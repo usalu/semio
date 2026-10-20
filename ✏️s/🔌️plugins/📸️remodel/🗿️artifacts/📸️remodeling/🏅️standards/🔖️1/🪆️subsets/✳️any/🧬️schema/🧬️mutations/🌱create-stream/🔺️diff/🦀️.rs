@@ -8,7 +8,7 @@ use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::sche
 use crate::standards::v1::subsets::any::schema::mutations::create_stream::component::CreateStream;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::CreateStream, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
+pub fn diff(payload: &crate::standards::v1::subsets::any::schema::mutations::create_stream::component::CreateStream, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
     if base.streams.iter().any(|stream| stream.id == payload.stream.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A stream with id \"{}\" already exists.", payload.stream.id), [payload.stream.id.clone()]);
     }

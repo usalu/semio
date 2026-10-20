@@ -8,6 +8,12 @@ const out = process.argv[2];
 const mode = process.argv[3] ?? "dry";
 const list: string[] = JSON.parse(readFileSync(`${out}/${process.argv[4] ?? "targets.json"}`, "utf8"));
 const WINDOW = 15 * 60 * 1000;
+const MINE = `${out}/mine.json`;
+let mine: Record<string, number> = {};
+try { mine = JSON.parse(readFileSync(MINE, "utf8")); } catch {}
+const FROZEN = ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/"];
+const isFrozen = (p: string) => FROZEN.some((f) => p.startsWith(f)) || p === "📜️script.ts" || p.endsWith("/package.json") || p.endsWith("/bun.lock") || p.endsWith("🔣️taxonomy.json");
+const queued: string[] = [];
 const applied: any[] = [];
 const deferred: string[] = [];
 const failed: any[] = [];
@@ -23,10 +29,11 @@ const isInComment = (lines: string[], i: number) => /^\s*(\/\*\*|\*)/.test(lines
 const tsCode = (p: string, t: string) => ts.transpileModule(t, { fileName: p, reportDiagnostics: false, compilerOptions: { removeComments: true, target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext, jsx: ts.JsxEmit.Preserve, allowJs: true, isolatedModules: true } }).outputText;
 
 for (const p of list) {
+  if (isFrozen(p)) { queued.push(p); continue; }
   const abs = `${root}/${p}`;
   let st;
   try { st = statSync(abs); } catch { continue; }
-  if (Date.now() - st.mtimeMs < WINDOW) { deferred.push(p); continue; }
+  if (Date.now() - st.mtimeMs < WINDOW && mine[p] !== st.mtimeMs) { deferred.push(p); continue; }
   const text = readFileSync(abs, "utf8");
   const plan = planFile(p, text);
   for (const [k, v] of Object.entries(plan.skipped)) skippedTotals[k] = (skippedTotals[k] ?? 0) + v;
@@ -52,14 +59,17 @@ for (const p of list) {
   if (!ok) { failed.push({ p, why }); continue; }
   if (mode === "apply") {
     const st2 = statSync(abs);
-    if (st2.mtimeMs !== st.mtimeMs || Date.now() - st2.mtimeMs < WINDOW) { deferred.push(p); continue; }
+    if (st2.mtimeMs !== st.mtimeMs) { deferred.push(p); continue; }
     writeFileSync(abs, next);
+    mine[p] = statSync(abs).mtimeMs;
   }
   for (const e of plan.edits) how[e.how] = (how[e.how] ?? 0) + 1;
   applied.push({ p, n: plan.edits.length, edits: plan.edits.map((e) => ({ line: e.line, emoji: e.emoji, how: e.how, name: e.name, head: e.head })) });
 }
-writeFileSync(`${out}/applied-${mode}.json`, JSON.stringify(applied));
-writeFileSync(`${out}/deferred-${mode}.json`, JSON.stringify(deferred));
-writeFileSync(`${out}/failed-${mode}.json`, JSON.stringify(failed));
+writeFileSync(MINE, JSON.stringify(mine));
+writeFileSync(`${out}/frozen-queued.json`, JSON.stringify(queued));
+writeFileSync(`${out}/applied-${mode}${process.argv[5] ?? ""}.json`, JSON.stringify(applied));
+writeFileSync(`${out}/deferred-${mode}${process.argv[5] ?? ""}.json`, JSON.stringify(deferred));
+writeFileSync(`${out}/failed-${mode}${process.argv[5] ?? ""}.json`, JSON.stringify(failed));
 console.log(mode, "files", applied.length, "edits", applied.reduce((a, b) => a + b.n, 0), "deferred", deferred.length, "failed", failed.length, "\nhow", how, "\nskipped", skippedTotals);
 if (failed.length) console.log(failed.slice(0, 20));

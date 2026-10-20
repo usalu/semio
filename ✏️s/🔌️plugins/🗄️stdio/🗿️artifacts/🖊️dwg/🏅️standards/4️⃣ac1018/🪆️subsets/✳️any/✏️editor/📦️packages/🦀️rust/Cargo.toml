@@ -28,6 +28,8 @@ semio-framework-value = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
 semio-s-artifact-stdio-dwg-examples = { workspace = true }
 semio-s-artifact-stdio-dwg-model = { workspace = true }
+semio-framework-replication = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust" }
+semio-framework-pack = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

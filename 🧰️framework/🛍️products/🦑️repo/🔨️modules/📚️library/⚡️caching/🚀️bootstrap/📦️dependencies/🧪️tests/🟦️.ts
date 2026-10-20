@@ -13,7 +13,7 @@ import * as bunOwnership from "../../../../🗂️workspaces/🟦️bun/🟦️.
 import { createSourceFile, isFunctionDeclaration, parseConfigFileTextToJson, ScriptTarget } from "typescript";
 import {prepareJavascriptDependencies,javascriptDependencyProducerArgumentsV1} from "../💾️storage/🟦️.ts";
 import dependencyInstallSchema from "../💾️storage/🧬️schema/📥️install.json"with{type:"json"};
-import {SyncScript,RefreshLockScript} from "../📜️script.ts";
+import {SyncScript,RefreshLockScript} from "../🧪️tests/🔬️script-commands/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { bunDistribution, bunArchiveExecutable } from "../../🛠️tools/🟦️bun/🟦️.ts";
 import { zipSync, unzipSync } from "fflate";
@@ -49,14 +49,14 @@ async function outputCensus(root:string,input:any,mutation:string,api:typeof bun
 }
 
 test("Bun ownership excludes mutable outputs and preserves authored custody against Node and esbuild",async()=>{
- const censusOwner=resolve(owner,"../../../🗂️workspaces/🟦️bun"),input=JSON.parse(readFileSync(join(censusOwner,"🧫️fixtures/🔣️.json"),"utf8")).outputCensus,schema=JSON.parse(readFileSync(join(censusOwner,"🧬️schema/🔣️.json"),"utf8"));expect(new Ajv({strict:true}).compile(schema.$defs.OutputCensus)(input)).toBe(true);
+ const censusOwner=resolve(owner,"../../../🗂️workspaces/🟦️bun"),input=JSON.parse(readFileSync(join(censusOwner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).outputCensus,schema=JSON.parse(readFileSync(join(censusOwner,"🧬️schema/🔣️.json"),"utf8"));expect(new Ajv({strict:true}).compile(schema.$defs.OutputCensus)(input)).toBe(true);
  const source=createSourceFile("census.ts",readFileSync(import.meta.path,"utf8"),ScriptTarget.Latest),operation=source.statements.find(statement=>isFunctionDeclaration(statement)&&statement.name?.text==="outputCensus")!;
  const compiled=await transform(operation.getText(source),{loader:"ts",format:"esm",target:"es2022"});
  for(const row of input.cases){
   const root=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"q")),actual=await outputCensus(root,input,row.mutation,bunOwnership);expect(actual.outcome,JSON.stringify(actual)).toBe(row.outcome);
   if(row.outcome==="admitted"){expect(actual.packages).toEqual(["source/member"]);expect(actual.visitedOutputs).toEqual([]);expect(glob.sync("source/**/package.json",{cwd:root,ignore:input.outputs.map((name:string)=>"**/"+name+"/**"),onlyFiles:true}).map(path=>path.replace(/\/package.json$/u,""))).toEqual(actual.packages);}
   else {expect(actual.changed).toBe(true);expect(actual.error).toContain(row.outcome==="canceled"?"Neutral census canceled":"Bun current");}
-  const oracleRoot=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"q")),entry='import {mkdirSync,writeFileSync,renameSync,rmSync} from "node:fs";import {join,dirname} from "node:path";import {createRequire} from "node:module";const api=createRequire(import.meta.url)('+JSON.stringify(join(censusOwner,"🟨️.cjs"))+');'+compiled.code+'console.log(JSON.stringify(await outputCensus('+JSON.stringify(oracleRoot)+','+JSON.stringify(input)+','+JSON.stringify(row.mutation)+',api)));';
+  const oracleRoot=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"q")),entry='import {mkdirSync,writeFileSync,renameSync,rmSync} from "node:fs";import {join,dirname} from "node:path";import {createRequire} from "node:module";const api=createRequire(import.meta.url)('+JSON.stringify(join(censusOwner,"🟨️.cjs"))+').createBunWorkspaceOwnershipV1({ownershipPath:'+JSON.stringify(join(censusOwner,"../🔣️policy.json"))+',ownershipSource:'+JSON.stringify(readFileSync(join(censusOwner,"../🔣️policy.json"),"utf8"))+'});'+compiled.code+'console.log(JSON.stringify(await outputCensus('+JSON.stringify(oracleRoot)+','+JSON.stringify(input)+','+JSON.stringify(row.mutation)+',api)));';
   const child=Bun.spawn(["node","--input-type=module","-e",entry.replace('import {join,dirname}', 'import {join,dirname,resolve,isAbsolute}')],{stdout:"pipe",stderr:"pipe",signal:new AbortController().signal}),[stdout,stderr,status]=await Promise.all([new Response(child.stdout).text(),new Response(child.stderr).text(),child.exited]);expect(status,stderr).toBe(0);const reference=JSON.parse(stdout);expect(reference.outcome).toBe(row.outcome);if(row.outcome==="admitted")expect(reference).toEqual(actual);else expect(reference.changed).toBe(true);
  }
  console.log("[DEBUG] Bun output census and independent esbuild/Node/fast-glob agree: generated birth/churn/removal admitted; authored manifest/directory/root drift and original cancellation refused");

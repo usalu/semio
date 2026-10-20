@@ -1,0 +1,53 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🧪️tests/🧪️docklayoutstore/🎰️machines/⚙️statechart-kernel-and-model-suites/🟦️.ts",
+ "function": "registerStatechartKernelAndModelSuites",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of registerStatechartKernelAndModelSuites. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️action-id",
+   "doc": "/** 🔶️ The action id phase of registerStatechartKernelAndModelSuites. */",
+   "phases": [
+    {
+     "name": "buildActionIdState",
+     "emoji": "🔷",
+     "doc": "Builds ActionId, ActorId, ActorSystem, BitSet of registerStatechartKernelAndModelSuites.",
+     "from": 7,
+     "to": 128
+    }
+   ]
+  },
+  {
+   "dir": "🔸️machine-test-host",
+   "doc": "/** 🔸️ The machine test host phase of registerStatechartKernelAndModelSuites. */",
+   "phases": [
+    {
+     "name": "registerMachineTestHostTests",
+     "emoji": "🔹",
+     "doc": "Registers the machine test host tests of registerStatechartKernelAndModelSuites.",
+     "from": 155,
+     "to": 196
+    }
+   ]
+  },
+  {
+   "dir": "🟠️machine-persist-restore",
+   "doc": "/** 🟠️ The machine persist restore phase of registerStatechartKernelAndModelSuites. */",
+   "phases": [
+    {
+     "name": "registerMachinePersistRestoreTests",
+     "emoji": "🟡",
+     "doc": "Registers the machine persist restore tests of registerStatechartKernelAndModelSuites.",
+     "from": 277,
+     "to": 360
+    }
+   ]
+  }
+ ]
+}

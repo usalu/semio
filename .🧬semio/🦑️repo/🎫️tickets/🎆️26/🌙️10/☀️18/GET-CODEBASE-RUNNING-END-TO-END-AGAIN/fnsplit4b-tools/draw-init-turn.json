@@ -1,0 +1,108 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🔄️initialization-turn/🦀️.rs",
+ "function": "turn",
+ "nth": 0,
+ "match_line": 44,
+ "types": {},
+ "ret": "DrawingInitializationTurn",
+ "inline": true,
+ "arms": [
+  {
+   "line": 54,
+   "name": "turn_admit_owners",
+   "doc": "🧱️ Admits the arena owners of the initialization.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 137,
+   "name": "turn_start_initial_clone",
+   "doc": "🪵️ Starts the clone of the initial snapshot.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 219,
+   "name": "turn_seed_history",
+   "doc": "🔩️ Seeds one history lane edit.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "edit": "usize",
+    "lane": "u8",
+    "index": "usize"
+   }
+  },
+  {
+   "line": 268,
+   "name": "turn_find_applied",
+   "doc": "⚙️ Finds the next applied edit of the history.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "position": "usize"
+   }
+  },
+  {
+   "line": 289,
+   "name": "turn_apply_forward",
+   "doc": "🧲️ Applies one forward mutation of an applied edit.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "position": "usize",
+    "edit": "usize",
+    "mutation": "usize"
+   }
+  },
+  {
+   "line": 361,
+   "name": "turn_return_forward",
+   "doc": "🪛️ Returns the forward mutation of an applied edit.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "position": "usize",
+    "edit": "usize",
+    "mutation": "usize"
+   }
+  },
+  {
+   "line": 412,
+   "name": "turn_find_redo",
+   "doc": "🔧️ Finds the next redo edit of the history.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "position": "usize"
+   }
+  }
+ ],
+ "method": {
+  "self_param": "&mut self",
+  "call": "self.{name}({args})"
+ }
+}

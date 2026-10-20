@@ -2,7 +2,7 @@ import {test,expect} from "bun:test";
 import {readFileSync} from "node:fs";
 import Ajv from "ajv";
 import {applyPatch} from "fast-json-patch";
-import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { readModuleTreeSource } from "@semio-tech/framework/compiler/syntax/module-tree";
 test("Energy terminal owners preserve concrete backing custody before authority release",()=>{
  const law=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
  expect(new Ajv({strict:true}).validate({type:"object",required:["schema","owned","name","temperatures","order","terminalDropBytes"],additionalProperties:false,properties:{schema:{const:"semio.energy.original-terminal-owners.v1"},owned:{type:"array",minItems:16,maxItems:16,uniqueItems:true,items:{type:"string"}},name:{type:"string"},temperatures:{type:"array",items:{type:"number"}},order:{type:"array",items:{type:"string"}},terminalDropBytes:{const:0}}},law)).toBe(true);

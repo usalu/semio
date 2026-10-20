@@ -1,3 +1,4 @@
+import { expect, test } from "bun:test";
 import Ajv2020 from "ajv/dist/2020.js";
 import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
@@ -17,3 +18,7 @@ export const runBmpPaintRegionChecks = (): number => {
   console.log(`[TRACE] bmp-paint-region-twin checks=${checks}`);
   return checks;
 };
+
+test("BMP paint-region fixtures agree with JSON Schema", () => {
+  expect(runBmpPaintRegionChecks()).toBe(4);
+});

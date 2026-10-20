@@ -120,9 +120,6 @@ fn doctype_content(doctype: &XDoctype) -> String {
 
 fn write_node<W: std::io::Write>(writer: &mut Writer<W>, node: &XNode) {
     match node {
-        // 📌 `from_escaped` here (never the auto-escaping `BytesText::new`) so recipe authors control
-        // the EXACT source bytes — see this file's own header on the base document's pre-escaped
-        // `item#i1` text run, which deliberately embeds a raw `&#169;` numeric reference.
         XNode::Text(text) => writer.write_event(Event::Text(BytesText::from_escaped(text.as_str()))).expect("write text event"),
         XNode::CData(text) => writer.write_event(Event::CData(BytesCData::new(text.as_str()))).expect("write cdata event"),
         XNode::Comment(text) => writer.write_event(Event::Comment(BytesText::from_escaped(text.as_str()))).expect("write comment event"),
@@ -381,9 +378,6 @@ fn decode_xml(bytes: &[u8]) -> Result<XDoc, String> {
                 doctype.prolog_position = doc.prolog.len();
                 doc.doctype = Some(doctype);
             }
-            // 📌 `content()` returns everything after the target NAME, including the one separating
-            // whitespace byte — `trim_start` recovers the semantic `data` half (what `write_node`'s
-            // own `format!("{target} {data}")` put there), so encode -> decode round-trips exactly.
             Event::PI(pi) if !root_seen => doc.prolog.push(XNode::Pi { target: pi.target().to_string(), data: pi.content().trim_start().to_string() }),
             Event::PI(pi) => doc.epilog.push(XNode::Pi { target: pi.target().to_string(), data: pi.content().trim_start().to_string() }),
             Event::Comment(comment) if !root_seen => doc.prolog.push(XNode::Comment(comment.as_ref().to_string())),
@@ -532,8 +526,6 @@ fn base_doc() -> XDoc {
                 XNode::Element {
                     name: "item".to_string(),
                     attrs: vec![("id".to_string(), "i1".to_string()), ("qty".to_string(), "2".to_string())],
-                    // 📌 Pre-escaped: literal file bytes contain `&amp;` (named) AND `&#169;` (numeric) —
-                    // this file's header explains why.
                     children: vec![XNode::Text("Widget &amp; Gadget &#169;".to_string())],
                 },
                 XNode::Element { name: "item".to_string(), attrs: vec![("id".to_string(), "i2".to_string())], children: vec![] },
@@ -557,14 +549,12 @@ fn base_doc() -> XDoc {
 fn recipe(id: &str) -> Option<(XDoc, XDoc)> {
     let base = base_doc();
     match id {
-        // 🧬 SetDeclaration — whole-value replace of the declaration only.
         "set-declaration-applied" => {
             let mut after = base.clone();
             after.declaration = Some(XDecl { version: "1.0".to_string(), encoding: Some("utf-8".to_string()), standalone: Some(true) });
             Some((base, after))
         }
 
-        // 🧬 SetDoctype — whole-value replace of the doctype only (SYSTEM -> PUBLIC, entity added).
         "set-doctype-applied" => {
             let mut after = base.clone();
             after.doctype = Some(XDoctype {
@@ -576,8 +566,6 @@ fn recipe(id: &str) -> Option<(XDoc, XDoc)> {
             Some((base, after))
         }
 
-        // 🧬 InsertElement{path:[], index:2, node:<item i3>} — a third item is inserted before the
-        // CDATA section; every other child keeps its position.
         "insert-element-applied" => {
             let mut after = base.clone();
             let XNode::Element { children, .. } = after.root.as_mut().unwrap() else { unreachable!() };
@@ -585,8 +573,6 @@ fn recipe(id: &str) -> Option<(XDoc, XDoc)> {
             Some((base, after))
         }
 
-        // 🧬 RemoveElement{path:[], index:2} — drops the CDATA section; the two items, comment and
-        // PI keep their relative order.
         "remove-element-applied" => {
             let mut after = base.clone();
             let XNode::Element { children, .. } = after.root.as_mut().unwrap() else { unreachable!() };
@@ -594,8 +580,6 @@ fn recipe(id: &str) -> Option<(XDoc, XDoc)> {
             Some((base, after))
         }
 
-        // 🧬 SetAttribute{path:[0], name:"qty", value:"5"} — item i1's qty changes; its text, i2, the
-        // CDATA/comment/PI and every other attribute are untouched.
         "set-attribute-applied" => {
             let mut after = base.clone();
             let XNode::Element { children, .. } = after.root.as_mut().unwrap() else { unreachable!() };
@@ -604,9 +588,6 @@ fn recipe(id: &str) -> Option<(XDoc, XDoc)> {
             Some((base, after))
         }
 
-        // 🧬 SetText{path:[0,0], text:"Sprocket &amp; Cog &#8364;"} — item i1's text run changes to a
-        // DIFFERENT pre-escaped named+numeric pair (Euro sign, U+20AC — a 3-byte UTF-8 char once
-        // resolved), proving the reassembly discipline survives a mutation, not just the base state.
         "set-text-applied" => {
             let mut after = base.clone();
             let XNode::Element { children, .. } = after.root.as_mut().unwrap() else { unreachable!() };

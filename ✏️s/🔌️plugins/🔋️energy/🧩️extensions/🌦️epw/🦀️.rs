@@ -4,6 +4,8 @@ extern crate semio_s_plugin_energy_engine_bestest as bestest;
 extern crate semio_s_plugin_energy_engine_error as error;
 extern crate semio_s_plugin_energy_engine_results as results;
 extern crate semio_s_plugin_energy_engine_site as site;
+#[cfg(test)]
+extern crate semio_s_plugin_energy_engine_sim as sim;
 
 use crate::error::{Diagnostics, Error};
 use crate::site::{WeatherData, WeatherRecord};

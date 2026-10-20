@@ -302,23 +302,7 @@ impl Fem3dNumericalChild {
                 self.node_cursor += 1;
                 self.stage = Fem3dNumericalStage::Nodes;
             }
-            Fem3dNumericalStage::ElementMaterial => {
-                let Some(element) = doc.elements.get(self.element_cursor) else {
-                    self.stage = Fem3dNumericalStage::SolidDomainOuterReserve;
-                    return Ok(false);
-                };
-                let material_id = match element {
-                    FemElement::Bar { material_id, .. } | FemElement::Frame { material_id, .. } => material_id,
-                };
-                let Some(material) = doc.materials.get(self.material_cursor) else { return Err(b"fem3d.numerical-material".to_vec()) };
-                if &material.id == material_id {
-                    self.resolved_material = self.material_cursor;
-                    self.material_cursor = 0;
-                    self.stage = Fem3dNumericalStage::ElementSection;
-                } else {
-                    self.material_cursor += 1;
-                }
-            }
+            Fem3dNumericalStage::ElementMaterial => self.model_element_material(doc),
             Fem3dNumericalStage::ElementSection => {
                 let Some(element) = doc.elements.get(self.element_cursor) else { return Err(b"fem3d.numerical-element".to_vec()) };
                 let section_id = match element {
@@ -333,45 +317,8 @@ impl Fem3dNumericalChild {
                     self.section_cursor += 1;
                 }
             }
-            Fem3dNumericalStage::ElementStart | Fem3dNumericalStage::ElementEnd => {
-                let Some(element) = doc.elements.get(self.element_cursor) else { return Err(b"fem3d.numerical-element".to_vec()) };
-                let (start, end) = match element {
-                    FemElement::Bar { start, end, .. } | FemElement::Frame { start, end, .. } => (start, end),
-                };
-                let target = if self.stage == Fem3dNumericalStage::ElementStart { start } else { end };
-                let Some(node) = doc.nodes.get(self.lookup_cursor) else { return Err(b"fem3d.numerical-element-node".to_vec()) };
-                if &node.id == target {
-                    self.pending_element_nodes[usize::from(self.stage == Fem3dNumericalStage::ElementEnd)] = self.lookup_cursor;
-                    self.lookup_cursor = 0;
-                    self.stage = if self.stage == Fem3dNumericalStage::ElementStart { Fem3dNumericalStage::ElementEnd } else { Fem3dNumericalStage::ElementCommit };
-                } else {
-                    self.lookup_cursor += 1;
-                }
-            }
-            Fem3dNumericalStage::ElementCommit => {
-                let element = doc.elements.get(self.element_cursor).ok_or_else(|| b"fem3d.numerical-element".to_vec())?;
-                let material = doc.materials.get(self.resolved_material).ok_or_else(|| b"fem3d.numerical-material".to_vec())?;
-                let section = doc.sections.get(self.resolved_section).ok_or_else(|| b"fem3d.numerical-section".to_vec())?;
-                let built: Elements = match element {
-                    FemElement::Bar { id, start, end, .. } => Bar3 { id: id.clone(), node_a: start.clone(), node_b: end.clone(), e: material.e, a: section.area, density: material.rho }.into(),
-                    FemElement::Frame { id, start, end, roll, .. } => {
-                        Frame3 { id: id.clone(), node_a: start.clone(), node_b: end.clone(), e: material.e, g: material.g, a: section.area, iy: section.iy, iz: section.iz, j: section.j, roll: *roll, density: material.rho }.into()
-                    }
-                };
-                self.element_materials[self.element_cursor] = self.resolved_material;
-                self.element_sections[self.element_cursor] = self.resolved_section;
-                let start = doc.nodes.get(self.pending_element_nodes[0]).ok_or_else(|| b"fem3d.numerical-element-node".to_vec())?;
-                let end = doc.nodes.get(self.pending_element_nodes[1]).ok_or_else(|| b"fem3d.numerical-element-node".to_vec())?;
-                let dx = end.x - start.x;
-                let dy = end.y - start.y;
-                let dz = end.z - start.z;
-                let length = (dx * dx + dy * dy + dz * dz).sqrt();
-                self.pending_translational_mass = material.rho * section.area * length * 0.5;
-                self.pending_rotational_mass = if matches!(element, FemElement::Frame { .. }) { material.rho * (section.area * length.powi(3) / 105.0 + section.j * length / 3.0) } else { 0.0 };
-                self.pending_element = Some(built);
-                self.mass_update_cursor = 0;
-                self.stage = Fem3dNumericalStage::ElementMass;
-            }
+            Fem3dNumericalStage::ElementStart | Fem3dNumericalStage::ElementEnd => self.model_element_start_or_element_end(doc),
+            Fem3dNumericalStage::ElementCommit => self.model_element_commit(doc),
             Fem3dNumericalStage::ElementMass => {
                 let limit = if self.pending_rotational_mass > 0.0 { 12 } else { 6 };
                 if self.mass_update_cursor < limit {
@@ -393,22 +340,7 @@ impl Fem3dNumericalChild {
                 self.element_cursor += 1;
                 self.stage = Fem3dNumericalStage::ElementMaterial;
             }
-            Fem3dNumericalStage::SolidDomainOuterReserve => {
-                let Some(solid) = doc.solids.get(self.solid_cursor) else {
-                    self.stage = Fem3dNumericalStage::SupportDofReserve;
-                    return Ok(false);
-                };
-                if solid.layers == 0 || solid.height <= 0.0 || solid.mesh_size <= 0.0 || solid.outline.len() < 3 {
-                    return Err(b"fem3d.numerical-solid-domain".to_vec());
-                }
-                if self.solid_domain.is_none() {
-                    self.solid_domain = Some(MountedPlanarDomain::new());
-                }
-                if self.solid_domain.as_mut().ok_or_else(|| b"fem3d.numerical-solid-domain-owner".to_vec())?.admit_outer_one(solid.outline.len()).map_err(|_| b"fem3d.numerical-solid-outline-admission".to_vec())? {
-                    self.point_cursor = 0;
-                    self.stage = Fem3dNumericalStage::SolidDomainOuterPoint;
-                }
-            }
+            Fem3dNumericalStage::SolidDomainOuterReserve => self.model_solid_domain_outer_reserve(doc),
             Fem3dNumericalStage::SolidDomainOuterPoint => {
                 let solid = doc.solids.get(self.solid_cursor).ok_or_else(|| b"fem3d.numerical-solid".to_vec())?;
                 if let Some(point) = solid.outline.get(self.point_cursor) {
@@ -425,23 +357,7 @@ impl Fem3dNumericalChild {
                     self.stage = Fem3dNumericalStage::SolidDomainHoleReserve;
                 }
             }
-            Fem3dNumericalStage::SolidDomainHoleReserve => {
-                let solid = doc.solids.get(self.solid_cursor).ok_or_else(|| b"fem3d.numerical-solid".to_vec())?;
-                let Some(hole) = solid.holes.get(self.hole_cursor) else {
-                    self.stage = Fem3dNumericalStage::SolidMeshBegin;
-                    return Ok(false);
-                };
-                let domain = self.solid_domain.as_mut().ok_or_else(|| b"fem3d.numerical-solid-domain-owner".to_vec())?;
-                if self.point_cursor == 0 {
-                    domain.begin_hole().map_err(|_| b"fem3d.numerical-solid-hole-slot".to_vec())?;
-                    self.point_cursor = 1;
-                    return Ok(false);
-                }
-                if domain.admit_hole_point_one(self.hole_cursor, hole.len()).map_err(|_| b"fem3d.numerical-solid-hole-admission".to_vec())? {
-                    self.point_cursor = 0;
-                    self.stage = Fem3dNumericalStage::SolidDomainHolePoint;
-                }
-            }
+            Fem3dNumericalStage::SolidDomainHoleReserve => self.model_solid_domain_hole_reserve(doc),
             Fem3dNumericalStage::SolidDomainHolePoint => {
                 let solid = doc.solids.get(self.solid_cursor).ok_or_else(|| b"fem3d.numerical-solid".to_vec())?;
                 let hole = solid.holes.get(self.hole_cursor).ok_or_else(|| b"fem3d.numerical-solid-hole".to_vec())?;
@@ -466,56 +382,8 @@ impl Fem3dNumericalChild {
                     self.solid_material_cursor += 1;
                 }
             }
-            Fem3dNumericalStage::SolidOwnersReserve => {
-                let solid = doc.solids.get(self.solid_cursor).ok_or_else(|| b"fem3d.numerical-solid".to_vec())?;
-                let node_count = self.solid_points.len().checked_mul(solid.layers + 1).ok_or_else(|| b"fem3d.numerical-solid-node-overflow".to_vec())?;
-                let tet_count = self.solid_tris.len().checked_mul(solid.layers).and_then(|count| count.checked_mul(3)).ok_or_else(|| b"fem3d.numerical-solid-element-overflow".to_vec())?;
-                let model = self.model.as_mut().ok_or_else(|| b"fem3d.numerical-model-owner".to_vec())?;
-                if model.nodes_len().saturating_add(node_count) > MAXIMUM_FIELDS || model.elements_len().saturating_add(tet_count) > MAXIMUM_ELEMENTS {
-                    return Err(b"fem3d.numerical-solid-capacity".to_vec());
-                }
-                match self.point_cursor {
-                    0 if self.solid_node_ids.admit_one(node_count).map_err(|_| b"fem3d.numerical-solid-node-id-admission".to_vec())? => self.point_cursor += 1,
-                    1 if self.solid_node_analysis_indices.admit_one(node_count).map_err(|_| b"fem3d.numerical-solid-node-index-admission".to_vec())? => self.point_cursor += 1,
-                    2 if model.admit_node_one(model.nodes_len() + node_count, MOUNTED_ANALYSIS_BACKING_BYTES).map_err(|_| b"fem3d.numerical-solid-node-admission".to_vec())?.complete => self.point_cursor += 1,
-                    3 if self.analysis_node_ids.admit_one(self.analysis_node_ids.len() + node_count).map_err(|_| b"fem3d.numerical-solid-analysis-id-admission".to_vec())? => self.point_cursor += 1,
-                    4 if model.admit_element_one(model.elements_len() + tet_count, MOUNTED_ANALYSIS_BACKING_BYTES).map_err(|_| b"fem3d.numerical-solid-tet-admission".to_vec())?.complete => self.point_cursor += 1,
-                    _ => {
-                        if self.point_cursor < 5 {
-                            return Ok(false);
-                        }
-                        self.volume_node_cursor = 0;
-                        self.lookup_cursor = 0;
-                        self.point_cursor = 0;
-                        self.stage = Fem3dNumericalStage::SolidNodeLookup;
-                        return Ok(false);
-                    }
-                }
-            }
-            Fem3dNumericalStage::SolidNodeLookup => {
-                let solid = doc.solids.get(self.solid_cursor).ok_or_else(|| b"fem3d.numerical-solid".to_vec())?;
-                let total = self.solid_points.len().checked_mul(solid.layers + 1).ok_or_else(|| b"fem3d.numerical-solid-node-overflow".to_vec())?;
-                if self.volume_node_cursor == total {
-                    self.point_cursor = 0;
-                    self.tet_cursor = 0;
-                    self.tet_phase = 0;
-                    self.stage = Fem3dNumericalStage::SolidTet;
-                } else if let Some(node) = self.model.as_ref().and_then(|model| model.node(self.lookup_cursor)) {
-                    let point = self.solid_point(doc, self.volume_node_cursor)?;
-                    if (node.pos[0] - point[0]).abs() < 1e-9 && (node.pos[1] - point[1]).abs() < 1e-9 && (node.pos[2] - point[2]).abs() < 1e-9 {
-                        self.pending_node_id = Some(node.id.clone());
-                        self.pending_node_index = self.lookup_cursor;
-                        self.pending_node_needs_analysis = false;
-                        self.lookup_cursor = 0;
-                        self.stage = Fem3dNumericalStage::SolidNodeId;
-                    } else {
-                        self.lookup_cursor += 1;
-                    }
-                } else {
-                    self.lookup_cursor = 0;
-                    self.stage = Fem3dNumericalStage::SolidNodeCreate;
-                }
-            }
+            Fem3dNumericalStage::SolidOwnersReserve => self.model_solid_owners_reserve(doc),
+            Fem3dNumericalStage::SolidNodeLookup => self.model_solid_node_lookup(doc),
             Fem3dNumericalStage::SolidNodeCreate => {
                 let solid = doc.solids.get(self.solid_cursor).ok_or_else(|| b"fem3d.numerical-solid".to_vec())?;
                 let point = self.solid_point(doc, self.volume_node_cursor)?;
@@ -530,58 +398,8 @@ impl Fem3dNumericalChild {
                 self.pending_node_needs_analysis = true;
                 self.stage = Fem3dNumericalStage::SolidNodeId;
             }
-            Fem3dNumericalStage::SolidNodeId => {
-                let id = self.pending_node_id.as_ref().ok_or_else(|| b"fem3d.numerical-solid-node-owner".to_vec())?;
-                match self.point_cursor {
-                    0 => {
-                        if self.pending_node_needs_analysis {
-                            self.analysis_node_ids.push(id.clone()).map_err(|_| b"fem3d.numerical-solid-analysis-id-slot".to_vec())?;
-                        }
-                        self.point_cursor = 1;
-                    }
-                    1 => {
-                        self.solid_node_ids.push(id.clone()).map_err(|_| b"fem3d.numerical-solid-node-id-slot".to_vec())?;
-                        self.point_cursor = 2;
-                    }
-                    _ => {
-                        self.solid_node_analysis_indices.push(self.pending_node_index).map_err(|_| b"fem3d.numerical-solid-node-index-slot".to_vec())?;
-                        self.pending_node_id = None;
-                        self.point_cursor = 0;
-                        self.volume_node_cursor += 1;
-                        self.lookup_cursor = 0;
-                        self.stage = Fem3dNumericalStage::SolidNodeLookup;
-                    }
-                }
-            }
-            Fem3dNumericalStage::SolidTet => {
-                let solid = doc.solids.get(self.solid_cursor).ok_or_else(|| b"fem3d.numerical-solid".to_vec())?;
-                if self.point_cursor == solid.layers {
-                    self.stage = Fem3dNumericalStage::SolidIndicesRetire;
-                } else if self.tet_cursor == self.solid_tris.len() {
-                    self.point_cursor += 1;
-                    self.tet_cursor = 0;
-                    self.tet_phase = 0;
-                } else {
-                    let material = doc.materials.get(self.resolved_solid_material).ok_or_else(|| b"fem3d.numerical-solid-material".to_vec())?;
-                    let indices = self.solid_tet_indices()?;
-                    let nodes = [
-                        self.solid_node_ids.get(indices[0]).cloned().ok_or_else(|| b"fem3d.numerical-solid-node-id".to_vec())?,
-                        self.solid_node_ids.get(indices[1]).cloned().ok_or_else(|| b"fem3d.numerical-solid-node-id".to_vec())?,
-                        self.solid_node_ids.get(indices[2]).cloned().ok_or_else(|| b"fem3d.numerical-solid-node-id".to_vec())?,
-                        self.solid_node_ids.get(indices[3]).cloned().ok_or_else(|| b"fem3d.numerical-solid-node-id".to_vec())?,
-                    ];
-                    let positions = [self.solid_point(doc, indices[0])?, self.solid_point(doc, indices[1])?, self.solid_point(doc, indices[2])?, self.solid_point(doc, indices[3])?];
-                    let a = [positions[1][0] - positions[0][0], positions[1][1] - positions[0][1], positions[1][2] - positions[0][2]];
-                    let b = [positions[2][0] - positions[0][0], positions[2][1] - positions[0][1], positions[2][2] - positions[0][2]];
-                    let c = [positions[3][0] - positions[0][0], positions[3][1] - positions[0][1], positions[3][2] - positions[0][2]];
-                    let volume = (a[0] * (b[1] * c[2] - b[2] * c[1]) - a[1] * (b[0] * c[2] - b[2] * c[0]) + a[2] * (b[0] * c[1] - b[1] * c[0])).abs() / 6.0;
-                    self.pending_tet_mass = material.rho * volume / 4.0;
-                    self.pending_tet_indices = indices;
-                    self.pending_tet = Some(Tet4 { id: format!("{}_c{}_{}", solid.id, self.point_cursor * self.solid_tris.len() + self.tet_cursor, self.tet_phase), nodes, e: material.e, nu: material.nu, density: material.rho }.into());
-                    self.mass_update_cursor = 0;
-                    self.stage = Fem3dNumericalStage::SolidTetMass;
-                }
-            }
+            Fem3dNumericalStage::SolidNodeId => self.model_solid_node_id(),
+            Fem3dNumericalStage::SolidTet => self.model_solid_tet(doc),
             Fem3dNumericalStage::SolidTetMass => {
                 if self.mass_update_cursor < 12 {
                     let index = self.pending_tet_indices[self.mass_update_cursor / 3];
@@ -614,25 +432,7 @@ impl Fem3dNumericalChild {
                 }
                 self.stage = Fem3dNumericalStage::SolidCommit;
             }
-            Fem3dNumericalStage::SolidCommit => {
-                let solid = doc.solids.get(self.solid_cursor).ok_or_else(|| b"fem3d.numerical-solid".to_vec())?;
-                let retained = Fem3dMeshedSolid {
-                    solid_index: self.solid_cursor,
-                    node_ids: std::mem::replace(&mut self.solid_node_ids, FixedSlots::new()),
-                    top_offset: solid.layers * self.solid_points.len(),
-                    points: std::mem::replace(&mut self.solid_points, FixedSlots::new()),
-                    tris: std::mem::replace(&mut self.solid_tris, FixedSlots::new()),
-                };
-                if let Err(retained) = self.meshed_solids.push(retained) {
-                    self.solid_node_ids = retained.node_ids;
-                    self.solid_points = retained.points;
-                    self.solid_tris = retained.tris;
-                    return Err(b"fem3d.numerical-meshed-solid-slot".to_vec());
-                }
-                self.solid_materials[self.solid_cursor] = self.resolved_solid_material;
-                self.solid_cursor += 1;
-                self.stage = Fem3dNumericalStage::SolidDomainOuterReserve;
-            }
+            Fem3dNumericalStage::SolidCommit => self.model_solid_commit(doc),
             Fem3dNumericalStage::SupportDofReserve => {
                 let Some(support) = doc.supports.get(self.support_cursor) else {
                     self.stage = Fem3dNumericalStage::PublishFieldCount;
@@ -666,6 +466,236 @@ impl Fem3dNumericalChild {
             _ => return Ok(true),
         }
         Ok(false)
+    }
+
+    /// 🪵️ Runs the `element material` stage of `step_model`.
+    fn model_element_material(&mut self, doc: &Fem3dSnapshot) -> Result<bool, Vec<u8>> {
+        let Some(element) = doc.elements.get(self.element_cursor) else {
+            self.stage = Fem3dNumericalStage::SolidDomainOuterReserve;
+            return Ok(false);
+        };
+        let material_id = match element {
+            FemElement::Bar { material_id, .. } | FemElement::Frame { material_id, .. } => material_id,
+        };
+        let Some(material) = doc.materials.get(self.material_cursor) else { return Err(b"fem3d.numerical-material".to_vec()) };
+        if &material.id == material_id {
+            self.resolved_material = self.material_cursor;
+            self.material_cursor = 0;
+            self.stage = Fem3dNumericalStage::ElementSection;
+        } else {
+            self.material_cursor += 1;
+        }
+    }
+
+    /// 🔩️ Runs the `element start` or `element end` stage of `step_model`.
+    fn model_element_start_or_element_end(&mut self, doc: &Fem3dSnapshot) -> Result<bool, Vec<u8>> {
+        let Some(element) = doc.elements.get(self.element_cursor) else { return Err(b"fem3d.numerical-element".to_vec()) };
+        let (start, end) = match element {
+            FemElement::Bar { start, end, .. } | FemElement::Frame { start, end, .. } => (start, end),
+        };
+        let target = if self.stage == Fem3dNumericalStage::ElementStart { start } else { end };
+        let Some(node) = doc.nodes.get(self.lookup_cursor) else { return Err(b"fem3d.numerical-element-node".to_vec()) };
+        if &node.id == target {
+            self.pending_element_nodes[usize::from(self.stage == Fem3dNumericalStage::ElementEnd)] = self.lookup_cursor;
+            self.lookup_cursor = 0;
+            self.stage = if self.stage == Fem3dNumericalStage::ElementStart { Fem3dNumericalStage::ElementEnd } else { Fem3dNumericalStage::ElementCommit };
+        } else {
+            self.lookup_cursor += 1;
+        }
+    }
+
+    /// ⚙️ Runs the `element commit` stage of `step_model`.
+    fn model_element_commit(&mut self, doc: &Fem3dSnapshot) -> Result<bool, Vec<u8>> {
+        let element = doc.elements.get(self.element_cursor).ok_or_else(|| b"fem3d.numerical-element".to_vec())?;
+        let material = doc.materials.get(self.resolved_material).ok_or_else(|| b"fem3d.numerical-material".to_vec())?;
+        let section = doc.sections.get(self.resolved_section).ok_or_else(|| b"fem3d.numerical-section".to_vec())?;
+        let built: Elements = match element {
+            FemElement::Bar { id, start, end, .. } => Bar3 { id: id.clone(), node_a: start.clone(), node_b: end.clone(), e: material.e, a: section.area, density: material.rho }.into(),
+            FemElement::Frame { id, start, end, roll, .. } => {
+                Frame3 { id: id.clone(), node_a: start.clone(), node_b: end.clone(), e: material.e, g: material.g, a: section.area, iy: section.iy, iz: section.iz, j: section.j, roll: *roll, density: material.rho }.into()
+            }
+        };
+        self.element_materials[self.element_cursor] = self.resolved_material;
+        self.element_sections[self.element_cursor] = self.resolved_section;
+        let start = doc.nodes.get(self.pending_element_nodes[0]).ok_or_else(|| b"fem3d.numerical-element-node".to_vec())?;
+        let end = doc.nodes.get(self.pending_element_nodes[1]).ok_or_else(|| b"fem3d.numerical-element-node".to_vec())?;
+        let dx = end.x - start.x;
+        let dy = end.y - start.y;
+        let dz = end.z - start.z;
+        let length = (dx * dx + dy * dy + dz * dz).sqrt();
+        self.pending_translational_mass = material.rho * section.area * length * 0.5;
+        self.pending_rotational_mass = if matches!(element, FemElement::Frame { .. }) { material.rho * (section.area * length.powi(3) / 105.0 + section.j * length / 3.0) } else { 0.0 };
+        self.pending_element = Some(built);
+        self.mass_update_cursor = 0;
+        self.stage = Fem3dNumericalStage::ElementMass;
+    }
+
+    /// 🧲️ Runs the `solid domain outer reserve` stage of `step_model`.
+    fn model_solid_domain_outer_reserve(&mut self, doc: &Fem3dSnapshot) -> Result<bool, Vec<u8>> {
+        let Some(solid) = doc.solids.get(self.solid_cursor) else {
+            self.stage = Fem3dNumericalStage::SupportDofReserve;
+            return Ok(false);
+        };
+        if solid.layers == 0 || solid.height <= 0.0 || solid.mesh_size <= 0.0 || solid.outline.len() < 3 {
+            return Err(b"fem3d.numerical-solid-domain".to_vec());
+        }
+        if self.solid_domain.is_none() {
+            self.solid_domain = Some(MountedPlanarDomain::new());
+        }
+        if self.solid_domain.as_mut().ok_or_else(|| b"fem3d.numerical-solid-domain-owner".to_vec())?.admit_outer_one(solid.outline.len()).map_err(|_| b"fem3d.numerical-solid-outline-admission".to_vec())? {
+            self.point_cursor = 0;
+            self.stage = Fem3dNumericalStage::SolidDomainOuterPoint;
+        }
+    }
+
+    /// 🪛️ Runs the `solid domain hole reserve` stage of `step_model`.
+    fn model_solid_domain_hole_reserve(&mut self, doc: &Fem3dSnapshot) -> Result<bool, Vec<u8>> {
+        let solid = doc.solids.get(self.solid_cursor).ok_or_else(|| b"fem3d.numerical-solid".to_vec())?;
+        let Some(hole) = solid.holes.get(self.hole_cursor) else {
+            self.stage = Fem3dNumericalStage::SolidMeshBegin;
+            return Ok(false);
+        };
+        let domain = self.solid_domain.as_mut().ok_or_else(|| b"fem3d.numerical-solid-domain-owner".to_vec())?;
+        if self.point_cursor == 0 {
+            domain.begin_hole().map_err(|_| b"fem3d.numerical-solid-hole-slot".to_vec())?;
+            self.point_cursor = 1;
+            return Ok(false);
+        }
+        if domain.admit_hole_point_one(self.hole_cursor, hole.len()).map_err(|_| b"fem3d.numerical-solid-hole-admission".to_vec())? {
+            self.point_cursor = 0;
+            self.stage = Fem3dNumericalStage::SolidDomainHolePoint;
+        }
+    }
+
+    /// 🔧️ Runs the `solid owners reserve` stage of `step_model`.
+    fn model_solid_owners_reserve(&mut self, doc: &Fem3dSnapshot) -> Result<bool, Vec<u8>> {
+        let solid = doc.solids.get(self.solid_cursor).ok_or_else(|| b"fem3d.numerical-solid".to_vec())?;
+        let node_count = self.solid_points.len().checked_mul(solid.layers + 1).ok_or_else(|| b"fem3d.numerical-solid-node-overflow".to_vec())?;
+        let tet_count = self.solid_tris.len().checked_mul(solid.layers).and_then(|count| count.checked_mul(3)).ok_or_else(|| b"fem3d.numerical-solid-element-overflow".to_vec())?;
+        let model = self.model.as_mut().ok_or_else(|| b"fem3d.numerical-model-owner".to_vec())?;
+        if model.nodes_len().saturating_add(node_count) > MAXIMUM_FIELDS || model.elements_len().saturating_add(tet_count) > MAXIMUM_ELEMENTS {
+            return Err(b"fem3d.numerical-solid-capacity".to_vec());
+        }
+        match self.point_cursor {
+            0 if self.solid_node_ids.admit_one(node_count).map_err(|_| b"fem3d.numerical-solid-node-id-admission".to_vec())? => self.point_cursor += 1,
+            1 if self.solid_node_analysis_indices.admit_one(node_count).map_err(|_| b"fem3d.numerical-solid-node-index-admission".to_vec())? => self.point_cursor += 1,
+            2 if model.admit_node_one(model.nodes_len() + node_count, MOUNTED_ANALYSIS_BACKING_BYTES).map_err(|_| b"fem3d.numerical-solid-node-admission".to_vec())?.complete => self.point_cursor += 1,
+            3 if self.analysis_node_ids.admit_one(self.analysis_node_ids.len() + node_count).map_err(|_| b"fem3d.numerical-solid-analysis-id-admission".to_vec())? => self.point_cursor += 1,
+            4 if model.admit_element_one(model.elements_len() + tet_count, MOUNTED_ANALYSIS_BACKING_BYTES).map_err(|_| b"fem3d.numerical-solid-tet-admission".to_vec())?.complete => self.point_cursor += 1,
+            _ => {
+                if self.point_cursor < 5 {
+                    return Ok(false);
+                }
+                self.volume_node_cursor = 0;
+                self.lookup_cursor = 0;
+                self.point_cursor = 0;
+                self.stage = Fem3dNumericalStage::SolidNodeLookup;
+                return Ok(false);
+            }
+        }
+    }
+
+    /// 🔨️ Runs the `solid node lookup` stage of `step_model`.
+    fn model_solid_node_lookup(&mut self, doc: &Fem3dSnapshot) -> Result<bool, Vec<u8>> {
+        let solid = doc.solids.get(self.solid_cursor).ok_or_else(|| b"fem3d.numerical-solid".to_vec())?;
+        let total = self.solid_points.len().checked_mul(solid.layers + 1).ok_or_else(|| b"fem3d.numerical-solid-node-overflow".to_vec())?;
+        if self.volume_node_cursor == total {
+            self.point_cursor = 0;
+            self.tet_cursor = 0;
+            self.tet_phase = 0;
+            self.stage = Fem3dNumericalStage::SolidTet;
+        } else if let Some(node) = self.model.as_ref().and_then(|model| model.node(self.lookup_cursor)) {
+            let point = self.solid_point(doc, self.volume_node_cursor)?;
+            if (node.pos[0] - point[0]).abs() < 1e-9 && (node.pos[1] - point[1]).abs() < 1e-9 && (node.pos[2] - point[2]).abs() < 1e-9 {
+                self.pending_node_id = Some(node.id.clone());
+                self.pending_node_index = self.lookup_cursor;
+                self.pending_node_needs_analysis = false;
+                self.lookup_cursor = 0;
+                self.stage = Fem3dNumericalStage::SolidNodeId;
+            } else {
+                self.lookup_cursor += 1;
+            }
+        } else {
+            self.lookup_cursor = 0;
+            self.stage = Fem3dNumericalStage::SolidNodeCreate;
+        }
+    }
+
+    /// 🪚️ Runs the `solid node id` stage of `step_model`.
+    fn model_solid_node_id(&mut self) -> Result<bool, Vec<u8>> {
+        let id = self.pending_node_id.as_ref().ok_or_else(|| b"fem3d.numerical-solid-node-owner".to_vec())?;
+        match self.point_cursor {
+            0 => {
+                if self.pending_node_needs_analysis {
+                    self.analysis_node_ids.push(id.clone()).map_err(|_| b"fem3d.numerical-solid-analysis-id-slot".to_vec())?;
+                }
+                self.point_cursor = 1;
+            }
+            1 => {
+                self.solid_node_ids.push(id.clone()).map_err(|_| b"fem3d.numerical-solid-node-id-slot".to_vec())?;
+                self.point_cursor = 2;
+            }
+            _ => {
+                self.solid_node_analysis_indices.push(self.pending_node_index).map_err(|_| b"fem3d.numerical-solid-node-index-slot".to_vec())?;
+                self.pending_node_id = None;
+                self.point_cursor = 0;
+                self.volume_node_cursor += 1;
+                self.lookup_cursor = 0;
+                self.stage = Fem3dNumericalStage::SolidNodeLookup;
+            }
+        }
+    }
+
+    /// 🧰️ Runs the `solid tet` stage of `step_model`.
+    fn model_solid_tet(&mut self, doc: &Fem3dSnapshot) -> Result<bool, Vec<u8>> {
+        let solid = doc.solids.get(self.solid_cursor).ok_or_else(|| b"fem3d.numerical-solid".to_vec())?;
+        if self.point_cursor == solid.layers {
+            self.stage = Fem3dNumericalStage::SolidIndicesRetire;
+        } else if self.tet_cursor == self.solid_tris.len() {
+            self.point_cursor += 1;
+            self.tet_cursor = 0;
+            self.tet_phase = 0;
+        } else {
+            let material = doc.materials.get(self.resolved_solid_material).ok_or_else(|| b"fem3d.numerical-solid-material".to_vec())?;
+            let indices = self.solid_tet_indices()?;
+            let nodes = [
+                self.solid_node_ids.get(indices[0]).cloned().ok_or_else(|| b"fem3d.numerical-solid-node-id".to_vec())?,
+                self.solid_node_ids.get(indices[1]).cloned().ok_or_else(|| b"fem3d.numerical-solid-node-id".to_vec())?,
+                self.solid_node_ids.get(indices[2]).cloned().ok_or_else(|| b"fem3d.numerical-solid-node-id".to_vec())?,
+                self.solid_node_ids.get(indices[3]).cloned().ok_or_else(|| b"fem3d.numerical-solid-node-id".to_vec())?,
+            ];
+            let positions = [self.solid_point(doc, indices[0])?, self.solid_point(doc, indices[1])?, self.solid_point(doc, indices[2])?, self.solid_point(doc, indices[3])?];
+            let a = [positions[1][0] - positions[0][0], positions[1][1] - positions[0][1], positions[1][2] - positions[0][2]];
+            let b = [positions[2][0] - positions[0][0], positions[2][1] - positions[0][1], positions[2][2] - positions[0][2]];
+            let c = [positions[3][0] - positions[0][0], positions[3][1] - positions[0][1], positions[3][2] - positions[0][2]];
+            let volume = (a[0] * (b[1] * c[2] - b[2] * c[1]) - a[1] * (b[0] * c[2] - b[2] * c[0]) + a[2] * (b[0] * c[1] - b[1] * c[0])).abs() / 6.0;
+            self.pending_tet_mass = material.rho * volume / 4.0;
+            self.pending_tet_indices = indices;
+            self.pending_tet = Some(Tet4 { id: format!("{}_c{}_{}", solid.id, self.point_cursor * self.solid_tris.len() + self.tet_cursor, self.tet_phase), nodes, e: material.e, nu: material.nu, density: material.rho }.into());
+            self.mass_update_cursor = 0;
+            self.stage = Fem3dNumericalStage::SolidTetMass;
+        }
+    }
+
+    /// 🧪️ Runs the `solid commit` stage of `step_model`.
+    fn model_solid_commit(&mut self, doc: &Fem3dSnapshot) -> Result<bool, Vec<u8>> {
+        let solid = doc.solids.get(self.solid_cursor).ok_or_else(|| b"fem3d.numerical-solid".to_vec())?;
+        let retained = Fem3dMeshedSolid {
+            solid_index: self.solid_cursor,
+            node_ids: std::mem::replace(&mut self.solid_node_ids, FixedSlots::new()),
+            top_offset: solid.layers * self.solid_points.len(),
+            points: std::mem::replace(&mut self.solid_points, FixedSlots::new()),
+            tris: std::mem::replace(&mut self.solid_tris, FixedSlots::new()),
+        };
+        if let Err(retained) = self.meshed_solids.push(retained) {
+            self.solid_node_ids = retained.node_ids;
+            self.solid_points = retained.points;
+            self.solid_tris = retained.tris;
+            return Err(b"fem3d.numerical-meshed-solid-slot".to_vec());
+        }
+        self.solid_materials[self.solid_cursor] = self.resolved_solid_material;
+        self.solid_cursor += 1;
+        self.stage = Fem3dNumericalStage::SolidDomainOuterReserve;
     }
 
 }

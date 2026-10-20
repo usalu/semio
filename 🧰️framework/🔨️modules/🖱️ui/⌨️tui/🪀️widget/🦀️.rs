@@ -1,3 +1,5 @@
+use crate::editor::{editor_cursor, editor_on_key, editor_on_mouse, editor_on_paste, paint_editor};
+pub use crate::editor::EditorState;
 use semio_framework_ui_tui_core::cell::CellBuffer;
 use crate::chip::paint_chip;
 use crate::dialog::{dialog_on_key, dialog_on_mouse, dialog_set_hover, paint_dialog, DialogState};
@@ -87,6 +89,7 @@ pub enum WidgetState {
     Tabs(TabsState),
     Log(LogState),
     Input(InputState),
+    Editor(EditorState),
     Divider(DividerState),
     Chip(ChipState),
     Table(TableState),
@@ -138,7 +141,7 @@ impl WidgetState {
 
     /// ⇥ Whether Tab belongs to the widget (shell completion, a dialog button cycle) instead of moving focus.
     pub fn claims_tab(&self) -> bool {
-        matches!(self, WidgetState::Terminal(_) | WidgetState::Menu(_) | WidgetState::Dialog(_) | WidgetState::Palette(_))
+        matches!(self, WidgetState::Editor(_) | WidgetState::Terminal(_) | WidgetState::Menu(_) | WidgetState::Dialog(_) | WidgetState::Palette(_))
     }
 
     /// ⌨️ Handles one key press, returning a signal when it changes visible state.
@@ -153,6 +156,7 @@ impl WidgetState {
             WidgetState::Select(s) => select_on_key(s, ev),
             WidgetState::Tabs(t) => tabs_on_key(t, ev),
             WidgetState::Input(i) => input_on_key(i, ev),
+            WidgetState::Editor(editor) => editor_on_key(editor, ev),
             WidgetState::Table(t) => table_on_key(t, ev),
             WidgetState::Wizard(w) => wizard_on_key(w, ev),
             WidgetState::Tree(t) => tree_on_key(t, ev),
@@ -176,6 +180,7 @@ impl WidgetState {
             (WidgetState::Wizard(w), _) => wizard_on_mouse(w, rect, event),
             (WidgetState::Table(t), _) => table_on_mouse(t, rect, event),
             (WidgetState::Input(i), _) => input_on_mouse(i, rect, event),
+            (WidgetState::Editor(editor), _) => editor_on_mouse(editor, rect, event),
             (WidgetState::Select(s), _) => select_on_mouse(s, rect, event),
             (WidgetState::Tree(t), _) => tree_on_mouse(t, rect, event),
             (WidgetState::Scrollable(s), _) => scrollable_on_mouse(s, rect, event),
@@ -198,6 +203,7 @@ impl WidgetState {
         if let WidgetState::Terminal(t) = self {
             return t.on_paste(text);
         }
+        if let WidgetState::Editor(editor) = self { return editor_on_paste(editor, text); }
         let text = text.replace(['\r', '\n'], " ");
         match self {
             WidgetState::Input(i) => input_on_paste(i, &text),
@@ -241,6 +247,7 @@ impl WidgetState {
     pub fn cursor(&self, rect: Rect) -> Option<CursorSpec> {
         match self {
             WidgetState::Input(i) => input_cursor(i, rect),
+            WidgetState::Editor(editor) => editor_cursor(editor, rect),
             WidgetState::Wizard(w) => wizard_cursor(w, rect),
             WidgetState::Tree(t) => tree_cursor(t, rect),
             WidgetState::Terminal(t) => t.cursor(rect),
@@ -272,6 +279,7 @@ impl WidgetState {
             WidgetState::Tabs(t) => paint_tabs(t, theme, rect, buf),
             WidgetState::Log(log) => paint_log(log, theme, rect, buf),
             WidgetState::Input(i) => paint_input(i, theme, rect, buf, focused),
+            WidgetState::Editor(editor) => paint_editor(editor, theme, rect, buf, focused),
             WidgetState::Divider(d) => paint_divider(d, theme, rect, buf),
             WidgetState::Chip(c) => paint_chip(c, theme, rect, buf),
             WidgetState::Table(t) => paint_table(t, theme, rect, buf, focused),

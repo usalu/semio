@@ -1,11 +1,11 @@
-import { ContextMenuChrome } from "../../../🧱️elements/🖱️ContextMenu/🥣️chrome/🟦️.tsx";
-import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { interactiveHoverClass } from "../../../🔨️modules/🖱️interaction-presentation/🟦️.ts";
+import { ContextMenuChrome } from "@semio-tech/ui/elements/ContextMenu/chrome";
+import { cn } from "@semio-tech/ui/modules/class-name-composition";
+import { interactiveHoverClass } from "@semio-tech/ui/modules/interaction-presentation";
 import { domSizePx } from "@semio-tech/ui-styling";
-import { reactHostPort } from "../../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
+import { reactHostPort } from "@semio-tech/ui/elements/Ports/react";
 import * as React from "react";
-import { useWindowContentDeadLineInset, windowContentDeadLineScrollClass } from "../../../🧱️elements/🚧️WindowContentDeadLine/🟦️.tsx";
-import { borderElementClass } from "../../../🔨️modules/📏️border-presentation/🟦️.ts";
+import { useWindowContentDeadLineInset, windowContentDeadLineScrollClass } from "@semio-tech/ui/elements/WindowContentDeadLine";
+import { borderElementClass } from "@semio-tech/ui/modules/border-presentation";
 
 /** 🪧️ Uppercase shell section title — element gray at rest. */
 export const shellChromeSectionTitleClassName = "text-2xs font-semibold uppercase tracking-wide text-element";

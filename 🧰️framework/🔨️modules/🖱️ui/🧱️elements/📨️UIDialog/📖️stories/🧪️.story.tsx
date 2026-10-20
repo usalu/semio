@@ -9,12 +9,12 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { argControl, type ActionArgDef } from "../../../../🛂️manifest/🎬️action-types-and-semantics/🟦️.ts";
-import { type DialogDefinition } from "../../../../🛂️manifest/🔘️definitions-action-ids-and-shell-brand/🟦️.ts";
+import { argControl, type ActionArgDef } from "@semio-tech/framework-manifest/action-types-and-semantics";
+import { type DialogDefinition } from "@semio-tech/framework-manifest/definitions-action-ids-and-shell-brand";
 import { Slider, Stepper, ToggleGroup, UIDialog, type UIDialogFieldBinding } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "../../../🧪️tests/📚️storybook-types/🟦️.ts";
 import { useState } from "react";
-import dialogChoicesFixture from "../../../../🛂️manifest/🧪️tests/🧫️fixtures/🧫️dialog-choices/🔣️.json";
+import dialogChoicesFixture from "@semio-tech/framework-manifest/testing/fixtures/dialog-choices.json" with { type: "json" };
 // #endregion 🔌️Adapters
 
 // 🗨️#region 🗨️UIDialog

@@ -78,8 +78,8 @@
         },
         {
           "mutationId": "change-scene-ambient-intensity",
-          "sourceMutationDirectoryName": "🔅️change-scene-ambient",
-          "mutationDirectoryName": "🔅️change-scene-ambient",
+          "sourceMutationDirectoryName": "🔅️change-scene-ambient-intensity",
+          "mutationDirectoryName": "🔅️change-scene-ambient-intensity",
           "scenarios": [
             {
               "id": "dims-scene-ambient-to-quarter",
@@ -89,8 +89,8 @@
         },
         {
           "mutationId": "change-scene-material-roughness",
-          "sourceMutationDirectoryName": "🪨️change-scene",
-          "mutationDirectoryName": "🪨️change-scene",
+          "sourceMutationDirectoryName": "🪨️change-scene-material-roughness",
+          "mutationDirectoryName": "🪨️change-scene-material-roughness",
           "scenarios": [
             {
               "id": "polishes-scene-material-to-quarter",
@@ -100,8 +100,8 @@
         },
         {
           "mutationId": "change-scene-shadow-enabled",
-          "sourceMutationDirectoryName": "🌑️change-scene-shadow",
-          "mutationDirectoryName": "🌑️change-scene-shadow",
+          "sourceMutationDirectoryName": "🌑️change-scene-shadow-enabled",
+          "mutationDirectoryName": "🌑️change-scene-shadow-enabled",
           "scenarios": [
             {
               "id": "switches-scene-shadows-off",
@@ -111,8 +111,8 @@
         },
         {
           "mutationId": "change-scene-sun-azimuth",
-          "sourceMutationDirectoryName": "🧭️change-scene-sun",
-          "mutationDirectoryName": "🧭️change-scene-sun",
+          "sourceMutationDirectoryName": "🧭️change-scene-sun-azimuth",
+          "mutationDirectoryName": "🧭️change-scene-sun-azimuth",
           "scenarios": [
             {
               "id": "turns-scene-sun-to-315-degrees",
@@ -122,8 +122,8 @@
         },
         {
           "mutationId": "change-scene-sun-elevation",
-          "sourceMutationDirectoryName": "🌅️change-scene-sun",
-          "mutationDirectoryName": "🌅️change-scene-sun",
+          "sourceMutationDirectoryName": "🌅️change-scene-sun-elevation",
+          "mutationDirectoryName": "🌅️change-scene-sun-elevation",
           "scenarios": [
             {
               "id": "raises-scene-sun-to-60-degrees",
@@ -133,8 +133,8 @@
         },
         {
           "mutationId": "change-scene-sun-enabled",
-          "sourceMutationDirectoryName": "☀️change-scene-sun",
-          "mutationDirectoryName": "☀️change-scene-sun",
+          "sourceMutationDirectoryName": "☀️change-scene-sun-enabled",
+          "mutationDirectoryName": "☀️change-scene-sun-enabled",
           "scenarios": [
             {
               "id": "switches-scene-sun-off",
@@ -144,8 +144,8 @@
         },
         {
           "mutationId": "change-scene-sun-intensity",
-          "sourceMutationDirectoryName": "💡️change-scene-sun",
-          "mutationDirectoryName": "💡️change-scene-sun",
+          "sourceMutationDirectoryName": "💡️change-scene-sun-intensity",
+          "mutationDirectoryName": "💡️change-scene-sun-intensity",
           "scenarios": [
             {
               "id": "dims-scene-sun-to-half",
@@ -342,8 +342,8 @@
         },
         {
           "mutationId": "replace-saved-camera-view",
-          "sourceMutationDirectoryName": "🎞️replace-saved",
-          "mutationDirectoryName": "🎞️replace-saved",
+          "sourceMutationDirectoryName": "🎞️replace-saved-camera-view",
+          "mutationDirectoryName": "🎞️replace-saved-camera-view",
           "scenarios": [
             {
               "id": "repositions-cam-close-view",

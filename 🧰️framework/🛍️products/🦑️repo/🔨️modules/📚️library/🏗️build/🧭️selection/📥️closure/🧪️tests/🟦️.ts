@@ -4,12 +4,13 @@ import Ajv from "ajv";
 import {withRepositoryNxStorageV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
 import {captureOwnedCommandV1} from "@semio-tech/process/execution";
 import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
-import {createRequestedIssuedResourceControlV1,receiveScriptProcessInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {createRequestedIssuedResourceControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
 import type {BuildGraphV1,BuildTargetV1} from "../../../🕸️graph/🟦️.ts";
 import {selectedBuildPrerequisitesV1} from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🔣️.json" with {type:"json"};
-test("selected prerequisite closure follows indirect owners and mode against actual Nx",async()=>receiveScriptProcessInvocation(process.env,async original=>{
+test("selected prerequisite closure follows indirect owners and mode against actual Nx",async()=>withBuildTestInvocationV1(async original=>{
  expect(new Ajv({strict:true}).compile(schema)(fixture.request)).toBe(true);
  const target=(dependsOn:BuildTargetV1["dependsOn"]):BuildTargetV1=>({execution:{kind:"noop"},dependsOn,configurations:{prototype:{execution:{}},release:{execution:{}}}}),projects=fixture.projects as Record<string,{dependsOn?:BuildTargetV1["dependsOn"]}>,graph:BuildGraphV1={version:1,projects:Object.fromEntries(Object.entries(projects).map(([name,row])=>{const targets:Record<string,BuildTargetV1>=name==="app"?{build:target([]),publish:target(row.dependsOn)}:name==="bridge"?{}:{build:target(row.dependsOn??[])};return[name,{name,root:name,targets}];})),dependencies:fixture.dependencies},request={...fixture.request,version:1 as const,mode:"release" as const},actual=await selectedBuildPrerequisitesV1(graph,request,original);
  expect(actual.map(row=>row.project+":"+row.target+":"+row.mode).sort()).toEqual(fixture.expected);
@@ -26,7 +27,7 @@ test("selected prerequisite closure follows indirect owners and mode against act
 }));
 
  import {selectBuildProjectsV1,validateBuildTaskArgumentsV1} from "../../🟦️.ts";
- test("project exclusion order matches actual Nx and unsupported target patterns refuse before dispatch",async()=>receiveScriptProcessInvocation(process.env,async original=>{
+ test("project exclusion order matches actual Nx and unsupported target patterns refuse before dispatch",async()=>withBuildTestInvocationV1(async original=>{
   expect(new Ajv({strict:true}).compile(schema.definitions.SelectorCases)(fixture.selectors)).toBe(true);const graph:BuildGraphV1={version:1,projects:Object.fromEntries(Object.keys(fixture.projects).map(name=>[name,{name,root:name,tags:["app","other"].includes(name)?["subset"]:[],targets:{}}])),dependencies:[]};
   await withRepositoryNxStorageV1(process.cwd(),original,scriptCompilerAdmissionControlV1(original,"nx:fixture",0),async(bind,nxPhase)=>{const identity=process.env.SEMIO_NX_TOOLING_IDENTITY;if(!identity)throw Error("Original Nx selector SDK required");const namespace=await bind(identity,null,(await import("../../../../🟨️.mjs")).nxBuildDependencyImplementationV1()),code="const sdk=require('node:module').createRequire(process.env.SDK),{findMatchingProjects}=sdk('nx/src/utils/find-matching-projects');const projects=JSON.parse(process.env.PROJECTS),cases=JSON.parse(process.env.CASES);console.log('[DEBUG] selectors '+JSON.stringify(cases.map(row=>findMatchingProjects(row.patterns,projects).sort())));",output=await captureOwnedCommandV1("node",["-e",code],process.cwd(),{control:createRequestedIssuedResourceControlV1(nxPhase,30000),env:{...process.env,...namespace.environment,SDK:join(process.cwd(),".cache/b/t/m/nx",identity,"package.json"),PROJECTS:JSON.stringify(Object.fromEntries(Object.entries(graph.projects).map(([name,data])=>[name,{name,type:"lib",data}]))),CASES:JSON.stringify(fixture.selectors)}}),line=output.split("\n").find(line=>line.startsWith("[DEBUG] selectors "));if(!line)throw Error("Actual Nx selectors required");const oracle=JSON.parse(line.slice("[DEBUG] selectors ".length));expect(oracle).toEqual(fixture.selectors.map(row=>row.expected));for(const[index,row]of fixture.selectors.entries())expect(selectBuildProjectsV1(graph,row.patterns)).toEqual(oracle[index]);});
   for(const pattern of fixture.unsupportedTargetPatterns)expect(()=>validateBuildTaskArgumentsV1(["run-many","--targets="+pattern])).toThrow("pattern");

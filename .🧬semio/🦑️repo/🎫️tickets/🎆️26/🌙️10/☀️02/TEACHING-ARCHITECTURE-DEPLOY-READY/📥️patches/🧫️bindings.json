@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "old": "const policy = dynamicLoad();\nexport const value = read();\n",
+  "host": "const policy = capturedText();\nexport const value = read(policy);\nexport const peer = true;\n",
+  "expected": "const policy = capturedText();\nexport const value = read(policy);\n",
+  "patch": {
+    "strategy": "replace-owned-module-bindings",
+    "changes": [
+      {
+        "from": "const policy = dynamicLoad();",
+        "to": "const policy = capturedText();"
+      },
+      {
+        "from": "export const value = read();",
+        "to": "export const value = read(policy);"
+      }
+    ]
+  }
+}

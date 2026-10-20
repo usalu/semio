@@ -6,7 +6,7 @@
 /**
  * 🧊️ Third-party ORACLE (three.js) for the shared World3d scene of the BIM surfaces.
  *
- * `../../🧫️fixtures/🔣️.json` is the language-agnostic vector written by the Rust test `bless_the_world_fixture`: for each case the meshes (f32 positions and triangle
+ * `../🧫️fixtures/🔣️.json` is the language-agnostic vector written by the Rust test `bless_the_world_fixture`: for each case the meshes (f32 positions and triangle
  * indices) and the instance transforms (position and `xyzw` quaternion about +Z) the scene builder published, plus the world-space bounds the Rust side computed from
  * the f64 solid bounds and the building placement. This file rebuilds every instance as a `THREE.Mesh` with that transform and lets three.js's own scene graph
  * (`Matrix4` composition, `Box3.setFromObject`) produce the world-space box of each element: the box of the published f32 mesh under the published transform must be

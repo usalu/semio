@@ -7,7 +7,7 @@ use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits,SqliteSnapsho
 use std::{io::Write,process::{Command,Stdio}};
 fn cohort()->serde_json::Value{serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🚦️public/🔣️.json")).expect("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🚦️public/🔣️.json").leak()).unwrap()}
 fn dialect()->ArtifactDialect{let f=cohort();ArtifactDialect{artifact_kind:f["dialect"]["artifactKind"].as_str().unwrap().into(),standard:f["dialect"]["standard"].as_str().unwrap().into(),subset:f["dialect"]["subset"].as_str().unwrap().into()}}
-fn publish(){semio_framework_plugin::PluginBuilder::<semio_framework_plugin::NeedsLabel, SqliteProcessApps>::new("process").label("Process3d actual public SQLite parent").version("0.0.1").package_id("semio:process").artifact(semio_s_artifact_process_process3d::declaration().unwrap()).try_build().unwrap();}
+fn publish(){semio_framework_plugin::PluginBuilder::<semio_framework_plugin::app::NeedsLabel, SqliteProcessApps>::new("process").label("Process3d actual public SQLite parent").version("0.0.1").package_id("semio:process").artifact(semio_s_artifact_process_process3d::declaration().unwrap()).try_build().unwrap();}
 fn payload(value:&Process3dSnapshot,encoding:SnapshotEncoding)->IoPayload{match encoding{SnapshotEncoding::Binary=>IoPayload::Binary(value.encode_pack_with(&store::PackEncodeOptions::default()).unwrap()),SnapshotEncoding::Text=>IoPayload::Text(value.print_dsl())}}
 pub(super) struct Owned(Option<Process3dSnapshot>);
 impl Owned{pub(super) fn new(value:Process3dSnapshot)->Self{Self(Some(value))}}

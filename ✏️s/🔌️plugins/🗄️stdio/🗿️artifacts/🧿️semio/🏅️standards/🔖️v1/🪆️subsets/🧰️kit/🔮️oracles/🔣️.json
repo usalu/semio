@@ -209,17 +209,6 @@
               "directoryName": "✏️renames"
             }
           ]
-        },
-        {
-          "mutationId": "unbind-representation",
-          "sourceMutationDirectoryName": "✂️unbind-representation",
-          "mutationDirectoryName": "✂️unbind-representation",
-          "scenarios": [
-            {
-              "id": "unbinds-the-leading-representation-and-keeps-the-trailing-one",
-              "directoryName": "🔗️unbinds-the-leading-representation-and-keeps-the-trailing-one"
-            }
-          ]
         }
       ],
       "kinds": [

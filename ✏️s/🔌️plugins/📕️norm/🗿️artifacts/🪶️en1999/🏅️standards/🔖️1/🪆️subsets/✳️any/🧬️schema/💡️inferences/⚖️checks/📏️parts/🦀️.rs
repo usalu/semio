@@ -126,7 +126,6 @@ pub mod part_en1990 {
         for (i, lead) in variables.iter().enumerate() {
             let lead_e = characteristic_effects(member, lead);
             let psi_lead = psi_row(&lead.category, annex);
-            // 6.10a: γ_G G + γ_Q ψ0 Q_lead + Σ γ_Q ψ0 Q_i
             let mut a610 = scale(g, gamma_g);
             a610 = add(a610, scale(lead_e, gamma_q * psi_lead.psi_0));
             for (j, other) in variables.iter().enumerate() {
@@ -134,7 +133,6 @@ pub mod part_en1990 {
                 let psi = psi_row(&other.category, annex);
                 a610 = add(a610, scale(characteristic_effects(member, other), gamma_q * psi.psi_0));
             }
-            // 6.10b: ξ γ_G G + γ_Q Q_lead + Σ γ_Q ψ0 Q_i
             let mut b610 = scale(g, xi * gamma_g);
             b610 = add(b610, scale(lead_e, gamma_q));
             for (j, other) in variables.iter().enumerate() {
@@ -221,7 +219,6 @@ pub mod part_en1990 {
                     }
                 }
                 _ => {
-                    // characteristic: G + Q_lead + Σ ψ0 Q_i
                     e = add(e, lead_e);
                     for (j, other) in variables.iter().enumerate() {
                         if i == j { continue; }
@@ -447,7 +444,6 @@ pub mod part_1_1 {
     }
 
     pub fn section_geometry(section: &AluminiumSection) -> (f64, f64, f64, f64, f64, f64, f64) {
-        // returns A, Iy, Iz, Wel_y, Wel_z, It, Iw  (SI: m², m⁴, m³)
         match section.kind.as_str() {
             "tube" => {
                 let d = section.outer_diameter.max(section.width);
@@ -480,7 +476,6 @@ pub mod part_1_1 {
                 (a, iy, iz, wel_y, wel_z, it, 0.0)
             }
             _ => {
-                // extruded I
                 let h = section.height; let b = section.width; let tf = section.flange_thickness; let tw = section.web_thickness;
                 let a = 2.0 * b * tf + (h - 2.0 * tf).max(0.0) * tw;
                 let iy = (b * h.powi(3) - (b - tw).max(0.0) * (h - 2.0 * tf).max(0.0).powi(3)) / 12.0;
@@ -500,7 +495,6 @@ pub mod part_1_1 {
         for e in &section.elements {
             let mut rho = local_buckling_rho(e, f_o_pa);
             if apply_haz && e.welded {
-                // §6.1.6 / §6.2.3–6.2.4: HAZ uses governing ρ_o,haz (proof) and ρ_u,haz (ultimate).
                 let haz_factor = (1.0 + e.weld_position.max(0.0) / e.width.max(1e-6)).min(1.25);
                 let rho_haz = rho_o_haz.min(rho_u_haz) / haz_factor.max(1.0);
                 rho = rho.min(rho_haz.max(0.05));
@@ -521,7 +515,6 @@ pub mod part_1_1 {
             rho_min = rho_min.min(local_buckling_rho(e, f_o_pa));
             if apply_haz && e.welded {
                 let haz_factor = (1.0 + e.weld_position.max(0.0) / e.width.max(1e-6)).min(1.25);
-                // §6.2.5 HAZ bending: governing ρ_o,haz and ρ_u,haz.
                 let rho_haz = rho_o_haz.min(rho_u_haz) / haz_factor.max(1.0);
                 rho_min = rho_min.min(rho_haz.max(0.05));
             }
@@ -577,7 +570,6 @@ pub mod part_1_1 {
         match section.kind.as_str() {
             "tube" | "chs" => {
                 let (a, _, _, _, _, _, _) = section_geometry(section);
-                // EN 1999-1-1 §6.2.6 — CHS shear area ≈ 2 A / π
                 2.0 * a / std::f64::consts::PI
             }
             _ => {
@@ -593,7 +585,7 @@ pub mod part_1_1 {
             "8.8" => 800.0e6,
             "5.6" => 500.0e6,
             "4.6" => 400.0e6,
-            _ => 0.0, // unknown grade → zero resistance (forces Fail + OneOf)
+            _ => 0.0,
         }
     }
 
@@ -617,7 +609,6 @@ pub mod part_1_1 {
     }
 
     pub fn filler_fu_pa(filler: &str, parent_fu: f64) -> f64 {
-        // EN 1999-1-1 Table 8.8 (simplified catalogue).
         match filler.to_ascii_lowercase().as_str() {
             "4043" | "alsi5" => 190.0e6,
             "5356" | "almg5" => 240.0e6,
@@ -627,7 +618,6 @@ pub mod part_1_1 {
     }
 
     pub fn haz_extent_m(welds: &semio_s_artifact_norm_en1999_model::WeldGroup, thickness: f64) -> f64 {
-        // §6.1.6: b_haz grows with throat and plate thickness; stored hazExtent is additive.
         let base = (3.0 * welds.throat).max(thickness);
         base + welds.haz_extent.max(0.0)
     }
@@ -708,7 +698,6 @@ pub mod part_1_3 {
         let n_allow = if delta_sigma <= 0.0 {
             N_L
         } else if delta_sigma * gamma_mf > delta_sigma_c {
-            // invert first branch
             N_C * (delta_sigma_c / (delta_sigma * gamma_mf)).powf(m1.max(1e-6))
         } else {
             let at_nd = delta_sigma_c * (N_C / N_D).powf(1.0 / m1.max(1e-6));
@@ -718,7 +707,6 @@ pub mod part_1_3 {
                 N_L
             }
         };
-        // Keep m2 live even when N ≤ N_D (second-slope weight).
         (n_cycles / n_allow.max(1e-9)) * (1.0 + 0.02 * m2 / m1.max(1e-6))
     }
 }

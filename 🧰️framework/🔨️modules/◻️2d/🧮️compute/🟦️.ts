@@ -1,4 +1,4 @@
-import { Blake3Hasher } from "@semio-tech/framework/hash";
+import { Blake3Hasher } from "@semio-tech/framework-hash";
 
 /** 🔑️ Frames the exact UTF-8 identity and input bytes with canonical unsigned 64-bit lengths. */
 export function engineKeyPreimage(engineId: string, input: Uint8Array): Uint8Array {

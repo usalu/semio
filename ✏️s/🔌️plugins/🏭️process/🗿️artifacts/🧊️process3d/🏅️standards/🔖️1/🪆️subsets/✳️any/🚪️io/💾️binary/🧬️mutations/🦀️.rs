@@ -767,7 +767,10 @@ use crate::Process3dMutation;
 use semio_s_artifact_process_process3d_mut_machines::{change_machine_icon, create_machine, delete_machine, rename_machine, replace_machine_capabilities};
 use semio_s_artifact_process_process3d_mut_steps::{change_step_enabled, change_step_origin, create_step, delete_step, rename_step, reorder_steps, replace_step_measure};
 use semio_s_artifact_process_process3d_mut_stock::{change_stock_label, move_stock, replace_stock_solid};
-#[cfg(test)] use crate::{Capability, Pose, StepOrigin, WorkshopMachine};
+#[cfg(test)] use semio_s_artifact_process_process3d_model::snapshot::Pose;
+use semio_s_artifact_process_process3d_model::snapshot::Capability;
+use semio_s_artifact_process_process3d_model::snapshot::StepOrigin;
+use semio_s_artifact_process_process3d_model::snapshot::WorkshopMachine;
 #[cfg(test)] use protocol::OpText;
 use crate::standards::v1::subsets::any::io::component::text::mutations::Process3dMutationDsl;
 

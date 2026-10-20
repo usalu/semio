@@ -137,6 +137,34 @@ pub fn decode_en1992_mutation_json(text: &str) -> Result<En1992Mutation, String>
 }
 }
 pub use crate::text::mutations::mutations_codec::*;
+use semio_s_artifact_norm_en1992_mut_project::change_annex;
+use semio_s_artifact_norm_en1992_mut_project::change_title;
+use semio_s_artifact_norm_en1992_mut_project::change_design_working_life;
+use semio_s_artifact_norm_en1992_mut_project::change_delta_c_dev;
+use semio_s_artifact_norm_en1992_mut_project::change_cement_type;
+use semio_s_artifact_norm_en1992_mut_project::change_concrete_f_ck;
+use semio_s_artifact_norm_en1992_mut_project::change_reinforcement_f_yk;
+use semio_s_artifact_norm_en1992_mut_members::remove_member;
+use semio_s_artifact_norm_en1992_mut_members::reorder_members;
+use semio_s_artifact_norm_en1992_mut_members::change_member_width;
+use semio_s_artifact_norm_en1992_mut_members::change_member_height;
+use semio_s_artifact_norm_en1992_mut_members::change_member_effective_depth;
+use semio_s_artifact_norm_en1992_mut_members::change_member_cover;
+use semio_s_artifact_norm_en1992_mut_members::change_member_exposure;
+use semio_s_artifact_norm_en1992_mut_members::change_member_span;
+use semio_s_artifact_norm_en1992_mut_resistance::change_member_stirrup_spacing;
+use semio_s_artifact_norm_en1992_mut_resistance::change_member_axis_distance;
+use semio_s_artifact_norm_en1992_mut_resistance::change_member_fire_rating;
+use semio_s_artifact_norm_en1992_mut_resistance::change_bar_layer_count;
+use semio_s_artifact_norm_en1992_mut_resistance::change_bar_layer_diameter;
+use semio_s_artifact_norm_en1992_mut_resistance::change_action_mk;
+use semio_s_artifact_norm_en1992_mut_resistance::change_action_nk;
+use semio_s_artifact_norm_en1992_mut_resistance::change_action_vk;
+use semio_s_artifact_norm_en1992_mut_anchors::remove_anchor;
+use semio_s_artifact_norm_en1992_mut_anchors::change_anchor_h_ef;
+use semio_s_artifact_norm_en1992_mut_anchors::change_anchor_a_s;
+use semio_s_artifact_norm_en1992_mut_members::insert_member;
+use semio_s_artifact_norm_en1992_mut_anchors::insert_anchor;
 
 /// 📜️ Describes the artifact mutation dialect.
 pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.semio");

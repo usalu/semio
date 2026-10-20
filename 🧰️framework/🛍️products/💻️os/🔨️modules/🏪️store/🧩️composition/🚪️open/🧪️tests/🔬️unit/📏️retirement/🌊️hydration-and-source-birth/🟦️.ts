@@ -10,6 +10,8 @@ import { readModuleTreeSource, sliceModuleTreeSource } from "@semio-tech/framewo
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 
+const phaseBody = (source: string, name: string): string => { const start = source.indexOf(`fn ${name}(`), next = source.indexOf("\n    pub(super) fn ", start + 1); return source.slice(start, next < 0 ? undefined : next); };
+
 test("catalog source birth precedes allocations and retains unfunded factory tickets", async () => {
   const sources = [64, 64, 64, 64].map(bytes => Buffer.allocUnsafeSlow(bytes));
   const extent = sources.reduce((sum, owner) => sum + owner.byteLength, 0);
@@ -266,8 +268,7 @@ test("hydration normal pack retirement retains physical backing until granted", 
     expect(receipt.released).toBe(0);
   }
   const source = readModuleTreeSource(new URL("../../../../../../🧾️document/📜️history/💧️hydration/🦀️.rs", import.meta.url));
-  const start = source.indexOf("Phase::RetirePack =>");
-  const body = source.slice(start, source.indexOf("Phase::CloseEnvelopeRuntime =>", start));
+  const body = phaseBody(source, "step_retire_pack");
   expect(body.includes(".truncate(")).toBe(false);
   expect(body.includes("self.pack.take()")).toBe(false);
   expect(body.includes("artifact_retirement_admit_owned")).toBe(true);
@@ -283,8 +284,7 @@ test("hydration fold consumes supplied independent physical authority", async ()
     expect(child.depth).toBe(grant.depth - 1);
   }
   const source = readModuleTreeSource(new URL("../../../../../../🧾️document/📜️history/💧️hydration/🦀️.rs", import.meta.url));
-  const start = source.indexOf("Phase::Fold =>");
-  const body = source.slice(start, source.indexOf("Phase::BindGenesis =>", start));
+  const body = phaseBody(source, "step_fold");
   expect(body.includes("required_copy.min(grant.maximum_copy_bytes)")).toBe(true);
   expect(body.includes("hydration_child_grant(grant, cx.fuel_remaining())")).toBe(true);
   const childStart = source.indexOf("fn hydration_child_grant(");
@@ -362,8 +362,7 @@ test("hydration current authored Rust syntax parses against original source", as
 
 test("hydration target decoder preserves original supplied physical authority", async () => {
   const source = readModuleTreeSource(new URL("../../../../../../🧾️document/📜️history/💧️hydration/🦀️.rs", import.meta.url));
-  const start = source.indexOf("Phase::DecodeTarget =>");
-  const body = source.slice(start, source.indexOf("Phase::TargetInputs =>", start));
+  const body = phaseBody(source, "step_decode_target");
   expect(body.includes("next_step_grant(")).toBe(false);
   expect(body.includes("hydration_child_grant(grant, cx.fuel_remaining())")).toBe(true);
   expect(body.includes("progress.fits(decode_grant)")).toBe(true);
@@ -436,10 +435,10 @@ test("hydration fold outputs retain original custody before receipt refusal", as
     expect(state.original).toBe(37);
   }
   const h = readModuleTreeSource(new URL("../../../../../../🧾️document/📜️history/💧️hydration/🦀️.rs", import.meta.url));
-  const ready = h.slice(h.indexOf("HistoryFoldJobStep::Ready { value: (fold"), h.indexOf("Phase::BindGenesis =>", h.indexOf("Phase::Fold =>")));
+  const foldStep = phaseBody(h, "step_fold"), ready = foldStep.slice(foldStep.indexOf("HistoryFoldJobStep::Ready { value: (fold"));
   expect(ready.indexOf("*self.fold = Some(fold)")).toBeLessThan(ready.indexOf("if !progress.fits(fold_grant)"));
   expect(h).toContain("pending_target: ManuallyDrop<Option<semio_framework_os_spr::HistoryTransition>>");
-  const target = h.slice(h.indexOf("Phase::DecodeTarget =>"), h.indexOf("Phase::SeedApplied |"));
+  const target = phaseBody(h, "step_decode_target") + phaseBody(h, "step_target_inputs");
   expect(target.indexOf("*self.pending_target = Some(target)")).toBeLessThan(target.indexOf("if !progress.fits(decode_grant)"));
   expect(target).toContain("artifact_retirement_admit_owned(&mut self.pending_target");
   expect(target).not.toContain("let target = self.pending_target.take()");
@@ -520,9 +519,9 @@ test("hydration target binding retains original empty physical address backing",
   const bound = applyPatch({ retainedOriginal: empty.buffer.byteLength, current: 0, released: 0 }, [{ op: "replace", path: "/current", value: replacement.buffer.byteLength }], true).newDocument;
   expect(bound.retainedOriginal).toBe(37); expect(bound.current).toBe(19); expect(bound.released).toBe(0);
   const h = readModuleTreeSource(new URL("../../../../../../🧾️document/📜️history/💧️hydration/🦀️.rs", import.meta.url));
-  const begin = h.slice(h.indexOf("Phase::BeginTargets =>"), h.indexOf("Phase::DecodeTarget =>"));
+  const begin = phaseBody(h, "step_begin_targets");
   expect(begin).toContain("artifact_retirement_admit_owned(&mut self.target_address");
-  const target = h.slice(h.indexOf("Phase::TargetInputs =>"), h.indexOf("Phase::SeedApplied |"));
+  const target = phaseBody(h, "step_target_inputs");
   expect(target).toContain("std::mem::replace(&mut source[self.record_index].target");
   expect(target).toContain("*self.target_address = Some(original)");
 });

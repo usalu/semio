@@ -13,7 +13,7 @@ use semio_s_artifact_norm_en1999_model::{AluminiumConnection, AluminiumMaterial,
 use protocol::OpText;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
-pub(crate) enum En1999MutationDsl {
+pub enum En1999MutationDsl {
     ChangeAnnex { new_annex: AnnexChoice },
     ChangeMaterials { payload_json: String },
     ChangeSections { payload_json: String },
@@ -62,7 +62,7 @@ fn from_json<T: pack::value::FromValue>(text: &str) -> T {
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation payload json")
 }
 
-pub(crate) fn en1999_mutation_to_dsl(mutation: &En1999Mutation) -> En1999MutationDsl {
+pub fn en1999_mutation_to_dsl(mutation: &En1999Mutation) -> En1999MutationDsl {
     match mutation {
         En1999Mutation::ChangeAnnex(p) => En1999MutationDsl::ChangeAnnex { new_annex: p.new_annex },
         En1999Mutation::ChangeMaterials(p) => En1999MutationDsl::ChangeMaterials { payload_json: json_of(&p.materials) },
@@ -85,7 +85,7 @@ pub(crate) fn en1999_mutation_to_dsl(mutation: &En1999Mutation) -> En1999Mutatio
     }
 }
 
-pub(crate) fn en1999_mutation_from_dsl(mutation: En1999MutationDsl) -> En1999Mutation {
+pub fn en1999_mutation_from_dsl(mutation: En1999MutationDsl) -> En1999Mutation {
     match mutation {
         En1999MutationDsl::ChangeAnnex { new_annex } => En1999Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex }),
         En1999MutationDsl::ChangeMaterials { payload_json } => En1999Mutation::ChangeMaterials(change_materials::ChangeMaterials { materials: from_json::<Vec<AluminiumMaterial>>(&payload_json) }),

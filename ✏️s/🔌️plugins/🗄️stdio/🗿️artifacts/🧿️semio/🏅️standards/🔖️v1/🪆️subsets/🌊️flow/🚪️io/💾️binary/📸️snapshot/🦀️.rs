@@ -355,7 +355,7 @@ impl SemioFlowSnapshotDecode {
     fn retirement_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         if let Some(active) = self.active.as_ref() { return store::os_store::snapshot_read::artifact_retirement_box_demands(active, body); }
         if self.snapshot.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.snapshot); }
-        if self.request.is_some() { return store::os_store::snapshot_read::artifact_retirement_owner_demands(&self.request, body); }
+        if let Some(request) = self.request.as_ref() { return ErasedSnapshotRetirement::next_demand(request, body); }
         Ok(semio_framework_value::RetirementDemand { depth: usize::from(!self.terminal), ..Default::default() })
     }
 }
@@ -373,7 +373,7 @@ impl ErasedSnapshotRetirement for SemioFlowSnapshotDecode {
         self.reject(MemberOpenDiagnostic::Cancelled);
         if self.active.is_some() { return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, grant); }
         if self.snapshot.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.snapshot, &mut self.active, grant); }
-        if self.request.is_some() { return store::os_store::snapshot_read::artifact_retirement_owner_close(&mut self.request, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if let Some(request) = self.request.as_mut() { return request.close_step(grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
         self.scalar.fill(0);
         self.terminal = true;
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..empty }))

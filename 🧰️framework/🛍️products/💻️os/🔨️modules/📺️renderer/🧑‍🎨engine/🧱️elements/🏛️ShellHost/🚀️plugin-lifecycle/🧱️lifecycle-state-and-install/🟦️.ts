@@ -23,7 +23,23 @@ import { announcedPageStreams } from "../../🔐️identity-binding/🟦️.ts";
 import { requiredHostPanelLeafId, withLocalizedWindowKindLabels } from "../../🧱️built-node-stores/🟦️.ts";
 import type { ShellCoreAfterDirectoryAndRoute } from "../../🛂️directory-route/🟦️.ts";
 
-/** 🗃 Binds the shell core, the plugin lifecycle refs and the effects that keep them current. */
+/**
+ * 🗃 Binds the shell core, the plugin lifecycle refs and the effects that keep them current.
+ *
+ * 🚑️ A LIVE session whose worker was taken down is recoverable exactly the way a killed boot is:
+ * `ShardClient.rebuild` has already replaced the worker and `PluginRuntime` has already retired the
+ * dead instance's bookkeeping (see `onPluginInstancesLost`), so a fresh `createApp` on the rebuilt
+ * shard re-opens the document and the session continues.
+ *
+ * Without this the shard restore brought the ACTOR back and nothing else: the guest returned empty,
+ * every later command page failed its liveness check with `plugin.command-page-invalid`, and the
+ * session was dead until the user reloaded — measured on 2026-09-12 after a 16 s `brep.bool.cut`
+ * tripped the watchdog (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+ * `📓️extension-evaluate-budget-2026-09-12.md`).
+ *
+ * If the rebuild ALSO fails there is nothing left to try in-page, so the shell says so in the
+ * user's own language rather than leaving a session that answers nothing.
+ */
 export function usePluginLifecycleState({ core }: { readonly core: ShellCoreAfterDirectoryAndRoute }) {
   const {
     catalog, pluginFilter, appId, appRole, hostConfig, hostMode, dispatch, pluginStatusById, pluginSupervisorById,

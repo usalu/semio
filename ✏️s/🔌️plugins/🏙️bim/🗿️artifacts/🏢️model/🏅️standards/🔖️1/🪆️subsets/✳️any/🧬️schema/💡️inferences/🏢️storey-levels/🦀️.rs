@@ -98,7 +98,7 @@ pub fn target_of<'a>(top: &TopConstraint, levels: &'a BTreeMap<String, StoreyLev
 //#endregion 🔖️Vertical
 
 /// ⚖️ The differences between a committed third-party oracle table and a produced one: numbers within `1e-9` (relative above 1), arrays in order, objects by member, everything else equal.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn table_problems(expected: &str, actual: &str) -> Vec<String> {
     fn walk(path: &str, expected: &serde_json::Value, actual: &serde_json::Value, problems: &mut Vec<String>) {
         use serde_json::Value;

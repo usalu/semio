@@ -4,7 +4,7 @@
 use crate::editor::note::commands::ink_apply_events::{note_ink_dispatch, NoteInkPhase, NOTE_INK_GESTURE_KEY};
 use crate::op::NoteMutation;
 use crate::schema::{block_id, block_locked, flatten_blocks};
-use crate::NoteSnapshot;
+use semio_s_artifact_note_note_schema::NoteSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfigMutation};
 use semio_framework_tool_machine::ToolYield;
 use semio_framework_value_derive::{FromValue, ToValue};

@@ -44,6 +44,7 @@
     },
     "test": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -81,6 +82,7 @@
     "verify-layout-window-ownership": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify layout-window-ownership",
@@ -98,6 +100,7 @@
     "verify-layout-document-contract": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify layout-document-contract",
@@ -115,6 +118,7 @@
     "verify-layout-frame-selection": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify layout-frame-selection",
@@ -139,6 +143,7 @@
         "{projectRoot}/../../🦀️.rs",
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*"
       ],
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite"
@@ -154,6 +159,7 @@
         "{projectRoot}/../../🦀️.rs",
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*"
       ],
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite source"
@@ -169,6 +175,7 @@
         "{projectRoot}/../../🦀️.rs",
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*"
       ],
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite native"
@@ -177,6 +184,7 @@
     "verify-physical-codecs": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify physical-codecs"

@@ -1,4 +1,5 @@
 use semio_framework_test_fixtures::repo_text;
+#[cfg(test)] use semio_s_artifact_procedural_3d_mode_edit::windows::preview::PreviewInteractionMarks;
 
 /// 📈️ Hot path and fault laws: the boot budget, window action declarations, the evaluate fault law and staged argument labels.
 
@@ -204,7 +205,7 @@ async fn every_emitted_action_is_declared_on_its_window_kind() {
     let config = Generation3dConfig::default();
     let view_state = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for example_id in examples().into_iter().map(|source| source.id().to_string()) {
-        let mut snapshot = semio_s_artifact_procedural_3d_model::example_snapshot(&example_id).unwrap_or_else(|| panic!("{example_id}: missing projection"));
+        let mut snapshot = semio_s_artifact_procedural_3d_io_text::snapshot::example_snapshot(&example_id).unwrap_or_else(|| panic!("{example_id}: missing projection"));
         crate::publication_authority::seed_law_generations(&mut snapshot.generation);
         for (kind_id, body_key, _) in &windows {
             let session = FlowEvalSession::new();

@@ -40,7 +40,7 @@ const subset = join(here, "..");
 const fixtures = join(subset, "🧪️tests/🧫️fixtures");
 const engine = join(here, "🔁️codec", "📦️packages", "🦀️rust");
 const FIXTURES = [
-  { kind: "change-stroke-color", directory: "🖌️change-stroke" },
+  { kind: "change-stroke-color", directory: "🖌️change-stroke-color" },
   { kind: "change-stroke-width", directory: "📐️change-stroke-width" },
   { kind: "create-layer", directory: "🌱️create-layer" },
   { kind: "create-node", directory: "➕️create-node" },
@@ -86,7 +86,6 @@ const manifests = (): void => {
       target: { artifact: "s.stdio.semio", standard: "v1", subset: "drawing" },
       mutation: kind,
       outcome: "applied",
-      // 📐️SVG user units, and SVG's own axis convention: +y points DOWN, which is why `up` is not `y`.
       units: { length: "svg-user-unit", angle: "degree", handedness: "left", up: "-y" },
       files: CARRIERS.map(({ name, role }) => ({
         role,
@@ -118,9 +117,6 @@ const manifests = (): void => {
     }];
   });
   writeFileSync(join(fixtures, "🔣️.json"), `${JSON.stringify(entries, null, 2)}\n`);
-  // 🧾️The REGISTRY reads `testEvidence` off the contribution file itself (`loadOracleRegistry`
-  // parses it there, not from `🧫️fixtures/🔣️.json`), so the generated block is merged into
-  // the catalog too — the standalone file stays as the generator's reviewable output.
   const catalogPath = join(subset, "🔮️oracles", "🔣️.json");
   const catalog = JSON.parse(readFileSync(catalogPath, "utf8"));
   const keep = (catalog.testEvidence ?? []).filter((entry: { family?: string }) => entry.family !== "drawing-svg-carrier");

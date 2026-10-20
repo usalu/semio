@@ -1,4 +1,4 @@
-import axes from "../🎚️axes/🔣️.json";
+import axes from "@semio-tech/ui/axes.json" with { type: "json" };
 
 export type LabelValue = { readonly kind: "null" } | { readonly kind: "boolean"; readonly value: boolean } | { readonly kind: "number"; readonly value: number } | { readonly kind: "string"; readonly value: string } | { readonly kind: "array"; readonly items: readonly LabelValue[] } | { readonly kind: "object"; readonly entries: readonly (readonly [string, LabelValue])[] };
 

@@ -2,7 +2,7 @@ import{forEachMetadataBatchV1,MetadataContinuationBarrierV1,metadataBatchSizeV1}
 import{CacheScanTimingRecorderV1,formatCacheScanTimingV1,cacheScanTimingPrefixV1,type CacheScanTimingPhaseV1}from"./⏱️measurement/🟦️.ts";
 import { lstat, readdir, rmdir, unlink } from "node:fs/promises";
 import type {Stats} from "node:fs";
-import recencySchema from "./⏱️recency/🧬️schema/🔣️.json";
+import recencySchema from "./⏱️recency/🧬️schema/🔣️.json" with { type: "json" };
 import{fitsRecencySourceBytesV1,type RecencyFileV1}from"./⏱️recency/🟦️.ts";
 /** 🔬️ Identifies one deterministic maximum from the same physical measurement, without custody authority. */
 export type CacheRecencySourceV1=Readonly<RecencyFileV1&{field:"atimeNs"|"mtimeNs"}>;
@@ -100,7 +100,11 @@ class CacheWalk {
   private readonly started = Date.now();
   private sourceBytes=0;
   private readonly timing?:CacheScanTimingRecorderV1;
-  constructor(readonly control: ResourceLeaseControl, readonly resource: string, readonly mode: "shared" | "exclusive",readonly diagnostics=false,timing?:Readonly<{phase:CacheScanTimingPhaseV1;scanner:"build"|"incremental"}>) { checkResourceLeaseControl(control);if(typeof diagnostics!=="boolean")throw Error("Explicit read-only recency diagnostic flag required");if(timing)this.timing=new CacheScanTimingRecorderV1(resource.slice("cache-scan:".length),timing.phase,timing.scanner); }
+  readonly control: ResourceLeaseControl;
+  readonly resource: string;
+  readonly mode: "shared" | "exclusive";
+  readonly diagnostics: boolean;
+  constructor(control: ResourceLeaseControl, resource: string, mode: "shared" | "exclusive",diagnostics=false,timing?:Readonly<{phase:CacheScanTimingPhaseV1;scanner:"build"|"incremental"}>) { this.control=control;this.resource=resource;this.mode=mode;this.diagnostics=diagnostics;checkResourceLeaseControl(control);if(typeof diagnostics!=="boolean")throw Error("Explicit read-only recency diagnostic flag required");if(timing)this.timing=new CacheScanTimingRecorderV1(resource.slice("cache-scan:".length),timing.phase,timing.scanner); }
   stage(value:"discovery"|"measurement"|"enumeration"):void{this.timing?.enter(value);}
   report(complete:boolean,units:number):void{if(this.timing)try{console.log(cacheScanTimingPrefixV1+formatCacheScanTimingV1(this.timing.finish(complete?"complete":"failed",units)));}catch{}}
   async checkpoint(): Promise<void> {

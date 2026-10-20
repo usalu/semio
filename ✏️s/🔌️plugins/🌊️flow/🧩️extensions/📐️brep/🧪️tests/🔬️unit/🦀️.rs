@@ -597,7 +597,7 @@ async fn every_kernel_operation_is_either_a_node_or_explicitly_unexposed() {
     for (method, _reason) in INTENTIONALLY_UNEXPOSED {
         assert!(seen.insert(*method), "{method:?} is listed in both NODE_KERNEL_METHOD and INTENTIONALLY_UNEXPOSED");
     }
-    let known: std::collections::HashSet<&str> = BREP_KERNEL_OPERATIONS.iter().chain(semio_s_artifact_stdio_step_geometry::geometry::STEP_GEOMETRY_OPERATIONS).copied().collect();
+    let known: std::collections::HashSet<&str> = BREP_KERNEL_OPERATIONS.iter().chain(semio_s_artifact_stdio_step::geometry::STEP_GEOMETRY_OPERATIONS).copied().collect();
     for method in &seen {
         assert!(known.contains(method), "{method:?} in NODE_KERNEL_METHOD/INTENTIONALLY_UNEXPOSED is not a real BrepKernel method");
     }

@@ -18,8 +18,8 @@
 // #endregion 🧲️Header
 
 import { WGPU_HOST_STORAGE_VALUE_MAX_BYTES, wgpuHostStorageCarriesKey, type WgpuHostStorageScope } from "../🧭️boot-descriptor/🟦️.ts";
-import moduleRoutes from "@semio-tech/plugin-registry/deployment/routes.json";
-import { formatHostTemporalValuesV1, type HostTemporalFormatPageStateV1, type HostTemporalFormatRequestV1 } from "@semio-tech/framework/modules/ui/contract/presentation/host-temporal-format";
+import moduleRoutes from "@semio-tech/plugin-registry/deployment/routes.json" with { type: "json" };
+import { formatHostTemporalValuesV1, type HostTemporalFormatPageStateV1, type HostTemporalFormatRequestV1 } from "@semio-tech/ui-contract/presentation/host-temporal-format";
 
 const WGPU_EXTENSION_INSTALL_PATH = `${moduleRoutes.extension}/install`;
 

@@ -1,0 +1,37 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/📦️package-language-handoff/🟦️.ts",
+ "describeLine": 39,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of the package language semantic handoff suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️schema-first-six-language",
+   "doc": "/** 🔶️ The schema first six language tests of the package language semantic handoff suite. */",
+   "name": "registerSchemaFirstSixLanguageTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the schema first six language tests of the package language semantic handoff suite.",
+   "from": 40,
+   "to": 129
+  },
+  {
+   "dir": "🔸️resident-native-metadata-router",
+   "doc": "/** 🔸️ The resident native metadata router tests of the package language semantic handoff suite. */",
+   "name": "registerResidentNativeMetadataRouterTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the resident native metadata router tests of the package language semantic handoff suite.",
+   "from": 192,
+   "to": 256
+  },
+  {
+   "dir": "🟠️ui-host-metadata-router",
+   "doc": "/** 🟠️ The ui host metadata router tests of the package language semantic handoff suite. */",
+   "name": "registerUiHostMetadataRouterTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the ui host metadata router tests of the package language semantic handoff suite.",
+   "from": 326,
+   "to": 326
+  }
+ ]
+}

@@ -192,8 +192,8 @@ describe("Vitest configuration ownership", () => {
     
     expect(fixture["schemaVersion"]).toEqual(1);
     
-    expect(fixture.owners).toHaveLength(55);
-    expect(new Set(fixture.owners.map(({ ownerPath }) => ownerPath)).size).toBe(55);
+    expect(fixture.owners).toHaveLength(53);
+    expect(new Set(fixture.owners.map(({ ownerPath }) => ownerPath)).size).toBe(53);
     const taxonomy = loadCatalogTaxonomy();
     for (const row of fixture.directoryContexts) expect(semanticDirectoryKindId(row.name, taxonomy, { parentKindId: row.parentKind }), `${row.parentKind}/${row.name}`).toBe(row.kind);
   }, 30_000);

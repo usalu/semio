@@ -171,6 +171,24 @@
         "class": "continuous"
       },
       "valid": false
+    },
+    {
+      "id": "unclassified",
+      "value": {
+        "version": 1,
+        "class": "unclassified",
+        "reason": "no-cache-classification"
+      },
+      "valid": true
+    },
+    {
+      "id": "unclassified-with-a-foreign-reason",
+      "value": {
+        "version": 1,
+        "class": "unclassified",
+        "reason": "measures-environment"
+      },
+      "valid": false
     }
   ],
   "policy": [
@@ -283,12 +301,18 @@
     },
     {
       "name": "test",
-      "decision": null,
+      "decision": [
+        "deterministic",
+        "check-without-outputs"
+      ],
       "cache": true
     },
     {
       "name": "build",
-      "decision": null,
+      "decision": [
+        "deterministic",
+        "pure-function-of-inputs"
+      ],
       "cache": true
     },
     {
@@ -296,6 +320,261 @@
       "authored": false,
       "decision": null,
       "cache": false
+    },
+    {
+      "name": "🧪️test",
+      "decision": [
+        "deterministic",
+        "check-without-outputs"
+      ],
+      "cache": true
+    },
+    {
+      "name": "🏭️generator-build",
+      "decision": [
+        "side-effecting",
+        "mutates-workspace"
+      ],
+      "cache": false
+    },
+    {
+      "name": "⚙️generator-manifests",
+      "decision": [
+        "side-effecting",
+        "mutates-workspace"
+      ],
+      "cache": false
+    },
+    {
+      "name": "🚀️serve",
+      "decision": [
+        "continuous",
+        "serves-until-stopped"
+      ],
+      "cache": false,
+      "continuous": true
+    },
+    {
+      "name": "🧹️clean",
+      "decision": [
+        "side-effecting",
+        "mutates-workspace"
+      ],
+      "cache": false
+    },
+    {
+      "name": "lockfile-check",
+      "decision": [
+        "deterministic",
+        "check-without-outputs"
+      ],
+      "cache": true
+    },
+    {
+      "name": "forms-document-contract",
+      "decision": [
+        "deterministic",
+        "check-without-outputs"
+      ],
+      "cache": true
+    },
+    {
+      "name": "generator-inputs",
+      "decision": [
+        "deterministic",
+        "pure-function-of-inputs"
+      ],
+      "cache": true
+    },
+    {
+      "name": "prepare-prototype",
+      "decision": [
+        "driver-owned",
+        "freshness-owned-by-driver"
+      ],
+      "cache": false
+    },
+    {
+      "name": "acceptance-goal",
+      "decision": [
+        "live",
+        "drives-running-process"
+      ],
+      "cache": false
+    },
+    {
+      "name": "unheard-of-kind",
+      "decision": [
+        "unclassified",
+        "no-cache-classification"
+      ],
+      "cache": false
+    },
+    {
+      "name": "🦄️unheard-of-kind",
+      "decision": [
+        "unclassified",
+        "no-cache-classification"
+      ],
+      "cache": false
+    },
+    {
+      "name": "unheard-of-kind",
+      "target": {"cache":true},
+      "decision": [
+        "unclassified",
+        "no-cache-classification"
+      ],
+      "cache": false
+    },
+    {
+      "name": "catalog-smoke",
+      "target": {"options":{"command":"bun ./📜️script.ts verify catalog"}},
+      "decision": [
+        "deterministic",
+        "check-without-outputs"
+      ],
+      "cache": true
+    },
+    {
+      "name": "unheard-of-kind",
+      "target": {"metadata":{"semio":{"cache":{"version":1,"class":"deterministic","reason":"pure-function-of-inputs"}}}},
+      "decision": [
+        "deterministic",
+        "pure-function-of-inputs"
+      ],
+      "cache": true
+    },
+    {
+      "name": "test",
+      "target": {"metadata":{"semio":{"cache":{"version":1,"class":"driver-owned","reason":"freshness-owned-by-driver"}}}},
+      "decision": [
+        "driver-owned",
+        "freshness-owned-by-driver"
+      ],
+      "cache": false
+    }
+  ],
+  "outputsGate": [
+    {
+      "id": "producer-with-outputs",
+      "name": "build",
+      "target": {"outputs":["{projectRoot}/dist"]},
+      "expect": {
+        "cache": true,
+        "decision": [
+          "deterministic",
+          "pure-function-of-inputs"
+        ]
+      }
+    },
+    {
+      "id": "producer-with-empty-outputs",
+      "name": "build",
+      "target": {"outputs":[]},
+      "expect": {
+        "cache": false,
+        "decision": [
+          "side-effecting",
+          "mutates-workspace"
+        ]
+      }
+    },
+    {
+      "id": "producer-without-outputs",
+      "name": "generate",
+      "target": {},
+      "expect": {
+        "cache": false,
+        "decision": [
+          "side-effecting",
+          "mutates-workspace"
+        ]
+      }
+    },
+    {
+      "id": "producer-with-rust-build-intent",
+      "name": "build",
+      "target": {"outputs":[],"metadata":{"semio":{"rustBuildIntent":{"version":1}}}},
+      "expect": {
+        "cache": true,
+        "decision": [
+          "deterministic",
+          "pure-function-of-inputs"
+        ]
+      }
+    },
+    {
+      "id": "producer-with-host-platform-outputs",
+      "name": "build",
+      "target": {"outputs":[],"metadata":{"semio":{"hostPlatformOutputsV1":{"version":1}}}},
+      "expect": {
+        "cache": true,
+        "decision": [
+          "deterministic",
+          "pure-function-of-inputs"
+        ]
+      }
+    },
+    {
+      "id": "ordering-task",
+      "name": "build",
+      "target": {"executor":"repo:noop","outputs":[]},
+      "expect": {
+        "cache": true,
+        "decision": [
+          "deterministic",
+          "pure-function-of-inputs"
+        ]
+      }
+    },
+    {
+      "id": "check-without-outputs",
+      "name": "test",
+      "target": {"outputs":[]},
+      "expect": {
+        "cache": true,
+        "decision": [
+          "deterministic",
+          "check-without-outputs"
+        ]
+      }
+    },
+    {
+      "id": "declared-producer-without-outputs",
+      "name": "unheard-of-kind",
+      "target": {"metadata":{"semio":{"cache":{"version":1,"class":"deterministic","reason":"pure-function-of-inputs"}}}},
+      "expect": {
+        "cache": false,
+        "decision": [
+          "side-effecting",
+          "mutates-workspace"
+        ]
+      }
+    },
+    {
+      "id": "declared-producer-with-outputs",
+      "name": "unheard-of-kind",
+      "target": {"outputs":["{projectRoot}/out"],"metadata":{"semio":{"cache":{"version":1,"class":"deterministic","reason":"pure-function-of-inputs"}}}},
+      "expect": {
+        "cache": true,
+        "decision": [
+          "deterministic",
+          "pure-function-of-inputs"
+        ]
+      }
+    },
+    {
+      "id": "unclassified-stays-uncached",
+      "name": "unheard-of-kind",
+      "target": {"cache":true,"outputs":["{projectRoot}/out"]},
+      "expect": {
+        "cache": false,
+        "decision": [
+          "unclassified",
+          "no-cache-classification"
+        ]
+      }
     }
   ],
   "nativeRunsTests": [
@@ -640,18 +919,21 @@
         "executor": "repo:script",
         "cache": true,
         "options": {
+          "cwd": "{projectRoot}",
           "command": "bun ./📜️script.ts build"
         }
       },
       "check": {
         "executor": "repo:script",
         "options": {
+          "cwd": "{projectRoot}",
           "command": "bun ./📜️script.ts check"
         }
       },
       "test": {
         "executor": "repo:script",
         "options": {
+          "cwd": "{projectRoot}",
           "command": "bun ./📜️script.ts test"
         }
       },
@@ -659,6 +941,7 @@
         "executor": "repo:script",
         "cache": false,
         "options": {
+          "cwd": "{projectRoot}",
           "command": "bun ./📜️script.ts test"
         }
       }

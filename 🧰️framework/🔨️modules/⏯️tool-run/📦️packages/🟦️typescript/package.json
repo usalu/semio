@@ -7,6 +7,10 @@
     "./actions": "./🕹️actions/🟦️.ts",
     "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts",
     "./actions-labels": "./🏷️actions-labels/🟦️.ts",
-    "./lifecycle": "./🚦️lifecycle/🟦️.ts"
+    "./lifecycle": "./🚦️lifecycle/🟦️.ts",
+    "./payload/stream": "./📨️payload/🌊️stream/🟦️.ts"
+  },
+  "devDependencies": {
+    "@semio-tech/framework-manifest": "workspace:*"
   }
 }

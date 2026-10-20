@@ -1,4 +1,4 @@
-import{captureBoundedSourceRevisionV1}from"../📥️inputs/🔏️revision/🟨️.mjs";
+import{captureBoundedSourceRevisionV1,physicalSourceOriginV1}from"../📥️inputs/🔏️revision/🟨️.mjs";
 import {withBuildGraphOptionalPublicationV1,registerBuildGraphOptionalHandleV1} from "../📥️inputs/💾️storage/🟨️.mjs";
 import * as fs from "node:fs";
 import { readFile as readFileAsync, stat as statAsync } from "node:fs/promises";
@@ -13,14 +13,14 @@ import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { openRecordStore, recordKey } from "../../⚡️caching/🗃️records/🟦️.ts";
 import { compileJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-const observationSchemaURLV1=new URL("./🧬️schema/🔣️.json",import.meta.url),observationSchemaCaptureV1=captureBoundedSourceRevisionV1(fileURLToPath(observationSchemaURLV1),65536,true),sourceAnalysisSchemaV1=JSON.parse(observationSchemaCaptureV1.text??""),observationSchemaRevisionV1=observationSchemaCaptureV1.sha256;
+const observationSchemaURLV1=new URL("./🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),observationSchemaCaptureV1=captureBoundedSourceRevisionV1(fileURLToPath(observationSchemaURLV1),65536,true),sourceAnalysisSchemaV1=JSON.parse(observationSchemaCaptureV1.text??""),observationSchemaRevisionV1=observationSchemaCaptureV1.sha256;
 import{requireExactSourceReadBatchV1,readExactSourceFileV1}from"../📥️inputs/🧮️digest/📥️read/🟨️.mjs";
 
 /** 🗃️ This module's own bytes: persisted observations validated by another revision of these rules are a miss. */
-const OBSERVATION_REVISION = captureBoundedSourceRevisionV1(fileURLToPath(import.meta.url),8388608).sha256;
+const OBSERVATION_REVISION = captureBoundedSourceRevisionV1(fileURLToPath(physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),8388608).sha256;
 
 /** 🧷️ Refuses a statically cached observation instance whose executing Source or privately captured schema changed. */
-export function requireCurrentObservationV1(){try{if(captureBoundedSourceRevisionV1(fileURLToPath(import.meta.url),8388608).sha256===OBSERVATION_REVISION&&captureBoundedSourceRevisionV1(fileURLToPath(observationSchemaURLV1),65536).sha256===observationSchemaRevisionV1)return;}catch(cause){throw Object.assign(Error("Stale loaded observation implementation; restart required"),{code:"BUILD_AUTHORITY_CHANGED",cause});}throw Object.assign(Error("Stale loaded observation implementation; restart required"),{code:"BUILD_AUTHORITY_CHANGED"});}
+export function requireCurrentObservationV1(){try{if(captureBoundedSourceRevisionV1(fileURLToPath(physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),8388608).sha256===OBSERVATION_REVISION&&captureBoundedSourceRevisionV1(fileURLToPath(observationSchemaURLV1),65536).sha256===observationSchemaRevisionV1)return;}catch(cause){throw Object.assign(Error("Stale loaded observation implementation; restart required"),{code:"BUILD_AUTHORITY_CHANGED",cause});}throw Object.assign(Error("Stale loaded observation implementation; restart required"),{code:"BUILD_AUTHORITY_CHANGED"});}
 
 /** ⏱️ Files stamped this close to the start of a computation may still change within one timestamp tick, so their result is never persisted (racy-git rule). */
 const RACY_MS = 2000;
@@ -395,8 +395,8 @@ export const observedFs = Object.freeze({
 });
 
 if(!import.meta.semioFrozenAuthorizers){
- observedFs.readFileSync(new URL("./🧬️schema/🔣️.json",import.meta.url));
- observedFs.readFileSync(new URL("../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts",import.meta.url));
+ observedFs.readFileSync(new URL("./🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)));
+ observedFs.readFileSync(new URL("../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)));
 }
 const sourceAnalysisContractV1=compileJsonSchemaSubset(sourceAnalysisSchemaV1.$defs.sourceAnalysis,sourceAnalysisSchemaV1);
 

@@ -17,9 +17,11 @@ pub fn standard() -> StandardDeclaration<crate::BinaryApps> {
 
 //#region 🧩️ArtifactItems7
 pub mod artifact_items_7 {
+    use semio_framework_plugin::declarations;
 use crate::{definition};
 use crate::{formats};
 use crate::{STDIO_BINARY_DOCUMENT_SCHEMA};
+use crate::BinaryApps;
 use semio_framework_plugin::{ArtifactDeclaration, ArtifactDefinition, ArtifactDefinitionError, PluginAssemblyError};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};

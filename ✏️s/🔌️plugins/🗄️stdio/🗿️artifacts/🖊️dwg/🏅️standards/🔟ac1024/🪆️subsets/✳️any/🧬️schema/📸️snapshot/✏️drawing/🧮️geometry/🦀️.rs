@@ -1,6 +1,8 @@
 //! 🧮️ The logical geometry projection: layers, entities and geometry records and their native drawing conversions.
 
 //#region 🔖️DrawingModel
+use std::sync::Arc;
+use semio_framework_pack_json::ArtifactCanonicalJsonText as Text;
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub enum DwgLogicalGeometryKind {

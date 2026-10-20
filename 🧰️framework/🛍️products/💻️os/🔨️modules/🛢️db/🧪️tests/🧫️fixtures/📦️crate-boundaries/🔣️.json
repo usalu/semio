@@ -515,7 +515,8 @@
         "semio-framework-os-kernel-db-policy",
         "semio-framework-os-kernel-db-storage",
         "semio-framework-os-kernel-db-wal-log",
-        "semio-framework-replication"
+        "semio-framework-replication",
+        "semio-framework-value"
       ],
       "forbiddenDependencies": [
         "semio-framework-os-kernel-db",
@@ -1318,7 +1319,8 @@
         "semio-framework-os-kernel-db-ids",
         "semio-framework-os-kernel-db-io-core",
         "semio-framework-os-kernel-db-io-driver",
-        "semio-framework-os-kernel-db-io-registry"
+        "semio-framework-os-kernel-db-io-registry",
+        "semio-framework-value"
       ],
       "forbiddenDependencies": [
         "semio-framework-os-kernel-db",

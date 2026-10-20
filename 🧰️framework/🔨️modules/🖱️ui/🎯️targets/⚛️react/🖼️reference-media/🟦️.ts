@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { ephemeralBox } from "@semio-tech/framework/transient";
+import { ephemeralBox } from "@semio-tech/framework-transient";
 
 /** 🖼️ Reference plane media kind for infinite-world grid underlays. */
 export type ReferenceMediaKind = "image" | "svg" | "pdf";

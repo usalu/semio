@@ -1,4 +1,4 @@
-import limits from "./🎛️policy/🔣️.json";
+import limits from "./🎛️policy/🔣️.json" with { type: "json" };
 import {CargoCliOperationOwner,parseCargoCliPolicy,type CargoCliPolicy} from "../🟦️.ts";
 import {parseCargoCommandScope,type CargoCommandScope} from "../../../📤️arguments/🟦️.ts";
 

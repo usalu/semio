@@ -31,3 +31,6 @@ semio-s-artifact-forms-forms-schema = { path = "../../../../../🧬️schema/�
 semio-s-artifact-forms-forms-snapshot = { path = "../../../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
 semio-s-artifact-forms-forms-tests = { path = "../../../../../🧬️schema/✅️validation/🧪️tests/📦️packages/🦀️rust" }
 semio-s-artifact-forms-forms-tests-2 = { path = "../../../../../🧬️schema/📨️response/🧪️tests/🔬️events/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde = { workspace = true }

@@ -44,6 +44,7 @@
     "test": {
 
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -57,11 +58,13 @@
         "command": "bun ./📜️script.ts test --lib --filter-expr \"test(schema::diff::component::tests::)\" --ignore-default-filter",
         "forwardAllArgs": true
       },
-      "cache": true
+      "cache": true,
+      "outputs": []
     },
     "test-snapshot-sqlite": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite",
@@ -71,6 +74,7 @@
     "test-snapshot-sqlite-native": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite native",
@@ -80,6 +84,7 @@
     "test-snapshot-sqlite-source": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite source",
@@ -89,6 +94,7 @@
     "test-replay-source": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-replay-source",
@@ -98,6 +104,7 @@
     "check-snapshot-sqlite-source": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check-snapshot-sqlite-source",

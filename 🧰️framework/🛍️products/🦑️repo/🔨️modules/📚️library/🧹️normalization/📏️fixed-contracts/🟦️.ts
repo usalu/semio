@@ -278,14 +278,17 @@ export function packageImplementationDestination(
   const location = packageLocation(sourcePath, taxonomy);
   if (!location || !canonical.fileKind) return null;
   const ownerCanonical = canonicalDirectoryByPath.get(location.owner) ?? location.owner.normalize("NFC");
+  const packageCanonical = canonicalDirectoryByPath.get(location.packageRoot) ?? location.packageRoot.normalize("NFC");
   const fileName = basename(canonical.path);
+  const relativePath = canonical.path.startsWith(`${packageCanonical}/`) ? canonical.path.slice(packageCanonical.length + 1) : fileName;
+  const modulePrefix = relativePath === fileName ? "" : `${relativePath.slice(0, relativePath.length - fileName.length)}`;
+  const at = (path: string): string => ownerCanonical ? `${ownerCanonical}/${path}` : path;
   const stem = canonical.stem?.normalize("NFC") ?? "";
-  if (!stem || GENERIC_SEMANTIC_STEMS.has(stem.toLocaleLowerCase("und"))) return ownerCanonical ? `${ownerCanonical}/${fileName}` : fileName;
-  if (canonical.semanticDirectoryName) return ownerCanonical ? `${ownerCanonical}/${canonical.semanticDirectoryName}/${fileName}` : `${canonical.semanticDirectoryName}/${fileName}`;
+  if (!stem || GENERIC_SEMANTIC_STEMS.has(stem.toLocaleLowerCase("und")) || canonical.semanticDirectoryName) return at(relativePath);
   const semantic = matchDirectoryKind(stem, taxonomy, directoryKindByPath.get(location.owner));
   if (!semantic.kind) return null;
   const directoryName = `${semantic.kind.emoji}${stem}`.normalize("NFC");
-  return ownerCanonical ? `${ownerCanonical}/${directoryName}/${fileName}` : `${directoryName}/${fileName}`;
+  return at(`${modulePrefix}${directoryName}/${fileName}`);
 }
 
 export function directoryHash(path: string, children: readonly Pick<TaxonomyInventoryEntry, "sourcePath" | "nodeKind" | "mode" | "contentHash">[]): string {

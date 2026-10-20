@@ -50,7 +50,7 @@ pub(super) enum Phase {
     Rejected,
 }
 
-pub struct ReferenceConfigStoreHydration<P, M>
+pub struct RetainedConfigStoreHydration<P, M>
 where
     P: Clone + ToValue + FromValue,
     M: ToValue + FromValue + Mutation<P>,
@@ -98,7 +98,7 @@ where
     pub terminal: bool,
 }
 
-impl<P, M> ReferenceConfigStoreHydration<P, M>
+impl<P, M> RetainedConfigStoreHydration<P, M>
 where
     P: Clone + ToValue + FromValue + Send + Sync + 'static,
     M: ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,

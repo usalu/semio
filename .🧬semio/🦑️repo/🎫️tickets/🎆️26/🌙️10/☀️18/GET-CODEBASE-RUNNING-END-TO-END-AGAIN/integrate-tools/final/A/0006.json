@@ -1,0 +1,315 @@
+{
+  "name": "@semio-tech/energy-model-rs",
+  "$schema": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "projectType": "library",
+  "tags": [
+    "language:rust",
+    "role:artifact",
+    "family:energy"
+  ],
+  "namedInputs": {
+    "nativeSources": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/⚡️electrical/🧪️tests/🔆️pv-plane/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌰️kernel/🧪️tests/🌡️thermal/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📍️site/📅️chronology/🧪️tests/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧠️precompute/🔲️enclosure/⚡️exchange/🧪️tests/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/♻️close/🧪️tests/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🧺️batch/🧪️tests/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📊️results/🧪️tests/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪪️capability/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️simulation-session/📮️publication/🧪️tests/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🧩️extensions/🌦️epw/🧪️tests/🔬️unit/**/*"
+    ]
+  },
+  "targets": {
+    "verify-solar-source": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify solar-source",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-solar-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify solar-native",
+        "forwardAllArgs": true
+      }
+    },
+    "build": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "outputs": [
+        "{projectRoot}/.🧾️store/build.json"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts build",
+        "forwardAllArgs": true
+      }
+    },
+    "check": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts check",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "repo:script",
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-bestest-regenerate": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [
+        "{projectRoot}/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+        "{projectRoot}/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test --lib bestest::tests::regenerate_bestest_fixtures -- --nocapture",
+        "env": {
+          "SEMIO_ENERGY_BESTEST_REGENERATE": "1"
+        }
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      }
+    },
+    "test-snapshot-sqlite": {
+      "executor": "repo:script",
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🦀️.rs",
+        "{projectRoot}/../../🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-native": {
+      "executor": "repo:script",
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🦀️.rs",
+        "{projectRoot}/../../🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-source": {
+      "executor": "repo:script",
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🦀️.rs",
+        "{projectRoot}/../../🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+        "forwardAllArgs": true
+      }
+    },
+    "canonical-architecture": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts canonical-architecture",
+        "forwardAllArgs": true
+      }
+    },
+    "test-optical-field-intent-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test --lib optical_field_tests --no-fail-fast",
+        "forwardAllArgs": true
+      }
+    },
+    "test-optical-inspector-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test --lib glazing_and_gas --no-fail-fast",
+        "forwardAllArgs": true
+      }
+    },
+    "test-document-history-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test --lib energy_document_history --no-fail-fast",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-thermal-source": {
+      "executor": "repo:script",
+      "options": {
+        "command": "bun ./📜️script.ts verify-thermal source",
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust"
+      },
+      "cache": true,
+      "outputs": []
+    },
+    "verify-thermal-native": {
+      "executor": "repo:script",
+      "options": {
+        "command": "bun ./📜️script.ts verify-thermal native",
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust"
+      },
+      "cache": true,
+      "outputs": []
+    },
+    "lock": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts lock"
+      }
+    },
+    "verify-publication-source": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify-publication source"
+      }
+    },
+    "verify-publication-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify-publication native"
+      }
+    },
+    "verify-weather-source": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify-weather source"
+      }
+    },
+    "verify-weather-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify-weather native"
+      }
+    },
+    "verify-enclosure-source": {
+      "executor": "repo:script",
+      "options": {
+        "command": "bun ./📜️script.ts verify-enclosure source",
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust"
+      },
+      "cache": true,
+      "outputs": []
+    },
+    "verify-enclosure-native": {
+      "executor": "repo:script",
+      "options": {
+        "command": "bun ./📜️script.ts verify-enclosure native",
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust"
+      },
+      "cache": true,
+      "outputs": []
+    },
+    "verify-results-native": {
+      "cache": true,
+      "outputs": [],
+      "executor": "repo:script",
+      "options": {
+        "command": "bun ./📜️script.ts verify-results native",
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust"
+      }
+    },
+    "verify-results-source": {
+      "cache": true,
+      "outputs": [],
+      "executor": "repo:script",
+      "options": {
+        "command": "bun ./📜️script.ts verify-results source",
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust"
+      }
+    },
+    "verify-batch-source": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify-batch source",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-batch-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify-batch native",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

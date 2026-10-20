@@ -1,6 +1,6 @@
 use crate::panels::catalogue::*;
 use semio_s_plugin_norm_app_surface::CatalogueCell;
-use semio_s_artifact_norm_en1996_schema::{evaluate_building, fire_min_thickness_m};
+use semio_s_artifact_norm_en1996_schema::checks::masonry::{evaluate_building, fire_min_thickness_m};
 use crate::unit_tests::context;
 use semio_s_artifact_norm_en1996_model::{En1996Snapshot, UnitMaterial};
 
@@ -65,18 +65,18 @@ fn reference_tables_cells_match_evaluate_sources() {
     let CatalogueCell::Number { value: psi0, .. } = &cat_e.cells[1] else {
         panic!("ψ₀ cell must be Number");
     };
-    assert_eq!(*psi0, semio_s_artifact_norm_en1996_schema::psi0_imposed("E"));
+    assert_eq!(*psi0, semio_s_artifact_norm_en1996_schema::checks::masonry::psi0_imposed("E"));
 
     let cap = tables.iter().find(|t| t.id == "f-vk-de-cap").expect("f_vk cap table");
     let row = &cap.rows[0];
     let CatalogueCell::Number { value: ratio, .. } = &row.cells[1] else {
         panic!("cap ratio cell must be Number");
     };
-    assert_eq!(*ratio, semio_s_artifact_norm_en1996_schema::F_VLT_OVER_FB_DE);
+    assert_eq!(*ratio, semio_s_artifact_norm_en1996_schema::checks::masonry::F_VLT_OVER_FB_DE);
 
     let fk = tables.iter().find(|t| t.id == "fk-factors-de-en").expect("f_k factors");
     let de_clay = fk.rows.iter().find(|r| r.id == "de-clay-g1-gp").expect("DE clay G1");
-    let expected = semio_s_artifact_norm_en1996_schema::fk_factors(
+    let expected = semio_s_artifact_norm_en1996_schema::checks::masonry::fk_factors(
         semio_s_plugin_norm_compliance::AnnexChoice::De,
         UnitMaterial::Clay,
         semio_s_artifact_norm_en1996_model::UnitGroup::Group1,

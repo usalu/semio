@@ -15,7 +15,7 @@ use protocol::OpText;
 
 //#region 🔖️OpText
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
-pub(crate) enum Din18599MutationDsl {
+pub enum Din18599MutationDsl {
     ChangeBuildingCategory {
         new_building_category: BuildingCategory,
     },
@@ -108,7 +108,7 @@ impl OpText for Din18599MutationDsl {
 
 //#endregion 🔖️HandcraftedOpCodecs
 
-pub(crate) fn din18599_mutation_to_dsl(mutation: &Din18599Mutation) -> Din18599MutationDsl {
+pub fn din18599_mutation_to_dsl(mutation: &Din18599Mutation) -> Din18599MutationDsl {
     match mutation {
         Din18599Mutation::ChangeBuildingCategory(payload) => Din18599MutationDsl::ChangeBuildingCategory { new_building_category: payload.new_building_category },
         Din18599Mutation::ChangeAttachment(payload) => Din18599MutationDsl::ChangeAttachment { new_attachment: payload.new_attachment },
@@ -132,7 +132,7 @@ pub(crate) fn din18599_mutation_to_dsl(mutation: &Din18599Mutation) -> Din18599M
     }
 }
 
-pub(crate) fn din18599_mutation_from_dsl(dsl: Din18599MutationDsl) -> Din18599Mutation {
+pub fn din18599_mutation_from_dsl(dsl: Din18599MutationDsl) -> Din18599Mutation {
     match dsl {
         Din18599MutationDsl::ChangeBuildingCategory { new_building_category } => Din18599Mutation::ChangeBuildingCategory(change_building_category::ChangeBuildingCategory { new_building_category }),
         Din18599MutationDsl::ChangeAttachment { new_attachment } => Din18599Mutation::ChangeAttachment(change_attachment::ChangeAttachment { new_attachment }),

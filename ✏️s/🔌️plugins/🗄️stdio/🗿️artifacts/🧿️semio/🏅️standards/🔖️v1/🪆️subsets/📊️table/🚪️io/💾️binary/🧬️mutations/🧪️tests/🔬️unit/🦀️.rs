@@ -1,6 +1,7 @@
 use semio_s_artifact_stdio_semio_table_mutations::io::binary::mutations::*;
 use semio_s_artifact_stdio_semio_table_mutations::io::text::mutations::demo_mutation_cases;
 use protocol::OpBinary;
+#[cfg(test)] use semio_s_artifact_stdio_semio_table_mutations::schema::mutations::SemioTableMutation;
 
 #[semio_framework_async_macros::async_test]
 async fn op_binary_roundtrip_law() {

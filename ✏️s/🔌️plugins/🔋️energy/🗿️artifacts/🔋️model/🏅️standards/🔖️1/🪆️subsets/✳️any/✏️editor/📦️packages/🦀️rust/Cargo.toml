@@ -66,6 +66,7 @@ semio-framework-async = { path = "../../../../../../../../../../../../🧰️fra
 semio-framework-plugin-retained-command = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-s-artifact-energy-model-import = { workspace = true }
 semio-framework-tool-run = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

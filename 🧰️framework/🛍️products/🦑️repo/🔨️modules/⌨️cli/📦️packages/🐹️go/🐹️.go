@@ -14,6 +14,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+ "path/filepath"
 	"time"
 	graphqlpkg "github.com/usalu/semio/repo/graphql"
 	"github.com/usalu/semio/repo/providers"
@@ -31,7 +32,7 @@ type Config struct {
 	Timeout time.Duration
 }
 
-// DefaultCommandTimeout is the wall-clock budget for MCP tool calls, hooks, and other repo CLI work when --timeout is not set.
+// 🎮️DefaultCommandTimeout is the wall-clock budget for MCP tool calls, hooks, and other repo CLI work when --timeout is not set.
 const DefaultCommandTimeout = 5 * time.Minute
 
 // 📋️IsJSON MUST return true only when the condition is met.
@@ -175,8 +176,52 @@ func defaultEngineFactory(config Config) (*Engine, error) {
 	return NewEngine(exec), nil
 }
 
+// 🚪️NativeEntrypointPlan selects the owned process port without parsing its arguments.
+type NativeEntrypointPlan struct { Kind string; Arguments []string }
+
+// 🧭️PlanNativeEntrypoint preserves opaque arguments at the native process boundary.
+func PlanNativeEntrypoint(argv []string) NativeEntrypointPlan {
+ arguments := append([]string{}, argv...)
+ if len(argv) >= 4 && argv[0] == "dev" && argv[1] == "mcp" && argv[2] == "stdio" && argv[3] == "os" { return NativeEntrypointPlan{"workspace", arguments} }
+ if len(argv) > 0 && argv[0] == "mcp" { return NativeEntrypointPlan{"mcp", arguments[1:]} }
+ if len(argv) > 0 && argv[0] == "dashboard" { return NativeEntrypointPlan{"build", append([]string{"run", "@semio-tech/repo-dashboard-rs:run", "--output=stream", "--"}, argv[1:]...)} }
+ index := 0
+ for index < len(argv) {
+  if argv[index] == "--tool" { index += 2; continue }
+  if len(argv[index]) >= 7 && argv[index][:7] == "--tool=" { index++; continue }; break
+ }
+ if index > 0 { return NativeEntrypointPlan{"build", arguments} }
+ if index < len(argv) { switch argv[index] { case "run", "run-many", "affected", "exec", "watch", "dependencies", "cargo", "tools", "reset", "cache", "preflight", "show", "graph": return NativeEntrypointPlan{"build", arguments} } }
+ return NativeEntrypointPlan{"domain", arguments}
+}
+
+// 🛠️NativeScriptTool is the tool-independent owned build process port.
+type NativeScriptTool interface { Run(root string, arguments []string) error }
+
+type nativeBunBuildTool struct{}
+
+func (nativeBunBuildTool) Run(root string, arguments []string) error {
+ entry := filepath.Join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts")
+ return runNativeScriptProcess(append([]string{entry, "repo"}, arguments...))
+}
+
+type nativeRootScriptTool struct{}
+func (nativeRootScriptTool) Run(root string, arguments []string) error {
+ return runNativeScriptProcess(append([]string{filepath.Join(root, "📜️script.ts")}, arguments...))
+}
+
+// 🏗️RunNativeScript selects the issued build invocation without rewriting its environment.
+func RunNativeScript(arguments []string, tool NativeScriptTool) error {
+ cwd, err := os.Getwd(); if err != nil { return err }
+ return tool.Run(workspace.FindRepoRoot(cwd), arguments)
+}
+
 // 🔊️RunCLI runs the repo CLI entry point.
 func RunCLI() error {
+ plan := PlanNativeEntrypoint(os.Args[1:])
+ if plan.Kind == "build" { return RunNativeScript(plan.Arguments, nativeBunBuildTool{}) }
+ if plan.Kind == "workspace" { return RunNativeScript(plan.Arguments, nativeRootScriptTool{}) }
+ if len(os.Args) == 1 || os.Args[1] == "--help" || os.Args[1] == "-h" { fmt.Fprintln(os.Stdout, "Repository build commands: run, run-many, affected, exec, watch, dependencies, cargo, tools, reset, cache, preflight, show, graph\nHuman control plane: repo dashboard [arguments]\nMCP stdio: repo mcp (SEMIO_REPO_MCP_CLIENT selects the profile)\nOS MCP stdio: repo dev mcp stdio os [arguments]") }
 	if err := workspace.BindWorkingDirectory(); err != nil {
 		return err
 	}

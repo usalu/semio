@@ -1,4 +1,6 @@
 use semio_s_artifact_remodel_remodeling_panels::editor::remodeling::panels::document::*;
+use semio_framework_ui_locale::Locale;
+use semio_framework_plugin::BuiltNode;
 
 /// 🌳️ Every node of a built tree as one debug text, since `BuiltChildren` debug prints only its length.
 fn described(node: &BuiltNode) -> String {

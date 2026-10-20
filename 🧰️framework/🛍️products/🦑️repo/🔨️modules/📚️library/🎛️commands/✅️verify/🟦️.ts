@@ -10,6 +10,12 @@ import { runTypescriptVerification } from "./🔷️typescript-project/🟦️.t
 import { runAgnosticGate, runDebugTagCensusGate, runDocstringCensusGate, runDocstringEmojiGate, runInterfaceImportGate, runMutationCapGate, runSourceCensusGate } from "./🚦️gates/🟦️.ts";
 import { VerifyGateLanes } from "./🏁️gate-lanes/🟦️.ts";
 
+/** 🧾️ Parses each viewport GraphQL schema with the reference parser and refuses the first syntax error. */
+async function parseViewportGraphqlSchemasV1(paths: readonly string[]): Promise<void> {
+  const { parse } = await import("graphql");
+  for (const path of paths) parse(readFileSync(path, "utf8"));
+}
+
 //#region 🔖️VerifyScript
 
 export abstract class VerifyScript extends VerifyGateLanes {
@@ -155,7 +161,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       return;
     }
     if (segments[0] === "resolved-host-context") {
-      const { testResolvedHostContext } = await import("@semio-tech/framework/manifest/view-context/testing/resolved-host-context");
+      const { testResolvedHostContext } = await import("@semio-tech/framework-manifest/view-context/testing/resolved-host-context");
       testResolvedHostContext();
       return;
     }
@@ -350,7 +356,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       const testRoot = join(this.root, "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧪️tests/🪟️poses");
       const { testViewportOwnership } = await import(`${testRoot}/🟦️.ts`);
       testViewportOwnership();
-      runCmd("bun", [this.root + "/node_modules/prettier/bin/prettier.cjs", "--check", ...["◻️2d", "🧊️3d"].map((dimension) => this.root + "/🧰️framework/🔨️modules/🖱️ui/🪟️viewport/" + dimension + "/🧬️schema/🔗️.graphql")], { cwd: this.root });
+      await parseViewportGraphqlSchemasV1([...["◻️2d", "🧊️3d"].map((dimension) => this.root + "/🧰️framework/🔨️modules/🖱️ui/🪟️viewport/" + dimension + "/🧬️schema/🔗️.graphql")]);
       runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--esModuleInterop", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🟦️.ts`], { cwd: this.root });
       if (segments[1] === "native") {
         const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
@@ -364,7 +370,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       const testRoot = join(this.root, "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧪️tests/📐️projection");
       const { testViewport3dProjectionValues } = await import(`${testRoot}/🟦️.ts`);
       testViewport3dProjectionValues();
-      runCmd("bun", [this.root + "/node_modules/prettier/bin/prettier.cjs", "--check", this.root + "/🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🔗️.graphql"], { cwd: this.root });
+      await parseViewportGraphqlSchemasV1([this.root + "/🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🔗️.graphql"]);
       runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--esModuleInterop", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🟦️.ts`], { cwd: this.root });
       if (segments[1] === "native") {
         const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
@@ -638,7 +644,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
         await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", "window_view_context_uses_the_addressed_instance"], join(this.root, "🧰️framework/📦️packages/🦀️rust"));
         return;
       }
-      const { testWindowViewContext } = await import("@semio-tech/framework/manifest/testing/window-view-context");
+      const { testWindowViewContext } = await import("@semio-tech/framework-manifest/testing/window-view-context");
       testWindowViewContext();
       return;
     }

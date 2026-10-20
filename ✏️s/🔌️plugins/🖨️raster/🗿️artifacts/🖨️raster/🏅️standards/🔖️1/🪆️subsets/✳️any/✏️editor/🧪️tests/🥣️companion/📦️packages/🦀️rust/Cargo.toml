@@ -39,3 +39,5 @@ semio-s-artifact-raster-raster-model = { workspace = true }
 semio-s-artifact-raster-raster-mutations = { workspace = true }
 semio-s-artifact-raster-raster-mutations-pixels = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-pack = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-framework-value-factory = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️packages/🦀️rust" }

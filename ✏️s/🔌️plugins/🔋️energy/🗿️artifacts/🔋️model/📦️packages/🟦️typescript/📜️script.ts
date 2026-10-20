@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🔋️ Publishes the complete typed Energy model and its semantic SQLite laws. */
-import {BundleScript, ScriptRouter} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {runRepositoryCommand} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts";
+import {BundleScript, ScriptRouter} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import {runRepositoryCommand} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 /** 🪟️ Runs only the neutral optical semantic intent oracle through the registered owner. */
 class OpticalFieldIntentScript extends BundleScript{async run(segments:string[]):Promise<void>{if(segments.length)throw new Error("test-optical-field-intent accepts no arguments");await runRepositoryCommand(this.invocation,process.execPath,["test","./✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🪟️optics/🟦️.ts"],this.repoRoot,"energy-optical-field-intent",{version:1,maximumElapsedMilliseconds:120000,output:{maximumBytes:134217728,maximumLines:65536}});}}
 import { runArtifactTypeScriptPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🟦️typescript/🟦️.ts";

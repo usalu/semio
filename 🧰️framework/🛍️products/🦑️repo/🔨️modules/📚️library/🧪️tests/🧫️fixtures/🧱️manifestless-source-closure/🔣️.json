@@ -193,26 +193,26 @@
   "aliases": [
     {
       "config": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/tsconfig.json",
-      "specifier": "@semio-tech/framework/products/repo/modules/server/library/persistence",
-      "target": "../../../../../../../📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🗄️persistence/🟦️.ts",
+      "specifier": "@semio-tech/repo-server-library/persistence",
+      "target": "../../../📚️library/🗄️persistence/🟦️.ts",
       "consumer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🎫️ticket/🟦️.ts"
     },
     {
       "config": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/tsconfig.json",
-      "specifier": "@semio-tech/framework/products/repo/modules/server/library/source-index",
-      "target": "../../../../../../../📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🔎️source-index/🟦️.ts",
+      "specifier": "@semio-tech/repo-server-library/source-index",
+      "target": "../../../📚️library/🔎️source-index/🟦️.ts",
       "consumer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🧾️diff/🟦️.ts"
     },
     {
       "config": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/tsconfig.json",
-      "specifier": "@semio-tech/framework/products/repo/modules/server/library/authentication",
-      "target": "../../../../../../../📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🔐️authentication/🟦️.ts",
+      "specifier": "@semio-tech/repo-server-library/authentication",
+      "target": "../../../📚️library/🔐️authentication/🟦️.ts",
       "consumer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🔐️authentication/🟦️.ts"
     },
     {
       "config": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/tsconfig.json",
-      "specifier": "@semio-tech/framework/products/repo/modules/server/library/event",
-      "target": "../../../../../../../📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/📡️event/🟦️.ts",
+      "specifier": "@semio-tech/repo-server-library/event",
+      "target": "../../../📚️library/📡️event/🟦️.ts",
       "consumer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📡️event/🟦️.ts"
     }
   ],

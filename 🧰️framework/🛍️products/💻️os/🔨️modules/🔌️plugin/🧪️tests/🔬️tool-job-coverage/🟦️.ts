@@ -26,7 +26,7 @@ import { toolJobFactoryProofJoinSelfTests } from "../🔬️tool-job-factory-pro
 import { toolJobLatestWinsSelfTests } from "../🔬️tool-job-latest-wins/🟦️.ts";
 import { toolJobMicrosecondBudgetSelfTests } from "@semio-tech/framework/job/budget/testing/tool-job-microsecond-budget";
 import { toolJobMicrosecondWorkerBindingSelfTests } from "@semio-tech/repo-lib/laws";
-import { toolJobTelemetryContentionSelfTests } from "@semio-tech/framework/trace/clock/testing/tool-job-telemetry-contention";
+import { toolJobTelemetryContentionSelfTests } from "@semio-tech/framework-trace/clock/testing/tool-job-telemetry-contention";
 import { toolJobCooperativeMaintenanceSelfTests } from "@semio-tech/framework-async/cooperative/testing/tool-job-cooperative-maintenance";
 import { proceduralGenerationRootSelfTests } from "@semio-tech/framework-os/modules/playbook/artifacts/playbook/generation/testing/procedural-generation-root";
 import { flowTypedRetirementSelfTests } from "@semio-tech/framework-os/modules/flow/artifacts/flow/retained/testing/flow-typed-retirement";

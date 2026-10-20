@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/⏱️change-simulation-settings",
+  "semanticKind": "change-simulation-settings",
+  "displayName": "Change Simulation Settings",
+  "emoji": "⏱️",
+  "aggregateVariant": "ChangeSimulationSettings",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-simulation-settings",
+  "binaryTag": 0,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema"
+  ]
+}

@@ -79,7 +79,8 @@
           "enum": [
             "action",
             "launcher",
-            "launch"
+            "launch",
+            "test"
           ]
         },
         "task": {
@@ -737,48 +738,18 @@
         },
         "repositoryContents": {
           "garbageCollectionMaximumAgeDays": 3
-        },
-        "remote": {
-          "endpointEnvironment": "SEMIO_BAZEL_REMOTE_CACHE",
-          "uploadEnvironment": "SEMIO_BAZEL_REMOTE_CACHE_UPLOAD",
-          "credentialHelperEnvironment": "SEMIO_BAZEL_REMOTE_CACHE_CREDENTIAL_HELPER",
-          "compression": true,
-          "timeoutSeconds": 30,
-          "retries": 3
-        }
-      }
-    },
-    "CacheEnvironment": {
-      "description": "Environment switch for the optional shared remote Bazel cache. Unset or empty keeps the remote cache off. The endpoint is a grpc, grpcs, http, https or unix URI. Local results are uploaded only when the upload variable is the literal true, because Bazel actions here run unsandboxed and a shared cache must not receive unreviewed results by default. The credential helper is an absolute path or a bare command name resolved on PATH; secrets never travel in flags.",
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "SEMIO_BAZEL_REMOTE_CACHE": {
-          "type": "string",
-          "pattern": "^((grpc|grpcs|http|https)://[^\\s\\u0000/][^\\s\\u0000]*|unix:[^\\s\\u0000]+)$",
-          "maxLength": 1024
-        },
-        "SEMIO_BAZEL_REMOTE_CACHE_UPLOAD": {
-          "enum": [
-            "true",
-            "false"
-          ]
-        },
-        "SEMIO_BAZEL_REMOTE_CACHE_CREDENTIAL_HELPER": {
-          "type": "string",
-          "pattern": "^((/|[A-Za-z]:[\\\\/])[^\\u0000]*|[^\\u0000\\s/\\\\-][^\\u0000/\\\\]*)$",
-          "maxLength": 1024
         }
       }
     },
     "CacheFlags": {
-      "description": "Closed Bazel flags derived from the storage layout, the products budget and the remote cache environment. The startup flag binds one output base, and therefore one server, to one workspace directory; the disk cache garbage collector only runs inside such a persistent server, never under --batch.",
+      "description": "Closed Bazel flags derived from the storage layout, the products budget and the neutral remote cache contract. The startup flag binds one output base, and therefore one server, to one workspace directory; the disk cache garbage collector only runs inside such a persistent server, never under --batch. The remote flags are the Bazel rendering of the contract in the build policy; the access token never appears in a flag: it travels as the one environment entry of the Bazel client that the credential helper reads, and the helper holds only the variable name.",
       "type": "object",
       "additionalProperties": false,
       "required": [
         "startup",
         "command",
-        "remote"
+        "remote",
+        "environment"
       ],
       "properties": {
         "startup": {
@@ -799,6 +770,43 @@
         },
         "remote": {
           "type": "boolean"
+        },
+        "environment": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[A-Z][A-Z0-9_]{0,63}$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._~+/=-]{1,4096}$"
+          }
+        },
+        "helper": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "content",
+            "mode"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "content": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            },
+            "mode": {
+              "enum": [
+                420,
+                493
+              ]
+            }
+          }
         }
       },
       "definitions": {
@@ -806,6 +814,241 @@
           "type": "string",
           "pattern": "^--(no)?[a-z][a-z_]*(=[^\\u0000]+)?$",
           "maxLength": 1024
+        }
+      }
+    },
+    "PlatformRules": {
+      "const": {
+        "version": 1,
+        "limits": {
+          "posix": 4095,
+          "windows": 259,
+          "windowsExtended": 32766
+        },
+        "trackedPathUnits": 256,
+        "execroot": {
+          "posix": "/execroot/_main/s/",
+          "win32": "\\execroot\\_main\\s\\"
+        },
+        "platforms": {
+          "darwin": {
+            "separator": "/",
+            "launcherExtension": "",
+            "sourceLink": "dir",
+            "startup": [],
+            "command": [
+              "--nobuild_runfile_links"
+            ],
+            "environment": {
+              "LANG": "en_US.UTF-8",
+              "LC_ALL": "en_US.UTF-8"
+            },
+            "emojiLabels": "verified"
+          },
+          "linux": {
+            "separator": "/",
+            "launcherExtension": "",
+            "sourceLink": "dir",
+            "startup": [],
+            "command": [
+              "--nobuild_runfile_links"
+            ],
+            "environment": {},
+            "emojiLabels": "verified"
+          },
+          "win32": {
+            "separator": "\\",
+            "launcherExtension": ".exe",
+            "sourceLink": "junction",
+            "startup": [
+              "--nowindows_enable_symlinks"
+            ],
+            "command": [
+              "--nobuild_runfile_links",
+              "--noenable_runfiles"
+            ],
+            "environment": {},
+            "emojiLabels": "unverified"
+          }
+        }
+      }
+    },
+    "PlatformInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platform",
+        "arch",
+        "container",
+        "outputBase",
+        "bun",
+        "longPaths"
+      ],
+      "properties": {
+        "platform": {
+          "enum": [
+            "win32",
+            "darwin",
+            "linux"
+          ]
+        },
+        "arch": {
+          "enum": [
+            "x64",
+            "arm64"
+          ]
+        },
+        "container": {
+          "type": "boolean"
+        },
+        "outputBase": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "bun": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "longPaths": {
+          "enum": [
+            "enabled",
+            "disabled",
+            "unprobed"
+          ]
+        }
+      }
+    },
+    "PlatformProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "platform",
+        "arch",
+        "startup",
+        "command",
+        "environment",
+        "launcherExtension",
+        "sourceLink",
+        "shell",
+        "emojiLabels",
+        "pathBudget",
+        "refusals",
+        "warnings"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "platform": {
+          "enum": [
+            "win32",
+            "darwin",
+            "linux"
+          ]
+        },
+        "arch": {
+          "enum": [
+            "x64",
+            "arm64"
+          ]
+        },
+        "startup": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^--[a-z_]+(=\\S+)?$"
+          },
+          "uniqueItems": true
+        },
+        "command": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^--[a-z_]+(=\\S+)?$"
+          },
+          "uniqueItems": true
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "launcherExtension": {
+          "enum": [
+            "",
+            ".exe"
+          ]
+        },
+        "sourceLink": {
+          "enum": [
+            "dir",
+            "junction"
+          ]
+        },
+        "shell": {
+          "const": "none"
+        },
+        "emojiLabels": {
+          "enum": [
+            "verified",
+            "unverified"
+          ]
+        },
+        "pathBudget": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "outputBase",
+            "execroot",
+            "tracked",
+            "total",
+            "limit",
+            "fits"
+          ],
+          "properties": {
+            "outputBase": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "execroot": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "tracked": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "total": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "fits": {
+              "type": "boolean"
+            }
+          }
+        },
+        "refusals": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     },
@@ -821,6 +1064,13 @@
           "darwin": {
             "pattern": "^[\\u0020-\\u007e]+$",
             "reason": "The macOS JVM opens its classpath from Bazel's byte-wise path strings as UTF-8, so a non-ASCII install base crashes the server at startup (main class not found). Bazel writes the darwin-sandbox profile (sandbox.sb) from the same byte-wise strings but encodes each byte as UTF-8 again, so a non-ASCII output base (sandbox directory, execroot and stats.out) is allow-listed under mojibake and every sandboxed action fails with Operation not permitted unless the base happens to sit under an allow-listed directory such as /private/tmp. Source labels, output names inside the execroot, disk cache and workspace paths accept non-ASCII names."
+          },
+          "linux": {
+            "guarded": [
+              "install"
+            ],
+            "pattern": "^[\\u0020-\\u007e]+$",
+            "reason": "The Linux JVM resolves the Bazel server classpath from the install base through its byte-wise path strings, so a non-ASCII install base crashes the server at startup (Could not find or load main class, ClassNotFoundException com.google.devtools.build.lib.bazel.Bazel) under every locale tried: unset, POSIX, C, C.UTF-8 and en_US.UTF-8. Output bases, sandbox directories, execroot, source labels, disk cache and workspace paths accept non-ASCII names (an emoji output base built and cached on Linux arm64)."
           }
         }
       }
@@ -866,6 +1116,18 @@
               "reason": {
                 "type": "string",
                 "minLength": 16
+              },
+              "guarded": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "enum": [
+                    "install",
+                    "outputs",
+                    "server"
+                  ]
+                }
               }
             }
           }
@@ -1141,12 +1403,136 @@
                 "side-effecting",
                 "live",
                 "aggregate",
-                "diagnostic"
+                "diagnostic",
+                "unclassified"
               ]
             }
           }
         }
       ]
+    },
+    "UncachedReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "actions",
+        "cached",
+        "uncached",
+        "unbounded"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "actions": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cached": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "uncached": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "continuous": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "declared": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "skipped": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "undeclared": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "unbounded": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "driver-owned": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "managed-output": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "side-effecting": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "live": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "aggregate": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "diagnostic": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "unclassified": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "unbounded": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "project",
+              "root",
+              "targets"
+            ],
+            "properties": {
+              "project": {
+                "type": "string",
+                "minLength": 1
+              },
+              "root": {
+                "type": "string"
+              },
+              "targets": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "target",
+                    "declared"
+                  ],
+                  "properties": {
+                    "target": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "declared": {
+                      "enum": [
+                        "cache",
+                        "class"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     },
     "Manifest": {
       "type": "object",

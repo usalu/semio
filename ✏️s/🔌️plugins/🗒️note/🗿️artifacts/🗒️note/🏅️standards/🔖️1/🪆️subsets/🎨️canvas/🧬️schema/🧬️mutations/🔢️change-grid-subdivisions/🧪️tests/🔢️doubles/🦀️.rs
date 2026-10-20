@@ -6,7 +6,8 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::schema::mutations::{apply_note_mutation, inverse_note_mutation, NoteMutation};
-use crate::{NoteDiff, NoteSnapshot};
+use semio_s_artifact_note_note_diff::standards::v1::subsets::any::schema::diff::NoteDiff;
+use semio_s_artifact_note_note_schema::NoteSnapshot;
 use protocol::Mutation;
 use semio_framework_test_fixtures::fixture_text;
 

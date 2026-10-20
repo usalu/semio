@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "old": "{\"name\":\"neutral\",\n  \"targets\": {\n    \"generate\": {\n      \"executor\": \"repo:script\",\n      \"options\": {\"command\":\"generate\"}\n    },\n    \"test\": {\"executor\":\"repo:script\"}\n  }\n}\n",
+  "host": "{\n  \"name\": \"neutral\",\n  \"targets\": {\n    \"generate\": {\n      \"executor\": \"repo:script\",\n      \"options\": {\n        \"command\": \"generate\"\n      },\n      \"metadata\": {\n        \"semio\": {\n          \"sourceInputObservation\": \"freshness\"\n        }\n      }\n    },\n    \"test\": {\n      \"executor\": \"repo:script\",\n      \"metadata\": {\n        \"semio\": {\n          \"dashboard\": {\n            \"title\": {\n              \"en\": \"Concurrent\",\n              \"de\": \"Parallel\"\n            }\n          }\n        }\n      }\n    }\n  }\n}\n",
+  "expected": "{\"name\":\"neutral\",\n  \"targets\": {\n    \"generate\": {\n      \"metadata\": {\n        \"semio\": {\n          \"sourceInputObservation\": \"freshness\"\n        }\n      },\n      \"executor\": \"repo:script\",\n      \"options\": {\"command\":\"generate\"}\n    },\n    \"test\": {\"executor\":\"repo:script\"}\n  }\n}\n",
+  "patch": {
+    "target": "generate",
+    "value": "freshness",
+    "strategy": "insert-target-metadata-before-executor"
+  }
+}

@@ -36,6 +36,7 @@ semio-s-artifact-stdio-semio-text-descriptor = { workspace = true }
 semio-s-artifact-stdio-semio-text-inferences = { workspace = true }
 semio-s-artifact-stdio-semio-text-model = { workspace = true }
 semio-s-artifact-stdio-semio-text-mutations = { workspace = true }
+semio-framework-pack = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-s-artifact-stdio-semio-text-mutations = { workspace = true, features = ["testkit"] }

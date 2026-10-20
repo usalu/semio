@@ -1,8 +1,8 @@
 /** 📋 Renderer types, owned declarative controls, external slots and declarative forms parity. */
 import { createElement } from "react";
-import { parseResolvedPluginViewState } from "@semio-tech/framework/modules/manifest/view-state-and-public-invocation";
-import { presenceOverlayFixture, sliderPresentationFixture } from "@semio-tech/framework/ui/testing/fixtures";
-import { manifestActionSemanticsFixture as actionSemanticsFixture, loadContextExtensionInputFixture, loadManifestViewContextSchema } from "@semio-tech/framework/manifest/testing/fixtures";
+import { parseResolvedPluginViewState } from "@semio-tech/framework-manifest/view-state-and-public-invocation";
+import { presenceOverlayFixture, sliderPresentationFixture } from "@semio-tech/ui/testing/fixtures";
+import { manifestActionSemanticsFixture as actionSemanticsFixture, loadContextExtensionInputFixture, loadManifestViewContextSchema } from "@semio-tech/framework-manifest/testing/fixtures";
 import { fireEvent, render } from "@semio-tech/ui-react/test";
 import { describe, expect, it, vi } from "vitest";
 import { actionSemanticsForKind } from "@semio-tech/framework";

@@ -35,6 +35,7 @@ semio-s-artifact-procedural-2d-model = { workspace = true }
 semio-s-artifact-procedural-2d-mutations = { workspace = true }
 semio-s-artifact-procedural-2d-node-graph-edit = { workspace = true }
 semio-s-artifact-procedural-2d-preview-eval = { workspace = true }
+semio-framework-async = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

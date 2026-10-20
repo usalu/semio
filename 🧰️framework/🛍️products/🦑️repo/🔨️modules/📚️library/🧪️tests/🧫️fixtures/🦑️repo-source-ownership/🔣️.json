@@ -41,7 +41,7 @@
     },
     {
       "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/🖥️server-implementations.ts",
-      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🔌️ports/🟦️.ts",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🔌️ports/🟦️.ts",
       "kind": "typescript",
       "boundary": "none",
       "anchor": "createOwnedDatabasePool"

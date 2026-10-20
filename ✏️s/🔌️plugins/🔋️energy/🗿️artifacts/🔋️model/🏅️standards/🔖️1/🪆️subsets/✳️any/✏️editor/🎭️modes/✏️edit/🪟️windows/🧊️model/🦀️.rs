@@ -53,7 +53,7 @@ pub const BODY_KEY: &str = "energy.model.3d";
 /// (`worldCameraSetCameraDispatchArgs`, `🌐️World3dHost/🟦️.tsx:767`, debounced). It is NOT
 /// framework-reserved: a window kind that does not declare it makes the host's dispatch land as
 /// `dropped action "setCamera" ... no window kind declares it` on every gesture.
-pub const SET_CAMERA_ACTION_ID: &str = "setCamera";
+pub const SET_CAMERA_ACTION_ID: &str = semio_s_artifact_energy_model_editor_commands::SET_CAMERA_ACTION_ID;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition

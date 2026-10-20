@@ -1,0 +1,4 @@
+registerProjectionPoseAndMatrixTests 3 phases, keep=-, final return=false
+4-38 registerWorldProjectionGumballPlaneTests
+96-206 registerWorldProjectionTransitionPoseTests
+224-351 registerWorldProjectionGoalMatrixTests

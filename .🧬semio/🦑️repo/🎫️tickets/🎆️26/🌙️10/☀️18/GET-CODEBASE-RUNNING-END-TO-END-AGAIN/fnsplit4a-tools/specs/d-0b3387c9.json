@@ -1,0 +1,28 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📚️course/🧪️tests/🪟️presence-screens/🟦️.tsx",
+ "describeLine": 17,
+ "shared": {
+  "dir": "🟠️shared",
+  "doc": "/** 🟠️ The shared declarations of the 👁️ what the screens show suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️places-observed-card-cursors",
+   "doc": "/** 🔶️ The places observed card cursors tests of the 👁️ what the screens show suite. */",
+   "name": "registerPlacesObservedCardCursorsTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the places observed card cursors tests of the 👁️ what the screens show suite.",
+   "from": 18,
+   "to": 131
+  },
+  {
+   "dir": "🔸️gathers-others-watched-room",
+   "doc": "/** 🔸️ The gathers others watched room tests of the 👁️ what the screens show suite. */",
+   "name": "registerGathersOthersWatchedRoomTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the gathers others watched room tests of the 👁️ what the screens show suite.",
+   "from": 170,
+   "to": 312
+  }
+ ]
+}

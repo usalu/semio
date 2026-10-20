@@ -1,0 +1,34 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🐾️pets/🧪️tests/🖌️pet-depiction/🟦️.tsx",
+ "describeLine": 129,
+ "sharedRewrite": [
+  [
+   "dirname(fileURLToPath(import.meta.url))",
+   "dirname(dirname(fileURLToPath(import.meta.url)))"
+  ]
+ ],
+ "shared": {
+  "dir": "🟠️shared",
+  "doc": "/** 🟠️ The shared declarations of the pet depiction suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️draws-one-svg-per",
+   "doc": "/** 🔶️ The draws one svg per tests of the pet depiction suite. */",
+   "name": "registerDrawsOneSvgPerTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the draws one svg per tests of the pet depiction suite.",
+   "from": 130,
+   "to": 286
+  },
+  {
+   "dir": "🔸️writes-nothing-frame-changes",
+   "doc": "/** 🔸️ The writes nothing frame changes tests of the pet depiction suite. */",
+   "name": "registerWritesNothingFrameChangesTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the writes nothing frame changes tests of the pet depiction suite.",
+   "from": 299,
+   "to": 376
+  }
+ ]
+}

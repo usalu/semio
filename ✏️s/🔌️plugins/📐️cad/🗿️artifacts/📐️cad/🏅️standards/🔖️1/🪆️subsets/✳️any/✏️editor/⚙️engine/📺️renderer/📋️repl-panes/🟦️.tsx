@@ -18,7 +18,7 @@ import {
   SelectValue,
   Fragment,
   type ReactNode
-} from "@semio-tech/framework/ui/targets/react";
+} from "@semio-tech/ui-react";
 // #endregion 🔌️Adapters
 import { type SpatialObjectRecord } from "@semio-tech/s-spatial-kernel-ts/geometry";
 import { type AttributeDefinitionSpec } from "@semio-tech/s-spatial-kernel-ts/geometry/typology";

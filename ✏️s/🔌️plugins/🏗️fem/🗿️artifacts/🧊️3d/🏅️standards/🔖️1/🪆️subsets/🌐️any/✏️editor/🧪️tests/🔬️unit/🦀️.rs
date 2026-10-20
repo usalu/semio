@@ -569,6 +569,7 @@ async fn fem3d_camera_scene_encoding_preserves_the_typed_pose() {
 //#endregion 🎬️SceneRender
 use store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory;
 #[cfg(test)] use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::set_active_example;
+#[cfg(test)] use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::set_camera;
 #[cfg(test)] use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_node;
 #[cfg(test)] use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_support;
 #[cfg(test)] use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_material;

@@ -58,7 +58,6 @@ pub use crate::mutation::map;
 pub use crate::mutation::prepared_retirement;
 pub use semio_framework_replication_error::protocol_cause_retirement_demand;
 pub use semio_framework_replication_error::protocol_error_retirement_demand;
-pub use crate::format::retained;
 pub use crate::mutation::transaction_admission;
 pub use crate::causal::transition;
 pub use crate::wire::local_interaction::transport;

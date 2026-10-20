@@ -1,4 +1,4 @@
-import{applyBuildGeneratedTaskDependenciesV1}from"../../🚪️admission/🟦️.ts";
+import{applyBuildGeneratedTaskDependenciesV1,buildSourceContractGroupsV1}from"../../🚪️admission/🟦️.ts";
 /** 🧱️ Normalizes one project's targets and named inputs into its generated Build configuration. */
 import { advanceScriptInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { checkResourceLeaseControl } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
@@ -51,17 +51,17 @@ function receiptedStoreTargetV1(policy, name, reason) {
   return withCacheDecision({ ...policy, outputs: [storeReceiptOutputV1(name)] }, policy.cache ? "deterministic" : "managed-output", policy.cache ? "pure-function-of-inputs" : reason);
 }
 
-let targetScriptSources,libraryBootstrap, nativeDependencyRoots, buildPath, LIBRARY_ROOT, readTaxonomyProjectionV1, readToml, POLICY, PROJECT_BASENAME, cargoSourceInputs, createScriptInputCache, loaded, yieldInferenceV1, SOURCE_INPUT_MODULE, TAXONOMY, SCRIPT_BASENAME, goManifest, relativeScriptInputs, resolveOutputPath, exampleCollectionInputs, owned, withWasmTooling, withCacheDecision, rootCommandTargets, cargoTargets, componentBuildTargets, printDocumentTargets, prepareSourceAnalysesV1, generatorContractInputs, generatorOutputOwners, genericCommandFallbackInputs, targetWithDefaults, targetPolicy, targetExecutionKindV1, nativeTargetCommandInputs, targetScriptClosure, nativeLockInputs, genericTargetCommandInputs, outputRootInputs, generatorOutputCouplingInputs;
+let targetScriptSources,libraryBootstrap, nativeDependencyRoots, buildPath, LIBRARY_ROOT, readTaxonomyProjectionV1, readToml, POLICY, WORKSPACE_POLICY, PROJECT_BASENAME, cargoSourceInputs, createScriptInputCache, loaded, yieldInferenceV1, SOURCE_INPUT_MODULE, TAXONOMY, SCRIPT_BASENAME, goManifest, relativeScriptInputs, resolveOutputPath, exampleCollectionInputs, owned, withWasmTooling, withCacheDecision, cachedOutputsAdmittedV1, rootCommandTargets, cargoTargets, componentBuildTargets, printDocumentTargets, prepareSourceAnalysesV1, generatorContractInputs, generatorOutputOwners, genericCommandFallbackInputs, targetWithDefaults, targetPolicy, targetExecutionKindV1, nativeTargetCommandInputs, targetScriptClosure, nativeLockInputs, genericTargetCommandInputs, outputRootInputs, generatorOutputCouplingInputs;
 
 /** 🔌️ Binds this component's dependencies from the revision registry once its needs are wired. */
 export function wire(registry) {
   ({ libraryBootstrap, loaded } = registry.bootstrap);
   ({ nativeDependencyRoots, readToml, cargoSourceInputs, goManifest } = registry.nativeManifests);
-  ({ buildPath, LIBRARY_ROOT, POLICY, PROJECT_BASENAME, SOURCE_INPUT_MODULE, SCRIPT_BASENAME, exampleCollectionInputs, owned } = registry.coordinates);
+  ({ buildPath, LIBRARY_ROOT, POLICY, WORKSPACE_POLICY, PROJECT_BASENAME, SOURCE_INPUT_MODULE, SCRIPT_BASENAME, exampleCollectionInputs, owned } = registry.coordinates);
   ({ readTaxonomyProjectionV1, TAXONOMY, prepareSourceAnalysesV1 } = registry.sourceAnalyses);
   ({ targetScriptSources,createScriptInputCache, yieldInferenceV1, relativeScriptInputs, genericCommandFallbackInputs, nativeTargetCommandInputs, targetScriptClosure, nativeLockInputs, genericTargetCommandInputs } = registry.scriptInputs);
   ({ resolveOutputPath, generatorContractInputs, generatorOutputOwners, outputRootInputs, generatorOutputCouplingInputs } = registry.generatorOutputs);
-  ({ withWasmTooling, withCacheDecision, targetWithDefaults, targetPolicy, targetExecutionKindV1 } = registry.targetPolicy);
+  ({ withWasmTooling, withCacheDecision, cachedOutputsAdmittedV1, targetWithDefaults, targetPolicy, targetExecutionKindV1 } = registry.targetPolicy);
   ({ rootCommandTargets, cargoTargets, componentBuildTargets, printDocumentTargets } = registry.componentTargets);
 }
 
@@ -110,10 +110,11 @@ export async function nativeSourceWatchPlanV1(root, workspaceRoot) {
 }
 
 /** 🧬️ Derives named task inputs from explicit relative source-graph contracts. */
-export async function declaredSourceInputs(json,workspaceRoot,context={}) {
+export async function declaredSourceInputs(json,workspaceRoot,context={},inputNames=[]) {
   const groups={};
-  for(const[name,path]of Object.entries(json.metadata?.sourceInputs??{})){
-    if(["default","production","nativeSources","nativeTestSources","artifactSources","artifactCommandSources"].includes(name)||Object.hasOwn(json.namedInputs??{},name))throw Error(`Duplicate source input group ${name}`);
+  for(const name of buildSourceContractGroupsV1(json,WORKSPACE_POLICY.namedInputs,inputNames)){
+    const path=json.metadata.sourceInputs[name];
+    if(Object.hasOwn(json.namedInputs??{},name))throw Error(`Duplicate source input group ${name}`);
     if(typeof path!=="string"||isAbsolute(path)||path.split(/[\\/]/).includes(".."))throw Error(`Invalid source input contract path ${path}`);
     const contractPath=resolve(workspaceRoot,path),contract=loaded.readSourceInputContract(contractPath),sources=await loaded.relativeSourceInputsAsyncV1(contract,workspaceRoot,()=>yieldInferenceV1(context,"build:source-contracts",0));
     groups[name]=[...new Set([contractPath,join(LIBRARY_ROOT,SOURCE_INPUT_MODULE),join(LIBRARY_ROOT,"🕸️dependencies/🟦️typescript/🔣️schema.json"),...sources.files])].map(file=>`{workspaceRoot}/${buildPath(relative(workspaceRoot,file))}`).concat([{externalDependencies:sources.externalDependencies}]);
@@ -132,8 +133,8 @@ function workspaceNegationClosed(inputs) {
 }
 
 /** 📥️ Shared command implementation and host identity are inputs of every script-backed task. */
-export async function projectInputs(json, root, workspaceRoot, facts, scripts=createScriptInputCache(), sourceRepresentation = "hash", sourceGroups) {
-  return loaded.inferProjectInputs(json, root, workspaceRoot, facts, scripts, { POLICY, TAXONOMY, LIBRARY_ROOT, SCRIPT_BASENAME, cargoSourceInputs, goManifest, buildPath, relativeScriptInputs, resolveOutputPath, exampleCollectionInputs, workspaceNegationClosed, declaredSourceInputs:sourceGroups===undefined?(json,root)=>declaredSourceInputs(json,root,scripts.context):()=>sourceGroups, owned, sourceRepresentation });
+export async function projectInputs(json, root, workspaceRoot, facts, scripts=createScriptInputCache(), sourceRepresentation = "hash", sourceGroups,inputNames=[],commandGroups={}) {
+  return loaded.inferProjectInputs(json, root, workspaceRoot, facts, scripts, { POLICY, TAXONOMY, LIBRARY_ROOT, SCRIPT_BASENAME, cargoSourceInputs, goManifest, buildPath, relativeScriptInputs, resolveOutputPath, exampleCollectionInputs, workspaceNegationClosed, declaredSourceInputs:sourceGroups===undefined?(json,root,namedInputs)=>declaredSourceInputs({...json,namedInputs:{...namedInputs,...commandGroups}},root,scripts.context,inputNames):()=>sourceGroups, owned, sourceRepresentation });
 }
 
 /**
@@ -141,7 +142,7 @@ export async function projectInputs(json, root, workspaceRoot, facts, scripts=cr
  * @param {string} root
  * @param {string} projectDir
  */
-export async function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = {}, facts, commandInputs, scripts=createScriptInputCache(), sourceGroups, sourceRepresentation = "hash", selectedTargets) {
+export async function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = {}, facts, commandInputs, scripts=createScriptInputCache(), sourceGroups, sourceRepresentation = "hash", selectedTargets,inputNames=[]) {
   const ownsScript = existsSync(join(projectDir, SCRIPT_BASENAME));
   const nativeRoot = json.metadata?.nativeRoot ?? root;
   if (json.metadata?.nativeRoot && (typeof nativeRoot !== "string" || isAbsolute(nativeRoot) || nativeRoot.split(/[\\/]/).some(part => ["", ".", ".."].includes(part)) || !existsSync(join(workspaceRoot, nativeRoot, "Cargo.toml")))) throw new Error(`Invalid native package root for ${json.name}: ${nativeRoot}`);
@@ -227,7 +228,7 @@ export async function projectWithDefaults(json, root, projectDir, workspaceRoot,
     if(policy.metadata?.semio?.wasmPackageSourceV1)policy = receiptedStoreTargetV1(policy, name, "outputs-in-managed-store");
     const source=await targetScriptSources(target,workspaceRoot,scripts,root,nativeProject?`${nativeRoot}/Cargo.toml`:undefined);if(source.generatedDependencies?.length)policy=applyBuildGeneratedTaskDependenciesV1({name:json.name,targets:{[name]:policy}},{[name]:source.generatedDependencies}).targets[name];
     if (POLICY.serialTargets?.includes(name)) policy.parallelism = false;
-    normalized[name] = loaded.targetBuildModes(name, policy);
+    normalized[name] = loaded.targetBuildModes(name, cachedOutputsAdmittedV1(policy));
   }
   for (const contract of Object.values(contracts)) {
     if (contract.ownership !== "owned" || contract.ownerPath !== root || !contract.checkTarget) continue;
@@ -241,7 +242,7 @@ export async function projectWithDefaults(json, root, projectDir, workspaceRoot,
     const extra = generatorOutputCouplingInputs(name, target, declared, root, workspaceRoot);
     if (extra.length) normalized[name] = { ...target, inputs: [...target.inputs, ...extra] };
   }
-  const namedInputs = await projectInputs({ ...json, targets: admitted }, root, workspaceRoot, facts, scripts,sourceRepresentation,sourceGroups);
+  const namedInputs = await projectInputs({ ...json, targets: normalized }, root, workspaceRoot, facts, scripts,sourceRepresentation,sourceGroups,inputNames,Object.fromEntries([...commandSourceGroups.values()].map(({name,inputs})=>[name,inputs])));
   for (const { name, inputs } of commandSourceGroups.values()) {
     if (Object.hasOwn(namedInputs, name)) throw new Error(`Duplicate command source group ${name}`);
     namedInputs[name] = sourceRepresentation === "source" ? loaded.deduplicateProjectInputs(inputs, root) : loaded.compactSourceInputs(inputs, workspaceRoot, root);

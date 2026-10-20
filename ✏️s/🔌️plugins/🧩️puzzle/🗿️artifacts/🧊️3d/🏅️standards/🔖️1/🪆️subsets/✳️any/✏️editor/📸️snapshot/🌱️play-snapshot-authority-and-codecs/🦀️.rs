@@ -225,3 +225,19 @@ fn from_sqlite_database(d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -
     }
 }
 //#endregion 🚪️Codecs
+
+//#region 🧪️TestSerde
+#[cfg(test)]
+impl serde::Serialize for Puzzle3dPlaySnapshot {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(self.typed(), serializer)
+    }
+}
+
+#[cfg(test)]
+impl<'de> serde::Deserialize<'de> for Puzzle3dPlaySnapshot {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        <Puzzle3dSnapshot as serde::Deserialize>::deserialize(deserializer).map(Self::new)
+    }
+}
+//#endregion 🧪️TestSerde

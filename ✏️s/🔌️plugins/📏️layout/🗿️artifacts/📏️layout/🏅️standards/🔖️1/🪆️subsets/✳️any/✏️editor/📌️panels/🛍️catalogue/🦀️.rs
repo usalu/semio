@@ -8,8 +8,8 @@
 //! `addPage`/`addFrame` command, so the rows keep their action, their drag payload and their
 //! catalogue-namespaced keys, and stamp no `granularity`.
 
-use semio_s_artifact_layout_layout_editor_panels::terminology::catalogue_kind_label;
-use semio_s_artifact_layout_layout_editor_panels::terminology::LayoutLabels;
+use crate::terminology::catalogue_kind_label;
+use crate::terminology::LayoutLabels;
 use semio_s_artifact_layout_layout_editor_commands::{layout_action, ui_value_map, ui_value_text};
 use semio_framework_plugin::tree_item_with_action;
 use semio_framework_ui_locale::Label;

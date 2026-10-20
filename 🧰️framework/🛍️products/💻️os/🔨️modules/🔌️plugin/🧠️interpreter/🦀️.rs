@@ -122,5 +122,7 @@ mod tests;
 
 #[cfg(any(test, feature = "testkit"))]
 pub mod testkit {
-    pub use super::{core_types_and_module_model::*, component_artifact::*, owned_semio_boundary::*, binary_decoder_and_module_parser::*, instruction_shape::*, instance_state::*, instruction_execution::*, memory_and_bulk_execution::*, numeric_execution::*, numeric_semantics::*, checkpoint_codec::*, tests::*};
+    pub use super::{core_types_and_module_model::*, component_artifact::*, owned_semio_boundary::*, binary_decoder_and_module_parser::*, instruction_shape::*, instance_state::*, instruction_execution::*, memory_and_bulk_execution::*, numeric_execution::*, numeric_semantics::*, checkpoint_codec::*};
+    #[cfg(test)]
+    pub use super::tests::*;
 }

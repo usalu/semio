@@ -1,0 +1,597 @@
+[
+ {
+  "i": 0,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🎬️canvas/🟦️.tsx",
+   "text": "  /** 🖱️ The wheel hook belongs on the EVENT SOURCE, not on the canvas: a `<Canvas eventSource>`\n   * stamps `pointer-events: none` on its canvas, so a wheel listener bound there is never called. */",
+   "after": [
+    "  reactHostPort.useEffect(() => {",
+    "    if (!canvasEventSource) return;",
+    "    const onWheel = (event: WheelEvent) => {"
+   ],
+   "before": [
+    "    [canvasEventSource, frameloop, dprKey, props.shadows, cameraKey, glKey, props.background, childrenSlot],",
+    "  );"
+   ]
+  }
+ },
+ {
+  "i": 1,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/⏱️watchdog/🟦️.ts",
+   "text": "      /** 🫀️ Only a MONOTONIC ADVANCE is proof of life. `!==` used to accept a REGRESSION too, which a\n       * worker that never processed `attachHeartbeatSab` produces on every tick (its slot stays `0`\n       * while `postMessage` beats advance `lastHeartbeatTurnSeq`) — under the liveness rule that would\n       * refresh a dead shard's clock forever and disarm the watchdog entirely. */",
+   "after": [
+    "      if (seq > slot.heartbeat.lastHeartbeatTurnSeq || slot.heartbeat.oldestPendingStartedAtMs === null) {",
+    "        this.recordHeartbeat(slot, seq, nowMs);",
+    "      }"
+   ],
+   "before": [
+    "    for (const slot of this.state.shards) {",
+    "      const seq = Atomics.load(this.state.heartbeatSabView, slot.index);"
+   ]
+  }
+ },
+ {
+  "i": 2,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/👥️session-presence-and-caret/🟦️.ts",
+   "text": "  /** ⌨️ The typing run ends as ONE edit when the editor loses focus or the page is hidden or left (a run pending for less than the\n   * idle bound is never lost to a closed tab), and when the editor unmounts. */",
+   "after": [
+    "  useEffect(() => {",
+    "    const sink = sinkRef.current;",
+    "    if (!sink) return;"
+   ],
+   "before": [
+    "    };",
+    "  }, []);"
+   ]
+  }
+ },
+ {
+  "i": 3,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🎛️marquee-and-gumball/🟦️.ts",
+   "text": "  /** 🧯️ Host aborts of a live gesture whose ticks opened the app's tool transaction: window blur and unmount. */",
+   "after": [
+    "  useEffect(() => {",
+    "    const onBlur = () => stepGumballGestureRef.current({ kind: \"cancel\", reason: \"blur\" });",
+    "    window.addEventListener(\"blur\", onBlur);"
+   ],
+   "before": [
+    "  );",
+    ""
+   ]
+  }
+ },
+ {
+  "i": 4,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/⚡️host-effects/🟦️.ts",
+   "text": "  /** 🏁️ Applies one retained typed operation's terminal publication. The command that started the\n   * operation resolved on its FIRST reactor turn — its `InvocationResult` carries no outcome at all —\n   * so a selection like \"open the Nakagin example\" used to leave the outliner, the inspection panel\n   * and the History list showing the previous document forever. `PluginWasmHandle\n   * .subscribeOperationCompletions` is the only carrier of that outcome: the operation's own history\n   * delta, its final `UiDirtyScope`, and every host effect its continuation turns requested.\n   *\n   * 🫥️ What this pass is owed is decided by {@link typedOperationCompletionRefreshV1}, never by the\n   * admitting reply: an admission reports `mutationCount: 0` for every typed operation, and a completion\n   * that dirtied nothing, patched no history and requested no effect owes no pass at all — a retained\n   * operation completes on every drain poll, so paying for those is a refresh storm (wave B27 §2). */",
+   "after": [
+    "  useEffect(() => {",
+    "    if (!session) return;",
+    "    const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;"
+   ],
+   "before": [
+    "  applyHostEffectsRef.current = applyHostEffects;",
+    ""
+   ]
+  }
+ },
+ {
+  "i": 5,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/⚡️host-effects/🟦️.ts",
+   "text": "  /**\n   * 🏁️🪟️ The SAME terminal-publication subscription, for every spawned program. The effect above\n   * subscribes `session.pluginId`/`session.instanceId` and nothing else, so a spawned foreign editor's\n   * typed operations completed into the void: no history delta, no final `UiDirtyScope`, none of the\n   * continuation turns' effects — and `settleOperation` was never called, so every `onAction` on a\n   * spawned program waited out the full {@link OPERATION_SETTLE_WATCHDOG_MS} watchdog.\n   *\n   * 🧯️ Measured live inside `s`: `addLayer` on a spawned `draw` DID add the layer, and the window kept\n   * reading `1 layer · 0 selected` until the next unrelated interaction re-fetched it\n   * (`🗑️generated/s5-action-{8,11}.txt`, ticket 26/09/18 S5 §4.3). `applyHostEffects` on a spawned base\n   * session already routes to `refreshSpawnedUi`, so the completion pass needs no spawned-specific\n   * branch of its own — only an owner.\n   */",
+   "after": [
+    "  useEffect(() => {",
+    "    if (!hostMode || !session) return;",
+    "    const disposers: (() => void)[] = [];"
+   ],
+   "before": [
+    "  }, [applyHistoryPatch, applyLeftoverInteractionView, applyHostEffects, captureProgramEffectOwner, dropForRetiredInstance, isCurrentEffectOwner, session, settleOperation]);",
+    ""
+   ]
+  }
+ },
+ {
+  "i": 6,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/⚡️host-effects/🟦️.ts",
+   "text": "  /** 📬️ Shows the exact original operation diagnostic for active and spawned program receivers. */",
+   "after": [
+    "  useEffect(() => {",
+    "    if (!session) return;",
+    "    const instances = [{ pluginId: session.pluginId, instanceId: session.instanceId }, ...(hostMode ? spawnedAppsRef.current : [])];"
+   ],
+   "before": [
+    "  }, [hostMode, session, spawnedRosterKey, applyHistoryPatch, applyHostEffects, captureProgramEffectOwner, settleOperation]);",
+    ""
+   ]
+  }
+ },
+ {
+  "i": 7,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/⚡️host-effects/🟦️.ts",
+   "text": "  /** 🎞️ Renders a running operation's process while it runs: every mid-operation refresh a tool run asks for (its trace,\n   * provisional pieces, progress) goes through the ui-refresh lane, whose coalescer merges what arrives while a pass is in\n   * flight — the operation never waits on the renderer, and the renderer shows as much of the process as it keeps up with. */",
+   "after": [
+    "  useEffect(() => {",
+    "    if (!session) return;",
+    "    const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;"
+   ],
+   "before": [
+    "  }, [hostMode, session, spawnedRosterKey]);",
+    ""
+   ]
+  }
+ },
+ {
+  "i": 8,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/⚡️host-effects/🟦️.ts",
+   "text": "  /**\n   * 🎞️🪟️ The SAME mid-operation progress lane, for every spawned program. The effect above\n   * subscribes `session.instanceId` alone, so a spawned editor's running operation — a tool run's\n   * trace, a mounted analysis's provisional pieces, a fill plan's progress — reached no window at\n   * all: the human watched a frozen canvas until the terminal completion landed. Measured as\n   * still-session-only by S6 (§2, `🏛️ShellHost` `subscribeOperationProgress`/\n   * `subscribeSpawnedJobProgress`), which is the last of the six session-only decision sites S5\n   * started on.\n   */",
+   "after": [
+    "  useEffect(() => {",
+    "    if (!hostMode || !session) return;",
+    "    const disposers: (() => void)[] = [];"
+   ],
+   "before": [
+    "  }, [applyHistoryPatch, applyHostEffects, captureProgramEffectOwner, dropForRetiredInstance, session]);",
+    ""
+   ]
+  }
+ },
+ {
+  "i": 9,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎮️focus-and-input/🟦️.tsx",
+   "text": "  /** 🧾️ A spawned program's full history, read once when it takes the canvas. Its completions patch\n   * the projection incrementally from then on; without this first snapshot its ledger would start\n   * empty even for a document that already carries entries (a re-opened artifact). */",
+   "after": [
+    "  useEffect(() => {",
+    "    if (!hostMode || focusedProgram === null || focusedProgram.spawnedId === null) return;",
+    "    refreshHistorySnapshot({ pluginId: focusedProgram.pluginId, instanceId: focusedProgram.instanceId });"
+   ],
+   "before": [
+    "  const timeTravelIndicatorText = focusedTimeTravel === null ? null : timeTravelIndicatorTextV1(focusedTimeTravel, { terminology: uiTerminology, locale: uiLocale });",
+    "  const timeTravelIndicator = useMemo(() => (timeTravelIndicatorStage === null || timeTravelIndicatorText === null ? undefined : <TimeTravelWindowIndicator stage={timeTravelIndicatorStage} description={timeTravelIndicatorText} />), [timeTravelIndicatorStage, timeTravelIndicatorText]);"
+   ]
+  }
+ },
+ {
+  "i": 10,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎮️focus-and-input/🟦️.tsx",
+   "text": "  /** 📇️🪟️ Publishes the agent census — the live session PLUS every spawned program, the FOCUSED one\n   * first ({@link spawnedBridgeCensusV1}). Keyed on the spawned ROSTER, never on `panel` identity (a\n   * panel object churns on every action), on the loaded-plugin count (a spawned program's window\n   * kinds come from its manifest and a roster entry can be written before its plugin finished\n   * loading), and on the focused program, because focus is what entry 0 means. */",
+   "after": [
+    "  useEffect(() => {",
+    "    const spawned = (spawnedAppsRef.current ?? []).flatMap((entry) => {",
+    "      const app = loadedPluginsRef.current.find((candidate) => candidate.handle.pluginId === entry.pluginId)?.manifest.apps.find((candidate) => candidate.id === entry.appId);"
+   ],
+   "before": [
+    "    // eslint-disable-next-line react-hooks/exhaustive-deps",
+    "  }, [hostMode, focusedProgram?.pluginId, focusedProgram?.instanceId, focusedProgram?.spawnedId, refreshHistorySnapshot]);"
+   ]
+  }
+ },
+ {
+  "i": 11,
+  "nhits": 2,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🪟️spawned-program/🟦️.ts",
+   "text": "/** 🧾️ Drops the projections of programs that are no longer open, so a shell that spawns and closes\n * editors all day keeps one entry per LIVE program rather than a growing ledger of dead ones. The\n * session's own key is always retained, including before its first patch. */",
+   "after": [
+    "export function programHistoryProjectionsRetainedV1<Projection>(",
+    "  projections: ProgramHistoryProjectionsV1<Projection>,",
+    "  liveKeys: readonly string[],"
+   ],
+   "before": [
+    "}",
+    ""
+   ]
+  }
+ },
+ {
+  "i": 12,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎮️focus-and-input/🟦️.tsx",
+   "text": "  /** ⏺️ Dev/studio-only probe surface (mirrors `__semioCrossingCensus` in `🔌️PluginRuntime`). */",
+   "after": [
+    "  useEffect(() => {",
+    "    if (!tutorialRecorderAvailable) return;",
+    "    Object.defineProperty(globalThis, \"__semioInputLedger\", { configurable: true, get: () => ({ ...inputLedgerRef.current.census(), recent: inputLedgerRef.current.recent() }), set: () => {} });"
+   ],
+   "before": [
+    "   * `registerRevision` dependency is what re-runs the readers after a write). */",
+    "  const utilityGenerationFor = useCallback((windowId: string): number => utilityRegisterCell(windowId).read().generation, [utilityRegisterCell]);"
+   ]
+  }
+ },
+ {
+  "i": 13,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🏗️dock-assembly/🟦️.ts",
+   "text": "  /** 🎓️ Panel interactions complete when their named panel tab is open and visible — checked for every\n   * `panel` interaction of the active step, not just the first, so a step can require opening several. */",
+   "after": [
+    "  useEffect(() => {",
+    "    if (!activeIntroductionStep) return;",
+    "    for (const interaction of activeIntroductionStep.interactions ?? []) {"
+   ],
+   "before": [
+    "  }, [introductionPanelTabId, introductionPanelTabAnchor, dock, mobile, mobilePanelTabs]);",
+    ""
+   ]
+  }
+ },
+ {
+  "i": 14,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🏗️dock-assembly/🟦️.ts",
+   "text": "  /** ⏪️ Each change of the focused program's session reveals the History panel on the edge into a session and moves focus\n   * where the session continues ({@link useTimeTravelRevealV1}). */",
+   "after": [
+    "  useTimeTravelRevealV1(focusedTimeTravel, { mobile, dock, mobilePanelTabs, dispatch, root: scope.rootRef.current });",
+    "",
+    "  /** 🤖️ Fills {@link applyAgentShellCommandRef}: the MCP gateway's `ui_reveal`/`ui_focus` reach this"
+   ],
+   "before": [
+    "  }, [toolRunPanelNode, dock]);",
+    ""
+   ]
+  }
+ },
+ {
+  "i": 15,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🏗️dock-assembly/🟦️.ts",
+   "text": "  /** 🤖️ Fills {@link applyAgentShellCommandRef}: the MCP gateway's `ui_reveal`/`ui_focus` reach this\n   * host as SSOT `ShellCommand`s, and this is where they stop being a mirror update and become the\n   * real chrome moving. `setPanelPath` carries the shell SSOT's four-anchor vocabulary while this\n   * dock has six, so the TAB is the address — `findPanelTabInDock` answers where it actually lives,\n   * exactly as the tool-run reveal above does, and the requested anchor is advisory. */",
+   "after": [
+    "  useEffect(() => {",
+    "    applyAgentShellCommandRef.current = (command: ShellCommand): void => {",
+    "      if (command.type === \"focusWindow\") {"
+   ],
+   "before": [
+    "  useTimeTravelRevealV1(focusedTimeTravel, { mobile, dock, mobilePanelTabs, dispatch, root: scope.rootRef.current });",
+    ""
+   ]
+  }
+ },
+ {
+  "i": 16,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🏗️dock-assembly/🟦️.ts",
+   "text": "  /** 🗿️ Fills {@link agentArtifactRouteRef}: this is the LIVE artifact route — an MCP client's\n   * `action_prepare`/`action_invoke`/`history_undo`/`transaction_*` executing against the plugin\n   * instance the human is looking at, instead of against the gateway's own headless interpreter on\n   * a different `--folder` workspace (`📓️r2…` §12 finding 1).\n   *\n   * Three laws make it the human's edit and not a side channel:\n   * 1. **One dispatch lane.** A mutation leaves through `onActionRef.current`, the shell's ONE input\n   *    funnel — the same call the palette, the keybindings and the app's own buttons make. It mints\n   *    an input-ledger entry, obeys the active-window rules and settles with a typed outcome, so an\n   *    agent can never bypass a gate the UI respects.\n   * 2. **The agent is its own actor.** `provenance.origin = \"agent\"` rides along, so the edit is\n   *    attributable in the human's history rather than looking like something they did.\n   * 3. **The commit is where the mutation happens.** The gateway's protocol is\n   *    `ReadHistory → PureCommand → TransactionPrepare → TransactionCommit`; the shell has no\n   *    \"compute the ops but do not apply them\" seam, so `pureCommand` returns a DEFERRED plan and\n   *    `transactionCommit` is the one leg that dispatches. A rollback therefore really does leave\n   *    the document untouched, which is the property the two-phase shape exists to give. */",
+   "after": [
+    "  useEffect(() => {",
+    "    const deferred = agentDeferredPlansRef.current;",
+    "    agentArtifactRouteRef.current = async (request): Promise<readonly ShellAppFrameV1[]> => {"
+   ],
+   "before": [
+    "  }, [dock]);",
+    ""
+   ]
+  }
+ },
+ {
+  "i": 17,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📐️layout-hotkeys/🟦️.ts",
+   "text": "  /** 📇️ Folds the current session's space index over its space's FULL directory history (the guest's contract). */",
+   "after": [
+    "  foldSpaceDirectoryRef.current = () => {",
+    "    const current = sessionRef.current;",
+    "    if (current === null) return;"
+   ],
+   "before": [
+    "  );",
+    "  dispatchDirectoryEventsRef.current = dispatchDirectoryEventBatch;"
+   ]
+  }
+ },
+ {
+  "i": 18,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📬️artifact-opening/🟦️.ts",
+   "text": "  /** 📖️ Seeds the Conflicts panel with this session's authoritative roster on session start/switch\n   * (`AppCommand::ReadConflicts`, contract freeze §C8/§C9) — otherwise the panel would only ever\n   * show conflicts a later `setMergePolicy`/`resolveConflict` reply happened to carry, staying empty\n   * across a reload even when the guest already holds `Open` conflicts. Reads\n   * `loadedPluginsRef.current` rather than depending on `loadedPlugins` so a plugin hot-swap that\n   * leaves the session's pluginId in place doesn't re-fire this on every unrelated roster change. */",
+   "after": [
+    "  useEffect(() => {",
+    "    if (!session) return;",
+    "    const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;"
+   ],
+   "before": [
+    "  conflictsHostRef.current = conflictsHost;",
+    ""
+   ]
+  }
+ },
+ {
+  "i": 19,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🔁️contributions-refresh/🟦️.ts",
+   "text": "  /** 🗣️ Keeps already-built window titles (workbench layout, extra spawned windows) in sync on every locale/terminology switch — `refreshUi` only rebuilds `shellLayout` from scratch on a session change, so an existing session's baked-in titles would otherwise go stale.\n   *\n   * 🌐️ And asks the GUEST to re-render, because the titles are only the shell's own half. Every label\n   * inside a guest-authored body — the outliner's section headings, its per-row Hide/Lock actions, the\n   * inspector's field names — is resolved by the program against `ViewModel::locale` at the moment it\n   * rendered (`🗣️terminology/🦀️.rs`'s `puzzle3d_labels`), so a language switch that requests no refresh\n   * leaves every one of those bodies in the previous language for as long as nothing else happens to\n   * dirty them. Measured on `:6013`: with the actor-revocation of §1 fixed, `locale-switch` brought the\n   * whole shell roster back German while the outliner still read \"OBJECTS / Hide / Lock / REFERENCES\"\n   * (ticket 26/09/02 wave B40 §3). `replaceBodies` because a language change re-authors EVERY string:\n   * the hash-conditional path must not be allowed to keep a body it cached under the old locale, and\n   * the live UI stores hold rendered text of their own. */",
+   "after": [
+    "  useEffect(() => {",
+    "    const windowKinds = session?.app.windowKinds;",
+    "    if (!windowKinds) return;"
+   ],
+   "before": [
+    "  refreshDirectoryHomeRef.current = async (nextSession) => refreshUi(nextSession);",
+    ""
+   ]
+  }
+ },
+ {
+  "i": 20,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🔒️identity-document-ports/🟦️.ts",
+   "text": "  /** 🎯️ The scope this shell asks the agent-bridge supervisor with (ticket 26/09/23, G12 session 14c — scoped offers): its\n   * hub, the space it has open and the agents THIS human delegated there, read from the hub, which lists only the asking\n   * human's own. A hub-bound gateway's offer is then served to its own human's shell and to no other. */",
+   "after": [
+    "  agentBridgeOfferScopeRef.current = async (signal) => {",
+    "    if (hubEnv === null || openSpaceId === null || hubSessionCapabilityRef.current === null) return null;",
+    "    const hubOrigin = hubBootstrapOriginV1();"
+   ],
+   "before": [
+    "    [rememberHubSessionCapability],",
+    "  );"
+   ]
+  }
+ },
+ {
+  "i": 21,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🖱️shell-actions/🟦️.ts",
+   "text": "        /**\n         * 🪟️ A WINDOW-scoped dispatch belongs to the program that owns that window, whatever\n         * controller raised it. Shell chrome (the navbar's history verbs, a keybinding, a panel row)\n         * raises actions with the SESSION's controller id while the active window belongs to a\n         * spawned program — measured on the live `s` host as\n         * `noteShellCommand refused: view-state-unresolved (user window=space-2::s-workflow)`, because\n         * the host app has no window by that name. This is the \"panel actions dispatch in the ACTIVE\n         * window\" rule, stated once for every route below instead of per call site.\n         */",
+   "after": [
+    "        if (hostMode && hostWindowId !== undefined) {",
+    "          const windowOwnerId = spawnedIdOfWindowInstanceV1(hostWindowId, spawnedIdsRef.current);",
+    "          if (windowOwnerId !== null && windowOwnerId !== targetSpawnedId) {"
+   ],
+   "before": [
+    "         * leftover-overlay lane are keyed by. */",
+    "        const hostWindowId = inputActionWindowV1(action, activeWindowIdRef.current) ?? undefined;"
+   ]
+  }
+ },
+ {
+  "i": 22,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🖼️canvas-footer/🟦️.tsx",
+   "text": "  /** 🚦️ Deterministic DOM beacon for headless smoke tests (e.g. Storybook's OS-shell plugin-boot matrix)\n   * to wait on instead of screenshots/timeouts — set once a session resolves or errors, cleared on unmount.\n   * Mirrored onto this shell's own `[data-shell-id]` scope root (`data-shell-ready`/`data-shell-error`/\n   * `data-shell-not-found`) because the `document.documentElement` slot above is a single global value and\n   * cannot distinguish several `FrameworkOsShell` instances mounted on one page (e.g. the demonstrator). */",
+   "after": [
+    "  useEffect(() => {",
+    "    const root = document.documentElement;",
+    "    const shellRoot = scope.rootRef.current;"
+   ],
+   "before": [
+    "",
+    "  // #region 🔖️ReadinessBeacon"
+   ]
+  }
+ },
+ {
+  "i": 23,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🖼️canvas-footer/🟦️.tsx",
+   "text": "  /** 🔬️ Dev-only mirror of the two facts a catalog-wide smoke cannot otherwise read from the DOM: which\n   * programs this session can spawn, and which installed plugins ended up `failed`/`crashed` (the shell\n   * only console-logs a non-primary install failure — see the streaming install effect). Shape is\n   * {@link ShellCatalogProbe}; consumed by\n   * `framework-os-dev verify catalog`. Beside it, `__semioOsInstalledContributions(instanceId)` reads the contributions\n   * closure the host last pushed into that instance through `setContributions` ({@link createContributionsPublisher}'s\n   * `installedFor`) — the witness that a topic-only extension reached its parent. Never defined in a production build. */",
+   "after": [
+    "  useEffect(() => {",
+    "    let dev = false;",
+    "    try {"
+   ],
+   "before": [
+    "",
+    "  // #region 🔖️CatalogSmokeProbe"
+   ]
+  }
+ },
+ {
+  "i": 24,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🖼️canvas-footer/🟦️.tsx",
+   "text": "  /** 🔬️ Dev/test-only read seam over the actual acknowledged Shell store. The caller supplies only\n   * a scope; the returned closed projection contains no capability or mutation surface. */",
+   "after": [
+    "  useEffect(() => {",
+    "    let dev = false;",
+    "    try {"
+   ],
+   "before": [
+    "  }, [session, error, pluginFilter, registry, pluginStatusById, panel, spacePrograms, appRouter]);",
+    ""
+   ]
+  }
+ },
+ {
+  "i": 25,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🖼️canvas-footer/🟦️.tsx",
+   "text": "  /** 🧯️ One console record per plugin the router excluded — permanent, not a `[TRACE]` trace: an\n   * excluded plugin installs cleanly, so this is the only signal outside the dev probe that its\n   * surfaces are unroutable. */",
+   "after": [
+    "  useEffect(() => {",
+    "    for (const fault of routerFaultByPluginId.values()) console.error(`AppRouter excluded plugin ${JSON.stringify(fault.scope.pluginId ?? \"\")}: ${fault.code}: ${fault.message}`);",
+    "  }, [routerFaultByPluginId]);"
+   ],
+   "before": [
+    "  }, [documentServices]);",
+    ""
+   ]
+  }
+ },
+ {
+  "i": 26,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗄️shell-uri-documents/🟦️.ts",
+   "text": "  /** 🗃️ Hands the landing app every document this device keeps that its current instance was not handed yet: each one's\n   * archive is read back from its own lane and applied as `applyLocalCatalogDocument` (a retained, idempotent catalog\n   * job), so a studio kept before a reload is listed — and opens — again. A lane that holds no archive is skipped. */",
+   "after": [
+    "  useEffect(() => {",
+    "    const current = session;",
+    "    if (!current || !hostPlugin || current.pluginId !== hostPlugin.handle.pluginId || current.app.id !== landingAppId) return;"
+   ],
+   "before": [
+    "  applyShellUriRef.current = applyShellUri;",
+    ""
+   ]
+  }
+ },
+ {
+  "i": 27,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🚀️plugin-lifecycle/🟦️.ts",
+   "text": "  /** 🚑️ A LIVE session whose worker was taken down is recoverable exactly the way a killed boot is:\n   * `ShardClient.rebuild` has already replaced the worker and `PluginRuntime` has already retired the\n   * dead instance's bookkeeping (see `onPluginInstancesLost`), so a fresh `createApp` on the rebuilt\n   * shard re-opens the document and the session continues.\n   *\n   * Without this the shard restore brought the ACTOR back and nothing else: the guest returned empty,\n   * every later command page failed its liveness check with `plugin.command-page-invalid`, and the\n   * session was dead until the user reloaded — measured on 2026-09-12 after a 16 s `brep.bool.cut`\n   * tripped the watchdog (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,\n   * `📓️extension-evaluate-budget-2026-09-12.md`).\n   *\n   * If the rebuild ALSO fails there is nothing left to try in-page, so the shell says so in the\n   * user's own language rather than leaving a session that answers nothing. */",
+   "after": [
+    "  useEffect(() => {",
+    "    return onPluginInstancesLost((_shardIndex, lost) => {",
+    "      const session = sessionRef.current;"
+   ],
+   "before": [
+    "  );",
+    ""
+   ]
+  }
+ },
+ {
+  "i": 28,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🛂️directory-route/🟦️.ts",
+   "text": "  /** 🧯️ Unmount and identity change both retire the operation: the worker cancels its transport and\n   * erases page, receipt, and capability before the pane can be remounted under a new identity. */",
+   "after": [
+    "  useEffect(() => () => {",
+    "    const worker = backboneWorkerRef.current;",
+    "    const operationEpoch = spaceAdministrationEpochRef.current;"
+   ],
+   "before": [
+    "  }, [spaceAdministration]);",
+    ""
+   ]
+  }
+ },
+ {
+  "i": 29,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🛫️spawned-session/🟦️.ts",
+   "text": "  /**\n   * 🪟️ Seeds the canvas for whichever program owns it. THIS is what makes a spawned program a member\n   * of the session rather than a breadcrumb: `Mode` prunes every layout leaf whose id is absent from\n   * the window list it is handed (`resolveModeLayout` → `reconcileWindows`), so a spawned program\n   * whose windows were never put into `shellLayout` reconciled the host app's leaves away and painted\n   * the empty-shell notice — measured verbatim on the real `s` host as \"Drag windows from Display in\n   * the navbar, or restore a saved layout\" with `[data-window-id] = []`\n   * (ticket 26/09/18, S4 §5.2). The spawned app's OWN declared default layout is used, renamed into\n   * that instance's window-id namespace, so a two-window foreign editor opens as its author declared.\n   *\n   * 🚦️ Keyed on the focused PROGRAM, never on `session` identity: an ordinary refresh must not\n   * re-seed, or every action would throw the live arrangement away.\n\n   */",
+   "after": [
+    "  useEffect(() => {",
+    "    if (!session) return;",
+    "    if (seededFocusedProgramKeyRef.current === focusedProgramKey) return;"
+   ],
+   "before": [
+    "  const focusedProgramKey = focusedProgramKeyV1(focusedProgram);",
+    "  const seededFocusedProgramKeyRef = useRef<string>(\"\");"
+   ]
+  }
+ },
+ {
+  "i": 30,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🛫️spawned-session/🟦️.ts",
+   "text": "  /** ⌨️ A program the user just opened takes keyboard focus once its active window has mounted — its dock tabpanel,\n   * the same stop a pointer click lands on — but only while nothing else holds focus. Opening a program from the\n   * command palette used to leave focus on `<body>`, so the next Tab restarted at the navbar instead of inside the\n   * program the user asked for (WCAG 2.2 SC 2.4.3, measured inside `s`, ticket 26/09/23 S15). */",
+   "after": [
+    "  useEffect(() => {",
+    "    if (focusedSpawnedId === null) return;",
+    "    let frames = 0;"
+   ],
+   "before": [
+    "  }, [focusedProgramKey, focusedSpawnedId, focusedApp, session, appLabelsOverlay, uiTerminology, uiLocale, writeToolRegister]);",
+    ""
+   ]
+  }
+ },
+ {
+  "i": 31,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🛫️spawned-session/🟦️.ts",
+   "text": "  /**\n   * 🐚️ Consumes a plugin action's typed `requestedEffects: Effect[]` (WS-D's `InvocationResponse`) —\n   * replaces the deleted `processPluginOperations` string-matching. The legacy `setDocument`-mirror\n   * backbone-write block is gone entirely: document content sync now flows through\n   * `openDocument`/`closeDocument`'s worker-backed `DocumentHost` lifecycle, not a per-operation JS mirror.\n   */",
+   "after": [
+    "  useEffect(() => {",
+    "    const services = documentServices.filter((presentation) => loadedPlugins.some((entry) => entry.handle.pluginId === presentation.owner && (entry.manifest.topicContributions ?? []).some((topic) => {",
+    "      if (topic.topic !== DOCUMENT_SERVICE_TOPIC_V1) return false;"
+   ],
+   "before": [
+    "  );",
+    ""
+   ]
+  }
+ },
+ {
+  "i": 32,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️HubConnection/🟦️.tsx",
+   "text": "  /** ♻️ Re-bootstrap on mount: the browsing context already holds a session (a reload, or this surface reopened after a\n   * sign-in), so it is presumed live only until the hub's own `me` answer confirms or refuses it. Mount-only — a later\n   * sign-out must not resurrect the session it just ended. */",
+   "after": [
+    "  useEffect(() => {",
+    "    const held = portRef.current.heldCapability?.() ?? null;",
+    "    if (held === null || rebootstrapped.current) return;"
+   ],
+   "before": [
+    "  }, [connection.id, loadSpaces]);",
+    ""
+   ]
+  }
+ },
+ {
+  "i": 33,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️HubConnection/🟦️.tsx",
+   "text": "  /** ♻️ Re-authentication without a round trip per render: once the locally known deadline has\n   * passed, one `me` read confirms it with the hub (which may have extended or revoked it) instead\n   * of the shell deciding from its own clock. */",
+   "after": [
+    "  useEffect(() => {",
+    "    if (session.phase !== \"signed-in\" || session.expiresAtMs === null) return undefined;",
+    "    const remaining = session.expiresAtMs - Date.now();"
+   ],
+   "before": [
+    "  }, []);",
+    ""
+   ]
+  }
+ },
+ {
+  "i": 34,
+  "nhits": 1,
+  "res": {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🎛️command-registry/🟦️.tsx",
+   "text": "  /** 👁️✏️ Whether the active session's dialect has at least one `AppRouter` entry for either role —\n   * gates `open-artifact-with-viewer`/`open-artifact-with-editor` (contract freeze §5) the same way\n   * `hasIntroduction`/`tutorialRecorderAvailable` gate their own optional commands above. */",
+   "after": [
+    "  hasOpenArtifactSurfaces = false,",
+    "): CommandDefinition[] {",
+    "  const lockedCommandIds = new Set<string>([...(locks.appearance ? [\"os.setAppearance\"] : []), ...(locks.themeId ? [\"os.setThemeId\"] : []), ...(locks.locale ? [\"os.setLocale\"] : []), ...(locks.terminology ? [\"os.setTerminology\"] : [])]);"
+   ],
+   "before": [
+    "  terminology: string = UI_TERMINOLOGY_NATIVE,",
+    "  locale: string = SHELL_LOCALES[0],"
+   ]
+  }
+ }
+]

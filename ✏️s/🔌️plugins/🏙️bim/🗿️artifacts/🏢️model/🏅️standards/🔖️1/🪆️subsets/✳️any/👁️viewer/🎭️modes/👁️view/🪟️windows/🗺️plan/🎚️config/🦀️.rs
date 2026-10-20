@@ -24,7 +24,7 @@ impl Default for BimViewerPlanWindowConfig {
     }
 }
 
-crate::bim_window_config! {
+semio_s_artifact_bim_model_tests::bim_window_config! {
     config: BimViewerPlanWindowConfig,
     diff: BimViewerPlanWindowConfigDiff,
     mutation: BimViewerPlanWindowConfigMutation,

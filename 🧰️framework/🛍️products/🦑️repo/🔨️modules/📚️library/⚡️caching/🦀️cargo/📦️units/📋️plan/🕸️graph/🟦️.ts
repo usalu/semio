@@ -3,7 +3,7 @@ import{types}from"node:util";
 import type{RustUnitV1}from"../../🧬️definition/🟦️.ts";
 import{requireRustUnitInputV1,constructRustUnitPlanV1,rustUnitPlanLimitsV1,type RustUnitPlanV1}from"../🟦️.ts";
 import{compareRustUnitTextV1}from"../🔏️identity/🟦️.ts";
-import schema from"./🧬️schema/🔣️.json";
+import schema from"./🧬️schema/🔣️.json" with { type: "json" };
 export const rustUnitGraphLimitsV1=Object.freeze({...schema.definitions.Policy.const});
 /** 📥️ Copies only a bounded dense list of already owned immutable Units before asynchronous work. */
 export function captureRustUnitGraphInputsV1(value:readonly RustUnitV1[]):readonly RustUnitV1[]{const policy=rustUnitGraphLimitsV1;if(!Array.isArray(value)||types.isProxy(value)||Object.getPrototypeOf(value)!==Array.prototype||value.length>policy.maximumUnits||Reflect.ownKeys(value).length!==value.length+1)throw Error("Bounded own Rust graph input list required");const units:RustUnitV1[]=[];let bytes=2;for(let index=0;index<value.length;index++){const row=Object.getOwnPropertyDescriptor(value,String(index));if(!row?.enumerable||!("value"in row))throw Error("Dense Rust graph input values required");const unit=row.value as RustUnitV1,extent=requireRustUnitInputV1(unit)+(index?1:0);if(extent>policy.maximumInputBytes-bytes)throw Error("Rust graph aggregate input bytes exceeded");bytes+=extent;units.push(unit);}return Object.freeze(units);}

@@ -48,7 +48,7 @@ async fn imported_document(example: &str) -> Arc<RemodelingSnapshot> {
         for (asset_id, bytes) in frames().take(kept) {
             let image = semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::decode_still_image(FRAME_MIME, bytes).expect("frame decodes");
             let asset = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ImageAsset { mime: FRAME_MIME.into(), data: base64_codec::base64_standard_encode(bytes), width: image.width, height: image.height };
-            scene = semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&scene, &semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_asset::create_asset((*asset_id).into(), asset)).expect("frame asset applies");
+            scene = semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&scene, &semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_asset((*asset_id).into(), asset)).expect("frame asset applies");
         }
         if example == "orbit-short" {
             for stream in &mut scene.streams {
@@ -68,9 +68,9 @@ async fn imported_document(example: &str) -> Arc<RemodelingSnapshot> {
         let stream = if index == 0 {
             semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_stream::create_stream(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaStream { id: "checker".into(), name: "checker".into(), kind: semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaKind::ImageSequence, camera_id: None, sync_offset_ms: 0.0, fps_hint: 2.0, frames: vec![frame], source: None })
         } else {
-            semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::add_stream_frame::add_stream_frame("checker".into(), frame, semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaKind::ImageSequence)
+            semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::add_stream_frame("checker".into(), frame, semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaKind::ImageSequence)
         };
-        for mutation in [semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_asset::create_asset(asset_id, semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_encode(&bytes), width: 24, height: 24 }), stream] {
+        for mutation in [semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_asset(asset_id, semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_encode(&bytes), width: 24, height: 24 }), stream] {
             scene = semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&scene, &mutation).expect("frame import applies");
         }
     }
@@ -462,7 +462,7 @@ async fn the_revalidate_job_keeps_the_result_on_an_unchanged_head_and_withdraws_
     let whole = run_to_end(&mut run, whole_turns());
     let checkpoint = whole.checkpoints.last().expect("a final checkpoint").clone();
     let provisional = whole.ops.len() as u32;
-    let unrelated = Arc::new(semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&document, &semio_s_artifact_remodel_remodeling_mut_calib::standards::v1::subsets::any::schema::mutations::create_gcp::create_gcp(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::GroundControlPoint { id: "gcp-1".into(), name: "Corner".into(), world_position: [0.0, 0.0, 0.0], observations: Vec::new() })).expect("gcp applies"));
+    let unrelated = Arc::new(semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&document, &semio_s_artifact_remodel_remodeling_mut_calib::standards::v1::subsets::any::schema::mutations::create_gcp(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::GroundControlPoint { id: "gcp-1".into(), name: "Corner".into(), world_position: [0.0, 0.0, 0.0], observations: Vec::new() })).expect("gcp applies"));
     let changed = Arc::new(semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&document, &semio_s_artifact_remodel_remodeling_mut_params::standards::v1::subsets::any::schema::mutations::update_ingest_params::update_ingest_params(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::IngestParams { frame_sample_stride: 2, ..document.params.ingest.clone() })).expect("params apply"));
     for (head, withdrawn) in [(unrelated, false), (changed, true)] {
         let mut job = ReconstructionRevalidateJob::new(identity(), head, Some(&checkpoint), provisional);

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@semio-tech/framework-onboarding",
+  "version": "0.1.0",
+  "description": "framework · onboarding declarations, window layouts and tutorials",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./🟦️.ts",
+    "./declaration": "./🏷️declaration/🟦️.ts",
+    "./testing/fixtures": "./🧪️tests/🧫️fixtures/🟦️.ts",
+    "./window-layout": "./🗺️window-layout/🟦️.ts"
+  },
+  "license": "LGPL-3.0-or-later",
+  "bundleKind": "library",
+  "devDependencies": {
+    "immer": "10.1.1"
+  }
+}

@@ -1,0 +1,97 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🔁️mounted-state-step/🦀️.rs",
+ "function": "step",
+ "nth": 0,
+ "match_line": 22,
+ "types": {},
+ "ret": "Result<JobStep, semio_framework_job::OriginalTurnFailure>",
+ "inline": true,
+ "arms": [
+  {
+   "line": 23,
+   "name": "stage_prepare_graph",
+   "doc": "🧱️ Runs the `prepare graph` stage of `step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 63,
+   "name": "stage_prepare_domain",
+   "doc": "🪵️ Runs the `prepare domain` stage of `step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 86,
+   "name": "stage_mesh",
+   "doc": "🔩️ Runs the `mesh` stage of `step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 139,
+   "name": "stage_build_model",
+   "doc": "⚙️ Runs the `build model` stage of `step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 237,
+   "name": "stage_build_csr",
+   "doc": "🧲️ Runs the `build csr` stage of `step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 275,
+   "name": "stage_pcg",
+   "doc": "🪛️ Runs the `pcg` stage of `step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 333,
+   "name": "stage_sync_pcg_visual",
+   "doc": "🔧️ Runs the `sync pcg visual` stage of `step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  }
+ ],
+ "method": {
+  "self_param": "&mut self",
+  "call": "self.{name}({args})"
+ },
+ "wrap": [
+  "Ok({",
+  "})"
+ ],
+ "call_suffix": "?"
+}

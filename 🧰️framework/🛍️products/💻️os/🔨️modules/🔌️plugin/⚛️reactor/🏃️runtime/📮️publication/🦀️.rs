@@ -1,9 +1,37 @@
 //! 📮️ Reactor publication retains eight original page loans through funded receiving and cancellation.
-use super::*;
-use semio_framework_actor::typed_operation_page::{ResultPageDelivery,ResultPageWireReceiver};
-use semio_framework_value::{ValueError,ValueRefusalKind};
+use crate::life_instance_registry::{PLUGIN_RUNTIME_INSTANCE_SLOTS,PluginRuntime};
+use semio_framework::kernel::{Effect,MessageEndpoint};
+use semio_framework::Fault;
+use semio_framework_actor::typed_operation_page::{ResultPageDelivery,ResultPageWireReceiver,TypedOperationResultPage};
+#[cfg(test)]
+use semio_framework_actor::typed_operation_page::TypedOperationResultToken;
+use semio_framework_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use std::mem::{size_of,ManuallyDrop};
+
+/// 🔁️ Units one turn may drive before it hands the host its turn back regardless of the clock.
+/// A guest whose host clock is missing still terminates; 256 covers every staged work this
+/// runtime admits (the heaviest measured is a 5.7 KB `registerBrushMesh` at ~84).
+pub const TYPED_OPERATION_UNITS_PER_TURN: u32 = 256;
+/// 📄️ Result pages ONE turn may hand the host, and therefore the widest acknowledgement batch the
+/// shell posts back in one crossing.
+///
+/// 🐛️ A turn used to carry EXACTLY ONE page: [`advance_typed_operation_output`] took a single page
+/// and [`TypedOperationGrant::spent`] ended the drive the instant it existed, so every
+/// acknowledgeable publication unit of every live operation cost its own host round trip. Measured
+/// on the React door of 🧊️generation3d (`📓️shard-message-crossings-2026-09-15.md` §2): **200 ack
+/// crossings over 69 operations, every single one carrying exactly ONE ack** — 10.0 of a
+/// `flowEvalTick` hop's 36.2 worker crossings, each a full structured-clone round trip to retire 53
+/// bytes. A page's ACK is per-page by protocol; the CROSSING that carries it never had to be.
+/// `Event::Message` is a list on the wire and the reactor's poll already acknowledges every entry of
+/// it, so N presentable pages retire in ONE crossing — the same cardinality change
+/// `📓️ui-turn-patch-batching-2026-09-15.md` made for `patch-ack`.
+///
+/// Each operation still retains exactly one unacknowledged page (`queue_page`), so this bound is
+/// over DISTINCT live operations, never over one operation's own sequence.
+pub const TYPED_OPERATION_PAGES_PER_TURN_MAXIMUM: usize = 8;
 
 struct PageSlot{page:Option<TypedOperationResultPage>,delivery:Option<ResultPageDelivery>,receiver:Option<ResultPageWireReceiver>,publication:ManuallyDrop<Option<Effect>>,refused:Option<ControlledRetirement<(String,Vec<u8>)>>}
 impl PageSlot{
@@ -30,11 +58,11 @@ impl PageSlot{
 }
 impl Drop for PageSlot{fn drop(&mut self){assert!(std::thread::panicking()||self.empty(),"original Reactor publication reached Drop before receiving and refused output closed");if self.empty(){unsafe{ManuallyDrop::drop(&mut self.publication);}}}}
 fn fits(d:RetirementDemand,g:RetainedCloneGrant)->bool{g.maximum_items>0&&g.maximum_copy_bytes>=d.copy_bytes&&g.maximum_capacity_bytes>=d.capacity_bytes&&g.maximum_release_bytes>=d.release_bytes&&g.maximum_depth>=d.depth}
-pub(super) struct NativeResultPages{slots:[PageSlot;TYPED_OPERATION_PAGES_PER_TURN_MAXIMUM]}
+pub struct NativeResultPages{slots:[PageSlot;TYPED_OPERATION_PAGES_PER_TURN_MAXIMUM]}
 impl NativeResultPages{
- pub(super) fn new()->Self{Self{slots:[const{PageSlot{page:None,delivery:None,receiver:None,publication:ManuallyDrop::new(None),refused:None}};TYPED_OPERATION_PAGES_PER_TURN_MAXIMUM]}}
- pub(super) fn terminal_is_empty(&self)->bool{self.slots.iter().all(PageSlot::empty)}
- pub(super) fn capture<PA:PluginApp>(&mut self,app:&mut PA,instance:u32,cx:&mut semio_framework_job::StepContext<'_>)->Result<usize,Fault>{
+ pub fn new()->Self{Self{slots:[const{PageSlot{page:None,delivery:None,receiver:None,publication:ManuallyDrop::new(None),refused:None}};TYPED_OPERATION_PAGES_PER_TURN_MAXIMUM]}}
+ pub fn terminal_is_empty(&self)->bool{self.slots.iter().all(PageSlot::empty)}
+ pub fn capture<PA:PluginApp>(&mut self,app:&mut PA,instance:u32,cx:&mut semio_framework_job::StepContext<'_>)->Result<usize,Fault>{
   let mut admitted=0;
   for slot in self.slots.iter_mut().filter(|slot|slot.empty()){
    for _ in 0..2{
@@ -46,11 +74,11 @@ impl NativeResultPages{
   }
   Ok(admitted)
  }
- pub(super) fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{match self.slots.iter_mut().find(|slot|!slot.empty()){Some(slot)=>slot.close_step(grant),None=>Ok(Default::default())}}
+ pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{match self.slots.iter_mut().find(|slot|!slot.empty()){Some(slot)=>slot.close_step(grant),None=>Ok(Default::default())}}
 }
 
 /// 🎛️ Each destination action consumes the same caller receipt before any renderer effect becomes visible.
-pub(crate) fn drive<PA:PluginApp>(runtime:&PluginRuntime<PA>,effects:&mut Vec<Effect>,maximum_effects:usize,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,Fault>{
+pub fn plugin_drive_result_pages<PA:PluginApp>(runtime:&PluginRuntime<PA>,effects:&mut Vec<Effect>,maximum_effects:usize,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,Fault>{
  let instances=runtime.instances.try_borrow().map_err(|_|plugin_internal_fault("runtime instance authority is busy"))?;let mut cursor=runtime.typed_continuation_cursor.get();let mut first=None;let mut pending=false;
  while let Some((index,id,cell))=instances.next_entry_from(cursor){
   if first==Some(index){break}first.get_or_insert(index);cursor=(index+1)%PLUGIN_RUNTIME_INSTANCE_SLOTS;

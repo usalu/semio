@@ -25,31 +25,6 @@
     }
   },
   "diff": {
-    "artifact": {
-      "schema": "procedure.document",
-      "flow": {
-        "childId": "procedure-flow",
-        "target": {
-          "artifactId": "procedure-flow",
-          "dialect": {
-            "artifactKind": "s.stdio.semio",
-            "standard": "v1",
-            "subset": "flow"
-          }
-        }
-      },
-      "text": {
-        "childId": "procedure-text",
-        "target": {
-          "artifactId": "procedure-text",
-          "dialect": {
-            "artifactKind": "s.stdio.semio",
-            "standard": "v1",
-            "subset": "text"
-          }
-        }
-      }
-    },
     "schema": "procedure.document",
     "flow": {
       "childId": "procedure-flow",

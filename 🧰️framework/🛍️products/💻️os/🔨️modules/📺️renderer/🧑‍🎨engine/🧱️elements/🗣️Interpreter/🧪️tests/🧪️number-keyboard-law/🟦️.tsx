@@ -3,16 +3,16 @@
  * design §18 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): each `keys` row through its physical key (a Home/End without
  * its bound stays the caret's), each `typed` row read back to its stored value, each `limits` row refused visibly or dispatched.
  * The dispatched intents are the oracle: what the guest receives is what the law says. */
-import { uiNumberControlsFixture as numberControls } from "@semio-tech/framework/ui/testing/fixtures";
-import { uiNumberFieldKey, type SliderKey } from "@semio-tech/framework/modules/ui/contract/component";
+import { uiNumberControlsFixture as numberControls } from "@semio-tech/ui/testing/fixtures";
+import { uiNumberFieldKey, type SliderKey } from "@semio-tech/ui-contract/component";
 
 type TestSource = { readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../📃️UiDocumentStore/🟦️.tsx"), "UiDocumentStore"> & Pick<typeof import("../../🧱️node-tree/🟦️.tsx"), "UiNodeView">, _source: TestSource): Promise<void> {
   const { UiDocumentStore, UiNodeView } = dependencies;
-  type Component = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").Component;
-  type UiIntent = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").UiIntent;
-  type UiNodeRecord = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").UiNodeRecord;
+  type Component = import("@semio-tech/framework-manifest/ui-contract-and-canvas-types").Component;
+  type UiIntent = import("@semio-tech/framework-manifest/ui-contract-and-canvas-types").UiIntent;
+  type UiNodeRecord = import("@semio-tech/framework-manifest/ui-contract-and-canvas-types").UiNodeRecord;
   type KeyRow = { readonly case: string; readonly current: number; readonly min: number | null; readonly max: number | null; readonly step: number; readonly snaps: readonly number[]; readonly key: SliderKey; readonly large: boolean; readonly precision?: number | null; readonly factor?: number | null; readonly expected: number };
   type TypedRow = { readonly case: string; readonly typed: number; readonly factor: number | null; readonly precision: number | null; readonly candidates: readonly number[]; readonly expected: number };
   type LimitRow = { readonly case: string; readonly value: number; readonly min: number | null; readonly max: number | null; readonly limits: Record<string, unknown> | null; readonly crossed: "min" | "max" | null };

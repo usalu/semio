@@ -6,6 +6,7 @@
     "verify-forms-try-window-ownership": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/📋️forms/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify forms-try-window-ownership",

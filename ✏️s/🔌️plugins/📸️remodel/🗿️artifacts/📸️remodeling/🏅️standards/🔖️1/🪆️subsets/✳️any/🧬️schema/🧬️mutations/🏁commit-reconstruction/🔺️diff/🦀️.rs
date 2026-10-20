@@ -19,7 +19,7 @@ use std::collections::BTreeMap;
 use crate::standards::v1::subsets::any::schema::mutations::commit_reconstruction::component::CommitReconstruction;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::CommitReconstruction, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
+pub fn diff(payload: &crate::standards::v1::subsets::any::schema::mutations::commit_reconstruction::component::CommitReconstruction, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
     if let Some((content_id, chunk_count)) = payload.sparse.as_ref().and_then(|sparse| sparse.points.content_reference()) {
         if !remodeling_content_is_complete(&base.durable_artifacts, content_id, RemodelingContentKind::Sparse, chunk_count) {
             return protocol::MutationOutcome::error("mutation.target-mismatch", "The sparse cloud names durable content that is not complete.", ["sparse".to_string()]);

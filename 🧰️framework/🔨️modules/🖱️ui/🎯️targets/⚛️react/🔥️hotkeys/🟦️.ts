@@ -1,6 +1,6 @@
-import { type ControlKeybindingCallback, type ControlKeybindingOptions, type ControlKeybindingDependencies, useUiKeybindingsByControlId, resolveControlKeybindingRaw, SHELL_KEYBINDINGS, useHotkeys } from "../../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
-import { reactHostPort } from "../../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
-import type { Anchor } from "../../../🔨️modules/⚓️panel-anchor/🟦️.ts";
+import { type ControlKeybindingCallback, type ControlKeybindingOptions, type ControlKeybindingDependencies, useUiKeybindingsByControlId, resolveControlKeybindingRaw, SHELL_KEYBINDINGS, useHotkeys } from "@semio-tech/ui/modules/control-keybinding-context";
+import { reactHostPort } from "@semio-tech/ui/elements/Ports/react";
+import type { Anchor } from "@semio-tech/ui/modules/panel-anchor";
 import { SHELL_PANEL_ANCHOR_KEY_IDS } from "../⌨️keybindings/🟦️.ts";
 
 /**

@@ -3,7 +3,7 @@ import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️proces
 import { captureOwnedCommandV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { readdirSync, renameSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { preparedBinaryen } from "@semio-tech/nx-bootstrap-tools/wasm/script";
+import { preparedBinaryen } from "@semio-tech/nx-bootstrap-tools/wasm";
 import { runCmdStatus } from "@semio-tech/process/execution";
 import { semioBuildMode } from "@semio-tech/repo-lib/process";
 import type { PluginWebMaterializeContext } from "../🧾️contract/🟦️.ts";

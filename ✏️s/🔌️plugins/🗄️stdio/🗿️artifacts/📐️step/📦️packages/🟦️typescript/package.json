@@ -23,6 +23,9 @@
     }
   },
   "dependencies": {},
+  "devDependencies": {
+    "@semio-tech/framework-manifest": "workspace:*"
+  },
   "license": "LGPL-3.0-or-later",
   "repository": {
     "type": "git",

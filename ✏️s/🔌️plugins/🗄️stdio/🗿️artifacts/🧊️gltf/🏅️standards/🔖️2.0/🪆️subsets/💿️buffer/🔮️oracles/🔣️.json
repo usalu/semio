@@ -39,6 +39,10 @@
             {
               "id": "removes-the-two-byte-buffer-and-retargets-the-buffer-view",
               "directoryName": "🚫️removes"
+            },
+            {
+              "id": "middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -50,6 +54,10 @@
             {
               "id": "removes-the-two-byte-window-and-renumbers-the-accessor",
               "directoryName": "🔬️t067"
+            },
+            {
+              "id": "middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },

@@ -1,5 +1,5 @@
 /** 📐️ CAD renderer geometry targets: the box and sphere preview layouts, the vector and bounding box readers and the display preview transforms. */
-import { type Object3D as ThreeObject3D } from "@semio-tech/framework/ui/targets/react";
+import { type Object3D as ThreeObject3D } from "@semio-tech/ui-react";
 import { type Vec3 } from "@semio-tech/cad-engine-ts/registry";
 import { type ModelEntityKind } from "@semio-tech/s-spatial-kernel-ts/geometry";
 import { type SpatialPreviewKernel } from "@semio-tech/s-spatial-kernel-ts/spatial";

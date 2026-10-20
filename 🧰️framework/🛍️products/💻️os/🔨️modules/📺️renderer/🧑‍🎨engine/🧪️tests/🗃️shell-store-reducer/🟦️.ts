@@ -11,8 +11,8 @@ import { tutorialInteractionSelectionActions } from "../../🧱️elements/🏛�
 import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
 import dialogOriginFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🗨️dialog-origin/🔣️.json";
 import tutorialInteractionFixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🎥️tutorial-interaction/🔣️.json";
-import { interactionSchema } from "@semio-tech/framework/interaction/testing/fixtures";
-import type { InteractionState } from "@semio-tech/framework/interaction";
+import { interactionSchema } from "@semio-tech/framework-interaction/testing/fixtures";
+import type { InteractionState } from "@semio-tech/framework-interaction";
 import type { TutorialUiChange, TutorialUiSnapshot } from "@semio-tech/framework";
 import { decodeLocalInteractionCaptureJson, LOCAL_INTERACTION_CAPTURE_MAX_BYTES } from "@semio-tech/framework-replication";
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";

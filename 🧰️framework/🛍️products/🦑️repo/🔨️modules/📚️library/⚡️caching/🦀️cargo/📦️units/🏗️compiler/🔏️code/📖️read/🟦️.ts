@@ -8,8 +8,8 @@ import{requireNativeStoragePathV1}from"../../../../../../../../../../🔨️modu
 import{validateJsonSchemaSubset}from"./../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import type{NxAuthorizerSourceManifestV1}from"./../../../../../🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts";
 import type{ScriptInvocation}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import schema from"../🧬️schema/🔣️.json";
-import receiptSchema from"../🧬️schema/📜️receipt.json";
+import schema from"../🧬️schema/🔣️.json" with { type: "json" };
+import receiptSchema from"../🧬️schema/📜️receipt.json" with { type: "json" };
 const hash=(bytes:Uint8Array|string)=>createHash("sha256").update(bytes).digest("hex");
 
 /** 🧊️ Actual sealed compiler code and its own Source receipt, independent of the unrelated Nx SDK generation. */

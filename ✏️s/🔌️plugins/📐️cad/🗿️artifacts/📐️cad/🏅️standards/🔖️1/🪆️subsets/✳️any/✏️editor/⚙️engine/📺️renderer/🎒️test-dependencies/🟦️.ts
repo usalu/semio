@@ -1,6 +1,6 @@
 /** 🎒️ The values the module hands its extracted suites, owned by the module directory so that the suites never import the module back. */
 
-import type { reactHostPort, uiDataLabel, WINDOW_SEARCH_USER } from "@semio-tech/framework/ui/targets/react";
+import type { reactHostPort, uiDataLabel, WINDOW_SEARCH_USER } from "@semio-tech/ui-react";
 import type { emptyMeshTransfer, kernelGeometry, solidRef } from "@semio-tech/cad-engine-ts/registry";
 import type { resolveTypologyStyle, typologyStyleCacheKey } from "@semio-tech/s-spatial-kernel-ts/geometry/typology";
 import type { listStatDefinitionsForModelDefinition, statDefinitionAppliesToScope } from "@semio-tech/s-spatial-kernel-ts/geometry/stats";

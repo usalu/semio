@@ -1,4 +1,4 @@
-import { loadUiSurfaceLifetimeFixture, loadSurfaceHostRetentionFixture } from "@semio-tech/framework/ui/testing/fixtures";
+import { loadUiSurfaceLifetimeFixture, loadSurfaceHostRetentionFixture } from "@semio-tech/ui/testing/fixtures";
 type TestSource = { readonly url: string };
 
 /** 🪪️ Every interpreted container carries its authored stable DOM id — including the two wrapper roles

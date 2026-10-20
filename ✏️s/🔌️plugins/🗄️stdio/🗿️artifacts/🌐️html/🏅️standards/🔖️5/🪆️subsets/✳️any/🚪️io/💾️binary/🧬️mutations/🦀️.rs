@@ -7,14 +7,14 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 mod mutations_codec {
 use super::*;
 use crate::standards::v5::subsets::any::schema::mutations::*;
-use crate::standards::v5::subsets::any::io::text::diff::{dec_html_node};
-use crate::standards::v5::subsets::any::io::text::diff::{enc_html_node};
-use crate::standards::v5::subsets::any::io::text::diff::{strip_brackets};
-use crate::standards::v5::subsets::any::io::text::diff::{split_top_level};
-use crate::standards::v5::subsets::any::io::text::diff::{decode_option};
-use crate::standards::v5::subsets::any::io::text::diff::{encode_option};
-use crate::standards::v5::subsets::any::io::text::diff::{dec_str};
-use crate::standards::v5::subsets::any::io::text::diff::{enc_str};
+use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::io::text::diff::dec_html_node;
+use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::io::text::diff::enc_html_node;
+use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::io::text::diff::strip_brackets;
+use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::io::text::diff::split_top_level;
+use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::io::text::diff::decode_option;
+use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::io::text::diff::encode_option;
+use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::io::text::diff::dec_str;
+use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::io::text::diff::enc_str;
 use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::schema::diff::{diff_at_path, HtmlAttrAdded, HtmlAttrModified, HtmlAttributesDiff, HtmlChildAdded, HtmlChildrenDiff, HtmlDiff, HtmlElementDiff, HtmlNodeDiff};
 use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::{element_attr, node_at, HtmlNode, HtmlSnapshot, NodePath};
 use protocol::OpBinary;

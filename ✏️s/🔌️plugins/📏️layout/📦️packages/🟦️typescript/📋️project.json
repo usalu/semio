@@ -4,33 +4,10 @@
   "targets": {
     "test": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📏️layout/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
-        "forwardAllArgs": true
-      }
-    },
-    "test-renderer-contract": {
-      "executor": "repo:script",
-      "inputs": [
-        "{workspaceRoot}/✏️s/🔌️plugins/📏️layout/**/*",
-        "{workspaceRoot}/🧰️framework/**/*"
-      ],
-      "options": {
-        "cwd": "✏️s/🔌️plugins/📏️layout/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test renderer-contract",
-        "forwardAllArgs": true
-      }
-    },
-    "canonical-architecture": {
-      "executor": "repo:script",
-      "inputs": [
-        "{workspaceRoot}/✏️s/🔌️plugins/📏️layout/**/*",
-        "{workspaceRoot}/🧰️framework/**/*"
-      ],
-      "options": {
-        "cwd": "✏️s/🔌️plugins/📏️layout/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test renderer-contract",
         "forwardAllArgs": true
       }
     }

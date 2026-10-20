@@ -4,7 +4,7 @@ import {dirname, join, relative, resolve} from "node:path";
 const REPO = "/Users/ueli/Documents/semio", C = `${REPO}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN`;
 const L = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
 const dirs = [`${L}/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🧪️tests/🛂️`, `${L}/🏃️process/🦀️cargo/🧪️testing/📦️executable/🧪️tests/🌿️`, `${L}/🏗️build/🎚️mode/🦀️profile/🧪️tests/⚙️arguments/📐️context/🦀️`, `${L}/🏗️build/🎚️mode/🦀️profile/🧪️tests/🦀️`];
-const files = readFileSync(`${C}/🗑️generated/tax-stage/grep-files.txt`, "utf8").split("\n").filter(Boolean);
+const files = readFileSync(`${C}/tax-stage-tools/index/grep-files.txt`, "utf8").split("\n").filter(Boolean);
 for (const f of files) {
   let text: string; try { text = readFileSync(join(REPO, f), "utf8"); } catch { continue; }
   const lines = text.split("\n");

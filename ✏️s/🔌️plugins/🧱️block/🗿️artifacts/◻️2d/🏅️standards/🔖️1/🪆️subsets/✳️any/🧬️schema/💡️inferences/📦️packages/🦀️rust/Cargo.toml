@@ -22,6 +22,7 @@ semio-framework-schema = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-block-2d-model = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

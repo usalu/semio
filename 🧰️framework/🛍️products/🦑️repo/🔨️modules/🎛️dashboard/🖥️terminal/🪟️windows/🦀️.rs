@@ -34,6 +34,8 @@ const SCROLLBACK: usize = 8000;
 /// 🧩️ What a window shows.
 pub(super) enum Body {
     Overview,
+    Files(super::sources::Files),
+    Document(Option<Box<super::sources::OpenDocument>>),
     Settings,
     Help,
     Launcher(Box<LauncherState>),
@@ -42,7 +44,7 @@ pub(super) enum Body {
 
 /// 🧱️ Which body to build.
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub(super) enum Kind { Overview, Settings, Help, Launcher, Output }
+pub(super) enum Kind { Files, Document, Overview, Settings, Help, Launcher, Output }
 
 /// 📍️ Where a new window goes among the others.
 #[derive(Clone, Copy)]
@@ -93,6 +95,9 @@ pub(super) enum Effect { Copy(String), OpenReady(String) }
 /// 🎛️ The whole native dashboard: preferences, keymap, windows, layout and the daemon link.
 pub(super) struct Dashboard {
     pub root: PathBuf,
+    pub source_job: Option<super::sources::Job>,
+    pub source_operation: u64,
+    pub source_pending: Option<(String, super::sources::Request)>,
     pub registry: Option<Arc<Registry>>,
     pub inventory: Option<Job>,
     pub phase: Option<Phase>,
@@ -141,7 +146,7 @@ impl Dashboard {
         let (keymap, _) = preferences.keymap();
         let light = preferences.appearance == "light";
         let mut dashboard = Self {
-            root, registry: None, inventory: None, phase: None, last_progress: 0, preferences, preference_path, shared_preferences, saving_preferences: None, opening_url: None, keymap, locale, light, layout, shell, windows: Vec::new(), next_serial: 2, armed: false, armed_at: None, input_mode: false, restore_focus: false,
+            root, source_job: None, source_operation: 0, source_pending: None, registry: None, inventory: None, phase: None, last_progress: 0, preferences, preference_path, shared_preferences, saving_preferences: None, opening_url: None, keymap, locale, light, layout, shell, windows: Vec::new(), next_serial: 2, armed: false, armed_at: None, input_mode: false, restore_focus: false,
             link: Link::default(), state: LinkState::Connecting, notice: None, sessions: BTreeMap::new(), hidden: HashSet::new(), shutdown_since: None, effects: Vec::new(), quit_requested: false, last_focus: std::cell::Cell::new(0), menu: None, glyphs: GlyphSet::Unicode, waker: None,
         };
         let (id, chrome) = dashboard.shell.windows[0].clone();
@@ -209,6 +214,12 @@ impl Dashboard {
         let list_state = || WidgetState::List(ListState::new(Vec::new()));
         let mut tree_node = None;
         let (list, input, caption, body) = match kind {
+            Kind::Files | Kind::Document => {
+                let caption = add_widget(tui, root, WidgetState::Label(LabelState { text: String::new(), align: Align::Left, role: semio_framework_ui_tui_core::theme::Role::MutedForeground }), Dimension::Cells(1));
+                let widget = if kind == Kind::Files { list_state() } else { let mut editor = semio_framework_ui_tui_widgets::widget::EditorState::new("", 1_048_576); editor.read_only = true; WidgetState::Editor(editor) };
+                let list = add_widget(tui, root, widget, Dimension::Weight(1));
+                (list, None, Some(caption), if kind == Kind::Files { Body::Files(super::sources::Files::default()) } else { Body::Document(None) })
+            }
             Kind::Output => {
                 let mut state = TerminalState::new(size.unwrap_or(Size { width: 80, height: 24 }), SCROLLBACK);
                 state.apply_theme(&tui.theme);
@@ -277,6 +288,7 @@ impl Dashboard {
     /// 🗑️ Removes a window; true when it was the last one.
     pub fn close_window(&mut self, tui: &mut Tui, index: usize) -> bool {
         if index >= self.windows.len() { return false; }
+        if self.dirty_close(index) { return false; }
         let focused = self.windows.get(self.focused_index(tui)).map(|window| window.id.clone());
         tui.cancel_pointer();
         let window = self.windows.remove(index);
@@ -371,6 +383,9 @@ impl Dashboard {
     fn body_title(&self, window: &DashboardWindow) -> String {
         let text = self.text();
         match &window.body {
+            Body::Files(_) => text.title_files.as_str().into(),
+            Body::Document(Some(document)) => format!("{}{}", if document.dirty { "* " } else { "" }, document.document.path),
+            Body::Document(None) => text.title_files.as_str().into(),
             Body::Overview => text.title_tasks.as_str().into(),
             Body::Settings => text.title_settings.as_str().into(),
             Body::Help => text.title_keyboard.as_str().into(),

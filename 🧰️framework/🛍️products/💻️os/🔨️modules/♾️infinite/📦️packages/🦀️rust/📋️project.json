@@ -75,7 +75,8 @@
           "execution": {
             "version": 1,
             "kind": "source"
-          }
+          },
+          "cache": { "version": 1, "class": "deterministic", "reason": "pure-function-of-inputs" }
         }
       }
     },

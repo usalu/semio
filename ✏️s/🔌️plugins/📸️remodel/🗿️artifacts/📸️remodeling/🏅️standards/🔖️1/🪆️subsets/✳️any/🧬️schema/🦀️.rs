@@ -5,6 +5,13 @@ use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::sche
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::VideoCodec;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaStream;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingAssetChild;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::CalibrationState;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ReconstructionParams;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::GroundControlPoint;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ReconstructionResults;
 
 //#region 🔖️ArtifactKind
 /// 🗿️ The `3d.remodeling` artifact kind — lifted verbatim out of the manifest builder's

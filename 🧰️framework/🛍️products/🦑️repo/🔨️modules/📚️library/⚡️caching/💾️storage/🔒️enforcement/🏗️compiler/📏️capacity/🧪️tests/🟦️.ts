@@ -5,7 +5,8 @@ import schema from"../🧬️schema/🔣️.json"with{type:"json"};
 import corpus from"./🔣️.json"with{type:"json"};
 import{mkdirSync,mkdtempSync,rmSync,writeFileSync,openSync,writeSync,closeSync,existsSync}from"node:fs";
 import{join}from"node:path";
-import{receiveScriptProcessInvocation,type ScriptInvocation}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {type ScriptInvocation} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
 import{scriptCompilerAdmissionControlV1}from"@semio-tech/process/compiler-capacity";
 import{captureOwnedCommandV1}from"@semio-tech/process/execution";
 import{resourceLeasePathV1}from"@semio-tech/process/leases";
@@ -66,4 +67,4 @@ async function physicalRecoveryLaw(original:ScriptInvocation):Promise<void>{
 
 
 
-test("one received Original retains actual physical admission, image exclusion and repeatable compact recovery laws",async()=>receiveScriptProcessInvocation(process.env,async original=>{await physicalCapacityLaw(original);await physicalImageExclusionLaw(original);await physicalRecoveryLaw(original);}),125000);
+test("one received Original retains actual physical admission, image exclusion and repeatable compact recovery laws",async()=>withBuildTestInvocationV1(async original=>{await physicalCapacityLaw(original);await physicalImageExclusionLaw(original);await physicalRecoveryLaw(original);}),125000);

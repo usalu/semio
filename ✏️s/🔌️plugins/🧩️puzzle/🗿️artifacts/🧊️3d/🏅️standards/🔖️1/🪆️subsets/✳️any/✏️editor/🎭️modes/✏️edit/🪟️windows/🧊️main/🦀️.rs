@@ -48,8 +48,6 @@ pub fn definition(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> WindowKi
         body_key: BODY_KEY.into(),
         surface_kind: SurfaceKind::World3d,
         icon_id: "puzzle".into(),
-        // 🪟️ `options.measures` stays empty: puzzle3d's chrome is config-derived per frame by
-        // `ArtifactApp::window_measures`, never frozen into the static manifest.
         options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::Some(engagement(envelope, labels, None)) },
         actions: Vec::new(),
         utilities: vec![semio_s_artifact_puzzle_3d_editor_transform::UTILITY_ID.into(), utilities::brush::UTILITY_ID.into(), utilities::volume_brush::UTILITY_ID.into(), utilities::world_relocate::UTILITY_ID.into()],
@@ -403,9 +401,6 @@ pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecom
                 })
             })
             .collect();
-        // 🔎️ The popup lists the free candidates the brush suggestions run has resolved so far and stays
-        // pending only while it has none and the search is still going; every tested candidate and its verdict
-        // is the run's trace, painted in the viewport.
         let pending = candidates.is_empty() && !found.is_some_and(|found| found.done);
         json!({
             "open": true,
@@ -418,12 +413,6 @@ pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecom
             "candidates": candidates,
         })
     });
-    // 🥽️ Brush-mesh residency, the client's only handle on the fact that what a guest instantiation
-    // holds does not outlive that instantiation: `meshResidency` is the guest's monotone install
-    // counter (a lower value than the client last saw proves a restart, so its "already uploaded"
-    // bookkeeping is void), and `meshReuploadUrls` names the identities a refused id-only announcement
-    // is waiting on bytes for. Both are read by `Puzzle3dBrushMeshRegistry`
-    // (`🧰️framework/…/🛠️ShellHelpers/🟦️.tsx`).
     let mut value = json!({
         "activeUtility": scene_mode(&envelope.active_utility),
         "brushCandidateIndex": runtime.brush_candidate_index,
@@ -433,9 +422,6 @@ pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecom
         "meshResidency": semio_s_artifact_puzzle_3d_precompute::shared_brush_mesh_installs(),
         "meshReuploadUrls": session.mesh_reupload_requests(),
     });
-    // 🐁️ `hoveredVortexFullId` is the host's Alt+right-click suggestion target and its context-menu
-    // priority key (`resolveWorldContextMenuTarget`) — it lives on the interaction record, not on
-    // `selectionJson`, so it is projected from the live `vortex`-domain hover here.
     if let (Some(object), Some(hovered)) = (value.as_object_mut(), interaction.hovered_vortex_full_id(&envelope.scene_snapshot)) {
         object.insert("hoveredVortexFullId".into(), json!(hovered));
     }
@@ -541,12 +527,6 @@ pub fn render(
     scene.chunking_json = Some(world3d_chunking_json(envelope.runtime.chunk_size, 8000.0));
     scene.environment_json = Some(world3d_environment_json(&envelope.runtime.sun));
     scene.fit_json = Some(world3d_fit_json(world_fit_revision(&envelope.scene_snapshot), PUZZLE3D_FIT_PADDING, None));
-    // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): bound, so `World3dHost`'s generic
-    // dispatch path emits `interactionSelect`/`interactionHover` for this domain
-    // (`world3dSelectionActionArgs`/`world3dHoverActionArgs`) instead of the legacy
-    // `worldPick`/`worldSelect`/`setHover` verbs this crate has no handler for. Granularity is
-    // declared explicitly because the host's own default (`"handle"`) is not one of this domain's
-    // granularities and `validate_state` would prune every id picked under it.
     scene.domain_id = Some(PUZZLE3D_INTERACTION_DOMAIN.into());
     scene.domain_granularity_id = Some(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_OBJECT.into());
     semio_framework_plugin::scene_surface(SURFACE_VIEWPORT, semio_framework_ui_contract::SurfaceKind::World3d, &scene)

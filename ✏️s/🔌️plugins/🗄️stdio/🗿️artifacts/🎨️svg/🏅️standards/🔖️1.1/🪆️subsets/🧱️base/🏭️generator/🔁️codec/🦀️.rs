@@ -154,8 +154,6 @@ fn parse_svg(bytes: &[u8]) -> QDoc {
                 let standalone = decl.standalone().transpose().expect("read xml decl standalone").map(|c| c.as_ref() == "yes");
                 doc.declaration = Some(QDecl { version, encoding, standalone });
             }
-            // 📜️ `BytesText::as_ref()` (`AsRef<str>`) — quick-xml 0.42's DocType event carries the
-            // raw content between `<!DOCTYPE` and `>` verbatim, never entity-decoded.
             Event::DocType(raw) => {
                 assert!(doc.root.is_none(), "doctype cannot appear after the root element");
                 assert!(doc.doctype.is_none(), "duplicate XML doctype");
@@ -176,9 +174,6 @@ fn parse_svg(bytes: &[u8]) -> QDoc {
                     children.push(QNode::CData(text.as_ref().to_string()));
                 }
             }
-            // 📜️ No `BytesText::unescape()` exists in quick-xml 0.42 — entity/character references
-            // arrive as SEPARATE `Event::GeneralRef` events (see below), so a bare `Text` event's own
-            // content is already the final, un-escaped run and is taken as-is.
             Event::Text(text) => text_buf.push_str(text.as_ref()),
             Event::GeneralRef(reference) => match reference.resolve_char_ref().expect("resolve character reference") {
                 Some(ch) => text_buf.push(ch),
@@ -347,9 +342,6 @@ fn base_doc() -> QDoc {
     };
     QDoc {
         declaration: Some(QDecl { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: None }),
-        // 📜️ No leading space: `quick_xml::Writer` inserts `"<!DOCTYPE "` (trailing space already
-        // included) around this content, and the reader hands the content back the same way — see
-        // this crate's own round-trip test.
         doctype: Some("svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\"".into()),
         doctype_prolog_position: 0,
         prolog: Vec::new(),
@@ -379,7 +371,6 @@ fn recipe(id: &str) -> Option<(QDoc, QDoc)> {
             after.doctype = Some("svg SYSTEM \"svg11-flat.dtd\"".into());
             Some((base, after))
         }
-        // 🧬 InsertElement{parent:[0], index:2, node:<circle>} — appended as the 3rd child of <g>.
         "insert-element-applied" => {
             let mut after = base.clone();
             let g = q_node_at_mut(&mut after, &[0]);
@@ -388,7 +379,6 @@ fn recipe(id: &str) -> Option<(QDoc, QDoc)> {
             }
             Some((base, after))
         }
-        // 🧬 RemoveElement{parent:[0], index:1} — drops the <text> element (index 1 of <g>'s children).
         "remove-element-applied" => {
             let mut after = base.clone();
             let g = q_node_at_mut(&mut after, &[0]);
@@ -397,7 +387,6 @@ fn recipe(id: &str) -> Option<(QDoc, QDoc)> {
             }
             Some((base, after))
         }
-        // 🧬 SetElementName{path:[0,0], name:"ellipse"} — renames <rect> in place.
         "set-element-name-applied" => {
             let mut after = base.clone();
             if let QNode::Element { name, .. } = q_node_at_mut(&mut after, &[0, 0]) {
@@ -405,13 +394,11 @@ fn recipe(id: &str) -> Option<(QDoc, QDoc)> {
             }
             Some((base, after))
         }
-        // 🧬 SetAttribute{path:[0,0], name:"fill", value:Some("red")} — new attribute, appended.
         "set-attribute-applied" => {
             let mut after = base.clone();
             q_set_attr(q_node_at_mut(&mut after, &[0, 0]), "fill", "red");
             Some((base, after))
         }
-        // 🧬 SetText{path:[0,1,0], text:"World"} — the text node inside <text>.
         "set-text-applied" => {
             let mut after = base.clone();
             if let QNode::Text(text) = q_node_at_mut(&mut after, &[0, 1, 0]) {
@@ -419,13 +406,11 @@ fn recipe(id: &str) -> Option<(QDoc, QDoc)> {
             }
             Some((base, after))
         }
-        // 🧬 SetViewBox{path:[], viewBox:Some([0,0,200,200])} — root's own viewBox.
         "set-view-box-applied" => {
             let mut after = base.clone();
             q_set_attr(q_node_at_mut(&mut after, &[]), "viewBox", "0 0 200 200");
             Some((base, after))
         }
-        // 🧬 SetTransform{path:[0], transform:Some([Translate{30,40}, Scale{2}])} — <g>'s own transform.
         "set-transform-applied" => {
             let mut after = base.clone();
             q_set_attr(q_node_at_mut(&mut after, &[0]), "transform", "translate(30,40) scale(2)");

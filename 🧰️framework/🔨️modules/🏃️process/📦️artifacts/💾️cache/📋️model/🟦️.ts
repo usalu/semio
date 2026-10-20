@@ -1,4 +1,4 @@
-import nativeSchema from"../../🏗️native-build/💾️storage/🧬️schema/🔣️.json";
+import nativeSchema from"../../🏗️native-build/💾️storage/🧬️schema/🔣️.json" with { type: "json" };
 import{readNativeArtifactCachePolicyV1,artifactCacheErrorsV1,type NativeArtifactCachePolicyV1}from"../⚙️policy/🟦️.ts";
 export interface NativeArtifactCacheSlotV1{slot:number;context:string;content:string;state:"clean"|"dirty"|"retiring";sequence:number;digest:string|null;retirement:Readonly<{dev:number;ino:number}>|null}
 export interface NativeArtifactCacheCatalogV1{version:1;sequence:number;slots:NativeArtifactCacheSlotV1[]}

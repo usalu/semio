@@ -21,9 +21,9 @@ import {repositoryStrictStorageV1} from "../../../../💾️storage/🔒️enfor
 import {rustCompilerIdentityV1} from "../../🏗️compiler/🦀️rustc/🟦️.ts";
 import {materializeCargoRustUnitsV1,type CargoRustUnitMaterializationPortV1,type CargoRustAdapterRefusalV1} from "../🕸️graph/🟦️.ts";
 import {rustUnitNxProjectV1} from "../../🔌️nx/🟦️.ts";
-import declaredSchema from "./🧬️schema/🔣️.json";
-import declaredProducerSchema from "./🧬️schema/📥️producer.json";
-import declaredProducer from "./🔣️policy.json";
+import declaredSchema from "./🧬️schema/🔣️.json" with { type: "json" };
+import declaredProducerSchema from "./🧬️schema/📥️producer.json" with { type: "json" };
+import declaredProducer from "./🔣️policy.json" with { type: "json" };
 const schema=structuredClone(declaredSchema),producerSchema=structuredClone(declaredProducerSchema),producer=Object.freeze(structuredClone(declaredProducer)),producerLimits=Object.freeze({...declaredProducerSchema.definitions.Policy.const});
 import{captureSelectedRustProducerDataV1,type SelectedCargoCompilationV1}from"./📥️request/🟦️.ts";
 export type{SelectedCargoCompilationV1}from"./📥️request/🟦️.ts";

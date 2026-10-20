@@ -64,11 +64,11 @@ pub enum TokenKind {
     Arrow,
     DashArrow,
     BackArrow,
-    /// Fused labeled edge operator: `-e1:Connection>` or `-e1-` (payload in `text`, includes leading `-`).
+    /// 🔗️ Fused labeled edge operator: `-e1:Connection>` or `-e1-` (payload in `text`, includes leading `-`).
     EdgeArrow,
     Caret,
     DotDot,
-    /// Arithmetic operators, only ever produced in a position where they were previously an
+    /// ➗️ Arithmetic operators, only ever produced in a position where they were previously an
     /// "unknown character" lex error (a leading `+`/`*`/`/`, or a `-` that isn't digit-adjacent
     /// and isn't the start of `->`/`--`) — see `Shape::Expr`'s parser, the only consumer. Purely
     /// additive: no existing valid document could contain one of these in the old error position.
@@ -76,7 +76,7 @@ pub enum TokenKind {
     Minus,
     Star,
     Slash,
-    /// A fenced verbatim block (see the lexer's own doc comment on the `` ` `` branch) — the ONE
+    /// 🚧️ A fenced verbatim block (see the lexer's own doc comment on the `` ` `` branch) — the ONE
     /// non-token-by-token construct in this alphabet, and `Shape::Embed`'s only consumer.
     Fence,
     Placeholder,

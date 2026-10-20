@@ -1,0 +1,173 @@
+{
+  "version": 1,
+  "scope": "Language-neutral controlled resume lifecycle expectations",
+  "cases": [
+    {
+      "id": "stopped-start-ready",
+      "ready": true,
+      "starts": 1,
+      "stops": 0
+    },
+    {
+      "id": "already-running-ready",
+      "running": true,
+      "ready": true,
+      "starts": 0,
+      "stops": 0
+    },
+    {
+      "id": "daemon-waits-ready",
+      "daemonWait": true,
+      "ready": true,
+      "starts": 1,
+      "stops": 0
+    },
+    {
+      "id": "foreign-container",
+      "foreign": true,
+      "ready": false,
+      "starts": 0,
+      "stops": 0,
+      "cleanupStopped": false
+    },
+    {
+      "id": "changed-input",
+      "inputRefusal": true,
+      "ready": false,
+      "starts": 0,
+      "stops": 0,
+      "cleanupStopped": false
+    },
+    {
+      "id": "cancel-before-admission",
+      "cancelInitially": true,
+      "ready": false,
+      "starts": 0,
+      "stops": 0,
+      "cleanupStopped": false
+    },
+    {
+      "id": "cancel-after-start",
+      "cancelAfterStart": true,
+      "ready": false,
+      "starts": 1,
+      "stops": 1,
+      "cleanupStopped": true
+    },
+    {
+      "id": "cancel-during-wait",
+      "daemonWait": true,
+      "cancelOnWait": true,
+      "ready": false,
+      "starts": 1,
+      "stops": 1,
+      "cleanupStopped": true
+    },
+    {
+      "id": "wrong-engine",
+      "badEngine": true,
+      "ready": false,
+      "starts": 1,
+      "stops": 1,
+      "cleanupStopped": true
+    },
+    {
+      "id": "wrong-tool",
+      "badTool": true,
+      "ready": false,
+      "starts": 1,
+      "stops": 1,
+      "cleanupStopped": true
+    },
+    {
+      "id": "missing-compose",
+      "badCompose": true,
+      "ready": false,
+      "starts": 1,
+      "stops": 1,
+      "cleanupStopped": true
+    },
+    {
+      "id": "deadline-after-start",
+      "deadlineAfterStart": true,
+      "ready": false,
+      "starts": 1,
+      "stops": 1,
+      "cleanupStopped": true
+    },
+    {
+      "id": "waits-for-stop",
+      "cancelAfterStart": true,
+      "holdStop": true,
+      "ready": false,
+      "starts": 1,
+      "stops": 1,
+      "cleanupStopped": true
+    },
+    {
+      "id": "stop-failure",
+      "cancelAfterStart": true,
+      "stopFailure": true,
+      "ready": false,
+      "starts": 1,
+      "stops": 1,
+      "cleanupStopped": false
+    },
+    {
+      "id": "never-ready",
+      "neverReady": true,
+      "ready": false,
+      "starts": 1,
+      "stops": 1,
+      "cleanupStopped": true
+    },
+    {
+      "id": "foreign-source-mount",
+      "badMount": true,
+      "ready": false,
+      "starts": 0,
+      "stops": 0,
+      "cleanupStopped": false
+    },
+    {
+      "id": "identity-changed-after-start",
+      "foreignAfterStart": true,
+      "ready": false,
+      "starts": 1,
+      "stops": 0,
+      "cleanupStopped": false
+    },
+    {
+      "id": "start-refused",
+      "startFailure": true,
+      "ready": false,
+      "starts": 1,
+      "stops": 0,
+      "cleanupStopped": true
+    },
+    {
+      "id": "wrong-immutable-id",
+      "wrongId": true,
+      "ready": false,
+      "starts": 0,
+      "stops": 0,
+      "cleanupStopped": false
+    },
+    {
+      "id": "wrong-immutable-image",
+      "wrongImage": true,
+      "ready": false,
+      "starts": 0,
+      "stops": 0,
+      "cleanupStopped": false
+    },
+    {
+      "id": "incoherent-state",
+      "incoherentState": true,
+      "ready": false,
+      "starts": 0,
+      "stops": 0,
+      "cleanupStopped": false
+    }
+  ]
+}

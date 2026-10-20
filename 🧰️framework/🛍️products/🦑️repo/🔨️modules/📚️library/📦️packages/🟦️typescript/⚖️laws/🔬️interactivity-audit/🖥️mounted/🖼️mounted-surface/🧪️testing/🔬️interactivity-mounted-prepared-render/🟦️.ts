@@ -1,0 +1,2 @@
+/** 🧩️ Public `@semio-tech/repo-lib/laws/interactivity-audit/mounted/mounted-surface/testing/interactivity-mounted-prepared-render` entry: explicit re-exports of the source module that owns each member. */
+export { interactivityMountedPreparedRenderSelfTests } from "../../../../../../../../⚖️laws/🔬️interactivity-audit/🖥️mounted/🖼️mounted-surface/🧪️tests/🔬️interactivity-mounted-prepared-render/🟦️.ts";

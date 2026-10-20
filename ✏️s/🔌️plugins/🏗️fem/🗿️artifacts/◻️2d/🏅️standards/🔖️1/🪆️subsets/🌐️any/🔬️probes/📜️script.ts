@@ -289,7 +289,6 @@ async function main(argv: readonly string[]): Promise<number> {
     process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
     return report.status === "failed" ? 1 : 0;
   };
-  // ⏱️A probe that hangs reports nothing, which is strictly worse than one that fails. Bound every run.
   const budgetMs = Number(process.env.SEMIO_PROBE_TIMEOUT_MS ?? 120_000);
   const watchdog = new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`probe exceeded ${budgetMs} ms`)), budgetMs).unref?.());
   const run = PROBES[probe];

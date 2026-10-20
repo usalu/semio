@@ -49,7 +49,7 @@ pub(super) struct TypedWindowConfigPackLoad<O: WindowConfigOwner> {
     initial_digest: Option<[u8; 32]>,
     history_decode: ManuallyDrop<Option<store::RetainedHistoryDecode>>,
     history: ManuallyDrop<Option<store::HistoryLog>>,
-    hydration: ManuallyDrop<Option<store::ReferenceConfigStoreHydration<O::State, O::Mutation>>>,
+    hydration: ManuallyDrop<Option<store::RetainedConfigStoreHydration<O::State, O::Mutation>>>,
     pub(super) owners: ManuallyDrop<Option<store::os_store::document_store_owners::DocumentStoreOwners<O::State, O::Mutation>>>,
     pub(super) candidate: ManuallyDrop<Option<WindowConfigPartition<O>>>,
     displaced: ManuallyDrop<Option<WindowConfigPartition<O>>>,
@@ -262,7 +262,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
             let history = self.history.take().expect("decoded window config history remains");
             let expected_id = self.expected_id.take().expect("exact window config partition id remains");
             let owners = self.owners.take().expect("window config store owners remain");
-            *self.hydration = Some(store::ReferenceConfigStoreHydration::from_snapshots(
+            *self.hydration = Some(store::RetainedConfigStoreHydration::from_snapshots(
                 genesis,
                 validation,
                 current,
@@ -376,7 +376,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
         if let Some(owner) = self.state_decode.as_ref() { return if owner.terminal_is_empty() { frame(size_of::<RetainedWindowConfigStateDecode<O>>()) } else { owner.retirement_demands(body) }; }
         if let Some(owner) = self.history_decode.as_ref() { return owner.demands(body); }
         if let Some(owner) = self.hydration.as_ref() {
-            return if store::ErasedSnapshotRetirement::terminal_is_empty(owner) { frame(size_of::<store::ReferenceConfigStoreHydration<O::State, O::Mutation>>()) }
+            return if store::ErasedSnapshotRetirement::terminal_is_empty(owner) { frame(size_of::<store::RetainedConfigStoreHydration<O::State, O::Mutation>>()) }
             else { Ok(RetirementDemand { copy_bytes: store::ErasedSnapshotRetirement::next_copy_byte_demand(owner)?, capacity_bytes: store::ErasedSnapshotRetirement::next_capacity_byte_demand(owner, body)?, release_bytes: store::ErasedSnapshotRetirement::next_release_byte_demand(owner)?, depth: store::ErasedSnapshotRetirement::next_depth_demand(owner)? }) };
         }
         if let Some(partition) = self.displaced.as_ref().or(self.candidate.as_ref()) { return Self::partition_demands(partition, body); }

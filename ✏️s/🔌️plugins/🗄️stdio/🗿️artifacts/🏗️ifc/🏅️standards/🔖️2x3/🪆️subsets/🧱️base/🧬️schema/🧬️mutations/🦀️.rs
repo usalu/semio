@@ -73,9 +73,9 @@ pub fn apply_ifc2x3_mutation(snapshot: &mut Ifc2x3Snapshot, mutation: &Ifc2x3Mut
 /// (`ops_grammar_conformance_law`) and `protocol_walk_law` fodder — every `Part21Value` tag (incl.
 /// the recursive `List`/`Typed` cases) and `UpsertInstance`'s bare `Part21Instance` payload (incl. a
 /// real COMPLEX 2-entity instance) are exercised at least once.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<Ifc2x3Mutation> {
+pub fn demo_mutation_cases() -> Vec<Ifc2x3Mutation> {
     vec![
         Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance {
             instance: Part21Instance {

@@ -14,14 +14,12 @@
     "email": "ueli@semio-tech.com",
     "url": "https://github.com/usalu"
   },
-  "dependencies": {
-    "@semio-tech/framework": "workspace:*",
-    "@semio-tech/ui-react": "workspace:*"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/node": "^22.19.6",
     "jsdom": "^24.1.3",
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/process": "workspace:*",
+    "@semio-tech/framework": "workspace:*"
   },
   "bundleKind": "asset",
   "exports": {
@@ -40,6 +38,9 @@
     "./fonts/anta/math/regular/outline": "./🔤️fonts/🚀️anta/🧮️math/📖️regular/🔤️outline/🟦️.ts",
     "./fonts/anta/symbols/regular/outline": "./🔤️fonts/🚀️anta/🔣️symbols/📖️regular/🔤️outline/🟦️.ts",
     "./cursor/default/light": "./👆️cursor/🖱️default/☀️light/🟦️.ts",
-    "./abbau-aufbau/hexagonal-cut-concrete-forest-left": "./🏚️abbau-aufbau/🧊️hexagonal-cut-concrete-forest-left/🟦️.ts"
+    "./abbau-aufbau/hexagonal-cut-concrete-forest-left": "./🏚️abbau-aufbau/🧊️hexagonal-cut-concrete-forest-left/🟦️.ts",
+    "./builder/publication": "./🏗️builder/📦️publication/🟦️.ts",
+    "./builder/publication/testing/fixtures.json": "./🏗️builder/📦️publication/🧪️testing/🧫️fixtures/🔣️json/🟦️.ts",
+    "./logos/emblem/dark-round": "./🪧️logos/🛡️emblem/🌘️dark-round/🟦️.ts"
   }
 }

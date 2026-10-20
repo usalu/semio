@@ -26,6 +26,9 @@ mod sessions;
 #[path = "⌨️controls/🦀️.rs"]
 mod controls;
 
+#[path = "📂️sources/🦀️.rs"]
+mod sources;
+
 use controls::Flow;
 use windows::{Dashboard, Effect};
 
@@ -83,6 +86,7 @@ pub fn run_with(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> i32 {
         let polled = dash.poll_daemon(&mut tui);
         let background = dash.poll_background(&mut tui);
         let sources = dash.poll_source_suggestions();
+        let documents = dash.poll_documents(&mut tui);
         let slice = IDLE_SLICE;
         let wait = tui.deadline_ms().map_or(slice, |ms| slice.min(std::time::Duration::from_millis(ms)));
         let wait = dash.prefix_wait(std::time::Instant::now()).map_or(wait, |left| wait.min(left));
@@ -93,7 +97,7 @@ pub fn run_with(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> i32 {
         for effect in std::mem::take(&mut dash.effects) { match effect { Effect::Copy(text) => { let _ = term.copy(&text); }, Effect::OpenReady(url) => dash.begin_open_ready(&url) } }
         let expired = dash.expire_prefix(std::time::Instant::now());
         let ticked = tui.tick(now());
-        if polled.changed || background || sources || !events.is_empty() || ticked || expired { dash.frame(&mut tui); }
+        if polled.changed || background || sources || documents || !events.is_empty() || ticked || expired { dash.frame(&mut tui); }
         if let Some(patch) = tui.render_due(now()) { present(&mut term, &mut tui, &patch); }
     }
     let _ = dash.send(&dashboard_wire::ipc::ClientMsg::Detach {});

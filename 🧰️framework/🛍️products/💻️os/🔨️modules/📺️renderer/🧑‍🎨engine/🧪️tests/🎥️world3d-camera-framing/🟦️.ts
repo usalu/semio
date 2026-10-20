@@ -6,7 +6,7 @@ import { Box3, BufferGeometry, EdgesGeometry, Float32BufferAttribute, Group, Lin
 import { describe, expect, it } from "vitest";
 import { frameWorldProjectionPose, worldSceneContentBounds } from "@semio-tech/infinite-world-r3f";
 import { world3dAutoFitKey, world3dAutoFitOwed, world3dBoundsRadius, world3dFrameCameraFromBounds } from "../../🧱️elements/🌐️World3dHost/🔭️scene-schema/🟦️.ts";
-import { world3dCameraFramingFixtureUrl } from "@semio-tech/framework/ui/testing/fixtures";
+import { world3dCameraFramingFixtureUrl } from "@semio-tech/ui/testing/fixtures";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");

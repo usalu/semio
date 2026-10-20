@@ -1,10 +1,10 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
-import {readModuleTreeSource} from "@semio-tech/framework-compiler-ts/syntax/module-tree";
-import {semioSchemaAjvV1} from "@semio-tech/schema-ts/oracles/validator";
-import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
-import "./../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/⏱️context/🧪️testing/🎟️caller/🧪️tests/🟦️.ts";
+import {readModuleTreeSource} from "@semio-tech/framework/compiler/syntax/module-tree";
+import {semioSchemaAjvV1} from "@semio-tech/framework/schema/oracles/validator";
+import {validateJsonSchemaSubset} from "@semio-tech/framework/schema";
+import "@semio-tech/framework/job/context/testing/caller/testing";
 const read=(f:string)=>readFileSync(new URL(f,import.meta.url),"utf8"),law=JSON.parse(read("./🧫️fixtures/🔣️.json"));
 /** 🧮️ The portable original-close acceptance relation is independently checked by SQLite. */
 test("3D fill original close corpus agrees with strict schemas and SQLite",()=>{const schema=JSON.parse(read("../🧬️schema/🔣️.json"));expect(validateJsonSchemaSubset(schema,law)).toEqual([]);expect(semioSchemaAjvV1({strict:true}).compile(schema)(law)).toBe(true);const db=new Database(":memory:");try{for(const row of law.admissionCases){const own=row.grant.every((n:number,i:number)=>n>=row.quote[i]);const other=db.query("SELECT ?1>=?6 AND ?2>=?7 AND ?3>=?8 AND ?4>=?9 AND ?5>=?10 AS admitted").get(...row.grant,...row.quote) as {admitted:number};expect(own).toBe(row.admitted);expect(Boolean(other.admitted)).toBe(row.admitted);}}finally{db.close()}console.log("[DEBUG] 3D fill original close matrix matches first-party/Ajv schemas and independent SQLite");});

@@ -4,17 +4,18 @@ import { scriptCompilerAdmissionControlV1 } from "@semio-tech/process/compiler-c
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🧭️ Builds and tests the Go repository implementation used by dashboard tasks. */
 import { mkdirSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { goCoverageArgs, goLevelTestArgs, runCanonicalGoTests, runCanonicalGoBuild } from "../../../📚️library/📦️packages/🟦️typescript/🧪️testing/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepoScriptMain } from "../../../📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts";
-import {  } from "../../🧪️tests/🔬️go-package-commands/🟦️.ts";
+import { runRepositoryTestCommand } from "../../../📚️library/📦️packages/🟦️typescript/🧪️testing/🟦️.ts";
+import { resolveCliBin } from "../../../📚️library/🚨️policy/🖥️cli/🟦️.ts";
 
 class BuildScript extends BundleScript {
   async run(): Promise<void> {
-    const binary = join(this.repoRoot, ".🧬semio/🦑️repo/⚡️cache/🗃️bin", process.platform === "win32" ? "semio-repo.exe" : "semio-repo");
+    const binary = resolveCliBin(this.repoRoot);
     mkdirSync(dirname(binary), { recursive: true });
-    await runCanonicalGoBuild(import.meta.dir, ["-trimpath", "-o", binary, "./🚀️bin"], { control: scriptCompilerAdmissionControlV1(this.invocation, "repo-cli:build", buildBudgetMs()), env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") }, budgetMs: buildBudgetMs() });
+    await runCanonicalGoBuild(resolve(import.meta.dir, "../../../💻️client/🔌️mcp"), ["-trimpath", "-o", binary, "."], { control: scriptCompilerAdmissionControlV1(this.invocation, "repo-cli:build", buildBudgetMs()), env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") }, budgetMs: buildBudgetMs() });
   }
 }
 
@@ -26,6 +27,10 @@ class TestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("test", TestScript);
+class EntrypointSourceScript extends BundleScript {
+ async run(): Promise<void> { await runRepositoryTestCommand(process.execPath,["test",resolve(import.meta.dir,"../../🧪️tests/🚪️entrypoint/🟦️.ts")],{cwd:this.repoRoot}); }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("test", TestScript).register("test-entrypoint-source", EntrypointSourceScript);
 
 await runRepoScriptMain(router, import.meta.url);

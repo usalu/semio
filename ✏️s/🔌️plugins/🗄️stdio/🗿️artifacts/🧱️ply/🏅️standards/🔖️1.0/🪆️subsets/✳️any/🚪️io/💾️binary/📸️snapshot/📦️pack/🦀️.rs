@@ -46,11 +46,11 @@ fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqlit
 }
 
 pub(crate) fn retire_value(value:PlyValue){let mut pending=vec![value];while let Some(value)=pending.pop(){if let PlyValue::List(values)=value{pending.extend(values);}}}
-pub(crate) fn retire(value:PlySnapshot){for element in value.elements{for row in element.rows{for value in row.values{retire_value(value);}}}}
+pub fn retire(value:PlySnapshot){for element in value.elements{for row in element.rows{for value in row.values{retire_value(value);}}}}
 
-pub(crate)fn spec()->semio_framework_dsl_record::RecordSpec{Snapshot::__dsl_spec()}
+pub fn spec()->semio_framework_dsl_record::RecordSpec{Snapshot::__dsl_spec()}
 pub(crate)fn spec_producer()->semio_framework_dsl_record::RecordSpecProducer{Snapshot::__dsl_spec_producer()}
-pub(crate)fn reconstruct_record_controlled(source:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,maximum_rows:usize)->Result<PlySnapshot,ValueError>{
+pub fn reconstruct_record_controlled(source:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,maximum_rows:usize)->Result<PlySnapshot,ValueError>{
  fn list(source:&semio_framework_dsl_record::RecordValue,id:u16)->Result<&[semio_framework_dsl_record::FieldValue],ValueError>{match source.fields.get(&id){Some(semio_framework_dsl_record::FieldValue::List(values))=>Ok(values),_=>Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"PLY native list field differs"))}}
  fn record(value:&semio_framework_dsl_record::FieldValue)->Result<&semio_framework_dsl_record::RecordValue,ValueError>{match value{semio_framework_dsl_record::FieldValue::Record(value)=>Ok(value),_=>Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"PLY native typed record differs"))}}
  control.scoped_stage(|control|->Result<(),ValueError>{let elements=list(source,3)?;let values=list(source,4)?;let mut rows=1usize.checked_add(list(source,2)?.len()).and_then(|n|n.checked_add(elements.len())).and_then(|n|n.checked_add(values.len())).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"PLY native row count overflow"))?;let check=|rows:usize|if rows>maximum_rows{Err(ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit,"PLY native row limit"))}else{Ok(())};check(rows)?;
@@ -59,7 +59,7 @@ pub(crate)fn reconstruct_record_controlled(source:&semio_framework_dsl_record::R
  reconstruct(Snapshot::__dsl_from_record_controlled(source,control)?,control)
 }
 
-pub(crate)fn record_controlled(source:&PlySnapshot,control:&mut semio_framework_value::NativeEncodeControl<'_>,maximum_rows:usize)->Result<semio_framework_dsl_record::RecordValue,ValueError>{
+pub fn record_controlled(source:&PlySnapshot,control:&mut semio_framework_value::NativeEncodeControl<'_>,maximum_rows:usize)->Result<semio_framework_dsl_record::RecordValue,ValueError>{
  fn project(source:&PlySnapshot,control:&mut semio_framework_value::NativeEncodeControl<'_>,maximum_rows:usize)->Result<Snapshot,ValueError>{
   fn add(rows:&mut usize,count:usize,maximum:usize)->Result<(),ValueError>{*rows=rows.checked_add(count).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"PLY native row count overflow"))?;if *rows>maximum{return Err(ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit,"PLY native row limit exceeded"))}Ok(())}
   fn reserve(frontier:&mut Vec<&PlyValue>,count:usize,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),ValueError>{control.charge(count.checked_mul(size_of::<&PlyValue>()).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"PLY native frontier overflow"))?)?;frontier.try_reserve_exact(count).map_err(|_|ValueError::new(semio_framework_value::ValueRefusalKind::AllocationFailed,"PLY native frontier allocation failed"))}

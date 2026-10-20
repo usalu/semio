@@ -25,6 +25,7 @@ semio-s-artifact-norm-iso16757-editor = { workspace = true }
 semio-s-artifact-norm-iso16757-inferences = { workspace = true }
 semio-s-artifact-norm-iso16757-io = { workspace = true }
 semio-s-artifact-norm-iso16757-schema = { workspace = true }
+semio-s-artifact-norm-iso16757-model = { workspace = true }
 
 [dev-dependencies]
 pack = { workspace = true }

@@ -4,7 +4,7 @@ use crate::standards::v1::subsets::any::schema::mutations::update_dense_params::
 use crate::standards::v1::subsets::any::schema::mutations::update_dense_params::component::update_dense_params;
 
 //#region 🔖️Inverse
-pub fn inverse<Op: From<UpdateDenseParams>>(_payload: &super::UpdateDenseParams, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<UpdateDenseParams>>(_payload: &crate::standards::v1::subsets::any::schema::mutations::update_dense_params::component::UpdateDenseParams, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     vec![super::update_dense_params(base.params.dense.clone())]
 

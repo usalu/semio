@@ -52,18 +52,18 @@ use visual_state_and_quality::{FEM2D_LIVE_REGION_CAPACITY, MESH_EDGE_COLOR};
 
 #[path = "🗄️fixed-packet-pages-and-lease/🦀️.rs"]
 mod fixed_packet_pages_and_lease;
-use fixed_packet_pages_and_lease::{
-    Fem2dFixedOrder, Fem2dFixedPacketPages, FEM2D_MOUNTED_VISUAL_OUTPUT_BYTES,
+use fixed_packet_pages_and_lease::{Fem2dFixedOrder, FEM2D_MOUNTED_VISUAL_OUTPUT_BYTES};
+pub use fixed_packet_pages_and_lease::{
+    Fem2dFixedPacketPages, Fem2dMountedVisualLease, Fem2dVisualFreshness, FEM2D_MOUNTED_VISUAL_PAGE_BYTES,
     FEM2D_MOUNTED_VISUAL_PAGE_COUNT,
 };
-pub use fixed_packet_pages_and_lease::{Fem2dMountedVisualLease, Fem2dVisualFreshness};
 
 #[path = "🧵️visual-job/🦀️.rs"]
 mod visual_job;
 use visual_job::{
     FEM2D_VISUAL_MAXIMUM_ELEMENTS, FEM2D_VISUAL_MAXIMUM_FIELDS, FEM2D_VISUAL_MAXIMUM_REGIONS,
 };
-pub use visual_job::{Fem2dVisualJob, Fem2dVisualJobStage};
+pub use visual_job::{Fem2dVisualJob, Fem2dVisualJobStage, FEM2D_VISUAL_MAXIMUM_NODES};
 
 #[path = "🖼️structure-and-live-layers/🦀️.rs"]
 mod structure_and_live_layers;
@@ -73,10 +73,9 @@ pub use structure_and_live_layers::{
     fem2d_deformed_shape_layers, fem2d_live_visual_layers, fem2d_model_extent,
     fem2d_region_mesh_triangles, fem2d_structure_layers_with, render, render_with_progress,
 };
+pub use structure_and_live_layers::fem2d_structure_layers;
 #[cfg(test)]
-pub(crate) use structure_and_live_layers::{
-    fem2d_structure_layers, HOVER_COLOR_2D, SELECTION_COLOR_2D,
-};
+pub(crate) use structure_and_live_layers::{HOVER_COLOR_2D, SELECTION_COLOR_2D};
 
 //#region 🧪️Tests
 //#endregion 🧪️Tests

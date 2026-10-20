@@ -1,6 +1,8 @@
 //! 📥️ Frame ingest tests of the staged reconstruction engine: the blur gate, the stride and frame cap and the video push counts with the flat and checker frame fixtures. See [`super`].
 
 use super::*;
+use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::images as remodeling_image;
+use semio_s_artifact_remodel_remodeling_video::editor::remodeling::engine::video as remodeling_video;
 
 // #region 🔖️TestFixtures
 /// 🎨️ Flat mid-gray `w x h` frame with zero gradient energy — a stand-in for a heavily blurred/

@@ -117,7 +117,6 @@ pub fn fastened_layout_snapshot(snapshot: &mut Puzzle2dSnapshot) {
                 visited.insert(neighbor_id.clone());
                 let edge = &snapshot.edges[edge_index];
                 let current_node = node_map.get(&current_id).expect("current");
-                // Parent handle angle → t.
                 let source = edge.source.to_string_owner();
                 let target = edge.target.to_string_owner();
                 let handle_id = if source.starts_with(&format!("{current_id}:")) {
@@ -128,7 +127,6 @@ pub fn fastened_layout_snapshot(snapshot: &mut Puzzle2dSnapshot) {
                     None
                 };
                 let parent_t = handle_id.and_then(|id| current_node.handles.iter().find(|handle| handle.id == id)).map_or(0.0, |handle| handle.angle / (2.0 * std::f64::consts::PI));
-                // 2d has no parent direction z; treat as horizontal unless encoded otherwise → use horizontal scale branch when parent not at origin.
                 let (child_x, child_y) = if parent_center[0] == 0.0 && parent_center[1] == 0.0 {
                     let angle = 2.0 * std::f64::consts::PI * parent_t;
                     (DIAGRAM_RADIUS * angle.sin(), DIAGRAM_RADIUS * angle.cos())
@@ -143,17 +141,14 @@ pub fn fastened_layout_snapshot(snapshot: &mut Puzzle2dSnapshot) {
     for node in &mut snapshot.nodes {
         if let Some(center) = centers.get(&node.id) {
             if !matches!(node.anchor, Puzzle2dNodeAnchor::Fixed) || adjacency.contains_key(&node.id) {
-                // Fixed roots keep stored coords; derived/children take computed centers.
             }
             if !matches!(node.anchor, Puzzle2dNodeAnchor::Fixed) {
                 node.x = center[0];
                 node.y = center[1];
             } else if centers.get(&node.id).is_some() {
-                // Keep fixed root; still update non-roots only.
             }
         }
     }
-    // Apply computed centers to non-fixed nodes only; fixed keep authored coords.
     for node in &mut snapshot.nodes {
         if matches!(node.anchor, Puzzle2dNodeAnchor::Fixed) {
             continue;

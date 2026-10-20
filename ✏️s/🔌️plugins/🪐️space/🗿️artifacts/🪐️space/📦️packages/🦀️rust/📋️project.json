@@ -40,6 +40,7 @@
     },
     "test": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -61,7 +62,8 @@
         "{projectRoot}/../../📜️artifact-definition.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
-      ]
+      ],
+      "outputs": []
     },
     "test-snapshot-sqlite-native": {
       "executor": "repo:script",
@@ -78,7 +80,8 @@
         "{projectRoot}/../../📜️artifact-definition.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
-      ]
+      ],
+      "outputs": []
     },
     "test-snapshot-sqlite-source": {
       "executor": "repo:script",
@@ -95,7 +98,8 @@
         "{projectRoot}/../../📜️artifact-definition.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
-      ]
+      ],
+      "outputs": []
     },
     "mutation-inventory": {
       "executor": "repo:script",
@@ -104,6 +108,7 @@
         "^default",
         "{workspaceRoot}/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/Cargo.lock"
       ],
+      "outputs": [],
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏭️bridge",
@@ -118,6 +123,7 @@
         "^default",
         "{workspaceRoot}/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/Cargo.lock"
       ],
+      "outputs": [],
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏭️bridge",
@@ -128,6 +134,7 @@
     "test-complete-app-document": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏭️bridge",
         "command": "bun ./📜️script.ts test",

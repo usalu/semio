@@ -8,6 +8,7 @@ const CONTENT_DIALECT: ArtifactDialect = { artifactKind: "s.stdio.semio", standa
 export function parseDagContentChild(value: unknown, at = "$"): ArtifactChild {
   const child = parseArtifactChild(value);
   requireArtifactDialect(child.target.dialect, CONTENT_DIALECT, at);
+  if (child.childId !== child.target.artifactId) throw new Error(`${at}: child identity must equal its target artifact id`);
   return child;
 }
 

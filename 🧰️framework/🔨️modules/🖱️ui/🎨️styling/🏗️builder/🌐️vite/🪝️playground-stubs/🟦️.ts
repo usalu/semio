@@ -4,18 +4,18 @@ import { readFileSync, existsSync } from "node:fs";
 import { validateJsonSchemaSubset } from "../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import providerSchema from "../🧬️schema/🔣️.json" with { type: "json" };
 
-/** @emoji 🧭️ Vite's URL prefix for prebundled chunks under `cacheDir`: root-relative inside `root`, `/@fs/` outside. https://vite.dev/config/shared-options.html#cachedir */
+/** 🧭️ Vite's URL prefix for prebundled chunks under `cacheDir`: root-relative inside `root`, `/@fs/` outside. https://vite.dev/config/shared-options.html#cachedir */
 export function playgroundOptimizedDepUrlPrefix(root: string, cacheDir: string): string {
   const path = relative(root, cacheDir).replaceAll("\\", "/");
   return path.startsWith("..") || isAbsolute(path) ? `/@fs/${resolve(cacheDir).replaceAll("\\", "/").replace(/^\/+/, "")}/deps/` : `/${path}/deps/`;
 }
 
-/** @emoji 🔗️ True when a percent-encoded request targets this server's Vite prebundled chunks. */
+/** 🔗️ True when a percent-encoded request targets this server's Vite prebundled chunks. */
 export function isPlaygroundOptimizedDepUrl(url: string, prefix: string): boolean {
   try { return decodeURI(url).includes(prefix); } catch { return false; }
 }
 
-/** @emoji 🧱️ Stubs vitest and testing-library when test regions enter the browser graph. */
+/** 🧱️ Stubs vitest and testing-library when test regions enter the browser graph. */
 export function playgroundVitestDevStubPlugin(): OwnedBuildPlugin {
   const vitestStubId = "\0playground-vitest-dev-stub";
   const testingLibraryStubId = "\0playground-testing-library-dev-stub";
@@ -173,7 +173,7 @@ export function playgroundFlowWasmDevStubPlugin(repoRoot: string,delivery:FlowWa
   };
 }
 
-/** @emoji 🧱️ Stubs Playwright when test-only regions are pulled into the browser graph. */
+/** 🧱️ Stubs Playwright when test-only regions are pulled into the browser graph. */
 export function playgroundPlaywrightDevStubPlugin(): OwnedBuildPlugin {
   return {
     name: "playground-playwright-dev-stub",
@@ -191,7 +191,7 @@ export function playgroundPlaywrightDevStubPlugin(): OwnedBuildPlugin {
   };
 }
 
-/** @emoji 🔄️ Full-reload connected clients when a stale optimized-dep chunk returns 504. */
+/** 🔄️ Full-reload connected clients when a stale optimized-dep chunk returns 504. */
 export function playgroundStaleOptimizeDepPlugin(): OwnedBuildPlugin {
   return {
     name: "playground-stale-optimize-dep",

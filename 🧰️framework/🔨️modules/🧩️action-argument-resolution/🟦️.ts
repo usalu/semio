@@ -1,7 +1,7 @@
 // #region 🧮️ActionArgumentResolution
 /** 🧮️ Resolves staged and default action arguments, then identifies unresolved required arguments. */
-import type { ActionArgDef } from "../🛂️manifest/🎬️action-types-and-semantics/🟦️.ts";
-import type { DialogChoice } from "../🛂️manifest/🔘️definitions-action-ids-and-shell-brand/🟦️.ts";
+import type { ActionArgDef } from "@semio-tech/framework-manifest/action-types-and-semantics";
+import type { DialogChoice } from "@semio-tech/framework-manifest/definitions-action-ids-and-shell-brand";
 
 /** 🌱️ `seed` carries a dialog's pre-seeded context args (e.g. a row-scoped `spaceId` that is never a
  * declared, editable form field) through untouched: declared `defs` still resolve staged-then-default

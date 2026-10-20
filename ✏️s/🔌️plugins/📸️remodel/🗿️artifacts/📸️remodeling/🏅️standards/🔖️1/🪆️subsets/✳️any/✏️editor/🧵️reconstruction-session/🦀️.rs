@@ -24,7 +24,7 @@ use semio_s_artifact_remodel_remodeling_geo::editor::remodeling::engine::geo as 
 use semio_s_artifact_remodel_remodeling_engine::editor::remodeling::engine::watertight_snapshot;
 use semio_s_artifact_remodel_remodeling_engine::editor::remodeling::engine::RasterPngPreparation;
 use semio_s_artifact_remodel_remodeling_engine::editor::remodeling::engine::RasterPngProgress;
-use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::append_content::append_content;
+use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::append_content;
 use semio_s_artifact_remodel_remodeling_mut_results::standards::v1::subsets::any::schema::mutations::commit_reconstruction::commit_reconstruction;
 use semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
 use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::append_content::AppendContent;

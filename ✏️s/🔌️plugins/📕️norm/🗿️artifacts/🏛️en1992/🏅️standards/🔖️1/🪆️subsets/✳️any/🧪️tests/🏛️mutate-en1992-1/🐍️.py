@@ -93,6 +93,9 @@ VECTORS = {
     "remove-anchor-gone": ("remove-anchor", "🗑️remove-anchor", "❓gone"),
     "change-anchor-h-ef": ("📍change-anchor-h-ef", "✅apply"),
     "change-anchor-as": ("🧷change-anchor-as", "✅apply"),
+    "remove-member-middle": ("remove-member", "➖️remove-member", "🧭️middle"),
+    "reorder-members-middle": ("reorder-members", "🔀️reorder-members", "🧭️middle"),
+    "remove-anchor-middle": ("remove-anchor", "🗑️remove-anchor", "🧭️middle"),
 }
 
 #: 🗣️ The real committed EN 1992 document, read where the domain already keeps it.

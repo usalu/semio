@@ -28,6 +28,10 @@
             {
               "id": "removes-the-bob-clip-and-leaves-spin-in-place",
               "directoryName": "🚫️removes"
+            },
+            {
+              "id": "middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },

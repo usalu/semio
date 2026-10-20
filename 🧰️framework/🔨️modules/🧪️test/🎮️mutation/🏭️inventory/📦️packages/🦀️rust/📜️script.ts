@@ -27,4 +27,4 @@ class TestScript extends BundleScript {
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("conformance", ConformanceScript).register("conformance-process", ConformanceProcessScript).register("conformance-command", ConformanceCommandScript).register("test", TestScript);
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, argv: ["conformance"] }));

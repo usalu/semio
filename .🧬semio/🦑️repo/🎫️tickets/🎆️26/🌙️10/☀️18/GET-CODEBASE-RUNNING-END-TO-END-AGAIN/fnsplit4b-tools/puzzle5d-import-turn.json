@@ -1,0 +1,103 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/📥️snapshot-import/🦀️.rs",
+ "function": "turn",
+ "nth": 0,
+ "match_line": 206,
+ "types": {},
+ "ret": "crate::puzzle_job::JobTurn",
+ "inline": true,
+ "arms": [
+  {
+   "line": 213,
+   "name": "turn_decode",
+   "doc": "🧱️ Decodes one record of the imported snapshot.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 257,
+   "name": "turn_census_parts",
+   "doc": "🪵️ Counts the parts of the imported snapshot.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 336,
+   "name": "turn_reserve_mutations",
+   "doc": "🔩️ Reserves the mutation slots of the import.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 450,
+   "name": "turn_parts",
+   "doc": "⚙️ Builds one part of the imported snapshot.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 490,
+   "name": "turn_part_vortices",
+   "doc": "🧲️ Builds the vortices of one part.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 546,
+   "name": "turn_grips",
+   "doc": "🪛️ Builds the grips of the imported snapshot.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 577,
+   "name": "turn_compatibility",
+   "doc": "🔧️ Checks the compatibility of the imported snapshot.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 621,
+   "name": "turn_complete",
+   "doc": "🔨️ Completes the import and publishes the result.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  }
+ ],
+ "method": {
+  "self_param": "&mut self",
+  "call": "self.{name}({args})"
+ }
+}

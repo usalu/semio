@@ -21,7 +21,7 @@ import (
 	"sync"
 )
 
-// Update command implementation for dependency updates.
+// 🔄️Update command implementation for dependency updates.
 // ✏️updateCmd holds the data fields for a updateCmd record.
 var updateCmd = &command.Command{
 	Use:   "update [target]",

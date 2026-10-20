@@ -4,7 +4,7 @@
  */
 
 import { type SchemaDiagnostic, readSchemaCatalog } from "../../../📦️packages/🟦️typescript/🟦️.ts";
-import { type ActionArgDef, type InputSchemaAudit, SHELL_LOCALES, SHELL_TERMINOLOGIES, argControl, inputLabelGlossary, inputNumericTransport, inputShape, isShellLocale, isShellTerminology, mutationInputAudit } from "@semio-tech/framework/manifest";
+import { type ActionArgDef, type InputSchemaAudit, SHELL_LOCALES, SHELL_TERMINOLOGIES, argControl, inputLabelGlossary, inputNumericTransport, inputShape, isShellLocale, isShellTerminology, mutationInputAudit } from "@semio-tech/framework-manifest";
 import { type Dirent, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { catalogSchemaDocuments, escapePointer, isRecord, readJsonObject, unescapePointer } from "../📚️schema-documents/🟦️.ts";

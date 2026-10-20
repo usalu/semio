@@ -81,6 +81,7 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
       ],
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify snapshot-sqlite-source",

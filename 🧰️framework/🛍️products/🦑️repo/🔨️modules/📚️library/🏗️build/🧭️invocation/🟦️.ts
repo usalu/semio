@@ -1,6 +1,6 @@
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import dependencySchema from "../🧬️schema/📥️dependencies.json";
-import authoringSchema from "../🧬️schema/📥️authoring.json";
+import dependencySchema from "../🧬️schema/📥️dependencies.json" with { type: "json" };
+import authoringSchema from "../🧬️schema/📥️authoring.json" with { type: "json" };
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {readFileSync} from "node:fs";
 import {join,resolve,isAbsolute} from "node:path";
@@ -10,9 +10,9 @@ import type {BuildGraphV1} from "../🕸️graph/🟦️.ts";
 import {resolveTestLevel} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import {semioBuildParallelFlag} from "../../🏃️process/🌿️environment/🟦️.ts";
 import {buildModeEnvironment,readBuildMode} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import {createRequire} from "node:module";
-const {fixedTargetBuildMode}=createRequire(import.meta.url)("../../🏗️build/🎚️mode/🟨️.mjs") as {fixedTargetBuildMode(name:string):"prototype"|"release"|undefined};
-import policy from "../🔣️policy.json";
+import {fixedTargetBuildMode} from "../🎚️mode/🟨️.mjs";
+import policy from "../🔣️policy.json" with { type: "json" };
+import {readWorkerSwitchV1} from "../👷️workers/🟦️.ts";
 
 /** 📖️ Admits public help before storage while preserving an opaque child argument tail. */
 export function buildInvocationRequestsHelpV1(args:readonly string[]):boolean {
@@ -123,18 +123,21 @@ export function resolveBuildModeV1(selection: Selection, environment: NodeJS.Pro
 }
 
 /** 🛠️ Selects a configured implementation without consuming task arguments after the separator. */
-export function parseBuildInvocationV1(args:readonly string[],environment:NodeJS.ProcessEnv=process.env):{tool:"nx"|"bazel";args:string[]} {
-  let tool=environment.SEMIO_BUILD_TOOL??policy.defaultTool;
+export function parseBuildInvocationV1(args:readonly string[],environment:NodeJS.ProcessEnv=process.env):{tool:"nx"|"bazel";args:string[];workers?:"on"|"off"} {
+  let tool=environment.SEMIO_BUILD_TOOL??policy.defaultTool,workers=environment.SEMIO_BUILD_WORKERS;
   const selected:string[]=[];
   for(let index=0;index<args.length;index++){
     const argument=args[index]!;
     if(argument==="--"){selected.push(...args.slice(index));break;}
     if(argument==="--tool"){tool=args[++index]??"";continue;}
     if(argument.startsWith("--tool=")){tool=argument.slice(7);continue;}
+    if(argument==="--workers"){workers=args[++index]??"";continue;}
+    if(argument.startsWith("--workers=")){workers=argument.slice(10);continue;}
     selected.push(argument);
   }
   if(tool!=="nx"&&tool!=="bazel")throw Error(`Unknown build tool: ${tool}`);
-  return {tool,args:selected};
+  readWorkerSwitchV1(workers);
+  return {tool,args:selected,...(workers?{workers:workers as "on"|"off"}:{})};
 }
 
 /** 🔌️ Translates portable CLI and environment options only at the Nx implementation boundary; `--graph` is the portable alias of `--dry-run` and always names stdout or a file. */

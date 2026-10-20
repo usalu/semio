@@ -19,3 +19,5 @@ semio-framework-value = { path = "../../../../🧰️framework/🔨️modules/�
 semio-framework-os-kernel = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 pack = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 semio-s-artifact-layout-layout = { path = "../🗿️artifacts/📏️layout/📦️packages/🦀️rust" }
+semio-s-artifact-layout-layout-model = { path = "../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-layout-layout-mutations = { path = "../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }

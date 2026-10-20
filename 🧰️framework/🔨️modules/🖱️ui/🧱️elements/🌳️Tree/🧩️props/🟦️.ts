@@ -1,7 +1,7 @@
 import * as React from "react";
 import type { ContextMenuItem } from "../../🖱️ContextMenu/🎨️item-render/🟦️.tsx";
 import type { UiLabel } from "../../🎗️UiLabel/🟦️.tsx";
-import type { TreeWindowRowExtent, TreePresentation } from "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
+import type { TreeWindowRowExtent, TreePresentation } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
 import type { TreeDirection } from "../📏️row-alignment/🟦️.tsx";
 import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import type { TreeDragRole, TreeHeaderAction } from "../⚡️actions/🟦️.tsx";

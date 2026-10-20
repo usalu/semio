@@ -20,5 +20,8 @@
     "@semio-tech/repo-lib": "workspace:*",
     "ajv": "8.20.0",
     "crc-32": "^1.2.2"
+  },
+  "dependencies": {
+    "@semio-tech/framework-hash": "workspace:*"
   }
 }

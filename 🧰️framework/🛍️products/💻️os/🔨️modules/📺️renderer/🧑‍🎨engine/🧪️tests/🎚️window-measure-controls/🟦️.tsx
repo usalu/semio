@@ -19,7 +19,7 @@ import { renderWindowMeasuresTree } from "../../🧱️elements/🛠️ShellHelp
 import { UiDocumentStore } from "../../🧱️elements/📃️UiDocumentStore/🟦️.tsx";
 import { UiNodeView } from "../../🧱️elements/🗣️Interpreter/🧱️node-tree/🟦️.tsx";
 import { FlowProvider } from "@semio-tech/ui-react";
-import { treeTextFlowFixture as readingFlow } from "@semio-tech/framework/ui/testing/fixtures";
+import { treeTextFlowFixture as readingFlow } from "@semio-tech/ui/testing/fixtures";
 
 it("interprets the neutral compact Tree and preserves checkbox identity, authority, and disability", () => {
   const law = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/📏️window-measures/🔣️.json"), "utf8"));

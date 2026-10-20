@@ -155,7 +155,8 @@ async fn analyzer_builder_round_trip() {
 mod conformance_laws {
     #[cfg(test)] use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
     use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::*;
-    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::{mutations, snapshot};
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot;
+    use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations;
     use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff;
     use protocol::{DiffBinary,DiffCodec,DiffText, OpBinary, OpText};
 
@@ -264,7 +265,7 @@ mod conformance_laws {
 fn save_preserves_relationship_selected_part_paths_and_clears_the_last_style() {
     use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::DocxBlockPath;
     use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::{apply_docx_mutation, remove_style, set_run_text, DocxMutation};
-    use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::{schema::{vocabulary::{MAIN_DOCUMENT_CONTENT_TYPE,MAIN_DOCUMENT_PART,REL_TYPE_STYLES,STYLES_CONTENT_TYPE}}};
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::{MAIN_DOCUMENT_CONTENT_TYPE,MAIN_DOCUMENT_PART,REL_TYPE_STYLES,STYLES_CONTENT_TYPE};
     use semio_s_artifact_stdio_zip::opc::REL_TYPE_OFFICE_DOCUMENT;
     use std::io::Read;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📦️save-part-identity/🔣️.json")).unwrap();
@@ -336,7 +337,7 @@ fn save_preserves_relationship_selected_part_paths_and_clears_the_last_style() {
 
 fn canonical_authority_fixture() -> (DocxSnapshot, serde_json::Value) {
     use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxXmlPart;
-    use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::{schema::{vocabulary::{MAIN_DOCUMENT_CONTENT_TYPE,REL_TYPE_STYLES,STYLES_CONTENT_TYPE}}};
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::{MAIN_DOCUMENT_CONTENT_TYPE,REL_TYPE_STYLES,STYLES_CONTENT_TYPE};
     use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
     use semio_s_artifact_stdio_zip::opc::REL_TYPE_OFFICE_DOCUMENT;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️canonical-xml-authority/🔣️.json")).unwrap();

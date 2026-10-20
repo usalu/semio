@@ -1,4 +1,4 @@
-import{captureBoundedSourceRevisionV1}from"../../../../../../🏗️build/📥️inputs/🔏️revision/🟨️.mjs";
+import{captureBoundedSourceRevisionV1,physicalSourceOriginV1,type PhysicalSourceModuleMetaV1}from"../../../../../../🏗️build/📥️inputs/🔏️revision/🟨️.mjs";
 import{fileURLToPath}from"node:url";
 import{persistentStateArtifactBudgetV1}from"../../../../../../../../../../🔨️modules/🏃️process/💾️state/📋️layout/🟦️.ts";
 import {AsyncLocalStorage} from "node:async_hooks";
@@ -16,7 +16,7 @@ import {openNativePlatformStorageV1,withNativePlatformChildStorageV1,withNativeP
 import type importedSchema from "./🧬️schema/🔣️.json";
 import type {NativeStorageChildFundingV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌱️birth/🟦️.ts";
 
-const storeSourceURLV1=new URL(import.meta.url),storeSchemaURLV1=new URL("./🧬️schema/🔣️.json",import.meta.url),storeSourceRevisionV1=captureBoundedSourceRevisionV1(fileURLToPath(storeSourceURLV1),8388608).sha256,storeSchemaCaptureV1=captureBoundedSourceRevisionV1(fileURLToPath(storeSchemaURLV1),65536,true),storeSchemaRevisionV1=storeSchemaCaptureV1.sha256;
+const storeSourceURLV1=new URL(physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),storeSchemaURLV1=new URL("./🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),storeSourceRevisionV1=captureBoundedSourceRevisionV1(fileURLToPath(storeSourceURLV1),8388608).sha256,storeSchemaCaptureV1=captureBoundedSourceRevisionV1(fileURLToPath(storeSchemaURLV1),65536,true),storeSchemaRevisionV1=storeSchemaCaptureV1.sha256;
 const schema:typeof importedSchema=JSON.parse(storeSchemaCaptureV1.text??"");
 
 /** 🧷️ Refuses cached Store behavior or a stale private policy before retained enrollment or physical opening. */

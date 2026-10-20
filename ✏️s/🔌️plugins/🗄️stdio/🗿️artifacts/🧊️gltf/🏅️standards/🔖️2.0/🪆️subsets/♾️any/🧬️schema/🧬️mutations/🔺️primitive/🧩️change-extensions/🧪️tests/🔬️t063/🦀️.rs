@@ -6,5 +6,5 @@ use crate::standards::v2_0::subsets::any::schema::mutations::change_primitive_ex
 #[test]
 fn committed_case_holds_the_corpus_law() {
     assert_eq!(<ChangePrimitiveExtensionDataMutation as protocol::MutationKind<GltfSnapshot, crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation>>::SEMANTICS.kind, "change-primitive-extension-data");
-    crate::standards::v2_0::subsets::any::schema::mutations::fixture_corpus_tests::assert_case("🔺️primitive/🧩️change/🔬️t063");
+    crate::standards::v2_0::subsets::any::schema::mutations::fixture_corpus_tests::assert_case("🔺️primitive/🧩️change-extensions/🔬️t063");
 }

@@ -54,6 +54,7 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
       ],
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",

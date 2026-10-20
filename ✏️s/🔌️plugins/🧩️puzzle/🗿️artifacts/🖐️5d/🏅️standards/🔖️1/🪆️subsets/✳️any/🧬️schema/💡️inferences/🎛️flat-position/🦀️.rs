@@ -96,7 +96,6 @@ pub fn flatten_snapshot_inplace(snapshot: &mut Puzzle5dSnapshot) {
     let attractions: Vec<Puzzle3dAttraction> = snapshot.fasteners.iter().map(fastener_to_attraction).collect();
     let seed_centers: HashMap<String, [f64; 2]> = snapshot.parts.iter().map(|part| (part.id.clone(), [part.part_2d.x, part.part_2d.y])).collect();
     let poses = flatten_objects(&objects, &attractions, Some(&seed_centers));
-    // Recompute diagram centers with grip `t` from 2d angle (3d vortices do not carry t).
     let centers = diagram_centers_with_grip_t(snapshot, &poses);
     for part in &mut snapshot.parts {
         if let Some(pose) = poses.get(&part.id) {

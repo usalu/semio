@@ -23,8 +23,7 @@ pub use shared_utf8::SharedUtf8;
 pub use semio_framework_value_intrinsic::bytes;
 
 
-#[path="📽️projection/🦀️.rs"]
-pub mod snapshot_projection;
+pub use semio_framework_value_snapshot_projection::snapshot_projection;
 
 #[path = "🧬️clone/🦀️.rs"]
 pub mod bounded_clone;

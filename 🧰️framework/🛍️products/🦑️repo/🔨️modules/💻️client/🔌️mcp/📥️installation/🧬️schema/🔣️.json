@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Native Repository User Installation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "platform",
+    "home",
+    "localAppData",
+    "digest",
+    "directory",
+    "executable"
+  ],
+  "properties": {
+    "platform": {
+      "enum": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    "home": {
+      "type": "string",
+      "minLength": 1
+    },
+    "localAppData": {
+      "type": "string"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "directory": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "executable": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    }
+  },
+  "$defs": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "unixDirectory": [
+          ".local",
+          "bin"
+        ],
+        "windowsDirectory": [
+          "Semio",
+          "repo"
+        ],
+        "maximumPathLength": 256,
+        "maximumBinaryBytes": 536870912,
+        "maximumProfileBytes": 1048576,
+        "shellProfiles": [
+          ".profile",
+          ".bash_profile",
+          ".bash_login",
+          ".bashrc",
+          ".zprofile",
+          ".zshrc"
+        ],
+        "marker": "semio native repo PATH"
+      }
+    },
+    "InvocationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "probes",
+        "published"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "ready",
+            "cancelled-probe",
+            "expired"
+          ]
+        },
+        "probes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "published": {
+          "type": "boolean"
+        }
+      }
+    },
+    "PathCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "components",
+        "expected"
+      ],
+      "properties": {
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "expected": {
+          "type": "string"
+        }
+      }
+    },
+    "DestinationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "accepted"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "missing",
+            "directory",
+            "symlink",
+            "dangling-symlink"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "HookCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "verb"
+      ],
+      "properties": {
+        "name": {
+          "enum": [
+            "prepare-commit-msg",
+            "post-commit",
+            "post-checkout",
+            "post-merge",
+            "post-rewrite"
+          ]
+        },
+        "verb": {
+          "enum": [
+            "prepare-commit-msg",
+            "reset"
+          ]
+        }
+      }
+    }
+  }
+}

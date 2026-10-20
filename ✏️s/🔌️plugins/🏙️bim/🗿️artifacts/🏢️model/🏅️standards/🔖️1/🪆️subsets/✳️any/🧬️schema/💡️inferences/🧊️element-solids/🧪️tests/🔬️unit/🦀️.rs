@@ -14,6 +14,7 @@ use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint;
 use semio_framework_geometry::placement::ZPlane;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::sheets::pdf::arcs::Point;
 
 fn square_prism(side: f64, height: f64) -> TriMesh {
     semio_framework_geometry::mesh::extrude(&[Point::new(0.0, 0.0), Point::new(side, 0.0), Point::new(side, side), Point::new(0.0, side)], &[], ZPlane::flat(0.0), ZPlane::flat(height))

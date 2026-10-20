@@ -19,7 +19,7 @@ import {scriptInvocationEnvironment} from "../../../../../../🔨️modules/🏃
 import { cargoProvenancePhysicalControlV1, writeCompletedCargoInvocationProvenanceV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import { createHash } from "node:crypto";
 import { tmpdir,homedir } from "node:os";
-import {CurrentPhysicalOwnerV1} from "@semio-tech/framework/filesystem/observation/current";
+import {CurrentPhysicalOwnerV1} from "@semio-tech/framework-filesystem/observation/current";
 import { closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, realpathSync, readdirSync, renameSync, rmSync, writeFileSync, writeSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { acquireCargoBuildLeaseV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";

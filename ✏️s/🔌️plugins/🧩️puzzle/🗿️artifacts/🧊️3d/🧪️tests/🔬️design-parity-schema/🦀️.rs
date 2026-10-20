@@ -1,5 +1,7 @@
 
 use crate::*;
+use semio_s_artifact_puzzle_3d_model::Puzzle3dAttraction;
+use semio_s_artifact_puzzle_3d_model::Puzzle3dObject;
 use semio_s_artifact_puzzle_3d_model::Puzzle3dCompatSpecificity;
 use semio_s_artifact_puzzle_3d_model::Puzzle3dCatalogObjectKind;
 use semio_s_artifact_puzzle_3d_model::Puzzle3dKindCompatibility;

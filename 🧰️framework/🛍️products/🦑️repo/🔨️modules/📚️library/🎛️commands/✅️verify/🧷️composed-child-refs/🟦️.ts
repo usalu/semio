@@ -25,7 +25,7 @@ const COMPOSED_CHILD_REF_WAIVERS: { targetArtifactId: string; reason: string }[]
 ];
 
 /** 🚫️Directory names the composed-child-ref walk never descends into — caches and build output carry copies of the same assets. */
-const COMPOSED_CHILD_REF_SKIPPED_DIRECTORIES = new Set([".git", "node_modules", "dist", "target", "⚡️cache", "🗑️generated"]);
+const COMPOSED_CHILD_REF_SKIPPED_DIRECTORIES = new Set([".git", "node_modules", "dist", "target", "⚡️cache", "🗑️generated", "🎫️tickets"]);
 
 /** 📚️Every committed `*.dsl.semio` document in the workspace, in walk order. */
 function verifyComposedChildRefAssets(root: string): string[] {

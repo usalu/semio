@@ -1,0 +1,53 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧩️shell-core-state/🟦️.ts",
+ "function": "useShellCoreState",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of useShellCoreState. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️scope",
+   "doc": "/** 🔶️ The scope phase of useShellCoreState. */",
+   "phases": [
+    {
+     "name": "useScopeState",
+     "emoji": "🔷",
+     "doc": "Builds scope, localDocumentOwnerRegistry, shellContextMenuTitleLabel, hostConfig of useShellCoreState.",
+     "from": 184,
+     "to": 336
+    }
+   ]
+  },
+  {
+   "dir": "🔸️window-ui-window",
+   "doc": "/** 🔸️ The window ui window phase of useShellCoreState. */",
+   "phases": [
+    {
+     "name": "useWindowUiWindowState",
+     "emoji": "🔹",
+     "doc": "Builds windowUiByWindowId, windowEngagementsByWindowId, windowMeasuresByWindowId, toolMeasuresByToolId of useShellCoreState.",
+     "from": 350,
+     "to": 536
+    }
+   ]
+  },
+  {
+   "dir": "🟠️remember-open-space",
+   "doc": "/** 🟠️ The remember open space phase of useShellCoreState. */",
+   "phases": [
+    {
+     "name": "useRememberOpenSpaceState",
+     "emoji": "🟡",
+     "doc": "Builds rememberOpenSpaceId, openInstanceIdRef, sessionRef, treeWindowSchedulerRef of useShellCoreState.",
+     "from": 537,
+     "to": 629
+    }
+   ]
+  }
+ ]
+}

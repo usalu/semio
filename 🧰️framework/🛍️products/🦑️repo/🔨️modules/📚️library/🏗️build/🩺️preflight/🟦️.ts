@@ -1,8 +1,8 @@
 import {access,stat} from "node:fs/promises";
 import {constants} from "node:fs";
 import {delimiter,dirname,join,resolve} from "node:path";
-import schema from "./🧬️schema/🔣️.json";
-import policy from "./🔣️policy.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
+import policy from "./🔣️policy.json" with { type: "json" };
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import {nativeDirectoryHostAvailableBytesV1,probeNativeDirectoryCaseCapabilityV1,probeNativeDirectoryExchangeV1} from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts";
 import {checkScriptInvocation,requireIssuedScriptInvocationV1,advanceScriptInvocation,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";

@@ -1769,6 +1769,13 @@
       ],
       "role": "schema"
     },
+    "json-case-table": {
+      "emoji": "🔣️",
+      "extensionChains": [
+        ".cases.json"
+      ],
+      "role": "test"
+    },
     "json-expect": {
       "emoji": "🔣️",
       "extensionChains": [
@@ -2389,6 +2396,11 @@
     "physical-javascript-source-mjs": {
       "extensionChain": ".mjs",
       "fileKindId": "javascript-source",
+      "priority": 0
+    },
+    "physical-json-case-table-json": {
+      "extensionChain": ".cases.json",
+      "fileKindId": "json-case-table",
       "priority": 0
     },
     "physical-json-expect-json": {
@@ -8652,6 +8664,11 @@
       "parentKindIds": [
         "rust-language"
       ]
+    },
+    "policy-document": {
+      "emoji": "⚖️",
+      "slugPattern": "^policy$",
+      "allowEmojiOnly": false
     }
   },
   "_semanticDirectoryMemberKindsComment": "🧷️ Member kinds resolve a directory below their ownerKindIds (nearest context first): exact memberNames always win, otherwise the optional anchored memberSlugPattern admits any RGI emoji followed by a matching slug. Two pattern rows that match at the same nearest owner distance are directory-kind-ambiguous; scope their ownerKindIds apart instead of listing names. Structural semanticDirectoryKinds still win over both.",
@@ -18281,12 +18298,12 @@
             "size": 14260
           },
           "currentPreimage": {
-            "sha256": "fe75b9b2e68113edc39a0473b540831cce671bca3e2b202d6e72fc673074faab",
-            "size": 9625,
+            "sha256": "7e3e2c54d817b12463f6034c255ec04420d263cf6634dd246e02b3f6d2e8c9e2",
+            "size": 10030,
             "mode": "0644"
           },
           "approvalPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/🪪️devcontainer-current-source-approval/🔣️.json",
-          "approvalSha256": "2e5880aeaedb257392e0597a99842a14fd8ad3ca77f4a6e2d9eddc8b9d133b3f"
+          "approvalSha256": "12c74269327e292b7317c69648a380e6c509615df4847b54eb7d5fea13635fc3"
         }
       },
       "sourceFileKindId": "markdown",
@@ -18764,6 +18781,10 @@
       },
       "fixtureRunner": {
         "relativePath": "🧬️schema/🧬️mutations/🧪️tests/🗂️fixture-cases/🦀️.rs"
+      },
+      "leafCaseTable": {
+        "fileKindId": "json-case-table",
+        "casesField": "cases"
       }
     }
   },
@@ -23650,6 +23671,918 @@
       "verification": "tectonic template compilation",
       "expires": null
     },
+    "print-latex-semio-phd": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-phd.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-phd.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-annotation": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-annotation.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-annotation.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-catalog": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-catalog.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-catalog.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-catalog-labels": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-catalog-labels.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-catalog-labels.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-charts-area": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-area.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-area.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-charts-bar": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-bar.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-bar.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-charts-dashboard": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-dashboard.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-dashboard.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-charts-distribution": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-distribution.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-distribution.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-charts-financial": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-financial.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-financial.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-charts-funnel": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-funnel.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-funnel.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-charts-line": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-line.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-line.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-charts-polar": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-polar.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-polar.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-charts-scatter": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-scatter.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-scatter.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-charts-statistical": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-statistical.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-statistical.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-charts-timeline": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-timeline.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-charts-timeline.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-composition": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-composition.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-composition.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-coordinate": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-coordinate.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-coordinate.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-diagram-architecture": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-architecture.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-architecture.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-diagram-concept": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-concept.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-concept.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-diagram-flowchart": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-flowchart.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-flowchart.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-diagram-process": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-process.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-process.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-diagram-uml": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-uml.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-diagram-uml.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-domain": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-domain.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-domain.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-facet": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-facet.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-facet.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-family": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-family.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-family.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-flow": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-flow.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-flow.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-flow-alluvial": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-flow-alluvial.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-flow-alluvial.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-flow-parallelsets": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-flow-parallelsets.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-flow-parallelsets.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-flow-sankey": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-flow-sankey.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-flow-sankey.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-format": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-format.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-format.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-geo": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-geo-choropleth": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-choropleth.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-choropleth.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-geo-contours": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-contours.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-contours.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-geo-map": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-map.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-map.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-geo-projection": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-projection.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-projection.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-geo-routes": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-routes.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-routes.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-geo-symbols": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-symbols.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-geo-symbols.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-guide": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-guide.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-guide.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-hierarchy": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-hierarchy-dendrogram": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy-dendrogram.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy-dendrogram.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-hierarchy-pack": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy-pack.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy-pack.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-hierarchy-packing": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy-packing.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy-packing.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-hierarchy-partition": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy-partition.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy-partition.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-hierarchy-tiling": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy-tiling.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy-tiling.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-hierarchy-tree": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy-tree.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy-tree.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-hierarchy-treemap": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy-treemap.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-hierarchy-treemap.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-infographic": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-infographic.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-infographic.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-interactionstate": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-interactionstate.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-interactionstate.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-label": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-label.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-label.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-matrix-correlation": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-matrix-correlation.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-matrix-correlation.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-matrix-heatmap": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-matrix-heatmap.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-matrix-heatmap.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-network": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-network-arc": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-arc.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-arc.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-network-bundling": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-bundling.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-bundling.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-network-chord": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-chord.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-chord.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-network-graph": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-graph.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-graph.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-network-matrix": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-matrix.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-network-matrix.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-plot": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-plot.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-plot.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-probe": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-probe.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-probe.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-scientific-3d": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-3d.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-3d.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-scientific-biology": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-biology.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-biology.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-scientific-chemistry": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-chemistry.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-chemistry.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-scientific-engineering": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-engineering.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-engineering.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-scientific-field": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-field.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-field.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-scientific-geometry": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-geometry.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-geometry.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-scientific-mathematics": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-mathematics.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-mathematics.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-scientific-physics": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-physics.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-physics.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-scientific-signal": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-signal.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-signal.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-scientific-surface": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-surface.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scientific-surface.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-shape": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-shape.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-shape.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-showcase": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-showcase.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-showcase.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-spatial": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-spatial.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-spatial.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-table": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-table.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-table.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-text": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-text.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-text.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-theme": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-theme.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-theme.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
+    "print-latex-semio-viz-transform": {
+      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-transform.sty",
+      "authority": "LaTeX package lookup",
+      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-transform.sty"
+      },
+      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
+      "expires": null
+    },
     "renderer-trunk-config": {
       "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Trunk.toml",
       "authority": "Trunk default configuration discovery",
@@ -24865,6 +25798,174 @@
         "kind": "path-pattern"
       },
       "verification": "deployed vendor transport: installed browser byte equality",
+      "expires": null
+    },
+    "unicode-ucd-auxiliary-graphemebreakproperty": {
+      "pathPattern": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/📥️sources/auxiliary-GraphemeBreakProperty.txt",
+      "authority": "Unicode Consortium UCD",
+      "reason": "The literal basename is the upstream Unicode Character Database file name recorded with url and sha256 in the sibling provenance",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/📥️sources/auxiliary-GraphemeBreakProperty.txt"
+      },
+      "verification": "unicode data tables generator digest check against the recorded sha256",
+      "expires": null
+    },
+    "unicode-ucd-bidibrackets": {
+      "pathPattern": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/📥️sources/BidiBrackets.txt",
+      "authority": "Unicode Consortium UCD",
+      "reason": "The literal basename is the upstream Unicode Character Database file name recorded with url and sha256 in the sibling provenance",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/📥️sources/BidiBrackets.txt"
+      },
+      "verification": "unicode data tables generator digest check against the recorded sha256",
+      "expires": null
+    },
+    "unicode-ucd-bidimirroring": {
+      "pathPattern": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/📥️sources/BidiMirroring.txt",
+      "authority": "Unicode Consortium UCD",
+      "reason": "The literal basename is the upstream Unicode Character Database file name recorded with url and sha256 in the sibling provenance",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/📥️sources/BidiMirroring.txt"
+      },
+      "verification": "unicode data tables generator digest check against the recorded sha256",
+      "expires": null
+    },
+    "unicode-ucd-derivedcoreproperties": {
+      "pathPattern": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/📥️sources/DerivedCoreProperties.txt",
+      "authority": "Unicode Consortium UCD",
+      "reason": "The literal basename is the upstream Unicode Character Database file name recorded with url and sha256 in the sibling provenance",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/📥️sources/DerivedCoreProperties.txt"
+      },
+      "verification": "unicode data tables generator digest check against the recorded sha256",
+      "expires": null
+    },
+    "unicode-ucd-derivednormalizationprops": {
+      "pathPattern": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/📥️sources/DerivedNormalizationProps.txt",
+      "authority": "Unicode Consortium UCD",
+      "reason": "The literal basename is the upstream Unicode Character Database file name recorded with url and sha256 in the sibling provenance",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/📥️sources/DerivedNormalizationProps.txt"
+      },
+      "verification": "unicode data tables generator digest check against the recorded sha256",
+      "expires": null
+    },
+    "unicode-ucd-emoji-emoji-data": {
+      "pathPattern": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/📥️sources/emoji-emoji-data.txt",
+      "authority": "Unicode Consortium UCD",
+      "reason": "The literal basename is the upstream Unicode Character Database file name recorded with url and sha256 in the sibling provenance",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/📥️sources/emoji-emoji-data.txt"
+      },
+      "verification": "unicode data tables generator digest check against the recorded sha256",
+      "expires": null
+    },
+    "unicode-ucd-extracted-derivedbidiclass": {
+      "pathPattern": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/📥️sources/extracted-DerivedBidiClass.txt",
+      "authority": "Unicode Consortium UCD",
+      "reason": "The literal basename is the upstream Unicode Character Database file name recorded with url and sha256 in the sibling provenance",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/📥️sources/extracted-DerivedBidiClass.txt"
+      },
+      "verification": "unicode data tables generator digest check against the recorded sha256",
+      "expires": null
+    },
+    "unicode-ucd-extracted-derivedjoiningtype": {
+      "pathPattern": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/📥️sources/extracted-DerivedJoiningType.txt",
+      "authority": "Unicode Consortium UCD",
+      "reason": "The literal basename is the upstream Unicode Character Database file name recorded with url and sha256 in the sibling provenance",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/📥️sources/extracted-DerivedJoiningType.txt"
+      },
+      "verification": "unicode data tables generator digest check against the recorded sha256",
+      "expires": null
+    },
+    "unicode-ucd-license": {
+      "pathPattern": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/📥️sources/License.txt",
+      "authority": "Unicode Consortium UCD",
+      "reason": "The literal basename is the upstream Unicode Character Database file name recorded with url and sha256 in the sibling provenance",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/📥️sources/License.txt"
+      },
+      "verification": "unicode data tables generator digest check against the recorded sha256",
+      "expires": null
+    },
+    "unicode-ucd-propertyvaluealiases": {
+      "pathPattern": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/📥️sources/PropertyValueAliases.txt",
+      "authority": "Unicode Consortium UCD",
+      "reason": "The literal basename is the upstream Unicode Character Database file name recorded with url and sha256 in the sibling provenance",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/📥️sources/PropertyValueAliases.txt"
+      },
+      "verification": "unicode data tables generator digest check against the recorded sha256",
+      "expires": null
+    },
+    "unicode-ucd-proplist": {
+      "pathPattern": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/📥️sources/PropList.txt",
+      "authority": "Unicode Consortium UCD",
+      "reason": "The literal basename is the upstream Unicode Character Database file name recorded with url and sha256 in the sibling provenance",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/📥️sources/PropList.txt"
+      },
+      "verification": "unicode data tables generator digest check against the recorded sha256",
+      "expires": null
+    },
+    "unicode-ucd-readme": {
+      "pathPattern": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/📥️sources/ReadMe.txt",
+      "authority": "Unicode Consortium UCD",
+      "reason": "The literal basename is the upstream Unicode Character Database file name recorded with url and sha256 in the sibling provenance",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/📥️sources/ReadMe.txt"
+      },
+      "verification": "unicode data tables generator digest check against the recorded sha256",
+      "expires": null
+    },
+    "unicode-ucd-scripts": {
+      "pathPattern": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/📥️sources/Scripts.txt",
+      "authority": "Unicode Consortium UCD",
+      "reason": "The literal basename is the upstream Unicode Character Database file name recorded with url and sha256 in the sibling provenance",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/📥️sources/Scripts.txt"
+      },
+      "verification": "unicode data tables generator digest check against the recorded sha256",
+      "expires": null
+    },
+    "unicode-ucd-unicodedata": {
+      "pathPattern": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/📥️sources/UnicodeData.txt",
+      "authority": "Unicode Consortium UCD",
+      "reason": "The literal basename is the upstream Unicode Character Database file name recorded with url and sha256 in the sibling provenance",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "exact-path",
+        "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/📥️sources/UnicodeData.txt"
+      },
+      "verification": "unicode data tables generator digest check against the recorded sha256",
       "expires": null
     }
   },
@@ -29512,6 +30613,18 @@
               "manifestPath": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🟦️typescript/package.json",
               "entryPath": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🟦️typescript/🎛️controlled/🟦️.ts"
             },
+            "@semio-tech/framework-effect/spawned-job": {
+              "manifestPath": "🧰️framework/🔨️modules/🎠️kernel/⚡️effect/package.json",
+              "entryPath": "🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🛠️spawned-job/🟦️.ts"
+            },
+            "@semio-tech/framework-effect/video-render-program": {
+              "manifestPath": "🧰️framework/🔨️modules/🎠️kernel/⚡️effect/package.json",
+              "entryPath": "🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🎥️video-render-program/🟦️.ts"
+            },
+            "@semio-tech/framework-hash": {
+              "manifestPath": "🧰️framework/🔨️modules/🔏️hash/package.json",
+              "entryPath": "🧰️framework/🔨️modules/🔏️hash/🟦️.ts"
+            },
             "@semio-tech/framework-io-base64-ts": {
               "manifestPath": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🟦️typescript/package.json",
               "entryPath": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🟦️typescript/🟦️.ts"
@@ -29532,13 +30645,13 @@
               "manifestPath": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/package.json",
               "entryPath": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/📤️return/📦️content/📥️input/🟦️.ts"
             },
-            "@semio-tech/framework-kernel/spawned-job": {
-              "manifestPath": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/package.json",
-              "entryPath": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🛠️spawned-job/🟦️.ts"
+            "@semio-tech/framework-manifest": {
+              "manifestPath": "🧰️framework/🔨️modules/🛂️manifest/package.json",
+              "entryPath": "🧰️framework/🔨️modules/🛂️manifest/🟦️.ts"
             },
-            "@semio-tech/framework-kernel/video-render-program": {
-              "manifestPath": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/package.json",
-              "entryPath": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🎥️video-render-program/🟦️.ts"
+            "@semio-tech/framework-manifest/schema": {
+              "manifestPath": "🧰️framework/🔨️modules/🛂️manifest/package.json",
+              "entryPath": "🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts"
             },
             "@semio-tech/framework-os": {
               "manifestPath": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json",
@@ -29567,6 +30680,14 @@
             "@semio-tech/framework-tool-run-ts/actions": {
               "manifestPath": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🟦️typescript/package.json",
               "entryPath": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🟦️typescript/🕹️actions/🟦️.ts"
+            },
+            "@semio-tech/framework-trace": {
+              "manifestPath": "🧰️framework/🔨️modules/⏱️trace/package.json",
+              "entryPath": "🧰️framework/🔨️modules/⏱️trace/🟦️.ts"
+            },
+            "@semio-tech/framework-trace/memory": {
+              "manifestPath": "🧰️framework/🔨️modules/⏱️trace/package.json",
+              "entryPath": "🧰️framework/🔨️modules/⏱️trace/🧮️memory/🟦️.ts"
             },
             "@semio-tech/framework-ui-viewport-ts/2d/schema": {
               "manifestPath": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🟦️typescript/package.json",
@@ -29620,33 +30741,13 @@
               "manifestPath": "🧰️framework/📦️packages/🟦️typescript/package.json",
               "entryPath": "🧰️framework/📦️packages/🟦️typescript/📇️directory/🏘️spaces/🟦️.ts"
             },
-            "@semio-tech/framework/hash": {
-              "manifestPath": "🧰️framework/📦️packages/🟦️typescript/package.json",
-              "entryPath": "🧰️framework/📦️packages/🟦️typescript/🔏️hash/🟦️.ts"
-            },
             "@semio-tech/framework/inference/service": {
               "manifestPath": "🧰️framework/📦️packages/🟦️typescript/package.json",
               "entryPath": "🧰️framework/📦️packages/🟦️typescript/💡️inference/🔌️service/🟦️.ts"
             },
-            "@semio-tech/framework/manifest": {
-              "manifestPath": "🧰️framework/📦️packages/🟦️typescript/package.json",
-              "entryPath": "🧰️framework/📦️packages/🟦️typescript/🛂️manifest/🟦️.ts"
-            },
-            "@semio-tech/framework/manifest/schema": {
-              "manifestPath": "🧰️framework/📦️packages/🟦️typescript/package.json",
-              "entryPath": "🧰️framework/📦️packages/🟦️typescript/🛂️manifest/🧬️schema/🟦️.ts"
-            },
             "@semio-tech/framework/packs": {
               "manifestPath": "🧰️framework/📦️packages/🟦️typescript/package.json",
               "entryPath": "🧰️framework/📦️packages/🟦️typescript/🎁️packs/🟦️.ts"
-            },
-            "@semio-tech/framework/trace": {
-              "manifestPath": "🧰️framework/📦️packages/🟦️typescript/package.json",
-              "entryPath": "🧰️framework/📦️packages/🟦️typescript/⏱️trace/🟦️.ts"
-            },
-            "@semio-tech/framework/trace/memory": {
-              "manifestPath": "🧰️framework/📦️packages/🟦️typescript/package.json",
-              "entryPath": "🧰️framework/📦️packages/🟦️typescript/⏱️trace/🧮️memory/🟦️.ts"
             },
             "@semio-tech/framework/wire-contracts": {
               "manifestPath": "🧰️framework/📦️packages/🟦️typescript/package.json",
@@ -29706,8 +30807,6 @@
             }
           },
           "sourceModulePaths": [
-            "🧰️framework/📦️packages/🟦️typescript/⏱️trace/🟦️.ts",
-            "🧰️framework/📦️packages/🟦️typescript/⏱️trace/🧮️memory/🟦️.ts",
             "🧰️framework/📦️packages/🟦️typescript/🎁️packs/🟦️.ts",
             "🧰️framework/📦️packages/🟦️typescript/💡️inference/🔌️service/🟦️.ts",
             "🧰️framework/📦️packages/🟦️typescript/📇️directory/🎓️first-run/🟦️.ts",
@@ -29719,9 +30818,6 @@
             "🧰️framework/📦️packages/🟦️typescript/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts",
             "🧰️framework/📦️packages/🟦️typescript/📇️directory/🧬️schema/🟦️.ts",
             "🧰️framework/📦️packages/🟦️typescript/📞️directory-client/🟦️.ts",
-            "🧰️framework/📦️packages/🟦️typescript/🔏️hash/🟦️.ts",
-            "🧰️framework/📦️packages/🟦️typescript/🛂️manifest/🟦️.ts",
-            "🧰️framework/📦️packages/🟦️typescript/🛂️manifest/🧬️schema/🟦️.ts",
             "🧰️framework/📦️packages/🟦️typescript/🛰️backbone/🟦️.ts",
             "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
             "🧰️framework/📦️packages/🟦️typescript/🧬️schema/🟦️.ts",
@@ -29775,9 +30871,10 @@
             "🧰️framework/🔨️modules/🎓️onboarding/🏷️declaration/🟦️.ts",
             "🧰️framework/🔨️modules/🎓️onboarding/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/⏱️runtime-metrics/🟦️.ts",
+            "🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🎥️video-render-program/🟦️.ts",
+            "🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🛠️spawned-job/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/🌉️plugin-backbone-routing/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/🎛️activation-registry/🟦️.ts",
-            "🧰️framework/🔨️modules/🎠️kernel/🎥️video-render-program/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/🎬️media-export/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/🎮️playground-boot/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/🎯️ui-dirty-scope/🟦️.ts",
@@ -29794,11 +30891,9 @@
             "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/📦️package-assets/🟦️.ts",
-            "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🎥️video-render-program/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/📤️return/📦️content/📥️input/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🕸️plugin-graph/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🛂️descriptor-admission/🟦️.ts",
-            "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🛠️spawned-job/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/🔀️dialect-equality/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/🔄️merge-outcome/🟦️.ts",
@@ -29811,7 +30906,6 @@
             "🧰️framework/🔨️modules/🎠️kernel/🚨️fault/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/🚪️io-router/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/🛂️descriptor-admission/🟦️.ts",
-            "🧰️framework/🔨️modules/🎠️kernel/🛠️spawned-job/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/🧩️extensions/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/🧭️app-router/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/🧮️invocation-response/🟦️.ts",
@@ -29927,7 +31021,6 @@
             "🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🌐️world3d/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📄️documents/🟦️.ts",
-            "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📋️context-menu/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📏️world3d-modelling/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📷️framing/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🕸️node-graph/🟦️.ts",
@@ -30013,6 +31106,7 @@
             "🧰️framework/🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
             "🧰️framework/🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts",
             "🧰️framework/🔨️modules/🛂️manifest/📋️app-definition-refresh-and-context-menu/🟦️.ts",
+            "🧰️framework/🔨️modules/🛂️manifest/📋️context-menu/🟦️.ts",
             "🧰️framework/🔨️modules/🛂️manifest/📥️mutation-input-schema/🟦️.ts",
             "🧰️framework/🔨️modules/🛂️manifest/🔁️host-effects-choices-and-fault-notices/🟦️.ts",
             "🧰️framework/🔨️modules/🛂️manifest/🔘️definitions-action-ids-and-shell-brand/🟦️.ts",
@@ -30145,8 +31239,6 @@
         "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts",
         "📋️project.json",
         "🧰️framework/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/📦️packages/🟦️typescript/⏱️trace/🟦️.ts",
-        "🧰️framework/📦️packages/🟦️typescript/⏱️trace/🧮️memory/🟦️.ts",
         "🧰️framework/📦️packages/🟦️typescript/🎁️packs/🟦️.ts",
         "🧰️framework/📦️packages/🟦️typescript/💡️inference/🔌️service/🟦️.ts",
         "🧰️framework/📦️packages/🟦️typescript/📇️directory/🎓️first-run/🟦️.ts",
@@ -30158,9 +31250,6 @@
         "🧰️framework/📦️packages/🟦️typescript/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts",
         "🧰️framework/📦️packages/🟦️typescript/📇️directory/🧬️schema/🟦️.ts",
         "🧰️framework/📦️packages/🟦️typescript/📞️directory-client/🟦️.ts",
-        "🧰️framework/📦️packages/🟦️typescript/🔏️hash/🟦️.ts",
-        "🧰️framework/📦️packages/🟦️typescript/🛂️manifest/🟦️.ts",
-        "🧰️framework/📦️packages/🟦️typescript/🛂️manifest/🧬️schema/🟦️.ts",
         "🧰️framework/📦️packages/🟦️typescript/🛰️backbone/🟦️.ts",
         "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
         "🧰️framework/📦️packages/🟦️typescript/🧬️schema/🟦️.ts",
@@ -30214,9 +31303,10 @@
         "🧰️framework/🔨️modules/🎓️onboarding/🏷️declaration/🟦️.ts",
         "🧰️framework/🔨️modules/🎓️onboarding/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/⏱️runtime-metrics/🟦️.ts",
+        "🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🎥️video-render-program/🟦️.ts",
+        "🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🛠️spawned-job/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/🌉️plugin-backbone-routing/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/🎛️activation-registry/🟦️.ts",
-        "🧰️framework/🔨️modules/🎠️kernel/🎥️video-render-program/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/🎬️media-export/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/🎮️playground-boot/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/🎯️ui-dirty-scope/🟦️.ts",
@@ -30233,11 +31323,9 @@
         "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/📦️package-assets/🟦️.ts",
-        "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🎥️video-render-program/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/📤️return/📦️content/📥️input/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🕸️plugin-graph/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🛂️descriptor-admission/🟦️.ts",
-        "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🛠️spawned-job/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/🔀️dialect-equality/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/🔄️merge-outcome/🟦️.ts",
@@ -30250,7 +31338,6 @@
         "🧰️framework/🔨️modules/🎠️kernel/🚨️fault/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/🚪️io-router/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/🛂️descriptor-admission/🟦️.ts",
-        "🧰️framework/🔨️modules/🎠️kernel/🛠️spawned-job/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/🧩️extensions/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/🧭️app-router/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/🧮️invocation-response/🟦️.ts",
@@ -30369,7 +31456,6 @@
         "🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🌐️world3d/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📄️documents/🟦️.ts",
-        "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📋️context-menu/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📏️world3d-modelling/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📷️framing/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🕸️node-graph/🟦️.ts",
@@ -30455,6 +31541,7 @@
         "🧰️framework/🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
         "🧰️framework/🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts",
         "🧰️framework/🔨️modules/🛂️manifest/📋️app-definition-refresh-and-context-menu/🟦️.ts",
+        "🧰️framework/🔨️modules/🛂️manifest/📋️context-menu/🟦️.ts",
         "🧰️framework/🔨️modules/🛂️manifest/📥️mutation-input-schema/🟦️.ts",
         "🧰️framework/🔨️modules/🛂️manifest/🔁️host-effects-choices-and-fault-notices/🟦️.ts",
         "🧰️framework/🔨️modules/🛂️manifest/🔘️definitions-action-ids-and-shell-brand/🟦️.ts",
@@ -31967,7 +33054,6 @@
       "ui-foundation": {
         "ownerPaths": [
           "🧰️framework/🔨️modules/🫧️transient",
-          "🧰️framework/📦️packages/🟦️typescript/🫧️transient",
           "🧰️framework/🔨️modules/🌱️value",
           "🧰️framework/🔨️modules/⏳️async/🪃️continuation",
           "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/🪃️continuation",
@@ -31976,14 +33062,14 @@
           "🧰️framework/🔨️modules/🧬️schema/🧾️record",
           "🧰️framework/🔨️modules/🧬️schema/📦️packages/🟦️typescript/🧾️record",
           "🧰️framework/🔨️modules/🕹️interaction",
-          "🧰️framework/📦️packages/🟦️typescript/🕹️interaction",
           "🧰️framework/🔨️modules/🖼️assets",
           "🧰️framework/🔨️modules/🧩️action-argument-resolution",
+          "🧰️framework/🔨️modules/🔏️hash",
           "🧰️framework/🔨️modules/🎓️onboarding/🏷️declaration",
           "🧰️framework/🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types",
+          "🧰️framework/🔨️modules/🛂️manifest/📋️context-menu",
           "🧰️framework/🔨️modules/🛂️manifest/🤖️generated",
-          "🧰️framework/📦️packages/🟦️typescript/🛂️manifest/🤖️generated",
-          "🧰️framework/🔨️modules/🛂️manifest/🗺️window-layout",
+          "🧰️framework/🔨️modules/🎓️onboarding/🗺️window-layout",
           "🧰️framework/🔨️modules/🛂️manifest/🎬️action-types-and-semantics",
           "🧰️framework/🔨️modules/🛂️manifest/🔘️definitions-action-ids-and-shell-brand"
         ],
@@ -31998,6 +33084,8 @@
           "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source",
           "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source",
           "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing",
+          "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity",
+          "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution",
           "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing",
           "🧰️framework/🔨️modules/🏃️process/🧪️testing",
           "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🟦️typescript/🪆️binding/🏛️ownership/🧪️testing",
@@ -32043,6 +33131,16 @@
       "version": 1,
       "rulePrefix": "no-cross-package-relative-",
       "sdkPackage": "@semio-tech/framework",
+      "sdkFoundationPackages": [
+        "@semio-tech/framework-hash",
+        "@semio-tech/framework-interaction",
+        "@semio-tech/framework-manifest",
+        "@semio-tech/framework-trace",
+        "@semio-tech/ui",
+        "@semio-tech/ui-contract",
+        "@semio-tech/ui-react",
+        "@semio-tech/ui-styling"
+      ],
       "toolingRoles": []
     },
     "vendoredPaths": [

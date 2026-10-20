@@ -15,7 +15,7 @@ export function fixtureItemsOf<T = Record<string, unknown>>(node: unknown): read
 
 function defaultCliBin(root: string, mode: SemioBuildMode): string {
   const win = process.platform === "win32";
-  return join(root, ".🧬semio/🦑️repo/⚡️cache/🗃️bin", mode, "client", win ? "client.exe" : "client");
+  return join(root, ".🧬semio/🦑️repo/⚡️cache/🗃️bin", mode, "repo", win ? "repo.exe" : "repo");
 }
 
 export function resolveCliBin(root = getWorkspaceRoot(), mode: SemioBuildMode = readBuildMode(process.env.SEMIO_BUILD_MODE ?? "prototype")): string {
@@ -30,7 +30,7 @@ function defaultMcpBin(root: string, mode: SemioBuildMode): string {
   return join(root, ".🧬semio", "🦑️repo", "⚡️cache", "🗃️bin", mode, "repo", win ? "repo.exe" : "repo");
 }
 
-/** 🔌️Resolves the native repo MCP binary without colliding with the repo CLI executable. */
+/** 🔌️Resolves the native repo MCP binary at the unified repository executable. */
 export function resolveMcpBin(root = getWorkspaceRoot(), mode: SemioBuildMode = readBuildMode(process.env.SEMIO_BUILD_MODE ?? "prototype")): string {
   const fromEnv = process.env.REPO_MCP_BIN?.trim();
   if (fromEnv) return resolve(fromEnv);

@@ -1,0 +1,223 @@
+{
+  "version": 1,
+  "maximumBytes": 1048576,
+  "historyBytes": 16777216,
+  "cases": [
+    {
+      "name": "multiline UTF8 insertion",
+      "initial": "",
+      "cursor": 0,
+      "commands": [
+        {
+          "op": "insert",
+          "text": "a\nβ"
+        }
+      ],
+      "expected": "a\nβ",
+      "expectedCursor": 4
+    },
+    {
+      "name": "whole emoji deletion",
+      "initial": "A👩‍💻B",
+      "cursor": 13,
+      "commands": [
+        {
+          "op": "left"
+        },
+        {
+          "op": "backspace"
+        }
+      ],
+      "expected": "AB",
+      "expectedCursor": 1
+    },
+    {
+      "name": "combining cluster navigation",
+      "initial": "éx",
+      "cursor": 4,
+      "commands": [
+        {
+          "op": "home"
+        },
+        {
+          "op": "right"
+        },
+        {
+          "op": "delete"
+        }
+      ],
+      "expected": "é",
+      "expectedCursor": 3
+    },
+    {
+      "name": "vertical line home",
+      "initial": "ab\n中z",
+      "cursor": 7,
+      "commands": [
+        {
+          "op": "home"
+        },
+        {
+          "op": "up"
+        },
+        {
+          "op": "insert",
+          "text": "X"
+        }
+      ],
+      "expected": "Xab\n中z",
+      "expectedCursor": 1
+    },
+    {
+      "name": "vertical display cells",
+      "initial": "a中\nxyz",
+      "cursor": 0,
+      "commands": [
+        {
+          "op": "right"
+        },
+        {
+          "op": "right"
+        },
+        {
+          "op": "down"
+        }
+      ],
+      "expected": "a中\nxyz",
+      "expectedCursor": 8
+    },
+    {
+      "name": "CRLF newline preservation",
+      "initial": "a\r\nb",
+      "cursor": 4,
+      "commands": [
+        {
+          "op": "home"
+        },
+        {
+          "op": "enter"
+        }
+      ],
+      "expected": "a\r\n\r\nb",
+      "expectedCursor": 5
+    },
+    {
+      "name": "bounded undo and redo",
+      "initial": "a",
+      "cursor": 1,
+      "commands": [
+        {
+          "op": "insert",
+          "text": "β"
+        },
+        {
+          "op": "undo"
+        },
+        {
+          "op": "redo"
+        }
+      ],
+      "expected": "aβ",
+      "expectedCursor": 3
+    },
+    {
+      "name": "UTF8 byte capacity refusal",
+      "initial": "ab",
+      "cursor": 2,
+      "limit": 3,
+      "commands": [
+        {
+          "op": "insert",
+          "text": "中"
+        }
+      ],
+      "expected": "ab",
+      "expectedCursor": 2
+    },
+    {
+      "name": "delete line separator",
+      "initial": "a\nb",
+      "cursor": 0,
+      "commands": [
+        {
+          "op": "right"
+        },
+        {
+          "op": "delete"
+        }
+      ],
+      "expected": "ab",
+      "expectedCursor": 1
+    },
+    {
+      "name": "paste filters terminal control bytes",
+      "initial": "",
+      "cursor": 0,
+      "commands": [
+        {
+          "op": "insert",
+          "text": "a\u0000b\u001bc\t\n"
+        }
+      ],
+      "expected": "abc\t\n",
+      "expectedCursor": 5
+    },
+    {
+      "name": "selection replacement preserves CRLF policy",
+      "initial": "a\r\nb",
+      "cursor": 0,
+      "commands": [
+        {
+          "op": "selectall"
+        },
+        {
+          "op": "insert",
+          "text": "中\nβ"
+        }
+      ],
+      "expected": "中\r\nβ",
+      "expectedCursor": 7
+    },
+    {
+      "name": "read only retained predecessor cannot mutate",
+      "initial": "foreign 🧪\n",
+      "cursor": 0,
+      "readOnly": true,
+      "commands": [
+        {
+          "op": "insert",
+          "text": "local"
+        },
+        {
+          "op": "delete"
+        },
+        {
+          "op": "backspace"
+        },
+        {
+          "op": "enter"
+        },
+        {
+          "op": "undo"
+        },
+        {
+          "op": "redo"
+        }
+      ],
+      "expected": "foreign 🧪\n",
+      "expectedCursor": 0
+    },
+    {
+      "name": "CRLF vertical movement never enters a line separator",
+      "initial": "a\r\nbc",
+      "cursor": 5,
+      "commands": [
+        {
+          "op": "up"
+        }
+      ],
+      "expected": "a\r\nbc",
+      "expectedCursor": 1
+    }
+  ]
+}

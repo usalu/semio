@@ -20,6 +20,9 @@ workspace=true
 [lib]
 path="🦀️.rs"
 
+[features]
+testkit=[]
+
 [dependencies]
 semio-framework-value-retirement={path="../../../../../🌱️value/♻️retirement/📦️packages/🦀️rust"}
 semio-framework-value-intrinsic={path="../../../../../🌱️value/🌳️intrinsic/📦️packages/🦀️rust"}

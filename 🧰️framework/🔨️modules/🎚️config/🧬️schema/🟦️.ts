@@ -1,6 +1,6 @@
 import type { ArtifactDialect } from "@semio-tech/schema-ts/artifact-reference";
-import type { AppRef, AppRole } from "../../🛂️manifest/🧬️schema/🟦️.ts";
-import type { WindowLayout } from "../../🛂️manifest/🟦️.ts";
+import type { AppRef, AppRole } from "@semio-tech/framework-manifest/schema";
+import type { WindowLayout } from "@semio-tech/framework-manifest";
 /** 🧬️ Canonical OS configuration schemas. */
 
 

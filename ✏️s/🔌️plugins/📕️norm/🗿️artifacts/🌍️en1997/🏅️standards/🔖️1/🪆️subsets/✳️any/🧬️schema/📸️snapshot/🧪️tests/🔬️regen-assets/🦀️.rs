@@ -13,7 +13,7 @@ fn regen_example_assets_when_env_set() {
     assert!(assets.is_dir(), "assets dir missing: {}", assets.display());
     for (name, snap) in [
         ("🎬️demo", compliant_demo()),
-        ("🏗compliant", compliant_demo()),
+        ("🏗️compliant", compliant_demo()),
         ("🚨noncompliant", noncompliant_demo()),
     ] {
         let dir = assets.join(name);

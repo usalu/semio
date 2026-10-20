@@ -34,7 +34,7 @@ function admitBuildAssetSpecV1<K extends keyof typeof providerSchema.definitions
 }
 
 //#region 🔖️ViteElementsAssets
-/** @emoji 📦️ Relative-base Vite build defaults for playground static sites (iframe + subdomain safe). */
+/** 📦️ Relative-base Vite build defaults for playground static sites (iframe + subdomain safe). */
 export function playgroundStaticSiteBuildOptions(overrides?: OwnedBuildConfig["build"]): NonNullable<OwnedBuildConfig["build"]> {
   return {
     target: "esnext",
@@ -48,7 +48,7 @@ export { semioViteBuild } from "./🎚️mode/🟦️.ts";
 
 //#endregion 🔖️TileProxyAssetPlugin
 
-/** @emoji 🦀️ Vite `optimizeDeps.exclude` entries for wasm-bindgen flow modules (must not be prebundled). */
+/** 🦀️ Vite `optimizeDeps.exclude` entries for wasm-bindgen flow modules (must not be prebundled). */
 export const FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE = [
   "@semio-tech/flow-module-core",
   "@semio-tech/flow-module-math",
@@ -59,7 +59,7 @@ export const FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE = [
   "@semio-tech/flow-module-draw",
 ] as const;
 
-/** @emoji 🧭️ Workspace Vite resolve preset: dedupe, fs.allow, optimizeDeps.exclude, scene-host aliases. */
+/** 🧭️ Workspace Vite resolve preset: dedupe, fs.allow, optimizeDeps.exclude, scene-host aliases. */
 export function createWorkspaceViteResolveConfig(repoRoot: string, extraAliases: ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }> = []): Pick<OwnedBuildConfig, "resolve" | "server" | "optimizeDeps"> {
   return {
     resolve: {
@@ -75,7 +75,7 @@ export function createWorkspaceViteResolveConfig(repoRoot: string, extraAliases:
   };
 }
 
-/** @emoji 🗂️ Connect middleware: serve one `static-dir` spec's files at `{route}/…`. */
+/** 🗂️ Connect middleware: serve one `static-dir` spec's files at `{route}/…`. */
 function createStaticDirMiddleware(repoRoot: string, spec: StaticDirectoryAssetSpecV1): OwnedBuildMiddleware {
   const fixtureRoot = resolve(repoRoot, spec.root);
   const route = spec.route.endsWith("/") ? spec.route : `${spec.route}/`;
@@ -109,7 +109,7 @@ function createStaticDirMiddleware(repoRoot: string, spec: StaticDirectoryAssetS
   };
 }
 
-/** @emoji 🖼️ Generic dev/build Vite plugin pair for one `static-dir` asset spec: serves and copies
+/** 🖼️ Generic dev/build Vite plugin pair for one `static-dir` asset spec: serves and copies
  * `spec.root` at `spec.route` — replaces the previous `cadFixtureVitePlugin`/`infiniteFixtureVitePlugin`
  * pair (byte-identical serving logic, now route/root-driven instead of hardcoded per fixture tree). */
 export function staticDirVitePlugin(repoRoot: string, spec: StaticDirectoryAssetSpecV1): OwnedBuildPlugin[] {
@@ -151,7 +151,7 @@ export function staticDirVitePlugin(repoRoot: string, spec: StaticDirectoryAsset
   ];
 }
 
-/** @emoji 🪜️ Serves several `static-dir` roots as ONE route table. Each mount answers 404 for a file its
+/** 🪜️ Serves several `static-dir` roots as ONE route table. Each mount answers 404 for a file its
  * root lacks (never the SPA fallback), so two roots on one route shadow each other — the second becomes
  * unreachable — and a parent route registered before a nested one swallows the nested one's requests.
  * The table therefore refuses a route claimed twice and orders the halves by nesting: serving
@@ -170,11 +170,11 @@ export function staticDirMountVitePlugins(repoRoot: string, specs: readonly Stat
 }
 
 
-/** @emoji 🚫️ Directory names [[findWorkspacePackages]] never descends into: installed dependencies and
+/** 🚫️ Directory names [[findWorkspacePackages]] never descends into: installed dependencies and
  * build output, none of which may contribute a workspace package name. */
 const WORKSPACE_PACKAGE_SCAN_SKIP: ReadonlySet<string> = new Set(["node_modules", "dist", "target", "storybook-static", "🗑️generated", "🤖️generated"]);
 
-/** @emoji 🧠️ Memo for [[findWorkspacePackages]], keyed by repo root.
+/** 🧠️ Memo for [[findWorkspacePackages]], keyed by repo root.
  *
  * 🩸️ The scan costs 14–27 s on this tree and every vite config that calls
  * [[createWorkspaceViteResolveConfig]] runs it at module load, so a process loading several configs paid
@@ -185,7 +185,7 @@ const WORKSPACE_PACKAGE_SCAN_SKIP: ReadonlySet<string> = new Set(["node_modules"
  * `optimizeDeps`. */
 const workspacePackagesByRoot = new Map<string, string[]>();
 
-/** @emoji 📦️ Every `@semio-tech/*` package name in the workspace tree, for `optimizeDeps.exclude`.
+/** 📦️ Every `@semio-tech/*` package name in the workspace tree, for `optimizeDeps.exclude`.
  *
  * 🩸️ Directory entries are classified from `readdirSync`'s own `Dirent`, which never follows a link.
  * The previous `statSync(full).isDirectory()` did follow, and a hub test leaves a **self-referential**
@@ -249,21 +249,21 @@ export const STATIC_DIRECTORY_ASSET_PROVIDER_V1: AssetDeliveryProviderV1 = Objec
   plugins: (context, declaration) => staticDirVitePlugin(context.root, admitBuildAssetSpecV1(declaration, "StaticDirectoryAssetSpecV1")),
 });
 
-/** @emoji 🧦️ The browser socket of one proxied upgrade. */
+/** 🧦️ The browser socket of one proxied upgrade. */
 type ProxiedBrowserSocket = {
   destroyed: boolean;
   on(event: "close" | "end" | "error", listener: () => void): void;
   unpipe?(destination?: unknown): void;
 };
 
-/** @emoji 🧦️ The socket the proxy opened to the upstream. */
+/** 🧦️ The socket the proxy opened to the upstream. */
 type ProxiedUpstreamSocket = {
   destroyed: boolean;
   destroy(): void;
   unpipe?(destination?: unknown): void;
 };
 
-/** @emoji 🔌️ The part of a dev proxy that sees a websocket upgrade start and the upstream it opened. */
+/** 🔌️ The part of a dev proxy that sees a websocket upgrade start and the upstream it opened. */
 export type ProxiedUpgradeProxy = {
   on(event: "proxyReqWs", listener: (proxyReq: { destroy(): void }, request: unknown, socket: ProxiedBrowserSocket) => void): void;
   on(event: "open", listener: (proxySocket: ProxiedUpstreamSocket) => void): void;

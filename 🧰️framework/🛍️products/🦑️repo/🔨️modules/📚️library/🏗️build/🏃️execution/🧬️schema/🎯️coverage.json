@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Repository Task Coverage",
+  "description": "🎯️ How one build task executes under any build tool: the tool family that does the work and the disposition the neutral contract assigns it. Nx runs every disposition as one `nx run`; Bazel maps `action` to a cached build action, `test` to a cached test result (`bazel test`), `interactive` to an uncached `bazel run` target, `uncached` to an action tagged `no-cache` with a recorded reason, and `refused` to a fail-closed refusal until the manifest owner declares what is missing.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["family", "disposition"],
+  "properties": {
+    "family": { "$ref": "#/definitions/Family" },
+    "disposition": { "$ref": "#/definitions/Disposition" },
+    "reason": { "$ref": "#/definitions/Reason" }
+  },
+  "definitions": {
+    "Family": {
+      "description": "The tool family that performs the work of a task; `bun-script` is a plain repository script with no other tool, `aggregate` orders prerequisites.",
+      "enum": ["aggregate", "bun-script", "tsc", "vitest", "bun-test", "vite", "playwright", "go", "python", "dotnet", "latex", "wasm", "cargo", "docker"]
+    },
+    "Disposition": {
+      "description": "`action` replays from an action cache, `test` replays a passed test result, `interactive` runs until stopped and is never produced, `uncached` always executes (its reason says why), `refused` is not cached because the manifest leaves cache or outputs undeclared.",
+      "enum": ["action", "test", "interactive", "uncached", "refused"]
+    },
+    "Reason": {
+      "enum": ["continuous", "declared", "skipped", "undeclared", "unbounded", "driver-owned", "managed-output", "side-effecting", "live", "aggregate", "diagnostic"]
+    },
+    "Rule": {
+      "description": "One ordered family rule; every stated matcher must hold (regular expressions search, they are not anchored implicitly) and the first matching rule wins.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "family"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+        "family": { "$ref": "#/definitions/Family" },
+        "noop": { "const": true },
+        "target": { "type": "string", "minLength": 1 },
+        "root": { "type": "string", "minLength": 1 },
+        "command": { "type": "string", "minLength": 1 },
+        "script": { "type": "string", "minLength": 1 }
+      }
+    },
+    "Rules": {
+      "const": [
+        { "id": "aggregate", "family": "aggregate", "noop": true },
+        { "id": "go-root", "family": "go", "root": "(?:^|/)🐹️go(?:/|$)" },
+        { "id": "python-root", "family": "python", "root": "(?:^|/)🐍️python(?:/|$)" },
+        { "id": "dotnet-root", "family": "dotnet", "root": "(?:^|/)🔷️dotnet(?:/|$)" },
+        { "id": "docker-target", "family": "docker", "target": "^docker-" },
+        { "id": "browser-target", "family": "playwright", "target": "(?:^|-)(?:e2e|browser-test)(?:-|$)" },
+        { "id": "print-root", "family": "latex", "root": "(?:^|/)(?:📓️print|📋️bericht)(?:/|$)", "target": "^(?:build|watch|fonts|deps-te|akteursnetz|generate-actor)" },
+        { "id": "wasm-target", "family": "wasm", "target": "^(?:wasm|check-wasm|component|jco)(?:-|$)" },
+        { "id": "native-target", "family": "cargo", "target": "^(?:native-build|cargo-|lockfile-check|prepare-.*-native|publish-.*-native|run-.*-native|smoke-.*-native)" },
+        { "id": "prepare-target", "family": "wasm", "target": "^prepare-" },
+        { "id": "rust-root", "family": "cargo", "root": "(?:^|/)🦀️rust(?:/|$)" },
+        { "id": "activation-target", "family": "vite", "target": "^(?:activate|build|serve|dev)-.*-(?:react|site)(?:-|$)|^activate-|^build-all-playground" },
+        { "id": "vite-script", "family": "vite", "target": "^(?:build|dev|serve|watch|preview)(?:-|$)", "script": "(?:\\bvite\\b|runVite)" },
+        { "id": "tsc-target", "family": "tsc", "target": "^(?:typecheck|check-types|lint)(?:-|$)" },
+        { "id": "tsc-check", "family": "tsc", "target": "^check$", "script": "(?:\\btsc\\b|typecheck)" },
+        { "id": "vitest-target", "family": "vitest", "target": "^test(?:-|$)", "script": "(?:\\bvitest\\b|runVitest)" },
+        { "id": "bun-test-target", "family": "bun-test", "target": "^test(?:-|$)" },
+        { "id": "bun-script", "family": "bun-script" }
+      ]
+    },
+    "Policy": {
+      "const": {
+        "version": 1,
+        "test": { "target": "^test(?:-|$)" },
+        "interactive": ["continuous"],
+        "refused": ["undeclared", "unbounded"]
+      }
+    },
+    "Input": {
+      "description": "What the classifier reads of one task; `script` is the optional text of the entry script, `outputs` is absent when the manifest declares none.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target", "root", "kind", "cache"],
+      "properties": {
+        "project": { "type": "string" },
+        "target": { "type": "string", "minLength": 1 },
+        "root": { "type": "string" },
+        "kind": { "enum": ["command", "noop"] },
+        "command": { "type": "string" },
+        "script": { "type": "string" },
+        "outputs": { "type": "array", "items": { "type": "string" } },
+        "cache": {
+          "oneOf": [
+            { "type": "object", "additionalProperties": false, "required": ["cache"], "properties": { "cache": { "const": true } } },
+            { "type": "object", "additionalProperties": false, "required": ["cache", "reason"], "properties": { "cache": { "const": false }, "reason": { "$ref": "#/definitions/Reason" } } }
+          ]
+        }
+      }
+    },
+    "Report": {
+      "description": "Task counts by family and disposition for one selection.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "tasks", "dispositions", "families"],
+      "properties": {
+        "version": { "const": 1 },
+        "tasks": { "type": "integer", "minimum": 0 },
+        "dispositions": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 1 } },
+        "families": { "type": "object", "additionalProperties": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 1 } } }
+      }
+    }
+  }
+}

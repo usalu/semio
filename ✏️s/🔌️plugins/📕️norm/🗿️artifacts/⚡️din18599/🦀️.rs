@@ -19,7 +19,7 @@ pub fn package_descriptor() -> Result<semio_s_artifact_norm_contract::NormArtifa
 }
 
 // #region 🔖️Types
-use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+pub use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 
 /// 📋️ Annual energy balancing inputs stored in the persisted snapshot.
 pub type BalancingInputs = Din18599Snapshot;

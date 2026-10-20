@@ -47,7 +47,7 @@ impl ReferenceSolid {
     /// 🧊️ The reference rebuilt in a fresh kernel session — one real solid handle, or `None` when
     /// the shipped STEP does not read (a build-time asset defect, never a user-facing state).
     pub fn import(&self, kernel: &mut semio_framework_3d_brep_engine::Brep) -> Option<semio_framework_3d_brep_engine::GeometryHandle> {
-        semio_s_artifact_stdio_step_geometry::geometry::import_step(kernel,self.step).ok()?.into_iter().next()
+        semio_s_artifact_stdio_step::geometry::import_step(kernel,self.step).ok()?.into_iter().next()
     }
 
     /// 🌉️ The reference's real, lossless B-Rep content — the composed `stock_solid` child this

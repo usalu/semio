@@ -770,6 +770,22 @@
       "expected": null
     },
     {
+      "name": "a target that declares no receipt output is never name-validated, whatever its characters",
+      "projectRoot": "a/b",
+      "target": "🏭️generator",
+      "outputs": [],
+      "expected": null
+    },
+    {
+      "name": "a target with other outputs only is never name-validated",
+      "projectRoot": "a/b",
+      "target": "🏭️generator-manifests",
+      "outputs": [
+        "{projectRoot}/dist"
+      ],
+      "expected": null
+    },
+    {
       "name": "a project at the workspace root",
       "projectRoot": ".",
       "target": "build",

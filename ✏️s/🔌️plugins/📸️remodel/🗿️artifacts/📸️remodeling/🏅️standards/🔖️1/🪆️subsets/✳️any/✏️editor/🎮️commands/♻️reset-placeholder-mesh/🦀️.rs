@@ -1,7 +1,7 @@
 //! 🧹️ 🧹️ Remodeling play app commands command — `reset-placeholder-mesh`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use semio_s_artifact_remodel_remodeling_mut_results::standards::v1::subsets::any::schema::mutations::replace_mesh_result::replace_mesh_result;
+use semio_s_artifact_remodel_remodeling_mut_results::standards::v1::subsets::any::schema::mutations::replace_mesh_result;
 use semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MeshSource;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingMesh;

@@ -15,9 +15,9 @@ import { loadingBorderStateClass, waitingBorderStateClass } from "../../🔨️m
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
 import { useLabel, useControlAccessibleLabel, Label } from "../🏷️Label/🟦️.tsx";
 import { useInteractionCommands } from "../👻️PanelGhost/🟦️.tsx";
-import { dialAngle, dialPosition, sliderAxisPosition, sliderAxisValue, sliderKeyValue, sliderPointerValue, uiNumberCrossedBound, uiNumberDisplayText, uiNumberTypedValue, type SliderKey } from "../../🧬️contract/🧩️component/🟦️.ts";
-import { formatUiNumber } from "../../🧬️contract/🖼️presentation/🔢️number-format/🟦️.ts";
-import type { SliderAppearance, UiNumberLimits, UiNumberScale } from "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
+import { dialAngle, dialPosition, sliderAxisPosition, sliderAxisValue, sliderKeyValue, sliderPointerValue, uiNumberCrossedBound, uiNumberDisplayText, uiNumberTypedValue, type SliderKey } from "@semio-tech/ui-contract/component";
+import { formatUiNumber } from "@semio-tech/ui-contract/presentation/number-format";
+import type { SliderAppearance, UiNumberLimits, UiNumberScale } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
 // #endregion 🔌️Adapters
 
 // #region 🏩️Slider

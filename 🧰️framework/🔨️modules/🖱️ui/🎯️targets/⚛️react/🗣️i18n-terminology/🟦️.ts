@@ -1,7 +1,7 @@
-import type { AssertUiRibbonParentKeysCovered, UiRibbonParentCategory, AssertUiSettingsLanguageKeysCovered, UiLocale, AssertUiSettingsTerminologyKeysCovered, UiChromeTerminologyId } from "../../../🧱️elements/📚️I18n/🟦️.tsx";
-import { uiChromeTranslationBundles } from "../🌐️i18n/🟦️.ts";
-import type { ShellLocale } from "@semio-tech/framework/manifest/generated/ui-axes";
-import { UI_TERMINOLOGY_NATIVE } from "../../../🔨️modules/🗣️ui-terminology/🟦️.tsx";
+import type { AssertUiRibbonParentKeysCovered, UiRibbonParentCategory, AssertUiSettingsLanguageKeysCovered, UiLocale, AssertUiSettingsTerminologyKeysCovered, UiChromeTerminologyId } from "@semio-tech/ui/elements/I18n";
+import { uiChromeTranslationBundles } from "@semio-tech/ui/i18n";
+import type { ShellLocale } from "@semio-tech/framework-manifest/generated/ui-axes";
+import { UI_TERMINOLOGY_NATIVE } from "@semio-tech/ui/modules/ui-terminology";
 
 const _assertUiRibbonParentKeys: AssertUiRibbonParentKeysCovered<UiRibbonParentCategory> = true;
 

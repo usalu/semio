@@ -1,0 +1,73 @@
+{
+ "file": "/Users/ueli/Documents/semio/🌎️hub/🧪️tests/🎫️invite-redemption-checks/🟦️.ts",
+ "function": "proveInviteRedemptionTransaction",
+ "keep": [
+  381,
+  383
+ ],
+ "resolve": true,
+ "typeOverrides": {
+  "client": "any",
+  "acceptanceMarker": "(value: unknown) => boolean"
+ },
+ "shared": {
+  "dir": "📐️invite-redemption-fixture-type",
+  "doc": "/** 📐️ The shared invite redemption fixture type. */"
+ },
+ "files": [
+  {
+   "dir": "🎟️redemption-fixture-and-oracle",
+   "doc": "/** 🎟️ The fixture contract, sqlite oracle and hostile call checks of the invite redemption transaction proof. */",
+   "phases": [
+    {
+     "name": "checkRedemptionFixtureContract",
+     "emoji": "📜",
+     "doc": "Loads the invite redemption fixture and checks its schema, limits, vector names and acceptance marker.",
+     "from": 58,
+     "to": 75
+    },
+    {
+     "name": "checkRedemptionOracleVectors",
+     "emoji": "🔮",
+     "doc": "Replays every redemption vector against the sqlite oracle.",
+     "from": 77,
+     "to": 131
+    },
+    {
+     "name": "checkRedemptionCallsAndHostiles",
+     "emoji": "☠",
+     "doc": "Checks every redemption call against the call schema and every hostile mutation against the fixture.",
+     "from": 219,
+     "to": 221
+    }
+   ]
+  },
+  {
+   "dir": "🔒️backend-source-closure",
+   "doc": "/** 🔒️ The production source closure checks of the invite redemption transaction proof. */",
+   "phases": [
+    {
+     "name": "checkRedemptionSourceClosure",
+     "emoji": "🧱",
+     "doc": "Reads the directory backend sources and checks the redemption transaction closure with its hostile mutations.",
+     "from": 238,
+     "to": 296
+    },
+    {
+     "name": "checkStateAuthorityClosure",
+     "emoji": "🏛",
+     "doc": "Checks the invite state and ingress authority closure with its hostile mutations.",
+     "from": 300,
+     "to": 340
+    },
+    {
+     "name": "checkArchiveClosure",
+     "emoji": "🗄",
+     "doc": "Checks the archive transaction and rollback closure with its hostile mutations.",
+     "from": 343,
+     "to": 380
+    }
+   ]
+  }
+ ]
+}

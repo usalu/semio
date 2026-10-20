@@ -995,3 +995,9 @@ path = "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/�
 
 [workspace.dependencies.semio-framework-plugin-instance-surface]
 path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🛬️lifted/🌳️tree/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-filesystem-workspace]
+path = "🧰️framework/🔨️modules/📁️filesystem/📝️workspace/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-value-snapshot-projection]
+path = "🧰️framework/🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust"

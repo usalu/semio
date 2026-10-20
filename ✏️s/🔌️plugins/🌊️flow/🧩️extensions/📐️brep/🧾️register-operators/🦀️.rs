@@ -48,7 +48,7 @@ pub fn register(registry: &mut Registry, session: &Session) {
 
 /// 🛂️ Manifest JSON for host contribution install (tests + packaging metadata).
 pub async fn extension_manifest_json() -> String {
-    let session = semio_s_artifact_stdio_step_geometry::geometry::session::geometry_session();
+    let session = semio_s_artifact_stdio_step::geometry::session::geometry_session();
     let registry = neural_engine::ColdOwner::new(module_registry(&session));
     let manifest = build_manifest_json("brep", "Brep", env!("CARGO_PKG_VERSION"), &registry, vec!["onStartup".into()], vec![], vec![], vec![]);
     drop(registry);

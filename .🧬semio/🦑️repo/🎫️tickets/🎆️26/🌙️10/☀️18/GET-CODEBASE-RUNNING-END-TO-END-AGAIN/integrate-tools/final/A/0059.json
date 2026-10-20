@@ -1,0 +1,135 @@
+{
+  "name": "@semio-tech/repo-client",
+  "$schema": "../../../../📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "targets": {
+    "dev": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts dev",
+        "forwardAllArgs": true
+      },
+      "dependsOn": [
+        "build",
+        "generate-entity-kinds"
+      ],
+      "cache": false,
+      "continuous": true
+    },
+    "build": {
+      "executor": "repo:script",
+      "inputs": [
+        "production",
+        "^production",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts build",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "driver-owned", "reason": "freshness-owned-by-driver" }
+        }
+      },
+      "cache": false,
+      "outputs": [
+        "{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/🗃️bin/{options.env.SEMIO_BUILD_MODE}/repo"
+      ],
+      "dependsOn": [
+        "generate-entity-kinds"
+      ]
+    },
+    "test": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      },
+      "dependsOn": [
+        "generate-entity-kinds"
+      ]
+    },
+    "generate-entity-kinds": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts generate-entity-kinds"
+      },
+      "cache": true,
+      "outputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🏷️entity-kinds/🐹️.go"
+      ]
+    },
+    "preview-generated": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts preview-generated"
+      },
+      "cache": true,
+      "outputs": []
+    },
+    "check-entity-kinds": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts check-entity-kinds"
+      },
+      "cache": true,
+      "outputs": []
+    },
+    "test-entity-kinds": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-entity-kinds"
+      },
+      "cache": true,
+      "outputs": [],
+      "dependsOn": [
+        "generate-entity-kinds"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "@semio-tech/framework-schema"
+  ],
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/📥️source/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+      "sharedGlobals"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ]
+  }
+}

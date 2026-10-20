@@ -87,9 +87,6 @@ impl protocol::Identified<String> for Step {
 /// full-replace semantics as `vcs::Patchable`'s impl above.
 impl protocol::Patchable<Dictionary> for Step {
     fn apply_patch(&mut self, patch: &Dictionary) {
-        // 🧊️ The DISPLACED dictionary is retired, never dropped: a bare `self.params = …` drops the
-        // previous root in place, which panics as soon as this step was its last owner
-        // (`final Dictionary ownership must be explicitly retired or owned by a cold boundary`).
         ColdRetire::retire_cold(std::mem::replace(&mut self.params, patch.clone()));
     }
 }
@@ -286,9 +283,6 @@ fn merge_output_into_scope(scope: &Dictionary, output: &Dictionary) -> Dictionar
                     continue;
                 }
             }
-            // 🧊️ `Dictionary::insert` CONSUMES its receiver (it builds through `ColdDictionaryBuilder`,
-            // which takes exact ownership of the displaced root), so unlike the borrowing `merge`
-            // above there is no previous owner left to retire.
             merged = merged.insert(key.clone(), value.clone());
         }
     }

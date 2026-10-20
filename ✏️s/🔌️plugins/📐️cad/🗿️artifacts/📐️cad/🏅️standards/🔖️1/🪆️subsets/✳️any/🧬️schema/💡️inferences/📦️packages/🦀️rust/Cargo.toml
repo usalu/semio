@@ -31,6 +31,9 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-cad-cad-model = { workspace = true }
 semio-s-artifact-stdio-semio-brep = { workspace = true }
 
+[features]
+derive-testing = []
+
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

@@ -98,6 +98,11 @@ pub mod io_registry {
     pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<IfcRawAnyComposer>()]).as_slice()
     }
+
+    // 🚫️async: E1 pure registration call over the static entry table — see R9
+    pub fn register() {
+        semio_framework_plugin::io::register_composer_entries(entries()).expect("static Stdio registration must be available and conflict-free");
+    }
 }
 //#endregion 🚪️DerivedIoRegistry
 

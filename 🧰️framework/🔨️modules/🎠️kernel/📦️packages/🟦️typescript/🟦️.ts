@@ -47,7 +47,7 @@ export type {
 } from "../../🧬️mutation-vocabulary/🟦️.ts";
 export { SemioFaultError, severityAsU8, severityFromU8 } from "../../🚨️fault/🟦️.ts";
 export type { Diagnostic, Fault, FaultCause, FaultOrigin, FaultScope, Severity, TextSpan } from "../../🚨️fault/🟦️.ts";
-export type { Effect, ServiceOperationPayloadV1 } from "../../⚡️effect/🟦️.ts";
+export type { Effect, ServiceOperationPayloadV1 } from "@semio-tech/framework-effect";
 export { MEDIA_EXPORT_BASE64_ENCODING, MEDIA_EXPORT_UTF8_ENCODING, mediaExportBytes, MediaExportEncodingError } from "../../🎬️media-export/🟦️.ts";
 export {
   MEDIA_VIDEO_RENDER_CAPABILITY,
@@ -62,7 +62,7 @@ export {
   videoRenderPathIsWellFormed,
   videoRenderProgramFromWire,
   videoRenderProgramProblem
-} from "../../🎥️video-render-program/🟦️.ts";
+} from "@semio-tech/framework-effect/video-render-program";
 export type {
   VideoRenderColor,
   VideoRenderImage,
@@ -73,7 +73,7 @@ export type {
   VideoRenderRun,
   VideoRenderScene,
   VideoRenderTransform
-} from "../../🎥️video-render-program/🟦️.ts";
+} from "@semio-tech/framework-effect/video-render-program";
 export { VideoRenderJobLedger } from "../../🧵️video-render-job/🟦️.ts";
 export type {
   VideoRenderEncoderTier,
@@ -103,8 +103,8 @@ export {
   SPAWNED_JOB_STEP_CEILING,
   spawnedJobCompletion,
   SpawnedJobDriveError
-} from "../../🛠️spawned-job/🟦️.ts";
-export type { JobPlacement, SpawnedJobCompletion, SpawnedJobStep } from "../../🛠️spawned-job/🟦️.ts";
+} from "@semio-tech/framework-effect/spawned-job";
+export type { JobPlacement, SpawnedJobCompletion, SpawnedJobStep } from "@semio-tech/framework-effect/spawned-job";
 export {
   mergeUiDirtyScopes,
   partitionRefreshWindowInstancesV1,

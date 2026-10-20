@@ -211,7 +211,18 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
         status: Some(vec![WindowEngagementStatus { id: "drawing-layer-count".into(), text: "0 layers · 0 selected".into() }]),
         possible_engagements: None,
     };
-    Editor::builder(semio_s_artifact_draw_drawing_model::DRAWING_DIALECT).document(["semio", "drawing"])
+    let builder = Editor::builder(semio_s_artifact_draw_drawing_model::DRAWING_DIALECT);
+    let builder = create_drawing_app_part_1(builder, engagement);
+    let builder = create_drawing_app_part_2(builder);
+    let builder = create_drawing_app_part_3(builder);
+    let builder = create_drawing_app_part_4(builder);
+    let builder = create_drawing_app_part_5(builder);
+    builder.build_definition()
+}
+
+/// 🧱️ The manifest slice 1 of 5 of `create_drawing_app`: its builder calls.
+fn create_drawing_app_part_1(builder: semio_framework_plugin::app::EditorBuilder, engagement: WindowEngagement) -> semio_framework_plugin::app::EditorBuilder {
+    builder.document(["semio", "drawing"])
             .artifact_kind(semio_s_artifact_draw_drawing_model::artifact_kind())
             .icon_id("drawing")
             .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
@@ -298,7 +309,12 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
                 .with_args([semio_framework_plugin::ActionArgDef::text("layerId", LocalizedLabel::native("Layer", "Ebene")).required(), semio_framework_plugin::ActionArgDef::json_text("edit", LocalizedLabel::native("Fill Edit", "Füllungsbearbeitung")).required()]))
             .action_interactive_job("editFill", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation))
-            .action_audience("deleteSelection", semio_framework_plugin::CapabilityAudience::Input)
+            
+}
+
+/// 🪵️ The manifest slice 2 of 5 of `create_drawing_app`: its builder calls.
+fn create_drawing_app_part_2(builder: semio_framework_plugin::app::EditorBuilder) -> semio_framework_plugin::app::EditorBuilder {
+    builder.action_audience("deleteSelection", semio_framework_plugin::CapabilityAudience::Input)
             .action_interactive_job("deleteSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("nudgeSelectionLeft", LocalizedLabel::native("Nudge Left", "Auswahl nach links verschieben"), ActionKind::Mutation))
             .action_audience("nudgeSelectionLeft", semio_framework_plugin::CapabilityAudience::Input)
@@ -368,7 +384,12 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
                     .use_when(["commit this document state"]),
             )
             .action_interactive_job("commitDocument", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_with(
+            
+}
+
+/// 🔩️ The manifest slice 3 of 5 of `create_drawing_app`: its builder calls.
+fn create_drawing_app_part_3(builder: semio_framework_plugin::app::EditorBuilder) -> semio_framework_plugin::app::EditorBuilder {
+    builder.action_with(
                 drawing_internal_action("loadDocumentJson", LocalizedLabel::native("Load Document JSON", "Dokument-JSON laden"), ActionKind::Mutation)
                     .describe(LocalizedLabel::native("Loads a whole drawing document from JSON text.", "Lädt ein vollständiges Zeichnungsdokument aus JSON-Text."))
                     .use_when(["load this drawing from json"])
@@ -446,7 +467,12 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
             .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegen"), ActionKind::View, "mouse-pointer").input_event())
             .action_interactive_job("canvasPointerMove", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(drawing_input_event("canvasEscape", LocalizedLabel::native("Canvas Escape", "Leinwand abbrechen"), ActionKind::View))
-            .action_interactive_job("canvasEscape", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            
+}
+
+/// ⚙️ The manifest slice 4 of 5 of `create_drawing_app`: its builder calls.
+fn create_drawing_app_part_4(builder: semio_framework_plugin::app::EditorBuilder) -> semio_framework_plugin::app::EditorBuilder {
+    builder.action_interactive_job("canvasEscape", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(semio_framework_plugin::ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand").input_event())
             .action_interactive_job("engagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera") })
@@ -513,9 +539,14 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
             .keybinding("shift+arrowright", "nudgeSelectionRightFast")
             .keybinding("arrowup", "nudgeSelectionUp")
             .keybinding("shift+arrowup", "nudgeSelectionUpFast")
-            .keybinding("arrowdown", "nudgeSelectionDown")
+            
+}
+
+/// 🧲️ The manifest slice 5 of 5 of `create_drawing_app`: its builder calls.
+fn create_drawing_app_part_5(builder: semio_framework_plugin::app::EditorBuilder) -> semio_framework_plugin::app::EditorBuilder {
+    builder.keybinding("arrowdown", "nudgeSelectionDown")
             .keybinding("shift+arrowdown", "nudgeSelectionDownFast")
             .default_layout(edit::layout())
             .io(drawing_io())
-            .build_definition()
+            
 }

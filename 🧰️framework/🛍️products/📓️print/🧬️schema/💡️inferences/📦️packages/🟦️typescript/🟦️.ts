@@ -3,7 +3,7 @@
  * runtime dependency on anything outside this repository.
  * @see ../../../../🖋️latex/semio-viz.sty
  */
-export { default as inferencesSchema } from "../../🔣️.json";
+export { default as inferencesSchema } from "../../🔣️.json" with { type: "json" };
 export { inferVizChartSnapshot, validateVizChartSpecification } from "../../🟦️.ts";
 export type { VizChartInference, VizChartInferenceControl, VizChartInferenceProgress } from "../../🟦️.ts";
 export * from "@semio-tech/print/schema/snapshot/chart";

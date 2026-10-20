@@ -1,0 +1,97 @@
+/**
+ * 🪞 Mirrors public entries of owner packages into the neutral SDK package `@semio-tech/framework` (the only package plugins and renderer hosts may use).
+ * The glue re-exports every member of the owner entry explicitly from the owner's bare key (the existing SDK convention), so nothing is defined in the SDK.
+ *
+ *   bun sdk-mirror.ts [check|apply]       (check is the default and writes nothing)
+ *
+ * Run after the exports-stage batch: owner keys that do not exist yet are reported as pending and skipped.
+ */
+import ts from "typescript";
+import { existsSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync, mkdirSync } from "node:fs";
+import { dirname, relative, resolve } from "node:path";
+
+const ROOT = resolve(import.meta.dir, "../../../../../../../../..");
+const apply = process.argv[2] === "apply";
+const SDK = "@semio-tech/framework";
+const pkgDir = (name: string): string => realpathSync(resolve(ROOT, "node_modules", name));
+const rel = (p: string): string => relative(ROOT, p).split("\\").join("/");
+
+type Mirror = { sdkKey: string; owner: string; ownerKey: string; modulePrefix: string };
+const MIRRORS: Mirror[] = JSON.parse(readFileSync(resolve(import.meta.dir, "sdk-mirror.json"), "utf8"));
+
+const sources = ["", ".ts", ".tsx", ".mts", ".js", ".mjs", ".cjs", ".json", "/🟦️.ts", "/🟦️.tsx"];
+const resolveRel = (from: string, spec: string): string | null => {
+  if (spec.startsWith("@semio-tech/")) return resolveBare(spec);
+  if (!spec.startsWith(".")) return null;
+  const base = resolve(dirname(from), spec.split("?")[0]!);
+  for (const s of sources) { try { if (statSync(base + s).isFile()) return base + s; } catch {} }
+  return null;
+};
+const manifestOf = (name: string): { dir: string; exports: Record<string, unknown> } => { const dir = pkgDir(name); return { dir, exports: JSON.parse(readFileSync(resolve(dir, "package.json"), "utf8")).exports ?? {} }; };
+const resolveBare = (spec: string): string | null => {
+  const parts = spec.split("/");
+  const name = parts.slice(0, 2).join("/");
+  let m: ReturnType<typeof manifestOf>;
+  try { m = manifestOf(name); } catch { return null; }
+  const value = m.exports["." + spec.slice(name.length)];
+  return typeof value === "string" ? resolve(m.dir, value) : null;
+};
+const has = (n: ts.Node, k: ts.SyntaxKind): boolean => !!ts.getModifiers(n as ts.HasModifiers)?.some(m => m.kind === k);
+const memo = new Map<string, Map<string, boolean>>();
+function members(file: string, depth = 0): Map<string, boolean> {
+  const hit = memo.get(file);
+  if (hit) return hit;
+  const out = new Map<string, boolean>();
+  memo.set(file, out);
+  if (depth > 8 || !/\.(ts|tsx)$/u.test(file)) return out;
+  const sf = ts.createSourceFile(file, readFileSync(file, "utf8"), ts.ScriptTarget.Latest, true);
+  for (const st of sf.statements) {
+    if (ts.isExportDeclaration(st)) {
+      const target = st.moduleSpecifier && ts.isStringLiteral(st.moduleSpecifier) ? st.moduleSpecifier.text : null;
+      if (st.exportClause && ts.isNamedExports(st.exportClause)) for (const e of st.exportClause.elements) out.set(e.name.text, st.isTypeOnly || e.isTypeOnly);
+      else if (target && !st.exportClause) { const f = resolveRel(file, target); if (f) for (const [k, v] of members(f, depth + 1)) if (k !== "default" && !out.has(k)) out.set(k, v || st.isTypeOnly); }
+    } else if (has(st, ts.SyntaxKind.ExportKeyword)) {
+      if (ts.isVariableStatement(st)) for (const d of st.declarationList.declarations) { if (ts.isIdentifier(d.name)) out.set(d.name.text, false); }
+      else if ((ts.isFunctionDeclaration(st) || ts.isClassDeclaration(st)) && st.name && !has(st, ts.SyntaxKind.DefaultKeyword)) out.set(st.name.text, false);
+      else if (ts.isInterfaceDeclaration(st) || ts.isTypeAliasDeclaration(st)) out.set(st.name.text, true);
+      else if (ts.isEnumDeclaration(st)) out.set(st.name.text, false);
+    }
+  }
+  return out;
+}
+
+const sdk = manifestOf(SDK);
+const sdkJsonPath = resolve(sdk.dir, "package.json");
+const sdkText = readFileSync(sdkJsonPath, "utf8");
+const sdkJson = JSON.parse(sdkText);
+if (JSON.stringify(sdkJson, null, 2) + "\n" !== sdkText) throw Error("SDK manifest does not round-trip through JSON.stringify(…, 2)");
+const sort = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+const plan: { sdkKey: string; value: string; glue: string; content: string }[] = [];
+const pending: { sdkKey: string; why: string }[] = [];
+for (const m of MIRRORS) {
+  if (m.sdkKey in sdkJson.exports) { pending.push({ sdkKey: m.sdkKey, why: "key exists" }); continue; }
+  const owner = manifestOf(m.owner);
+  const value = owner.exports[m.ownerKey];
+  if (typeof value !== "string") { pending.push({ sdkKey: m.sdkKey, why: `owner key ${m.owner}${m.ownerKey.slice(1)} missing (apply the exports-stage batch first)` }); continue; }
+  const target = resolve(owner.dir, value);
+  if (!existsSync(target)) { pending.push({ sdkKey: m.sdkKey, why: "owner target file missing" }); continue; }
+  const names = members(target);
+  if (!names.size) { pending.push({ sdkKey: m.sdkKey, why: "owner entry has no explicit members" }); continue; }
+  const specifier = m.owner + (m.ownerKey === "." ? "" : m.ownerKey.slice(1));
+  const values = [...names].filter(([, t]) => !t).map(([k]) => k).sort(sort), types = [...names].filter(([, t]) => t).map(([k]) => k).sort(sort);
+  const lines = [`/** 🧩️ Public \`${SDK}${m.sdkKey.slice(1)}\` entry: explicit re-exports of the source module that owns each member. */`];
+  if (values.length) lines.push(`export { ${values.join(", ")} } from "${specifier}";`);
+  if (types.length) lines.push(`export type { ${types.join(", ")} } from "${specifier}";`);
+  const glueRel = (m.modulePrefix ? m.modulePrefix + "/" : "") + value.replace(/^\.\//u, "");
+  const glue = resolve(sdk.dir, glueRel);
+  if (existsSync(glue)) { pending.push({ sdkKey: m.sdkKey, why: "glue file exists" }); continue; }
+  plan.push({ sdkKey: m.sdkKey, value: "./" + glueRel, glue, content: lines.join("\n") + "\n" });
+}
+for (const p of plan) { console.log(`add ${p.sdkKey} -> ${p.value}`); if (process.argv.includes("--print")) console.log(p.content.split("\n").map(l => "    " + l.slice(0, 220)).join("\n")); }
+for (const p of pending) console.log(`skip ${p.sdkKey}: ${p.why}`);
+if (apply && plan.length) {
+  for (const p of plan) { mkdirSync(dirname(p.glue), { recursive: true }); writeFileSync(p.glue, p.content); sdkJson.exports[p.sdkKey] = p.value; }
+  writeFileSync(sdkJsonPath, JSON.stringify(sdkJson, null, 2) + "\n");
+  for (const p of plan) if (!existsSync(p.glue)) throw Error("glue missing after write: " + rel(p.glue));
+  console.log(`written ${plan.length} keys + glue files`);
+} else console.log(`plan: ${plan.length} keys, ${pending.length} skipped (${apply ? "applied" : "check only"})`);

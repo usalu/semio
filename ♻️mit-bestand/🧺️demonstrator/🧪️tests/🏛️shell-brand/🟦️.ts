@@ -149,8 +149,8 @@ describe("demonstrator shell brands", () => {
 import Ajv from "ajv";
 import { DEMONSTRATOR_SHELL_BRANDS, DEMONSTRATOR_FOOTER_ITEMS } from "../../🪧️brand.ts";
 import { shellFooterNavbarItem } from "@semio-tech/framework-os/modules/renderer/engine/elements/ShellFooter";
-import { manifestSchema as schema } from "@semio-tech/framework/manifest/schema";
-import { manifestShellFooterFixture as fixture } from "@semio-tech/framework/manifest/testing/fixtures/shell-footer";
+import { manifestSchema as schema } from "@semio-tech/framework-manifest/schema";
+import fixture from "@semio-tech/framework-manifest/testing/fixtures/shell-footer.json" with { type: "json" };
 import type { ShellFooterItem, ShellLocale } from "@semio-tech/framework";
 
 it("renders schema-owned neutral credits and validates every concrete owner contribution", () => {

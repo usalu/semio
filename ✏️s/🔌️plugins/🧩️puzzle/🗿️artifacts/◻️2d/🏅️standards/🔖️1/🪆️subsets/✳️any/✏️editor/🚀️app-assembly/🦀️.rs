@@ -7,6 +7,10 @@ use crate::mirror::editor::puzzle2d::modes::edit::windows::selection;
 use crate::mirror::editor::puzzle2d::panels::catalogue;
 use crate::mirror::editor::puzzle2d::panels::inspection;
 use semio_s_artifact_puzzle_2d_retained_panels::editor::puzzle2d::panels::settings;
+use crate::mirror::editor::puzzle2d::panels::artifact;
+use crate::mirror::editor::puzzle2d::modes::edit::windows::overview::utilities::area_brush as area_brush_utility;
+use crate::mirror::editor::puzzle2d::modes::edit::windows::overview::utilities::brush as brush_utility;
+use crate::mirror::editor::puzzle2d::modes::edit::windows::overview::utilities::select as select_utility;
 
 //#region 🔖️Manifest
 /// 🛠️ An internal (non-palette) action declaration — the pointer/gesture/inspector/engagement-bound

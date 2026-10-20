@@ -4,6 +4,13 @@ use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::
 use semio_s_artifact_stdio_zip::opc::{OpcRelationship, OpcTargetMode};
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr;
+#[cfg(test)] use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::cell_address;
+#[cfg(test)] use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
+#[cfg(test)] use semio_framework_os_kernel::DslValue;
+#[cfg(test)] use semio_s_artifact_stdio_xml_snapshot::standards::v1_0::subsets::base::schema::snapshot::XmlNode;
+#[cfg(test)] use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::opc_layer;
+#[cfg(test)] use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
+#[cfg(test)] use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::XlsxMutation;
 
 fn part_row(snapshot: &XlsxSnapshot, wanted: impl Fn(&PartRole) -> bool) -> usize {
     snapshot.xml_parts.iter().position(|part| part_role(snapshot, &part.path).is_ok_and(|role| wanted(&role))).expect("the fixture has the part")

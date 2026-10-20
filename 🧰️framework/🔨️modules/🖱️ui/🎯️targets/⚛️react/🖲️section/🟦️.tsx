@@ -1,4 +1,4 @@
-import type { UiLabel } from "../../../🧱️elements/🎗️UiLabel/🟦️.tsx";
+import type { UiLabel } from "@semio-tech/ui/elements/UiLabel";
 import * as React from "react";
 
 // Collapsible section container with heading and specificity.

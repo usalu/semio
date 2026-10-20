@@ -1,4 +1,4 @@
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import {validateJsonSchemaSubset} from "../../../../../../📦️packages/🟦️typescript/🧬️schema/🟦️.ts";
 export type NativeHostV1=Readonly<{landingAppId:string;hostAppId:string}>;
 export type NativePluginV1=Readonly<{pluginId:string;cratePath:string;wasmOut:string;role:"plugin"|"extension";extends:string|null;capabilities:readonly string[];activationEvents:readonly string[];host:NativeHostV1|null}>;

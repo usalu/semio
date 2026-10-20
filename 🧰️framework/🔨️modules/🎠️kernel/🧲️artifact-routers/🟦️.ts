@@ -68,7 +68,7 @@ export class ArtifactMutationRouter {
     this.registry.register(artifactKind, mutationId, { kind: "owner" }, { kind: "owner", artifactKind, mutationId });
   }
 
-  /** Contract freeze §4 rule 1 registration gate: `contributorDependsOnOwner` must already be true —
+  /** 🧬️ Contract freeze §4 rule 1 registration gate: `contributorDependsOnOwner` must already be true —
    * callers derive it from a {@link PluginGraph} lookup (the contributor's declared `dependencies`
    * directly naming `ownerPluginId`) before calling this. */
   registerContributed(artifactKind: string, contributorPluginId: string, ownerPluginId: string, metadata: ContributedMutationMetadata, contributorDependsOnOwner: boolean): void {
@@ -92,7 +92,7 @@ export class ArtifactInferenceRouter {
     this.registry.register(artifactKind, inferenceSchema, { kind: "owner" }, { kind: "owner", artifactKind, inferenceSchema });
   }
 
-  /** Contract freeze §4 rules 1+4: the contributor must directly depend on the owner, and the
+  /** 📐️ Contract freeze §4 rules 1+4: the contributor must directly depend on the owner, and the
    * metadata's own `owner`/`contributor` must match each other and `artifactKind` must match the
    * target. */
   registerContributed(artifactKind: string, metadata: ContributedInferenceMetadata, contributorDependsOnOwner: boolean): void {

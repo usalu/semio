@@ -3,7 +3,7 @@ import Ajv from "ajv";
 import { applyPatch } from "fast-json-patch";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { mutationInputDefs } from "@semio-tech/framework/manifest";
+import { mutationInputDefs } from "@semio-tech/framework-manifest";
 
 const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,"../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧪️tests/🔗️id-inputs/🔣️.json"),"utf8"));
 const root=resolve(import.meta.dir,"../..");

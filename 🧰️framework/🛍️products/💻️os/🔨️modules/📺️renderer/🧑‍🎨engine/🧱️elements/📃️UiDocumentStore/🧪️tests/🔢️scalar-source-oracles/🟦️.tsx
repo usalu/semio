@@ -1,6 +1,6 @@
 /** 🔢 Resident scalar source oracles: the OwnedResidentScalarCloseModel law over the neutral declaration. */
 import { exactSchemaDefinitionV1, createTypedWireSupport, type TypedWireVitest, type TypedWireDependencies, type TypedWireSource } from "../🪛️typedwire-helpers/🟦️.tsx";
-import { loadResidentScalarDeclarationFixture, loadRetainedResidentScalarFixture, loadRetainedResidentReaderFixtureText, loadRetainedResidentPageFixtureText } from "@semio-tech/framework/ui/testing/fixtures";
+import { loadResidentScalarDeclarationFixture, loadRetainedResidentScalarFixture, loadRetainedResidentReaderFixtureText, loadRetainedResidentPageFixtureText } from "@semio-tech/ui/testing/fixtures";
 
 export async function registerScalarSourceOraclesTests(vitest: TypedWireVitest, dependencies: TypedWireDependencies, source: TypedWireSource): Promise<void> {
   const { describe, test } = vitest;
@@ -16,7 +16,7 @@ export async function registerScalarSourceOraclesTests(vitest: TypedWireVitest, 
 
   const scalarTestsJson = await loadRetainedResidentScalarFixture();
 
-  const { actorBytePageSchema: actorWordSchemaJson } = await import("../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts");
+  const { actorBytePageSchema: actorWordSchemaJson } = await import("@semio-tech/framework/actor/page");
 
   const scalarReaderFixtureRaw = await loadRetainedResidentReaderFixtureText();
 

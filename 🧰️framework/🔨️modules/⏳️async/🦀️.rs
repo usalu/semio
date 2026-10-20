@@ -205,9 +205,11 @@ pub mod internals {
     pub use super::publication_claim::internals as publication_claim;
     pub use super::deferred_wake::internals as deferred_wake;
     pub use super::maintenance::internals as maintenance;
+    #[cfg(not(target_arch = "wasm32"))]
     pub use super::worker_parking::internals as worker_parking;
     pub const LANE_COUNT: usize = super::LANE_COUNT;
     pub type CancelNode = super::CancelNode;
+    #[cfg(not(target_arch = "wasm32"))]
     pub use super::native_pool::internals as native_pool;
 }
 

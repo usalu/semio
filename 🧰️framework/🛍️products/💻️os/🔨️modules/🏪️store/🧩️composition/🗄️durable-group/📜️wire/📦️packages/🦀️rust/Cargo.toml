@@ -22,7 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-durable-group-testing = []
+durable-group-testing = ["semio-framework-os-store-one-item-batch/durable-group-testing", "semio-framework-os-store-one-item-publication/durable-group-testing"]
 
 [dependencies]
 semio-framework-os-dsl = { path = "../../../../../../🗣️dsl/📦️packages/🦀️rust" }

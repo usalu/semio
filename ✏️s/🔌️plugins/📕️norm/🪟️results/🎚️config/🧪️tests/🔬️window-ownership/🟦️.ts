@@ -29,7 +29,7 @@ type Fixture = {
 };
 
 const here = fileURLToPath(new URL(".", import.meta.url));
-const fixture = JSON.parse(readFileSync(`${here}/../../🧫️fixtures/🔬️window-ownership/🔣️.json`, "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(`${here}/../🧫️fixtures/🔬️window-ownership/🔣️.json`, "utf8")) as Fixture;
 const schema = JSON.parse(readFileSync(`${here}/../../🧬️schema/🔣️.json`, "utf8"));
 
 const target = (instances: readonly WindowInstance[], row: Pick<MutationRow, "windowId" | "focusedWindowId" | "claimedWindowKindId">): string => {

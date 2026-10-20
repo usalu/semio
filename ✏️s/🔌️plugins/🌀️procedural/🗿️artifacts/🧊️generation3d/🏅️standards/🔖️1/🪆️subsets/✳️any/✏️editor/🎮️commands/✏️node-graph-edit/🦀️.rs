@@ -116,7 +116,7 @@ pub(crate) fn generation3d_node_drag_leaves(host_snapshot: &FlowHostSnapshot, re
 /// re-evaluates, and the two panels that read the moved value back. Everything else — the catalogue,
 /// the utilities, tools, engagements, measures and labels — is identical before and after, and
 /// re-rendering it was a whole-shell refresh charged to every frame of a drag.
-pub(crate) fn slider_gesture_ui_scope() -> UiDirtyScope {
+pub fn slider_gesture_ui_scope() -> UiDirtyScope {
     UiDirtyScope::Partial {
         window_bodies: vec![
             semio_s_artifact_procedural_3d_mode_edit::windows::flow::GENERATION_3D_PLAY_BODY_MAIN.to_string(),

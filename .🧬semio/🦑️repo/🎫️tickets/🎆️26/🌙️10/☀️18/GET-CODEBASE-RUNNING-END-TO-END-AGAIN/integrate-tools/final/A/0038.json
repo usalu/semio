@@ -1,0 +1,45 @@
+{
+  "name": "@semio-tech/fixture-generator-stdio-semio-v1-brep",
+  "targets": {
+    "🏭️generator": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator",
+        "command": "bun ./📜️script.ts generate",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      },
+      "outputs": []
+    },
+    "🏭️generator-manifests": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator",
+        "command": "bun ./📜️script.ts manifests",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      },
+      "outputs": []
+    },
+    "📏️tolerance-contract": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator",
+        "command": "bun ./📜️script.ts tolerance-contract",
+        "forwardAllArgs": false
+      },
+      "outputs": []
+    }
+  }
+}

@@ -47,14 +47,14 @@ export interface QueuedTurn<TPayload> {
 export type TurnBudgetProvider<TBudget> = (actorId: string) => TBudget;
 
 export interface TurnSchedulerOptions<TPayload, TBudget> {
-  /** Per-actor `BoundedMailbox` capacity — see `📬️mailbox.ts`'s own doc for the accept/coalesced/
+  /** ↔️ Per-actor `BoundedMailbox` capacity — see `📬️mailbox.ts`'s own doc for the accept/coalesced/
    * dropped/rejected contract this scheduler surfaces verbatim from `enqueue`. */
   readonly mailboxCapacity: number;
   readonly budgetFor: TurnBudgetProvider<TBudget>;
-  /** Runs exactly one turn for `actorId`. Never called again for the SAME `actorId` until this
+  /** 🏃️ Runs exactly one turn for `actorId`. Never called again for the SAME `actorId` until this
    * promise settles (resolve or reject) — that's the one-turn-at-a-time-per-actor invariant. */
   readonly runTurn: (actorId: string, payload: TPayload, budget: TBudget) => Promise<void>;
-  /** A rejected `runTurn` never throws out of the scheduler's own pump loop — it's reported here
+  /** 📐️ A rejected `runTurn` never throws out of the scheduler's own pump loop — it's reported here
    * instead, same "never let one actor's failure wedge the dispatch loop" reasoning as `ShardClient`'s
    * own per-request reject-not-throw contract. */
   readonly onTurnError?: (actorId: string, error: unknown) => void;

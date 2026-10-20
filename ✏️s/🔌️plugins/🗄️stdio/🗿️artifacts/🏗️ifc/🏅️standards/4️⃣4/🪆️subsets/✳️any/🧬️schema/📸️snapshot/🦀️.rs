@@ -54,7 +54,6 @@ pub struct IfcTypedValue {
 }
 
 impl IfcValue {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_reference(&self) -> Option<u64> {
         if let IfcValue::Reference(id) = self {
             Some(*id)
@@ -62,7 +61,6 @@ impl IfcValue {
             None
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_str(&self) -> Option<&str> {
         if let IfcValue::String(s) = self {
             Some(s.as_str())
@@ -70,7 +68,6 @@ impl IfcValue {
             None
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_enum(&self) -> Option<&str> {
         if let IfcValue::Enum(s) = self {
             Some(s.as_str())
@@ -78,7 +75,6 @@ impl IfcValue {
             None
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_real(&self) -> Option<f64> {
         match self {
             IfcValue::Real(r) => Some(*r),
@@ -86,7 +82,6 @@ impl IfcValue {
             _ => None,
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_aggregate(&self) -> Option<&[IfcValue]> {
         if let IfcValue::Aggregate(items) = self {
             Some(items.as_slice())
@@ -94,7 +89,6 @@ impl IfcValue {
             None
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_typed(&self) -> Option<(&str, &[IfcValue])> {
         if let IfcValue::TypedValue(IfcTypedValue { name, items }) = self {
             Some((name.as_str(), items.as_slice()))

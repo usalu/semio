@@ -1,0 +1,46 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🍃️item/🟦️.tsx",
+ "function": "TreeItem",
+ "keep": [
+  99,
+  196,
+  327,
+  468
+ ],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "arrowVar": true,
+ "shared": {
+  "dir": "🟠️shared",
+  "doc": "/** 🟠️ The shared declarations of TreeItem. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️generated-label-id",
+   "doc": "/** 🔶️ The generated label id phase of TreeItem. */",
+   "phases": [
+    {
+     "name": "useGeneratedLabelIdState",
+     "emoji": "🔷",
+     "doc": "Builds generatedLabelId, disclosureLabelId, descriptionId, valueSlotRef of TreeItem.",
+     "from": 89,
+     "to": 98
+    }
+   ]
+  },
+  {
+   "dir": "🔸️level",
+   "doc": "/** 🔸️ The level phase of TreeItem. */",
+   "phases": [
+    {
+     "name": "useLevelState",
+     "emoji": "🔹",
+     "doc": "Builds level, isLastAtLevel, showLines, isTree of TreeItem.",
+     "from": 121,
+     "to": 188
+    }
+   ]
+  }
+ ]
+}

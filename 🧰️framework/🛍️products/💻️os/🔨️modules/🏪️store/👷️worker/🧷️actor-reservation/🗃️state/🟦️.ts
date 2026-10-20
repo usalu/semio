@@ -1,6 +1,6 @@
 import type { ActorInstanceLifetime } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
 import type { BrowserActorUiPatchOfferV1, BrowserActorUiPatchResultV1 } from "@semio-tech/framework/browser-bundle/patch-handoff";
-import type { ResolvedPluginViewState } from "@semio-tech/framework/manifest";
+import type { ResolvedPluginViewState } from "@semio-tech/framework-manifest";
 import type { ActorDocumentBindingV1 } from "@semio-tech/framework/backbone/binding";
 import type { BrowserActorEphemeralSnapshotV1 } from "@semio-tech/framework/browser-bundle/action-handoff/publication";
 import { BROWSER_ACTOR_VISIBLE_SURFACES_V1 } from "../../🪟️visible-surfaces/🟦️.ts";

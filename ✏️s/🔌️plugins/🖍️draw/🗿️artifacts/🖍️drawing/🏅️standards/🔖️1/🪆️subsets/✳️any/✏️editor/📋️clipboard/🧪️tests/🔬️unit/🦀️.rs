@@ -8,6 +8,7 @@ use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)] use semio_framework_plugin::kernel::{ClipboardFragment,ClipboardError,PastePlacement,PasteAnchor};
 #[allow(unused_imports)] use std::collections::{BTreeMap,BTreeSet};
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor_interaction::clipboard::*;
+use semio_s_artifact_draw_drawing_editor::clipboard_job as job;
 fn shape(id:&str)->DrawingLayerNode {let mut shape=semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((id)).to_string().into()).expect("nonempty authored identity"), id);layer_base_mut(&mut shape).id=id.into();shape}
 fn apply(document:&mut DrawingSnapshot,mutations:&[DrawingMutation])->Vec<Vec<DrawingMutation>> {let mut inverses=Vec::new();for mutation in mutations {inverses.push(semio_s_artifact_draw_drawing_mutations::inverse_drawing_mutation(document,mutation).unwrap());semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(document,mutation).unwrap();}inverses}
 #[test]

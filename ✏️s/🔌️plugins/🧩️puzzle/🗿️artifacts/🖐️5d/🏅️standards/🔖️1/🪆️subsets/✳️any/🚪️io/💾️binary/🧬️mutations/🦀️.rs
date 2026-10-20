@@ -1,4 +1,4 @@
-//! `Puzzle5dMutation`'s binary wire form, plus the `ArtifactEnvelope`/`ArtifactStore` aliases every
+//! 🧱️ `Puzzle5dMutation`'s binary wire form, plus the `ArtifactEnvelope`/`ArtifactStore` aliases every
 //! 📡️ Puzzle 5d artifact — the state-patch-representation codec: `encode_op`/`decode_op` for
 //! puzzle-5d host binds. Renamed from the pre-consolidation `📡️protocol` module; the wire format is
 //! unchanged (`dsl::DslOps`'s generated `OpBinary`).

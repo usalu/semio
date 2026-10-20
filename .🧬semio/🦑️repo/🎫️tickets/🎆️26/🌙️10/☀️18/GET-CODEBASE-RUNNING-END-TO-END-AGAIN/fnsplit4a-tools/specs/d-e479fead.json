@@ -1,0 +1,37 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📚️course/🧪️tests/🎛️pet-allowances/🟦️.tsx",
+ "describeLine": 72,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of the 🐾️ pet companions suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️what-learner-allows",
+   "doc": "/** 🔶️ The what learner allows tests of the 🐾️ pet companions suite. */",
+   "name": "registerWhatLearnerAllowsTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the what learner allows tests of the 🐾️ pet companions suite.",
+   "from": 73,
+   "to": 73
+  },
+  {
+   "dir": "🔸️hand-topics",
+   "doc": "/** 🔸️ The hand topics tests of the 🐾️ pet companions suite. */",
+   "name": "registerHandTopicsTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the hand topics tests of the 🐾️ pet companions suite.",
+   "from": 183,
+   "to": 183
+  },
+  {
+   "dir": "🟠️play-pets",
+   "doc": "/** 🟠️ The play pets tests of the 🐾️ pet companions suite. */",
+   "name": "registerPlayPetsTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the play pets tests of the 🐾️ pet companions suite.",
+   "from": 287,
+   "to": 287
+  }
+ ]
+}

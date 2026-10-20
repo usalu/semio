@@ -66,7 +66,6 @@ fn ladder_with_one_corridor_walled_off_fails_flow_of_two() {
     let model = floor_wall_model();
     let adjacency = ladder_adjacency();
     let c = FlowConstraint::new(model, PatternSelector::Pattern(PatternId(0)), vec![NodeId(0), NodeId(1)], vec![NodeId(4), NodeId(5)], 2);
-    // node2 (the middle of the top corridor) is wall: only 1 edge-disjoint path survives.
     let one_corridor = vec![PatternId(0), PatternId(0), PatternId(1), PatternId(0), PatternId(0), PatternId(0)];
     assert!(c.validate_complete(&one_corridor, &adjacency).is_err());
 }
@@ -82,8 +81,6 @@ fn source_not_selected_yields_zero_flow() {
 
 #[test]
 fn max_flow_never_exceeds_the_number_of_distinct_source_sink_edges() {
-    // A direct single-edge line: max possible flow is 1, regardless of how large min_flow's
-    // check demands — this just exercises the network construction terminates and is exact.
     let model = floor_wall_model();
     let adjacency = line_adjacency(2);
     let c = FlowConstraint::new(model, PatternSelector::Pattern(PatternId(0)), vec![NodeId(0)], vec![NodeId(1)], 1);

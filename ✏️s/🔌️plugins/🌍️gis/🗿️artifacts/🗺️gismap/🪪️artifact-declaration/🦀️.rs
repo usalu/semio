@@ -4,6 +4,7 @@ use crate::schema::snapshot::GisMapSnapshot;
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use crate::{GISMAP_DIALECT, GIS_MAP_SCHEMA};
 use crate::standards::v1::subsets::any::inference_service::{gis_map_inference_service};
+use semio_s_artifact_gis_gismap_mutations::standards::v1::subsets::any::schema::mutations::GisMapMutation;
 
 //#region 🔹ArtifactKind
 /// 🗺️ The canonical GIS map artifact-kind declaration; payload schemas remain independent.

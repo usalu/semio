@@ -5,11 +5,11 @@ import{nativeDirectoryMappingV1}from"../../📁️directory/🟦️.ts";
 import{nativeImageRootV1,nativeImageAttachedV1,nativeImageFilesystemBytesV1,nativeImageBackingFilenameV1}from"../../🌐️platform/📋️contract/🟦️.ts";
 import type{NativeImageMountDirectoryV1}from"../../🌐️platform/📋️contract/📂️mount/🟦️.ts";
 import type{NativeImagePublicationRequestV1}from"../🟦️.ts";
-import commandSchemaComponent from"../../🧱️fixed/🧬️schema/🔣️.json";const commandSchema=commandSchemaComponent.definitions.Command;
-import imageSchema from"../../🧱️fixed/🧬️schema/🔣️.json";
-import mountSchema from"../../🌐️platform/📋️contract/📂️mount/🧬️schema/🔣️.json";
+import commandSchemaComponent from"../../🧱️fixed/🧬️schema/🔣️.json" with { type: "json" };const commandSchema=commandSchemaComponent.definitions.Command;
+import imageSchema from"../../🧱️fixed/🧬️schema/🔣️.json" with { type: "json" };
+import mountSchema from"../../🌐️platform/📋️contract/📂️mount/🧬️schema/🔣️.json" with { type: "json" };
 import{validateJsonSchemaSubset}from"../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import publicSchema from"./🧬️schema/🔣️.json";
+import publicSchema from"./🧬️schema/🔣️.json" with { type: "json" };
 const schema=JSON.parse(JSON.stringify(publicSchema))as typeof publicSchema;
 /** 🧱️ Admits complete concrete directory-partition publication mapping DATA; grants no Native operation. */
 export function readNativeFixedPublicationMappingV1(value:unknown,image:string,filesystemBytes:number):string{if(!Number.isSafeInteger(filesystemBytes)||filesystemBytes<1||typeof image!=="string"||!image||image.length>256||!value||Object.getPrototypeOf(value)!==Object.prototype)throw Error("Closed Fixed publication mapping DATA required");const row:Record<string,unknown>={};for(const key of Reflect.ownKeys(value)){const item=Object.getOwnPropertyDescriptor(value,key);if(typeof key!=="string"||!item||!("value"in item)||!item.enumerable)throw Error("Primitive Fixed publication mapping required");row[key]=item.value;}if(validateJsonSchemaSubset(schema.definitions.DirectoryMapping,row,schema).length)throw Error("Exact complete directory publication mapping required");return JSON.stringify(row);}

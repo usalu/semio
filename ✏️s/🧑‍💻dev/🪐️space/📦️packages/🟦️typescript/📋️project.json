@@ -18,6 +18,7 @@
     "verify-framework-ui-protocol-ownership": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify framework-ui-protocol-ownership",

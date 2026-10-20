@@ -2,13 +2,13 @@
  * @see ../../../📦️packages/🦀️rust/📜️script.ts
  */
 import { type CompilerAdmissionControl } from "@semio-tech/process/compiler-capacity";
-import { type FileObservationControlV1 } from "@semio-tech/framework/filesystem/observation";
+import { type FileObservationControlV1 } from "@semio-tech/framework-filesystem/observation";
 import { COMPONENT_MODULE_DIRECTORIES } from "@semio-tech/s-dev-catalog-ts/generated/plugins";
 import { createHash } from "node:crypto";
 import { closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, openSync, readdirSync, rmSync, writeFileSync, writeSync, type Stats } from "node:fs";
 import { dirname, join } from "node:path";
 import { captureOwnedCommandResultV1 } from "@semio-tech/process/owned-execution";
-import { blake3Hex } from "@semio-tech/framework/hash";
+import { blake3Hex } from "@semio-tech/framework-hash";
 import { decodePackValue, encodePackValue, packValueToExactJson } from "@semio-tech/framework-os";
 import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES } from "@semio-tech/framework-os/modules/directory/schema/document-open";
 import { DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, type DocumentExecutionProtocolV1 } from "@semio-tech/framework/directory/schema";

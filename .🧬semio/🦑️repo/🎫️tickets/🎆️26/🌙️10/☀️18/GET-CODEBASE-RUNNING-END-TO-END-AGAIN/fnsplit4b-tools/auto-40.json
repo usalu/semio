@@ -1,0 +1,111 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🔨️modules/🏠️host/🧰️owned/🚀️store-initialization/🦀️.rs",
+ "function": "step",
+ "nth": 0,
+ "match_line": 86,
+ "types": {},
+ "ret": "Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError>",
+ "inline": true,
+ "arms": [
+  {
+   "line": 119,
+   "name": "phase_clone_initial",
+   "doc": "🧱️ Runs the `clone initial` stage of `step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 142,
+   "name": "phase_seed_history",
+   "doc": "🪵️ Runs the `seed history` stage of `step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "edit": "usize",
+    "lane": "u8",
+    "index": "usize"
+   }
+  },
+  {
+   "line": 191,
+   "name": "phase_find_applied",
+   "doc": "🔩️ Runs the `find applied` stage of `step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "position": "usize"
+   }
+  },
+  {
+   "line": 212,
+   "name": "phase_apply_forward",
+   "doc": "⚙️ Runs the `apply forward` stage of `step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "position": "usize",
+    "edit": "usize",
+    "mutation": "usize"
+   }
+  },
+  {
+   "line": 281,
+   "name": "phase_find_redo",
+   "doc": "🧲️ Runs the `find redo` stage of `step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "position": "usize"
+   }
+  },
+  {
+   "line": 312,
+   "name": "phase_retire_actor",
+   "doc": "🪛️ Runs the `retire actor` stage of `step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 347,
+   "name": "phase_retire_cancelled_or_retire_fault",
+   "doc": "🔧️ Runs the `retire cancelled` or `retire fault` stage of `step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  }
+ ],
+ "method": {
+  "self_param": "&'a mut self",
+  "call": "self.{name}({args})"
+ },
+ "generics": "<'a>",
+ "prelude_ifs": [
+  {
+   "regex": "JobOutcomeBorrow",
+   "line": "use semio_framework_job::JobOutcomeBorrow;"
+  }
+ ]
+}

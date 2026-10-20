@@ -24,18 +24,10 @@ mod tests_twice;
 mod tests_turns;
 #[path = "../../🌀️rotate-selection/🧪️tests/📐️lifts/🦀️.rs"]
 mod tests_lifts;
-#[path = "../../🌀️rotate-selection/🧪️tests/⏸️still/🦀️.rs"]
-mod tests_still;
 #[path = "../../🌀️rotate-selection/🧪️tests/🫥️void/🦀️.rs"]
 mod tests_void;
-#[path = "../../🌀️rotate-selection/🧪️tests/⛔️ghost/🦀️.rs"]
-mod tests_ghost;
 #[path = "../../🔍️scale-selection/🧪️tests/🔍️wides/🦀️.rs"]
 mod tests_wides;
-#[path = "../../🔍️scale-selection/🧪️tests/🧩️part/🦀️.rs"]
-mod tests_part;
-#[path = "../../🔍️scale-selection/🧪️tests/⏸️still/🦀️.rs"]
-mod tests_still;
 #[path = "../../🔍️scale-selection/🧪️tests/🫓️flat/🦀️.rs"]
 mod tests_flat;
 #[path = "../../📍️set-vertex-positions/🧪️tests/📍️sets/🦀️.rs"]

@@ -1,0 +1,28 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📚️course/🧪️tests/🎪️pets-on-stage/🟦️.tsx",
+ "describeLine": 42,
+ "shared": {
+  "dir": "🟠️shared",
+  "doc": "/** 🟠️ The shared declarations of the 🐾️ pet companions suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️pets-stage",
+   "doc": "/** 🔶️ The pets stage tests of the 🐾️ pet companions suite. */",
+   "name": "registerPetsStageTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the pets stage tests of the 🐾️ pet companions suite.",
+   "from": 43,
+   "to": 43
+  },
+  {
+   "dir": "🔸️client",
+   "doc": "/** 🔸️ The client tests of the 🐾️ pet companions suite. */",
+   "name": "registerClientTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the client tests of the 🐾️ pet companions suite.",
+   "from": 169,
+   "to": 169
+  }
+ ]
+}

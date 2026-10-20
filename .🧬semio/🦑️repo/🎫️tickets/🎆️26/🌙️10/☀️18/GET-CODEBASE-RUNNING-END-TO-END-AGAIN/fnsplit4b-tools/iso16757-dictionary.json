@@ -1,0 +1,45 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/📚️part4/🦀️.rs",
+ "function": "check_dictionary_typing",
+ "nth": 0,
+ "types": {
+  "dict": "&semio_s_artifact_norm_iso16757_model::part_4::Dictionary",
+  "subject_ids": "HashSet<String>"
+ },
+ "modes": {},
+ "keep": [
+  310
+ ],
+ "phases": [
+  {
+   "name": "check_dictionary_subjects_and_relationships",
+   "doc": "🧱️ Checks the dictionary structure, the subject id uniqueness and the relationships of the dictionary.",
+   "from": 311,
+   "to": 368,
+   "drop_outs": [
+    "subject_ids"
+   ]
+  },
+  {
+   "name": "check_dictionary_properties",
+   "doc": "🪵️ Checks the properties of the dictionary.",
+   "from": 471,
+   "to": 471
+  },
+  {
+   "name": "check_dictionary_values_and_catalogue_tokens",
+   "doc": "🔩️ Checks the dictionary values and collects the tokens the catalogue uses.",
+   "from": 603,
+   "to": 679,
+   "drop_ins": [
+    "subject_ids"
+   ]
+  },
+  {
+   "name": "check_dictionary_references",
+   "doc": "⚙️ Checks the references of the dictionary against the subject ids.",
+   "from": 716,
+   "to": 716
+  }
+ ]
+}

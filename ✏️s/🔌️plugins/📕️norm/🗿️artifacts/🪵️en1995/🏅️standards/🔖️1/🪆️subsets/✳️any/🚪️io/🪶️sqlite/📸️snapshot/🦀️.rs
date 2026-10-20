@@ -86,5 +86,5 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
 pub fn sqlite_codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<En1995Snapshot as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec()}
 
 #[path="🛂️admission/🦀️.rs"]
-pub(crate)mod admission;
+pub mod admission;
 

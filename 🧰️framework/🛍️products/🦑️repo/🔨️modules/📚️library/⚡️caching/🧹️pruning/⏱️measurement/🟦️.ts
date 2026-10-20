@@ -19,7 +19,8 @@ export class CacheScanTimingRecorderV1{
  private maximumInFlight=0;
  private readonly stages={discovery:0,measurement:0,enumeration:0};
  private readonly operations={stat:{calls:0,milliseconds:0},measurement:{calls:0,milliseconds:0},entries:{calls:0,milliseconds:0},continuation:{calls:0,milliseconds:0}};
- constructor(private readonly root:string,private readonly phase:CacheScanTimingPhaseV1,private readonly scanner:CacheScanTimingV1["scanner"]){if(phase!=="initial"&&phase!=="recensus")throw Error("Explicit cache timing phase required");}
+ private readonly root:string;private readonly phase:CacheScanTimingPhaseV1;private readonly scanner:CacheScanTimingV1["scanner"];
+ constructor(root:string,phase:CacheScanTimingPhaseV1,scanner:CacheScanTimingV1["scanner"]){this.root=root;this.phase=phase;this.scanner=scanner;if(phase!=="initial"&&phase!=="recensus")throw Error("Explicit cache timing phase required");}
  enter(stage:StageV1):void{const now=performance.now();this.stages[this.stage]+=now-this.stageStarted;this.stageStarted=now;this.stage=stage;}
  begin(kind:OperationV1):number{this.operations[kind].calls++;if(kind!=="continuation")this.maximumInFlight=Math.max(this.maximumInFlight,++this.active);return performance.now();}
  end(kind:OperationV1,started:number):void{this.operations[kind].milliseconds+=performance.now()-started;if(kind!=="continuation")this.active--;}

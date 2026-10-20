@@ -17,14 +17,6 @@ use semio_s_fem_algebra::vec3d_normalize;
 
 use semio_s_fem_algebra::vec3d_sub;
 
-/// 🧲️ Contracts the original signed axial strain with the transverse geometric projector.
-fn bar3_geometric_cell(e: f64, area: f64, geometry: Line3Geometry, displacement: &[f64; 6], row: usize, column: usize) -> f64 {
-    let extension: f64 = (0..3).map(|axis| geometry.direction[axis] * (displacement[axis + 3] - displacement[axis])).sum();
-    let sign = if row / 3 == column / 3 { 1.0 } else { -1.0 };
-    let identity = f64::from(u8::from(row % 3 == column % 3));
-    e * area * extension / geometry.length.powi(2) * sign * (identity - geometry.direction[row % 3] * geometry.direction[column % 3])
-}
-
 use semio_s_fem_algebra::Mat3d;
 
 use semio_s_fem_algebra::MatD;

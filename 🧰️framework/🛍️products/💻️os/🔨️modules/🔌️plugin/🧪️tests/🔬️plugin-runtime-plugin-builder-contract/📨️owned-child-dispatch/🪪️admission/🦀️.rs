@@ -1,3 +1,4 @@
+use semio_framework_plugin_job::reserved_jobs::{FrameworkCopyJobFactory, FrameworkCutJobFactory, FrameworkImportMediaJobFactory, FrameworkPasteJobFactory, FrameworkRedoJobFactory, FrameworkUndoJobFactory};
 use semio_framework_ui_contract::*;
 use semio_framework::*;
 use semio_framework::kernel::*;

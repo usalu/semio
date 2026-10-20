@@ -67,6 +67,14 @@ Feature: Apply every typed ISO 16757 mutation against an independent Python impl
       | retire-product-index          | 🗑️retire-product-index          | ✅apply  |
       | introduce-geometry-object     | 📐introduce-geometry-object      | ✅apply  |
       | retire-geometry-object        | 🗑️retire-geometry-object        | ✅apply  |
+      | retire-subject-middle         | ✂️retire-subject                | 🧭️middle |
+      | remove-selection-constraint-middle | 🔓️remove-selection-constraint   | 🧭️middle |
+      | retire-product-class-middle   | 🗑️retire-product-class          | 🧭️middle |
+      | retire-product-index-middle   | 🗑️retire-product-index          | 🧭️middle |
+      | retire-product-series-middle  | 🗑️retire-product-series         | 🧭️middle |
+      | retire-product-middle         | 🚫️retire-product                | 🧭️middle |
+      | retire-product-group-middle   | 🧹️retire-product-group          | 🧭️middle |
+      | retire-property-definition-middle | 🧽️retire-property-definition    | 🧭️middle |
 
   @id-inverse
   @level-exhaustive

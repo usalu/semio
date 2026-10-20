@@ -45,6 +45,7 @@ semio-s-artifact-stdio-gif-mutations-2 = { path = "../../🧬️mutations/📦�
 semio-s-artifact-stdio-gif-schema = { path = "../../../../../../7️⃣87a/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-gif-snapshot = { path = "../../📸️snapshot/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-s-artifact-stdio-gif-inferences = { path = "../../../../../../7️⃣87a/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust", features = ["testkit"] }

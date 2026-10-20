@@ -439,10 +439,6 @@ async function generateOne(t: NonNullable<typeof toolkit>, recipe: Recipe, outDi
     provenance: { source: "generated", license: "Apache-2.0 (manifold-3d) + MIT (three)", attribution: "Generated with manifold-3d (Apache-2.0) and exported/re-imported via three.js (MIT)", security: "scanned-clean", privacy: "no-personal-data" },
     comparisonProfile: "semantic-mesh-manifold-v1",
     toleranceProfile: recipe.tolerance,
-    // ✅️Unlike the BRep pilot's OCCT (which stamps a translator counter and a wall-clock timestamp into
-    // every export), MEASURED here: two `STLExporter`/`OBJExporter`/`PLYExporter`/`GLTFExporter` passes
-    // over the same `THREE.Mesh` in the same process produce byte-identical output — no timestamps, no
-    // incrementing counters anywhere in three's exporters. This corpus is reproducible byte-for-byte.
     reproducible: true,
     family: recipe.family,
     notes: recipe.notes,
@@ -484,17 +480,12 @@ async function main(argv: readonly string[]): Promise<number> {
         manifests.push(await generateOne(t, recipe, outDir));
         console.error(`[generator] ${recipe.id} (${recipe.family})`);
       } catch (error) {
-        // 🧭️A recipe the kernel refuses is REPORTED, never dropped: a corpus that quietly shrank to
-        // whatever happened to build would read as complete coverage of a smaller matrix.
         failed += 1;
         console.error(`[generator] ${recipe.id} FAILED — ${(error as Error).message}`);
       }
     }
     if (command === "manifests") process.stdout.write(`${JSON.stringify(manifests, null, 2)}\n`);
     else {
-      // 🧬️A NARROWED run MERGES into the manifest index; it does not replace it — see the BRep pilot's
-      // generator for the incident this guards against (a sequence of `--only` runs during development
-      // silently destroying every other fixture's manifest record while leaving its files on disk).
       const indexPath = join(outDir, "🔣️.json");
       const previous = (() => {
         if (only === null || !existsSync(indexPath)) return [];

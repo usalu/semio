@@ -1,6 +1,6 @@
 import type { ShardClientState } from "../🗃️state/🟦️.ts";
 import type { ShardClientHubPort } from "../🧩️hub/🟦️.ts";
-import { OwnedUiPatchAcknowledgement } from "@semio-tech/framework/modules/ui/contract/retained/instance";
+import { OwnedUiPatchAcknowledgement } from "@semio-tech/ui-contract/retained/instance";
 import { actorInstanceLifetimeEquals } from "../../🚪️lifetime/🟦️.ts";
 import { actorUiPatchReceiptEquals, decodeActorUiPatchReceipt, validateActorUiPatchPairing } from "../../🚪️lifetime/🩹️patch/🟦️.ts";
 import type { ShardInstanceOwner } from "../🔐️activation/🟦️.ts";

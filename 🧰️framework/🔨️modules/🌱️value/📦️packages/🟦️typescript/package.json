@@ -36,7 +36,26 @@
     "./type": "./🏷️type/🟦️.ts",
     "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts",
     "./retirement/testing/fixtures": "./♻️retirement/🧪️testing/🧫️fixtures/🟦️.ts",
-    "./scratch-hash": "./🔑️hashed/🧮️scratch/🟦️.ts"
+    "./scratch-hash": "./🔑️hashed/🧮️scratch/🟦️.ts",
+    "./decode/construction/result/receiving": "./🛬️decode/🏭️construction/🧾️result/🛬️receiving/🟦️.ts",
+    "./decode/construction/schema.json": "./🛬️decode/🏭️construction/🧬️schema/🔣️json/🟦️.ts",
+    "./decode/construction/testing/fixtures.json": "./🛬️decode/🏭️construction/🧪️testing/🧫️fixtures/🔣️json/🟦️.ts",
+    "./decode/owned/record/schema.json": "./🛬️decode/🧳️owned/🧩️record/🧬️schema/🔣️json/🟦️.ts",
+    "./decode/owned/record/testing/fixtures.json": "./🛬️decode/🧳️owned/🧩️record/🧪️testing/🧫️fixtures/🔣️json/🟦️.ts",
+    "./decode/owned/schema.json": "./🛬️decode/🧳️owned/🧬️schema/🔣️json/🟦️.ts",
+    "./decode/owned/testing/fixtures.json": "./🛬️decode/🧳️owned/🧪️testing/🧫️fixtures/🔣️json/🟦️.ts",
+    "./list/persistent/read/schema.json": "./📋️list/🔗️persistent/🧳️read/🧬️schema/🔣️json/🟦️.ts",
+    "./list/persistent/read/testing/fixtures.json": "./📋️list/🔗️persistent/🧳️read/🧪️testing/🧫️fixtures/🔣️json/🟦️.ts",
+    "./list/persistent/schema.json": "./📋️list/🔗️persistent/🧬️schema/🔣️json/🟦️.ts",
+    "./list/persistent/splice/schema.json": "./📋️list/🔗️persistent/🎮️splice/🧬️schema/🔣️json/🟦️.ts",
+    "./list/persistent/splice/testing/fixtures.json": "./📋️list/🔗️persistent/🎮️splice/🧪️testing/🧫️fixtures/🔣️json/🟦️.ts",
+    "./list/persistent/testing/fixtures.json": "./📋️list/🔗️persistent/🧪️testing/🧫️fixtures/🔣️json/🟦️.ts",
+    "./retained-clone/contract/schema.json": "./🧬️retained-clone/🧬️contract/🧬️schema/🔣️json/🟦️.ts",
+    "./retirement/factory/vector/schema.json": "./♻️retirement/🏭️factory/📋️vector/🧬️schema/🔣️json/🟦️.ts",
+    "./retirement/factory/vector/testing/fixtures.json": "./♻️retirement/🏭️factory/📋️vector/🧪️testing/🧫️fixtures/🔣️json/🟦️.ts",
+    "./sort/testing": "./📶️sort/🧪️testing/🟦️.ts",
+    "./text/utf8": "./📝️text/🚶️utf8/🟦️.ts",
+    "./tree/equal": "./🌳️tree/🟰️equal/🟦️.ts"
   },
   "scripts": {
     "test-numeric-api": "bun --cwd \"../../../../..\" repo run @semio-tech/value-ts:test-numeric-api",
@@ -51,6 +70,7 @@
   },
   "dependencies": {
     "@semio-tech/framework-async": "workspace:*",
+    "@semio-tech/framework-hash": "workspace:*",
     "@semio-tech/framework-io-base64-ts": "workspace:*",
     "@semio-tech/schema-ts": "workspace:*"
   }

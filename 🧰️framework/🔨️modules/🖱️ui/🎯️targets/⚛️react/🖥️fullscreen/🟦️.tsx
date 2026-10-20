@@ -1,14 +1,14 @@
-import { reactHostPort } from "../../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
-import { resolveElementsSurfaceChromeRoot } from "../🌓️appearance/🟦️.ts";
-import { shellNavbarTrailingEndWidthByRoot, shellNavbarTrailingEndWidthListenersByRoot } from "../../../🔨️modules/🛟️chrome-safe-area/🟦️.tsx";
-import { useShellScopeOptional } from "../../../🧱️elements/🐚️ShellScope/🟦️.tsx";
-import { useLabel } from "../../../🧱️elements/🏷️Label/🟦️.tsx";
-import { Toggle } from "../../../🧱️elements/🔀️Toggle/🟦️.tsx";
-import { Minimize2Icon, Maximize2Icon, Icon } from "../../../🧱️elements/🔣️Icons/🟦️.tsx";
+import { reactHostPort } from "@semio-tech/ui/elements/Ports/react";
+import { resolveElementsSurfaceChromeRoot } from "@semio-tech/ui/appearance";
+import { shellNavbarTrailingEndWidthByRoot, shellNavbarTrailingEndWidthListenersByRoot } from "@semio-tech/ui/modules/chrome-safe-area";
+import { useShellScopeOptional } from "@semio-tech/ui/elements/ShellScope";
+import { useLabel } from "@semio-tech/ui/elements/Label";
+import { Toggle } from "@semio-tech/ui/elements/Toggle";
+import { Minimize2Icon, Maximize2Icon, Icon } from "@semio-tech/ui/elements/Icons";
 import * as React from "react";
-import { setNavbarTrailingChrome } from "../../../🧱️elements/🔝️Navbar/🟦️.tsx";
-import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { borderNormalBottomClass } from "../../../🔨️modules/📏️border-presentation/🟦️.ts";
+import { setNavbarTrailingChrome } from "@semio-tech/ui/elements/Navbar";
+import { cn } from "@semio-tech/ui/modules/class-name-composition";
+import { borderNormalBottomClass } from "@semio-tech/ui/modules/border-presentation";
 
 // #region 🖥️Fullscreen
 
@@ -23,13 +23,13 @@ type FullscreenHTMLElement = HTMLElement & {
   webkitRequestFullscreen?: () => Promise<void> | void;
 };
 
-/** @emoji 🖥️ Whether the browser document is in fullscreen mode. */
+/** 🖥️ Whether the browser document is in fullscreen mode. */
 export function readDocumentFullscreenActive(doc: Document = document): boolean {
   const typed = doc as FullscreenDocument;
   return !!(typed.fullscreenElement ?? typed.webkitFullscreenElement);
 }
 
-/** @emoji 🖥️ Enter or exit browser fullscreen. `root` is the element requesting fullscreen — a shell's
+/** 🖥️ Enter or exit browser fullscreen. `root` is the element requesting fullscreen — a shell's
  * own root (e.g. `ShellScope.rootRef.current`) so going fullscreen from within one embedded shell fills
  * the screen with just that shell's content, not the whole page (other mounted shells included);
  * omitted, defaults to `document.documentElement` (the single-shell-per-page case, unchanged). The
@@ -47,7 +47,7 @@ export async function toggleDocumentFullscreen(root: Element = document.document
   else typedRoot.webkitRequestFullscreen?.();
 }
 
-/** @emoji 🖥️ Tracks browser fullscreen state for shell chrome. `root` scopes which element requests
+/** 🖥️ Tracks browser fullscreen state for shell chrome. `root` scopes which element requests
  * fullscreen — see {@link toggleDocumentFullscreen}'s doc. */
 export function useDocumentFullscreen(root?: Element): { isFullscreen: boolean; toggle: () => void } {
   const [isFullscreen, setIsFullscreen] = reactHostPort.useState(() => (typeof document !== "undefined" ? readDocumentFullscreenActive() : false));
@@ -96,7 +96,7 @@ function NavbarFullscreenToggle({ onToggle }: { readonly onToggle?: () => void }
   );
 }
 
-/** @emoji 🖥️ Navbar trailing chrome (chat toggle, fullscreen, …) — parks width so center labels do not collapse when panels open. */
+/** 🖥️ Navbar trailing chrome (chat toggle, fullscreen, …) — parks width so center labels do not collapse when panels open. */
 export function NavbarTrailingChromeSlot({
   beforeFullscreen,
   showFullscreenToggle = true,
@@ -140,14 +140,14 @@ setNavbarTrailingChrome(NavbarTrailingChromeSlot);
 // Draggable Electron-style window title bar with minimize/maximize/close controls.
 // Consumers MUST omit `controls` on non-Electron hosts; no control buttons render without it.
 
-/** @emoji 🪟️ Configuration for {@link DesktopTitlebar} window controls. */
+/** 🪟️ Configuration for {@link DesktopTitlebar} window controls. */
 export interface DesktopTitlebarProps {
   title: string;
   controls?: { minimize(): void; maximize(): void; close(): void };
   children?: React.ReactNode;
 }
 
-/** @emoji 🪟️ Draggable title bar row with a title, extra chrome, and window controls. @see https://www.electronjs.org/docs/latest/tutorial/custom-title-bar */
+/** 🪟️ Draggable title bar row with a title, extra chrome, and window controls. @see https://www.electronjs.org/docs/latest/tutorial/custom-title-bar */
 export function DesktopTitlebar({ title, controls, children }: DesktopTitlebarProps): React.ReactElement {
   const minimizeLabel = useLabel("ui.common.minimize");
   const maximizeLabel = useLabel("ui.common.maximize");

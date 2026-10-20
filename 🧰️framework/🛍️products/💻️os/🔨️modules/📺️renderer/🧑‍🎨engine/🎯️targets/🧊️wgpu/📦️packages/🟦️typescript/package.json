@@ -45,7 +45,9 @@
     "./browser-frame-transport/contract": "./🚚️browser-frame-transport/📋️contract/🟦️.ts",
     "./browser-frame-transport/dom-events": "./🚚️browser-frame-transport/🖱️dom-events/🟦️.ts",
     "./browser-frame-transport": "./🚚️browser-frame-transport/🟦️.ts",
-    "./host-io": "./🚪️host-io/🟦️.ts"
+    "./host-io": "./🚪️host-io/🟦️.ts",
+    "./testing/source-text/host-io": "./🧪️testing/📖️source-text/🚪️host-io/🟦️.ts",
+    "./testing/source-text/renderer-boot": "./🧪️testing/📖️source-text/🎬️renderer-boot/🟦️.ts"
   },
   "scripts": {
     "test:browser": "bun --cwd \"../../../../../../../../../..\" repo run @semio-tech/framework-renderer-wgpu:test-browser",
@@ -63,7 +65,9 @@
   "dependencies": {
     "@semio-tech/framework": "workspace:*",
     "@semio-tech/framework-os": "workspace:*",
-    "@semio-tech/assets": "workspace:*"
+    "@semio-tech/assets": "workspace:*",
+    "@semio-tech/ui": "workspace:*",
+    "@semio-tech/ui-contract": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

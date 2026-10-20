@@ -9,7 +9,7 @@ import {
   videoRenderFrameCount,
   videoRenderProgramFromWire,
   videoRenderProgramProblem
-} from "../../🎥️video-render-program/🟦️.ts";
+} from "@semio-tech/framework-effect/video-render-program";
 import { wireEffectToFriendly } from "@semio-tech/framework-actor/wire-turn";
 
 /** 🎞️ TypeScript twin of `🧪️tests/🎞️video-render-program/🦀️.rs`, driven from the SAME fixture

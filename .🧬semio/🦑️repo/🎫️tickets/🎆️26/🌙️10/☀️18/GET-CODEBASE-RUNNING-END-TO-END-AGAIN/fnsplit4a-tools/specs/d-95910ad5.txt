@@ -1,0 +1,4 @@
+9-60 🔶️adaptpluginhandle-s-own-refreshui registerAdaptpluginhandleSOwnRefreshuiTests
+78-233 🔸️applyuipatchtoretained registerApplyuipatchtoretainedTests
+248-356 🟠️serializes-complete-multi-turn registerSerializesCompleteMultiTurnTests
+394-438 🟢️adaptpluginhandle-exposes-setmergepolicy registerAdaptpluginhandleExposesSetmergepolicyResolveconflictTests

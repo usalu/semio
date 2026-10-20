@@ -1,11 +1,11 @@
 /** 🏅 OwnedWire and SurfaceBytePages suites. */
 import { createTypedWireSupport, type TypedWireVitest, type TypedWireDependencies } from "../🪛️typedwire-helpers/🟦️.tsx";
-import { loadRetainedWireDecodeFixture, loadWireSurfaceBytesFixture } from "@semio-tech/framework/ui/testing/fixtures";
+import { loadRetainedWireDecodeFixture, loadWireSurfaceBytesFixture } from "@semio-tech/ui/testing/fixtures";
 
 export async function registerOwnedWireAndBytePagesTests(vitest: TypedWireVitest, dependencies: TypedWireDependencies): Promise<void> {
   const { describe, expect, it } = vitest;
   const { Buffer, produce } = await createTypedWireSupport(vitest, dependencies);
-  const { RetainedUiWireValueCursor } = await import("@semio-tech/framework/modules/ui/contract/retained/wire");
+  const { RetainedUiWireValueCursor } = await import("@semio-tech/ui-contract/retained/wire");
 
   const wireFixture = await loadRetainedWireDecodeFixture();
 
@@ -124,7 +124,7 @@ export async function registerOwnedWireAndBytePagesTests(vitest: TypedWireVitest
   //#region 📦️SurfaceBytePagesTests
   describe("SurfaceBytePages", () => {
     it("matches Node Buffer at every native page boundary and preserves exact captured owners", async () => {
-      const { UiSurfaceByteBuilder } = await import("@semio-tech/framework/modules/ui/contract/retained/wire/bytes");
+      const { UiSurfaceByteBuilder } = await import("@semio-tech/ui-contract/retained/wire/bytes");
       const fixture = await loadWireSurfaceBytesFixture();
       for (const length of fixture.lengths) {
         const expected = Buffer.from(Array.from({ length }, (_, i) => (i * fixture.pattern.multiply + fixture.pattern.add) % fixture.pattern.modulo));
@@ -155,7 +155,7 @@ export async function registerOwnedWireAndBytePagesTests(vitest: TypedWireVitest
     });
 
     it("retires cancellation before allocation, between pages, and after preparation without transferring partial bytes", async () => {
-      const { UiSurfaceByteBuilder } = await import("@semio-tech/framework/modules/ui/contract/retained/wire/bytes");
+      const { UiSurfaceByteBuilder } = await import("@semio-tech/ui-contract/retained/wire/bytes");
       for (const stop of [0, 1, 2, 3, 255, 256, 257, 258, 260, 600]) {
         const builder = new UiSurfaceByteBuilder(513);
         for (let n = 0; n < stop; n++) builder.advance({ maxItems: 1, maxBytes: 4096 }, n % 256);
@@ -170,7 +170,7 @@ export async function registerOwnedWireAndBytePagesTests(vitest: TypedWireVitest
     });
 
     it("decodes the full native SurfaceDoc numeric-list wire into pages without changing ordinary UiValue bounds", async () => {
-      const { UiSurfaceBytes } = await import("@semio-tech/framework/modules/ui/contract/retained/wire/bytes");
+      const { UiSurfaceBytes } = await import("@semio-tech/ui-contract/retained/wire/bytes");
       const fixture = await loadWireSurfaceBytesFixture();
       const { encodePackValue } = await import("@semio-tech/framework/packs");
       const expected = Buffer.from(Array.from({ length: fixture.maximumBytes }, (_, i) => (i * fixture.pattern.multiply + fixture.pattern.add) % fixture.pattern.modulo));

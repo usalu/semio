@@ -28,6 +28,7 @@ semio-s-artifact-stdio-semio-mesh = { workspace = true }
 semio-s-artifact-stdio-semio-mesh-export = { workspace = true }
 semio-s-artifact-stdio-stl = { workspace = true }
 semio-s-artifact-procedural-3d-model = { workspace = true }
+semio-framework-async = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

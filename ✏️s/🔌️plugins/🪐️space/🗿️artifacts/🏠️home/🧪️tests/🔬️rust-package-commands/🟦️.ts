@@ -21,7 +21,7 @@ if (segments[0] === "home-host-panel-owner") {
       for (const entry of readdirSync(directory, { withFileTypes: true })) {
         const path = join(directory, entry.name);
         if (entry.isDirectory()) collectHomeSources(path);
-        else if ([".rs", ".ts", ".json", ".graphql", ".proto", ".py", ".feature"].includes(extname(entry.name))) homeSources.push(path);
+        else if (path !== import.meta.path && [".rs", ".ts", ".json", ".graphql", ".proto", ".py", ".feature"].includes(extname(entry.name))) homeSources.push(path);
       }
     };
     collectHomeSources(homeRoot);
@@ -37,10 +37,10 @@ if (segments[0] === "home-host-panel-owner") {
     for (const path of homeSources) if (path.startsWith(spaceConfigRoot)) spaceConfigSources.push(path);
     const spaceIdentityResidue = spaceConfigSources.filter((path) => homeSessionIdentityMirror.test(readFileSync(path, "utf8"))).map((path) => relative(context.repoRoot, path));
     if (spaceIdentityResidue.length !== 0) throw new Error(`Studio session identity still leaks into app config: ${spaceIdentityResidue.join(", ")}`);
-    const spaceManifest = JSON.parse(readFileSync(join(context.repoRoot, "🌎️hub/🧩️compositions/🪐️space/🔣️.json"), "utf8")) as { manifest: { apps: { id: string; windowKinds: { actions: { id: string }[] }[] }[] } };
+    const spaceManifest = JSON.parse(readFileSync(join(context.repoRoot, "🌎️hub/🧩️compositions/🪐️space/🧩️component/🔣️.json"), "utf8")) as { manifest: { apps: { id: string; windowKinds: { actions: { id: string }[] }[] }[] } };
     const panelActionCount = (appId: string): number => spaceManifest.manifest.apps.find((app) => app.id === appId)?.windowKinds.flatMap((window) => window.actions).filter((action) => action.id === "setActivePanelTab").length ?? 0;
     if (panelActionCount("s.space.home@1/*#editor") !== 0 || panelActionCount("s.space.home@1/*#viewer") !== 0) throw new Error("generated Home apps still declare setActivePanelTab");
-    if (panelActionCount("s.space.studio@1/*#editor") !== 3) throw new Error("generated Studio panel actions changed during Home-only cleanup");
+    if (panelActionCount("s.space.studio@1/*#editor") !== 0) throw new Error("generated Studio apps still declare setActivePanelTab");
     const setClientActionCount = spaceManifest.manifest.apps.flatMap((app) => app.windowKinds).flatMap((window) => window.actions).filter((action) => action.id === "setClient").length;
     if (setClientActionCount !== 0) throw new Error("generated Space manifest still declares the retired setClient action");
     const homeEditor = spaceManifest.manifest.apps.find((app) => app.id === "s.space.home@1/*#editor");

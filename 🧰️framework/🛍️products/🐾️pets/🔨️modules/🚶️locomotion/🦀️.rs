@@ -7,7 +7,7 @@
 //! @see ./⚓️footing/🟦️.ts — the TypeScript twin, split into the child folders `📐️constants`, `⚓️footing`, `🛬️courses`, `🛫️departure`, `🏃️motion`, `✋️hand`, `🪜️outings`, `🧳️trips`, `🪄️mischief` and `🚪️leaving` next to this file
 
 use crate::draft::{beat_of, clip_at, clip_of, hover_of, release, remove, settle, shift, shoulders, Draft, Launch, ORIGIN, RATE};
-use crate::spacing::{clearway, hindered, soars, vacancy, COMFORT_GAP, MEET_GAP};
+use crate::spacing::{clearway, soars, COMFORT_GAP, MEET_GAP};
 use semio_framework_pets_character::behavior::dwell_of;
 use semio_framework_pets_contract::schema::{Activity, Footing, Gait, Perch, Point, Slug, Species, Ticks};
 use semio_framework_pets_kinematics::animation::clip_ticks;
@@ -49,7 +49,8 @@ pub(crate) use hand::{give_back, hold, let_go, lift, toss, toss_target};
 
 #[path = "🪜️outings/🦀️.rs"]
 mod outings;
-pub(crate) use outings::{geared, reaches, set_out, trip_of, Outing, Venture};
+pub use outings::{geared, reaches, set_out, Venture};
+pub(crate) use outings::{trip_of, Outing};
 use outings::{
     effort_of, embark, grip_now, ladder_ways, lasting, outings_to, ranked, reserve_of, scaling,
     slide_outing, spaced, walk_end, walked, ways_off, Stand,

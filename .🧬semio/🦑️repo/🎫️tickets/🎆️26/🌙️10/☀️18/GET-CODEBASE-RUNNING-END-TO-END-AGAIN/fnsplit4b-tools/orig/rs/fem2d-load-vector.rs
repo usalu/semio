@@ -1,0 +1,761 @@
+//! 📶️ artifact-level `mutate-fem2d-1` case in ticket
+//! 🏗️ `s.fem.fem2d` load mutation case — Rust SUBJECT adapter. Relocated out of the
+//! `26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION` so
+//! this subset's own kinds have a subset-owned test.
+//!
+//! This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️.py` beside this file — a
+//! second implementation of the structural model and this subset's typed mutations, written in
+//! Python from this subset's committed snapshot schema, mutation grammar and specification vectors.
+//! This adapter registers the SUBJECT half only: keeping oracle registrations here would put this
+//! repository's answer on both sides of the comparison.
+//!
+//! **What the two roles each hold.** The cross-language projection is the whole model; this artifact
+//! composes no digest-derived child, so nothing has to be held back. The committed `🔺️diff` — which
+//! pins WHICH fields a mutation was allowed to touch — and the committed `🎯️outcome` are Rust-side
+//! report shapes rather than parts of the document, so they stay asserted HERE, in role, in
+//! [`subject::spec_vector`].
+
+use semio_repo_test_host::parse_json;
+
+use semio_repo_test_host::Adapter;
+
+use semio_repo_test_host::Json;
+
+//#region 🔖️Kinds
+/// 🏷️ This subset's own slice of `KINDS` in `../../🧬️schema/🧬️mutations/🦀️.rs` — duplicated, not
+/// imported, because the oracle-only build must not link the subject crate. The contract's
+/// mutation-coverage gate keeps this list honest against the catalog, and that file's own
+/// `kinds_match_the_enum_and_the_catalog` keeps it honest against both the enum and the manifest.
+const KINDS: &[&str] = &["change-load", "change-combination-name", "change-combination-term", "create-load-case", "delete-load-case", "add-load", "remove-load", "change-load-case-self-weight", "create-combination", "delete-combination", "replace-load", "change-load-case-name", "replace-combination"];
+
+/// 👁️ Kinds whose COMMITTED specification vector cannot exhibit a forward effect, so
+/// [`law::mutation_is_observable`] must not demand one of them.
+/// Empty: every committed vector of this subset is forward and message-free, so every kind's effect
+/// is visible.
+const UNOBSERVABLE: &[&str] = &[
+
+];
+
+/// 🧫️ The same derived timber-portal-frame model every fem2d mutation subset case shares, as its
+/// own local copy — see `../../../🌐️any/🧪️tests/🔄️round-trips-the-committed-document/🥒️.feature`
+/// for the full derivation provenance.
+#[cfg(feature = "sut")]
+const DERIVED_ASSET: &str = "shared://🏋️mutate-fem2d-1-load/🏗️timber-portal-frame.snapshot.json";
+//#endregion 🔖️Kinds
+
+//#region 🔖️Scenarios
+/// 📇️ Every FORWARD committed vector this subset owns, as `(scenario id, kind)`. Two per kind:
+/// the pre-existing `spec-vector-<kind>` and the steel-frame `frame-vector-<kind>`.
+const COMMITTED: &[(&str, &str)] = &[
+    ("spec-vector-change-load", "change-load"),
+    ("frame-vector-change-load", "change-load"),
+    ("spec-vector-change-combination-name", "change-combination-name"),
+    ("frame-vector-change-combination-name", "change-combination-name"),
+    ("empty-vector-change-combination-name", "change-combination-name"),
+    ("spec-vector-change-combination-term", "change-combination-term"),
+    ("frame-vector-change-combination-term", "change-combination-term"),
+
+    ("spec-vector-add-load", "add-load"),
+    ("frame-vector-add-load", "add-load"),
+    ("spec-vector-change-load-case-self-weight", "change-load-case-self-weight"),
+    ("frame-vector-change-load-case-self-weight", "change-load-case-self-weight"),
+    ("spec-vector-create-combination", "create-combination"),
+    ("frame-vector-create-combination", "create-combination"),
+    ("spec-vector-create-load-case", "create-load-case"),
+    ("frame-vector-create-load-case", "create-load-case"),
+    ("spec-vector-delete-combination", "delete-combination"),
+    ("frame-vector-delete-combination", "delete-combination"),
+    ("spec-vector-delete-load-case", "delete-load-case"),
+    ("frame-vector-delete-load-case", "delete-load-case"),
+    ("spec-vector-remove-load", "remove-load"),
+    ("frame-vector-remove-load", "remove-load"),
+    ("spec-vector-replace-load", "replace-load"),
+    ("frame-vector-replace-load", "replace-load"),
+    ("spec-vector-change-load-case-name", "change-load-case-name"),
+    ("frame-vector-change-load-case-name", "change-load-case-name"),
+    ("spec-vector-replace-combination", "replace-combination"),
+    ("frame-vector-replace-combination", "replace-combination"),
+];
+
+/// 📇️ Every REFUSAL or no-op vector this subset owns, numbered in the catalog's own order.
+const REFUSED: &[(&str, &str)] = &[
+    ("reject-change-load-1", "change-load"),
+    ("reject-change-load-2", "change-load"),
+    ("reject-change-load-3", "change-load"),
+    ("reject-change-combination-name-1", "change-combination-name"),
+    ("reject-change-combination-name-2", "change-combination-name"),
+    ("reject-change-combination-term-1", "change-combination-term"),
+    ("reject-change-combination-term-2", "change-combination-term"),
+    ("reject-change-combination-term-3", "change-combination-term"),
+
+    ("reject-add-load-1", "add-load"),
+    ("reject-add-load-2", "add-load"),
+    ("reject-change-load-case-self-weight-1", "change-load-case-self-weight"),
+    ("reject-create-combination-1", "create-combination"),
+    ("reject-create-load-case-1", "create-load-case"),
+    ("reject-delete-combination-1", "delete-combination"),
+    ("reject-delete-combination-2", "delete-combination"),
+    ("reject-delete-load-case-1", "delete-load-case"),
+    ("reject-delete-load-case-2", "delete-load-case"),
+    ("reject-remove-load-1", "remove-load"),
+    ("reject-replace-load-1", "replace-load"),
+    ("reject-replace-load-2", "replace-load"),
+    ("reject-replace-load-3", "replace-load"),
+    ("reject-change-load-case-name-1", "change-load-case-name"),
+    ("reject-change-load-case-name-2", "change-load-case-name"),
+    ("reject-replace-combination-1", "replace-combination"),
+    ("reject-replace-combination-2", "replace-combination"),
+    ("reject-replace-combination-3", "replace-combination"),
+];
+//#endregion 🔖️Scenarios
+
+//#region 🔖️Fixtures
+/// 🧫️ One kind's committed `(before, mutation, after, diff, outcome)` specification vector, read
+/// literally via `include_str!`. This IS the independently handcrafted evidence this case rests on —
+/// never recomputed here, never restated as a Rust literal.
+struct Vector {
+    before: &'static str,
+    mutation: &'static str,
+    after: &'static str,
+    diff: Option<&'static str>,
+    outcome: &'static str,
+}
+
+fn vector(scenario: &str) -> Vector {
+    match scenario {
+        "spec-vector-change-load" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-load/🩹️changes/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-load/🩹️changes/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-load/🩹️changes/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/🩹️change-load/🩹️changes/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-load/🩹️changes/🎯️outcome/🔣️.json"),
+        },        "frame-vector-change-load" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-load/📍️target/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-load/📍️target/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-load/📍️target/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/🩹️change-load/📍️target/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-load/📍️target/🎯️outcome/🔣️.json"),
+        },        "reject-change-load-1" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-load/⏸️same/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-load/⏸️same/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-load/⏸️same/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/🩹️change-load/⏸️same/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-load/⏸️same/🎯️outcome/🔣️.json"),
+        },        "reject-change-load-2" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-load/⛔️missing/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-load/⛔️missing/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-load/⛔️missing/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-load/⛔️missing/🎯️outcome/🔣️.json"),
+        },        "reject-change-load-3" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-load/⚗️invalid/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-load/⚗️invalid/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-load/⚗️invalid/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-load/⚗️invalid/🎯️outcome/🔣️.json"),
+        },        "spec-vector-change-combination-name" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-name/🩹️renames/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-name/🩹️renames/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-name/🩹️renames/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-name/🩹️renames/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-name/🩹️renames/🎯️outcome/🔣️.json"),
+        },        "frame-vector-change-combination-name" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-name/✏️labels/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-name/✏️labels/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-name/✏️labels/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-name/✏️labels/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-name/✏️labels/🎯️outcome/🔣️.json"),
+        },        "reject-change-combination-name-1" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-name/⏸️same/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-name/⏸️same/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-name/⏸️same/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-name/⏸️same/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-name/⏸️same/🎯️outcome/🔣️.json"),
+        },        "reject-change-combination-name-2" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-name/⛔️missing/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-name/⛔️missing/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-name/⛔️missing/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-name/⛔️missing/🎯️outcome/🔣️.json"),
+        },        "empty-vector-change-combination-name" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-name/⚗️empty/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-name/⚗️empty/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-name/⚗️empty/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-name/⚗️empty/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-name/⚗️empty/🎯️outcome/🔣️.json"),
+        },        "spec-vector-change-combination-term" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚖️weights/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚖️weights/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚖️weights/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚖️weights/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚖️weights/🎯️outcome/🔣️.json"),
+        },        "frame-vector-change-combination-term" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-term/🗑️removes/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-term/🗑️removes/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-term/🗑️removes/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-term/🗑️removes/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-term/🗑️removes/🎯️outcome/🔣️.json"),
+        },        "reject-change-combination-term-1" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⏸️same/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⏸️same/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⏸️same/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⏸️same/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⏸️same/🎯️outcome/🔣️.json"),
+        },        "reject-change-combination-term-2" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⛔️missing/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⛔️missing/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⛔️missing/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⛔️missing/🎯️outcome/🔣️.json"),
+        },        "reject-change-combination-term-3" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚗️invalid/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚗️invalid/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚗️invalid/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚗️invalid/🎯️outcome/🔣️.json"),
+        },
+        "spec-vector-add-load" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/➕️add-load/📏️appends/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/➕️add-load/📏️appends/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/➕️add-load/📏️appends/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/➕️add-load/📏️appends/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/➕️add-load/📏️appends/🎯️outcome/🔣️.json"),
+        },
+        "frame-vector-add-load" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/➕️add-load/💨️pushes-a-wind-load-5c3f1e/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/➕️add-load/💨️pushes-a-wind-load-5c3f1e/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/➕️add-load/💨️pushes-a-wind-load-5c3f1e/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/➕️add-load/💨️pushes-a-wind-load-5c3f1e/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/➕️add-load/💨️pushes-a-wind-load-5c3f1e/🎯️outcome/🔣️.json"),
+        },
+        "reject-add-load-1" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/➕️add-load/🚫️rejects-a-missing-4271bc/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/➕️add-load/🚫️rejects-a-missing-4271bc/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/➕️add-load/🚫️rejects-a-missing-4271bc/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/➕️add-load/🚫️rejects-a-missing-4271bc/🎯️outcome/🔣️.json"),
+        },
+        "reject-add-load-2" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/➕️add-load/👻️dangling-node-8d113b/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/➕️add-load/👻️dangling-node-8d113b/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/➕️add-load/👻️dangling-node-8d113b/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/➕️add-load/👻️dangling-node-8d113b/🎯️outcome/🔣️.json"),
+        },
+        "spec-vector-change-load-case-self-weight" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/⚖️switches/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/⚖️switches/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/⚖️switches/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/⚖️switches/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/⚖️switches/🎯️outcome/🔣️.json"),
+        },
+        "frame-vector-change-load-case-self-weight" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/🏋️switches/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/🏋️switches/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/🏋️switches/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/🏋️switches/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/🏋️switches/🎯️outcome/🔣️.json"),
+        },
+        "reject-change-load-case-self-weight-1" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/🔁️keeps/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/🔁️keeps/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/🔁️keeps/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/🔁️keeps/🎯️outcome/🔣️.json"),
+        },
+        "spec-vector-create-combination" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🔗️create-combination/🔗️appends/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🔗️create-combination/🔗️appends/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🔗️create-combination/🔗️appends/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/🔗️create-combination/🔗️appends/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🔗️create-combination/🔗️appends/🎯️outcome/🔣️.json"),
+        },
+        "frame-vector-create-combination" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🔗️create-combination/➕️appends/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🔗️create-combination/➕️appends/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🔗️create-combination/➕️appends/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/🔗️create-combination/➕️appends/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🔗️create-combination/➕️appends/🎯️outcome/🔣️.json"),
+        },
+        "reject-create-combination-1" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🔗️create-combination/🚫️rejects/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🔗️create-combination/🚫️rejects/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🔗️create-combination/🚫️rejects/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🔗️create-combination/🚫️rejects/🎯️outcome/🔣️.json"),
+        },
+        "spec-vector-create-load-case" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/📋️create-load-case/📍️appends/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/📋️create-load-case/📍️appends/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/📋️create-load-case/📍️appends/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/📋️create-load-case/📍️appends/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/📋️create-load-case/📍️appends/🎯️outcome/🔣️.json"),
+        },
+        "frame-vector-create-load-case" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/📋️create-load-case/❄️appends/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/📋️create-load-case/❄️appends/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/📋️create-load-case/❄️appends/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/📋️create-load-case/❄️appends/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/📋️create-load-case/❄️appends/🎯️outcome/🔣️.json"),
+        },
+        "reject-create-load-case-1" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/📋️create-load-case/🚫️rejects/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/📋️create-load-case/🚫️rejects/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/📋️create-load-case/🚫️rejects/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/📋️create-load-case/🚫️rejects/🎯️outcome/🔣️.json"),
+        },
+        "spec-vector-delete-combination" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/✂️delete-combination/✂️removes/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/✂️delete-combination/✂️removes/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/✂️delete-combination/✂️removes/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/✂️delete-combination/✂️removes/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/✂️delete-combination/✂️removes/🎯️outcome/🔣️.json"),
+        },
+        "frame-vector-delete-combination" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/✂️delete-combination/🗑️drops/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/✂️delete-combination/🗑️drops/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/✂️delete-combination/🗑️drops/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/✂️delete-combination/🗑️drops/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/✂️delete-combination/🗑️drops/🎯️outcome/🔣️.json"),
+        },
+        "reject-delete-combination-1" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/✂️delete-combination/⛔️rejects/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/✂️delete-combination/⛔️rejects/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/✂️delete-combination/⛔️rejects/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/✂️delete-combination/⛔️rejects/🎯️outcome/🔣️.json"),
+        },
+        "reject-delete-combination-2" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/✂️delete-combination/🔗️blocks-in-use-0b898b/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/✂️delete-combination/🔗️blocks-in-use-0b898b/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/✂️delete-combination/🔗️blocks-in-use-0b898b/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/✂️delete-combination/🔗️blocks-in-use-0b898b/🎯️outcome/🔣️.json"),
+        },
+        "spec-vector-delete-load-case" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🗑️delete-load-case/🚫️removes/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🗑️delete-load-case/🚫️removes/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🗑️delete-load-case/🚫️removes/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/🗑️delete-load-case/🚫️removes/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🗑️delete-load-case/🚫️removes/🎯️outcome/🔣️.json"),
+        },
+        "frame-vector-delete-load-case" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🗑️delete-load-case/🗑️drops/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🗑️delete-load-case/🗑️drops/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🗑️delete-load-case/🗑️drops/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/🗑️delete-load-case/🗑️drops/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🗑️delete-load-case/🗑️drops/🎯️outcome/🔣️.json"),
+        },
+        "reject-delete-load-case-1" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🗑️delete-load-case/⛔️rejects/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🗑️delete-load-case/⛔️rejects/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🗑️delete-load-case/⛔️rejects/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🗑️delete-load-case/⛔️rejects/🎯️outcome/🔣️.json"),
+        },
+        "reject-delete-load-case-2" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🗑️delete-load-case/🔗️blocks-in-use-7cdc5f/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🗑️delete-load-case/🔗️blocks-in-use-7cdc5f/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🗑️delete-load-case/🔗️blocks-in-use-7cdc5f/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🗑️delete-load-case/🔗️blocks-in-use-7cdc5f/🎯️outcome/🔣️.json"),
+        },
+        "spec-vector-remove-load" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/➖️remove-load/➖️strips/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/➖️remove-load/➖️strips/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/➖️remove-load/➖️strips/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/➖️remove-load/➖️strips/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/➖️remove-load/➖️strips/🎯️outcome/🔣️.json"),
+        },
+        "frame-vector-remove-load" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/➖️remove-load/✂️strips-the-roof-udl-0c1b3c/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/➖️remove-load/✂️strips-the-roof-udl-0c1b3c/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/➖️remove-load/✂️strips-the-roof-udl-0c1b3c/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/➖️remove-load/✂️strips-the-roof-udl-0c1b3c/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/➖️remove-load/✂️strips-the-roof-udl-0c1b3c/🎯️outcome/🔣️.json"),
+        },
+        "reject-remove-load-1" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/➖️remove-load/⛔️rejects-a-missing-1a8a80/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/➖️remove-load/⛔️rejects-a-missing-1a8a80/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/➖️remove-load/⛔️rejects-a-missing-1a8a80/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/➖️remove-load/⛔️rejects-a-missing-1a8a80/🎯️outcome/🔣️.json"),
+        },
+        "spec-vector-replace-load" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-load/🏋️retunes-the-live-f6fd49/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-load/🏋️retunes-the-live-f6fd49/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-load/🏋️retunes-the-live-f6fd49/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-load/🏋️retunes-the-live-f6fd49/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-load/🏋️retunes-the-live-f6fd49/🎯️outcome/🔣️.json"),
+        },
+        "frame-vector-replace-load" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-load/💨️strengthens/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-load/💨️strengthens/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-load/💨️strengthens/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-load/💨️strengthens/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-load/💨️strengthens/🎯️outcome/🔣️.json"),
+        },
+        "reject-replace-load-1" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-load/⛔️rejects-a-missing-7a1e1f/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-load/⛔️rejects-a-missing-7a1e1f/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-load/⛔️rejects-a-missing-7a1e1f/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-load/⛔️rejects-a-missing-7a1e1f/🎯️outcome/🔣️.json"),
+        },
+        "reject-replace-load-2" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-load/🪪️denies-rename-732de0/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-load/🪪️denies-rename-732de0/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-load/🪪️denies-rename-732de0/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-load/🪪️denies-rename-732de0/🎯️outcome/🔣️.json"),
+        },
+        "reject-replace-load-3" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-load/👻️dangling-node-b95678/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-load/👻️dangling-node-b95678/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-load/👻️dangling-node-b95678/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-load/👻️dangling-node-b95678/🎯️outcome/🔣️.json"),
+        },
+        "spec-vector-change-load-case-name" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames/🎯️outcome/🔣️.json"),
+        },
+        "frame-vector-change-load-case-name" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/✏️renames/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/✏️renames/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/✏️renames/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/✏️renames/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/✏️renames/🎯️outcome/🔣️.json"),
+        },
+        "reject-change-load-case-name-1" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/⛔️rejects/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/⛔️rejects/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/⛔️rejects/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/⛔️rejects/🎯️outcome/🔣️.json"),
+        },
+        "reject-change-load-case-name-2" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🔁️keeps/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🔁️keeps/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🔁️keeps/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🔁️keeps/🎯️outcome/🔣️.json"),
+        },
+        "spec-vector-replace-combination" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-combination/⚖️reweights/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-combination/⚖️reweights/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-combination/⚖️reweights/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-combination/⚖️reweights/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-combination/⚖️reweights/🎯️outcome/🔣️.json"),
+        },
+        "frame-vector-replace-combination" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-combination/🔗️adds/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-combination/🔗️adds/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-combination/🔗️adds/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-combination/🔗️adds/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-combination/🔗️adds/🎯️outcome/🔣️.json"),
+        },
+        "reject-replace-combination-1" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-combination/⛔️rejects/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-combination/⛔️rejects/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-combination/⛔️rejects/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-combination/⛔️rejects/🎯️outcome/🔣️.json"),
+        },
+        "reject-replace-combination-2" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-combination/🪪️denies/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-combination/🪪️denies/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-combination/🪪️denies/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-combination/🪪️denies/🎯️outcome/🔣️.json"),
+        },
+        "reject-replace-combination-3" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-combination/👻️dangling/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-combination/👻️dangling/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-combination/👻️dangling/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-combination/👻️dangling/🎯️outcome/🔣️.json"),
+        },
+        "reject-replace-combination-4" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-combination/👻️self-term-0f54d1/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-combination/👻️self-term-0f54d1/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-combination/👻️self-term-0f54d1/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-combination/👻️self-term-0f54d1/🎯️outcome/🔣️.json"),
+        },
+        other => panic!("🏋️mutate-fem2d-1-load: no committed specification vector is registered for scenario {other:?}"),
+    }
+}
+
+/// 🔎️ Parses one embedded fixture file into the framework's own dependency-free `Json`.
+#[cfg(feature = "sut")]
+fn canonical(text: &str) -> Json {
+    parse_json(text).unwrap_or_else(|error| panic!("mutate-fem2d-1-load: a committed fixture must be valid JSON: {error}"))
+}
+//#endregion 🔖️Fixtures
+
+//#region 🔖️Subject
+#[cfg(feature = "sut")]
+mod subject {
+    use super::canonical;
+    use super::vector;
+    use super::DERIVED_ASSET;
+    use super::UNOBSERVABLE;
+    use semio_repo_test_host::parse_json;
+    use semio_repo_test_host::Context;
+    use semio_repo_test_host::Json;
+    use semio_repo_test_host::Outcome;
+    use semio_repo_test_host::law;
+    use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::io::text::mutations::fem2d_mutation_report_json;
+
+    //#region 🔖️Report
+    /// 📋️ One member of the production bridge's report, named in the error when it is absent — never
+    /// defaulted, because a silently missing member would turn every comparison below into a comparison
+    /// of two empty values.
+    fn member<'a>(report: &'a Json, key: &str) -> Result<&'a Json, String> {
+        report.get(key).ok_or_else(|| format!("the report carries no {key:?} member"))
+    }
+
+    /// 📋️ An array member of the report, rejecting a present-but-wrong-shaped value rather than
+    /// treating it as empty.
+    fn members(report: &Json, key: &str) -> Result<Vec<Json>, String> {
+        match member(report, key)? {
+            Json::Array(items) => Ok(items.clone()),
+            other => Err(format!("the report's {key:?} member is {}, not an array", other.to_string())),
+        }
+    }
+
+    /// 📋️ A string array read as owned `String`s — an address list, either declared by a committed
+    /// outcome or reported by a diagnostic.
+    fn strings(value: &Json, key: &str) -> Vec<String> {
+        value
+            .array(key)
+            .iter()
+            .map(|segment| match segment {
+                Json::String(text) => text.clone(),
+                other => other.to_string(),
+            })
+            .collect()
+    }
+
+    /// 🎯️ Checks the produced diagnostics against the ones the committed `🎯️outcome` vector declares.
+    /// A `rejected` vector declares one fault code and the offending address; an `applied` vector
+    /// declares an ordered (possibly empty) message list and forbids anything at error level or worse.
+    fn declared_outcome_holds(kind: &str, produced: &[Json], outcome: &Json) -> Result<(), String> {
+        let codes: Vec<String> = produced.iter().map(|message| message.str("code")).collect();
+        let levels: Vec<String> = produced.iter().map(|message| message.str("level")).collect();
+        if outcome.str("status") == "rejected" {
+            let expected = outcome.str("code");
+            if codes != vec![expected.clone()] {
+                return Err(format!("mutate-{kind}: the vector declares a rejection with code {expected:?}, the implementation raised {codes:?}"));
+            }
+            if !levels.iter().any(|level| level == "error" || level == "fatal") {
+                return Err(format!("mutate-{kind}: the vector declares a rejection, but the implementation raised it at {levels:?} — a rejection is at least an error"));
+            }
+            let path = strings(outcome, "path");
+            let target = strings(&produced[0], "target");
+            if !path.is_empty() && target != path {
+                return Err(format!("mutate-{kind}: the vector declares the offending address {path:?}, the implementation reported {target:?}"));
+            }
+            return Ok(());
+        }
+        let expected: Vec<String> = outcome.array("messages").iter().map(|message| message.str("code")).collect();
+        if codes != expected {
+            return Err(format!("mutate-{kind}: the vector declares the diagnostics {expected:?}, the implementation raised {codes:?}"));
+        }
+        match levels.iter().find(|level| level.as_str() == "error" || level.as_str() == "fatal") {
+            Some(level) => Err(format!("mutate-{kind}: the vector declares an applied outcome, but the implementation raised a {level}")),
+            None => Ok(()),
+        }
+    }
+    //#endregion 🔖️Report
+
+    //#region 🔖️Plan
+    /// 🧫️ The one declared fixture URI of this scenario's steps containing `needle`.
+    fn uri_in(ctx: &Context, needle: &str) -> Result<String, String> {
+        ctx.scenario
+            .steps
+            .iter()
+            .flat_map(|(_, step)| step.split_whitespace())
+            .find(|token| (token.starts_with("asset://") || token.starts_with("shared://🏋️mutate-fem2d-1-load/") || token.starts_with("shared://")) && token.contains(needle))
+            .map(|token| token.to_string())
+            .ok_or_else(|| format!("scenario {} declares no fixture URI containing {needle:?}", ctx.scenario.id))
+    }
+
+    /// 🧫️ The declared fixture's bytes as UTF-8 text.
+    fn fixture_text(ctx: &Context, needle: &str) -> Result<String, String> {
+        let uri = uri_in(ctx, needle)?;
+        String::from_utf8(ctx.input_bytes(&uri)?).map_err(|error| format!("the declared fixture {uri} is not UTF-8: {error}"))
+    }
+
+    /// 🔀️ Each verb writes exactly ONE of the nine members. That is the check an after-snapshot
+    /// comparison cannot make on its own: an implementation that re-derived a sibling collection on
+    /// every edit — renumbering ids, re-sorting sections — would still land on the right value for
+    /// the member it meant to write.
+    fn touches_one(scenario: &str, kind: &str, before: &Json, after: &Json) -> Result<(), String> {
+        let written = match kind {
+            "update-analysis-settings" => "analysis",
+            "change-combination-name" | "change-combination-term" | "change-combination-name-empty" => "combinations",
+            "change-load" | "replace-load" | "change-load-case-name" | "add-load" | "remove-load" | "replace-load" | "change-load-case-self-weight" | "change-load-case-name" | "create-load-case" | "delete-load-case" => "loadCases",
+            _ => match kind.split_once('-').map(|(_, noun)| noun).unwrap_or_default() {
+                "node" => "nodes",
+                "element" => "elements",
+                "region" => "regions",
+                "material" => "materials",
+                "section" => "sections",
+                "support" => "supports",
+                "combination" => "combinations",
+                other => return Err(format!("{scenario}: no collection is declared for the noun {other:?}")),
+            },
+        };
+        let moved: Vec<String> = ["nodes", "elements", "regions", "materials", "sections", "supports", "loadCases", "combinations", "analysis"]
+            .iter()
+            .filter(|name| before.get(name) != after.get(name))
+            .map(|name| (*name).to_string())
+            .collect();
+        if moved != vec![written.to_string()] {
+            return Err(format!("{scenario}: this verb writes {written} and nothing else, but {moved:?} moved"));
+        }
+        Ok(())
+    }
+
+    /// 🧭️ The one report the production bridge produces for a `(base, mutation)` pair. The bridge's
+    /// third argument only feeds its `expectedSnapshot` member, which the real-model scenarios do not
+    /// consult, so they pass the base for it.
+    fn report_of(scenario: &str, base: &str, mutation: &str, after: &str) -> Result<Json, String> {
+        parse_json(&fem2d_mutation_report_json(base, mutation, after).map_err(|error| format!("{scenario}: the input did not reach this subset's own codec: {error}"))?)
+    }
+    //#endregion 🔖️Plan
+
+    //#region 🔖️Handlers
+    /// 🎯️ Applies one kind to the REAL derived timber portal frame with the parameters the feature
+    /// states, and asserts in role that it moved the model and wrote exactly one member.
+    pub fn mutate(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
+        move |ctx: &Context| {
+            let base = fixture_text(ctx, "timber-portal-frame")?;
+            let report = report_of(&format!("mutate-{kind}"), &base, ctx.doc_string()?, &base)?;
+            let applied = member(&report, "snapshot")?;
+            let faults: Vec<String> = members(&report, "messages")?.iter().filter(|message| { let level = message.str("level"); level == "error" || level == "fatal" }).map(|message| message.str("code")).collect();
+            if !faults.is_empty() {
+                return Err(format!("mutate-{kind}: the feature's parameters were rejected with {faults:?}"));
+            }
+            law::mutation_is_observable(kind, applied, member(&report, "base")?, &[])?;
+            touches_one(&format!("mutate-{kind}"), kind, member(&report, "base")?, applied)?;
+            Ok(Outcome::with_raw(applied.to_string().into_bytes(), applied.clone()))
+        }
+    }
+
+    /// ↩️ Applies one kind to the REAL derived frame and then EVERY step of its OWN computed inverse.
+    /// The projection carries BOTH models: projecting only the restored one would make every row
+    /// project the same value and the differential would be vacuous.
+    pub fn inverse(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
+        move |ctx: &Context| {
+            let base = fixture_text(ctx, "timber-portal-frame")?;
+            let report = report_of(&format!("inverse-{kind}"), &base, ctx.doc_string()?, &base)?;
+            let faults: Vec<String> = members(&report, "inverseMessages")?.iter().filter(|message| { let level = message.str("level"); level == "error" || level == "fatal" }).map(|message| message.str("code")).collect();
+            if !faults.is_empty() {
+                return Err(format!("inverse-{kind}: an inverse step was rejected with {faults:?}, so the model never got the chance to return"));
+            }
+            let applied = member(&report, "snapshot")?;
+            law::mutation_is_observable(kind, applied, member(&report, "base")?, &[])?;
+            let restored = member(&report, "inverseSnapshot")?;
+            law::inverse_restores(kind, restored, member(&report, "base")?)?;
+            let projection = Json::Object(vec![("mutated".to_string(), applied.clone()), ("restored".to_string(), restored.clone())]);
+            Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
+        }
+    }
+
+    /// 📐️ Replays one committed handcrafted specification vector, addressed by SCENARIO id rather
+    /// than by kind — every kind now carries several. This is where the evidence the case carried
+    /// before the relocation still lives, undiminished: the applied model is held to the committed
+    /// after-snapshot, the produced delta to the committed `🔺️diff`, and the diagnostics to the
+    /// committed `🎯️outcome`.
+    pub fn committed_vector(kind: &'static str, scenario: &str) -> impl Fn(&Context) -> Result<Outcome, String> {
+        let scenario = scenario.to_string();
+        move |_ctx: &Context| {
+            let committed = vector(&scenario);
+            let report = report_of(&scenario, committed.before, committed.mutation, committed.after)?;
+            let applied = member(&report, "snapshot")?;
+            if let Some(first) = law::divergence(applied, member(&report, "expectedSnapshot")?) {
+                return Err(format!("{scenario}: the applied model is not the committed after-snapshot — {first}"));
+            }
+            match committed.diff {
+                Some(text) => {
+                    if let Some(first) = law::divergence(member(&report, "diff")?, &canonical(text)) {
+                        return Err(format!("{scenario}: the produced delta is not the committed 🔺️diff — {first}"));
+                    }
+                }
+                None => return Err(format!("{scenario}: a forward vector must carry a committed 🔺️diff")),
+            }
+            declared_outcome_holds(kind, &members(&report, "messages")?, &canonical(committed.outcome))?;
+            law::mutation_is_observable(kind, applied, member(&report, "base")?, UNOBSERVABLE)?;
+            touches_one(&scenario, kind, member(&report, "base")?, applied)?;
+            law::inverse_restores(kind, member(&report, "inverseSnapshot")?, member(&report, "base")?)?;
+            Ok(Outcome::with_raw(applied.to_string().into_bytes(), applied.clone()))
+        }
+    }
+
+    /// 🚫️ Replays one committed REFUSAL or no-op vector. The projection carries the diagnostic
+    /// beside the model on purpose: two implementations that merely both decline to move a document
+    /// agree vacuously, and what these rows are evidence for is that they refuse for the SAME
+    /// reason — same code, same level, same address.
+    pub fn reject(kind: &'static str, scenario: &str) -> impl Fn(&Context) -> Result<Outcome, String> {
+        let scenario = scenario.to_string();
+        move |_ctx: &Context| {
+            let committed = vector(&scenario);
+            if committed.diff.is_some() {
+                return Err(format!("{scenario}: a refusal vector carries 🔺️diff/🚫️.absent, never a committed delta"));
+            }
+            let report = report_of(&scenario, committed.before, committed.mutation, committed.after)?;
+            let applied = member(&report, "snapshot")?;
+            if let Some(first) = law::divergence(applied, member(&report, "base")?) {
+                return Err(format!("{scenario}: a refused or no-op mutation must leave the model exactly where it was — {first}"));
+            }
+            let raised = members(&report, "messages")?;
+            let first = raised.first().ok_or_else(|| format!("{scenario}: the vector declares a refusal, the implementation raised nothing"))?;
+            declared_outcome_holds(kind, &raised, &canonical(committed.outcome))?;
+            let refusal = Json::Object(vec![
+                ("code".to_string(), Json::String(first.str("code"))),
+                ("level".to_string(), Json::String(first.str("level"))),
+                ("target".to_string(), Json::Array(strings(first, "target").into_iter().map(Json::String).collect())),
+            ]);
+            let projection = Json::Object(vec![("model".to_string(), applied.clone()), ("refusal".to_string(), refusal)]);
+            Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
+        }
+    }
+    //#endregion 🔖️Handlers
+}
+//#endregion 🔖️Subject
+
+//#region 🔖️Registration
+/// 🧭️ Registration entry point the generated host calls, by FULL expanded scenario id. SUBJECT only:
+/// the reference for every scenario here is the Python implementation beside this file, and
+/// registering an oracle handler as well would put this repository's answer on both sides.
+pub fn adapter() -> Adapter {
+    let built = Adapter::new("rust");
+    #[cfg(feature = "sut")]
+    {
+        let mut built = built;
+        for kind in KINDS {
+            built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind));
+            built = built.subject(&format!("inverse-{kind}"), subject::inverse(kind));
+        }
+        for &(scenario, kind) in COMMITTED {
+            built = built.subject(scenario, subject::committed_vector(kind, scenario));
+        }
+        for &(scenario, kind) in REFUSED {
+            built = built.subject(scenario, subject::reject(kind, scenario));
+        }
+        return built;
+    }
+    #[cfg(not(feature = "sut"))]
+    {
+        let _ = (KINDS, UNOBSERVABLE, COMMITTED, REFUSED, vector as fn(&str) -> Vector);
+        built
+    }
+}
+//#endregion 🔖️Registration

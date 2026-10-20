@@ -3,7 +3,8 @@ import {Database} from "bun:sqlite";
 import Ajv from "ajv";
 import {readFileSync,existsSync,mkdirSync,mkdtempSync,writeFileSync,rmSync} from "node:fs";
 import {join,resolve} from "node:path";
-import {receiveScriptProcessInvocation,withIssuedResourceOperationV1,scriptInvocationEnvironment,type ScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {withIssuedResourceOperationV1,scriptInvocationEnvironment,type ScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
 import {captureOwnedCommandResultV1,captureOwnedCommandV1} from "@semio-tech/process/execution";
 import {openNativeImageStorageV1,retireNativeImageStorageV1} from "@semio-tech/process/artifacts/native-build/storage/image";
 import {acquireNativeStorageV1,recoverNativeStorageReservationV1,nativeStorageRetirementPortV1,type NativeStoragePortV1} from "@semio-tech/process/artifacts/native-build/storage";
@@ -30,7 +31,7 @@ test("closed historical custody corpus distinguishes real exact scope from copie
 
 
 test("actual authenticated image scope rejects copies and drains accepted work before its owner returns",async()=>{
- await receiveScriptProcessInvocation(process.env,async invocation=>{
+ await withBuildTestInvocationV1(async invocation=>{
   const root=resolve(import.meta.dir,"../../../../../../../../../.."),mode=process.env.SEMIO_BUILD_MODE,control=scriptCompilerAdmissionControlV1(invocation,"test:historical-custody",120000),foreign=scriptCompilerAdmissionControlV1(invocation,"test:foreign-historical-control",120000),events:string[]=[];if(mode!=="prototype"&&mode!=="release")throw Error("Exact historical custody test mode required");let leaked:Parameters<typeof history.requireHistoricalCargoMaintenanceV1>[0]|undefined;
   await history.withHistoricalCargoImageMaintenanceV1(root,invocation,control,{version:1,mode,preview:true},async(image,buildDirectory,targetDirectory,heldControl)=>{
    const exact={workspace:root,invocation,control:heldControl,buildDirectory,relatedDirectories:[targetDirectory],leaseDirectory:join(root,".cache/b/l/m/data"),preview:true,wait:false};leaked=exact;
@@ -38,7 +39,7 @@ test("actual authenticated image scope rejects copies and drains accepted work b
    const unowned=join(root,".unissued-cargo-retirement"),artifactDirectory=join(unowned,"artifacts");await expect(retireInactiveCargoStoreV1({...exact,control:foreign,buildDirectory:unowned,artifactDirectory,leaseDirectory:join(root,".cache/b/l/m/data"),policy:{version:1,retainedBytes:0,targetAvailableBytes:0,maximumDeletionBytes:1}})).rejects.toThrow("authenticated historical Cargo custody");expect(existsSync(artifactDirectory)).toBe(false);
    void withIssuedResourceOperationV1(heldControl,async()=>{await new Promise<void>(accept=>setImmediate(accept));await image.recheck();expect(history.requireHistoricalCargoMaintenanceV1(exact)).toBe(image);events.push("child-settled");});events.push("callback-returning");
   });events.push("owner-returned");expect(events).toEqual(["callback-returning","child-settled","owner-returned"]);expect(leaked).toBeDefined();expect(()=>history.requireHistoricalCargoMaintenanceV1(leaked!)).toThrow("authenticated historical Cargo custody");
-  const artifact=join(root,".unissued-historical-custody");expect(existsSync(artifact)).toBe(false);const failed=await captureOwnedCommandResultV1(process.execPath,[join(import.meta.dir,"📜️script.ts")],root,{control:foreign,env:scriptInvocationEnvironment(invocation,process.env),output:{maximumBytes:1048576,maximumLines:8192}});expect(failed.status).toBe(1);expect(failed.stdout).toContain("Actual detached lower historical retirement accepted before callback return");expect(failed.stderr).toContain("Complete Cargo retirement policy required");expect(failed.stderr).not.toContain("silently lost");expect(existsSync(artifact)).toBe(false);await history.withHistoricalCargoImageMaintenanceV1(root,invocation,control,{version:1,mode,preview:true},async image=>{await image.recheck();});
+  const artifact=join(root,".unissued-historical-custody");expect(existsSync(artifact)).toBe(false);const failed=await captureOwnedCommandResultV1(process.execPath,[join(import.meta.dir,"🧪️tests/🔬️script-commands/🟦️.ts")],root,{control:foreign,env:scriptInvocationEnvironment(invocation,process.env),output:{maximumBytes:1048576,maximumLines:8192}});expect(failed.status).toBe(1);expect(failed.stdout).toContain("Actual detached lower historical retirement accepted before callback return");expect(failed.stderr).toContain("Complete Cargo retirement policy required");expect(failed.stderr).not.toContain("silently lost");expect(existsSync(artifact)).toBe(false);await history.withHistoricalCargoImageMaintenanceV1(root,invocation,control,{version:1,mode,preview:true},async image=>{await image.recheck();});
   await detachedCompactLaw(invocation,root);
  });
 },120000);

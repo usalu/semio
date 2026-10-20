@@ -17,7 +17,7 @@ import { decodeFaultFromWire, decodePackValue, encodePackValue } from "@semio-te
 // `error instanceof SemioFaultError` branch is typed against that module instance, and a door double
 // that throws the other package's class degrades to a generic `extension.invoke-failed`.
 import { SemioFaultError } from "@semio-tech/framework";
-import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, GUEST_HOST_ANSWER_CEILING_BYTES } from "@semio-tech/framework/trace/memory";
+import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, GUEST_HOST_ANSWER_CEILING_BYTES } from "@semio-tech/framework-trace/memory";
 import { wireEffectToFriendly, wireRespondAnswer } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
 import { driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET } from "@semio-tech/framework/actor/wire-turn";
 import type { WireVariant } from "@semio-tech/framework-actor/wire-turn";

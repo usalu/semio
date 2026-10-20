@@ -1,5 +1,6 @@
 //! 🏷️ Native ID3 framing and text encoding admission for semantic metadata.
 use semio_s_artifact_stdio_mp3_metadata::standards::mpeg1_layer3::subsets::any::schema::snapshot::metadata::{Id3Content,Id3Frame,Id3v1Tag,Id3v2Tag,validate_id3_frame,validate_id3v1_tag};
+use semio_framework_pack_json::ArtifactCanonicalJsonText as Text;
 
 fn latin(bytes:&[u8])->String{bytes.iter().map(|&b|char::from(b)).collect()}
 fn latin_bytes(text:&str)->Result<Vec<u8>,String>{text.chars().map(|c|u8::try_from(c as u32).map_err(|_|"id3.latin1".into())).collect()}

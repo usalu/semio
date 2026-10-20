@@ -17,7 +17,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-import { correlatedActionReceiptsFixture as receiptFixture } from "@semio-tech/framework/ui/testing/fixtures";
+import { correlatedActionReceiptsFixture as receiptFixture } from "@semio-tech/ui/testing/fixtures";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 it("correlates receipt refusals independently of identical action payloads", () => {

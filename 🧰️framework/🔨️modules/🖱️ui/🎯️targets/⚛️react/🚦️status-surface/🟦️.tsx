@@ -1,8 +1,8 @@
 import * as React from "react";
-import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { BoxIcon, AlertCircleIcon } from "../../../🧱️elements/🔣️Icons/🟦️.tsx";
-import type { UiLabel } from "../../../🧱️elements/🎗️UiLabel/🟦️.tsx";
-import { useLabel } from "../../../🧱️elements/🏷️Label/🟦️.tsx";
+import { cn } from "@semio-tech/ui/modules/class-name-composition";
+import { BoxIcon, AlertCircleIcon } from "@semio-tech/ui/elements/Icons";
+import type { UiLabel } from "@semio-tech/ui/elements/UiLabel";
+import { useLabel } from "@semio-tech/ui/elements/Label";
 
 // #region 🚦️StatusSurface
 // Tone-based status-surface kit: badges, status chips, stat tiles, and empty/error placeholders.

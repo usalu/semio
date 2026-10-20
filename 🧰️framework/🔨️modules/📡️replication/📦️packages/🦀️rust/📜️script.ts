@@ -24,7 +24,7 @@ import { readCargoTestPolicyV1, runAdmittedExactCargoLawsV1 as runExactCargoLaws
 import { BundleScript, ScriptRouter } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
-import { blake3Hex } from "../../../../📦️packages/🟦️typescript/🔏️hash/🟦️.ts";
+import { blake3Hex } from "@semio-tech/framework-hash";
 
 import { resolveTypescriptCompilerV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 /** 📡️ The replication packages bottom up: leaf contracts, wire core, format and mutation, edit and causal, history and frames, the message ledgers, then the façade every consumer links. */
@@ -531,9 +531,9 @@ const router = new ScriptRouter(import.meta.dir).register("history-invariants-ch
 class InteractionSetLawsScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.some(segment => segment !== "--native")) throw new Error("interaction-set-laws-check accepts only --native");
-    const { testInteractionSetLaws } = await import("../../../🕹️interaction/🧪️tests/🎯️set-laws/🟦️.ts");
+    const { testInteractionSetLaws } = await import("@semio-tech/framework-interaction/testing/set-laws");
     testInteractionSetLaws();
-    await runBudgetedTestCommand(process.execPath, [resolveTypescriptCompilerV1(this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--esModuleInterop", "--resolveJsonModule", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--jsx", "react-jsx", "--types", "bun,vite/client", resolve(this.root, "../../../🕹️interaction/🧪️tests/🎯️set-laws/🟦️.ts")], { cwd: this.repoRoot, budgetMs: cmdBudgetMs(), throwOnFailure: true });
+    await runBudgetedTestCommand(process.execPath, [resolveTypescriptCompilerV1(this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--esModuleInterop", "--resolveJsonModule", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--jsx", "react-jsx", "--types", "bun,vite/client", resolve(this.root, "@semio-tech/framework-interaction/testing/set-laws")], { cwd: this.repoRoot, budgetMs: cmdBudgetMs(), throwOnFailure: true });
     if (!segments.includes("--native")) return;
     const receipts = await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 600_000 }, manifestPaths: { "semio-framework-replication": resolve(this.root, "Cargo.toml") }, cwd: this.repoRoot, groups: [{ package: "semio-framework-replication", target: { kind: "lib", name: "protocol" }, laws: ["wire::frames::interaction_tests::interaction_set_laws_follow_portable_vectors"] }] });
     assert.equal(receipts[0]!.assertions, 1);

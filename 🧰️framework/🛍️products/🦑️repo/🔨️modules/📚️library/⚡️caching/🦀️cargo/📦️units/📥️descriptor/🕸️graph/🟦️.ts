@@ -1,7 +1,7 @@
 import{captureRustUnitInputV1}from"../../📋️plan/🟦️.ts";
 import{rustCompilerExecutionV2}from"../../🏗️compiler/💾️state/📍️layout/🟦️.ts";
 import{projectCargoRlibProfileV1,requireCargoRlibArgumentsV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📐️profile/🟦️.ts";
-import compilerSchema from "./🧬️schema/📥️compiler.json";
+import compilerSchema from "./🧬️schema/📥️compiler.json" with { type: "json" };
 import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {relative,resolve,isAbsolute,sep} from "node:path";
 import {createHash} from "node:crypto";

@@ -52,7 +52,7 @@ async fn durable_map_three_store_assembly_late_member_rejection_closes_prior_pub
 
 #[semio_framework_async_macros::async_test]
 async fn durable_map_three_store_assembly_cancellation_before_journal_restores_all_three_frontiers() {
-        let mut receiving_fixture=super::super::tests::FixtureStoreReceiving::new(copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES).retained_grant());
+        let mut receiving_fixture=semio_framework_os_store_testing_prelude::FixtureStoreReceiving::new(copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES).retained_grant());
 let (parent, drawing, value) = owned_three_stores().await;
     let state = Arc::new(std::sync::Mutex::new(FakeJournalState::default()));
     let (mut assembly, _) = map_assembly(parent, drawing, value, None, FakeJournalResolution::Commit, state.clone());

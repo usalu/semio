@@ -5,7 +5,7 @@
 //! or draft mutation. MUST NOT reference the sibling editor module.
 
 use semio_s_artifact_stdio_step_cc2::standards::v_ap214::subsets::cc2::schema::mutations::StepCc2Mutation;
-use semio_s_artifact_stdio_step_cc2::standards::v_ap214::subsets::cc2::schema::snapshot::StepSnapshot;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
 use crate::viewer::step_cc2::modes::view;
 use crate::viewer::step_cc2::modes::view::windows::main;
 use semio_framework_plugin::app::InteractionView;

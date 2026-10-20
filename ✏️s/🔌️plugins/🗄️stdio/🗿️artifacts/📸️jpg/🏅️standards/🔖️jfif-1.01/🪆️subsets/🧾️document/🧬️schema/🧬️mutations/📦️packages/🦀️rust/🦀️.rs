@@ -46,11 +46,11 @@ pub mod standards {
                         #[path = "../../🦀️.rs"]
                         mod top_level;
                         pub use top_level::*;
-                        #[path = "../../🪪️change-jfif/🦀️.rs"]
+                        #[path = "../../🪪️change-jfif-header/🦀️.rs"]
                         pub mod change_jfif_header;
-                        #[path = "../../📥️insert-other/🦀️.rs"]
+                        #[path = "../../📥️insert-other-segment/🦀️.rs"]
                         pub mod insert_other_segment;
-                        #[path = "../../🗑️remove-other/🦀️.rs"]
+                        #[path = "../../🗑️remove-other-segment/🦀️.rs"]
                         pub mod remove_other_segment;
                         #[path = "../../🔲️replace-pixels/🦀️.rs"]
                         pub mod replace_pixels;

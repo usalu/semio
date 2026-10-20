@@ -4,6 +4,8 @@
 use crate::schema::snapshot::{TiffIfd};
 use crate::TiffSnapshot;
 use framework_schema::ArtifactSchema;
+use semio_s_artifact_stdio_tiff_snapshot::standards::v6_0::subsets::document::schema::snapshot::TiffValues;
+use semio_s_artifact_stdio_tiff_snapshot::standards::v6_0::subsets::document::schema::snapshot::TiffWord64;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]

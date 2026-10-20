@@ -1,4 +1,4 @@
-import {sha256} from "@semio-tech/framework/hash";
+import {sha256} from "@semio-tech/framework-hash";
 import type {DrawingIdentityKind,DrawingIdentityCommitment} from "../../../🧬️schema/🪪️identity/🟦️.ts";
 export interface IdentityControl {maximumBytes:number;onProgress?:(completed:number,total:number,ownedBytes:number)=>boolean}
 export const kinds:DrawingIdentityKind[]=["layer","path","group","boolean","trace","shape","text","image","svg","imageAsset"];

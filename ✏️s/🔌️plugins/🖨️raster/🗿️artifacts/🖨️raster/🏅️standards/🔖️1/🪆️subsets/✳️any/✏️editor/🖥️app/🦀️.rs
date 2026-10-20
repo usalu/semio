@@ -272,7 +272,7 @@ impl ArtifactEditor for RasterPlayApp {
             HostEvent::TimeTravelFrozen { .. } => ToolAbortReason::Frozen,
             HostEvent::BaseMoved { .. } => return None,
         };
-        Some(RasterCommand::PaintStroke(paint_stroke::PaintStroke { layer_id: String::new(), tool: String::new(), xs: Vec::new(), ys: Vec::new(), phase: Some("abort".to_string()), reason: Some(reason.as_str().to_string()), gesture: None }))
+        Some(RasterCommand::PaintStroke(semio_s_artifact_raster_raster_editor_commands::commands::paint_stroke::PaintStroke { layer_id: String::new(), tool: String::new(), xs: Vec::new(), ys: Vec::new(), phase: Some("abort".to_string()), reason: Some(reason.as_str().to_string()), gesture: None }))
     }
 
     fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {

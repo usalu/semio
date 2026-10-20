@@ -10,23 +10,23 @@ use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base:
 use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::DocxXmlPartModification;
 use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::DocxXmlPartRemoval;
 use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::DocxXmlPartsDelta;
-#[cfg(test)] use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::{DocxPathSegment};
+#[cfg(any(test, feature = "testkit"))] use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::{DocxPathSegment};
 use semio_s_artifact_stdio_contract::list_delta::insertion_index;
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument;
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::docx_part_is_xml;
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxBlock;
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxStyle;
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxXmlPart;
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxParagraph;
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxRun;
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxTable;
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxTableCell;
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxTableRow;
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 
@@ -34,7 +34,7 @@ use protocol::Mutation;
 use semio_s_artifact_stdio_xml::schema::diff::{diff_at_path as xml_diff_at_path, XmlChildAdded, XmlChildrenDiff, XmlElementDiff, XmlNodeDiff};
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use semio_s_artifact_stdio_zip::opc::{OpcTargetMode, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
 //#region 🔖️Mutations
@@ -701,7 +701,7 @@ pub fn xml_part_positions(base: &DocxSnapshot, path: &str) -> Option<(usize, Opt
 /// tests below AND by `⚙️engine/🦀️.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`
 /// conformance tests, same shape `📷️png/…/🧬️mutations/🦀️.rs`'s own
 /// `demo_mutation_cases()` establishes.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn fixture() -> DocxSnapshot {
     let mut snapshot = semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument {
@@ -721,16 +721,16 @@ fn fixture() -> DocxSnapshot {
     opc_layer::with_demo_entries(snapshot)
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn table_path(block_index: usize, row: usize, cell: usize, index: usize) -> DocxBlockPath {
     DocxBlockPath { segments: vec![DocxPathSegment { block_index, row, cell }], index }
 }
 
 /// 🧪️ The demo cases proper -- one representative `DocxMutation` per variant.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<DocxMutation> {
+pub fn demo_mutation_cases() -> Vec<DocxMutation> {
     let base = fixture();
     let address = docx_block_run_address(&base, &DocxBlockPath { segments: vec![], index: 0 }, 0).expect("demo run address");
     let mut node = resolve_docx_xml_address(&base, &address).expect("demo run").node.clone();

@@ -1,7 +1,7 @@
 import type { ScriptInvocation } from "@semio-tech/process/routing";
 import { runCmd, runCargo } from "@semio-tech/process/execution";
 import { runVitest } from "@semio-tech/repo-lib/testing";
-import { policyReadModuleTreeSource, policyReadFileSafe } from "@semio-tech/repo-lib/inventory";
+import { policyReadModuleTreeSource } from "@semio-tech/repo-lib/inventory";
 import { join } from "node:path";
 import { toolJobFemLiveVisualPublicationExact, toolJobFemNumericalMicrocursorExact } from "@semio-tech/repo-lib/laws";
 import { toolJobFemNumericalMicrocursorSelfTests } from "../../../../🔌️plugins/🏗️fem/📦️packages/🟦️typescript/🧪️testing/🔬️tool-job-fem-numerical-microcursor/🟦️.ts";
@@ -13,21 +13,21 @@ export async function runOwnedVerifyScript(context: Readonly<{ root: string; rep
 if (segments[0] === "fem-live-visual-publication") {
     const fem2dModel = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️.rs");
     const fem2dSession = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🦀️.rs");
-    const fem3dSession = policyReadFileSafe(context.repoRoot, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🦀️.rs");
-    const fem3dEditor = policyReadFileSafe(context.repoRoot, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs");
-    const fem3dModel = policyReadFileSafe(context.repoRoot, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️.rs");
-    const fem3dResults = policyReadFileSafe(context.repoRoot, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️.rs");
-    const fem3dViewer = policyReadFileSafe(context.repoRoot, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/👁️viewer/🦀️.rs");
-    const fem3dViewerModel = policyReadFileSafe(context.repoRoot, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧱️model/🦀️.rs");
-    const femPluginRoot = policyReadFileSafe(context.repoRoot, "🌎️hub/🧩️compositions/🏗️fem/🦀️.rs");
-    const femGlue = policyReadFileSafe(context.repoRoot, "🌎️hub/🧩️compositions/🏗️fem/📦️packages/🦀️rust/🦀️.rs");
+    const fem3dSession = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🦀️.rs");
+    const fem3dEditor = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs");
+    const fem3dModel = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️.rs");
+    const fem3dResults = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️.rs");
+    const fem3dViewer = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/👁️viewer/🦀️.rs");
+    const fem3dViewerModel = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧱️model/🦀️.rs");
+    const femPluginRoot = policyReadModuleTreeSource(context.repoRoot, "🌎️hub/🧩️compositions/🏗️fem/🦀️.rs");
+    const femGlue = policyReadModuleTreeSource(context.repoRoot, "🌎️hub/🧩️compositions/🏗️fem/📦️packages/🦀️rust/🦀️.rs");
     const femSparse = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs");
-    const frameworkPlugin = policyReadFileSafe(context.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs");
+    const frameworkPlugin = policyReadModuleTreeSource(context.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs");
     const frameworkWorld = ["🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🗃️model/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧩️components/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧲️cursors/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🌉️bridge/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧵️interaction/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎛️host/🦀️.rs"].map(root => policyReadModuleTreeSource(context.repoRoot, root)).join("\n");
-    const worldSnapshot = policyReadFileSafe(context.repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🌍️world3d-snapshot/🦀️.rs");
-    const canvasSnapshot = policyReadFileSafe(context.repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🖼️canvas2d-snapshot/🦀️.rs");
+    const worldSnapshot = policyReadModuleTreeSource(context.repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🌍️world3d-snapshot/🦀️.rs");
+    const canvasSnapshot = policyReadModuleTreeSource(context.repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🖼️canvas2d-snapshot/🦀️.rs");
     const canvasRenderer = policyReadModuleTreeSource(context.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs");
-    const femAnalyses = policyReadFileSafe(context.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs");
+    const femAnalyses = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs");
     const femMesh = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️.rs");
     const mutations = args.includes("--self-test")
       ? toolJobFemLiveVisualPublicationSelfTests(toolJobFemLiveVisualPublicationExact, fem2dModel, fem2dSession, fem3dSession, fem3dEditor, fem3dModel, fem3dResults, fem3dViewer, fem3dViewerModel, femPluginRoot, femGlue, femSparse, frameworkPlugin, frameworkWorld, worldSnapshot, canvasSnapshot, canvasRenderer, femAnalyses, femMesh)
@@ -41,10 +41,10 @@ if (segments[0] === "fem-numerical-microcursor") {
     const session = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🦀️.rs");
     const sparse = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs");
     const mesh = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️.rs");
-    const analyses = policyReadFileSafe(context.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs");
-    const model = policyReadFileSafe(context.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🏗️model/🦀️.rs");
+    const analyses = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs");
+    const model = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🏗️model/🦀️.rs");
     const elements = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/📏️elements2d/🦀️.rs");
-    const runtime = policyReadFileSafe(context.repoRoot, "🧰️framework/🔨️modules/🧵️job/🦀️.rs");
+    const runtime = policyReadModuleTreeSource(context.repoRoot, "🧰️framework/🔨️modules/🧵️job/🦀️.rs");
     const mutations = args.includes("--self-test") ? toolJobFemNumericalMicrocursorSelfTests(toolJobFemNumericalMicrocursorExact, sparse, mesh, analyses, model, elements, session, runtime) : 0;
     if (!toolJobFemNumericalMicrocursorExact(sparse, mesh, analyses, model, elements, session, runtime)) throw new Error("[verify interactivity tool-jobs p6h] live FEM numerical microcursor contract failed.");
     console.log(`[verify interactivity tool-jobs p6h] live-source clean; hostile-mutations=${mutations}.`);

@@ -121,7 +121,7 @@ async fn regenerate_committed_diff_fixtures() {
     files.sort();
     for path in files {
         let text = std::fs::read_to_string(&path).expect("committed diff reads");
-        let decoded: crate::NoteDiff = semio_framework_pack_json::from_json_str(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+        let decoded: semio_s_artifact_note_note_diff::standards::v1::subsets::any::schema::diff::NoteDiff = semio_framework_pack_json::from_json_str(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
         let canonical = semio_framework_pack_json::to_json_string(&decoded);
         if serde_json::from_str::<serde_json::Value>(&canonical).expect("canonical parses") != serde_json::from_str::<serde_json::Value>(&text).expect("committed parses") {
             std::fs::write(&path, canonical).expect("committed diff rewrites");

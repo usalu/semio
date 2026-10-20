@@ -1,0 +1,66 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎥️tutorial-orchestration/🟦️.ts",
+ "function": "useTutorialOrchestration",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟣️shared",
+  "doc": "/** 🟣️ The shared declarations of useTutorialOrchestration. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️scope",
+   "doc": "/** 🔶️ The scope phase of useTutorialOrchestration. */",
+   "phases": [
+    {
+     "name": "useScopeState",
+     "emoji": "🔷",
+     "doc": "Builds scope, shellState, dispatch, localInteraction of useTutorialOrchestration.",
+     "from": 48,
+     "to": 125
+    }
+   ]
+  },
+  {
+   "dir": "🔸️apply-tutorial-slice",
+   "doc": "/** 🔸️ The apply tutorial slice phase of useTutorialOrchestration. */",
+   "phases": [
+    {
+     "name": "useApplyTutorialSliceState",
+     "emoji": "🔹",
+     "doc": "Builds applyTutorialSliceToShell, seekTutorial of useTutorialOrchestration.",
+     "from": 173,
+     "to": 259
+    }
+   ]
+  },
+  {
+   "dir": "🟠️play-pause-tutorial",
+   "doc": "/** 🟠️ The play pause tutorial phase of useTutorialOrchestration. */",
+   "phases": [
+    {
+     "name": "usePlayPauseTutorialState",
+     "emoji": "🟡",
+     "doc": "Builds playPauseTutorial, startTutorial, stopTutorial, toggleTutorialRecording of useTutorialOrchestration.",
+     "from": 304,
+     "to": 451
+    }
+   ]
+  },
+  {
+   "dir": "🟢️add-tutorial-chapter",
+   "doc": "/** 🟢️ The add tutorial chapter phase of useTutorialOrchestration. */",
+   "phases": [
+    {
+     "name": "useAddTutorialChapterState",
+     "emoji": "🔵",
+     "doc": "Builds addTutorialChapter, tutorialChapterMarkers of useTutorialOrchestration.",
+     "from": 459,
+     "to": 476
+    }
+   ]
+  }
+ ]
+}

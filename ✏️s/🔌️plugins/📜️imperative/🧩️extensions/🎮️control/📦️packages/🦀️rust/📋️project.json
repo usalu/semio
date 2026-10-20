@@ -14,6 +14,7 @@
   "targets": {
     "test": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",

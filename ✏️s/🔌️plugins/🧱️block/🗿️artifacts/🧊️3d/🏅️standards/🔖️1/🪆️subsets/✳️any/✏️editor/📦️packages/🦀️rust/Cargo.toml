@@ -40,6 +40,7 @@ semio-s-artifact-block-3d-model = { workspace = true }
 semio-s-artifact-block-3d-mutations = { workspace = true }
 semio-s-plugin-block = { workspace = true }
 semio-s-plugin-block-catalog = { workspace = true }
+semio-framework-async = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

@@ -86,7 +86,7 @@ const LayoutMobilePanel: React.FC<LayoutMobilePanelProps> = ({ visible = false, 
 // #endregion 📱️LayoutMobilePanel
 
 /**
- * Props interface for the top-level Layout component.
+ * 📐️ Props interface for the top-level Layout component.
  **/
 export interface LayoutProps {
   navbar?: React.ReactNode;

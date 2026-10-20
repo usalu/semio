@@ -479,7 +479,8 @@
                 "valueFlag": "--users"
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
         }
       },
       "executor": "repo:script",
@@ -487,7 +488,7 @@
         "default",
         "^default"
       ],
-      "cache": true,
+      "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts acceptance goal",
@@ -501,11 +502,16 @@
         "default",
         "^default"
       ],
-      "cache": true,
+      "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts acceptance plan",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
       },
       "outputs": []
     },
@@ -592,8 +598,8 @@
       "{projectRoot}/🩺️environment/📋️inspection/🟦️.ts",
       "{projectRoot}/⚖️policy/🧹️domain/🟦️.ts",
       "{projectRoot}/🧪️tests/🧱️command-composition-source/🟦️.ts",
-      "{projectRoot}/🧫️fixtures/🧱️command-composition-source/🔣️.json",
-      "{projectRoot}/🧫️fixtures/🧱️command-composition-source/🐍️.py",
+      "{projectRoot}/🧪️tests/🧫️fixtures/🧱️command-composition-source/🔣️.json",
+      "{projectRoot}/🧪️tests/🧫️fixtures/🧱️command-composition-source/🐍️.py",
       "{projectRoot}/🧪️tests/🧰️repository-scan/🟦️.ts",
       "{projectRoot}/🧪️tests/🔍️discovery-contract/🟦️.ts",
       "{projectRoot}/🧪️tests/⚖️comparison-profiles/🟦️.ts",

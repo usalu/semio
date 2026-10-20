@@ -289,11 +289,6 @@ pub fn create_din4108_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("applyRemedy", InteractiveJobClassification::Migrated)
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
-            // 🚧️ SDK GAP (contract §2.4): `EditorBuilder` takes a bare `AppDefinition` — there is no
-            // `.example(...)`/`.workflow(...)` on this builder (see the pilot's w2-cad-report.md "SDK
-            // gaps" #4), so the old app-level example/workflow registration is dropped here, not
-            // silently: the subset's own `📚️examples/🎬️demo-session` facet (real content, moved
-            // verbatim below) is the modern role-agnostic replacement surface for this.
             .action_describe("evaluate", LocalizedLabel::native("Recomputes every DIN 4108 (thermal insulation and moisture protection) check from the document's inputs and refreshes the results window; the document is not changed.", "Berechnet alle Nachweise nach DIN 4108 (Wärmeschutz und Feuchteschutz) aus den Eingaben des Dokuments neu und aktualisiert das Ergebnisfenster; das Dokument ändert sich nicht."))
             .action_describe("setSelectedCheckIndex", LocalizedLabel::native("Points the inspection panel at one computed check by its index in the results list; only the view changes.", "Richtet das Inspektionspanel anhand seines Index in der Ergebnisliste auf einen berechneten Nachweis aus; nur die Ansicht ändert sich."))
             .build_definition()
@@ -315,9 +310,8 @@ mod example;
 //#endregion 🪢️TaxonomyMounts
 
 //#region 🪢️Mounts
-#[cfg(test)]
-#[path = "🏷️field-meta/🧪️tests/🔬️unit/🦀️.rs"]
-mod field_meta;
+#[path = "🏷️field-meta/🦀️.rs"]
+pub mod field_meta;
 #[path = "."]
 pub mod commands {
     #[path = "🎮️commands/🩹apply-remedy/🦀️.rs"]

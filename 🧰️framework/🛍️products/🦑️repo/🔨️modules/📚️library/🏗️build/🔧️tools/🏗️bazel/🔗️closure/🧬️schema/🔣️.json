@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "maximumFiles": 262144,
+        "maximumManifests": 16384,
+        "maximumPathUnits": 512,
+        "namespaces": {
+          "source": "build-input-closures",
+          "lock": "build-lock-closures"
+        },
+        "markerPattern": "^SEMIO_(SOURCE_CLOSURE|CARGO_LOCK)_([a-f0-9]{64})$",
+        "lockFile": "Cargo.lock"
+      }
+    },
+    "SourceManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "files"],
+      "properties": {
+        "version": { "const": 1 },
+        "files": {
+          "type": "array",
+          "maxItems": 262144,
+          "items": { "type": "string", "minLength": 1, "maxLength": 512 }
+        }
+      }
+    },
+    "LockManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "manifest"],
+      "properties": {
+        "version": { "const": 1 },
+        "manifest": { "type": "string", "minLength": 1, "maxLength": 512 }
+      }
+    }
+  }
+}

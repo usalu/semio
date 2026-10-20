@@ -1,7 +1,7 @@
-import{captureBoundedSourceRevisionV1}from"../../🔏️revision/🟨️.mjs";
+import{captureBoundedSourceRevisionV1,physicalSourceOriginV1}from"../../🔏️revision/🟨️.mjs";
 import{createHash}from"node:crypto";
 import{fileURLToPath}from"node:url";
-const sourceURL=new URL("../🟨️.mjs",import.meta.url),policyURL=new URL("../../🧮️digest/📥️read/🧬️schema/🔣️.json",import.meta.url),ownerURL=new URL(import.meta.url);
+const sourceURL=new URL("../🟨️.mjs",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),policyURL=new URL("../../🧮️digest/📥️read/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),ownerURL=new URL(physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL));
 function revision(url,maximumBytes=8388608){return captureBoundedSourceRevisionV1(fileURLToPath(url),maximumBytes).sha256;}
 async function loadSourceInventoryImplementationV1(sourceURL,policyURL,ownerURL){
 const ownerRevision=revision(ownerURL),sourceCapture=captureBoundedSourceRevisionV1(fileURLToPath(sourceURL),65536,true),policyCapture=captureBoundedSourceRevisionV1(fileURLToPath(policyURL),65536,true),sourceRevision=sourceCapture.sha256,policyRevision=policyCapture.sha256,sourceBytes=Buffer.from(sourceCapture.text??"","utf8"),policyBytes=Buffer.from(policyCapture.text??"","utf8");

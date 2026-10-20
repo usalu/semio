@@ -433,11 +433,12 @@ export interface SemanticPathProjectionReferenceConsumerContract {
   readonly staleMarkers: readonly string[];
 }
 
-/** 🥒️ How a committed fixture bundle is covered when no per-case implementation case holds it: the subset's exhaustive mutation case declares it in a feature, or the subset's fixture runner discovers it at run time. */
+/** 🥒️ How a committed fixture bundle is covered when no per-case implementation case holds it: the subset's exhaustive mutation case declares it in a feature, the subset's fixture runner discovers it at run time, or the case table of its leaf lists it. */
 export interface MutationFixtureCoverageContract {
   readonly implementationCase: string;
   readonly exhaustiveCase: Readonly<{ featureFileKindId: string; stepUriPrefix: string; bundleFacetDirectoryNames: readonly string[] }>;
   readonly fixtureRunner: Readonly<{ relativePath: string }>;
+  readonly leafCaseTable: Readonly<{ fileKindId: string; casesField: string }>;
 }
 
 /** 🔗️ Exact canonical implementation/fixture pair consumed by MutationCatalog validation. */

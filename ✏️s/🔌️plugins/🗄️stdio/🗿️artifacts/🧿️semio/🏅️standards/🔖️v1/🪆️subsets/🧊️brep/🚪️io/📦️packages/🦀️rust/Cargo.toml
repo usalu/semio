@@ -46,6 +46,7 @@ semio-s-artifact-stdio-semio-brep-schema = { path = "../../../🧬️schema/📦
 semio-s-artifact-stdio-semio-brep-snapshot = { path = "../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-semio-brep-viewer = { path = "../../../👁️viewer/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
+semio-framework-pack = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-3d-brep-boolean.workspace = true

@@ -1,0 +1,1046 @@
+{
+ "rows": [
+  {
+   "name": "pure ordering task",
+   "input": {
+    "project": "p",
+    "target": "build",
+    "root": "a/📦️packages/🟦️typescript",
+    "kind": "noop",
+    "cache": {
+     "cache": true
+    }
+   },
+   "expected": {
+    "family": "aggregate",
+    "disposition": "action"
+   }
+  },
+  {
+   "name": "vitest test with empty outputs replays as a test result",
+   "input": {
+    "project": "p",
+    "target": "test",
+    "root": "a/📦️packages/🟦️typescript",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "script": "import {runVitest} from \"x\";",
+    "outputs": []
+   },
+   "expected": {
+    "family": "vitest",
+    "disposition": "test"
+   }
+  },
+  {
+   "name": "bun test with empty outputs replays as a test result",
+   "input": {
+    "project": "p",
+    "target": "test",
+    "root": "a/📦️packages/🟦️typescript",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "script": "bun test ./x.ts",
+    "outputs": []
+   },
+   "expected": {
+    "family": "bun-test",
+    "disposition": "test"
+   }
+  },
+  {
+   "name": "bun test without script text falls back to the Bun runner",
+   "input": {
+    "project": "p",
+    "target": "test-contract",
+    "root": "a/📦️packages/🟦️typescript",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "outputs": []
+   },
+   "expected": {
+    "family": "bun-test",
+    "disposition": "test"
+   }
+  },
+  {
+   "name": "test that declares no outputs array stays an action",
+   "input": {
+    "project": "p",
+    "target": "test",
+    "root": "a/📦️packages/🟦️typescript",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    }
+   },
+   "expected": {
+    "family": "bun-test",
+    "disposition": "action"
+   }
+  },
+  {
+   "name": "test that declares outputs stays an action",
+   "input": {
+    "project": "p",
+    "target": "test-snapshot",
+    "root": "a/📦️packages/🟦️typescript",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "outputs": [
+     "{projectRoot}/out"
+    ]
+   },
+   "expected": {
+    "family": "bun-test",
+    "disposition": "action"
+   }
+  },
+  {
+   "name": "test-e2e runs in a browser and replays as a test result",
+   "input": {
+    "project": "p",
+    "target": "test-e2e",
+    "root": "a/📦️packages/🟦️typescript",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "outputs": []
+   },
+   "expected": {
+    "family": "playwright",
+    "disposition": "test"
+   }
+  },
+  {
+   "name": "browser-test in a Rust root is a browser test",
+   "input": {
+    "project": "p",
+    "target": "browser-test",
+    "root": "a/📦️packages/🦀️rust",
+    "kind": "command",
+    "cache": {
+     "cache": false,
+     "reason": "declared"
+    }
+   },
+   "expected": {
+    "family": "playwright",
+    "disposition": "uncached",
+    "reason": "declared"
+   }
+  },
+  {
+   "name": "typecheck uses tsc",
+   "input": {
+    "project": "p",
+    "target": "typecheck",
+    "root": "a/📦️packages/🟦️typescript",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "outputs": []
+   },
+   "expected": {
+    "family": "tsc",
+    "disposition": "action"
+   }
+  },
+  {
+   "name": "lint uses tsc",
+   "input": {
+    "project": "p",
+    "target": "lint",
+    "root": "a/📦️packages/🟦️typescript",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "outputs": []
+   },
+   "expected": {
+    "family": "tsc",
+    "disposition": "action"
+   }
+  },
+  {
+   "name": "check with tsc script uses tsc",
+   "input": {
+    "project": "p",
+    "target": "check",
+    "root": "a/📦️packages/🟦️typescript",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "script": "await run(\"tsc\",\"-p\")",
+    "outputs": []
+   },
+   "expected": {
+    "family": "tsc",
+    "disposition": "action"
+   }
+  },
+  {
+   "name": "check without a tsc script is a plain script",
+   "input": {
+    "project": "p",
+    "target": "check",
+    "root": "a/📦️packages/🟦️typescript",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "script": "verify()",
+    "outputs": []
+   },
+   "expected": {
+    "family": "bun-script",
+    "disposition": "action"
+   }
+  },
+  {
+   "name": "vite build script is vite",
+   "input": {
+    "project": "p",
+    "target": "build",
+    "root": "a/📦️packages/🟦️typescript",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "script": "import {runViteBuild} from \"p\";",
+    "outputs": [
+     "{projectRoot}/dist"
+    ]
+   },
+   "expected": {
+    "family": "vite",
+    "disposition": "action"
+   }
+  },
+  {
+   "name": "build without vite is a plain script",
+   "input": {
+    "project": "p",
+    "target": "build",
+    "root": "a/📦️packages/🟦️typescript",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "script": "copy()",
+    "outputs": [
+     "{projectRoot}/dist"
+    ]
+   },
+   "expected": {
+    "family": "bun-script",
+    "disposition": "action"
+   }
+  },
+  {
+   "name": "dev server is interactive",
+   "input": {
+    "project": "p",
+    "target": "dev",
+    "root": "a/📦️packages/🟦️typescript",
+    "kind": "command",
+    "cache": {
+     "cache": false,
+     "reason": "continuous"
+    }
+   },
+   "expected": {
+    "family": "bun-script",
+    "disposition": "interactive",
+    "reason": "continuous"
+   }
+  },
+  {
+   "name": "vite dev server is interactive",
+   "input": {
+    "project": "p",
+    "target": "dev",
+    "root": "a/📦️packages/🟦️typescript",
+    "kind": "command",
+    "cache": {
+     "cache": false,
+     "reason": "continuous"
+    },
+    "script": "vite.createServer()"
+   },
+   "expected": {
+    "family": "vite",
+    "disposition": "interactive",
+    "reason": "continuous"
+   }
+  },
+  {
+   "name": "serve of a react playground variant is vite and interactive",
+   "input": {
+    "project": "p",
+    "target": "serve-s-react-prototype",
+    "root": "p",
+    "kind": "command",
+    "cache": {
+     "cache": false,
+     "reason": "continuous"
+    }
+   },
+   "expected": {
+    "family": "vite",
+    "disposition": "interactive",
+    "reason": "continuous"
+   }
+  },
+  {
+   "name": "serve of a wgpu playground variant is a plain script and interactive",
+   "input": {
+    "project": "p",
+    "target": "serve-s-wgpu-prototype",
+    "root": "p",
+    "kind": "command",
+    "cache": {
+     "cache": false,
+     "reason": "continuous"
+    }
+   },
+   "expected": {
+    "family": "bun-script",
+    "disposition": "interactive",
+    "reason": "continuous"
+   }
+  },
+  {
+   "name": "Go test",
+   "input": {
+    "project": "p",
+    "target": "test",
+    "root": "a/📦️packages/🐹️go",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "outputs": []
+   },
+   "expected": {
+    "family": "go",
+    "disposition": "test"
+   }
+  },
+  {
+   "name": "Go build",
+   "input": {
+    "project": "p",
+    "target": "build",
+    "root": "a/📦️packages/🐹️go",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "outputs": [
+     "{projectRoot}/bin"
+    ]
+   },
+   "expected": {
+    "family": "go",
+    "disposition": "action"
+   }
+  },
+  {
+   "name": "Python generate",
+   "input": {
+    "project": "p",
+    "target": "generate",
+    "root": "a/📦️packages/🐍️python",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "outputs": [
+     "{projectRoot}/gen"
+    ]
+   },
+   "expected": {
+    "family": "python",
+    "disposition": "action"
+   }
+  },
+  {
+   "name": "Python deps install",
+   "input": {
+    "project": "p",
+    "target": "deps",
+    "root": "a/📦️packages/🐍️python",
+    "kind": "command",
+    "cache": {
+     "cache": false,
+     "reason": "declared"
+    }
+   },
+   "expected": {
+    "family": "python",
+    "disposition": "uncached",
+    "reason": "declared"
+   }
+  },
+  {
+   "name": ".NET build",
+   "input": {
+    "project": "p",
+    "target": "build",
+    "root": "a/📦️packages/🔷️dotnet",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "outputs": [
+     "{projectRoot}/bin"
+    ]
+   },
+   "expected": {
+    "family": "dotnet",
+    "disposition": "action"
+   }
+  },
+  {
+   "name": "docker image build is never replayed",
+   "input": {
+    "project": "p",
+    "target": "docker-image-build",
+    "root": "a/📦️packages/🟦️typescript",
+    "kind": "command",
+    "cache": {
+     "cache": false,
+     "reason": "declared"
+    }
+   },
+   "expected": {
+    "family": "docker",
+    "disposition": "uncached",
+    "reason": "declared"
+   }
+  },
+  {
+   "name": "print build is LaTeX",
+   "input": {
+    "project": "p",
+    "target": "build",
+    "root": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "outputs": [
+     "{projectRoot}/dist"
+    ]
+   },
+   "expected": {
+    "family": "latex",
+    "disposition": "action"
+   }
+  },
+  {
+   "name": "report build is LaTeX",
+   "input": {
+    "project": "p",
+    "target": "build-zwischenbericht",
+    "root": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "outputs": [
+     "{projectRoot}/dist"
+    ]
+   },
+   "expected": {
+    "family": "latex",
+    "disposition": "action"
+   }
+  },
+  {
+   "name": "report check is not LaTeX",
+   "input": {
+    "project": "p",
+    "target": "check-generated",
+    "root": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "outputs": []
+   },
+   "expected": {
+    "family": "bun-script",
+    "disposition": "action"
+   }
+  },
+  {
+   "name": "wasm target",
+   "input": {
+    "project": "p",
+    "target": "wasm",
+    "root": "a/📦️packages/🦀️rust",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "outputs": [
+     "{projectRoot}/pkg"
+    ]
+   },
+   "expected": {
+    "family": "wasm",
+    "disposition": "action"
+   }
+  },
+  {
+   "name": "wasm check",
+   "input": {
+    "project": "p",
+    "target": "check-wasm",
+    "root": "a/📦️packages/🦀️rust",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "outputs": []
+   },
+   "expected": {
+    "family": "wasm",
+    "disposition": "action"
+   }
+  },
+  {
+   "name": "playground prepare builds wasm modules",
+   "input": {
+    "project": "p",
+    "target": "prepare-s-react-prototype",
+    "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev",
+    "kind": "command",
+    "cache": {
+     "cache": false,
+     "reason": "driver-owned"
+    }
+   },
+   "expected": {
+    "family": "wasm",
+    "disposition": "uncached",
+    "reason": "driver-owned"
+   }
+  },
+  {
+   "name": "playground native prepare is cargo",
+   "input": {
+    "project": "p",
+    "target": "prepare-s-native-release",
+    "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev",
+    "kind": "command",
+    "cache": {
+     "cache": false,
+     "reason": "driver-owned"
+    }
+   },
+   "expected": {
+    "family": "cargo",
+    "disposition": "uncached",
+    "reason": "driver-owned"
+   }
+  },
+  {
+   "name": "playground native smoke is cargo and live",
+   "input": {
+    "project": "p",
+    "target": "smoke-s-native-release",
+    "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev",
+    "kind": "command",
+    "cache": {
+     "cache": false,
+     "reason": "live"
+    }
+   },
+   "expected": {
+    "family": "cargo",
+    "disposition": "uncached",
+    "reason": "live"
+   }
+  },
+  {
+   "name": "playground native run is cargo and live",
+   "input": {
+    "project": "p",
+    "target": "run-s-native-prototype",
+    "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev",
+    "kind": "command",
+    "cache": {
+     "cache": false,
+     "reason": "live"
+    }
+   },
+   "expected": {
+    "family": "cargo",
+    "disposition": "uncached",
+    "reason": "live"
+   }
+  },
+  {
+   "name": "playground activation is vite",
+   "input": {
+    "project": "p",
+    "target": "activate-s-react-prototype",
+    "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "outputs": [
+     "{workspaceRoot}/.cache/x"
+    ]
+   },
+   "expected": {
+    "family": "vite",
+    "disposition": "action"
+   }
+  },
+  {
+   "name": "playground wgpu activation publishes live state",
+   "input": {
+    "project": "p",
+    "target": "activate-s-wgpu-release",
+    "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev",
+    "kind": "command",
+    "cache": {
+     "cache": false,
+     "reason": "side-effecting"
+    }
+   },
+   "expected": {
+    "family": "vite",
+    "disposition": "uncached",
+    "reason": "side-effecting"
+   }
+  },
+  {
+   "name": "playground react build is vite",
+   "input": {
+    "project": "p",
+    "target": "build-s-react-release",
+    "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "outputs": [
+     "{workspaceRoot}/.cache/y"
+    ]
+   },
+   "expected": {
+    "family": "vite",
+    "disposition": "action"
+   }
+  },
+  {
+   "name": "playground CDN aggregate publishes remotely",
+   "input": {
+    "project": "p",
+    "target": "build-all-playground-cdn-sites",
+    "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev",
+    "kind": "command",
+    "cache": {
+     "cache": false,
+     "reason": "side-effecting"
+    }
+   },
+   "expected": {
+    "family": "vite",
+    "disposition": "uncached",
+    "reason": "side-effecting"
+   }
+  },
+  {
+   "name": "Rust test is cargo",
+   "input": {
+    "project": "p",
+    "target": "test",
+    "root": "a/📦️packages/🦀️rust",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "outputs": []
+   },
+   "expected": {
+    "family": "cargo",
+    "disposition": "test"
+   }
+  },
+  {
+   "name": "Rust check is cargo",
+   "input": {
+    "project": "p",
+    "target": "check",
+    "root": "a/📦️packages/🦀️rust",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "outputs": []
+   },
+   "expected": {
+    "family": "cargo",
+    "disposition": "action"
+   }
+  },
+  {
+   "name": "Rust package is cargo",
+   "input": {
+    "project": "p",
+    "target": "package",
+    "root": "a/📦️packages/🦀️rust",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "outputs": [
+     "{projectRoot}/pkg"
+    ]
+   },
+   "expected": {
+    "family": "cargo",
+    "disposition": "action"
+   }
+  },
+  {
+   "name": "native build is cargo",
+   "input": {
+    "project": "p",
+    "target": "native-build",
+    "root": "p",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "outputs": [
+     "{projectRoot}/t"
+    ]
+   },
+   "expected": {
+    "family": "cargo",
+    "disposition": "action"
+   }
+  },
+  {
+   "name": "lockfile check is cargo",
+   "input": {
+    "project": "p",
+    "target": "lockfile-check",
+    "root": "p",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "outputs": []
+   },
+   "expected": {
+    "family": "cargo",
+    "disposition": "action"
+   }
+  },
+  {
+   "name": "generic generator is a plain script",
+   "input": {
+    "project": "p",
+    "target": "generate",
+    "root": "p",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "outputs": [
+     "{projectRoot}/g"
+    ]
+   },
+   "expected": {
+    "family": "bun-script",
+    "disposition": "action"
+   }
+  },
+  {
+   "name": "generator with undeclared outputs is refused",
+   "input": {
+    "project": "p",
+    "target": "generate",
+    "root": "p",
+    "kind": "command",
+    "cache": {
+     "cache": false,
+     "reason": "unbounded"
+    }
+   },
+   "expected": {
+    "family": "bun-script",
+    "disposition": "refused",
+    "reason": "unbounded"
+   }
+  },
+  {
+   "name": "undeclared cache is refused",
+   "input": {
+    "project": "p",
+    "target": "verify-x",
+    "root": "p",
+    "kind": "command",
+    "cache": {
+     "cache": false,
+     "reason": "undeclared"
+    }
+   },
+   "expected": {
+    "family": "bun-script",
+    "disposition": "refused",
+    "reason": "undeclared"
+   }
+  },
+  {
+   "name": "explicitly uncached publish always executes",
+   "input": {
+    "project": "p",
+    "target": "publish",
+    "root": "a/📦️packages/🟦️typescript",
+    "kind": "command",
+    "cache": {
+     "cache": false,
+     "reason": "declared"
+    }
+   },
+   "expected": {
+    "family": "bun-script",
+    "disposition": "uncached",
+    "reason": "declared"
+   }
+  },
+  {
+   "name": "skipped cache always executes",
+   "input": {
+    "project": "p",
+    "target": "test",
+    "root": "a/📦️packages/🟦️typescript",
+    "kind": "command",
+    "cache": {
+     "cache": false,
+     "reason": "skipped"
+    }
+   },
+   "expected": {
+    "family": "bun-test",
+    "disposition": "uncached",
+    "reason": "skipped"
+   }
+  },
+  {
+   "name": "managed output store",
+   "input": {
+    "project": "p",
+    "target": "prepare",
+    "root": "p",
+    "kind": "command",
+    "cache": {
+     "cache": false,
+     "reason": "managed-output"
+    }
+   },
+   "expected": {
+    "family": "bun-script",
+    "disposition": "uncached",
+    "reason": "managed-output"
+   }
+  },
+  {
+   "name": "diagnostic",
+   "input": {
+    "project": "p",
+    "target": "doctor",
+    "root": "p",
+    "kind": "command",
+    "cache": {
+     "cache": false,
+     "reason": "diagnostic"
+    }
+   },
+   "expected": {
+    "family": "bun-script",
+    "disposition": "uncached",
+    "reason": "diagnostic"
+   }
+  },
+  {
+   "name": "target name with an emoji and a ZWJ sequence",
+   "input": {
+    "project": "p",
+    "target": "🏭️generator-x",
+    "root": "🧑‍💻dev/x",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "outputs": [
+     "{projectRoot}/g"
+    ]
+   },
+   "expected": {
+    "family": "bun-script",
+    "disposition": "action"
+   }
+  },
+  {
+   "name": "a test whose name merely contains test is not a test result",
+   "input": {
+    "project": "p",
+    "target": "contest",
+    "root": "p",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "outputs": []
+   },
+   "expected": {
+    "family": "bun-script",
+    "disposition": "action"
+   }
+  },
+  {
+   "name": "test as a hyphenated suffix is not a test result",
+   "input": {
+    "project": "p",
+    "target": "unit-test",
+    "root": "p",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "outputs": []
+   },
+   "expected": {
+    "family": "bun-script",
+    "disposition": "action"
+   }
+  },
+  {
+   "name": "Go root segment must be a whole segment",
+   "input": {
+    "project": "p",
+    "target": "test",
+    "root": "a/not🐹️gopher",
+    "kind": "command",
+    "cache": {
+     "cache": true
+    },
+    "outputs": []
+   },
+   "expected": {
+    "family": "bun-test",
+    "disposition": "test"
+   }
+  }
+ ],
+ "reports": [
+  {
+   "name": "mixed selection",
+   "rows": [
+    {
+     "family": "aggregate",
+     "disposition": "action"
+    },
+    {
+     "family": "vitest",
+     "disposition": "test"
+    },
+    {
+     "family": "bun-test",
+     "disposition": "test"
+    },
+    {
+     "family": "bun-test",
+     "disposition": "test"
+    },
+    {
+     "family": "bun-test",
+     "disposition": "action"
+    },
+    {
+     "family": "bun-test",
+     "disposition": "action"
+    },
+    {
+     "family": "playwright",
+     "disposition": "test"
+    },
+    {
+     "family": "playwright",
+     "disposition": "uncached",
+     "reason": "declared"
+    },
+    {
+     "family": "tsc",
+     "disposition": "action"
+    },
+    {
+     "family": "tsc",
+     "disposition": "action"
+    },
+    {
+     "family": "tsc",
+     "disposition": "action"
+    },
+    {
+     "family": "bun-script",
+     "disposition": "action"
+    }
+   ],
+   "expected": {
+    "version": 1,
+    "tasks": 12,
+    "dispositions": {
+     "action": 7,
+     "test": 4,
+     "uncached": 1
+    },
+    "families": {
+     "aggregate": {
+      "action": 1
+     },
+     "bun-script": {
+      "action": 1
+     },
+     "bun-test": {
+      "action": 2,
+      "test": 2
+     },
+     "playwright": {
+      "test": 1,
+      "uncached": 1
+     },
+     "tsc": {
+      "action": 3
+     },
+     "vitest": {
+      "test": 1
+     }
+    }
+   }
+  }
+ ]
+}

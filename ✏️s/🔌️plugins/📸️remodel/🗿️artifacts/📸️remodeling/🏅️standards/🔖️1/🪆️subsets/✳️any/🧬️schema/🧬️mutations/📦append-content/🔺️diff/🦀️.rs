@@ -11,7 +11,7 @@ use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::sche
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::AppendContent, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
+pub fn diff(payload: &crate::standards::v1::subsets::any::schema::mutations::append_content::component::AppendContent, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
     let target = [payload.content_id.clone()];
     let mut appended_bytes = 0usize;
     for chunk in &payload.chunks {

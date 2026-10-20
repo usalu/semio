@@ -1,7 +1,8 @@
 import { scriptInvocationEnvironment, withScriptInvocationSignalV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { join, resolve } from "node:path";
 import { BundleScript } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { readServiceSession, waitForServiceReady } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
+import { parseServiceReadinessBudgetV1, readServiceSession, serviceReadyProgressLanguage, serviceReadyProgressLine, waitForServiceReady } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
+import readinessBudget from "../🧩️runtime/🧪️e2e/🔣️.json" with { type: "json" };
 import { repoCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { PLAY_E2E_OWNER, playE2eInvocationPid, playE2eSessionRoot } from "../🧩️runtime/🧪️e2e/🟦️.ts";
 import { readNativeCallerAuthorityV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
@@ -22,7 +23,8 @@ export class TestScript extends BundleScript {
     process.once("SIGINT", interrupt); process.once("SIGTERM", terminate);
     try {
       console.log(`Waiting for play E2E service ${session.id}`);
-      const baseURL = await waitForServiceReady(sessionRoot, session, controller.signal);
+      const budget = parseServiceReadinessBudgetV1(readinessBudget), language = serviceReadyProgressLanguage(process.env);
+      const baseURL = await waitForServiceReady(sessionRoot, session, controller.signal, budget.readyTimeoutMs, { intervalMs: budget.progressIntervalMs, report: progress => console.log(serviceReadyProgressLine(PLAY_E2E_OWNER, progress, language)) });
       const output = process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated",this.reportDirectory, session.id) : join(root, "dist/reports/e2e", session.id);
       console.log(`Testing play at ${baseURL}`);
       const child = Bun.spawn([process.execPath, join(this.repoRoot, "node_modules/playwright/cli.js"), "test", "--config", join(root, "🔨️modules/🧪️e2e/🎚️config/🟦️.ts"), "--output", output,...this.selection], { cwd: this.repoRoot, env: { ...process.env, PLAYWRIGHT_BASE_URL: baseURL, PLAYWRIGHT_BROWSERS_PATH: repoCacheDirectory(this.repoRoot, "tools", "ms-playwright") }, stdout: "inherit", stderr: "inherit", stdin: "ignore" });

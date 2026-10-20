@@ -1,4 +1,6 @@
-import {phaseCompilerAdmissionControlV1} from '../../../🏗️build/🎟️capacity/🟦️.ts';
+import {createIssuedResourceControlV1} from "../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import type {ScriptInvocation} from "../../../🧭️routing/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../🧪️testing/📥️invocation/🟦️.ts";
 import { expect,test } from "bun:test";
 import { spawnSync } from "node:child_process";
 import { mkdtempSync,writeFileSync } from "node:fs";
@@ -13,13 +15,13 @@ test("Go optimizer policy and schema are explicit and match the independent vali
  for(const mode of ["dev","ship",undefined])expect(validate({...base,...(mode?{mode}:{})})).toBe(false);
  expect(()=>goBuildArgumentsV1("prototype",["-ldflags=-s -w","."])).toThrow();
 });
-test("Go compiles both modes, publishes immutable outputs and matches the standard compiler runtime",async()=>{
+test("Go compiles both modes, publishes immutable outputs and matches the standard compiler runtime",()=>withBuildTestInvocationV1(async original=>{
  const directory=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"g-"));writeFileSync(join(directory,"go.mod"),'module mode-fixture\n\ngo 1.25\n');writeFileSync(join(directory,"main.go"),fixture.source);
  const environment={...process.env,GOWORK:"off",GOPROXY:"off",GOTOOLCHAIN:"local",GOCACHE:join(directory,"cache")};
- for(const row of fixture.modes){const binary=join(directory,"dist/build",row.mode,`fixture${process.platform==="win32"?".exe":""}`),policy={version:1 as const,mode:row.mode as "prototype"|"release",cwd:directory,captureDirectory:join(directory,"c"),leaseDirectory:process.env.SEMIO_TEST_ARTIFACT_DIR!,budgetMs:120000};await buildGoArtifactsV1(["-o",binary,"."],policy,{environment,control:fixtureAdmissionV1()});const actual=spawnSync(binary,[],{encoding:"utf8"});expect(actual.status).toBe(0);expect(actual.stdout).toBe(fixture.stdout);
+ for(const row of fixture.modes){const binary=join(directory,"dist/build",row.mode,`fixture${process.platform==="win32"?".exe":""}`),policy={version:1 as const,mode:row.mode as "prototype"|"release",cwd:directory,captureDirectory:join(directory,"c"),leaseDirectory:process.env.SEMIO_TEST_ARTIFACT_DIR!,budgetMs:120000};await buildGoArtifactsV1(["-o",binary,"."],policy,{environment,control:fixtureAdmissionV1(original)});const actual=spawnSync(binary,[],{encoding:"utf8"});expect(actual.status).toBe(0);expect(actual.stdout).toBe(fixture.stdout);
  const metadata=spawnSync("go",["version","-m",binary],{encoding:"utf8"});expect(metadata.status).toBe(0);expect(metadata.stdout).toContain(row.mode==="prototype"?"-gcflags":"-trimpath");
  const oracle=spawnSync("go",["run",...row.flags,"."],{cwd:directory,env:environment,encoding:"utf8",timeout:120000});expect(oracle.status).toBe(0);expect(oracle.stdout).toBe(actual.stdout);}
-},300000);
+}),300000);
 
 /** 🎛️ Owns this fixture compiler phase with its actual signal and fixed test deadline. */
-function fixtureAdmissionV1(signal:AbortSignal=new AbortController().signal){return phaseCompilerAdmissionControlV1(signal,120000,()=>undefined,()=>new Promise(done=>setImmediate(done)));}
+function fixtureAdmissionV1(original:ScriptInvocation,signal?:AbortSignal){return createIssuedResourceControlV1(original,"fixture:go-build",120000,signal);}

@@ -51,7 +51,7 @@ semio-s-artifact-shooting-shooting-mut-any-2 = { path = "../../../🧬️schema/
 semio-s-artifact-shooting-shooting-mutations = { path = "../../../🧬️schema/🧬️mutations/➕️create-asset/🧪️tests/➕️appends/📦️packages/🦀️rust" }
 semio-s-artifact-shooting-shooting-set-active-asset = { path = "../../../🧬️schema/🧬️mutations/📌️set-active-asset/📦️packages/🦀️rust" }
 semio-s-artifact-shooting-shooting-tests = { path = "../../../🧬️schema/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
-semio-s-artifact-shooting-shooting-tests-dims-scene-sun-to-half = { path = "../../../🧬️schema/🧬️mutations/💡️change-scene-sun/🧪️tests/💡️dims/📦️packages/🦀️rust" }
+semio-s-artifact-shooting-shooting-tests-dims-scene-sun-to-half = { path = "../../../🧬️schema/🧬️mutations/💡️change-scene-sun-intensity/🧪️tests/💡️dims/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-bmp = { workspace = true }
 semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-gif = { workspace = true }

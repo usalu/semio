@@ -39,7 +39,7 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
 fn case() -> Case {
     Case {
         kind: "change-infiltration-velocity-squared-term-coefficient",
-        directory: "🆑️change-infiltration/⛔️refuses",
+        directory: "🕳️leakage/🆑️change-velocity-squared-term-coefficient/⛔️refuses",
         before: BEFORE,
         after: AFTER,
         mutation: MUTATION,

@@ -105,8 +105,10 @@ describe("📡️ a history change replaying before adoption is announced outsid
       [cleared[key]?.reprojection, cleared["other#2"] === remote, programHistoryProjectionsWithLoadV1(cleared, key, null) === cleared, programHistoryProjectionsWithLoadV1(cleared, "", { completed: 1, total: 2 }) === cleared, programHistoryProjectionsWithLoadV1(cleared, "unknown#9", null) === cleared],
       "only the loading program's projection moves; no program or nothing to end is the same map",
     ).toEqual([null, true, true, true, true]);
-    const host = readModuleTreeSource(join(shellHelpers, "..", "🏛️ShellHost", "🟦️.tsx"));
-    const load = host.slice(host.indexOf("const task = core.documentTransferRef.current.trackDocumentTransfer(file, baseSession.pluginId);"), host.indexOf("`Effect::LoadDocument` is pack+spr bytes only"));
+    const host = readModuleTreeSource(join(shellHelpers, "..", "🏛️ShellHost", "⚡️host-effects", "📥️document-load-effects", "🟦️.ts"));
+    const start = host.indexOf("export async function applyLoadDocumentEffect(");
+    expect(start, "applyLoadDocumentEffect must still be where this law reads it").toBeGreaterThanOrEqual(0);
+    const load = host.slice(start, host.indexOf("\nexport ", start + 1));
     expect(
       [load.split("programHistoryProjectionsWithLoadV1(").length - 1, /progress: \(status\) => \{[^}]*showLoad\(status\);/u.test(load), /\} finally \{\s*showLoad\(null\);/u.test(load)],
       "the shell folds every polled step of a load into the loading program's projection and ends it however the load ends",

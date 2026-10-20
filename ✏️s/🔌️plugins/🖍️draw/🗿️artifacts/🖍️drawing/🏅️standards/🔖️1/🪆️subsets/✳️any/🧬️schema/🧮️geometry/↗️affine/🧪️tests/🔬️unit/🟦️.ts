@@ -34,7 +34,7 @@ test("world rotation remains exact inside a nonuniformly scaled parent", () => {
 
 
 import {semioSchemaAjvV1} from "@semio-tech/framework/schema/oracles/validator";
-import mutationSchema from "../../../../../../🔀️transform/🧬️schema/🧬️mutations/🔄️update-layer/🧬️schema/🔣️.json";
+import mutationSchema from "../../../../../../🔀️transform/🧬️schema/🧬️mutations/🔄️update-layer-transform/🧬️schema/🔣️.json";
 
 test("transform mutation schema requires shear and accepts exact affine components", () => {
   const validate=semioSchemaAjvV1({allErrors:true}).compile(mutationSchema);

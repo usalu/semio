@@ -1,0 +1,1868 @@
+{
+ "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript|esbuild": {
+  "pkg": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
+  "kind": "undeclared-resolves",
+  "example": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript/📜️script.ts",
+  "count": 1
+ },
+ "♻️mit-bestand|@semio-tech/presentation": {
+  "pkg": "♻️mit-bestand",
+  "kind": "undeclared-resolves",
+  "example": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🎞️slide/🔎️Recherche/🔎️Recherche/🟣️Gedanke Schweiz/🔬️ZoomIn2.ts",
+  "count": 28
+ },
+ "♻️mit-bestand|@semio-tech/mit-bestand-praesentation-projektetage": {
+  "pkg": "♻️mit-bestand",
+  "kind": "undeclared-resolves",
+  "example": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🎞️slide/🧩️Bauteilportal/🏔️Ausgangslage/🧩️Bauteilbörsen/🧱️Baukomponenten.ts",
+  "count": 6
+ },
+ "♻️mit-bestand|vitest": {
+  "pkg": "♻️mit-bestand",
+  "kind": "undeclared-resolves",
+  "example": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🧪️tests/🎚️config/🟦️.ts",
+  "count": 2
+ },
+ "♻️mit-bestand|@semio-tech/ui-react": {
+  "pkg": "♻️mit-bestand",
+  "kind": "undeclared-resolves",
+  "example": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🧪️tests/🎞️react-deck/🟦️.tsx",
+  "count": 1
+ },
+ "♻️mit-bestand|@semio-tech/presentation-react": {
+  "pkg": "♻️mit-bestand",
+  "kind": "undeclared-resolves",
+  "example": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🧪️tests/🎞️react-deck/🟦️.tsx",
+  "count": 1
+ },
+ "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript|@semio-tech/ui-react": {
+  "pkg": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript",
+  "kind": "undeclared-resolves",
+  "example": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📦️index.ts",
+  "count": 1
+ },
+ "♻️mit-bestand/🧺️demonstrator|esbuild": {
+  "pkg": "♻️mit-bestand/🧺️demonstrator",
+  "kind": "undeclared-resolves",
+  "example": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/🧪️tests/🟦️.ts",
+  "count": 1
+ },
+ "♻️mit-bestand/🧺️demonstrator|@playwright/test": {
+  "pkg": "♻️mit-bestand/🧺️demonstrator",
+  "kind": "undeclared-resolves",
+  "example": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧪️e2e/🎚️config/🟦️.ts",
+  "count": 2
+ },
+ "♻️mit-bestand/🧺️demonstrator|vitest": {
+  "pkg": "♻️mit-bestand/🧺️demonstrator",
+  "kind": "undeclared-resolves",
+  "example": "♻️mit-bestand/🧺️demonstrator/🧪️tests/🏛️shell-brand/🟦️.ts",
+  "count": 2
+ },
+ "♻️mit-bestand/🧺️demonstrator|react": {
+  "pkg": "♻️mit-bestand/🧺️demonstrator",
+  "kind": "undeclared-resolves",
+  "example": "♻️mit-bestand/🧺️demonstrator/🧪️tests/🏛️shell-brand/🟦️.ts",
+  "count": 1
+ },
+ "♻️mit-bestand/🧺️demonstrator|react-dom": {
+  "pkg": "♻️mit-bestand/🧺️demonstrator",
+  "kind": "undeclared-resolves",
+  "example": "♻️mit-bestand/🧺️demonstrator/🧪️tests/🏛️shell-brand/🟦️.ts",
+  "count": 1
+ },
+ "♻️mit-bestand/🧺️demonstrator|@semio-tech/framework-renderer-react": {
+  "pkg": "♻️mit-bestand/🧺️demonstrator",
+  "kind": "undeclared-resolves",
+  "example": "♻️mit-bestand/🧺️demonstrator/🧪️tests/🧪️demonstratorpanebranding/🟦️.ts",
+  "count": 2
+ },
+ "🌎️hub|@semio-tech/framework-compiler-ts": {
+  "pkg": "🌎️hub",
+  "kind": "undeclared-resolves",
+  "example": "🌎️hub/📇️directory/📣️publication/🧪️tests/🧾️ordered-append-broadcast/🟦️.ts",
+  "count": 15
+ },
+ "🌎️hub|react": {
+  "pkg": "🌎️hub",
+  "kind": "undeclared-resolves",
+  "example": "🌎️hub/🔨️modules/🛡️admin/🧱️elements/🛡️AdminApp/🟦️.tsx",
+  "count": 10
+ },
+ "🌎️hub|@semio-tech/ui-react": {
+  "pkg": "🌎️hub",
+  "kind": "undeclared-resolves",
+  "example": "🌎️hub/🔨️modules/🛡️admin/🧱️elements/🛡️AdminApp/🟦️.tsx",
+  "count": 9
+ },
+ "🌎️hub|os-hub-ts": {
+  "pkg": "🌎️hub",
+  "kind": "undeclared-resolves",
+  "example": "🌎️hub/🔨️modules/🛡️admin/🧱️elements/📊️ObservabilityPage/🟦️.tsx",
+  "count": 3
+ },
+ "🌎️hub|vitest": {
+  "pkg": "🌎️hub",
+  "kind": "undeclared-resolves",
+  "example": "🌎️hub/🔨️modules/🛡️admin/🧪️tests/🎚️config/🟦️.ts",
+  "count": 25
+ },
+ "🌎️hub|typescript": {
+  "pkg": "🌎️hub",
+  "kind": "undeclared-resolves",
+  "example": "🌎️hub/🔨️modules/🛡️admin/🧪️tests/🧪️command-routing/🟦️.ts",
+  "count": 10
+ },
+ "🌎️hub|react-dom": {
+  "pkg": "🌎️hub",
+  "kind": "undeclared-resolves",
+  "example": "🌎️hub/🔨️modules/🛡️admin/🟦️.tsx",
+  "count": 1
+ },
+ "🌎️hub|@semio-tech/schema-validator-ts": {
+  "pkg": "🌎️hub",
+  "kind": "undeclared-resolves",
+  "example": "🌎️hub/🚀️local-bootstrap/🎛️host/🟦️.ts",
+  "count": 7
+ },
+ "🌎️hub|@semio-tech/framework-os-dev": {
+  "pkg": "🌎️hub",
+  "kind": "undeclared-resolves",
+  "example": "🌎️hub/🚀️local-bootstrap/👷️dev-owner/🟦️.ts",
+  "count": 18
+ },
+ "🌎️hub|vite": {
+  "pkg": "🌎️hub",
+  "kind": "undeclared-resolves",
+  "example": "🌎️hub/🏗️bootstrap/🧾️provenance/🌍️gis-browser-proof/🟦️.ts",
+  "count": 4
+ },
+ "🌎️hub|playwright": {
+  "pkg": "🌎️hub",
+  "kind": "undeclared-resolves",
+  "example": "🌎️hub/🏗️bootstrap/🧾️provenance/🌍️gis-browser-proof/🟦️.ts",
+  "count": 21
+ },
+ "🌎️hub|@semio-tech/s-dev-catalog-ts": {
+  "pkg": "🌎️hub",
+  "kind": "undeclared-resolves",
+  "example": "🌎️hub/🏗️bootstrap/🧾️provenance/🗃️bootstrap-bundle/🟦️.ts",
+  "count": 3
+ },
+ "🌎️hub|esbuild": {
+  "pkg": "🌎️hub",
+  "kind": "undeclared-resolves",
+  "example": "🌎️hub/🧩️compositions/🗄️stdio/🧩️component/🏗️compiler/♻️capture/🧪️tests/🟦️.ts",
+  "count": 1
+ },
+ "🌎️hub|@webassemblyjs/leb128": {
+  "pkg": "🌎️hub",
+  "kind": "undeclared-resolves",
+  "example": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/🔬️catalog-contract-and-flow-decode/🟦️.ts",
+  "count": 1
+ },
+ "🌎️hub|@semio-tech/schema-ts": {
+  "pkg": "🌎️hub",
+  "kind": "undeclared-resolves",
+  "example": "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/📇️native-codecs/🟦️.ts",
+  "count": 3
+ },
+ "🌎️hub|@semio-tech/framework-io-schema-ts": {
+  "pkg": "🌎️hub",
+  "kind": "undeclared-resolves",
+  "example": "🌎️hub/🧩️compositions/📏️layout/🖊️drawing/🧪️tests/🪪️document/🟦️.ts",
+  "count": 1
+ },
+ "🌎️hub|@semio-tech/stdio-semio": {
+  "pkg": "🌎️hub",
+  "kind": "undeclared-resolves",
+  "example": "🌎️hub/🧩️compositions/📏️layout/🖊️drawing/🧪️tests/🪪️document/🟦️.ts",
+  "count": 5
+ },
+ "🌎️hub|@semio-tech/value-ts": {
+  "pkg": "🌎️hub",
+  "kind": "undeclared-resolves",
+  "example": "🌎️hub/🧩️compositions/📏️layout/🖊️drawing/🧪️tests/🪪️document/🟦️.ts",
+  "count": 2
+ },
+ "🌎️hub|@semio-tech/layout-layout-ts": {
+  "pkg": "🌎️hub",
+  "kind": "undeclared-resolves",
+  "example": "🌎️hub/🧩️compositions/📏️layout/🖊️drawing/🧪️tests/🪪️document/🟦️.ts",
+  "count": 13
+ },
+ "🌎️hub|@semio-tech/framework-sqlite-snapshot-ts": {
+  "pkg": "🌎️hub",
+  "kind": "undeclared-resolves",
+  "example": "🌎️hub/🧩️compositions/📏️layout/🖊️drawing/🧪️tests/🪶️sqlite/🟦️.ts",
+  "count": 1
+ },
+ "🌎️hub|@semio-tech/puzzle-js": {
+  "pkg": "🌎️hub",
+  "kind": "undeclared-resolves",
+  "example": "🌎️hub/🧩️compositions/🧩️puzzle/🧪️tests/🔬️rust-package-commands/🟦️.ts",
+  "count": 1
+ },
+ "🌎️hub|@semio-tech/framework-pack-ts": {
+  "pkg": "🌎️hub",
+  "kind": "undeclared-resolves",
+  "example": "🌎️hub/🧪️tests/🛂️space-administration-checks/🟦️.ts",
+  "count": 1
+ },
+ "🌎️hub|fast-deep-equal": {
+  "pkg": "🌎️hub",
+  "kind": "undeclared-resolves",
+  "example": "🌎️hub/🧪️tests/👤️browser-actor-checks/🟦️.ts",
+  "count": 2
+ },
+ "🌎️hub|@semio-tech/framework-pack-record-ts": {
+  "pkg": "🌎️hub",
+  "kind": "undeclared-resolves",
+  "example": "🌎️hub/🧪️tests/🏛️trusted-catalog-fixtures/🚀️stdio-gis-bootstrap-and-compiled-dependencies-fixtures/🟦️.ts",
+  "count": 1
+ },
+ "🌎️hub|@semio-tech/gis-gismap-js": {
+  "pkg": "🌎️hub",
+  "kind": "undeclared-resolves",
+  "example": "🌎️hub/🧪️tests/🌐️relay-checks/🟦️.ts",
+  "count": 2
+ },
+ "🌎️hub|pdfjs-dist": {
+  "pkg": "🌎️hub",
+  "kind": "undeclared-resolves",
+  "example": "🌎️hub/🧪️tests/🚪️io-matrix/🟦️.ts",
+  "count": 1
+ },
+ "🌎️hub|three": {
+  "pkg": "🌎️hub",
+  "kind": "undeclared-resolves",
+  "example": "🌎️hub/🧪️tests/🚪️io-matrix/🟦️.ts",
+  "count": 3
+ },
+ "🌎️hub|@semio-tech/framework-renderer-wgpu": {
+  "pkg": "🌎️hub",
+  "kind": "undeclared-resolves",
+  "example": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/🟦️.ts",
+  "count": 1
+ },
+ "🎓️teaching|@semio-tech/pets": {
+  "pkg": "🎓️teaching",
+  "kind": "undeclared-resolves",
+  "example": "🎓️teaching/🏛️architecture/🐾️pets/🟦️.ts",
+  "count": 3
+ },
+ "🎓️teaching|@semio-tech/framework-server": {
+  "pkg": "🎓️teaching",
+  "kind": "undeclared-resolves",
+  "example": "🎓️teaching/🏛️architecture/📚️course/🧱️stack/🟦️.ts",
+  "count": 1
+ },
+ "🎓️teaching|vitest": {
+  "pkg": "🎓️teaching",
+  "kind": "undeclared-resolves",
+  "example": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🎭️sessions/🟦️.ts",
+  "count": 14
+ },
+ "🎓️teaching|@noble/hashes": {
+  "pkg": "🎓️teaching",
+  "kind": "undeclared-resolves",
+  "example": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🟦️.ts",
+  "count": 3
+ },
+ "🎓️teaching|picomatch": {
+  "pkg": "🎓️teaching",
+  "kind": "undeclared-resolves",
+  "example": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🟦️.ts",
+  "count": 1
+ },
+ "🎓️teaching|@playwright/test": {
+  "pkg": "🎓️teaching",
+  "kind": "undeclared-resolves",
+  "example": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/📐️adaptive-layout/🟦️.ts",
+  "count": 4
+ },
+ "🎓️teaching|typescript": {
+  "pkg": "🎓️teaching",
+  "kind": "undeclared-resolves",
+  "example": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🏗️proctor-build/🟦️.ts",
+  "count": 3
+ },
+ "🎓️teaching|vite": {
+  "pkg": "🎓️teaching",
+  "kind": "undeclared-resolves",
+  "example": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧱️local-stack/🟦️.ts",
+  "count": 1
+ },
+ "🎓️teaching|resolve.exports": {
+  "pkg": "🎓️teaching",
+  "kind": "undeclared-resolves",
+  "example": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/📦️resolution/🟦️.ts",
+  "count": 1
+ },
+ "🎓️teaching|jsonc-parser": {
+  "pkg": "🎓️teaching",
+  "kind": "undeclared-resolves",
+  "example": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/📦️resolution/🟦️.ts",
+  "count": 1
+ },
+ "🎓️teaching|tar-stream": {
+  "pkg": "🎓️teaching",
+  "kind": "undeclared-unresolved",
+  "example": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🐳️image/🟦️.ts",
+  "count": 1
+ },
+ "🎓️teaching|@semio-tech/course-react": {
+  "pkg": "🎓️teaching",
+  "kind": "undeclared-resolves",
+  "example": "🎓️teaching/🏛️architecture/📚️course/🟦️.ts",
+  "count": 1
+ },
+ "🏢️semio-tech/🎡️play|@playwright/test": {
+  "pkg": "🏢️semio-tech/🎡️play",
+  "kind": "undeclared-resolves",
+  "example": "🏢️semio-tech/🎡️play/🔨️modules/🧪️e2e/🎚️config/🟦️.ts",
+  "count": 3
+ },
+ "🏢️semio-tech/🎡️play|@semio-tech/framework": {
+  "pkg": "🏢️semio-tech/🎡️play",
+  "kind": "undeclared-resolves",
+  "example": "🏢️semio-tech/🎡️play/🪧️brand.ts",
+  "count": 2
+ },
+ "🏢️semio-tech/🎡️play|vitest": {
+  "pkg": "🏢️semio-tech/🎡️play",
+  "kind": "undeclared-resolves",
+  "example": "🏢️semio-tech/🎡️play/🧪️tests/🎚️config/🟦️.ts",
+  "count": 1
+ },
+ "🏢️semio-tech/🎡️play|whatwg-url": {
+  "pkg": "🏢️semio-tech/🎡️play",
+  "kind": "undeclared-resolves",
+  "example": "🏢️semio-tech/🎡️play/🧪️tests/🧪️playpages/🟦️.ts",
+  "count": 1
+ },
+ "🏢️semio-tech/🎡️play|@semio-tech/framework-renderer-react": {
+  "pkg": "🏢️semio-tech/🎡️play",
+  "kind": "undeclared-resolves",
+  "example": "🏢️semio-tech/🎡️play/🟦️.tsx",
+  "count": 1
+ },
+ "|@semio-tech/framework": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/⏯️tool-run/🕹️actions/🧪️tests/🟦️.ts",
+  "count": 1805
+ },
+ "|@semio-tech/framework-replication": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛬️receive/🎟️limits/🧪️tests/🟦️.ts",
+  "count": 77
+ },
+ "|@semio-tech/framework-compiler-ts": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/⏭️successor/🧪️tests/🟦️.ts",
+  "count": 198
+ },
+ "|@semio-tech/ui-react": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts",
+  "count": 534
+ },
+ "|@semio-tech/schema-ts": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🟦️.ts",
+  "count": 75
+ },
+ "|@semio-tech/value-ts": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🎭️actor/🤖️generated/🎭️actor/🟦️.ts",
+  "count": 172
+ },
+ "|@semio-tech/framework-kernel": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🧵️spawned-job/🟦️.ts",
+  "count": 45
+ },
+ "|@semio-tech/framework-pack-json-ts": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🟦️.ts",
+  "count": 10
+ },
+ "|@semio-tech/framework-diagnostic-ts": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🟦️.ts",
+  "count": 14
+ },
+ "|@semio-tech/schema-validator-ts": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🟦️.ts",
+  "count": 101
+ },
+ "|@semio-tech/framework-async": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🚦️checkpoint/🟦️.ts",
+  "count": 8
+ },
+ "|@semio-tech/compiler-syntax-rust-ts": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🏛️ownership/🟦️.ts",
+  "count": 48
+ },
+ "|@semio-tech/framework-io-base64-ts": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🚪️io/🧪️tests/🧫️fixtures/🟦️.ts",
+  "count": 5
+ },
+ "|@semio-tech/framework-io-schema-ts": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🚪️io/🧪️tests/🧫️fixtures/🟦️.ts",
+  "count": 8
+ },
+ "|@semio-tech/framework-sqlite-snapshot-ts": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🚪️io/🔌️ports/🟦️.ts",
+  "count": 11
+ },
+ "|@semio-tech/framework-dsl-record-ts": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🚪️io/📝️text/🗿️artifact-reference/🪆️binding/🧪️tests/🏛️ownership/🟦️.ts",
+  "count": 2
+ },
+ "|@semio-tech/pack-json-decode-ts": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🧱️ownership/🟦️.ts",
+  "count": 6
+ },
+ "|@semio-tech/framework-pack-error-ts": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🎒️pack/🧪️tests/🧫️fixtures/🟦️.ts",
+  "count": 4
+ },
+ "|@semio-tech/framework-pack-record-ts": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🎒️pack/🧪️tests/🧫️fixtures/🟦️.ts",
+  "count": 6
+ },
+ "|@semio-tech/assets": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🎯️action-bus/🟦️.ts",
+  "count": 46
+ },
+ "|cross-spawn": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🧪️tests/📥️input/🟦️.ts",
+  "count": 3
+ },
+ "|@semio-tech/machine": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧪️conformance/🟦️.ts",
+  "count": 2
+ },
+ "|@semio-tech/framework-tool-run-ts": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧪️fault-notices/🟦️.ts",
+  "count": 5
+ },
+ "|@semio-tech/framework-canvas-ts": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/🧪️tests/🪶️demand-frames/🟦️.tsx",
+  "count": 20
+ },
+ "|@semio-tech/framework-actor": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🖼️canvas/🧵️renderer-work/🟦️.ts",
+  "count": 133
+ },
+ "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust|@semio-tech/framework-compiler-ts": {
+  "pkg": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts",
+  "count": 1
+ },
+ "|@semio-tech/framework-2d-js": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts",
+  "count": 6
+ },
+ "|@semio-tech/framework-deflate-ts": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🔲️pixels/📷️png/📥️decode/🟦️.ts",
+  "count": 1
+ },
+ "|semver": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/✅️satisfy-version-requirements/🟦️.ts",
+  "count": 3
+ },
+ "|@semio-tech/framework-pack-ts": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🌱️value/🔁️codec/🧪️tests/🛬️controlled/🟦️.ts",
+  "count": 5
+ },
+ "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust|ajv": {
+  "pkg": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📜️script.ts",
+  "count": 1
+ },
+ "|@semio-tech/framework-compiler-rs": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧪️tests/🟦️.ts",
+  "count": 4
+ },
+ "|@semio-tech/framework-3d-js": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🔬️unit/🟦️.ts",
+  "count": 1
+ },
+ "🧰️framework/🔨️modules/🏗️mesh-engine/🏛️ownership/🎨️attributes|three": {
+  "pkg": "🧰️framework/🔨️modules/🏗️mesh-engine/🏛️ownership/🎨️attributes",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🏗️mesh-engine/🏛️ownership/🎨️attributes/🧪️tests/🟦️.ts",
+  "count": 1
+ },
+ "|@semio-tech/ui-styling": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🖼️reference/🟦️.tsx",
+  "count": 89
+ },
+ "|@semio-tech/framework-dsl-ts": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/📝️shared-utf8/🧪️tests/🟦️.ts",
+  "count": 1
+ },
+ "|@semio-tech/framework-pixels-ts": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🟦️.ts",
+  "count": 2
+ },
+ "🧰️framework/🔨️modules/◻️2d/🧮️compute|typescript": {
+  "pkg": "🧰️framework/🔨️modules/◻️2d/🧮️compute",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️tests/📍️ownership/🧭️direction/🟦️.ts",
+  "count": 1
+ },
+ "🧰️framework/🔨️modules/◻️2d/🧮️compute|lodash": {
+  "pkg": "🧰️framework/🔨️modules/◻️2d/🧮️compute",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️tests/🟦️.ts",
+  "count": 1
+ },
+ "|@semio-tech/framework-ui-viewport-ts": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🕸️node-graph/🟦️.ts",
+  "count": 3
+ },
+ "|@semio-tech/framework-tool-machine-ts": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/✂️text-splice/🟦️.ts",
+  "count": 1
+ },
+ "|lru-cache": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🔨️modules/🫧️transient/🧪️tests/🟦️.ts",
+  "count": 1
+ },
+ "|@semio-tech/pets": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/🔨️modules/✨️effects/🟦️.ts",
+  "count": 37
+ },
+ "|@semio-tech/pets-react": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📖️stories/🏟️sandbox/🟦️.tsx",
+  "count": 23
+ },
+ "|@semio-tech/framework-server": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🛂️proctor/🟦️.ts",
+  "count": 16
+ },
+ "|@semio-tech/course-react": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🧪️tests/📚️course-shell/🟦️.tsx",
+  "count": 72
+ },
+ "|@semio-tech/presentation": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/🔨️modules/🖼️figure-scroll/🟦️.tsx",
+  "count": 28
+ },
+ "|@semio-tech/presentation-react": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/📖️stories/🎭️presentation-deck/🧪️.story.tsx",
+  "count": 1
+ },
+ "|rehype-stringify": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/🎤️presentation/🧪️tests/📝️markdown-html-compilation/🟦️.ts",
+  "count": 1
+ },
+ "|remark-gfm": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/🎤️presentation/🧪️tests/📝️markdown-html-compilation/🟦️.ts",
+  "count": 1
+ },
+ "|remark-parse": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/🎤️presentation/🧪️tests/📝️markdown-html-compilation/🟦️.ts",
+  "count": 1
+ },
+ "|remark-rehype": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/🎤️presentation/🧪️tests/📝️markdown-html-compilation/🟦️.ts",
+  "count": 1
+ },
+ "|unified": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/🎤️presentation/🧪️tests/📝️markdown-html-compilation/🟦️.ts",
+  "count": 1
+ },
+ "|@semio-tech/framework-os-dev": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🎫️local-session/🗄️broker/🟦️.ts",
+  "count": 20
+ },
+ "|@semio-tech/framework-plugin": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔏️document-open/🟦️.ts",
+  "count": 136
+ },
+ "|@semio-tech/framework-os": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🧪️tests/🔬️rust-package-commands/🟦️.ts",
+  "count": 226
+ },
+ "|@semio-tech/framework-mesh-engine-ts": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🔎️read/🧪️tests/🟦️.ts",
+  "count": 1
+ },
+ "|@semio-tech/framework-os-mcp": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🕸️wasm/🧪️tests/🔬️unit/🟦️.ts",
+  "count": 5
+ },
+ "|@semio-tech/plugin-registry": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts",
+  "count": 92
+ },
+ "|@semio-tech/value-rs": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️extension/🧪️tests/📨️invoke/🟦️.ts",
+  "count": 3
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store|@semio-tech/framework": {
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts",
+  "count": 3
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store|@semio-tech/framework-plugin": {
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts",
+  "count": 12
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store|emoji-regex": {
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/🧪️tests/🧪️authored-extension-installation-identity/🟦️.ts",
+  "count": 1
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store|vitest": {
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/🧪️tests/🧪️authored-extension-installation-identity/🟦️.ts",
+  "count": 1
+ },
+ "|@semio-tech/nx-bootstrap-tools": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/🟦️.ts",
+  "count": 14
+ },
+ "|external": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌐️browser-bundle/🏭️component-factory-test/🟦️.ts",
+  "count": 1
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits|vitest": {
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🌳️tree/🧪️tests/🧪️rendertree/🟦️.ts",
+  "count": 6
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry|@semio-tech/framework-os": {
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🏗️fresh-build-verifier/🟦️.ts",
+  "count": 5
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry|@semio-tech/framework-plugin": {
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🏗️fresh-build-verifier/🟦️.ts",
+  "count": 11
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry|@semio-tech/framework": {
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🏗️fresh-build-verifier/🟦️.ts",
+  "count": 25
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry|@semio-tech/framework-io-schema-ts": {
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/📚️navbar-example-audits/🟦️.ts",
+  "count": 1
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry|typescript": {
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧩️composition/🧪️tests/🟦️.ts",
+  "count": 2
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry|@semio-tech/ui-styling": {
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts",
+  "count": 1
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry|esbuild": {
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/⭐️default/🧪️tests/🟦️.ts",
+  "count": 3
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry|@semio-tech/framework-os-dev": {
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/👓️reading/🟦️.ts",
+  "count": 5
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry|vitest": {
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧩️composition/🎚️config/🟦️.ts",
+  "count": 9
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry|graphlib": {
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧩️composition/🟦️.ts",
+  "count": 1
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry|@semio-tech/framework-kernel": {
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧩️composition/🟦️.ts",
+  "count": 1
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry|@playwright/test": {
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/📚️storybook-plugins/🟦️.ts",
+  "count": 1
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry|graphql": {
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧬️surface-schema/🟦️.ts",
+  "count": 1
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry|emoji-regex": {
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/✅️catalog-complete/🟦️.ts",
+  "count": 2
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry|decimal.js": {
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/✅️catalog-complete/🟦️.ts",
+  "count": 1
+ },
+ "|exit": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔡️imperative-extension-text/semio_s_plugin_imperative_text_component.js",
+  "count": 86
+ },
+ "|now": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔡️imperative-extension-text/semio_s_plugin_imperative_text_component.js",
+  "count": 78
+ },
+ "|poll": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔡️imperative-extension-text/semio_s_plugin_imperative_text_component.js",
+  "count": 86
+ },
+ "|@semio-tech/framework-renderer-react": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🪝️host-ports/🕸️wasm-bindings/🟦️.ts",
+  "count": 22
+ },
+ "|@semio-tech/framework-surface-rs": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🪝️host-ports/🕸️wasm-bindings/🟦️.ts",
+  "count": 1
+ },
+ "|@semio-tech/flow-core": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🪝️host-ports/🕸️wasm-bindings/🟦️.ts",
+  "count": 1
+ },
+ "|@semio-tech/framework-editor-rs": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🪝️host-ports/🕸️wasm-bindings/🟦️.ts",
+  "count": 3
+ },
+ "|@semio-tech/framework-os-node-graph-rs": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🪝️host-ports/🕸️wasm-bindings/🟦️.ts",
+  "count": 13
+ },
+ "|@semio-tech/repo-test": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🥾️boot-budget/🟦️.ts",
+  "count": 28
+ },
+ "|@semio-tech/framework-time-travel-ts": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️time-travel/📟️console-digest/🟦️.ts",
+  "count": 30
+ },
+ "|@semio-tech/framework-renderer-wgpu": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🟦️.ts",
+  "count": 88
+ },
+ "|@semio-tech/infinite-world-r3f": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📖️stories/🎭️world-r3f/🧪️.story.tsx",
+  "count": 25
+ },
+ "|@semio-tech/canvas-react-renderer": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📖️stories/🎭️graph-wasm-canvas/🧪️.story.tsx",
+  "count": 2
+ },
+ "|@semio-tech/neural-engine-ts": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/🧪️tests/🧫️fixtures/🟦️.ts",
+  "count": 4
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust|@semio-tech/framework": {
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust/📜️script.ts",
+  "count": 2
+ },
+ "|@semio-tech/framework-sqlite-snapshot-rs": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🪶️sqlite/🧪️tests/🟦️.ts",
+  "count": 3
+ },
+ "|@semio-tech/ui-locale-rs": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎬️renderer-boot/🟦️.ts",
+  "count": 2
+ },
+ "|@semio-tech/schema-validator-rs": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/📋️contract/🟦️.ts",
+  "count": 1
+ },
+ "|@semio-tech/plugin-extension-store": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎬️wasm-plugin-install/🟦️.ts",
+  "count": 2
+ },
+ "|@semio-tech/framework-mesh-engine-rs": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🚧️hidden-tab-surfaces/🟦️.ts",
+  "count": 1
+ },
+ "|@semio-tech/framework-tool-machine-rs": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🫳️node-graph-gestures/🟦️.ts",
+  "count": 1
+ },
+ "|@semio-tech/plugin-window-kits": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎬️presented-media-slots/🟦️.ts",
+  "count": 1
+ },
+ "|@semio-tech/framework-ui-viewport-rs": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📐️projection-render-parity/🟦️.ts",
+  "count": 1
+ },
+ "|retry": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/💻️os/🧪️tests/🔁️execution-target-retry/🟦️.ts",
+  "count": 1
+ },
+ "|@semio-tech/framework-surface-ts": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/🧪️tests/📡️scene-wire/🟦️.ts",
+  "count": 1
+ },
+ "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust|@semio-tech/schema-ts": {
+  "pkg": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/🧪️source-and-native-tests/🟦️.ts",
+  "count": 6
+ },
+ "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust|@semio-tech/framework-replication": {
+  "pkg": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/🧪️source-and-native-tests/🟦️.ts",
+  "count": 1
+ },
+ "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust|@semio-tech/framework-compiler-ts": {
+  "pkg": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/🗄️database-checks/🟦️.ts",
+  "count": 5
+ },
+ "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust|@semio-tech/framework-pack-ts": {
+  "pkg": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/✍️wal-checks/🟦️.ts",
+  "count": 1
+ },
+ "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust|@semio-tech/framework": {
+  "pkg": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/✍️wal-checks/🟦️.ts",
+  "count": 3
+ },
+ "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust|@semio-tech/repo-test": {
+  "pkg": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/📄️document-checks/🟦️.ts",
+  "count": 1
+ },
+ "|@semio-tech/repo-coordinator": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/👷️worker/🏃️execution/🟦️.ts",
+  "count": 6
+ },
+ "|succeeds": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🚧️mutation-gates/🟦️.ts",
+  "count": 1
+ },
+ "|vscode": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏬️uri-resolution/🟦️.ts",
+  "count": 16
+ },
+ "|@vscode/vsce": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/📦️package/🟦️.ts",
+  "count": 1
+ },
+ "|@vscode/test-cli": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🎚️config/🟨️.mjs",
+  "count": 1
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript|vscode": {
+  "pkg": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/out/test/extension.test.js",
+  "count": 2
+ },
+ "|@semio/process": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️tests/📦️package-boundary-classification/🟦️.ts",
+  "count": 1
+ },
+ "|repo-vscode": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🏗️web-build/🟦️.ts",
+  "count": 3
+ },
+ "|@semio-tech/fixture-wasm": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🏗️web-build/🟦️.ts",
+  "count": 1
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools|esbuild": {
+  "pkg": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️snapshot/🧪️tests/🟦️.ts",
+  "count": 4
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools|probe": {
+  "pkg": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️snapshot/🧪️tests/🟦️.ts",
+  "count": 1
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools|@iarna/toml": {
+  "pkg": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/🧪️tests/🏗️installation/🟦️.ts",
+  "count": 1
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools|iconv-lite": {
+  "pkg": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧪️tests/🟦️.ts",
+  "count": 1
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools|@semio-tech/framework": {
+  "pkg": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️runtime/🟦️.ts",
+  "count": 2
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools|@semio-tech/schema-validator-ts": {
+  "pkg": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
+  "count": 1
+ },
+ "|dotenv": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/🧪️tests/🟦️.ts",
+  "count": 1
+ },
+ "|x": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️script-async-runners/🟦️.ts",
+  "count": 1
+ },
+ "|toml": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⏱️process-budgets/🟦️.ts",
+  "count": 1
+ },
+ "|safe-regex": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🏗️construction/🧪️tests/🛡️pattern-safety/🟦️.ts",
+  "count": 1
+ },
+ "|@semio-tech/compiler-syntax-ecma-ts": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🟦️.ts",
+  "count": 3
+ },
+ "|@semio-tech/print-viz-inference": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/📓️print/🔨️modules/🏠️host/💡️inferences/🧵️worker/🟦️.ts",
+  "count": 27
+ },
+ "|suncalc": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/📓️print/🧪️tests/☀️diagram-sunpath/🟦️.ts",
+  "count": 2
+ },
+ "|d3-hexbin": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🗺️geo-planar/🟦️.ts",
+  "count": 3
+ },
+ "|d3-contour": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🗺️geo-planar/🟦️.ts",
+  "count": 4
+ },
+ "|d3-shape": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🎛️family-and-scientific/🟦️.ts",
+  "count": 19
+ },
+ "|d3-force": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🎛️family-and-scientific/🟦️.ts",
+  "count": 3
+ },
+ "|d3-random": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🎛️family-and-scientific/🟦️.ts",
+  "count": 2
+ },
+ "|dagre": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🎛️family-and-scientific/🟦️.ts",
+  "count": 4
+ },
+ "|d3-interpolate": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🧠️neural-and-domain/🟦️.ts",
+  "count": 8
+ },
+ "|d3-chord": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🟦️.ts",
+  "count": 4
+ },
+ "|@asamuzakjp/css-color": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🟦️.ts",
+  "count": 1
+ },
+ "|d3-time": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🟦️.ts",
+  "count": 3
+ },
+ "|d3-format": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/📓️print/🧪️tests/🔢️format-number/🟦️.ts",
+  "count": 3
+ },
+ "|d3-quadtree": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/📓️print/🧪️tests/🌳️spatial-quadtree/🟦️.ts",
+  "count": 1
+ },
+ "|d3-time-format": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/📓️print/🧪️tests/📏️guide-axis-ticks/🟦️.ts",
+  "count": 3
+ },
+ "|fft.js": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/📓️print/🧪️tests/📡️signal-dft-bode/🟦️.ts",
+  "count": 1
+ },
+ "|d3-delaunay": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️chart-layout-grammar/🟦️.ts",
+  "count": 3
+ },
+ "|d3-sankey": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️chart-layout-grammar/🟦️.ts",
+  "count": 2
+ },
+ "|d3-regression": {
+  "pkg": ".",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/📓️print/🧪️tests/🌌️charts-scatter-trend/🟦️.ts",
+  "count": 2
+ },
+ "|@semio-tech/print": {
+  "pkg": ".",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/🥧shape/🟦️.ts",
+  "count": 17
+ },
+ "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript|d3-regression": {
+  "pkg": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript/🔬️probes/🟦️.ts",
+  "count": 1
+ },
+ "🧰️framework/📦️packages/🟦️typescript|d3-shape": {
+  "pkg": "🧰️framework/📦️packages/🟦️typescript",
+  "kind": "undeclared-unresolved",
+  "example": "🧰️framework/📦️packages/🟦️typescript/🌿️ambient/📊️d3-shape-stack-order/🟦️.d.ts",
+  "count": 1
+ },
+ "🧰️framework/📦️packages/🟦️typescript|typescript": {
+  "pkg": "🧰️framework/📦️packages/🟦️typescript",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/📦️packages/🟦️typescript/🧪️tests/📤️module-package-surface/🟦️.ts",
+  "count": 2
+ },
+ "🧰️framework/📦️packages/🟦️typescript|@semio-tech/value-rs": {
+  "pkg": "🧰️framework/📦️packages/🟦️typescript",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/📦️packages/🟦️typescript/🌱️value/🧪️testing/🧫️fixtures/🟦️.ts",
+  "count": 1
+ },
+ "🧰️framework/📦️packages/🟦️typescript|@semio-tech/framework-os": {
+  "pkg": "🧰️framework/📦️packages/🟦️typescript",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/📦️packages/🟦️typescript/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧫️fixtures/🟦️.ts",
+  "count": 3
+ },
+ "🧰️framework/📦️packages/🟦️typescript|@semio-tech/framework-renderer-wgpu": {
+  "pkg": "🧰️framework/📦️packages/🟦️typescript",
+  "kind": "undeclared-resolves",
+  "example": "🧰️framework/📦️packages/🟦️typescript/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/♿️accessibility-mirror/🟦️.ts",
+  "count": 1
+ },
+ "✏️s|@semio-tech/framework-3d-js": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/📦️aabb/🟦️.ts",
+  "count": 33
+ },
+ "✏️s|vitest": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🧪️tests/🧪️semio-tech-cad-js-core-model-commit-mesh/🟦️.ts",
+  "count": 73
+ },
+ "✏️s|@semio-tech/s-spatial-kernel-semio-session-ts": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🟦️.ts",
+  "count": 3
+ },
+ "✏️s|fast-json-patch": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🏗️construction/🧪️tests/🟦️.ts",
+  "count": 98
+ },
+ "✏️s|mathjs": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧪️tests/⚖️combination-stress/🟦️.ts",
+  "count": 16
+ },
+ "✏️s|graphlib": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🧪️tests/🕸️edge-authority/🟦️.ts",
+  "count": 3
+ },
+ "✏️s|lodash": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎯️selected-runtime/🟦️.ts",
+  "count": 3
+ },
+ "✏️s|nx": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎯️selected-runtime/🟦️.ts",
+  "count": 3
+ },
+ "✏️s|esbuild": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎮️session/🟦️.ts",
+  "count": 4
+ },
+ "✏️s|typescript": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎮️session/🟦️.ts",
+  "count": 11
+ },
+ "✏️s|react": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🧪️multi-shell-harness/🟦️.tsx",
+  "count": 27
+ },
+ "✏️s|react-dom": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🧪️multi-shell-harness/🟦️.tsx",
+  "count": 1
+ },
+ "✏️s|@storybook/react-vite": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/📸️remodel/📖️stories/🎭️report/🧪️.story.tsx",
+  "count": 25
+ },
+ "✏️s|@semio-tech/ui-react": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🎚️config/🟦️.ts",
+  "count": 1
+ },
+ "✏️s|@semio-tech/cad-engine-ts": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🔗️wires-and-selection/🟦️.ts",
+  "count": 26
+ },
+ "✏️s|@semio-tech/cad-cad-ts": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🧪️tests/🧪️semio-tech-cad-js-brepjs/🟦️.ts",
+  "count": 9
+ },
+ "✏️s|@semio-tech/cad-js-module-aec-building": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🧪️tests/🧪️semio-tech-cad-js-brepjs/🟦️.ts",
+  "count": 2
+ },
+ "✏️s|@semio-tech/cad-js-module-aec-building-energy": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🧪️tests/🧪️semio-tech-cad-js-brepjs/🟦️.ts",
+  "count": 3
+ },
+ "✏️s|@semio-tech/cad-js-module-aec-building-structure": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🧪️tests/🧪️semio-tech-cad-js-brepjs/🟦️.ts",
+  "count": 2
+ },
+ "✏️s|@playwright/test": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🎨️storybook-renderer/🟦️.ts",
+  "count": 4
+ },
+ "✏️s|@semio-tech/s-dev-block-ts": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🧱️block/📖️stories/🎭️2d-board/🧪️.story.tsx",
+  "count": 5
+ },
+ "✏️s|@semio-tech/block-2d": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🧱️block/📖️stories/🧭️coordination/🟦️.ts",
+  "count": 7
+ },
+ "✏️s|@semio-tech/block-3d": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🧱️block/📖️stories/🧭️coordination/🟦️.ts",
+  "count": 4
+ },
+ "✏️s|@semio-tech/block-5d": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🧱️block/📖️stories/🧭️coordination/🟦️.ts",
+  "count": 2
+ },
+ "✏️s|@semio-tech/stdio-docx": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📚️office-schema-contract/🧬️public-facets/🟦️.ts",
+  "count": 7
+ },
+ "✏️s|@semio-tech/stdio-xlsx": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📚️office-schema-contract/🧬️public-facets/🟦️.ts",
+  "count": 7
+ },
+ "✏️s|@semio-tech/stdio-pptx": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📚️office-schema-contract/🧬️public-facets/🟦️.ts",
+  "count": 10
+ },
+ "✏️s|@semio-tech/stdio-xml": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📚️office-schema-contract/🟦️.ts",
+  "count": 28
+ },
+ "✏️s|@semio-tech/stdio-inventory-ts": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📦️artifact-package-graph/🟦️.ts",
+  "count": 3
+ },
+ "✏️s|@semio-tech/stdio-deflate": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+  "count": 6
+ },
+ "✏️s|@semio-tech/stdio-zip": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+  "count": 5
+ },
+ "✏️s|@semio-tech/stdio-csv": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+  "count": 1
+ },
+ "✏️s|@semio-tech/stdio-md": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+  "count": 1
+ },
+ "✏️s|@semio-tech/stdio-stl": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+  "count": 1
+ },
+ "✏️s|@semio-tech/stdio-las": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+  "count": 2
+ },
+ "✏️s|@semio-tech/stdio-step": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+  "count": 1
+ },
+ "✏️s|@semio-tech/stdio-ifc": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+  "count": 3
+ },
+ "✏️s|@semio-tech/stdio-dwg": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+  "count": 2
+ },
+ "✏️s|@semio-tech/stdio-dxf": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+  "count": 1
+ },
+ "✏️s|@semio-tech/stdio-svg": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+  "count": 1
+ },
+ "✏️s|@semio-tech/stdio-png": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+  "count": 1
+ },
+ "✏️s|@semio-tech/stdio-jpg": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+  "count": 4
+ },
+ "✏️s|@semio-tech/stdio-gif": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+  "count": 1
+ },
+ "✏️s|@semio-tech/stdio-bmp": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+  "count": 1
+ },
+ "✏️s|@semio-tech/stdio-tiff": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+  "count": 1
+ },
+ "✏️s|@semio-tech/stdio-pdf": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+  "count": 2
+ },
+ "✏️s|@semio-tech/stdio-bcf": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+  "count": 1
+ },
+ "✏️s|@semio-tech/stdio-mp4": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+  "count": 1
+ },
+ "✏️s|@semio-tech/stdio-avi": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+  "count": 1
+ },
+ "✏️s|@semio-tech/stdio-mp3": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+  "count": 1
+ },
+ "✏️s|@semio-tech/stdio-wav": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+  "count": 1
+ },
+ "✏️s|@semio-tech/stdio-epw": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+  "count": 1
+ },
+ "✏️s|@semio-tech/stdio-tsv": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+  "count": 1
+ },
+ "✏️s|@semio-tech/stdio-html": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+  "count": 1
+ },
+ "✏️s|@semio-tech/puzzle-2d": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🚀️entry/🟦️.ts",
+  "count": 3
+ },
+ "✏️s|fast-deep-equal": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/💡️inference-port/🔑️broker-session-authority/🟦️.ts",
+  "count": 7
+ },
+ "✏️s|playwright": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🤖️live-agent-loop/🟦️.ts",
+  "count": 3
+ },
+ "✏️s|@semio-tech/puzzle-wasm": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️2d-fixtures/🧪️.story.tsx",
+  "count": 4
+ },
+ "✏️s|@semio-tech/puzzle-3d-ts": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🧩️puzzle/🧪️tests/🔺️diff-parsers/🟦️.ts",
+  "count": 1
+ },
+ "✏️s|@semio-tech/puzzle-js": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🧩️puzzle/🧪️tests/🔺️diff-parsers/🟦️.ts",
+  "count": 2
+ },
+ "✏️s|@semio-tech/s-fem-composition-tests": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🏗️fem/📖️stories/🎭️3d-model/🧪️.story.tsx",
+  "count": 6
+ },
+ "✏️s|@semio-tech/framework-ui-viewport-ts": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🏗️fem/📖️stories/🧭️coordination/🎞️scenes/🟦️.ts",
+  "count": 5
+ },
+ "✏️s|@semio-tech/fem-2d": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🏗️fem/📖️stories/🧭️coordination/🟦️.ts",
+  "count": 2
+ },
+ "✏️s|@semio-tech/fem-3d": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🧑‍💻dev/🏗️fem/📖️stories/🧭️coordination/🟦️.ts",
+  "count": 2
+ },
+ "✏️s|graphql": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🪆️query/🟦️.ts",
+  "count": 19
+ },
+ "✏️s|graphology": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🪆️query/🟦️.ts",
+  "count": 3
+ },
+ "✏️s|sharp": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧱️preparation/🟦️.ts",
+  "count": 29
+ },
+ "✏️s|manifold-3d": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/🟦️.ts",
+  "count": 12
+ },
+ "✏️s|@semio-tech/norm-js": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🟦️.ts",
+  "count": 690
+ },
+ "✏️s|protobufjs": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+  "count": 10
+ },
+ "✏️s|@semio-tech/cad-js": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/🎒️test-dependencies/🟦️.ts",
+  "count": 24
+ },
+ "✏️s|chevrotain": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/🟦️.ts",
+  "count": 3
+ },
+ "✏️s|@semio-tech/cad-js-module-spatial-shape": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts",
+  "count": 2
+ },
+ "✏️s|@semio-tech/block-js": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts",
+  "count": 29
+ },
+ "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📦️packages/🟦️typescript|@semio-tech/framework": {
+  "pkg": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📦️packages/🟦️typescript",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/🟦️.ts",
+  "count": 1
+ },
+ "✏️s|@semio-tech/stdio-registry-ts": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+  "count": 2
+ },
+ "✏️s|fast-glob": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts",
+  "count": 3
+ },
+ "✏️s|jsonschema": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts",
+  "count": 3
+ },
+ "✏️s|markdown-it": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🔬️probes/🟦️.ts",
+  "count": 3
+ },
+ "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🟦️typescript|@semio-tech/framework": {
+  "pkg": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🟦️typescript",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/🟦️.ts",
+  "count": 1
+ },
+ "✏️s|@semio-tech/sequence-sequence": {
+  "pkg": "✏️s",
+  "kind": "undeclared-unresolved",
+  "example": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🧪️tests/🔮️protocol-oracle/🟨️.js",
+  "count": 2
+ },
+ "✏️s|dagre": {
+  "pkg": "✏️s",
+  "kind": "undeclared-unresolved",
+  "example": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️tests/📌️retained-actions/🟨️.js",
+  "count": 1
+ },
+ "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🟦️typescript|@semio-tech/framework": {
+  "pkg": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🟦️typescript",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/🟦️.ts",
+  "count": 1
+ },
+ "✏️s|@semio-tech/procedural-js": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+  "count": 12
+ },
+ "✏️s|dom-accessibility-api": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🔬️unit/🟦️.ts",
+  "count": 1
+ },
+ "✏️s|jsdom": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🔬️unit/🟦️.ts",
+  "count": 1
+ },
+ "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📦️packages/🟦️typescript|@semio-tech/framework": {
+  "pkg": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📦️packages/🟦️typescript",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/🟦️.ts",
+  "count": 1
+ },
+ "✏️s|decimal.js": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💰️costs/🧪️tests/🟦️.ts",
+  "count": 2
+ },
+ "✏️s|ajv-formats": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧪️tests/🟦️.ts",
+  "count": 1
+ },
+ "✏️s|@semio-tech/s-fem-engine-ts": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧪️tests/🪟️window-config-contract/🟦️.ts",
+  "count": 6
+ },
+ "✏️s|@semio-tech/fem-js": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧪️tests/🪟️window-config-contract/🟦️.ts",
+  "count": 11
+ },
+ "✏️s|@napi-rs/canvas": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️owned/🧪️tests/🟦️.ts",
+  "count": 5
+ },
+ "✏️s|pdfjs-dist": {
+  "pkg": "✏️s",
+  "kind": "undeclared-resolves",
+  "example": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️owned/🧪️tests/🟦️.ts",
+  "count": 3
+ },
+ "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript|scheduler": {
+  "pkg": "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript",
+  "kind": "undeclared-unresolved",
+  "example": "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript/📜️script.ts",
+  "count": 1
+ }
+}

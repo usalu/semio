@@ -60,8 +60,8 @@
     },
     "lanes": {
       "type": "array",
-      "minItems": 15,
-      "maxItems": 15,
+      "minItems": 16,
+      "maxItems": 16,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -76,14 +76,14 @@
           "tag": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 14
+            "maximum": 15
           }
         }
       }
     },
     "invalidTags": {
       "const": [
-        15,
+        16,
         255
       ]
     },

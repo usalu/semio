@@ -10,9 +10,6 @@
         "semio-framework-3d-mesh-reconstruction",
         "semio-framework-3d-mesh-document",
         "semio-framework-3d-mesh-contract",
-        "semio-framework-3d-mesh-journal",
-        "semio-framework-3d-mesh-surface",
-        "semio-framework-3d-mesh-quality",
         "semio-framework-3d-mesh-clipping",
         "semio-framework-3d-brep-vector",
         "semio-framework-value",
@@ -60,6 +57,7 @@
         "semio-framework-3d-mesh-contract",
         "semio-framework-pack-json",
         "semio-framework-value",
+        "semio-framework-value-native-owned",
         "semio-framework-mesh-engine",
         "semio-framework-value-derive"
       ],
@@ -133,6 +131,8 @@
       "development": [
         "semio-framework-3d",
         "semio-framework-3d-mesh-reconstruction",
+        "semio-framework-3d-mesh-quality",
+        "semio-framework-3d-mesh-surface",
         "semio-framework-value",
         "semio-framework-pack-json",
         "semio-framework-async-macros",

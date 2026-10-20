@@ -92,7 +92,8 @@ fn sqlite_snapshot_cad_parent_initial_cancellation_reaches_all_four_owned_phases
 fn sqlite_snapshot_cad_parent_long_unicode_is_cancellable_inside_every_owned_phase(){
  let mut expected=fixture();expected.schema="😀".repeat(laws()["control"]["largeCharacters"].as_u64().unwrap()as usize);let d=database(&expected);for phase in[SqliteSnapshotPhase::ProjectSnapshot,SqliteSnapshotPhase::ReconstructSnapshot,SqliteSnapshotPhase::DecodeNative,SqliteSnapshotPhase::EncodeNative]{let mut reached=false;let mut callback=|event:SqliteSnapshotProgress|if event.phase==phase&&event.total>=65536&&event.completed>=65536&&event.completed<event.total{reached=true;false}else{true};let mut control=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default());let result=match phase{SqliteSnapshotPhase::ProjectSnapshot=>expected.to_sqlite_database(&mut control).map(|_|()),SqliteSnapshotPhase::ReconstructSnapshot=>CadSnapshot::from_sqlite_database(&d,&mut control).map(|_|()),SqliteSnapshotPhase::DecodeNative=>original_owners::with_decoding(|native_owner|CadSnapshot::decode_sqlite_snapshot_native(&payload(&expected,SnapshotEncoding::Text),&mut control, native_owner)).map(|_|()),SqliteSnapshotPhase::EncodeNative=>original_owners::with_encoding(|native_owner|expected.encode_sqlite_snapshot_native(SnapshotEncoding::Text,&mut control, native_owner)).map(|_|()),_=>panic!("unexpected")};assert!(result.is_err(),"{phase:?}");drop(control);assert!(reached,"{phase:?}");}
 }
-use semio_framework_plugin::{PluginApp,VcsArtifactApp,EditorApp,ViewerApp,__semio_dispatch_PluginApp,plugin_app_close_prelude::*};
+use semio_framework_plugin::{PluginApp,VcsArtifactApp,EditorApp,ViewerApp,plugin_app_close_prelude::*};
+use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
 semio_framework_dispatch_macros::dyn_enum_close!{
  /// 📐️ The actual CAD editor and viewer app roster.
  enum SqliteApps:PluginApp{

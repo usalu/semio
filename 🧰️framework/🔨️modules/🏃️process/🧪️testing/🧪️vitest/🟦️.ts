@@ -27,11 +27,11 @@ export function testCacheDirectoryV1(environment:Readonly<Record<string,string|u
   return join(readVitestPolicyV1(environment).cacheRoot,id);
 }
 
-/** 📋️ Preserves owning config resolution, argument order and report semantics. */
+/** 📋️ Preserves owning config resolution, argument order and report semantics; configs load natively so Node and Bun see the same module graph. */
 export function vitestArgumentsV1(policy:VitestPolicyV1,args:readonly string[],config:string,coverage:boolean):string[]{
   admit(policy);if(!config)throw Error("Explicit Vitest config required");
   const ms=String(policy.budgetMs);
-  return [policy.toolPath,"run","--config",resolve(policy.cwd,config),"--testTimeout",ms,"--hookTimeout",ms,"--teardownTimeout",ms,...(coverage?["--coverage.enabled","--coverage.provider=v8","--coverage.reporter=lcovonly",`--coverage.reportsDirectory=${policy.coverageDirectory}`]:[]),...args];
+  return [policy.toolPath,"run","--config",resolve(policy.cwd,config),"--configLoader","native","--testTimeout",ms,"--hookTimeout",ms,"--teardownTimeout",ms,...(coverage?["--coverage.enabled","--coverage.provider=v8","--coverage.reporter=lcovonly",`--coverage.reportsDirectory=${policy.coverageDirectory}`]:[]),...args];
 }
 
 /** ⏱️ Runs the supplied test tool with cancellation and its exact wall-clock budget. */

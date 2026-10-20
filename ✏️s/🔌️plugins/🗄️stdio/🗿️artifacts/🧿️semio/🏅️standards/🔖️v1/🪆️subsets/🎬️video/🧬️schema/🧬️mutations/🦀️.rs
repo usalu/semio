@@ -161,7 +161,18 @@ fn sample_at(base: &SemioVideoSnapshot, stream_index: usize, index: usize) -> Op
 #[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_mutation_cases() -> Vec<SemioVideoMutation> {
-    tests::sample_mutations()
+    vec![
+        SemioVideoMutation::InsertStream(insert_stream::InsertStream {
+            index: 1,
+            stream: SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "srt".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() },
+        }),
+        SemioVideoMutation::RemoveStream(remove_stream::RemoveStream { index: 0 }),
+        SemioVideoMutation::SetStreamMeta(set_stream_meta::SetStreamMeta { index: 0, kind: SemioVideoStreamKind::Audio, codec: "vp9".into(), width: 1280, height: 720, rate: SemioRational { num: 60, den: 1 } }),
+        SemioVideoMutation::InsertSample(insert_sample::InsertSample { stream_index: 0, index: 1, sample: SemioVideoSample { pts: 99, key: true, data: vec![9, 9] } }),
+        SemioVideoMutation::RemoveSample(remove_sample::RemoveSample { stream_index: 0, index: 0 }),
+        SemioVideoMutation::SetSampleData(set_sample_data::SetSampleData { stream_index: 0, index: 0, data: vec![42] }),
+        SemioVideoMutation::SetSampleFlags(set_sample_flags::SetSampleFlags { stream_index: 0, index: 0, pts: 500, key: true }),
+    ]
 }
 //#endregion 🔖️Demo
 

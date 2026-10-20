@@ -1,6 +1,7 @@
 //! 🌐️ Global averaging, loop closure and pose prior tests of the structure from motion: the rotation and translation averaging, the loop detection, the pose-graph optimisation and the similarity and ground-control priors. See [`super`].
 
 use super::*;
+use semio_s_artifact_remodel_remodeling_sfm_geometry::editor::remodeling::engine::sfm::geometry::KeyframeIndex;
 
 // #region 🔖️GlobalTests
 #[test]

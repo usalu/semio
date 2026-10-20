@@ -1,0 +1,68 @@
+{
+  "link": {
+    "name": "s"
+  },
+  "cargo": {
+    "keys": [
+      "CARGO_TARGET_DIR",
+      "CARGO_BUILD_TARGET_DIR",
+      "CARGO_BUILD_BUILD_DIR"
+    ],
+    "cases": [
+      {
+        "name": "all-three-keys-resolve-against-the-workspace",
+        "env": {
+          "CARGO_TARGET_DIR": ".cache/b/cargo/target",
+          "CARGO_BUILD_TARGET_DIR": "out/target",
+          "CARGO_BUILD_BUILD_DIR": "out/build",
+          "KEPT": "yes"
+        },
+        "directories": {
+          "CARGO_TARGET_DIR": ".cache/b/cargo/target",
+          "CARGO_BUILD_TARGET_DIR": "out/target",
+          "CARGO_BUILD_BUILD_DIR": "out/build"
+        },
+        "base": {
+          "KEPT": "yes"
+        }
+      },
+      {
+        "name": "one-key-and-parent-segments-normalize",
+        "env": {
+          "CARGO_BUILD_BUILD_DIR": "out/../shared/build"
+        },
+        "directories": {
+          "CARGO_BUILD_BUILD_DIR": "out/../shared/build"
+        },
+        "base": {}
+      },
+      {
+        "name": "other-cargo-variables-are-ordinary-environment",
+        "env": {
+          "CARGO_HOME": "home",
+          "RUSTFLAGS": "-C debuginfo=0"
+        },
+        "directories": {},
+        "base": {
+          "CARGO_HOME": "home",
+          "RUSTFLAGS": "-C debuginfo=0"
+        }
+      },
+      {
+        "name": "non-string-directories-are-not-declarations",
+        "env": {
+          "CARGO_TARGET_DIR": 7,
+          "CARGO_BUILD_TARGET_DIR": null
+        },
+        "directories": {},
+        "base": {}
+      },
+      {
+        "name": "no-environment",
+        "env": null,
+        "directories": {},
+        "base": {}
+      }
+    ]
+  }
+}

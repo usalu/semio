@@ -3,7 +3,7 @@
  * 🧱️ Child module of `🎠️kernel`; importers import this module directly, and the kernel package entry {@link ../📦️packages/🟦️typescript/🟦️.ts} lists its public names.
  */
 
-import type { ShellLocale, ShellTerminology, LocalizedLabel } from "@semio-tech/framework/manifest/generated/ui-axes";
+import type { ShellLocale, ShellTerminology, LocalizedLabel } from "@semio-tech/framework-manifest/generated/ui-axes";
 import { type Severity } from "../🚨️fault/🟦️.ts";
 import { historyNotice } from "../🏷️notice-labels/🟦️.ts";
 

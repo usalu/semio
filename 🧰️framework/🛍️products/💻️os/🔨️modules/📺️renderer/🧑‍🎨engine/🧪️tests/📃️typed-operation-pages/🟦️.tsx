@@ -27,7 +27,7 @@ export async function registerTypedOperationPagesTests(vitest: PluginRuntimeVite
           return { tag: "send-message", val: { target: { tag: "shell", val: String(receiver) }, payload: Array.from(Buffer.concat([Buffer.from("semio.typed-operation-page.v1\0"), body, payload])) } };
         };
         expect(typedOperationResult(wire(10, "x".repeat(4_096)))?.payload.length).toBe(4_096);
-        for (const invalid of [wire(15, ""), wire(10, "x".repeat(4_097)), wire(10, "", 8)]) expect(() => typedOperationResult(invalid)).toThrow("authority");
+        for (const invalid of [wire(16, ""), wire(10, "x".repeat(4_097)), wire(10, "", 8)]) expect(() => typedOperationResult(invalid)).toThrow("authority");
         const truncated = wire(10, "x");
         (truncated.val as { payload: number[] }).payload.pop();
         expect(() => typedOperationResult(truncated)).toThrow("authority");

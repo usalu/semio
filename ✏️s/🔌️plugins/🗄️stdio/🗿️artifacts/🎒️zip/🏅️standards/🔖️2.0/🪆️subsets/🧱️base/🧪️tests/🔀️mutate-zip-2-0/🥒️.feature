@@ -6,7 +6,7 @@ Feature: Apply every typed ZIP 2.0 mutation to a real-world multi-entry archive
   The input is `shared://🗜️.zip`, a real 20-entry, ~1.53 MB archive derived
   ONCE (not a test step) with the `zip` reference library from 20 of the 67 real architecture
   photographs committed at `♻️mit-bestand/📋️bericht/📋️zwischenbericht/🖼️asset/🏗️projekt/`, no genuine
-  multi-entry ZIP being reachable outside the forbidden `compose/` tree. Every member keeps its
+  multi-entry ZIP being reachable outside the retired compose tree. Every member keeps its
   source filename under a `projekt/` prefix; the archive comment is
   "Zwischenbericht Projektbeispiele – 20 von 67 realen Bestandsarchitektur-Referenzfotos." Exact file
   list, in archive order (`projekt/<name>`):

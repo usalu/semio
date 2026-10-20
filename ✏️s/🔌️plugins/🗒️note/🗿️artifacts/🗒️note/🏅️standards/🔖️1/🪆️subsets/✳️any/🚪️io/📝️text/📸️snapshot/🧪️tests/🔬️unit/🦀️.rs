@@ -1,4 +1,4 @@
-use crate::NoteSnapshot;
+use semio_s_artifact_note_note_schema::NoteSnapshot;
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
 use crate::{NoteBlockNode, NoteImageAsset, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
 use std::collections::BTreeMap;

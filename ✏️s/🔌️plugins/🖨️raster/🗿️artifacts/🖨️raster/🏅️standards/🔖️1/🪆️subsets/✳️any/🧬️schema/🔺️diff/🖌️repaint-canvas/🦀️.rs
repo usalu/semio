@@ -30,7 +30,7 @@ pub enum Refusal {
 }
 
 /// 🧩️ The decoded image behind `key`, from the asset pool's own materialized child.
-fn asset_image(base: &RasterSnapshot, key: &str) -> Result<SemioImageSnapshot, Refusal> {
+pub fn asset_image(base: &RasterSnapshot, key: &str) -> Result<SemioImageSnapshot, Refusal> {
     let child = base.assets.get(key).ok_or_else(|| Refusal::Error("mutation.target-missing", format!("Image asset \"{key}\" is not in the document.")))?;
     let image = child.local_owner::<SemioImageSnapshot>().ok_or_else(|| Refusal::Fatal("mutation.apply.image-unmaterialized", format!("Image asset \"{key}\" has no materialized pixels.")))?;
     let frame = image.frames.first().ok_or_else(|| Refusal::Fatal("mutation.apply.image-invalid", format!("Image asset \"{key}\" has no frame.")))?;
@@ -117,7 +117,7 @@ pub(super) fn filed(canvas: Canvas, image: SemioImageSnapshot, layer_id: &str) -
 }
 
 /// 🗑️ Whether the image `key` that `layer_id`'s `target` stops showing is shown by nothing else and so leaves the pool.
-fn released(base: &RasterSnapshot, key: &str, layer_id: &str, target: &str) -> bool {
+pub fn released(base: &RasterSnapshot, key: &str, layer_id: &str, target: &str) -> bool {
     base.assets.contains_key(key)
         && !flatten_raster_layers(&base.layers).iter().any(|layer| {
             let own = layer_node_id(layer) == layer_id;

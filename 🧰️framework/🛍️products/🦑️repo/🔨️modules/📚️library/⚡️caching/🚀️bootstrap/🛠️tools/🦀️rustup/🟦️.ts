@@ -1,7 +1,7 @@
 import {createHash} from "node:crypto";
 import {posix} from "node:path";
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 export interface RustupProvisionObservationV1 {readonly receipt:"valid"|"absent"|"foreign"|"interrupted-original";readonly offline:boolean;readonly canceled:boolean}
 export type RustupToolchainSealEntryV1=Readonly<{path:string;kind:"file";bytes:number;digest:string}>|Readonly<{path:string;kind:"directory"}>|Readonly<{path:string;kind:"symlink";target:string}>;
 /** 🚦️ Selects only an Original retained generation, issued recovery or controlled online provision. */

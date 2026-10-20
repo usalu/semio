@@ -131,6 +131,38 @@ pub mod serialization {
     pub use semio_framework_os_store_space_history::lifted_serialization::*;
 }
 
+/// 🧲️ The physical receiving authority an ordinary store test lends to bounded store steps: every step runs inside one fresh
+/// native decode turn whose construction recipient funds each quoted demand from the one fixed grant and accepts only receipts that fit it.
+pub struct FixtureStoreReceiving {
+    grant: RetainedCloneGrant,
+}
+
+struct FixtureStoreConstruction(RetainedCloneGrant);
+
+impl semio_framework_value_native_owned::native_decoding::NativeDecodeConstructionRecipient for FixtureStoreConstruction {
+    fn grant(&mut self, _: semio_framework_value::RetirementDemand) -> Result<RetainedCloneGrant, ValueError> {
+        Ok(self.0)
+    }
+
+    fn accept(&mut self, grant: RetainedCloneGrant, progress: RetainedCloneProgress) -> Result<(), ValueError> {
+        assert!(progress.fits(grant), "a store step spent more than the fixture receiving grant");
+        Ok(())
+    }
+}
+
+impl FixtureStoreReceiving {
+    pub fn new(grant: RetainedCloneGrant) -> Self {
+        Self { grant }
+    }
+
+    pub fn receive<R>(&mut self, operation: impl FnOnce(&mut semio_framework_value::NativeDecodeControl<'_>) -> R) -> R {
+        let mut observer = |_: semio_framework_value::NativeDecodeProgress| true;
+        let mut control = semio_framework_value::NativeDecodeControl::new(1 << 30, &mut observer);
+        let mut construction = FixtureStoreConstruction(self.grant);
+        control.with_construction_recipient(&mut construction, |control| Ok::<R, ValueError>(operation(control))).expect("a fixture receiving turn owns no earlier construction recipient")
+    }
+}
+
 pub mod owned_schema_decode {
     pub use semio_framework_os_store_owned_schema_decode::*;
     pub use semio_framework_os_store_owned_schema_fields::lifted_owned_schema_decode::*;

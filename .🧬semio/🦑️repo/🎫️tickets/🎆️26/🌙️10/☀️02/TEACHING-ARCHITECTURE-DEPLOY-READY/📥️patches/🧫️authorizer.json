@@ -1,0 +1,7 @@
+{
+  "version":1,
+  "cases":[
+    {"name":"Minified Reader","text":"function Vu(){return 1}function oe(){return './🧬️schema/🔣️.json'}","needle":"function Vu(","expectedOffset":0},
+    {"name":"Schema Initializer","text":"prefix function oe(){return import.meta.dirname+'/🧬️schema/🔣️.json'}","needle":"function oe(","expectedOffset":7}
+  ]
+}

@@ -1,7 +1,7 @@
 use semio_framework_test_fixtures::fixture_path;
 use semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::default_snapshot;
 use super::*;
-use semio_s_artifact_lowpoly_lowpoly_model::{default_snapshot, snapshot::LowpolyObject, snapshot::LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::LowpolyObject, snapshot::LowpolySnapshot};
 use protocol::Mutation;
 
 fn tiny_object(id: &str, name: &str) -> LowpolyObject {

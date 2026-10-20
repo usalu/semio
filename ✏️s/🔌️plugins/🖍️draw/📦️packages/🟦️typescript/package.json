@@ -14,7 +14,8 @@
   "devDependencies": {
     "ajv": "8.20.0",
     "typescript": "^5.9.3",
-    "@semio-tech/framework": "workspace:*"
+    "@semio-tech/framework": "workspace:*",
+    "scheduler": "0.28.0"
   },
   "author": {
     "name": "Ueli Saluz",

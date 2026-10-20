@@ -7,7 +7,7 @@ import {lstat,open,opendir,readlink,realpath} from "node:fs/promises";
 import {basename,dirname,isAbsolute,join,relative,resolve,posix,win32} from "node:path";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {captureOwnedCommandV1} from "@semio-tech/process/execution";
-import corpus from "./🧪️tests/🔣️.json";
+import corpus from "./🧪️tests/🔣️.json" with { type: "json" };
 import{nxToolingInstallIdentityV1}from"../🪪️identity/🟦️.ts";
 import{nxAuthorizerReceiptHoldsV1}from"../../🔏️authorizers/📤️receipt/🟦️.ts";
 import {nxSdkSnapshotReceiptHoldsV1,nxSdkSnapshotIdentityV1} from "../📥️snapshot/🟦️.ts";

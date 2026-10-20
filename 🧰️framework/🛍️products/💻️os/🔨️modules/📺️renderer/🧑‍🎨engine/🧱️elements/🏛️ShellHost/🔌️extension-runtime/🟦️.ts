@@ -11,7 +11,7 @@ import { resolveManifestLabel } from "../../🛠️ShellHelpers/🏷️labels/�
 import { beginCancellableExtensionRequest } from "../../🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
 import { type PluginExtensionCompletion, serializePerActor } from "../../🔌️PluginRuntime/🟦️.tsx";
 import { isShardLostError } from "@semio-tech/framework/actor/shard-client/heartbeat";
-import { hopTrace, type HopTraceDetail } from "@semio-tech/framework/trace";
+import { hopTrace, type HopTraceDetail } from "@semio-tech/framework-trace";
 import { commandStallBandTextV1, commandStallHeldSecondsV1, type CommandStallV1 } from "../../🔌️PluginRuntime/⏱️command-stall/🟦️.ts";
 
 //#region FrameworkOsShell

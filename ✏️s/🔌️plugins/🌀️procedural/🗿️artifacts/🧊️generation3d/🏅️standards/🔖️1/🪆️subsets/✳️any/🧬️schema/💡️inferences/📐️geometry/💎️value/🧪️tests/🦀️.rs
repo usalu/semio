@@ -69,7 +69,7 @@ fn original_widget_output_cancel_keeps_nested_payload_for_same_caller_retirement
     assert_eq!(input_heap.released_bytes,0);let mut evaluation=Some(evaluation);
     let handoff=RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()};
     let mut job=caller.turn(handoff,|cx|ReadyJob::admit(&mut evaluation,cx)).unwrap().unwrap();assert!(evaluation.is_none());
-    let (_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_async::poll_ready_now(caller.cancel().cancel()));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+    let (_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_async::poll::resolve_ready(caller.cancel().cancel()));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     let before=caller.cumulative_receipt();assert!(caller.turn(stock,|cx|job.step_on_original(cx)).unwrap().is_none());assert_eq!(caller.cumulative_receipt(),before);
     let (_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.cancel());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     let before=caller.cumulative_receipt();assert!(caller.turn(stock,|cx|job.step_on_original(cx)).unwrap().is_none());assert_eq!(caller.cumulative_receipt(),before);

@@ -119,7 +119,7 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
       validateBuildTaskArgumentsV1(resolved.args);
     }
     if(command==="dependencies"){
-      const {mode,selection}=readBuildDependencyInvocationV1(resolved.args),{SyncScript,RefreshLockScript}=await import("../⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts");
+      const {mode,selection}=readBuildDependencyInvocationV1(resolved.args),{SyncScript,RefreshLockScript}=await import("../⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🔬️script-commands/🟦️.ts");
       await new (mode==="lock"?RefreshLockScript:SyncScript)(root,root,invocation).run(selection.kind==="all"?["--all"]:["--scope",selection.owner]);return;
     }
     if(command==="cargo"){

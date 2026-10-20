@@ -12,9 +12,9 @@ pub struct UpdateText {
     pub layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
     pub content: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
     pub size: f64,
-    pub font_family:crate::DrawingFontFamily,
+    pub font_family:semio_s_artifact_draw_drawing_model::font_family::DrawingFontFamily,
 }
-pub fn update_text<Op: From<UpdateText>>(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, content: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, size: f64,font_family:crate::DrawingFontFamily) -> Op {
+pub fn update_text<Op: From<UpdateText>>(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, content: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, size: f64,font_family:semio_s_artifact_draw_drawing_model::font_family::DrawingFontFamily) -> Op {
     Op::from(UpdateText { layer_id, content, size,font_family })
 }
 impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for UpdateText where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<UpdateText> {

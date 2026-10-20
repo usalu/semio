@@ -6,20 +6,20 @@ import Ajv from "ajv";
 import { applyPatch } from "fast-json-patch";
 import { Root } from "protobufjs";
 import { parse, buildASTSchema } from "graphql";
-import { binary64, binary64Value, type Binary64 } from "@semio-tech/value-ts/ieee754";
-import { parseFem2dNodePatch, parseFem2dSectionPatch } from "../../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts";
-import { parseFem3dNodePatch, parseFem3dSectionPatch } from "../../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts";
+import { binary64, binary64Value, type Binary64 } from "@semio-tech/framework/value/ieee754";
 
 const owner = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const read = (path: string) => JSON.parse(readFileSync(path, "utf8"));
 const capture = (patch: Record<string, unknown>) => Object.fromEntries(Object.entries(patch).map(([key, value]) => [key, typeof value === "number" ? binary64(value) : value]));
 
-describe("node and section field intent mirrors", () => {
-  for (const dimension of ["2d", "3d"] as const) {
+/** 🕸️ Registers the node and section field-intent laws of one dimension against that artifact's own diff parsers. */
+export function registerMeshFieldIntent(dimension: "2d" | "3d", parsers: { parseNodePatch(patch: any): object; parseSectionPatch(patch: any): object }): void {
+describe(`${dimension} node and section field intent mirrors`, () => {
+  {
     const subsets = resolve(owner, `🗿️artifacts/${dimension === "2d" ? "◻️2d" : "🧊️3d"}/🏅️standards/🔖️1/🪆️subsets`);
     for (const entity of ["node", "section"] as const) {
       const title = entity === "node" ? "Node" : "Section";
-      const parsePatch = entity === "node" ? dimension === "2d" ? parseFem2dNodePatch : parseFem3dNodePatch : dimension === "2d" ? parseFem2dSectionPatch : parseFem3dSectionPatch;
+      const parsePatch = entity === "node" ? parsers.parseNodePatch : parsers.parseSectionPatch;
       const schema = read(resolve(subsets, `🕸️mesh/🧬️schema/🧬️mutations/🩹️change-${entity}/🧬️schema/🔣️.json`));
       const validate = new Ajv({ strict: false, strictNumbers: true, validateFormats: false }).compile(schema);
       const fixtures = resolve(subsets, `🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-${entity}`);
@@ -70,3 +70,4 @@ describe("node and section field intent mirrors", () => {
     }
   }
 });
+}

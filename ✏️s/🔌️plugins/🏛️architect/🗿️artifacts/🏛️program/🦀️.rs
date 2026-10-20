@@ -12,6 +12,7 @@ extern crate semio_framework_os_kernel as store;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
 mod art_program_demo_tests;
 extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_schema as schema;
 
 #[cfg(test)]
 use pack::snapshot::ArtifactDsl;
@@ -78,7 +79,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 
 pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(schema::program_artifact_schema_descriptor())
+        .schema(standards::v1::subsets::any::schema::program_artifact_schema_descriptor())
         .inferences([standards::v1::subsets::any::schema::inferences::program_artifact_inference_descriptor()])
         .composers(standards::v1::subsets::any::io::io_registry::entries())
         .document_codec::<semio_framework_plugin::EditorApp<editor::architect::ArchitectPlayApp>>()

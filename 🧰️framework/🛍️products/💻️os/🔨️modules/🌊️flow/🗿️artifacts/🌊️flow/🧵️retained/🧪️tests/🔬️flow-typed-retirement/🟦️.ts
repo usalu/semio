@@ -1,8 +1,9 @@
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 
-const WORKSPACE_ROOT = process.cwd();
+const WORKSPACE_ROOT = fileURLToPath(new URL("../../../../../../../../../..", import.meta.url));
 
 /** 🧪️ Executes flow typed retirement policy assertions. */
 export function flowTypedRetirementSelfTests(): number {

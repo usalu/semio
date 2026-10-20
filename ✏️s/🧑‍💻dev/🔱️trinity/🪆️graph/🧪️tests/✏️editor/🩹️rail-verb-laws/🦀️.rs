@@ -1,6 +1,7 @@
 //! 🩹️ The rail verbs of the editor laws: patch nodes, undo and redo, select all and the text gesture verbs. See [`super`].
 
 use super::*;
+use semio_framework::Fault;
 
 //#region 🩹️RailVerbLaws
 /// 🕹️ Dispatches `action` with rail-staged text `args` (the Actions pane's own shape) and settles it.

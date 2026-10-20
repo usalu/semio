@@ -109,7 +109,7 @@ fn an_open_gesture_previews_exactly_what_its_release_commits() {
     use semio_s_artifact_procedural_3d_editor::generation3d_gumball_preview;
     use semio_s_artifact_procedural_3d_transforms::GumballGestures;
     use semio_s_artifact_procedural_3d_editor::PreviewInteractionMarks;
-    use semio_s_artifact_procedural_3d_model::example_snapshot;
+    use semio_s_artifact_procedural_3d_io_text::snapshot::example_snapshot;
     use semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation;
     use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_HEX_COLUMN;
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();

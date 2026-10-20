@@ -11,6 +11,7 @@ extern crate semio_framework_value_derive as value_derive;
 use semio_s_artifact_norm_en1993_model::{BridgeFatigue, ColdFormedMember, CraneRunway, FatigueDetail, FireExposure, LoadCase, MemberAction, PlatedPanel, SiloShell, SteelJoint, SteelMaterial, SteelMember, SteelPile, SteelSection, TensionComponent, TowerLeg};
 use semio_s_plugin_norm_compliance::AnnexChoice;
 use framework_schema::ArtifactSchema;
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 //#region 🔖️Artifact
 /// 🧬️ Full En1993 artifact state across the artifact and presence lanes.

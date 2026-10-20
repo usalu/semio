@@ -17,7 +17,7 @@ use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
-use xml_address::{PptxShapeAddress, PptxSlideAddress, PptxXmlAddress, PptxXmlVacancyAddress};
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::xml_address::{PptxShapeAddress, PptxSlideAddress, PptxXmlAddress, PptxXmlVacancyAddress};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 struct PptxMutationRecord {

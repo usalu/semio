@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@semio-tech/framework-transient",
+  "version": "0.1.0",
+  "description": "framework · ephemeral state boxes and maps (leaf)",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./🟦️.ts"
+  },
+  "license": "LGPL-3.0-or-later",
+  "bundleKind": "library",
+  "devDependencies": {
+    "ajv": "8.20.0",
+    "esbuild": "^0.27.2",
+    "lru-cache": "11.5.3"
+  }
+}

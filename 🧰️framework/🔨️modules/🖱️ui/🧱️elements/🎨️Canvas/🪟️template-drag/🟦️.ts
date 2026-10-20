@@ -2,7 +2,7 @@ import type { WindowConfig } from "../../🪟️Window/🟦️.tsx";
 import type { UiLabel } from "../../🎗️UiLabel/🟦️.tsx";
 import type { IconName } from "@semio-tech/assets";
 import * as React from "react";
-import { ephemeralBox } from "../../../../🫧️transient/🟦️.ts";
+import { ephemeralBox } from "@semio-tech/framework-transient";
 import { panelGhostSessionBridge } from "../../👻️PanelGhost/🟦️.tsx";
 import type { TreeDragAndDropController } from "../../🌳️Tree/🧲️drag-drop/🟦️.tsx";
 import type { WindowStackCorner } from "../../../🔨️modules/🗺️window-layout/🟦️.ts";

@@ -1,0 +1,66 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📋️panel-hosting/🟦️.tsx",
+ "function": "usePanelHosting",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟣️shared",
+  "doc": "/** 🟣️ The shared declarations of usePanelHosting. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️brand",
+   "doc": "/** 🔶️ The brand phase of usePanelHosting. */",
+   "phases": [
+    {
+     "name": "useBrandState",
+     "emoji": "🔷",
+     "doc": "Builds brand, localDocumentOwnerRegistry, hostMode, mobile of usePanelHosting.",
+     "from": 101,
+     "to": 197
+    }
+   ]
+  },
+  {
+   "dir": "🔸️search-items",
+   "doc": "/** 🔸️ The search items phase of usePanelHosting. */",
+   "phases": [
+    {
+     "name": "useSearchItems",
+     "emoji": "🔹",
+     "doc": "Builds searchItems of usePanelHosting.",
+     "from": 242,
+     "to": 242
+    }
+   ]
+  },
+  {
+   "dir": "🟠️mode-windows",
+   "doc": "/** 🟠️ The mode windows phase of usePanelHosting. */",
+   "phases": [
+    {
+     "name": "useModeWindows",
+     "emoji": "🟡",
+     "doc": "Builds modeWindows of usePanelHosting.",
+     "from": 329,
+     "to": 329
+    }
+   ]
+  },
+  {
+   "dir": "🟢️effective-mode-layout",
+   "doc": "/** 🟢️ The effective mode layout phase of usePanelHosting. */",
+   "phases": [
+    {
+     "name": "useEffectiveModeLayoutState",
+     "emoji": "🔵",
+     "doc": "Builds effectiveModeLayout, handleActiveWindowChange, layoutChangeSettleTimeoutRef, layoutChangeClassificationRef of usePanelHosting.",
+     "from": 527,
+     "to": 568
+    }
+   ]
+  }
+ ]
+}

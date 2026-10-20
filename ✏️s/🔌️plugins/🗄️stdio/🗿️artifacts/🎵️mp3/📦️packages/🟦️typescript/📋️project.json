@@ -70,10 +70,12 @@
         "{projectRoot}/../../📜️artifact-definition.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
-      ]
+      ],
+      "outputs": []
     },
     "metadata-source": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts metadata-source",
@@ -82,6 +84,7 @@
     },
     "metadata-native": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts metadata-native",
@@ -90,6 +93,7 @@
     },
     "metadata-oracle": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts metadata-oracle",

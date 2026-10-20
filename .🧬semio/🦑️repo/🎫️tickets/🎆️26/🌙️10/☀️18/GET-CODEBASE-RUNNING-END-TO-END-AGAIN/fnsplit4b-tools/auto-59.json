@@ -1,0 +1,92 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🧭️encode/🦀️.rs",
+ "function": "emit",
+ "nth": 0,
+ "match_line": 349,
+ "types": {},
+ "ret": "Result<Mp4EncodeAdvance, String>",
+ "inline": true,
+ "arms": [
+  {
+   "line": 384,
+   "name": "emit_elst_header",
+   "doc": "🧱️ Runs the `elst header` phase of `emit`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 393,
+   "name": "emit_edit",
+   "doc": "🪵️ Runs the `edit` phase of `emit`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 436,
+   "name": "emit_stsd_header",
+   "doc": "🔩️ Runs the `stsd header` phase of `emit`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 464,
+   "name": "emit_codec_fixed",
+   "doc": "⚙️ Runs the `codec fixed` phase of `emit`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 476,
+   "name": "emit_codec_nal_length",
+   "doc": "🧲️ Runs the `codec nal length` phase of `emit`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 504,
+   "name": "emit_codec_hevc_array",
+   "doc": "🪛️ Runs the `codec hevc array` phase of `emit`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 568,
+   "name": "emit_stsc_entry",
+   "doc": "🔧️ Runs the `stsc entry` phase of `emit`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  }
+ ],
+ "method": {
+  "self_param": "&mut self",
+  "call": "self.{name}({args})"
+ }
+}

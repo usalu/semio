@@ -1,0 +1,1552 @@
+[
+ {
+  "manifest": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript/📋️project.json",
+  "target": "build",
+  "id": "@semio-tech/mit-bestand-bericht:build",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "aggregate",
+   "reason": "orders-prerequisites"
+  }
+ },
+ {
+  "manifest": "♻️mit-bestand/🧺️demonstrator/📋️project.json",
+  "target": "prepare-prototype",
+  "id": "@semio-tech/mit-bestand-demonstrator:prepare-prototype",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "driver-owned",
+   "reason": "freshness-owned-by-driver"
+  }
+ },
+ {
+  "manifest": "♻️mit-bestand/🧺️demonstrator/📋️project.json",
+  "target": "prepare-release",
+  "id": "@semio-tech/mit-bestand-demonstrator:prepare-release",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "driver-owned",
+   "reason": "freshness-owned-by-driver"
+  }
+ },
+ {
+  "manifest": "♻️mit-bestand/🧺️demonstrator/📋️project.json",
+  "target": "activate-prototype",
+  "id": "@semio-tech/mit-bestand-demonstrator:activate-prototype",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "driver-owned",
+   "reason": "freshness-owned-by-driver"
+  }
+ },
+ {
+  "manifest": "♻️mit-bestand/🧺️demonstrator/📋️project.json",
+  "target": "activate-lanes-prototype",
+  "id": "@semio-tech/mit-bestand-demonstrator:activate-lanes-prototype",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "driver-owned",
+   "reason": "freshness-owned-by-driver"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-equation-1-any:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-equation-1-any:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-fem-2d-1-any:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-fem-2d-1-any:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📋️project.json",
+  "target": "🏭️generator-carrier",
+  "id": "@semio-tech/fixture-generator-fem-2d-1-any:🏭️generator-carrier",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📋️project.json",
+  "target": "🏭️generator-carrier-manifests",
+  "id": "@semio-tech/fixture-generator-fem-2d-1-any:🏭️generator-carrier-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-fem-3d-1-any:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-fem-3d-1-any:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📋️project.json",
+  "target": "🏭️generator-carrier",
+  "id": "@semio-tech/fixture-generator-fem-3d-1-any:🏭️generator-carrier",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📋️project.json",
+  "target": "🏭️generator-carrier-manifests",
+  "id": "@semio-tech/fixture-generator-fem-3d-1-any:🏭️generator-carrier-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-drawing-1-any:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-drawing-1-any:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-las-1-0-any:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-las-1-0-any:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-gif-87a-any:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-gif-87a-any:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🏭️generator/📋️project.json",
+  "target": "🏭️generator-aspect",
+  "id": "@semio-tech/fixture-generator-stdio-gif-87a-any:🏭️generator-aspect",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🏭️generator/📋️project.json",
+  "target": "🏭️generator-aspect-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-gif-87a-any:🏭️generator-aspect-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-gif-89a-any:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-gif-89a-any:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📋️project.json",
+  "target": "🏭️generator-build",
+  "id": "@semio-tech/fixture-generator-stdio-gif-89a-any:🏭️generator-build",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📋️project.json",
+  "target": "🏭️generator-build-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-gif-89a-any:🏭️generator-build-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📋️project.json",
+  "target": "🏭️generator-extensions",
+  "id": "@semio-tech/fixture-generator-stdio-gif-89a-any:🏭️generator-extensions",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📋️project.json",
+  "target": "🏭️generator-extensions-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-gif-89a-any:🏭️generator-extensions-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📋️project.json",
+  "target": "🏭️generator-aspect",
+  "id": "@semio-tech/fixture-generator-stdio-gif-89a-any:🏭️generator-aspect",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📋️project.json",
+  "target": "🏭️generator-aspect-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-gif-89a-any:🏭️generator-aspect-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-svg-1-1-base:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-svg-1-1-base:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-bcf-2-1-any:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📋️project.json",
+  "target": "⚙️generator",
+  "id": "@semio-tech/fixture-generator-stdio-step-ap214-cc6:⚙️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📋️project.json",
+  "target": "⚙️generator-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-step-ap214-cc6:⚙️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-pdf-1-4-x:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-pdf-1-4-x:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-pdf-1-4-a:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-pdf-1-4-a:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-pdf-1-4-base:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-pdf-1-4-base:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-pdf-1-7-ua:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-pdf-1-7-ua:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-pdf-1-7-h:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-pdf-1-7-h:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-pdf-1-7-e:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-pdf-1-7-e:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🏭️generator/📋️project.json",
+  "target": "🏭️generator-encryption",
+  "id": "@semio-tech/fixture-generator-stdio-pdf-1-7-e:🏭️generator-encryption",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🏭️generator/📋️project.json",
+  "target": "🏭️generator-encryption-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-pdf-1-7-e:🏭️generator-encryption-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-pdf-1-7-x:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-pdf-1-7-x:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/📋️project.json",
+  "target": "🏭️generator-encryption",
+  "id": "@semio-tech/fixture-generator-stdio-pdf-1-7-x:🏭️generator-encryption",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/📋️project.json",
+  "target": "🏭️generator-encryption-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-pdf-1-7-x:🏭️generator-encryption-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-pdf-1-7-a:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-pdf-1-7-a:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🏭️generator/📋️project.json",
+  "target": "🏭️generator-encryption",
+  "id": "@semio-tech/fixture-generator-stdio-pdf-1-7-a:🏭️generator-encryption",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🏭️generator/📋️project.json",
+  "target": "🏭️generator-encryption-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-pdf-1-7-a:🏭️generator-encryption-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-pdf-1-7-base:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-pdf-1-7-base:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-pdf-1-7-vt:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-pdf-1-7-vt:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/📋️project.json",
+  "target": "🏭️generator-encryption",
+  "id": "@semio-tech/fixture-generator-stdio-pdf-1-7-vt:🏭️generator-encryption",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/📋️project.json",
+  "target": "🏭️generator-encryption-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-pdf-1-7-vt:🏭️generator-encryption-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-docx-ecma-376-base:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-xml-1-0-base:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-xml-1-0-base:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-png-1-2-any:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-png-1-2-any:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📋️project.json",
+  "target": "🏭️generator-chunks",
+  "id": "@semio-tech/fixture-generator-stdio-png-1-2-any:🏭️generator-chunks",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📋️project.json",
+  "target": "🏭️generator-chunks-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-png-1-2-any:🏭️generator-chunks-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-jpg-jfif-1-01-document:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-jpg-jfif-1-01-document:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📋️project.json",
+  "target": "🏭️generator-markers",
+  "id": "@semio-tech/fixture-generator-stdio-jpg-jfif-1-01-document:🏭️generator-markers",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📋️project.json",
+  "target": "🏭️generator-markers-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-jpg-jfif-1-01-document:🏭️generator-markers-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-avi-1-0-any:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-avi-1-0-any:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-dxf-r12-any:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-dxf-r12-any:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-tiff-6-0-document:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-tiff-6-0-document:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-obj-3-0-any:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-obj-3-0-any:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📋️project.json",
+  "target": "🏭️generator-list-recipes",
+  "id": "@semio-tech/fixture-generator-stdio-obj-3-0-any:🏭️generator-list-recipes",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📋️project.json",
+  "target": "🏭️generator-document",
+  "id": "@semio-tech/fixture-generator-stdio-obj-3-0-any:🏭️generator-document",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📋️project.json",
+  "target": "🏭️generator-document-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-obj-3-0-any:🏭️generator-document-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-gltf-2-0-any:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📋️project.json",
+  "target": "🏭️generator-list",
+  "id": "@semio-tech/fixture-generator-stdio-gltf-2-0-any:🏭️generator-list",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-json-rfc8259-base:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-json-rfc8259-base:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-semio-v1-cad:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-semio-v1-document:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-semio-v1-document:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📋️project.json",
+  "target": "🏭️generator-carrier",
+  "id": "@semio-tech/fixture-generator-stdio-semio-v1-document:🏭️generator-carrier",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📋️project.json",
+  "target": "🏭️generator-carrier-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-semio-v1-document:🏭️generator-carrier-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-semio-v1-mesh:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-semio-v1-mesh:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-semio-v1-drawing:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-semio-v1-drawing:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-semio-v1-brep:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-semio-v1-brep:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-stdio-bmp-v3-any:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-bmp-v3-any:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/📋️project.json",
+  "target": "🏭️generator-header",
+  "id": "@semio-tech/fixture-generator-stdio-bmp-v3-any:🏭️generator-header",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/📋️project.json",
+  "target": "🏭️generator-header-manifests",
+  "id": "@semio-tech/fixture-generator-stdio-bmp-v3-any:🏭️generator-header-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📋️project.json",
+  "target": "🏭️generator",
+  "id": "@semio-tech/fixture-generator-note-1-any:🏭️generator",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📋️project.json",
+  "target": "🏭️generator-manifests",
+  "id": "@semio-tech/fixture-generator-note-1-any:🏭️generator-manifests",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🏢️semio-tech/🎡️play/📋️project.json",
+  "target": "prepare-prototype",
+  "id": "@semio-tech/semio-tech-play:prepare-prototype",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "driver-owned",
+   "reason": "freshness-owned-by-driver"
+  }
+ },
+ {
+  "manifest": "🏢️semio-tech/🎡️play/📋️project.json",
+  "target": "activate-prototype",
+  "id": "@semio-tech/semio-tech-play:activate-prototype",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "driver-owned",
+   "reason": "freshness-owned-by-driver"
+  }
+ },
+ {
+  "manifest": "👴️leutwiler/💤️realparts-of-powers-z-n/📋️project.json",
+  "target": "build-lean",
+  "id": "@leutwiler/realparts-of-powers-z-n:build-lean",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "prepare",
+  "id": "workspace:prepare",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "aggregate",
+   "reason": "orders-prerequisites"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python/📋️project.json",
+  "target": "generate",
+  "id": "@semio-tech/ui-styling-py:generate",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📋️project.json",
+  "target": "generate",
+  "id": "@semio-tech/ui-styling:generate",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📋️project.json",
+  "target": "logo",
+  "id": "@semio-tech/assets:logo",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/📋️project.json",
+  "target": "stage-runtime-assets",
+  "id": "semio-framework-canvas:stage-runtime-assets",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "managed-output",
+   "reason": "outputs-in-managed-store"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/📋️project.json",
+  "target": "fonts",
+  "id": "semio-framework-os-infinite:fonts",
+  "decision": {
+   "version": 1,
+   "class": "deterministic",
+   "reason": "pure-function-of-inputs"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/📋️project.json",
+  "target": "schema-mirror",
+  "id": "@semio-tech/framework-os-mcp-rs:schema-mirror",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📋️project.json",
+  "target": "generate",
+  "id": "@semio-tech/plugin-registry:generate",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📋️project.json",
+  "target": "support",
+  "id": "@semio-tech/framework-plugin-web:support",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "managed-output",
+   "reason": "outputs-in-managed-store"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "build",
+  "id": "@semio-tech/framework-os-dev:build",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "aggregate",
+   "reason": "orders-prerequisites"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "plugin",
+  "id": "@semio-tech/framework-os-dev:plugin",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "driver-owned",
+   "reason": "freshness-owned-by-driver"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "parity",
+  "id": "@semio-tech/framework-os-dev:parity",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "build-inputs",
+  "id": "@semio-tech/framework-os-dev:build-inputs",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "channel-version-generate",
+  "id": "@semio-tech/framework-os-dev:channel-version-generate",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📋️project.json",
+  "target": "generate-viz",
+  "id": "@semio-tech/print:generate-viz",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📋️project.json",
+  "target": "fonts",
+  "id": "@semio-tech/print:fonts",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "managed-output",
+   "reason": "outputs-in-managed-store"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📋️project.json",
+  "target": "build",
+  "id": "@semio-tech/print:build",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "aggregate",
+   "reason": "orders-prerequisites"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📋️project.json",
+  "target": "build-viz",
+  "id": "@semio-tech/print:build-viz",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "aggregate",
+   "reason": "orders-prerequisites"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📋️project.json",
+  "target": "generate-font-metrics",
+  "id": "@semio-tech/print:generate-font-metrics",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript/📋️project.json",
+  "target": "build",
+  "id": "@semio-tech/print-viz-inference:build",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/📋️project.json",
+  "target": "build",
+  "id": "@semio-tech/repo-cli-go:build",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "driver-owned",
+   "reason": "freshness-owned-by-driver"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "compile",
+  "id": "@semio-tech/repo-dashboard-rs:compile",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "driver-owned",
+   "reason": "freshness-owned-by-driver"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏃️test-runner/📦️packages/🐹️go/📋️project.json",
+  "target": "build",
+  "id": "@semio-tech/repo-test-runner-go:build",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript/📋️project.json",
+  "target": "build",
+  "id": "@semio-tech/repo-client:build",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "driver-owned",
+   "reason": "freshness-owned-by-driver"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/📋️project.json",
+  "target": "build",
+  "id": "@semio-tech/repo-vscode:build",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/📋️project.json",
+  "target": "build-vsix",
+  "id": "@semio-tech/repo-vscode:build-vsix",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📊️metrics/📦️packages/🐹️go/📋️project.json",
+  "target": "build",
+  "id": "@semio-tech/repo-metrics-go:build",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test-root-clean-scaffold-source",
+  "id": "@semio-tech/repo-lib:test-root-clean-scaffold-source",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test-inventory-artifact-shards",
+  "id": "@semio-tech/repo-lib:test-inventory-artifact-shards",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+  "target": "acceptance-goal",
+  "id": "@semio-tech/repo-test-domain:acceptance-goal",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+  "target": "acceptance-plan",
+  "id": "@semio-tech/repo-test-domain:acceptance-plan",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ }
+]

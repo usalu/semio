@@ -1,0 +1,53 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🕹️interaction/👆️gesture/🧪️tests/🔬️unit/🟦️.ts",
+ "function": "registerTests1",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of registerTests1. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️area-selection-drag-neutral",
+   "doc": "/** 🔶️ The area selection drag neutral phase of registerTests1. */",
+   "phases": [
+    {
+     "name": "registerAreaSelectionDragNeutralTests",
+     "emoji": "🔷",
+     "doc": "Registers the area selection drag neutral tests of registerTests1.",
+     "from": 40,
+     "to": 134
+    }
+   ]
+  },
+  {
+   "dir": "🔸️step-quantized-pinch-zoom",
+   "doc": "/** 🔸️ The step quantized pinch zoom phase of registerTests1. */",
+   "phases": [
+    {
+     "name": "registerStepQuantizedPinchZoomTests",
+     "emoji": "🔹",
+     "doc": "Registers the step quantized pinch zoom tests of registerTests1.",
+     "from": 187,
+     "to": 307
+    }
+   ]
+  },
+  {
+   "dir": "🟠️gesture-zoom-conversions",
+   "doc": "/** 🟠️ The gesture zoom conversions phase of registerTests1. */",
+   "phases": [
+    {
+     "name": "registerGestureZoomConversionsTests",
+     "emoji": "🟡",
+     "doc": "Registers the gesture zoom conversions tests of registerTests1.",
+     "from": 320,
+     "to": 320
+    }
+   ]
+  }
+ ]
+}

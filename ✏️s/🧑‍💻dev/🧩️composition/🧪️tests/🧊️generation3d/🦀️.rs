@@ -8,6 +8,7 @@ use semio_framework_os_flow::*;
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, FlowGraphStep, Widget};
 use semio_framework_os_flow::forms_bridge::flow_host_snapshot_to_form_spec;
 use serde_json::Value;
+#[cfg(test)] use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 /// 📸️ A concrete law fixture owns and retires each projection read.
 pub(crate) struct SnapshotRead(Option<Generation3dSnapshot>);

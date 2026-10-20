@@ -11,7 +11,7 @@ extern crate semio_framework_value_derive as value_derive;
 //#region 🪢️Mounts
 #[path = "../🧷️change-handle-handle-kind/🦀️.rs"]
 pub mod change_handle_handle_kind;
-#[path = "../🔌️change-handle-kind-default-wire/🦀️.rs"]
+#[path = "../🔌️change-handle-kind-default-wire-kind/🦀️.rs"]
 pub mod change_handle_kind_default_wire_kind;
 #[path = "../🌿️create-handle/🦀️.rs"]
 pub mod create_handle;

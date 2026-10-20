@@ -24,6 +24,7 @@
   "devDependencies": {
     "@semio-tech/fem-2d": "workspace:*",
     "@semio-tech/fem-3d": "workspace:*",
+    "@semio-tech/framework-interaction": "workspace:*",
     "@semio-tech/process": "workspace:*"
   },
   "dependencies": {

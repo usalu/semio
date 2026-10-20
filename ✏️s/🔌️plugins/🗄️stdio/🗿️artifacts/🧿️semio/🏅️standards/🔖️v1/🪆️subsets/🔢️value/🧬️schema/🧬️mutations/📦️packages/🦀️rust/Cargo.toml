@@ -30,6 +30,7 @@ semio-s-artifact-stdio-semio-value-model = { workspace = true }
 semio-s-artifact-stdio-semio-value-mutation-leaves = { path = "../../🍃️leaves/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-s-artifact-stdio-semio-value-mutations = { workspace = true, features = ["testkit"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-async-macros = { workspace = true }

@@ -1,0 +1,310 @@
+{
+  "name": "@semio-tech/repo-vscode",
+  "$schema": "../../../../📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "sourceRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🎚️config/🟨️.mjs",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/📐️source-policy/🟨️.mjs",
+      "sharedGlobals"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ]
+  },
+  "targets": {
+    "dev": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts dev",
+        "forwardAllArgs": true
+      },
+      "dependsOn": [
+        {
+          "target": "generate",
+          "projects": [
+            "@semio-tech/framework-schema"
+          ]
+        },
+        "generate-graphql-types"
+      ],
+      "cache": false,
+      "continuous": true
+    },
+    "test": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      },
+      "dependsOn": [
+        "generate-graphql-types"
+      ]
+    },
+    "build": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts build",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      },
+      "cache": false,
+      "outputs": [
+        "{projectRoot}/📤️dist/{options.env.SEMIO_BUILD_MODE}"
+      ],
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "dependsOn": [
+        {
+          "target": "generate",
+          "projects": [
+            "@semio-tech/framework-schema"
+          ]
+        },
+        "generate-graphql-types"
+      ]
+    },
+    "lint": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts lint",
+        "forwardAllArgs": true
+      }
+    },
+    "build-vsix": {
+      "executor": "repo:script",
+      "inputs": [
+        "production",
+        "^production",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
+      "dependsOn": [
+        "build"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts build-vsix",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      },
+      "cache": false,
+      "outputs": [
+        "{projectRoot}/📤️dist/{options.env.SEMIO_BUILD_MODE}/🧩️repo.vsix"
+      ]
+    },
+    "compile-extension": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/📤️dist/{options.env.SEMIO_BUILD_MODE}"
+      ],
+      "inputs": [
+        "default",
+        "^default",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
+      "dependsOn": [
+        {
+          "target": "generate",
+          "projects": [
+            "@semio-tech/framework-schema"
+          ]
+        },
+        "generate-graphql-types"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts compile-extension",
+        "forwardAllArgs": true
+      },
+      "defaultConfiguration": "prototype",
+      "configurations": {
+        "prototype": {
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      }
+    },
+    "watch-extension": {
+      "executor": "repo:script",
+      "continuous": true,
+      "cache": false,
+      "outputs": [
+        "{projectRoot}/📤️dist/{options.env.SEMIO_BUILD_MODE}"
+      ],
+      "dependsOn": [
+        {
+          "target": "generate",
+          "projects": [
+            "@semio-tech/framework-schema"
+          ]
+        },
+        "generate-graphql-types"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts watch-extension",
+        "forwardAllArgs": true
+      },
+      "defaultConfiguration": "prototype",
+      "configurations": {
+        "prototype": {
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      }
+    },
+    "generate-graphql-types": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts generate-graphql-types"
+      },
+      "cache": true,
+      "inputs": [
+        "default",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🧪️tests/🧫️fixtures/📜️served-schema/🔗️.graphql",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"
+      ],
+      "outputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🤖️generated/🔗️graphql-types/🟦️.ts"
+      ]
+    },
+    "preview-generated": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts preview-generated"
+      },
+      "cache": true,
+      "outputs": []
+    },
+    "check-graphql-types": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts check-graphql-types"
+      },
+      "cache": true,
+      "outputs": [],
+      "dependsOn": [
+        "generate-graphql-types"
+      ]
+    },
+    "test-graphql-types": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-graphql-types"
+      },
+      "cache": true,
+      "outputs": [],
+      "dependsOn": [
+        "generate-graphql-types"
+      ]
+    },
+    "test-custody": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-custody"
+      },
+      "defaultConfiguration": "prototype",
+      "configurations": {
+        "prototype": {
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      }
+    },
+    "test-dashboard-only": {
+      "executor": "repo:script",
+      "outputs": [],
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-dashboard-only"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "@semio-tech/framework-schema"
+  ]
+}

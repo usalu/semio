@@ -19,6 +19,7 @@ pub mod standards {
                         pub mod commit_reconstruction {
                             #[path = "../../../🏁commit-reconstruction/🦀️.rs"]
                             mod component;
+                            pub use component::*;
                             #[path = "../../../🏁commit-reconstruction/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../../../🏁commit-reconstruction/↩️inverse/🦀️.rs"]
@@ -28,6 +29,7 @@ pub mod standards {
                         pub mod replace_trajectory {
                             #[path = "../../../🛣️replace-trajectory/🦀️.rs"]
                             mod component;
+                            pub use component::*;
                             #[path = "../../../🛣️replace-trajectory/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../../../🛣️replace-trajectory/↩️inverse/🦀️.rs"]

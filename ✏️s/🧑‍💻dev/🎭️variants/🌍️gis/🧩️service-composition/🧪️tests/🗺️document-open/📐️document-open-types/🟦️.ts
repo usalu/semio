@@ -8,7 +8,7 @@ export type BrowserActorChildValue = import("@semio-tech/framework/browser-bundl
 export type BrowserActorUiPatchOfferV1 = import("@semio-tech/framework/browser-bundle/patch-handoff").BrowserActorUiPatchOfferV1;
 export type DocumentBrowserActorChild = import("@semio-tech/framework-os/modules/store/worker").DocumentBrowserActorChild;
 export type MutationEnvelope = import("@semio-tech/framework-replication").MutationEnvelope;
-export type ResolvedPluginViewState = import("@semio-tech/framework/manifest").ResolvedPluginViewState;
+export type ResolvedPluginViewState = import("@semio-tech/framework-manifest").ResolvedPluginViewState;
 export type WireArtifactBootstrap = import("@semio-tech/framework-replication").WireArtifactBootstrap;
 export type Vitest = NonNullable<ImportMeta["vitest"]>;
 

@@ -129,3 +129,6 @@ fn sqlite_snapshot_docx_borrowed_preflight_pays_frontiers_without_materializing_
  }
  snapshot.retire_sqlite_snapshot();
 }
+
+#[path = "💰️backing/🦀️.rs"]
+mod backing;

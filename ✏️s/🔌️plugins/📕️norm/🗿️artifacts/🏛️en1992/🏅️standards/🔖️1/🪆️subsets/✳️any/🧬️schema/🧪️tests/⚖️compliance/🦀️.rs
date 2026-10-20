@@ -406,7 +406,7 @@ fn accidental_de_gamma_reduces_vs_uls() {
 #[test]
 fn fire_tables_route_per_kind_and_rating() {
     use semio_s_artifact_norm_en1992_checks::part_1_2_fire;
-    use crate::{FireRating, MemberKind, SupportCondition};
+    use semio_s_artifact_norm_en1992_model::{FireRating, MemberKind, SupportCondition};
     let ratings = [FireRating::R30, FireRating::R60, FireRating::R90, FireRating::R120];
     for r in ratings {
         let (b_a, a_a) = part_1_2_fire::required_for(MemberKind::Column, SupportCondition::Fixed, r, "A", "one-way");

@@ -20,7 +20,9 @@
       "import": "./dist/🟦️.js"
     },
     "./standards/1/subsets/any/editor/testing/window-config-contract": "./🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧪️testing/🪟️window-config-contract/🟦️.ts",
-    "./standards/1/subsets/any/assets/demo": "./🏅️standards/🔖️1/🪆️subsets/🌐️any/🖼️assets/🎬️demo/🟦️.ts"
+    "./standards/1/subsets/any/assets/demo": "./🏅️standards/🔖️1/🪆️subsets/🌐️any/🖼️assets/🎬️demo/🟦️.ts",
+    "./standards/1/subsets/any/schema/diff": "./🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts",
+    "./standards/1/subsets/any/schema/snapshot": "./🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🟦️.ts"
   },
   "dependencies": {
     "@semio-tech/fem-js": "workspace:*"

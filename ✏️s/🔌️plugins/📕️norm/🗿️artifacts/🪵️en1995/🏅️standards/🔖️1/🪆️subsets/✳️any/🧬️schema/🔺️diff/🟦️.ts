@@ -5,11 +5,11 @@ import { normWireArray, normWireBoolean, normWireDefault, normWireInteger, normW
 import { type CharacteristicAction, type ConnectionAction, type MemberRole, parseCharacteristicAction, parseConnectionAction, parseMemberRole, parseSupportType, parseTimberConnection, parseTimberMember, type SupportType, type TimberConnection, type TimberMember } from "../📸️snapshot/🟦️.ts";
 
 export interface En1995Diff {
-  /** @state artifact */
+  /** 📑️ @state artifact */
   annex: ("En" | "De") | null;
-  /** @state artifact */
+  /** 👤️ @state artifact */
   members?: En1995MemberDelta;
-  /** @state artifact */
+  /** 🔗️ @state artifact */
   connections?: En1995ConnectionDelta;
 }
 

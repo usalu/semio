@@ -1,6 +1,6 @@
 import { lstat, readFile, readdir } from "node:fs/promises";
 import { isAbsolute, join, resolve } from "node:path";
-import { createLiveFilesystemJournalV1, type FilesystemJournalChangeV1, type FilesystemJournalControlV1, type FilesystemJournalScopeV1, type LiveFilesystemJournalV1 } from "@semio-tech/framework/filesystem/observation/journal";
+import { createLiveFilesystemJournalV1, type FilesystemJournalChangeV1, type FilesystemJournalControlV1, type FilesystemJournalScopeV1, type LiveFilesystemJournalV1 } from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📥️journal/🟦️.ts";
 import { collectionManifestCandidate,collectionManifestsFromInventory,gitCollectionManifests } from "../../../../🚀️bootstrap/📥️admission/🟦️.ts";
 import cachePolicy from "../../../../🔣️policy.json" with {type: "json"};
 import ownership from "../../../../../🗂️workspaces/🔣️policy.json" with {type: "json"};

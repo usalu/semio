@@ -4,9 +4,18 @@
     "script": "🧪️tests/🧫️fixtures/🧭️journeys/🏗️workspace/📜️script.ts",
     "binaryEnvironment": "SEMIO_TEST_CLI",
     "binaryCases": [
-      { "value": null, "accepted": false },
-      { "value": "", "accepted": false },
-      { "value": "🧭️owned executable/semio", "accepted": true }
+      {
+        "value": null,
+        "accepted": false
+      },
+      {
+        "value": "",
+        "accepted": false
+      },
+      {
+        "value": "🧭️owned executable/semio",
+        "accepted": true
+      }
     ]
   },
   "widthProbe": {
@@ -353,6 +362,29 @@
         "status": "closed"
       },
       "id": "26/09/23/HUMAN-REOPEN"
+    }
+  },
+  "nativeEditor": {
+    "directory": "native",
+    "file": "file 🧪.txt",
+    "initial": "base\n",
+    "input": "é👩‍💻",
+    "saved": "base\n中\n👩‍💻",
+    "foreign": "foreign writer\n",
+    "local": "local alternative\n",
+    "labels": {
+      "en": {
+        "files": "Workspace Files",
+        "dirty": "unsaved",
+        "conflict": "File changed elsewhere",
+        "discard": "Unsaved changes retained"
+      },
+      "de": {
+        "files": "Arbeitsbereich-Dateien",
+        "dirty": "ungespeichert",
+        "conflict": "Datei wurde andernorts geändert",
+        "discard": "Ungespeicherte Änderungen bleiben erhalten"
+      }
     }
   }
 }

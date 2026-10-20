@@ -12,7 +12,7 @@ export async function testCameraPresenceContract(repoRoot: string): Promise<numb
   const root = resolve(import.meta.dir, "..");
   const fixture = JSON.parse(readFileSync(resolve(root, "🧫️fixtures/🔣️.json"), "utf8"));
   const ajv = semioSchemaAjvV1();
-  const projections = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/👕️peer-overlay-v1/🔣️.json"), "utf8")).projectionCases;
+  const projections = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/👕️peer-overlay-v1/🔣️.json"), "utf8")).projectionCases;
   for (const row of projections) {
     const actual = orbitPointToScreen(row, row.size, row.world);
     assert.deepEqual(actual, row.expected);
@@ -77,6 +77,5 @@ export async function testCameraPresenceContract(repoRoot: string): Promise<numb
   publishLocalPresenceActorV1(documentA, null);
   publishLocalPresenceActorV1(documentB, null);
   publishLocalActiveToolV1("local", null);
-  console.log("[DEBUG] canonical window presence wire and exact document/window isolation passed");
   return 83;
 }

@@ -3,6 +3,7 @@ use crate::editor::puzzle5d::entities::{puzzle5d_grip_full_id, world_grip_positi
 use crate::editor::puzzle5d::precompute::geometry::distance_squared;
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::entities::Puzzle5dGrip;
+use crate::editor::puzzle5d::entities::Puzzle5dPart;
 #[allow(unused_imports)]
 use std::collections::HashSet;
 use crate::editor::puzzle5d::view::engine_grip_kind;

@@ -16,6 +16,8 @@
   },
   "dependencies": {
     "@semio-tech/framework": "workspace:*",
+    "@semio-tech/framework-filesystem": "workspace:*",
+    "@semio-tech/framework-hash": "workspace:*",
     "@semio-tech/framework-os": "workspace:*",
     "@semio-tech/framework-os-dev": "workspace:*",
     "@semio-tech/framework-os-mcp": "workspace:*",
@@ -33,7 +35,8 @@
     "@semio-tech/schema-ts": "workspace:*",
     "@semio-tech/framework-compiler-ts": "workspace:*",
     "@semio-tech/framework-pack-record-ts": "workspace:*",
-    "@semio-tech/framework-pack-ts": "workspace:*"
+    "@semio-tech/framework-pack-ts": "workspace:*",
+    "@semio-tech/framework-manifest": "workspace:*"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

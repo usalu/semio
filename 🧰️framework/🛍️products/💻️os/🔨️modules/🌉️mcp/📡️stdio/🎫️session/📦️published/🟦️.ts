@@ -1,7 +1,7 @@
 import{join}from"node:path";
 import{open,type FileHandle}from"node:fs/promises";
 import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
-import schema from"../🧬️schema/🔣️.json";
+import schema from"../🧬️schema/🔣️.json" with { type: "json" };
 const admission=structuredClone(schema),policy=Object.freeze({...admission.definitions.Policy.const});
 import{requireIssuedResourceControlInvocationV1,type ScriptInvocation}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";

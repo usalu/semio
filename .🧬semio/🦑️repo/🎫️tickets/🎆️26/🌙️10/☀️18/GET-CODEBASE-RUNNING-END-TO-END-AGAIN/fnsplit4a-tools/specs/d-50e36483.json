@@ -1,0 +1,37 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧪️tests/🔔️directory-client-stream/🟦️.ts",
+ "describeLine": 81,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of the DirectoryClient.stream suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️round-trips-scoped-directory",
+   "doc": "/** 🔶️ The round trips scoped directory tests of the DirectoryClient.stream suite. */",
+   "name": "registerRoundTripsScopedDirectoryTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the round trips scoped directory tests of the DirectoryClient.stream suite.",
+   "from": 82,
+   "to": 156
+  },
+  {
+   "dir": "🔸️keeps-installed-service-status",
+   "doc": "/** 🔸️ The keeps installed service status tests of the DirectoryClient.stream suite. */",
+   "name": "registerKeepsInstalledServiceStatusTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the keeps installed service status tests of the DirectoryClient.stream suite.",
+   "from": 239,
+   "to": 375
+  },
+  {
+   "dir": "🟠️drop-after-sustained-health",
+   "doc": "/** 🟠️ The drop after sustained health tests of the DirectoryClient.stream suite. */",
+   "name": "registerDropAfterSustainedHealthTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the drop after sustained health tests of the DirectoryClient.stream suite.",
+   "from": 393,
+   "to": 454
+  }
+ ]
+}

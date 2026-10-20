@@ -17,8 +17,8 @@ import { afterEach, describe, expect, it } from "vitest";
 import { presenceColor } from "@semio-tech/ui-react/chrome";
 import { EMPTY_PRESENCE_VIEW, PresenceOverlay, paintStyle, peerInk, type PeerCursor } from "@semio-tech/course-react";
 import { quizStylesheet as stylesheet } from "@semio-tech/course-react/stylesheet";
-import palette from "../../../../🔨️modules/🖱️ui/🎨️styling/🎨️palette/🎨️.css?raw";
-import chrome from "../../../../🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css?raw";
+import { paletteCssText as palette } from "@semio-tech/ui-styling/palette/text";
+import { chromeCssText as chrome } from "@semio-tech/ui-styling/chrome/text";
 import states from "../🧫️fixtures/🌗️contrast-states/🔣️.json";
 
 extend([a11y]);

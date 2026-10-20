@@ -20,30 +20,7 @@ impl MountedState {
                 return Ok(step);
             }
             Ok(match self.stage {
-                MountedStage::PrepareGraph => {
-                    const PLANS: [FemStagePlan; 8] = [
-                        FemStagePlan { stage: FemJobStage::ValidateReferences, units: 1 },
-                        FemStagePlan { stage: FemJobStage::BuildDofMap, units: 1 },
-                        FemStagePlan { stage: FemJobStage::OrderEquations, units: 1 },
-                        FemStagePlan { stage: FemJobStage::Assemble, units: 1 },
-                        FemStagePlan { stage: FemJobStage::Factor, units: 1 },
-                        FemStagePlan { stage: FemJobStage::Solve, units: 1 },
-                        FemStagePlan { stage: FemJobStage::Recover, units: 1 },
-                        FemStagePlan { stage: FemJobStage::Finalize, units: 1 },
-                    ];
-                    if self.graph_plans.capacity() == 0 {
-                        if self.graph_plans.try_reserve_exact(PLANS.len()).is_err() || self.graph_plans.capacity() * size_of::<FemStagePlan>() > SESSION_OWNER_PAGE_BYTES {
-                            return Ok(self.fail(b"fem2d.graph-plan-allocation".to_vec()));
-                        }
-                    } else if let Some(plan) = PLANS.get(self.graph_plans.len()).cloned() {
-                        self.graph_plans.push(plan);
-                    } else {
-                        self.graph = Some(FemJobGraph::new(self.identity.operation(), std::mem::take(&mut self.graph_plans), 1));
-                        self.stage = MountedStage::Graph;
-                    }
-                    cx.consume_fuel(1);
-                    self.progress(b"fem2d.graph-admitted")
-                }
+                MountedStage::PrepareGraph => self.stage_prepare_graph(cx)?,
                 MountedStage::Graph => match child_end(self.graph.as_mut().expect("graph stage owns graph").step(cx))? {
                     ChildEnd::Complete(output) => {
                         self.stage = MountedStage::PrepareDomain;
@@ -60,111 +37,9 @@ impl MountedState {
                     ChildEnd::Cancelled => self.fail(b"fem2d.graph-cancelled".to_vec()),
                     ChildEnd::Fault(detail) => self.fail(detail.unwrap_or_else(|| b"fem2d.graph-fault-capacity".to_vec())),
                 },
-                MountedStage::PrepareDomain => match self.prepare_domain_one() {
-                    Ok(false) => {
-                        cx.consume_fuel(1);
-                        self.progress(b"fem2d.domain")
-                    }
-                    Ok(true) => {
-                        let snapshot = self.snapshot.as_ref().expect("preflight retains snapshot");
-                        if let (Some(region), Some(domain)) = (snapshot.regions.get(self.region_cursor), self.domain.take()) {
-                            if self.visual.region_quality.insert(region.id.clone(), RegionVisualQuality::Unmeshed).is_err() {
-                                return Ok(self.fail(b"fem2d.visual-region-capacity".to_vec()));
-                            }
-                            self.visual.state = FemVisualState::Unmeshed;
-                            self.visual_dirty = true;
-                            self.mesh = Some(MeshJob::new_bounded(domain, MeshOpts { max_edge: region.mesh_size, min_angle_deg: 20.0 }, self.identity.operation(), SESSION_MAXIMUM_MESH_POINTS, SESSION_MAXIMUM_MESH_TRIANGLES));
-                            self.stage = MountedStage::Mesh;
-                        } else {
-                            self.stage = MountedStage::BuildModel;
-                        }
-                        cx.consume_fuel(1);
-                        self.progress(b"fem2d.domain-complete")
-                    }
-                    Err(detail) => self.fail(detail.to_vec()),
-                },
-                MountedStage::Mesh => match child_end(self.mesh.as_mut().expect("mesh stage owns mesh").step(cx))? {
-                    ChildEnd::Complete(output) => {
-                        if let Some(region) = self.snapshot.as_ref().and_then(|snapshot| snapshot.regions.get(self.region_cursor)) {
-                            if !self.visual.region_quality.update(&region.id, RegionVisualQuality::Final) {
-                                return Ok(self.fail(b"fem2d.visual-region-capacity".to_vec()));
-                            }
-                            self.visual.state = FemVisualState::Refined;
-                            self.visual_dirty = true;
-                        }
-                        let completed_mesh = self.mesh.as_mut().and_then(MeshJob::take_completed_mesh);
-                        if let Some(builder) = self.model_build.as_mut() {
-                            let Some(mesh) = completed_mesh else { return Ok(self.fail(b"fem2d.mesh-terminal-owner".to_vec())); };
-                            builder.attach_region(self.region_cursor, mesh);
-                        } else {
-                            self.model_build = Some(MountedModelBuild::new(completed_mesh));
-                        }
-                        self.stage = MountedStage::BuildModel;
-                        match output {
-                            Some(bytes) => JobStep::Running(Some(bytes)),
-                            None => self.progress(b"fem2d.mesh-complete"),
-                        }
-                    }
-                    ChildEnd::Preview { bytes: payload, quality } => {
-                        if let Some(region) = self.snapshot.as_ref().and_then(|snapshot| snapshot.regions.get(self.region_cursor)) {
-                            let quality = match quality {
-                                Some(0) => RegionVisualQuality::Coarse,
-                                Some(1) => RegionVisualQuality::Refined,
-                                Some(2) => RegionVisualQuality::Final,
-                                _ => RegionVisualQuality::Unmeshed,
-                            };
-                            if !self.visual.region_quality.update(&region.id, quality) {
-                                return Ok(self.fail(b"fem2d.visual-region-capacity".to_vec()));
-                            }
-                            self.visual.state = match quality {
-                                RegionVisualQuality::Unmeshed => FemVisualState::Unmeshed,
-                                RegionVisualQuality::Coarse => FemVisualState::Coarse,
-                                RegionVisualQuality::Refined | RegionVisualQuality::Final => FemVisualState::Refined,
-                            };
-                            self.visual_dirty = true;
-                        }
-                        match payload {
-                            Some(bytes) => JobStep::Running(Some(bytes)),
-                            None => self.progress(b"fem2d.mesh-preview"),
-                        }
-                    }
-                    ChildEnd::Checkpoint(payload) => match payload {
-                        Some(bytes) => JobStep::Running(Some(bytes)),
-                        None => self.progress(b"fem2d.mesh-yield"),
-                    },
-                    ChildEnd::Yield => self.progress(b"fem2d.mesh-yield"),
-                    ChildEnd::Cancelled => self.fail(b"fem2d.mesh-cancelled".to_vec()),
-                    ChildEnd::Fault(detail) => self.fail(detail.unwrap_or_else(|| b"fem2d.mesh-fault-capacity".to_vec())),
-                },
-                MountedStage::BuildModel => {
-                    let snapshot = self.snapshot.as_ref().expect("preflight retains snapshot");
-                    if self.model_build.is_none() {
-                        self.model_build = Some(MountedModelBuild::new(None));
-                        cx.consume_fuel(1);
-                        return Ok(self.progress(b"fem2d.model-admitted"));
-                    }
-                    match self.model_build.as_mut().expect("model builder admitted above").step_one(snapshot) {
-                        Ok(false) => {
-                            cx.consume_fuel(1);
-                            self.progress(b"fem2d.model-building")
-                        }
-                        Ok(true) => {
-                            if self.region_cursor + 1 < snapshot.regions.len() {
-                                self.model_build.as_mut().expect("completed region retains builder").close_lane = 7;
-                                self.stage = MountedStage::RetireRegion;
-                                cx.consume_fuel(1);
-                                return Ok(self.progress(b"fem2d.region-complete"));
-                            }
-                            let model = self.model_build.as_mut().and_then(MountedModelBuild::take_complete).expect("complete model transfers exactly once");
-                            self.assembly_build = Some(AssemblyJobConstruction::new_mounted(model, self.identity.operation(), 1));
-                            self.stage = MountedStage::PrepareAssembly;
-                            self.visual.state = FemVisualState::Assembling;
-                            cx.consume_fuel(1);
-                            self.progress(b"fem2d.model-built")
-                        }
-                        Err(error) => self.fail(error),
-                    }
-                }
+                MountedStage::PrepareDomain => self.stage_prepare_domain(cx)?,
+                MountedStage::Mesh => self.stage_mesh(cx)?,
+                MountedStage::BuildModel => self.stage_build_model(cx)?,
                 MountedStage::RetireRegion => {
                     cx.consume_fuel(1);
                     let builder = self.model_build.as_mut().expect("region retirement retains model");
@@ -234,28 +109,7 @@ impl MountedState {
                         Err(detail) => self.fail(detail),
                     }
                 }
-                MountedStage::BuildCsr => match self.csr_build.as_mut().expect("CSR builder retained").step_one_funded(cx.retained_grant()).and_then(|(complete, progress)| {
-                    cx.consume_retained(progress).map_err(|_| b"fem2d.csr-grant" as &'static [u8])?;
-                    Ok(complete)
-                }) {
-                    Ok(false) => {
-                        cx.consume_fuel(1);
-                        self.progress(b"fem2d.csr-building")
-                    }
-                    Ok(true) => {
-                        let Some((matrix, progress)) = self.csr_build.as_mut().and_then(|build| build.take_complete(cx.retained_grant())) else { return Ok(self.progress(b"fem2d.csr-transfer-pending")); };
-                        if cx.consume_retained(progress).is_err() { return Ok(self.fail(b"fem2d.csr-transfer-grant".to_vec())); }
-                        let rhs = std::mem::take(&mut self.load_build.as_mut().expect("assembled loads retained").free);
-                        self.pcg_build = match PcgJobConstruction::new_with_mounted_rhs(self.identity.operation(), matrix, rhs) {
-                            Ok(builder) => Some(builder),
-                            Err((matrix, rhs)) => { self.rejected_pcg_matrix = Some(matrix); self.load_build.as_mut().expect("load owner retained").free = rhs; return Ok(self.fail(b"fem2d.pcg-rhs-shape".to_vec())); }
-                        };
-                        self.stage = MountedStage::PreparePcg;
-                        cx.consume_fuel(1);
-                        self.progress(b"fem2d.csr-complete")
-                    }
-                    Err(detail) => self.fail(detail.to_vec()),
-                },
+                MountedStage::BuildCsr => self.stage_build_csr(cx)?,
                 MountedStage::PreparePcg => match self.pcg_build.as_mut().expect("PCG builder retained").step_one() {
                     Ok(false) => {
                         cx.consume_fuel(1);
@@ -272,47 +126,7 @@ impl MountedState {
                     }
                     Err(detail) => self.fail(detail.to_vec()),
                 },
-                MountedStage::Pcg => match child_end(self.pcg.as_mut().expect("pcg stage owns pcg").step(cx))? {
-                    ChildEnd::Complete(output) => {
-                        if let Some(job) = self.pcg.as_ref() {
-                            let (completed, total, residual, tolerance, converged) = job.visual_progress();
-                            self.visual.progress_completed = completed;
-                            self.visual.progress_total = total;
-                            self.visual.residual_norm = residual;
-                            self.visual.tolerance = tolerance;
-                            self.visual.converged = converged;
-                            self.visual.state = if converged { FemVisualState::SolvingConverged } else { FemVisualState::SolvingUnconverged };
-                        }
-                        self.visual_field_cursor = 0;
-                        self.visual_pcg_complete = true;
-                        self.stage = MountedStage::RecoverReactions;
-                        match output {
-                            Some(bytes) => JobStep::Running(Some(bytes)),
-                            None => self.progress(b"fem2d.pcg-complete"),
-                        }
-                    }
-                    ChildEnd::Preview { bytes: payload, .. } | ChildEnd::Checkpoint(payload) => {
-                        if let Some(job) = self.pcg.as_ref() {
-                            let (completed, total, residual, tolerance, converged) = job.visual_progress();
-                            self.visual.progress_completed = completed;
-                            self.visual.progress_total = total;
-                            self.visual.residual_norm = residual;
-                            self.visual.tolerance = tolerance;
-                            self.visual.converged = converged;
-                            self.visual.state = if converged { FemVisualState::SolvingConverged } else { FemVisualState::SolvingUnconverged };
-                        }
-                        self.visual_field_cursor = 0;
-                        self.visual_pcg_complete = false;
-                        self.stage = MountedStage::SyncPcgVisual;
-                        match payload {
-                            Some(bytes) => JobStep::Running(Some(bytes)),
-                            None => self.progress(b"fem2d.pcg-output-capacity"),
-                        }
-                    }
-                    ChildEnd::Yield => self.progress(b"fem2d.pcg-yield"),
-                    ChildEnd::Cancelled => self.fail(b"fem2d.pcg-cancelled".to_vec()),
-                    ChildEnd::Fault(detail) => self.fail(detail.unwrap_or_else(|| b"fem2d.pcg-fault-capacity".to_vec())),
-                },
+                MountedStage::Pcg => self.stage_pcg(cx)?,
                 MountedStage::RecoverReactions => {
                     cx.consume_fuel(1);
                     let loads = self.load_build.as_mut().expect("physical RHS retained for equilibrium");
@@ -330,34 +144,7 @@ impl MountedState {
                     } else { self.stage = MountedStage::SyncPcgVisual; }
                     self.progress(b"fem2d.reaction-recovering")
                 }
-                MountedStage::SyncPcgVisual => {
-                    let Some(node) = self.csr_build.as_ref().and_then(|assembly| assembly.model_node(self.visual_field_cursor)) else {
-                        self.visual_dirty = true;
-                        self.stage = if self.visual_pcg_complete { MountedStage::CommitReady } else { MountedStage::Pcg };
-                        cx.consume_fuel(1);
-                        return Ok(self.progress(b"fem2d.visual-field-page-complete"));
-                    };
-                    let scalar = |dof| self.csr_build.as_ref().and_then(|assembly| assembly.visual_equation_indices(&node.id, dof)).and_then(|(_, free)| free).and_then(|index| self.pcg.as_ref()?.visual_scalar(index));
-                    let tx = scalar(semio_s_fem_model::Dof::Tx);
-                    let ty = scalar(semio_s_fem_model::Dof::Ty);
-                    let reaction = |dof| self.csr_build.as_ref().and_then(|assembly| assembly.visual_equation_indices(&node.id, dof)).and_then(|(full, _)| self.load_build.as_ref()?.reactions.get(full)).unwrap_or(0.0);
-                    let field = semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::NodeLiveField {
-                        node_id: node.id.clone(),
-                        displacement: [tx.map_or(0.0, |scalar| scalar.displacement), ty.map_or(0.0, |scalar| scalar.displacement)],
-                        residual: [tx.map_or(0.0, |scalar| scalar.residual), ty.map_or(0.0, |scalar| scalar.residual)],
-                        reaction: [reaction(semio_s_fem_model::Dof::Tx), reaction(semio_s_fem_model::Dof::Ty)],
-                        contour: tx.map_or(0.0, |scalar| scalar.contour).max(ty.map_or(0.0, |scalar| scalar.contour)),
-                        mode_shape: [0.0; 2],
-                    };
-                    if let Some(target) = self.visual.fields.get_mut(self.visual_field_cursor) {
-                        *target = field;
-                    } else {
-                        self.visual.fields.push(field);
-                    }
-                    self.visual_field_cursor += 1;
-                    cx.consume_fuel(1);
-                    self.progress(b"fem2d.visual-field-entry")
-                }
+                MountedStage::SyncPcgVisual => self.stage_sync_pcg_visual(cx)?,
                 MountedStage::CommitReady => {
                     let validation = current_identity(self.identity);
                     let store_is_current = self.snapshot.as_ref().is_some_and(|snapshot| snapshot.commit_authority_matches(self.identity.generation.0, self.identity.canonical_base_revision));
@@ -398,6 +185,262 @@ impl MountedState {
                 MountedStage::Closing | MountedStage::Empty => JobStep::Failed(b"fem2d.session-closed".to_vec()),
             })
         })()
+    }
+
+    /// 🧱️ Runs the `prepare graph` stage of `step`.
+    fn stage_prepare_graph(&mut self, cx: &mut StepContext<'_>) -> Result<JobStep, semio_framework_job::OriginalTurnFailure> {
+        Ok({
+            const PLANS: [FemStagePlan; 8] = [
+                FemStagePlan { stage: FemJobStage::ValidateReferences, units: 1 },
+                FemStagePlan { stage: FemJobStage::BuildDofMap, units: 1 },
+                FemStagePlan { stage: FemJobStage::OrderEquations, units: 1 },
+                FemStagePlan { stage: FemJobStage::Assemble, units: 1 },
+                FemStagePlan { stage: FemJobStage::Factor, units: 1 },
+                FemStagePlan { stage: FemJobStage::Solve, units: 1 },
+                FemStagePlan { stage: FemJobStage::Recover, units: 1 },
+                FemStagePlan { stage: FemJobStage::Finalize, units: 1 },
+            ];
+            if self.graph_plans.capacity() == 0 {
+                if self.graph_plans.try_reserve_exact(PLANS.len()).is_err() || self.graph_plans.capacity() * size_of::<FemStagePlan>() > SESSION_OWNER_PAGE_BYTES {
+                    return Ok(self.fail(b"fem2d.graph-plan-allocation".to_vec()));
+                }
+            } else if let Some(plan) = PLANS.get(self.graph_plans.len()).cloned() {
+                self.graph_plans.push(plan);
+            } else {
+                self.graph = Some(FemJobGraph::new(self.identity.operation(), std::mem::take(&mut self.graph_plans), 1));
+                self.stage = MountedStage::Graph;
+            }
+            cx.consume_fuel(1);
+            self.progress(b"fem2d.graph-admitted")
+        })
+    }
+
+    /// 🪵️ Runs the `prepare domain` stage of `step`.
+    fn stage_prepare_domain(&mut self, cx: &mut StepContext<'_>) -> Result<JobStep, semio_framework_job::OriginalTurnFailure> {
+        Ok({
+            match self.prepare_domain_one() {
+                Ok(false) => {
+                    cx.consume_fuel(1);
+                    self.progress(b"fem2d.domain")
+                }
+                Ok(true) => {
+                    let snapshot = self.snapshot.as_ref().expect("preflight retains snapshot");
+                    if let (Some(region), Some(domain)) = (snapshot.regions.get(self.region_cursor), self.domain.take()) {
+                        if self.visual.region_quality.insert(region.id.clone(), RegionVisualQuality::Unmeshed).is_err() {
+                            return Ok(self.fail(b"fem2d.visual-region-capacity".to_vec()));
+                        }
+                        self.visual.state = FemVisualState::Unmeshed;
+                        self.visual_dirty = true;
+                        self.mesh = Some(MeshJob::new_bounded(domain, MeshOpts { max_edge: region.mesh_size, min_angle_deg: 20.0 }, self.identity.operation(), SESSION_MAXIMUM_MESH_POINTS, SESSION_MAXIMUM_MESH_TRIANGLES));
+                        self.stage = MountedStage::Mesh;
+                    } else {
+                        self.stage = MountedStage::BuildModel;
+                    }
+                    cx.consume_fuel(1);
+                    self.progress(b"fem2d.domain-complete")
+                }
+                Err(detail) => self.fail(detail.to_vec()),
+            }
+        })
+    }
+
+    /// 🔩️ Runs the `mesh` stage of `step`.
+    fn stage_mesh(&mut self, cx: &mut StepContext<'_>) -> Result<JobStep, semio_framework_job::OriginalTurnFailure> {
+        Ok({
+            match child_end(self.mesh.as_mut().expect("mesh stage owns mesh").step(cx))? {
+                ChildEnd::Complete(output) => {
+                    if let Some(region) = self.snapshot.as_ref().and_then(|snapshot| snapshot.regions.get(self.region_cursor)) {
+                        if !self.visual.region_quality.update(&region.id, RegionVisualQuality::Final) {
+                            return Ok(self.fail(b"fem2d.visual-region-capacity".to_vec()));
+                        }
+                        self.visual.state = FemVisualState::Refined;
+                        self.visual_dirty = true;
+                    }
+                    let completed_mesh = self.mesh.as_mut().and_then(MeshJob::take_completed_mesh);
+                    if let Some(builder) = self.model_build.as_mut() {
+                        let Some(mesh) = completed_mesh else { return Ok(self.fail(b"fem2d.mesh-terminal-owner".to_vec())); };
+                        builder.attach_region(self.region_cursor, mesh);
+                    } else {
+                        self.model_build = Some(MountedModelBuild::new(completed_mesh));
+                    }
+                    self.stage = MountedStage::BuildModel;
+                    match output {
+                        Some(bytes) => JobStep::Running(Some(bytes)),
+                        None => self.progress(b"fem2d.mesh-complete"),
+                    }
+                }
+                ChildEnd::Preview { bytes: payload, quality } => {
+                    if let Some(region) = self.snapshot.as_ref().and_then(|snapshot| snapshot.regions.get(self.region_cursor)) {
+                        let quality = match quality {
+                            Some(0) => RegionVisualQuality::Coarse,
+                            Some(1) => RegionVisualQuality::Refined,
+                            Some(2) => RegionVisualQuality::Final,
+                            _ => RegionVisualQuality::Unmeshed,
+                        };
+                        if !self.visual.region_quality.update(&region.id, quality) {
+                            return Ok(self.fail(b"fem2d.visual-region-capacity".to_vec()));
+                        }
+                        self.visual.state = match quality {
+                            RegionVisualQuality::Unmeshed => FemVisualState::Unmeshed,
+                            RegionVisualQuality::Coarse => FemVisualState::Coarse,
+                            RegionVisualQuality::Refined | RegionVisualQuality::Final => FemVisualState::Refined,
+                        };
+                        self.visual_dirty = true;
+                    }
+                    match payload {
+                        Some(bytes) => JobStep::Running(Some(bytes)),
+                        None => self.progress(b"fem2d.mesh-preview"),
+                    }
+                }
+                ChildEnd::Checkpoint(payload) => match payload {
+                    Some(bytes) => JobStep::Running(Some(bytes)),
+                    None => self.progress(b"fem2d.mesh-yield"),
+                },
+                ChildEnd::Yield => self.progress(b"fem2d.mesh-yield"),
+                ChildEnd::Cancelled => self.fail(b"fem2d.mesh-cancelled".to_vec()),
+                ChildEnd::Fault(detail) => self.fail(detail.unwrap_or_else(|| b"fem2d.mesh-fault-capacity".to_vec())),
+            }
+        })
+    }
+
+    /// ⚙️ Runs the `build model` stage of `step`.
+    fn stage_build_model(&mut self, cx: &mut StepContext<'_>) -> Result<JobStep, semio_framework_job::OriginalTurnFailure> {
+        Ok({
+            let snapshot = self.snapshot.as_ref().expect("preflight retains snapshot");
+            if self.model_build.is_none() {
+                self.model_build = Some(MountedModelBuild::new(None));
+                cx.consume_fuel(1);
+                return Ok(self.progress(b"fem2d.model-admitted"));
+            }
+            match self.model_build.as_mut().expect("model builder admitted above").step_one(snapshot) {
+                Ok(false) => {
+                    cx.consume_fuel(1);
+                    self.progress(b"fem2d.model-building")
+                }
+                Ok(true) => {
+                    if self.region_cursor + 1 < snapshot.regions.len() {
+                        self.model_build.as_mut().expect("completed region retains builder").close_lane = 7;
+                        self.stage = MountedStage::RetireRegion;
+                        cx.consume_fuel(1);
+                        return Ok(self.progress(b"fem2d.region-complete"));
+                    }
+                    let model = self.model_build.as_mut().and_then(MountedModelBuild::take_complete).expect("complete model transfers exactly once");
+                    self.assembly_build = Some(AssemblyJobConstruction::new_mounted(model, self.identity.operation(), 1));
+                    self.stage = MountedStage::PrepareAssembly;
+                    self.visual.state = FemVisualState::Assembling;
+                    cx.consume_fuel(1);
+                    self.progress(b"fem2d.model-built")
+                }
+                Err(error) => self.fail(error),
+            }
+        })
+    }
+
+    /// 🧲️ Runs the `build csr` stage of `step`.
+    fn stage_build_csr(&mut self, cx: &mut StepContext<'_>) -> Result<JobStep, semio_framework_job::OriginalTurnFailure> {
+        Ok({
+            match self.csr_build.as_mut().expect("CSR builder retained").step_one_funded(cx.retained_grant()).and_then(|(complete, progress)| {
+                cx.consume_retained(progress).map_err(|_| b"fem2d.csr-grant" as &'static [u8])?;
+                Ok(complete)
+            }) {
+                Ok(false) => {
+                    cx.consume_fuel(1);
+                    self.progress(b"fem2d.csr-building")
+                }
+                Ok(true) => {
+                    let Some((matrix, progress)) = self.csr_build.as_mut().and_then(|build| build.take_complete(cx.retained_grant())) else { return Ok(self.progress(b"fem2d.csr-transfer-pending")); };
+                    if cx.consume_retained(progress).is_err() { return Ok(self.fail(b"fem2d.csr-transfer-grant".to_vec())); }
+                    let rhs = std::mem::take(&mut self.load_build.as_mut().expect("assembled loads retained").free);
+                    self.pcg_build = match PcgJobConstruction::new_with_mounted_rhs(self.identity.operation(), matrix, rhs) {
+                        Ok(builder) => Some(builder),
+                        Err((matrix, rhs)) => { self.rejected_pcg_matrix = Some(matrix); self.load_build.as_mut().expect("load owner retained").free = rhs; return Ok(self.fail(b"fem2d.pcg-rhs-shape".to_vec())); }
+                    };
+                    self.stage = MountedStage::PreparePcg;
+                    cx.consume_fuel(1);
+                    self.progress(b"fem2d.csr-complete")
+                }
+                Err(detail) => self.fail(detail.to_vec()),
+            }
+        })
+    }
+
+    /// 🪛️ Runs the `pcg` stage of `step`.
+    fn stage_pcg(&mut self, cx: &mut StepContext<'_>) -> Result<JobStep, semio_framework_job::OriginalTurnFailure> {
+        Ok({
+            match child_end(self.pcg.as_mut().expect("pcg stage owns pcg").step(cx))? {
+                ChildEnd::Complete(output) => {
+                    if let Some(job) = self.pcg.as_ref() {
+                        let (completed, total, residual, tolerance, converged) = job.visual_progress();
+                        self.visual.progress_completed = completed;
+                        self.visual.progress_total = total;
+                        self.visual.residual_norm = residual;
+                        self.visual.tolerance = tolerance;
+                        self.visual.converged = converged;
+                        self.visual.state = if converged { FemVisualState::SolvingConverged } else { FemVisualState::SolvingUnconverged };
+                    }
+                    self.visual_field_cursor = 0;
+                    self.visual_pcg_complete = true;
+                    self.stage = MountedStage::RecoverReactions;
+                    match output {
+                        Some(bytes) => JobStep::Running(Some(bytes)),
+                        None => self.progress(b"fem2d.pcg-complete"),
+                    }
+                }
+                ChildEnd::Preview { bytes: payload, .. } | ChildEnd::Checkpoint(payload) => {
+                    if let Some(job) = self.pcg.as_ref() {
+                        let (completed, total, residual, tolerance, converged) = job.visual_progress();
+                        self.visual.progress_completed = completed;
+                        self.visual.progress_total = total;
+                        self.visual.residual_norm = residual;
+                        self.visual.tolerance = tolerance;
+                        self.visual.converged = converged;
+                        self.visual.state = if converged { FemVisualState::SolvingConverged } else { FemVisualState::SolvingUnconverged };
+                    }
+                    self.visual_field_cursor = 0;
+                    self.visual_pcg_complete = false;
+                    self.stage = MountedStage::SyncPcgVisual;
+                    match payload {
+                        Some(bytes) => JobStep::Running(Some(bytes)),
+                        None => self.progress(b"fem2d.pcg-output-capacity"),
+                    }
+                }
+                ChildEnd::Yield => self.progress(b"fem2d.pcg-yield"),
+                ChildEnd::Cancelled => self.fail(b"fem2d.pcg-cancelled".to_vec()),
+                ChildEnd::Fault(detail) => self.fail(detail.unwrap_or_else(|| b"fem2d.pcg-fault-capacity".to_vec())),
+            }
+        })
+    }
+
+    /// 🔧️ Runs the `sync pcg visual` stage of `step`.
+    fn stage_sync_pcg_visual(&mut self, cx: &mut StepContext<'_>) -> Result<JobStep, semio_framework_job::OriginalTurnFailure> {
+        Ok({
+            let Some(node) = self.csr_build.as_ref().and_then(|assembly| assembly.model_node(self.visual_field_cursor)) else {
+                self.visual_dirty = true;
+                self.stage = if self.visual_pcg_complete { MountedStage::CommitReady } else { MountedStage::Pcg };
+                cx.consume_fuel(1);
+                return Ok(self.progress(b"fem2d.visual-field-page-complete"));
+            };
+            let scalar = |dof| self.csr_build.as_ref().and_then(|assembly| assembly.visual_equation_indices(&node.id, dof)).and_then(|(_, free)| free).and_then(|index| self.pcg.as_ref()?.visual_scalar(index));
+            let tx = scalar(semio_s_fem_model::Dof::Tx);
+            let ty = scalar(semio_s_fem_model::Dof::Ty);
+            let reaction = |dof| self.csr_build.as_ref().and_then(|assembly| assembly.visual_equation_indices(&node.id, dof)).and_then(|(full, _)| self.load_build.as_ref()?.reactions.get(full)).unwrap_or(0.0);
+            let field = semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::NodeLiveField {
+                node_id: node.id.clone(),
+                displacement: [tx.map_or(0.0, |scalar| scalar.displacement), ty.map_or(0.0, |scalar| scalar.displacement)],
+                residual: [tx.map_or(0.0, |scalar| scalar.residual), ty.map_or(0.0, |scalar| scalar.residual)],
+                reaction: [reaction(semio_s_fem_model::Dof::Tx), reaction(semio_s_fem_model::Dof::Ty)],
+                contour: tx.map_or(0.0, |scalar| scalar.contour).max(ty.map_or(0.0, |scalar| scalar.contour)),
+                mode_shape: [0.0; 2],
+            };
+            if let Some(target) = self.visual.fields.get_mut(self.visual_field_cursor) {
+                *target = field;
+            } else {
+                self.visual.fields.push(field);
+            }
+            self.visual_field_cursor += 1;
+            cx.consume_fuel(1);
+            self.progress(b"fem2d.visual-field-entry")
+        })
     }
 
 }

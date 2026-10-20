@@ -1,5 +1,5 @@
 import { type ActorBytePage, ACTOR_BYTE_PAGE_BYTES, createActorBytePage } from "../../📃️page/🟦️.ts";
-import { GUEST_HOST_ANSWER_CEILING_BYTES } from "@semio-tech/framework/trace/memory";
+import { GUEST_HOST_ANSWER_CEILING_BYTES } from "@semio-tech/framework-trace/memory";
 import type { Lane, CoalesceKey } from "../../🤖️generated/🎭️actor/🟦️.ts";
 
 //#region 🧬️Types

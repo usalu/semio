@@ -24,6 +24,7 @@ path = "../../🦀️.rs"
 "ruststep" = { version = "0.4" }
 "semio-repo-test-host" = { path = "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust", default-features = false }
 "semio-s-plugin-stdio-part21-test-oracle" = { path = "../../../../../🔮️oracles/🔤️part21/📦️packages/🦀️rust" }
+semio-framework-test-fixtures = { path = "../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

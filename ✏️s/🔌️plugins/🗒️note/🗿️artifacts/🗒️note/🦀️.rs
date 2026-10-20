@@ -80,7 +80,10 @@ pub use semio_s_artifact_note_note_v1::{artifact_kind};
 
 pub use semio_s_artifact_note_note_v1::{NOTE_DIALECT};
 
-pub use semio_s_artifact_note_note_schema::{NOTE_DOCUMENT_SCHEMA, NoteBlockNode, NoteCamera, NoteDiff, NoteImageAsset, NoteMutation, NoteSnapshot, NoteTableCell, NoteTextChild, NoteTextParagraph, NoteTextRun, default_true, default_zoom, note_block_text, note_text_child_handle, note_text_child_record, paragraphs_from_text_snapshot, text_snapshot_from_paragraphs};
+pub use semio_s_artifact_note_note_schema::{NOTE_DOCUMENT_SCHEMA, NoteBlockNode, NoteCamera, NoteImageAsset, NoteTableCell, NoteTextChild, NoteTextParagraph, NoteTextRun, default_true, default_zoom, note_block_text, note_text_child_handle, note_text_child_record, paragraphs_from_text_snapshot, text_snapshot_from_paragraphs};
+pub use semio_s_artifact_note_note_diff::standards::v1::subsets::any::schema::diff::NoteDiff;
+pub use semio_s_artifact_note_note_mutations::standards::v1::subsets::any::schema::mutations::NoteMutation;
+pub use semio_s_artifact_note_note_schema::NoteSnapshot;
 
 //#region 🧪️Tests
 #[cfg(test)]

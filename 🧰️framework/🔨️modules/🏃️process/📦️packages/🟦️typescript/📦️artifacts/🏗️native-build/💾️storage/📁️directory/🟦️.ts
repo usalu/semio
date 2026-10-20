@@ -1,0 +1,2 @@
+/** 🧩️ Public `@semio-tech/process/artifacts/native-build/storage/directory` entry: explicit re-exports of the source module that owns each member. */
+export { admitNativeDirectoryCapacityV1, createNativeDirectoryMeterV1, nativeDirectoryHostAvailableBytesV1, probeNativeDirectoryCaseCapabilityV1, probeNativeDirectoryExchangeV1 } from "../../../../../../📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts";

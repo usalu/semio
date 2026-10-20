@@ -180,6 +180,7 @@ use crate::editor::writer::commands::{commit_rename, engagement_input, engagemen
 use crate::editor::writer::modes::edit;
 use crate::editor::writer::editor_vocabulary::writer_io;
 use crate::editor::writer::{WriterCommand, WriterPlayApp, create_writer_app};
+use crate::editor::writer::WriterArtifactPreparationFactory;
 use crate::editor::writer::editor_vocabulary::{reset_document_effect, WriterChapterPayload};
 use crate::editor_unit_tests::context::{new_app_with_registry, WriterApp};
 use semio_framework_plugin::PluginApp;
@@ -394,10 +395,6 @@ async fn jack_completions_use_example_fixture() {
 #[semio_framework_async_macros::async_test]
 async fn command_surface_has_the_expected_row_count_and_distinct_wire_keywords() {
     let commands = every_command();
-    // 🔢️ Counted off the enum itself (`app_commands!` emits one `TOOL_JOB_IDS` entry per row) rather
-    // than a literal: the literal said 21 while the surface has been 19 rows since `ast-hover` and
-    // `text-hover` dissolved into the framework's own `ast` interaction domain, so the law failed on
-    // its own staleness instead of on an uncovered row — which is all it was ever there to catch.
     assert_eq!(commands.len(), WriterCommand::TOOL_JOB_IDS.len(), "every WriterCommand row must be covered by every_command()");
     let mut keywords: Vec<String> = commands.iter().map(|command| protocol::OpText::print_op(command).split(' ').next().unwrap_or_default().to_string()).collect();
     keywords.sort();
@@ -661,11 +658,6 @@ async fn window_engagements_include_format_and_lint_possible_engagements() {
 async fn writer_labels_resolve_native_english_by_default_across_every_surface() {
     let mut app = context::new_app().await;
     let inspection_json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, WRITER_PLAY_BODY_INSPECTION, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("render JSON");
-    // 🗣️ The inspection body renders ONE section, labelled with this app's own `artifact` term —
-    // native English "Artifact" (never the German "Artefakt", which is what "by default" means here).
-    // It asserted "Document"/"Camera": neither is in `WriterPlayLabels` (the artifact term has been
-    // "Artifact" throughout) and the panel has never rendered a camera section, so the law failed on
-    // its own vocabulary rather than on a locale regression.
     assert!(inspection_json.contains("\"Artifact\""), "{inspection_json}");
     assert!(!inspection_json.contains("Artefakt"), "{inspection_json}");
     let catalogue_json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, WRITER_PLAY_BODY_CATALOGUE, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("render JSON");

@@ -123,7 +123,6 @@ async fn table3_light_construction_and_frame_kinds() {
         delta_u_r: 0.0,
         layers,
     };
-    // R ≈ 0.13 + 0.923 + 0.286 + 0.04 ≈ 1.38 < light R_min 1.75
     assert_eq!(part_2::check_minimum_r(&el, "residential", 20.0).status, CheckStatus::Fail);
     el.layers[1].thickness_m = 0.08;
     let pass = part_2::check_minimum_r(&el, "residential", 20.0);
@@ -132,7 +131,7 @@ async fn table3_light_construction_and_frame_kinds() {
 
 #[semio_framework_async_macros::async_test]
 async fn iso6946_67_timber_stud_upper_lower_bound_matches_hand_calc() {
-    use semio_s_artifact_norm_din4108_schema::{total_resistance, total_resistance_lower, total_resistance_upper, u_value, R_SE, R_SI_WALL};
+    use semio_s_artifact_norm_din4108_checks::{total_resistance, total_resistance_lower, total_resistance_upper, u_value, R_SE, R_SI_WALL};
     let layers = [
         LayerDocument { id: "plaster".into(), material_id: "gypsum".into(), thickness_m: 0.015, lambda: 0.70, mu: 10.0, density: 1400.0, application_type: String::new(), compressive_class: String::new(), water_class: String::new(), tensile_class: String::new(), acoustic_class: String::new(), segments: vec![] },
         LayerDocument {
@@ -497,8 +496,6 @@ fn perturb_json_leaf(value: &mut serde_json::Value, path: &str) -> bool {
 
 #[semio_framework_async_macros::async_test]
 async fn every_editable_leaf_perturbation_changes_some_check_on_default_snapshot() {
-    // Exemptions (descriptive name/title/entity label leaves only): zones[].id, elements[].id,
-    // layers[].id, windows[].id, thermalBridges[].id, segments[].id — used as report entity names.
     for (label, snap) in [
         ("default", Din4108Snapshot::compliant_etics_dwelling()),
         ("timber", Din4108Snapshot::compliant_etics_dwelling().with_timber_frame_wall()),
@@ -571,8 +568,7 @@ async fn din4108_10_wrong_application_fails_and_remedy_passes() {
     let mut snap = Din4108Snapshot::compliant_etics_dwelling();
     let wall = snap.elements.iter_mut().find(|e| e.id == "wall-north").unwrap();
     let eps = wall.layers.iter_mut().find(|l| l.id == "eps").unwrap();
-    eps.application_type = "DAD".into(); // roof type on exterior wall → unsuitable
-    // keep compressive_class = dm (compliant for WAP once type is fixed)
+    eps.application_type = "DAD".into();
     let report = evaluate(&snap);
     let fail = report
         .checks
@@ -711,7 +707,6 @@ fn catalogue_design_lambda_matches_evaluated_limit() {
     let li = element.layers.iter().position(|l| l.material_id == "eps").unwrap();
     let check = part_4::check_design_lambda(element, li);
     assert!((check.limit.value - cell).abs() < 1e-12, "evaluated λ limit {} vs catalogue const {}", check.limit.value, cell);
-    // Same const the catalogue panel publishes as DESIGN_LAMBDA_ROWS.
     assert!(part_4::DESIGN_LAMBDA_ROWS.iter().any(|(id, v)| *id == "eps" && (*v - cell).abs() < 1e-12));
 }
 
@@ -809,7 +804,6 @@ async fn zone_ht_flip_leaves_u_prime_and_targets_with_clearing_remedies() {
         .collect();
     assert!(!applicables.is_empty(), "zone-ht must expose applicables");
 
-    // Option index 0 on the first applicable (gate's first probe).
     {
         let mut tree = semio_framework_value::ToValue::to_value(&snap0);
         semio_s_plugin_norm_app_surface::apply_remedy_edit(&report0, ht_id, applicables[0], 0, &mut tree)
@@ -827,7 +821,6 @@ async fn zone_ht_flip_leaves_u_prime_and_targets_with_clearing_remedies() {
         }
     }
 
-    // Sequential applicables (gate's multi-remedy fallback).
     {
         let mut tree = semio_framework_value::ToValue::to_value(&snap0);
         for index in &applicables {
@@ -870,6 +863,5 @@ async fn failing_thin_u_prime_option0_clears_wall_north() {
         check.utilization,
         updated.utilization
     );
-    // Also cover via shared clearing helper (all applicables / sequential).
     assert_fail_has_clearing_remedy(&snap, id);
 }

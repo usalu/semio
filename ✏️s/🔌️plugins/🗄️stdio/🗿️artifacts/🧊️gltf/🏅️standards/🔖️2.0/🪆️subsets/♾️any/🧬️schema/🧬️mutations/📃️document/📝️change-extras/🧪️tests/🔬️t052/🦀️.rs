@@ -6,5 +6,5 @@ use crate::standards::v2_0::subsets::any::schema::mutations::change_document_ext
 #[test]
 fn committed_case_holds_the_corpus_law() {
     assert_eq!(<ChangeDocumentExtraDataMutation as protocol::MutationKind<GltfSnapshot, crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation>>::SEMANTICS.kind, "change-document-extra-data");
-    crate::standards::v2_0::subsets::any::schema::mutations::fixture_corpus_tests::assert_case("📃️document/📝️change/🔬️t052");
+    crate::standards::v2_0::subsets::any::schema::mutations::fixture_corpus_tests::assert_case("📃️document/📝️change-extras/🔬️t052");
 }

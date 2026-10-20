@@ -2,7 +2,7 @@
 import * as React from "react";
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import numberControlsFixture from "../../../../🧬️contract/🧪️tests/🧫️fixtures/🧫️number-controls/🔣️.json";
+import numberControlsFixture from "@semio-tech/ui-contract/testing/fixtures/number-controls.json";
 import { Stepper } from "../../🟦️.tsx";
 // #endregion 🔌️Adapters
 

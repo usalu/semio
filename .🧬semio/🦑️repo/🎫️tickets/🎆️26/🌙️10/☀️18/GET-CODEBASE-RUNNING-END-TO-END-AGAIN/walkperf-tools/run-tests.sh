@@ -1,9 +1,12 @@
 #!/bin/sh
-# usage: run-tests.sh mirror <mirror-dir> | real
+# usage: run-tests.sh mirror <mirror-dir> | real [gate]
+# gate: runs only the generation receipt suite and exits non-zero when it fails (the planner verifies with it); without gate every suite is informational.
+# mirror: build it first with `python3 walkperf.py mirror <dir> --closure` (real files for the runtime import closure, symlinks elsewhere).
 # Runs the explicit-path suites that cover the walkperf change (never a directory, never ./): sequentially, with the minted caller envelope.
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
 MODE="${1:-real}"
+GATE=0; if [ "${2:-}" = gate ]; then GATE=1; fi
 if [ "$MODE" = mirror ]; then BASE="$(cd "$2" && pwd)"; else BASE="$(cd "$HERE/../../../../../../../.." && pwd)"; fi
 LIB="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"
 DEPS="$LIB/⚡️caching/🚀️bootstrap/📦️dependencies"
@@ -15,8 +18,13 @@ import {createNativeBuildCallerCapabilitiesV1} from "$BASE/$LIB/🏗️build/�
 process.stdout.write(scriptProcessEnvironment(createScriptProcessEnvelope({version:1,owner:"walkperf-test",maximumElapsedMilliseconds:3000000},createNativeBuildCallerCapabilitiesV1(process.cwd(),["show","projects"],"nx",process.env),Date.now()),{}).SEMIO_SCRIPT_PROCESS_INVOCATION!);
 TS
 cd "$BASE" || exit 2
-run() { SEMIO_SCRIPT_PROCESS_INVOCATION="$(bun "$MINT")" perl -e 'alarm 560; exec @ARGV' -- bun test "$BASE/$1" "${@:2}" 2>&1 | grep -E '^ *[0-9]+ (pass|fail|skip)|^\(fail\)|error:' | sed 's/ \[[0-9.]*ms\]//' | head -${LINES_MAX:-12}; }
-echo "== generation receipt (new)"; run "$DEPS/🧾️generation/🧪️tests/🟦️.ts"
+run() {
+  OUT="$(SEMIO_SCRIPT_PROCESS_INVOCATION="$(bun "$MINT")" perl -e 'alarm 560; exec @ARGV' -- bun test "$BASE/$1" "${@:2}" 2>&1)"; RC=$?
+  printf '%s\n' "$OUT" | grep -E '^ *[0-9]+ (pass|fail|skip)|^\(fail\)|error:' | sed 's/ \[[0-9.]*ms\]//' | head -${LINES_MAX:-12}
+  return $RC
+}
+echo "== generation receipt (new)"; run "$DEPS/🧾️generation/🧪️tests/🟦️.ts"; GEN=$?
+if [ "$GATE" = 1 ]; then exit $GEN; fi
 echo "== workspaces bun (cjs patch)"; run "$LIB/🗂️workspaces/🟦️bun/🧪️tests/🟦️.ts"
 echo "== bootstrap parser AST law (patched ensureBuildEnvironmentV1)"; run "$LIB/🏗️build/🚀️bootstrap/📦️parsers/🧪️tests/🟦️.ts" -t "Bootstrap publishes missing parser receipts"
 echo "== bootstrap parser receipt schema"; run "$LIB/🏗️build/🚀️bootstrap/📦️parsers/🧪️tests/🟦️.ts" -t "neutral bootstrap parser receipt"

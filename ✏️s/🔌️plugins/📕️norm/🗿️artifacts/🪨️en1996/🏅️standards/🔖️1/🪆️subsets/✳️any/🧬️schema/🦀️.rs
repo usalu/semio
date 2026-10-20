@@ -86,7 +86,7 @@ pub fn en1996_artifact_schema_descriptor() -> semio_framework_schema_registry::A
 #[path = "."]
 pub mod checks {
     #[path = "⚖️masonry/🦀️.rs"]
-    mod masonry;
+    pub mod masonry;
     #[cfg(test)]
     #[path = "🧪️tests/🔬️oracle/🦀️.rs"]
     mod oracle_tests;

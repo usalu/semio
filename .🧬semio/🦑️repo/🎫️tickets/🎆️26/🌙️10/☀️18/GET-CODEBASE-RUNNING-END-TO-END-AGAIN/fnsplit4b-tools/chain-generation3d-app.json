@@ -1,0 +1,11 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🦀️.rs",
+ "function": "create_generation3d_app",
+ "nth": 0,
+ "max_lines": 110,
+ "builder_type": "semio_framework_plugin::app::EditorBuilder",
+ "keep_tail": 1,
+ "types": {},
+ "noun": "manifest",
+ "what": "its builder calls"
+}

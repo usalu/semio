@@ -36,10 +36,6 @@ fn stepper_window_args(window_id: &str) -> semio_framework_plugin::UiAssemblyRes
 
 fn stepper_field(id: &str, label: &str, value: f64, step: f64, action: &str, window_id: &str) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let (action, args) = ActionFactory::new(PUZZLE3D_PLAY_CONTROLLER_ID).action(action, Some(stepper_window_args(window_id)?))?;
-    // 🔢️ `uniform: true` — one window's own scalar setting, never a multi-selection aggregate.
-    // `uniform: false` renders the stepper as MIXED: a blank box with a placeholder instead of the
-    // value, and its internal base for a +/− bump is `defaultValue` (0), not the setting. Both halves
-    // were browser-visible (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B12).
     let mut control = BuiltNode::try_new(format!("{id}.control"), Component::NumberStepper(NumberStepperProps { value, step, uniform: true, ..Default::default() }))
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.number-stepper", "number stepper admission failed"))?;
     control.bindings.try_push(ActionBinding { trigger: Trigger::Change, action, args, capability: None }).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.number-stepper", "number stepper binding admission failed"))?;

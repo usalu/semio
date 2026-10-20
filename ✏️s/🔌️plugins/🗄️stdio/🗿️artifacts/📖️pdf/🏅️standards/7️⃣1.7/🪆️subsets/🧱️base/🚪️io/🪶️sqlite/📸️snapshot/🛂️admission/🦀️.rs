@@ -1,6 +1,7 @@
 //! 🛂️ Borrowed literal PDF fields admitted against their handwritten SQL cells.
 use crate::standards::v1_7::subsets::base::schema::snapshot::model::*;
 use store::sqlite_snapshot::{self};
+use semio_s_artifact_stdio_pdf_diff::standards::v1_7::subsets::base::io::sqlite::snapshot::number;
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use pack::value::DslValue as D;
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;

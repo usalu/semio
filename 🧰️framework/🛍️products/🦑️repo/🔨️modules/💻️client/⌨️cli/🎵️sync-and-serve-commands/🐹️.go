@@ -262,7 +262,7 @@ func analyzeCommand(factory EngineFactory, config *Config) *command.Command {
 	return cmd
 }
 
-// through emojiText and deduplicated first-wins, so the CLI, the VS Code extension and the Rust
+// 🧩️through emojiText and deduplicated first-wins, so the CLI, the VS Code extension and the Rust
 // catalog answer with the same set. The catalog is the generated projection EntityKindCatalog
 // (🏷️entity-kinds/🐹️.go) of the framework-owned `framework.schema` export EntityKindCatalog; this
 // function MUST NOT restate it.

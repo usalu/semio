@@ -1,16 +1,58 @@
 {
   "recheckFences": {
-    "members": ["members/**"],
-    "packages": [{"path":"members/a","name":"neutral-a"},{"path":"members/b","name":"neutral-b"}],
-    "current": ["members/a","members/b"],
+    "members": [
+      "members/**"
+    ],
+    "packages": [
+      {
+        "path": "members/a",
+        "name": "neutral-a"
+      },
+      {
+        "path": "members/b",
+        "name": "neutral-b"
+      }
+    ],
+    "current": [
+      "members/a",
+      "members/b"
+    ],
     "cases": [
-      {"name":"original-cancel-during-recheck","action":"cancel","outcome":"canceled"},
-      {"name":"manifest-change-during-recheck","action":"manifest","outcome":"rejected"},
-      {"name":"topology-change-during-recheck","action":"topology","outcome":"rejected"},
-      {"name":"symlink-substitution-during-recheck","action":"symlink","outcome":"rejected"},
-      {"name":"manifest-change-after-fresh-plan","action":"late-manifest","outcome":"rejected"},
-      {"name":"unrelated-source-change-during-recheck","action":"unrelated","outcome":"accepted"},
-      {"name":"unchanged-recheck","action":"none","outcome":"accepted"}
+      {
+        "name": "original-cancel-during-recheck",
+        "action": "cancel",
+        "outcome": "canceled"
+      },
+      {
+        "name": "manifest-change-during-recheck",
+        "action": "manifest",
+        "outcome": "rejected"
+      },
+      {
+        "name": "topology-change-during-recheck",
+        "action": "topology",
+        "outcome": "rejected"
+      },
+      {
+        "name": "symlink-substitution-during-recheck",
+        "action": "symlink",
+        "outcome": "rejected"
+      },
+      {
+        "name": "manifest-change-after-fresh-plan",
+        "action": "late-manifest",
+        "outcome": "rejected"
+      },
+      {
+        "name": "unrelated-source-change-during-recheck",
+        "action": "unrelated",
+        "outcome": "accepted"
+      },
+      {
+        "name": "unchanged-recheck",
+        "action": "none",
+        "outcome": "accepted"
+      }
     ]
   },
   "schemaVersion": 1,
@@ -1389,5 +1431,38 @@
         "outcome": "canceled"
       }
     ]
-  }
+  },
+  "frontierStates": [
+    {"dev":"1","ino":"9007199254740992","mode":33188,"expected":["file","1","9007199254740992",33188]},
+    {"dev":"1","ino":"9007199254740993","mode":33188,"expected":["file","1","9007199254740993",33188]},
+    {"dev":"9007199254740993","ino":"18446744073709551615","mode":33188,"expected":["file","9007199254740993","18446744073709551615",33188]}
+  ],
+  "frontierReplay": [
+    {"name":"exact-settled-directory","before":"1:2:3:1000000001:1000000002","after":"1:2:3:1000000001:1000000002","settled":true,"expected":"reuse"},
+    {"name":"nanosecond-membership-churn","before":"1:2:3:1000000001:1000000002","after":"1:2:3:1000000002:1000000002","settled":true,"expected":"relist"},
+    {"name":"replacement-inode","before":"1:2:3:1:1","after":"1:4:3:1:1","settled":true,"expected":"relist"},
+    {"name":"changed-ctime","before":"1:2:3:1:1","after":"1:2:3:1:2","settled":true,"expected":"relist"},
+    {"name":"missing-baseline","before":null,"after":"1:2:3:1:1","settled":true,"expected":"derive"},
+    {"name":"missing-current","before":"1:2:3:1:1","after":null,"settled":true,"expected":"derive"},
+    {"name":"unsettled-exact-stamp","before":"1:2:3:1:1","after":"1:2:3:1:1","settled":false,"expected":"relist"},
+    {"name":"unsettled-changed-stamp","before":"1:2:3:1:1","after":"1:2:3:1:2","settled":false,"expected":"relist"}
+  ],
+  "physicalPolicies": [
+    {
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "fault": "text",
+      "accepted": false
+    },
+    {
+      "fault": "relative",
+      "accepted": false
+    },
+    {
+      "fault": "extra",
+      "accepted": false
+    }
+  ]
 }

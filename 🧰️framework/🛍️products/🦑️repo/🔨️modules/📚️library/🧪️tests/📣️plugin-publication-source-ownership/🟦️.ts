@@ -187,7 +187,7 @@ describe("plugin publication source ownership", () => {
     expect(project.targets[fixture.registration.target]?.options?.command).toBe("bun ./📜️script.ts test plugin-publication-source-ownership");
     const manifest = JSON.parse(readFileSync(resolve(packageRoot, "package.json"), "utf8"));
     expect(manifest.scripts[fixture.registration.target]).toBe(`bun --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${fixture.registration.target}`);
-    const commandSource = readFileSync(resolve(packageRoot, "📜️script.ts"), "utf8");
+    const commandSource = readFileSync(resolve(libraryRoot, "🧪️tests/🔬️typescript-package-commands/🟦️.ts"), "utf8");
     expect(commandSource).toContain('segments[0] === "plugin-publication-source-ownership"');
   });
 });

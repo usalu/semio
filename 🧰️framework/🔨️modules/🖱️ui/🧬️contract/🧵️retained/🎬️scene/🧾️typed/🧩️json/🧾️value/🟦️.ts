@@ -1,5 +1,5 @@
 //#region 🧬️JsonDocumentContract
-import { NumericIndex, type NumericIndexEdit, type NumericIndexReader } from "../../../../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
+import { NumericIndex, type NumericIndexEdit, type NumericIndexReader } from "@semio-tech/value-ts/ordered/numeric";
 import { OwnedUiPreparedScene } from "../../🟦️.ts";
 import { OwnedUiSceneJsonCursor, type OwnedUiSceneJsonToken } from "../🟦️.ts";
 import type { OwnedUiSceneReader } from "../../../🟦️.ts";

@@ -149,12 +149,18 @@
     "./routing/workspace/schema.json": "./🧭️routing/🏠️workspace/🧬️schema/🔣️json/🟦️.ts",
     "./routing/invocation/process/schema/cleanup.json": "./🧭️routing/📥️invocation/🏃️process/🧬️schema/🔣️json/cleanup/🟦️.ts",
     "./routing/invocation/process/lifetime/schema.json": "./🧭️routing/📥️invocation/🏃️process/🪢️lifetime/🧬️schema/🔣️json/🟦️.ts",
-    "./routing/invocation/process/lifetime": "./🧭️routing/📥️invocation/🏃️process/🪢️lifetime/🟦️.ts"
+    "./routing/invocation/process/lifetime": "./🧭️routing/📥️invocation/🏃️process/🪢️lifetime/🟦️.ts",
+    "./artifacts/native-build/receipt/retention/copy": "./📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📁️copy/🟦️.ts",
+    "./artifacts/native-build/storage/directory": "./📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts",
+    "./artifacts/native-build/storage/directory/host": "./📦️artifacts/🏗️native-build/💾️storage/📁️directory/🪟️host/🟦️.ts",
+    "./artifacts/native-build/storage/image/capacity": "./📦️artifacts/🏗️native-build/💾️storage/🍎️image/📏️capacity/🟦️.ts",
+    "./artifacts/native-build/testing/cargo": "./📦️artifacts/🏗️native-build/🧪️testing/🦀️cargo/🟦️.ts"
   },
   "license": "LGPL-3.0-or-later",
   "devDependencies": {
     "@semio-tech/schema-ts": "workspace:*",
-    "@semio-tech/schema-validator-ts": "workspace:*"
+    "@semio-tech/schema-validator-ts": "workspace:*",
+    "cross-spawn": "7.0.6"
   },
   "scripts": {
     "test-cargo-build-lease": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-process:test-cargo-build-lease",
@@ -162,6 +168,7 @@
   },
   "dependencies": {
     "@semio-tech/compiler-syntax-rust-ts": "workspace:*",
-    "@semio-tech/framework": "workspace:*"
+    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/framework-filesystem": "workspace:*"
   }
 }

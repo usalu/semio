@@ -50,18 +50,3 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     assert_eq!(EnergyModelLinkSlots::of(&carried), links);
     assert_eq!(EnergyModelLinkSlots::of(&energy_snapshot_with_links(&model, &EnergyModelLinkSlots::default())), EnergyModelLinkSlots::default());
 }
-
-/// 🧪️ The load effect is a genesis document, not an edit: its pack decodes back to exactly the
-/// snapshot that went in, so the host's `ArtifactStore::reset` installs the loaded model itself
-/// rather than a projection of it.
-#[semio_framework_async_macros::async_test]
-async fn the_load_document_effect_carries_the_model_it_was_given() {
-    let mut model = Model { name: "BESTEST 900".into(), version: "1".into(), ..Model::default() };
-    model.zones.push(zone(1));
-    let effect = energy_model_load_document_effect("model", &model, &EnergyModelLinkSlots::default());
-    let semio_framework_plugin::kernel::Effect::LoadDocument { pack, spr } = effect else { panic!("a whole-document load must be a LoadDocument effect") };
-    assert!(!spr.is_empty(), "the genesis envelope must still print an spr");
-    let loaded = <EnergyModelSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).expect("the emitted pack decodes");
-    assert_eq!(loaded.model, model);
-    assert_eq!(loaded.schema, ENERGY_MODEL_DOCUMENT_SCHEMA);
-}

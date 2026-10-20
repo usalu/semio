@@ -4,17 +4,17 @@ import { type Flow } from "../🧭️flow-direction-context/🟦️.tsx";
 
 export const ANCHORS = ["top-left", "top-middle", "top-right", "right-middle", "bottom-right", "bottom-middle", "bottom-left", "left-middle"] as const;
 
-/** @emoji 🧭️ One of the eight anchors a panel or pane can grow from. */
+/** 🧭️ One of the eight anchors a panel or pane can grow from. */
 export type Anchor = (typeof ANCHORS)[number];
 
-/** @emoji 🧭️ `"top"`/`"middle"`/`"bottom"` row of an {@link Anchor} — `left-middle`/`right-middle` sit in the middle row. */
+/** 🧭️ `"top"`/`"middle"`/`"bottom"` row of an {@link Anchor} — `left-middle`/`right-middle` sit in the middle row. */
 export function anchorVertical(anchor: Anchor): "top" | "middle" | "bottom" {
   if (anchor.startsWith("top")) return "top";
   if (anchor.startsWith("bottom")) return "bottom";
   return "middle";
 }
 
-/** @emoji 🧭️ `"left"`/`"middle"`/`"right"` column of an {@link Anchor} — `top-middle`/`bottom-middle` sit in the middle column. */
+/** 🧭️ `"left"`/`"middle"`/`"right"` column of an {@link Anchor} — `top-middle`/`bottom-middle` sit in the middle column. */
 export function anchorHorizontal(anchor: Anchor): "left" | "middle" | "right" {
   switch (anchor) {
     case "top-left":
@@ -30,12 +30,12 @@ export function anchorHorizontal(anchor: Anchor): "left" | "middle" | "right" {
   }
 }
 
-/** @emoji 🧭️ The mirrored {@link Flow} a {@link Panel} or {@link Pane} grows into — right anchors flip inline, bottom anchors flip block; middle anchors (row or column) never mirror. */
+/** 🧭️ The mirrored {@link Flow} a {@link Panel} or {@link Pane} grows into — right anchors flip inline, bottom anchors flip block; middle anchors (row or column) never mirror. */
 export function flowFromAnchor(anchor: Anchor): Flow {
   return { inline: anchorHorizontal(anchor) === "right" ? "rtl" : "ltr", block: anchorVertical(anchor) === "bottom" ? "up" : "down" };
 }
 
-/** @emoji 🧭️ Edge insets for an {@link Anchor} plus responsive width/height clamps to its containing region — corners inset on both axes, an edge-middle anchor centers along its middle axis via a translate. Shared by {@link Panel} and {@link Pane} so both float from identical math. */
+/** 🧭️ Edge insets for an {@link Anchor} plus responsive width/height clamps to its containing region — corners inset on both axes, an edge-middle anchor centers along its middle axis via a translate. Shared by {@link Panel} and {@link Pane} so both float from identical math. */
 export function anchorPositionStyle(anchor: Anchor): React.CSSProperties {
   const horizontal = anchorHorizontal(anchor);
   const vertical = anchorVertical(anchor);
@@ -59,7 +59,7 @@ export function anchorPositionStyle(anchor: Anchor): React.CSSProperties {
 }
 
 /**
- * @emoji 🧭️ Open chrome-hosted {@link Panel} position — pulls the window-chrome cap into the navbar/footer
+ * 🧭️ Open chrome-hosted {@link Panel} position — pulls the window-chrome cap into the navbar/footer
  * band where {@link PanelChromeTabBar} parked the folded toggles, so opening unfolds in place instead of
  * jumping the chips into the canvas. Navbar/footer are `h-large` with centered `h-medium` items; the offset
  * aligns the panel's `min-h-medium` cap to that centered row. Max height grows by the same overhang so the
@@ -88,7 +88,7 @@ export function chromeHostedOpenPanelPositionStyle(anchor: Anchor): React.CSSPro
 // `26/07/15/RENAME-WINDOW-PANELS-TO-PANES-AND-CORNER-PANELS-TO-PANELS`): "panel" is the shell-edge dock, "pane" is
 // chrome floating inside one window.
 
-/** @emoji 🧭️ Nearest anchor to a pointer position within a host's bounding rect — a 3×3 zone grid over the box.
+/** 🧭️ Nearest anchor to a pointer position within a host's bounding rect — a 3×3 zone grid over the box.
  * There is no center anchor, so the dead-center zone resolves to whichever edge-middle the pointer has drifted
  * closer to (compares distance from the vertical vs. horizontal midline). */
 export function nearestAnchor(pointerX: number, pointerY: number, hostRect: { readonly left: number; readonly top: number; readonly width: number; readonly height: number }): Anchor {

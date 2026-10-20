@@ -6,6 +6,7 @@ use crate::clear_widget_layout;
 use crate::move_widget;
 
 use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
+use crate::move_widget::component::MoveWidget;
 
 pub fn inverse<Op: From<crate::clear_widget_layout::ClearWidgetLayout> + From<MoveWidget>>(payload: &super::MoveWidget, base: &Generation2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {

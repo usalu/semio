@@ -181,7 +181,7 @@ func buildPolicyEntityKindTree(groups []model.Territory) []*TreeNode {
 
 // #region 🧨️Monorepo Tree Types
 
-// Tree node kinds, filter criteria, and matching logic for monorepo tree queries.
+// 🧩️Tree node kinds, filter criteria, and matching logic for monorepo tree queries.
 // 🏷️EntityKinds holds the data fields for a EntityKinds record.
 var EntityKinds = []string{
 	"root", "year", "month", "day", "hour", "minute", "second",

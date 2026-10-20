@@ -1,29 +1,8 @@
 #!/usr/bin/env bun
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { createHash } from "node:crypto";
-import { join } from "node:path";
-import { readFileSync } from "node:fs";
-import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { publishGeneratorInputReceipt } from "./🟦️.ts";
+import { ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { RegistryCatalogInputsScript } from "./🧪️tests/🔬️script-commands/🟦️.ts";
 
-/** 📇️ Scans catalog membership and exact source bytes once before Nx hashes the resulting receipt. */
-class RegistryCatalogInputsScript extends BundleScript {
-  async run(args: string[]): Promise<void> {
-    if (args.length) throw new Error("registry-catalog accepts no arguments");
-    const kind = "registry-catalog", policy = JSON.parse(readFileSync(join(import.meta.dir, "../🔣️policy.json"), "utf8"));
-    const { loadCatalogTaxonomy, registryCatalogInputView } = await import("../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts"), { registryCatalogInputPaths } = await import("../../🔍️discovery/🧲️registry-catalog-projection/🟦️.ts");
-    const taxonomy = loadCatalogTaxonomy(), view = registryCatalogInputView(this.repoRoot, taxonomy), hash = createHash("sha256");
-    for (const path of registryCatalogInputPaths(this.repoRoot, taxonomy, view)) {
-      const nodeKind = view.kind(path);
-      if (nodeKind === "symlink") throw new Error(`Generator input is a symlink: ${path}`);
-      const content = nodeKind === "file" ? readFileSync(join(this.repoRoot, path)) : Buffer.alloc(0);
-      hash.update(JSON.stringify([path, nodeKind, content.byteLength]) + "\n").update(content);
-    }
-    const digest = hash.digest("hex");
-    publishGeneratorInputReceipt(this.repoRoot, policy.generatorInputs[kind].output, kind, digest);
-    console.log(digest);
-  }
-}
 
 const router = new ScriptRouter(import.meta.dir).register("registry-catalog", RegistryCatalogInputsScript);
 if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (router).run(process.argv.slice(2), original));

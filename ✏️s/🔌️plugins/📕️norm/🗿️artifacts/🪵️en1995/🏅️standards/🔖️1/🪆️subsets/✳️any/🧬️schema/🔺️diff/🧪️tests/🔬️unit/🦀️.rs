@@ -1,6 +1,7 @@
 use semio_s_artifact_norm_en1995_diff::*;
 use semio_s_artifact_norm_en1995_mutations::En1995Mutation;
 use protocol::{apply_diff, DiffAlgebra, Mutation as _, MutationDiff};
+use semio_s_artifact_norm_en1995_model::En1995Snapshot;
 
 /// 🔺️ A member-scoped change patches only that member's field; annex and connections stay untouched.
 #[semio_framework_async_macros::async_test]

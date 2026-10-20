@@ -13,7 +13,7 @@ import{withNativePlatformChildStorageV1,requireNativePlatformImageV1,withNativeP
 import{validateJsonSchemaSubset}from"../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import{PersistentStateOperationsV1}from"./🎟️lifetime/🟦️.ts";
 import{persistentStateLayoutV1,persistentStatePolicyV1}from"./📋️layout/🟦️.ts";
-import publicSchema from"./🧬️schema/🔣️.json";
+import publicSchema from"./🧬️schema/🔣️.json" with { type: "json" };
 const schema=JSON.parse(JSON.stringify(publicSchema))as typeof publicSchema,policy=persistentStatePolicyV1(),chargeOwner=persistentStateChargeOwnerV1(),hash=(bytes:Uint8Array|string)=>createHash("sha256").update(bytes).digest("hex"),policyDigest=hash(JSON.stringify(policy));
 type Binding=Readonly<{version:1;allocation:string;owner:string;bytes:number;directory:string;policy:string;receipt:string;dev:number;ino:number;size:number}>;
 type Intent=Readonly<{version:1;allocation:string;directory:string;policy:string}>;

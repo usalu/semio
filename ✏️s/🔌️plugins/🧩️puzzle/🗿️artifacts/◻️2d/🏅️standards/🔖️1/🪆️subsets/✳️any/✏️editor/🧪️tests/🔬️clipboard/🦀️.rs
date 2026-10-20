@@ -211,8 +211,6 @@ fn copy_then_paste_restores_a_twelve_node_nakagin_subgraph() {
     let mut app = app();
     load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID);
     let snapshot = fixture_of(&app);
-    // 🔎️ A connected dozen: walk the edge list and take the first twelve distinct endpoint owners, so
-    // the subset is guaranteed to carry internal edges rather than twelve isolated nodes.
     let owner_of: HashMap<String, String> = board_snapshot_nodes(&snapshot)
         .iter()
         .flat_map(|node| {

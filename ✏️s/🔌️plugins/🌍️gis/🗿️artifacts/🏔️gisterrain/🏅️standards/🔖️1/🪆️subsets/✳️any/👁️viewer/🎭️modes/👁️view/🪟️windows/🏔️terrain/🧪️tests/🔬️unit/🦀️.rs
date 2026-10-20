@@ -40,6 +40,6 @@ async fn definition_declares_a_world3d_terrain_window() {
 
 #[semio_framework_async_macros::async_test]
 async fn render_produces_a_scene_node_for_the_default_document() {
-    let document = crate::schema::default_terrain_document();
+    let document = semio_s_artifact_gis_gisterrain_inferences::standards::v1::subsets::any::io::text::snapshot::default_terrain_document();
     let _node = render(&document);
 }

@@ -2,10 +2,11 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "entry", "removedRoots", "removedPackages", "packages", "laws"],
+  "required": ["version", "entry", "commands", "removedRoots", "removedPackages", "packages", "laws"],
   "properties": {
     "version": { "const": 1 },
     "entry": { "const": "📦️packages/🦀️rust/📜️script.ts" },
+    "commands": { "const": "🧪️tests/🔬️rust-package-commands/🟦️.ts" },
     "removedRoots": { "$ref": "#/$defs/names" },
     "removedPackages": { "$ref": "#/$defs/names" },
     "packages": { "type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },

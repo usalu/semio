@@ -29,7 +29,7 @@ use semio_framework_os_store_ledger::{ArtifactEditMessageLedger, fold_envelope_h
 use semio_framework_os_store_ledger::{retire_replayed_projection, retire_scratch_operations, stamp_edit_semantics, validate_composition_pins};
 use semio_framework_os_store_canonical_json::{ArtifactCanonicalJson, ArtifactCanonicalJsonTree};
 use semio_framework_os_store_replay::{EditReplay, EditReplayResult, EffectiveSupersessions, ReplayEdits, ReplayMode, admit_replacement};
-use semio_framework_os_store_replay::{FoldProjection, retire_shared_projection};
+use semio_framework_os_store_replay::{ColdFoldProjection, retire_shared_projection};
 #[cfg(target_arch = "wasm32")]
 use semio_framework_os_store_backbone::resolve_backbone;
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]

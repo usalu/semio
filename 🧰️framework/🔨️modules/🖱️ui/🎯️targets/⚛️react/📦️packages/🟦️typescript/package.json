@@ -34,7 +34,6 @@
   "dependencies": {
     "@semio-tech/assets": "workspace:*",
     "@semio-tech/ui-styling": "workspace:*",
-    "@semio-tech/framework": "workspace:*",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -49,7 +48,12 @@
     "react-resizable-panels": "4.14.5",
     "three": "^0.182.0",
     "three-mesh-bvh": "^0.9.14",
-    "xstate": "^5.25.0"
+    "xstate": "^5.25.0",
+    "@semio-tech/framework-interaction": "workspace:*",
+    "@semio-tech/framework-manifest": "workspace:*",
+    "@semio-tech/framework-onboarding": "workspace:*",
+    "@semio-tech/framework-transient": "workspace:*",
+    "@semio-tech/ui": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",

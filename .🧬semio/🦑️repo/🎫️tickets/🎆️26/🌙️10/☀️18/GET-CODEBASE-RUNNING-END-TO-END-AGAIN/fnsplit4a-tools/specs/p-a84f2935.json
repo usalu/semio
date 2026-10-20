@@ -1,0 +1,53 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🧪️tests/🧪️chunkkey/📐️projection-poses-and-matrices/🟦️.ts",
+ "function": "registerProjectionPoseAndMatrixTests",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of registerProjectionPoseAndMatrixTests. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️world-projection-gumball-plane",
+   "doc": "/** 🔶️ The world projection gumball plane phase of registerProjectionPoseAndMatrixTests. */",
+   "phases": [
+    {
+     "name": "registerWorldProjectionGumballPlaneTests",
+     "emoji": "🔷",
+     "doc": "Registers the world projection gumball plane tests of registerProjectionPoseAndMatrixTests.",
+     "from": 4,
+     "to": 38
+    }
+   ]
+  },
+  {
+   "dir": "🔸️world-projection-transition-pose",
+   "doc": "/** 🔸️ The world projection transition pose phase of registerProjectionPoseAndMatrixTests. */",
+   "phases": [
+    {
+     "name": "registerWorldProjectionTransitionPoseTests",
+     "emoji": "🔹",
+     "doc": "Registers the world projection transition pose tests of registerProjectionPoseAndMatrixTests.",
+     "from": 96,
+     "to": 206
+    }
+   ]
+  },
+  {
+   "dir": "🟠️world-projection-goal-matrix",
+   "doc": "/** 🟠️ The world projection goal matrix phase of registerProjectionPoseAndMatrixTests. */",
+   "phases": [
+    {
+     "name": "registerWorldProjectionGoalMatrixTests",
+     "emoji": "🟡",
+     "doc": "Registers the world projection goal matrix tests of registerProjectionPoseAndMatrixTests.",
+     "from": 224,
+     "to": 351
+    }
+   ]
+  }
+ ]
+}

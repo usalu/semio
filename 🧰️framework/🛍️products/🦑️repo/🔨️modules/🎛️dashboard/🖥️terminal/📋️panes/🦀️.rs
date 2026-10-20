@@ -12,7 +12,7 @@ use semio_framework_ui_tui_widgets::widget::WidgetState;
 
 /// 🎬️ What activating a row does.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) enum RowAction { None, NewTask, Settings, Help, Refresh, CancelDiscovery, Session(String), OpenReady(String), CancelOpenReady, Language, Appearance, Terminology, Renderer, Layout, SaveScope, Back }
+pub(super) enum RowAction { None, Files, NewTask, Settings, Help, Refresh, CancelDiscovery, Session(String), OpenReady(String), CancelOpenReady, Language, Appearance, Terminology, Renderer, Layout, SaveScope, Back }
 
 /// 🪧️ The rows of one list window and where the selection and the visible slice are.
 #[derive(Default)]
@@ -37,7 +37,7 @@ impl Dashboard {
         let text = self.text();
         match &self.windows[index].body {
             Body::Overview => {
-                let mut rows = vec![(text.row_new_task.as_str().into(), RowAction::NewTask), (text.row_settings.as_str().into(), RowAction::Settings), (text.row_keyboard.as_str().into(), RowAction::Help), (text.row_refresh.as_str().into(), RowAction::Refresh), (text.row_cancel_discovery.as_str().into(), RowAction::CancelDiscovery)];
+                let mut rows = vec![(text.action_show_files.as_str().into(), RowAction::Files), (text.row_new_task.as_str().into(), RowAction::NewTask), (text.row_settings.as_str().into(), RowAction::Settings), (text.row_keyboard.as_str().into(), RowAction::Help), (text.row_refresh.as_str().into(), RowAction::Refresh), (text.row_cancel_discovery.as_str().into(), RowAction::CancelDiscovery)];
                 if self.sessions.is_empty() { rows.push((text.row_no_tasks.as_str().into(), RowAction::None)); }
                 if self.opening_url.is_some() { rows.push((text.action_cancel_open_ready.as_str().into(), RowAction::CancelOpenReady)); }
                 for session in self.sessions.values() {
@@ -134,6 +134,7 @@ impl Dashboard {
         let Some(action) = self.windows[index].pane.current().cloned() else { return };
         match action {
             RowAction::None => {}
+            RowAction::Files => self.open_files(tui),
             RowAction::NewTask => self.set_body(tui, index, Kind::Launcher, None),
             RowAction::Settings => self.set_body(tui, index, Kind::Settings, None),
             RowAction::Help => self.set_body(tui, index, Kind::Help, None),

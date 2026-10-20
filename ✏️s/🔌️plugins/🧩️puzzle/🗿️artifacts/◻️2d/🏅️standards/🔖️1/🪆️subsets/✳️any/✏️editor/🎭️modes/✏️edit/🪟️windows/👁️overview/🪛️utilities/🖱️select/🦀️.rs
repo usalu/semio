@@ -1,4 +1,4 @@
-//! click picking). Together with `🖌️brush` it forms this window's entire exclusive utility set, so it
+//! 🔘️ click picking). Together with `🖌️brush` it forms this window's entire exclusive utility set, so it
 //! 🖱️ Overview-window utility — Select: the default pointer utility (rectangle/lasso marquee plus
 //! carries `group: None` and renders as its own flat utility-bar icon, never a collapsed dropdown.
 //!

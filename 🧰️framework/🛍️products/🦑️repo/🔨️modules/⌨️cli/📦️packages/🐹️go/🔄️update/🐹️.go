@@ -24,7 +24,7 @@ import (
 
 // #region 🔊️Cli
 
-// Update command implementation for dependency updates.
+// 🔄️Update command implementation for dependency updates.
 // ✏️updateCmd holds the data fields for a updateCmd record.
 var updateCmd = &Command{
 	Use:   "update [target]",

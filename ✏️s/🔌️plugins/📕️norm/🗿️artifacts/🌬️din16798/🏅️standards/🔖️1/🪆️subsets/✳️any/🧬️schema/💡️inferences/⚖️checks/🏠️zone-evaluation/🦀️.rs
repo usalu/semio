@@ -13,7 +13,23 @@ pub(super) fn evaluate_zone(doc: &semio_s_artifact_norm_din16798_model::Din16798
     let linked = doc.vent_systems.iter().find(|v| v.id == zone.vent_system_id);
     let linked_name = linked.map(|v| v.name.as_str()).unwrap_or("—");
     let linked_type = linked.map(|v| VentSystemType::parse(&v.system_type));
+    check_zone_ventilation_link(doc, zone, &mut out, &path, linked, linked_name);
+    check_zone_temperatures(doc, zone, &mut out, cat, &path);
+    check_zone_clothing_insulation(doc, zone, &mut out, cat, &path);
+    check_zone_air_quality(doc, zone, annex, &mut out, cat, usage, pollution, method, &path, linked_name, linked_type);
+    check_zone_humidity_light_noise_and_draught(doc, zone, annex, &mut out, cat, usage, &path);
+    out
+}
 
+/// 🧱️ Checks the ventilation system a zone links to.
+fn check_zone_ventilation_link(
+    doc: &semio_s_artifact_norm_din16798_model::Din16798Snapshot,
+    zone: &ZoneDocument,
+    out: &mut Vec<CheckResult>,
+    path: &dyn Fn(&str) -> String,
+    linked: Option<&semio_s_artifact_norm_din16798_model::VentSystemDocument>,
+    linked_name: &str,
+) {
     {
         let mut bi = CheckResult::assess(
             format!("din16798.zone.ventSystem.{}", zone.id), "DIN EN 16798-1", ClauseId::new("EN 16798-1", "§6.3", "system"),
@@ -58,7 +74,17 @@ pub(super) fn evaluate_zone(doc: &semio_s_artifact_norm_din16798_model::Din16798
         }
         out.push(bi.build());
     }
+}
 
+/// 🪵️ Checks the operative and the adaptive temperature of a zone against its comfort category.
+fn check_zone_temperatures(
+    doc: &semio_s_artifact_norm_din16798_model::Din16798Snapshot,
+    zone: &ZoneDocument,
+    out: &mut Vec<CheckResult>,
+    cat: ComfortCategory,
+    path: &dyn Fn(&str) -> String,
+) {
+    use part_1::*;
     let (t_min, t_max) = operative_temp_band(cat, "summer");
     let t = zone.t_op_summer_c;
     let mut b = CheckResult::assess(
@@ -106,7 +132,17 @@ pub(super) fn evaluate_zone(doc: &semio_s_artifact_norm_din16798_model::Din16798
             .explanation(loc(format!("Winter θ_op={tw:.1} °C lies within {tw_min:.1}–{tw_max:.1} °C."), format!("Operative Wintertemperatur θ_op={tw:.1} °C liegt im Band {tw_min:.1}–{tw_max:.1} °C.")));
     }
     out.push(bw.build());
+}
 
+/// 🔩️ Checks the clothing insulation and the seasonal comfort bands of a zone.
+fn check_zone_clothing_insulation(
+    doc: &semio_s_artifact_norm_din16798_model::Din16798Snapshot,
+    zone: &ZoneDocument,
+    out: &mut Vec<CheckResult>,
+    cat: ComfortCategory,
+    path: &dyn Fn(&str) -> String,
+) {
+    use part_1::*;
     let clo_summer = zone.clothing_clo;
     let clo_winter = 1.0;
     if ComfortModel::parse(&zone.comfort_model) == ComfortModel::Adaptive {
@@ -205,7 +241,24 @@ pub(super) fn evaluate_zone(doc: &semio_s_artifact_norm_din16798_model::Din16798
         }
         out.push(bppd_w.build());
     }
+}
 
+/// ⚙️ Checks the ventilation method, the outdoor air flow and the carbon dioxide level of a zone.
+#[allow(clippy::too_many_arguments, reason = "the extracted phase keeps the locals of its original function as explicit parameters")]
+fn check_zone_air_quality(
+    doc: &semio_s_artifact_norm_din16798_model::Din16798Snapshot,
+    zone: &ZoneDocument,
+    annex: &annex_params::AnnexParams,
+    out: &mut Vec<CheckResult>,
+    cat: ComfortCategory,
+    usage: OccupancyType,
+    pollution: PollutionClass,
+    method: VentMethod,
+    path: &dyn Fn(&str) -> String,
+    linked_name: &str,
+    linked_type: Option<VentSystemType>,
+) {
+    use part_1::*;
     let dlim_for_method = co2_above_outdoor_ppm(cat);
     let abs_lim_early = match usage {
         OccupancyType::Residential => annex.co2_absolute_residential_ppm,
@@ -283,7 +336,19 @@ pub(super) fn evaluate_zone(doc: &semio_s_artifact_norm_din16798_model::Din16798
             ));
     }
     out.push(bc.build());
+}
 
+/// 🧲️ Checks the humidity, illuminance, noise and draught of a zone.
+fn check_zone_humidity_light_noise_and_draught(
+    doc: &semio_s_artifact_norm_din16798_model::Din16798Snapshot,
+    zone: &ZoneDocument,
+    annex: &annex_params::AnnexParams,
+    out: &mut Vec<CheckResult>,
+    cat: ComfortCategory,
+    usage: OccupancyType,
+    path: &dyn Fn(&str) -> String,
+) {
+    use part_1::*;
     let (rh_min, rh_max) = humidity_band(cat);
     let rh = zone.rh_percent;
     let mut brh = CheckResult::assess(
@@ -354,6 +419,4 @@ pub(super) fn evaluate_zone(doc: &semio_s_artifact_norm_din16798_model::Din16798
             )));
     }
     out.push(bd.build());
-
-    out
 }

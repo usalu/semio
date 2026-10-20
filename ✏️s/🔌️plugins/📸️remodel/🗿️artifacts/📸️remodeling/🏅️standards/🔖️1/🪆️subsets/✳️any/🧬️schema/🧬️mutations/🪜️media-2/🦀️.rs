@@ -19,6 +19,7 @@ pub mod standards {
                         pub mod change_stream_sync {
                             #[path = "../⏱️change-stream-sync/🦀️.rs"]
                             mod component;
+                            pub use component::*;
                             #[path = "../⏱️change-stream-sync/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../⏱️change-stream-sync/↩️inverse/🦀️.rs"]
@@ -28,6 +29,7 @@ pub mod standards {
                         pub mod create_asset {
                             #[path = "../🧷create-asset/🦀️.rs"]
                             mod component;
+                            pub use component::*;
                             #[path = "../🧷create-asset/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../🧷create-asset/↩️inverse/🦀️.rs"]
@@ -37,6 +39,7 @@ pub mod standards {
                         pub mod delete_asset {
                             #[path = "../🗞️delete-asset/🦀️.rs"]
                             mod component;
+                            pub use component::*;
                             #[path = "../🗞️delete-asset/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../🗞️delete-asset/↩️inverse/🦀️.rs"]
@@ -46,6 +49,7 @@ pub mod standards {
                         pub mod append_content {
                             #[path = "../📦append-content/🦀️.rs"]
                             mod component;
+                            pub use component::*;
                             #[path = "../📦append-content/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../📦append-content/↩️inverse/🦀️.rs"]
@@ -55,6 +59,7 @@ pub mod standards {
                         pub mod remove_content {
                             #[path = "../🔪remove-content/🦀️.rs"]
                             mod component;
+                            pub use component::*;
                             #[path = "../🔪remove-content/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../🔪remove-content/↩️inverse/🦀️.rs"]

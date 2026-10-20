@@ -20,7 +20,7 @@
   "targets": {
     "build": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "inputs": [
         "production",
         "^production"
@@ -30,6 +30,11 @@
         "cwd": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts build",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "test": {

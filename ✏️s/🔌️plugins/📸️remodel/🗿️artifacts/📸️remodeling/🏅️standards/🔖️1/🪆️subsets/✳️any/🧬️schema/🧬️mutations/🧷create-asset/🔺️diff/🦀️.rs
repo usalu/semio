@@ -21,7 +21,7 @@ use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::sche
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::CreateAsset, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
+pub fn diff(payload: &crate::standards::v1::subsets::any::schema::mutations::create_asset::component::CreateAsset, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
     let handle = store_remodeling_asset(&payload.key, &payload.asset);
     let Some(artifact) = durable_remodeling_asset(&payload.asset) else {
         return protocol::MutationOutcome::fatal("mutation.invariant", "The asset payload is malformed or exceeds its exact bounded envelope.", [payload.key.clone()]);

@@ -1,0 +1,37 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🔬️micro-commit/🟦️.ts",
+ "describeLine": 10,
+ "shared": {
+  "dir": "🔵️shared",
+  "doc": "/** 🔵️ The shared declarations of the micro-commit suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️safegitenv-replaces-unusable-configured",
+   "doc": "/** 🔶️ The safegitenv replaces unusable configured tests of the micro-commit suite. */",
+   "name": "registerSafegitenvReplacesUnusableConfiguredTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the safegitenv replaces unusable configured tests of the micro-commit suite.",
+   "from": 11,
+   "to": 174
+  },
+  {
+   "dir": "🔹️buildmicrocommitmetrics-merges-uloc-git",
+   "doc": "/** 🔹️ The buildmicrocommitmetrics merges uloc git tests of the micro-commit suite. */",
+   "name": "registerBuildmicrocommitmetricsMergesUlocGitTests",
+   "emoji": "🟠",
+   "fdoc": "Registers the buildmicrocommitmetrics merges uloc git tests of the micro-commit suite.",
+   "from": 185,
+   "to": 325
+  },
+  {
+   "dir": "🟡️installmicrocommitgithooks-writes-portab",
+   "doc": "/** 🟡️ The installmicrocommitgithooks writes portable hooks tests of the micro-commit suite. */",
+   "name": "registerInstallmicrocommitgithooksWritesPortableHooksTests",
+   "emoji": "🟢",
+   "fdoc": "Registers the installmicrocommitgithooks writes portable hooks tests of the micro-commit suite.",
+   "from": 343,
+   "to": 480
+  }
+ ]
+}

@@ -19,7 +19,11 @@ for (const f of files) {
       const spec = m[2]!;
       let abs: string | null = null;
       if (spec.startsWith(".")) abs = relative(REPO, resolve(dirname(join(REPO, f)), spec));
-      else if (spec.includes("/")) abs = spec.replace(/^\/Users\/ueli\/Documents\/semio\//, "");
+      else {
+        const sibling = relative(REPO, resolve(dirname(join(REPO, f)), spec));
+        abs = sibling;
+        if (!byBase.has(sibling.split("/").slice(-2).join("/")) || ![...(byBase.get(sibling.split("/").slice(-2).join("/")) ?? [])].includes(sibling)) abs = spec.includes("/") ? spec.replace(/^\/Users\/ueli\/Documents\/semio\//, "") : null;
+      }
       if (!abs) continue;
       const tail = abs.split("/").slice(-2).join("/");
       for (const t of byBase.get(tail) ?? []) if (t === abs || abs.endsWith(t)) (out[t] ??= []).push({file: f, line: i + 1, spec, kind: spec.startsWith(".") ? "relative" : "path"});

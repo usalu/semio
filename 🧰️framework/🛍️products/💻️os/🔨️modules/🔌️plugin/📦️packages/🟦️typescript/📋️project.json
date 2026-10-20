@@ -17,7 +17,7 @@
     },
     "support": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "inputs": [
         "default",
         "^default",
@@ -31,6 +31,11 @@
       ],
       "options": {
         "command": "bun ./📜️script.ts support"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "managed-output", "reason": "outputs-in-managed-store" }
+        }
       },
       "dependsOn": []
     },

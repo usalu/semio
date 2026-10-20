@@ -43,15 +43,15 @@ impl protocol::OpBinary for JpgMutation {
 //#endregion Framing
 
 
-#[path = "🪪️change-jfif/🦀️.rs"]
+#[path = "🪪️change-jfif-header/🦀️.rs"]
 pub mod change_jfif_header;
 
 
 
-#[path = "🗑️remove-other/🦀️.rs"]
+#[path = "🗑️remove-other-segment/🦀️.rs"]
 pub mod remove_other_segment;
 
-#[path = "📥️insert-other/🦀️.rs"]
+#[path = "📥️insert-other-segment/🦀️.rs"]
 pub mod insert_other_segment;
 
 

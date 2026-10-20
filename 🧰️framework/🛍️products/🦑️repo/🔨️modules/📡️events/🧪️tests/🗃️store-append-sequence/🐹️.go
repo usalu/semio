@@ -30,7 +30,7 @@ func loadStoreVectors(ctx *host.Context) (storeVectors, error) {
 	return vectors, json.Unmarshal(data, &vectors)
 }
 
-// freshScenarioDir is an empty directory of its own for one scenario.
+// 🌱️freshScenarioDir is an empty directory of its own for one scenario.
 //
 // The harness reuses one work directory per (case, role, implementation) and never empties it, so a
 // log file left by an earlier scenario — or by an earlier run of this same case — is still there when
@@ -204,7 +204,7 @@ func recordChecksumIsSha256(ctx *host.Context) (host.Outcome, error) {
 
 // region 🔖️Registration
 
-// Adapter is the registration entry point the generated host calls.
+// 🌉️Adapter is the registration entry point the generated host calls.
 func Adapter() *host.Adapter {
 	return host.NewAdapter("go").
 		Subject("append-then-replay-sequences", appendThenReplaySequences).

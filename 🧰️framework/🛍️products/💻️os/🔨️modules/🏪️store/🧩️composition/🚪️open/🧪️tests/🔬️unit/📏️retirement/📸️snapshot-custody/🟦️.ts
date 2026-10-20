@@ -9,6 +9,7 @@ import { frameworkSourcePath, readStoreSourceText } from "@semio-tech/framework/
 const blockEnd = (text: string, from: number) => { const at = text.indexOf("\n}\n", from); return at < 0 ? text.length : at + 3; };
 const storeModule = (path: string) => readModuleTreeSource(frameworkSourcePath("🛍️products/💻️os/🔨️modules/🏪️store/" + path));
 import { spawnSync } from "node:child_process";
+const phaseBody = (source: string, name: string): string => { const start = source.indexOf(`fn ${name}(`), next = source.indexOf("\n    pub(super) fn ", start + 1); return source.slice(start, next < 0 ? undefined : next); };
 import fixture from "../../../../📏️retirement/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 import { controlSnapshotReceivingFixtureUrl } from "@semio-tech/framework/io/testing/fixtures";
 import { cloneWireProgressSchemaUrl } from "@semio-tech/value-ts/testing/fixtures";
@@ -69,7 +70,7 @@ test("genesis admission preserves original payload and envelope metadata under s
   expect(owner).toContain("schema: String"); expect(owner).toContain("id: String"); expect(owner).toContain("        schema,"); expect(owner).toContain("        id,");
   expect(owner).not.toContain(".into()"); expect(owner).not.toContain(".clone()");
   const h = readModuleTreeSource(new URL("../../../../../../🧾️document/📜️history/💧️hydration/🦀️.rs", import.meta.url));
-  const bind = h.slice(h.indexOf("Phase::BindGenesis =>"), h.indexOf("Phase::BuildAppliedCursor |"));
+  const bind = phaseBody(h, "step_bind_genesis");
   expect(bind.indexOf("birth.admit(child)")).toBeLessThan(bind.indexOf("self.initial.take()"));
   expect(bind).toContain("admit_verified_pack(initial, pack, initial_digest, child)");
   expect(bind).toContain("*self.initial = Some(initial)"); expect(bind).toContain("*self.pack = Some(pack)");
@@ -166,7 +167,7 @@ test("envelope birth retains original phased catalogs before hydration advanceme
   expect(root.includes("pub fn document_admission_is_complete(")).toBe(true);
   const h = readModuleTreeSource(new URL("../../../../../../🧾️document/📜️history/💧️hydration/🦀️.rs", import.meta.url));
   expect(h).toContain("Phase::AdmitEnvelope =>");
-  const phase = h.slice(h.indexOf("Phase::AdmitEnvelope =>"), h.indexOf("Phase::BuildAppliedCursor |"));
+  const phase = phaseBody(h, "step_admit_envelope");
   expect(phase).toContain("admit_document_next(child)");
   expect(phase).toContain("document_admission_is_complete()");
   expect(phase).toContain("progress.fits(child)");
@@ -350,7 +351,7 @@ test("snapshot native consumers retain the genuine caller controls and progress 
  const fs=await import("node:fs"),path=await import("node:path");const base=path.join(process.cwd(),"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store");
  const snapshot=fs.readFileSync(path.join(base,"📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"),"utf8"),encoding=fs.readFileSync(path.join(base,"📦️codec/🪶️snapshot-capability/🪶️native-encoding/🧪️tests/🦀️.rs"),"utf8"),decoding=fs.readFileSync(path.join(base,"📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs"),"utf8");
  expect(snapshot.includes("semio_framework_value::NativeDecodeProgress")).toBe(false);expect(snapshot.includes("semio_framework_value::NativeEncodeProgress")).toBe(false);
- expect(snapshot.includes("semio_framework_value::native_decoding::NativeDecodeProgress")).toBe(true);expect(snapshot.includes("semio_framework_value::native_encoding::NativeEncodeProgress")).toBe(true);
+ expect(snapshot.includes("semio_framework_value_native_owned::native_decoding::NativeDecodeProgress")).toBe(true);expect(snapshot.includes("semio_framework_value::native_encoding::NativeEncodeProgress")).toBe(true);
  const guards=encoding.slice(encoding.indexOf("    GuardedEncoding,"),encoding.indexOf("#[test]"));
  expect(guards.includes("native_owner: &mut NativeSnapshotEncodeOwner")).toBe(true);expect(guards.includes("let native = native_owner.native();")).toBe(true);expect(guards.includes("NativeEncodeControl::new")).toBe(false);expect(guards.includes("encoding, control, native_owner")).toBe(true);
  const original=decoding.slice(decoding.indexOf("impl ArtifactSqliteSnapshotHost for DecodedBuffers"),decoding.indexOf("fn to_sqlite_database"));expect(original.includes("native: &mut NativeSnapshotDecodeOwner")).toBe(true);expect(original.includes("            native,")).toBe(true);

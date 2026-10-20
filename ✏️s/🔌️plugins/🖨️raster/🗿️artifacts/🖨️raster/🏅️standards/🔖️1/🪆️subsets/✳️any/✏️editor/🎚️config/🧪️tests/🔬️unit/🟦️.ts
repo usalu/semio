@@ -70,8 +70,8 @@ test("completed selection rejects malformed coverage and incompatible paint targ
   expect(parseRasterConfig(config("#2878dc",1)).pixelSelection).toBeUndefined();
 });
 
-import {PAINT2D_SCENE_LANES,paint2dSceneFromLanes,type Paint2dScene} from "@semio-tech/framework/ui/scene";
-import { scenePaint2dSceneLanesFixture as sceneContract } from "@semio-tech/framework/ui/scene/testing";
+import {PAINT2D_SCENE_LANES,paint2dSceneFromLanes,type Paint2dScene} from "@semio-tech/ui/scene";
+import sceneContract from "@semio-tech/ui/scene/testing/fixtures/paint2d-scene-lanes.json" with { type: "json" };
 
 test("completed selection survives the shared optional scene carrier",()=>{
   expect(PAINT2D_SCENE_LANES).toEqual<typeof sceneContract.lanes>(sceneContract.lanes);

@@ -453,7 +453,7 @@ function spacePluginIdentityOracle(repoRoot: string): number {
   assert.equal(cargo.split("[[package.metadata.semio.playground]]")[1]?.match(/variant\s*=\s*"([^"]+)"/)?.[1], fixture.playgroundVariant, "the playground variant row is the OTHER name and must stay declared");
 
   const pluginRoot = readFileSync(join(plugin, "🦀️.rs"), "utf8");
-  assert.equal(pluginRoot.match(/Plugin::<SpaceApps>::builder\("([^"]+)"\)/)?.[1], fixture.pluginId, "plugin() builder id is not the fixture identity");
+  assert.equal(pluginRoot.match(/PluginBuilder::<_, SpaceApps>::new\("([^"]+)"\)/)?.[1], fixture.pluginId, "plugin() builder id is not the fixture identity");
   assert.equal(pluginRoot.match(/\.package_id\("([^"]+)"\)/)?.[1], fixture.packageId, "plugin().package_id is not the fixture identity");
   assert.equal(fixture.packageId, `semio:${fixture.pluginId}`, "component package identity must be semio:<plugin id>");
   assert.equal(fixture.artifactKindPrefix, `s.${fixture.pluginId}.`, "the canonical s.<plugin>.<kind> owner segment must be the plugin id");
@@ -475,11 +475,11 @@ function interactiveJobCatalogOracle(repoRoot: string): number {
   const plugin = join(repoRoot, "🌎️hub/🧩️compositions/🪐️space");
   const artifactPlugin = join(repoRoot, "✏️s/🔌️plugins/🪐️space");
   const surfaces = [
-    { appId: "s.space.studio@1/*#editor", owner: join(plugin, "⚙️engine/🪐️space"), source: join(plugin, "⚙️engine/🪐️space/🦀️.rs"), children: ["🧰️document-helpers", "🎯️space-command", "🏠️space-app", "📜️space-manifest"].map((child) => join(plugin, "⚙️engine/🪐️space", child, "🦀️.rs")), shape: "status" as const, factory: "SpaceCommandJobFactory" },
+    { appId: "s.space.studio@1/*#editor", owner: join(plugin, "⚙️engine/🪐️space"), source: join(plugin, "⚙️engine/🪐️space/🦀️.rs"), children: ["🧰️document-helpers", "🕹️space-command", "🏠️space-app", "📜️space-manifest"].map((child) => join(plugin, "⚙️engine/🪐️space", child, "🦀️.rs")), shape: "status" as const, factory: "SpaceCommandJobFactory" },
     { appId: "s.space.home@1/*#editor", owner: join(artifactPlugin, "🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor"), scope: join(artifactPlugin, "🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any"), export: "HomeRetainedCommandLimits", source: join(artifactPlugin, "🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"), shape: "disposition" as const, factory: "HomeRetainedCommandJobFactory" },
     { appId: "s.space.space@1/*#editor", owner: join(artifactPlugin, "🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor"), scope: join(artifactPlugin, "🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any"), export: "SpaceIndexRetainedCommandLimits", source: join(artifactPlugin, "🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"), shape: "status" as const, factory: "SpaceIndexRetainedCommandJobFactory" },
   ];
-  const descriptor = JSON.parse(readFileSync(join(plugin, "🔣️.json"), "utf8"));
+  const descriptor = JSON.parse(readFileSync(join(plugin, "🧩️component", "🔣️.json"), "utf8"));
   let checks = spacePluginIdentityOracle(repoRoot);
   let staleRows = 0;
   for (const surface of surfaces) {

@@ -1,0 +1,9 @@
+{
+ "tokenConflictSha256": "4072927777f954de0b9c81da34ce765d61564506739b0c99f120b05b1e52908e",
+ "choices": [
+  "kind:\"task\"|\"noop\"|\"launch\"|\"hermetic\"|\"test\";",
+  "ours",
+  "action.kind===\"noop\"?\"repo_noop\":action.kind===\"launch\"?\"repo_launch\":action.kind===\"hermetic\"?\"repo_hermetic_task\":action.kind===\"test\"?\"repo_test\":\"repo_task\"}",
+  "action=>(action.kind===\"task\"||action.kind===\"hermetic\"||action.kind===\"test\")&&action.cache.cache)"
+ ]
+}

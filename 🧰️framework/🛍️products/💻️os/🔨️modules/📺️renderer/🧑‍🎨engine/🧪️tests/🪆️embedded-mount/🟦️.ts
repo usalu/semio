@@ -2,7 +2,7 @@ const authoredReceiptSource={async read(){throw Error("Descriptor oracle did not
 import type { PluginCatalogRowsV1 } from "@semio-tech/framework/plugin-catalog";
 import { admitPluginCatalogV1, pluginCatalogV1 } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
 const emptyCatalogRows: PluginCatalogRowsV1 = { version: 1, targets: [], hosts: [], playgrounds: [] };
-import { shouldStartIntroduction } from "@semio-tech/framework/modules/ui/introduction";
+import { shouldStartIntroduction } from "@semio-tech/ui/introduction";
 import bootLifecycle from "../🧫️fixtures/⏳️boot-lifecycle/🔣️.json";
 // @vitest-environment jsdom
 
@@ -21,7 +21,7 @@ import pluginModulesFixture from "../🧫️fixtures/🧩️plugin-modules/🔣�
 import pluginModulesSchema from "../../🧬️schema/🧩️plugin-modules/🔣️.json";
 import fixture from "../🧫️fixtures/🪆️embedded-mount/🔣️.json";
 import { bootFrameworkOsWgpu } from "@semio-tech/framework-renderer-wgpu";
-import wgpuBootSource from "../../🎯️targets/🧊️wgpu/🎬️renderer-boot/🟦️.ts?raw";
+import { wgpuRendererBootSourceText as wgpuBootSource } from "@semio-tech/framework-renderer-wgpu/testing/source-text/renderer-boot";
 import bootExecutionFixture from "../🧫️fixtures/🎬️boot-execution/🔣️.json";
 import serviceStatusFixture from "../🧫️fixtures/⏳️owned-service-status/🔣️.json";
 import serviceStatusSchema from "../../🧬️schema/⏳️owned-service-status/🔣️.json";

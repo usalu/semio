@@ -1,0 +1,79 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️owned-locale-detector-retirement/🧮️unifiedgumball-math-and-more/🟦️.tsx",
+ "function": "registerUnifiedgumballMathAndMoreTests",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "⭐️shared",
+  "doc": "/** ⭐️ The shared declarations of registerUnifiedgumballMathAndMoreTests. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️default-gumball-config",
+   "doc": "/** 🔶️ The default gumball config phase of registerUnifiedgumballMathAndMoreTests. */",
+   "phases": [
+    {
+     "name": "buildDefaultGumballConfigState",
+     "emoji": "🔷",
+     "doc": "Builds DEFAULT_GUMBALL_CONFIG, GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP, GUMBALL_DEFAULT_SHIFT_SCALE_SNAP, GUMBALL_PLANE_OFFSET of registerUnifiedgumballMathAndMoreTests.",
+     "from": 10,
+     "to": 14
+    }
+   ]
+  },
+  {
+   "dir": "🔸️unified-gumball-math",
+   "doc": "/** 🔸️ The unified gumball math phase of registerUnifiedgumballMathAndMoreTests. */",
+   "phases": [
+    {
+     "name": "registerUnifiedGumballMathTests",
+     "emoji": "🔹",
+     "doc": "Registers the unified gumball math tests of registerUnifiedgumballMathAndMoreTests.",
+     "from": 16,
+     "to": 16
+    }
+   ]
+  },
+  {
+   "dir": "🟠️icon-svg-markup",
+   "doc": "/** 🟠️ The icon svg markup phase of registerUnifiedgumballMathAndMoreTests. */",
+   "phases": [
+    {
+     "name": "registerIconSvgMarkupTests",
+     "emoji": "🟡",
+     "doc": "Registers the icon svg markup tests of registerUnifiedgumballMathAndMoreTests.",
+     "from": 201,
+     "to": 244
+    }
+   ]
+  },
+  {
+   "dir": "🟢️icon-hover-animations",
+   "doc": "/** 🟢️ The icon hover animations phase of registerUnifiedgumballMathAndMoreTests. */",
+   "phases": [
+    {
+     "name": "registerIconHoverAnimationsTests",
+     "emoji": "🔵",
+     "doc": "Registers the icon hover animations tests of registerUnifiedgumballMathAndMoreTests.",
+     "from": 250,
+     "to": 250
+    }
+   ]
+  },
+  {
+   "dir": "🟣️icon-hover-animation-attributes",
+   "doc": "/** 🟣️ The icon hover animation attributes phase of registerUnifiedgumballMathAndMoreTests. */",
+   "phases": [
+    {
+     "name": "registerIconHoverAnimationAttributesTests",
+     "emoji": "🟤",
+     "doc": "Registers the icon hover animation attributes tests of registerUnifiedgumballMathAndMoreTests.",
+     "from": 480,
+     "to": 480
+    }
+   ]
+  }
+ ]
+}

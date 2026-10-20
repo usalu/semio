@@ -1,0 +1,282 @@
+[
+ {
+  "f": "🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🎬️canvas/🟦️.tsx",
+  "l": 613,
+  "n": 2,
+  "t": "/** 🖱️ The wheel hook belongs on the EVENT SOURCE, not on the canvas: a `<Canvas eventSource>`\n   * stamps `pointer-events: none` on its canvas, so a wheel lis",
+  "ctx": "  /** 🖱️ The wheel hook belongs on the EVENT SOURCE, not on the canvas: a `<Canvas eventSource>`\n   * stamps `pointer-events: none` on its canvas, so a wheel listener bound there is never called. */",
+  "_src": "🗑️generated/comments-a/ap-modules-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/⏱️watchdog/🟦️.ts",
+  "l": 55,
+  "n": 4,
+  "t": "/** 🫀️ Only a MONOTONIC ADVANCE is proof of life. `!==` used to accept a REGRESSION too, which a\n       * worker that never processed `attachHeartbeatSab` prod",
+  "ctx": "      /** 🫀️ Only a MONOTONIC ADVANCE is proof of life. `!==` used to accept a REGRESSION too, which a\n       * worker that never processed `attachHeartbeatSab` produces on every tick (its slot stays",
+  "_src": "🗑️generated/comments-a/ap-modules-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/👥️session-presence-and-caret/🟦️.ts",
+  "l": 89,
+  "n": 2,
+  "t": "/** ⌨️ The typing run ends as ONE edit when the editor loses focus or the page is hidden or left (a run pending for less than the\n   * idle bound is never lost ",
+  "ctx": "  /** ⌨️ The typing run ends as ONE edit when the editor loses focus or the page is hidden or left (a run pending for less than the\n   * idle bound is never lost to a closed tab), and when the editor ",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🎛️marquee-and-gumball/🟦️.ts",
+  "l": 101,
+  "n": 1,
+  "t": "/** 🧯️ Host aborts of a live gesture whose ticks opened the app's tool transaction: window blur and unmount. */",
+  "ctx": "  /** 🧯️ Host aborts of a live gesture whose ticks opened the app's tool transaction: window blur and unmount. */",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/⚡️host-effects/📡️operation-subscriptions/🟦️.ts",
+  "l": 17,
+  "n": 11,
+  "t": "/** 🏁️ Applies one retained typed operation's terminal publication. The command that started the\n   * operation resolved on its FIRST reactor turn — its `Invoc",
+  "ctx": "  /** 🏁️ Applies one retained typed operation's terminal publication. The command that started the\n   * operation resolved on its FIRST reactor turn — its `InvocationResult` carries no outcome at all",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/⚡️host-effects/📡️operation-subscriptions/🟦️.ts",
+  "l": 50,
+  "n": 13,
+  "t": "/**\n   * 🏁️🪟️ The SAME terminal-publication subscription, for every spawned program. The effect above\n   * subscribes `session.pluginId`/`session.instanceId` ",
+  "ctx": "  /**\n   * 🏁️🪟️ The SAME terminal-publication subscription, for every spawned program. The effect above\n   * subscribes `session.pluginId`/`session.instanceId` and nothing else, so a spawned foreign",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/⚡️host-effects/📡️operation-subscriptions/🟦️.ts",
+  "l": 91,
+  "n": 1,
+  "t": "/** 📬️ Shows the exact original operation diagnostic for active and spawned program receivers. */",
+  "ctx": "  /** 📬️ Shows the exact original operation diagnostic for active and spawned program receivers. */",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/⚡️host-effects/📡️operation-subscriptions/🟦️.ts",
+  "l": 113,
+  "n": 3,
+  "t": "/** 🎞️ Renders a running operation's process while it runs: every mid-operation refresh a tool run asks for (its trace,\n   * provisional pieces, progress) goes",
+  "ctx": "  /** 🎞️ Renders a running operation's process while it runs: every mid-operation refresh a tool run asks for (its trace,\n   * provisional pieces, progress) goes through the ui-refresh lane, whose co",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/⚡️host-effects/📡️operation-subscriptions/🟦️.ts",
+  "l": 143,
+  "n": 9,
+  "t": "/**\n   * 🎞️🪟️ The SAME mid-operation progress lane, for every spawned program. The effect above\n   * subscribes `session.instanceId` alone, so a spawned edito",
+  "ctx": "  /**\n   * 🎞️🪟️ The SAME mid-operation progress lane, for every spawned program. The effect above\n   * subscribes `session.instanceId` alone, so a spawned editor's running operation — a tool run's\n ",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎮️focus-and-input/🎯️focused-program-and-introduction/🟦️.tsx",
+  "l": 102,
+  "n": 3,
+  "t": "/** 🧾️ A spawned program's full history, read once when it takes the canvas. Its completions patch\n   * the projection incrementally from then on; without this",
+  "ctx": "  /** 🧾️ A spawned program's full history, read once when it takes the canvas. Its completions patch\n   * the projection incrementally from then on; without this first snapshot its ledger would start",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎮️focus-and-input/🎯️focused-program-and-introduction/🟦️.tsx",
+  "l": 110,
+  "n": 5,
+  "t": "/** 📇️🪟️ Publishes the agent census — the live session PLUS every spawned program, the FOCUSED one\n   * first ({@link spawnedBridgeCensusV1}). Keyed on the sp",
+  "ctx": "  /** 📇️🪟️ Publishes the agent census — the live session PLUS every spawned program, the FOCUSED one\n   * first ({@link spawnedBridgeCensusV1}). Keyed on the spawned ROSTER, never on `panel` identit",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎮️focus-and-input/🎯️focused-program-and-introduction/🟦️.tsx",
+  "l": 129,
+  "n": 2,
+  "t": "/** 🧾️ Drops the projections of programs that are no longer open. Keyed on the spawned roster and\n   * the session's instance, which is exactly when a program ",
+  "ctx": "  /** 🧾️ Drops the projections of programs that are no longer open. Keyed on the spawned roster and\n   * the session's instance, which is exactly when a program appears or disappears. */",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎮️focus-and-input/🎯️focused-program-and-introduction/🟦️.tsx",
+  "l": 255,
+  "n": 1,
+  "t": "/** ⏺️ Dev/studio-only probe surface (mirrors `__semioCrossingCensus` in `🔌️PluginRuntime`). */",
+  "ctx": "  /** ⏺️ Dev/studio-only probe surface (mirrors `__semioCrossingCensus` in `🔌️PluginRuntime`). */",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🏗️dock-assembly/🎓️override-anchors-and-introduction/🟦️.ts",
+  "l": 167,
+  "n": 2,
+  "t": "/** 🎓️ Panel interactions complete when their named panel tab is open and visible — checked for every\n   * `panel` interaction of the active step, not just the",
+  "ctx": "  /** 🎓️ Panel interactions complete when their named panel tab is open and visible — checked for every\n   * `panel` interaction of the active step, not just the first, so a step can require opening ",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🏗️dock-assembly/🪟️panel-reveal-and-tool-tabs/🟦️.ts",
+  "l": 80,
+  "n": 2,
+  "t": "/** ⏪️ Each change of the focused program's session reveals the History panel on the edge into a session and moves focus\n   * where the session continues ({@lin",
+  "ctx": "  /** ⏪️ Each change of the focused program's session reveals the History panel on the edge into a session and moves focus\n   * where the session continues ({@link useTimeTravelRevealV1}). */",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🏗️dock-assembly/🪟️panel-reveal-and-tool-tabs/🟦️.ts",
+  "l": 84,
+  "n": 5,
+  "t": "/** 🤖️ Fills {@link applyAgentShellCommandRef}: the MCP gateway's `ui_reveal`/`ui_focus` reach this\n   * host as SSOT `ShellCommand`s, and this is where they s",
+  "ctx": "  /** 🤖️ Fills {@link applyAgentShellCommandRef}: the MCP gateway's `ui_reveal`/`ui_focus` reach this\n   * host as SSOT `ShellCommand`s, and this is where they stop being a mirror update and become t",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🏗️dock-assembly/🪟️panel-reveal-and-tool-tabs/🟦️.ts",
+  "l": 110,
+  "n": 17,
+  "t": "/** 🗿️ Fills {@link agentArtifactRouteRef}: this is the LIVE artifact route — an MCP client's\n   * `action_prepare`/`action_invoke`/`history_undo`/`transaction",
+  "ctx": "  /** 🗿️ Fills {@link agentArtifactRouteRef}: this is the LIVE artifact route — an MCP client's\n   * `action_prepare`/`action_invoke`/`history_undo`/`transaction_*` executing against the plugin\n   * ",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📐️layout-hotkeys/🟦️.ts",
+  "l": 98,
+  "n": 1,
+  "t": "/** 📇️ Folds the current session's space index over its space's FULL directory history (the guest's contract). */",
+  "ctx": "  /** 📇️ Folds the current session's space index over its space's FULL directory history (the guest's contract). */",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📬️artifact-opening/🟦️.ts",
+  "l": 432,
+  "n": 6,
+  "t": "/** 📖️ Seeds the Conflicts panel with this session's authoritative roster on session start/switch\n   * (`AppCommand::ReadConflicts`, contract freeze §C8/§C9) —",
+  "ctx": "  /** 📖️ Seeds the Conflicts panel with this session's authoritative roster on session start/switch\n   * (`AppCommand::ReadConflicts`, contract freeze §C8/§C9) — otherwise the panel would only ever\n ",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🔁️contributions-refresh/🟦️.ts",
+  "l": 503,
+  "n": 12,
+  "t": "/** 🗣️ Keeps already-built window titles (workbench layout, extra spawned windows) in sync on every locale/terminology switch — `refreshUi` only rebuilds `shel",
+  "ctx": "  /** 🗣️ Keeps already-built window titles (workbench layout, extra spawned windows) in sync on every locale/terminology switch — `refreshUi` only rebuilds `shellLayout` from scratch on a session cha",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🔒️identity-document-ports/📎️hub-port-and-document-backbone/🟦️.ts",
+  "l": 86,
+  "n": 3,
+  "t": "/** 🎯️ The scope this shell asks the agent-bridge supervisor with (ticket 26/09/23, G12 session 14c — scoped offers): its\n   * hub, the space it has open and t",
+  "ctx": "  /** 🎯️ The scope this shell asks the agent-bridge supervisor with (ticket 26/09/23, G12 session 14c — scoped offers): its\n   * hub, the space it has open and the agents THIS human delegated there, ",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🖱️shell-actions/🧭️input-funnel/🎯️dispatch-target-and-view-state/🟦️.ts",
+  "l": 41,
+  "n": 9,
+  "t": "/**\n   * 🪟️ A WINDOW-scoped dispatch belongs to the program that owns that window, whatever\n   * controller raised it. Shell chrome (the navbar's history verbs",
+  "ctx": "  /**\n   * 🪟️ A WINDOW-scoped dispatch belongs to the program that owns that window, whatever\n   * controller raised it. Shell chrome (the navbar's history verbs, a keybinding, a panel row)\n   * rais",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🖼️canvas-footer/🟦️.tsx",
+  "l": 292,
+  "n": 5,
+  "t": "/** 🚦️ Deterministic DOM beacon for headless smoke tests (e.g. Storybook's OS-shell plugin-boot matrix)\n   * to wait on instead of screenshots/timeouts — set o",
+  "ctx": "  /** 🚦️ Deterministic DOM beacon for headless smoke tests (e.g. Storybook's OS-shell plugin-boot matrix)\n   * to wait on instead of screenshots/timeouts — set once a session resolves or errors, clea",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🖼️canvas-footer/🟦️.tsx",
+  "l": 344,
+  "n": 7,
+  "t": "/** 🔬️ Dev-only mirror of the two facts a catalog-wide smoke cannot otherwise read from the DOM: which\n   * programs this session can spawn, and which installe",
+  "ctx": "  /** 🔬️ Dev-only mirror of the two facts a catalog-wide smoke cannot otherwise read from the DOM: which\n   * programs this session can spawn, and which installed plugins ended up `failed`/`crashed` ",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🖼️canvas-footer/🟦️.tsx",
+  "l": 375,
+  "n": 2,
+  "t": "/** 🔬️ Dev/test-only read seam over the actual acknowledged Shell store. The caller supplies only\n   * a scope; the returned closed projection contains no capa",
+  "ctx": "  /** 🔬️ Dev/test-only read seam over the actual acknowledged Shell store. The caller supplies only\n   * a scope; the returned closed projection contains no capability or mutation surface. */",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🖼️canvas-footer/🟦️.tsx",
+  "l": 398,
+  "n": 3,
+  "t": "/** 🧯️ One console record per plugin the router excluded — permanent, not a `[TRACE]` trace: an\n   * excluded plugin installs cleanly, so this is the only sign",
+  "ctx": "  /** 🧯️ One console record per plugin the router excluded — permanent, not a `[TRACE]` trace: an\n   * excluded plugin installs cleanly, so this is the only signal outside the dev probe that its\n   *",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗄️shell-uri-documents/🟦️.ts",
+  "l": 168,
+  "n": 3,
+  "t": "/** 🗃️ Hands the landing app every document this device keeps that its current instance was not handed yet: each one's\n   * archive is read back from its own l",
+  "ctx": "  /** 🗃️ Hands the landing app every document this device keeps that its current instance was not handed yet: each one's\n   * archive is read back from its own lane and applied as `applyLocalCatalogD",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🚀️plugin-lifecycle/🧱️lifecycle-state-and-install/🟦️.ts",
+  "l": 175,
+  "n": 13,
+  "t": "/** 🚑️ A LIVE session whose worker was taken down is recoverable exactly the way a killed boot is:\n   * `ShardClient.rebuild` has already replaced the worker a",
+  "ctx": "  /** 🚑️ A LIVE session whose worker was taken down is recoverable exactly the way a killed boot is:\n   * `ShardClient.rebuild` has already replaced the worker and `PluginRuntime` has already retired",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🛂️directory-route/🟦️.ts",
+  "l": 217,
+  "n": 2,
+  "t": "/** 🧯️ Unmount and identity change both retire the operation: the worker cancels its transport and\n   * erases page, receipt, and capability before the pane ca",
+  "ctx": "  /** 🧯️ Unmount and identity change both retire the operation: the worker cancels its transport and\n   * erases page, receipt, and capability before the pane can be remounted under a new identity. *",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🛫️spawned-session/🟦️.ts",
+  "l": 256,
+  "n": 14,
+  "t": "/**\n   * 🪟️ Seeds the canvas for whichever program owns it. THIS is what makes a spawned program a member\n   * of the session rather than a breadcrumb: `Mode` ",
+  "ctx": "  /**\n   * 🪟️ Seeds the canvas for whichever program owns it. THIS is what makes a spawned program a member\n   * of the session rather than a breadcrumb: `Mode` prunes every layout leaf whose id is a",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🛫️spawned-session/🟦️.ts",
+  "l": 301,
+  "n": 4,
+  "t": "/** ⌨️ A program the user just opened takes keyboard focus once its active window has mounted — its dock tabpanel,\n   * the same stop a pointer click lands on —",
+  "ctx": "  /** ⌨️ A program the user just opened takes keyboard focus once its active window has mounted — its dock tabpanel,\n   * the same stop a pointer click lands on — but only while nothing else holds foc",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🛫️spawned-session/🟦️.ts",
+  "l": 540,
+  "n": 6,
+  "t": "/**\n   * 🐚️ Consumes a plugin action's typed `requestedEffects: Effect[]` (WS-D's `InvocationResponse`) —\n   * replaces the deleted `processPluginOperations` s",
+  "ctx": "  /**\n   * 🐚️ Consumes a plugin action's typed `requestedEffects: Effect[]` (WS-D's `InvocationResponse`) —\n   * replaces the deleted `processPluginOperations` string-matching. The legacy `setDocumen",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️HubConnection/📒️connection-book-and-commands/🟦️.tsx",
+  "l": 218,
+  "n": 3,
+  "t": "/** ♻️ Re-bootstrap on mount: the browsing context already holds a session (a reload, or this surface reopened after a\n   * sign-in), so it is presumed live onl",
+  "ctx": "  /** ♻️ Re-bootstrap on mount: the browsing context already holds a session (a reload, or this surface reopened after a\n   * sign-in), so it is presumed live only until the hub's own `me` answer conf",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️HubConnection/📒️connection-book-and-commands/🟦️.tsx",
+  "l": 253,
+  "n": 3,
+  "t": "/** ♻️ Re-authentication without a round trip per render: once the locally known deadline has\n   * passed, one `me` read confirms it with the hub (which may hav",
+  "ctx": "  /** ♻️ Re-authentication without a round trip per render: once the locally known deadline has\n   * passed, one `me` read confirms it with the hub (which may have extended or revoked it) instead\n   *",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ },
+ {
+  "f": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🎛️command-registry/🟦️.tsx",
+  "l": 219,
+  "n": 3,
+  "t": "/** 👁️✏️ Whether the active session's dialect has at least one `AppRouter` entry for either role —\n   * gates `open-artifact-with-viewer`/`open-artifact-with-e",
+  "ctx": "  /** 👁️✏️ Whether the active session's dialect has at least one `AppRouter` entry for either role —\n   * gates `open-artifact-with-viewer`/`open-artifact-with-editor` (contract freeze §5) the same w",
+  "_src": "🗑️generated/comments-a/ap-os-ts/apply-removals.jsonl"
+ }
+]

@@ -329,8 +329,6 @@ fn decode_materials(root: &Object, model: &mut Model) -> Vec<String> {
         next += 1;
         push(model, &mut names, material);
     }
-    // 🪟️🌫️ Layered glazing: panes and gas gaps share the one material id space, so `names` keeps
-    // ONE position list across all three families and a construction layer resolves by position.
     for (name, fields) in objects(root, "WindowMaterial:Glazing") {
         model.glazing_materials.push(GlazingMaterial {
             id: EntityId(next),
@@ -537,9 +535,6 @@ fn decode_apertures(root: &Object, model: &mut Model, glazing: &[(String, f64, f
             fin_depth_m: fin.map_or(0.0, |(_, shade)| number_or(shade, "left_depth_as_fraction_of_window_door_width", 0.0) * height),
             fin_offset_m: fin.map_or(0.0, |(_, shade)| number_or(shade, "left_extension_from_window_door", 0.0)),
             glazing_construction_id,
-            // 🔶️ The real corners, kept rather than thrown away: they ARE the aperture, and
-            // re-exporting them is what makes this codec's own output round-trip byte-identically
-            // whatever shape the document states.
             vertices_m: corners,
         });
     }

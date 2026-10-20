@@ -4,7 +4,7 @@ name = "semio-framework-repo-cli"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
-description = "semio repo command line and repo MCP stdio server (binaries: semio-repo, repo)"
+description = "Repository command line with explicit MCP stdio command"
 
 [package.metadata.semio]
 role = "tool"
@@ -18,10 +18,6 @@ path = "../../🦀️.rs"
 [[bin]]
 name = "repo"
 path = "📦️mcp-main.rs"
-
-[[bin]]
-name = "semio-repo"
-path = "📦️cli-main.rs"
 
 [dependencies]
 semio-framework-repo-cli-command-framework = { path = "../../🧭️repo-cli/🎮️command-framework/📦️packages/🦀️rust" }

@@ -6,6 +6,7 @@ pub enum WidgetSignal {
     Activated(usize),
     SelectionChanged(usize),
     ValueChanged(String),
+    TextEdited,
     Toggled(bool),
     TabChanged(usize),
     NavigateBack,

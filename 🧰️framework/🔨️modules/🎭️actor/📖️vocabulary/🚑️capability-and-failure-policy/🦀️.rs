@@ -200,11 +200,11 @@ impl Default for FailureState {
 /// 🪜️ Outcome of `FailureState::on_signal` the kernel must act on beyond updating this actor's own state.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FailureEscalation {
-    /// No cross-actor action required.
+    /// 🫥️ No cross-actor action required.
     None,
-    /// This actor trapped — kernel must drop + re-instantiate with `ActorId::next_generation` and restore its last checkpoint.
+    /// 👤️ This actor trapped — kernel must drop + re-instantiate with `ActorId::next_generation` and restore its last checkpoint.
     Restart,
-    /// Restart count crossed the threshold — kernel must quarantine every actor sharing this actor's `PackageId`.
+    /// 🗜️ Restart count crossed the threshold — kernel must quarantine every actor sharing this actor's `PackageId`.
     QuarantinePackage,
 }
 

@@ -16,11 +16,23 @@ const fixture = JSON.parse(readFileSync(join(import.meta.dir, "🧫️fixtures/�
 const packages = fixture.packages.map(row => ({ ...row, manifest: JSON.parse(readFileSync(join(repoRoot, row.dir, "package.json"), "utf8")) as { name: string; exports: Record<string, string> } }));
 const entries = packages.flatMap(row => Object.entries(row.manifest.exports).map(([subpath, target]) => ({ name: row.name, dir: join(repoRoot, row.dir), subpath, target, file: join(repoRoot, row.dir, target) })));
 
+/** 📄️ Names the local binding of a `import x from "<document>.json" with { type: "json" }` statement, or null. */
+function jsonDocumentImport(statement: ts.Statement): string | null {
+  if (!ts.isImportDeclaration(statement) || !statement.importClause?.name || statement.importClause.namedBindings || statement.importClause.isTypeOnly) return null;
+  if (!ts.isStringLiteral(statement.moduleSpecifier) || !statement.moduleSpecifier.text.endsWith(".json")) return null;
+  const typed = statement.attributes?.elements.some(attribute => attribute.name.text === "type" && ts.isStringLiteral(attribute.value) && attribute.value.text === "json");
+  return typed ? statement.importClause.name.text : null;
+}
+
 /** 🔎️ Lists every reason a facade source is not a pure explicit re-export file. */
 function facadeViolations(name: string, source: string): string[] {
   const file = ts.createSourceFile(name, source, ts.ScriptTarget.ESNext, true, ts.ScriptKind.TS);
   const out: string[] = [];
+  const documents = new Set<string>();
   for (const statement of file.statements) {
+    const document = jsonDocumentImport(statement);
+    if (document !== null) { documents.add(document); continue; }
+    if (ts.isExportAssignment(statement) && !statement.isExportEquals && ts.isIdentifier(statement.expression) && documents.has(statement.expression.text)) continue;
     if (ts.isImportDeclaration(statement) && !statement.importClause) continue;
     if (!ts.isExportDeclaration(statement) || !statement.moduleSpecifier) { out.push(`not a re-export: ${ts.SyntaxKind[statement.kind]}`); continue; }
     if (!statement.exportClause) out.push("export * is not explicit");
@@ -39,6 +51,7 @@ function facadeValueNames(file: string): string[] {
   const source = ts.createSourceFile(file, readFileSync(file, "utf8"), ts.ScriptTarget.ESNext, true, ts.ScriptKind.TS);
   const names: string[] = [];
   for (const statement of source.statements) {
+    if (ts.isExportAssignment(statement) && !statement.isExportEquals) { names.push("default"); continue; }
     if (!ts.isExportDeclaration(statement) || statement.isTypeOnly || !statement.exportClause || !ts.isNamedExports(statement.exportClause)) continue;
     for (const element of statement.exportClause.elements) if (!element.isTypeOnly) names.push(element.name.text);
   }

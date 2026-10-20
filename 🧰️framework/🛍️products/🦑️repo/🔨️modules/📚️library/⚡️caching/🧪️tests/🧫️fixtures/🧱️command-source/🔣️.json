@@ -58,7 +58,8 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔁️verification/📋️orchestration/🟦️.ts",
       "declarations": [
-        "CacheVerifyScript"
+        "CacheVerifyScript",
+        "probeSpecification"
       ]
     },
     {

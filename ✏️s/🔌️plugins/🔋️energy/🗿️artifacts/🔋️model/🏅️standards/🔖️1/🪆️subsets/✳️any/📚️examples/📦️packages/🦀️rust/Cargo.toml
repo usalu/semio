@@ -24,6 +24,7 @@ semio-s-plugin-energy-engine-bestest = { workspace = true }
 semio-s-plugin-energy-engine-model = { workspace = true }
 
 [dev-dependencies]
+semio-s-plugin-energy-engine-sim = { workspace = true, features = ["testing"] }
 pack = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

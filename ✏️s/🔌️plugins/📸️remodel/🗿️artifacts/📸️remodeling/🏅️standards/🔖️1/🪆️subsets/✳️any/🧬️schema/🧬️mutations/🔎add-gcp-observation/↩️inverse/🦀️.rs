@@ -6,7 +6,7 @@ use crate::standards::v1::subsets::any::schema::mutations::remove_gcp_observatio
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse<Op: From<RemoveGcpObservation>>(payload: &super::AddGcpObservation, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<RemoveGcpObservation>>(payload: &crate::standards::v1::subsets::any::schema::mutations::add_gcp_observation::component::AddGcpObservation, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(gcp) = base.gcps.iter().find(|gcp| gcp.id == payload.id) else {
         return Vec::new();

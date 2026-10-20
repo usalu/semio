@@ -46,23 +46,23 @@ pub mod standards {
                         pub mod inferences;
                         #[path = "."]
                         pub mod mutations {
-                            #[path = "../../🚪️io/💾️binary/🧬️mutations/📐️change-rule-layout/🦀️.rs"]
+                            #[path = "../../🚪️io/💾️binary/🧬️mutations/📐️change-rule-layout-point/🦀️.rs"]
                             pub mod change_rule_layout_point;
-                            #[path = "../../🚪️io/💾️binary/🧬️mutations/🫳️drag-rule/🦀️.rs"]
+                            #[path = "../../🚪️io/💾️binary/🧬️mutations/🫳️drag-rule-nodes/🦀️.rs"]
                             pub mod drag_rule_nodes;
                             #[path = "../../🚪️io/💾️binary/🧬️mutations/👉️edit-rhs/🦀️.rs"]
                             pub mod edit_rhs;
                             #[path = "../../🚪️io/💾️binary/🧬️mutations/🖼️edit-working-graph/🦀️.rs"]
                             pub mod edit_working_graph;
-                            #[path = "../../🚪️io/💾️binary/🧬️mutations/🗑️remove-rule-layout/🦀️.rs"]
+                            #[path = "../../🚪️io/💾️binary/🧬️mutations/🗑️remove-rule-layout-point/🦀️.rs"]
                             pub mod remove_rule_layout_point;
-                            #[path = "../../🚪️io/💾️binary/🧬️mutations/🔧️change-parameter/🦀️.rs"]
+                            #[path = "../../🚪️io/💾️binary/🧬️mutations/🔧️change-parameter-binding/🦀️.rs"]
                             pub mod change_parameter_binding;
                             #[path = "../../🚪️io/💾️binary/🧬️mutations/👈️edit-lhs/🦀️.rs"]
                             pub mod edit_lhs;
                             #[path = "../../🚪️io/💾️binary/🧬️mutations/🧹️remove-parameter-binding/🦀️.rs"]
                             pub mod remove_parameter_binding;
-                            #[path = "../../🚪️io/💾️binary/🧬️mutations/📍️set-rule-layout/🦀️.rs"]
+                            #[path = "../../🚪️io/💾️binary/🧬️mutations/📍️set-rule-layout-points/🦀️.rs"]
                             pub mod set_rule_layout_points;
                         }
                     }
@@ -70,23 +70,23 @@ pub mod standards {
                     pub mod text {
                         #[path = "."]
                         pub mod mutations {
-                            #[path = "../../🚪️io/📝️text/🧬️mutations/📐️change-rule-layout/🦀️.rs"]
+                            #[path = "../../🚪️io/📝️text/🧬️mutations/📐️change-rule-layout-point/🦀️.rs"]
                             pub mod change_rule_layout_point;
-                            #[path = "../../🚪️io/📝️text/🧬️mutations/🫳️drag-rule/🦀️.rs"]
+                            #[path = "../../🚪️io/📝️text/🧬️mutations/🫳️drag-rule-nodes/🦀️.rs"]
                             pub mod drag_rule_nodes;
                             #[path = "../../🚪️io/📝️text/🧬️mutations/👉️edit-rhs/🦀️.rs"]
                             pub mod edit_rhs;
                             #[path = "../../🚪️io/📝️text/🧬️mutations/🖼️edit-working-graph/🦀️.rs"]
                             pub mod edit_working_graph;
-                            #[path = "../../🚪️io/📝️text/🧬️mutations/🗑️remove-rule-layout/🦀️.rs"]
+                            #[path = "../../🚪️io/📝️text/🧬️mutations/🗑️remove-rule-layout-point/🦀️.rs"]
                             pub mod remove_rule_layout_point;
-                            #[path = "../../🚪️io/📝️text/🧬️mutations/🔧️change-parameter/🦀️.rs"]
+                            #[path = "../../🚪️io/📝️text/🧬️mutations/🔧️change-parameter-binding/🦀️.rs"]
                             pub mod change_parameter_binding;
                             #[path = "../../🚪️io/📝️text/🧬️mutations/👈️edit-lhs/🦀️.rs"]
                             pub mod edit_lhs;
                             #[path = "../../🚪️io/📝️text/🧬️mutations/🧹️remove-parameter-binding/🦀️.rs"]
                             pub mod remove_parameter_binding;
-                            #[path = "../../🚪️io/📝️text/🧬️mutations/📍️set-rule-layout/🦀️.rs"]
+                            #[path = "../../🚪️io/📝️text/🧬️mutations/📍️set-rule-layout-points/🦀️.rs"]
                             pub mod set_rule_layout_points;
                         }
                     }

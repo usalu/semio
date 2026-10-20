@@ -7,13 +7,14 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import ts from "typescript";
 import panelHostingSource from "../../🧱️elements/🏛️ShellHost/📋️panel-hosting/🟦️.tsx?raw";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import documentTransferTabsSource from "../../🧱️elements/🏛️ShellHost/📤️document-transfer-tabs/🟦️.tsx?raw";
 
-const shellActionsSource = readModuleTreeSource(new URL("../../🧱️elements/🏛️ShellHost/🖱️shell-actions/🟦️.ts", import.meta.url));
+const shellActionsSource = readModuleTreeSource(join(import.meta.dirname, "..", "..", "🧱️elements", "🏛️ShellHost", "🖱️shell-actions", "🟦️.ts"));
 const shellTreeSource = Object.values(import.meta.glob<string>(["../../🧱️elements/🏛️ShellHost/🟦️.tsx", "../../🧱️elements/🏛️ShellHost/**/🟦️.ts", "../../🧱️elements/🏛️ShellHost/**/🟦️.tsx", "!../../🧱️elements/🏛️ShellHost/🧪️tests/**"], { query: "?raw", import: "default", eager: true })).join("\n");
 // #endregion 🔌️Adapters
 

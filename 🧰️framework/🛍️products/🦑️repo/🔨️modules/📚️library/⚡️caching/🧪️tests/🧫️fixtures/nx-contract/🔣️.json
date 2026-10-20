@@ -209,6 +209,42 @@
       "cache": true,
       "disabledCache": false,
       "continuous": false
+    },
+    {
+      "target": "🧪️test",
+      "cache": true,
+      "continuous": false,
+      "disabledCache": false
+    },
+    {
+      "target": "🏭️generator-build",
+      "cache": false,
+      "continuous": false,
+      "disabledCache": false
+    },
+    {
+      "target": "⚙️generator-manifests",
+      "cache": false,
+      "continuous": false,
+      "disabledCache": false
+    },
+    {
+      "target": "unheard-of-kind",
+      "cache": false,
+      "continuous": false,
+      "disabledCache": false
+    },
+    {
+      "target": "prepare-prototype",
+      "cache": false,
+      "continuous": false,
+      "disabledCache": false
+    },
+    {
+      "target": "acceptance-goal",
+      "cache": false,
+      "continuous": false,
+      "disabledCache": false
     }
   ],
   "pluginGraph": {

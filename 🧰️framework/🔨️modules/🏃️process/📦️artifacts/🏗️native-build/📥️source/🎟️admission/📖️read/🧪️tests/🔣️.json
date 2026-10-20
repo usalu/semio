@@ -64,5 +64,35 @@
       "remainingFiles": 1,
       "accepted": false
     }
+  ],
+  "refusals": [
+    {
+      "bytes": 9,
+      "maximumBytes": 8,
+      "remainingFiles": 1,
+      "expectedBytes": null,
+      "reason": "bytes"
+    },
+    {
+      "bytes": 0,
+      "maximumBytes": 8,
+      "remainingFiles": 0,
+      "expectedBytes": null,
+      "reason": "files"
+    },
+    {
+      "bytes": 3,
+      "maximumBytes": 8,
+      "remainingFiles": 1,
+      "expectedBytes": 4,
+      "reason": "extent"
+    },
+    {
+      "bytes": 9,
+      "maximumBytes": 8,
+      "remainingFiles": 0,
+      "expectedBytes": null,
+      "reason": "files"
+    }
   ]
 }

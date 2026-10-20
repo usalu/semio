@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import {lusolve} from "mathjs";
-import {DenseSolveCursor} from "../../../../../../../../../🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/🟦️.ts";
+import {DenseSolveCursor} from "@semio-tech/framework/math/algebra/dense";
 import fixture from "../🧫️fixtures/🌡️thermal/🔣️.json" with {type:"json"};
 import schema from "../🧫️fixtures/🌡️thermal/schema.json" with {type:"json"};
 

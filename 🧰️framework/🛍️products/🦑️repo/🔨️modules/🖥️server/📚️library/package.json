@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@semio-tech/repo-server-library",
+  "version": "0.1.0",
+  "description": "repo · server library (persistence, authentication, events, source index, worker execution) and its ports",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./authentication": "./🔐️authentication/🟦️.ts",
+    "./event": "./📡️event/🟦️.ts",
+    "./persistence": "./🗄️persistence/🟦️.ts",
+    "./ports": "./🔌️ports/🟦️.ts",
+    "./source-index": "./🔎️source-index/🟦️.ts"
+  },
+  "dependencies": {
+    "@semio-tech/framework-transient": "workspace:*",
+    "next": "^15.3.3",
+    "pg": "^8.16.0",
+    "pg-boss": "^10.3.2"
+  },
+  "license": "LGPL-3.0-or-later",
+  "bundleKind": "library"
+}

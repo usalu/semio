@@ -1,0 +1,3 @@
+/** 🧩️ Public `@semio-tech/repo-lib/build/tooling/graph/inference` entry: explicit re-exports of the source module that owns each member. */
+export { default } from "../../../../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs";
+export { cacheInternals, createDependencies, createMetadata, createScriptInputCache, currentImplementationRevisionV1, dependencyResolutionAuthority, discoverBuildDependenciesV1, discoverBuildOwnerAdmissionFactsV1, discoverBuildProjectsV1, discoverNativeBuildOwnersV1, inferReadOnlyBuildProjectSourcesV1, libraryBootstrap, loadCurrentImplementationV1, nativeSourceWatchPlanV1, prepareSourceAnalysesV1, readBuildOwnerRegistrySourceV1 } from "../../../../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs";

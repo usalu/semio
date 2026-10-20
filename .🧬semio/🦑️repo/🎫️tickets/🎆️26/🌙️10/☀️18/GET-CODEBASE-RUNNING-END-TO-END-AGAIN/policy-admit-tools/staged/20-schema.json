@@ -1,0 +1,425 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.repo.dependency-direction/v1",
+  "$ref": "#/$defs/DependencyDirections",
+  "$defs": {
+    "GraphRuleAuthorityCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "rules", "reportedRules", "accept"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "rules": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/GraphDirectionRule"}},
+        "reportedRules": {"type": "array", "items": {"type": "object"}},
+        "accept": {"type": "boolean"}
+      }
+    },
+    "GraphDirectionRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "severity", "from", "to"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "severity": {"const": "error"},
+        "comment": {"type": "string"},
+        "scope": {"const": "module"},
+        "from": {"$ref": "#/$defs/GraphDirectionSelector"},
+        "to": {"$ref": "#/$defs/GraphDirectionSelector"}
+      }
+    },
+    "GraphDirectionSelector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path"],
+      "properties": {
+        "path": {"$ref": "#/$defs/GraphDirectionPaths"},
+        "pathNot": {"$ref": "#/$defs/GraphDirectionPaths"}
+      }
+    },
+    "GraphDirectionPaths": {
+      "anyOf": [
+        {"type": "string"},
+        {"type": "array", "items": {"type": "string", "minLength": 1}}
+      ]
+    },
+    "DependencyDirections": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "roles",
+        "uiBoundary",
+        "rules",
+        "publicApi",
+        "vendoredPaths"
+      ],
+      "properties": {
+        "roles": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "ownerPaths",
+              "externalPackages"
+            ],
+            "properties": {
+              "ownerPaths": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "externalPackages": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        },
+        "uiBoundary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "subjectRole",
+            "foundationRoles",
+            "testSupportRoles"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "subjectRole": {
+              "type": "string",
+              "minLength": 1
+            },
+            "foundationRoles": {
+              "type": "array",
+              "uniqueItems": true,
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "testSupportRoles": {
+              "type": "array",
+              "uniqueItems": true,
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "rules": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "fromRoles",
+              "toRoles"
+            ],
+            "properties": {
+              "fromRoles": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              },
+              "toRoles": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              }
+            }
+          }
+        },
+        "publicApi": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "rulePrefix",
+            "sdkPackage",
+            "sdkFoundationPackages",
+            "toolingRoles"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "rulePrefix": {
+              "const": "no-cross-package-relative-"
+            },
+            "sdkPackage": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sdkFoundationPackages": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^@[^/\\s]+/[^/\\s]+$"
+              }
+            },
+            "toolingRoles": {
+              "const": []
+            }
+          }
+        },
+        "vendoredPaths": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "GraphScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workspaceRoots",
+        "excludedPaths",
+        "nonFollowedPaths",
+        "expectedSources",
+        "workspacePackages"
+      ],
+      "properties": {
+        "workspaceRoots": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "excludedPaths": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "nonFollowedPaths": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "expectedSources": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "workspacePackages": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "owner",
+              "exports",
+              "sourceOwner",
+              "exportTargets"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "owner": {
+                "type": "string",
+                "minLength": 1
+              },
+              "exports": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^\\.(?:/.*)?$"
+                }
+              },
+              "exportTargets": {
+                "$ref": "#/$defs/AuthoredExportTargets"
+              },
+              "sourceOwner": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "AuthoredExportTargets": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "subpath",
+          "target"
+        ],
+        "properties": {
+          "subpath": {
+            "type": "string",
+            "pattern": "^\\.(?:/.*)?$"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\./[^\\\\]+$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "AuthoredPublicPackage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "sourceOwner",
+        "name",
+        "exports",
+        "exportTargets"
+      ],
+      "properties": {
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceOwner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "exports": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^\\.(?:/.*)?$"
+          }
+        },
+        "exportTargets": {
+          "$ref": "#/$defs/AuthoredExportTargets"
+        },
+        "dependencyRole": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "AuthoredPublicOwnerRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "severity",
+        "comment",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^no-cross-package-relative-.+"
+        },
+        "severity": {
+          "const": "error"
+        },
+        "comment": {
+          "type": "string",
+          "minLength": 1
+        },
+        "from": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "pathNot"
+          ],
+          "properties": {
+            "path": {
+              "const": "^"
+            },
+            "pathNot": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "to": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "pathNot"
+          ],
+          "properties": {
+            "path": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            },
+            "pathNot": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

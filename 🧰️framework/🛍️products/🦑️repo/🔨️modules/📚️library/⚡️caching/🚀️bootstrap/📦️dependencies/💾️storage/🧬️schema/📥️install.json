@@ -1913,7 +1913,8 @@
         "maximumBindingRewritesPerHandle": 8,
         "fullFenceInterval": 32,
         "maximumWork": 16777216,
-        "progressWorkUnits": 64
+        "progressWorkUnits": 64,
+        "scanProgressWorkUnits": 4096
       }
     },
     "InstalledPathCase": {

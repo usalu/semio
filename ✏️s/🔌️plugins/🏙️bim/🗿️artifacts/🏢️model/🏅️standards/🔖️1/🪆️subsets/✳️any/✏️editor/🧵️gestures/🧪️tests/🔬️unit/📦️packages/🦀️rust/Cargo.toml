@@ -121,3 +121,4 @@ semio-s-artifact-bim-model-snapshot = { path = "../../../../../../🧬️schema/
 semio-s-artifact-bim-model-storey-levels = { path = "../../../../../../🧬️schema/💡️inferences/🏢️storey-levels/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-bim-model-tests = { path = "../../../../../../🧬️schema/📸️snapshot/🕰️phases/🧪️tests/🔬️unit/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-bim-model-wall-layout = { path = "../../../../../../🧬️schema/💡️inferences/🧱️wall-layout/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-authored = { path = "../../../../../../🧬️schema/📏️authored/📦️packages/🦀️rust" }

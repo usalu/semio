@@ -2,6 +2,7 @@ use semio_framework_test_fixtures::fixture_text;
 use super::*;
 
 #[derive(crate::RetireOwned,crate::SnapshotProjection)]
+#[value(crate="crate")]
 struct OwnedRecord{schema:String,bytes:Vec<u8>,dictionary:Option<Vec<u8>>}
 impl Clone for OwnedRecord{fn clone(&self)->Self{panic!("whole record projection must never clone")}}
 
@@ -17,10 +18,10 @@ fn project_owned(count:usize,schema:&str,octet:u8,optional:bool,cut:Option<usize
  while !cursor.ready()&&cut.is_none_or(|cut|turns<cut){
   let d=cursor.demands(source.borrow(),4096).unwrap();let grant=funded(d);
   for denied in [Some(RetainedCloneGrant{maximum_items:0,..grant}),(d.copy_bytes>0).then_some(RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes.saturating_sub(1),..grant}),(d.capacity_bytes>0).then_some(RetainedCloneGrant{maximum_capacity_bytes:d.capacity_bytes.saturating_sub(1),..grant}),(d.depth>0).then_some(RetainedCloneGrant{maximum_depth:d.depth.saturating_sub(1),..grant})].into_iter().flatten(){
-   let(step,heap)=observe_retirement_allocations(||cursor.advance(source.borrow(),denied).unwrap());
+   let(step,heap)=observe_retirement_allocations(||cursor.advance(source.borrow(),4096,denied).unwrap());
    assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));assert_eq!(cursor.demands(source.borrow(),4096).unwrap(),d);
   }
-  let(step,heap)=observe_retirement_allocations(||cursor.advance(source.borrow(),grant).unwrap());
+  let(step,heap)=observe_retirement_allocations(||cursor.advance(source.borrow(),4096,grant).unwrap());
   assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));turns+=1;assert!(turns<count.saturating_mul(4).saturating_add(schema.len()).saturating_add(256));
  }
  if cursor.ready()&&cut.is_none(){
@@ -45,6 +46,6 @@ fn project_owned(count:usize,schema:&str,octet:u8,optional:bool,cut:Option<usize
 
 #[test]
 fn owned_snapshot_projection_composes_real_string_and_byte_fields_with_exact_custody(){
- let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../📽️projection/🧪️tests/🧫️fixtures/📦️owned/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/📦️owned/🔣️.json")).unwrap();
  for row in corpus["cases"].as_array().unwrap(){let count=row["count"].as_u64().unwrap()as usize;let schema=row["schema"].as_str().unwrap();let octet=row["octet"].as_u64().unwrap()as u8;let optional=row["optionalPayload"].as_bool().unwrap();project_owned(count,schema,octet,optional,None);for cut in corpus["cancelCuts"].as_array().unwrap(){project_owned(count,schema,octet,optional,Some(cut.as_u64().unwrap()as usize));}}
 }

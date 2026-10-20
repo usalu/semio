@@ -104,8 +104,8 @@
       "vectors": [
         {
           "mutationId": "change-object-smooth-shading",
-          "sourceMutationDirectoryName": "🔘️change-object-smooth",
-          "mutationDirectoryName": "🔘️change-object-smooth",
+          "sourceMutationDirectoryName": "🔘️change-object-smooth-shading",
+          "mutationDirectoryName": "🔘️change-object-smooth-shading",
           "scenarios": [
             {
               "id": "turns-on-smooth-shading-for-obj-hull",
@@ -115,8 +115,8 @@
         },
         {
           "mutationId": "change-paint-layer-blend-mode",
-          "sourceMutationDirectoryName": "🎛️change-paint-layer",
-          "mutationDirectoryName": "🎛️change-paint-layer",
+          "sourceMutationDirectoryName": "🎛️change-paint-layer-blend-mode",
+          "mutationDirectoryName": "🎛️change-paint-layer-blend-mode",
           "scenarios": [
             {
               "id": "switches-the-base-layer-to-multiply",
@@ -126,8 +126,8 @@
         },
         {
           "mutationId": "change-paint-layer-opacity",
-          "sourceMutationDirectoryName": "🌫️change-paint-layer",
-          "mutationDirectoryName": "🌫️change-paint-layer",
+          "sourceMutationDirectoryName": "🌫️change-paint-layer-opacity",
+          "mutationDirectoryName": "🌫️change-paint-layer-opacity",
           "scenarios": [
             {
               "id": "fades-the-base-layer-to-half",
@@ -137,8 +137,8 @@
         },
         {
           "mutationId": "change-paint-layer-visible",
-          "sourceMutationDirectoryName": "👁️change-paint-layer",
-          "mutationDirectoryName": "👁️change-paint-layer",
+          "sourceMutationDirectoryName": "👁️change-paint-layer-visible",
+          "mutationDirectoryName": "👁️change-paint-layer-visible",
           "scenarios": [
             {
               "id": "hides-the-base-layer",

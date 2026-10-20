@@ -82,14 +82,15 @@ test("the actual private shared helpers and public byte boundary carry no foreig
 
 test("additive complete lower native cohort preserves the original full oracle route", () => {
   const script = read("🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📜️script.ts");
-  const route = script.match(/class NativeOracleTestScript[\s\S]*?\n\}/u)![0];
+  const library = read("🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/🟦️.ts");
+  const route = library.match(/export async function runNativeOracleTestScript[\s\S]*?\n\}/u)![0];
   for (const binding of ["contract.neutralLaw.source", "contract.providers.map", "contract.families.map", "contract.grammar.package.path", "contract.package.path"]) expect(route).toContain(binding);
   expect(route).toContain('if (rest.length) throw new Error');
-  expect(route).toContain('runRepositoryCargoCommandV1(this.invocation,createIssuedResourceControlV1(this.invocation,"cargo:native-oracle",0)');
+  expect(route).toContain('runRepositoryCargoCommandV1(context.invocation,createIssuedResourceControlV1(context.invocation,"cargo:native-oracle",0)');
   expect(route).not.toContain('"--features"');
   const project = JSON.parse(read("🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📋️project.json"));
   expect(project.targets["test-native-drawing-reader"]?.options.command).toBe("bun 📜️script.ts test-native-drawing-reader");
-  const command = script.match(/class NativeDrawingReaderTestScript[\s\S]*?\n\}/u)?.[0];
+  const command = library.match(/export async function runNativeDrawingReaderTestScript[\s\S]*?\n\}/u)?.[0];
   expect(command).toContain("contract.families.find(({ module }) => module === \"drawing\")");
   expect(command).toContain("if (rest.length) throw new Error");
   expect(command).not.toContain("\"--features\"");

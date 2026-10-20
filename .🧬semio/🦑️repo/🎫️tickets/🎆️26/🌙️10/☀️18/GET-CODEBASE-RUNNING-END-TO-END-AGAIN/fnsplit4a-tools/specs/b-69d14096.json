@@ -1,0 +1,68 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🟦️.ts",
+ "scopeLine": 40,
+ "files": [
+  {
+   "id": "f0",
+   "dir": "🔶️validate",
+   "doc": "/** 🔶️ The validate step of testCacheContracts. */"
+  },
+  {
+   "id": "f1",
+   "dir": "🔸️activation-schema",
+   "doc": "/** 🔸️ The activation schema step of testCacheContracts. */"
+  },
+  {
+   "id": "f2",
+   "dir": "🟠️validated-project",
+   "doc": "/** 🟠️ The validated project step of testCacheContracts. */"
+  },
+  {
+   "id": "f3",
+   "dir": "🟢️revision-root",
+   "doc": "/** 🟢️ The revision root step of testCacheContracts. */"
+  }
+ ],
+ "items": [
+  {
+   "id": "i0",
+   "kind": "range",
+   "line": 41,
+   "to": 191,
+   "name": "runValidateStep",
+   "emoji": "🔷",
+   "doc": "Runs the validate, policy, schema, authoredWorkspace step of testCacheContracts.",
+   "file": "f0"
+  },
+  {
+   "id": "i1",
+   "kind": "range",
+   "line": 192,
+   "to": 314,
+   "name": "runActivationSchemaStep",
+   "emoji": "🔹",
+   "doc": "Runs the activationSchema, validateActivation, keyBy, sortBy step of testCacheContracts.",
+   "file": "f1"
+  },
+  {
+   "id": "i2",
+   "kind": "range",
+   "line": 315,
+   "to": 464,
+   "name": "runValidatedProjectStep",
+   "emoji": "🟡",
+   "doc": "Runs the validatedProject, validatedTarget, workspace, hostProject step of testCacheContracts.",
+   "file": "f2"
+  },
+  {
+   "id": "i3",
+   "kind": "range",
+   "line": 465,
+   "to": 604,
+   "name": "runRevisionRootStep",
+   "emoji": "🔵",
+   "doc": "Runs the revisionRoot, captureOwnedCommandV1, materializerSpawn, materializerFixture step of testCacheContracts.",
+   "file": "f3"
+  }
+ ]
+}

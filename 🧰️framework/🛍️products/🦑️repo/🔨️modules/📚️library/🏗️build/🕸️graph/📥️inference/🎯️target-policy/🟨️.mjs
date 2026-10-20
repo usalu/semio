@@ -15,7 +15,30 @@ export const matchesUncached = (name, policy) => policy.uncachedExact.includes(n
 export const mutatingName = (name) => /(?:^|-)(?:clean|gc|prune|setup|fuzz)(?:-|$)/.test(name);
 export const liveName = (name) => /(?:^|-)(?:e2e|live)(?:-|$)/.test(name);
 export const verifyCommand = (target) => /(?:^|[\s"'])verify(?:[\s"']|$)/.test(target?.options?.command ?? "");
-export const cacheableFamily = (name) => /^(test(?:-|$)|check(?:-|$)|lint(?:-|$)|typecheck(?:-|$)|format-check(?:-|$)|generate(?:-|$)|schema(?:-|$)|verify(?:-|$)|stdio(?:-|$)|build(?:-|$)|wasm$|native-build$|package$|extension-package$|cpp-(?:configure|build|test)$|graph-check$|policy-check$|artifact-check$|artifact-package-contract$|toolchain$)/.test(name) || /(?:^|-)contract(?:-|$)/.test(name) || /^generator(?:-|$)/.test(name) && !name.includes("generator-inputs");
+const hasHead = (name, head) => name === head || name.startsWith(`${head}-`);
+const hasTail = (name, tail) => name === tail || name.endsWith(`-${tail}`);
+const hasToken = (name, token) => hasHead(name, token) || hasTail(name, token) || name.includes(`-${token}-`);
+
+/** 🔤️ Strips the leading symbols (an emoji prefix) of a target name, so every name rule reads `🏭️generator-build` exactly as `generator-build`. */
+export const normalizedTargetName = (name) => name.replace(/^[^A-Za-z0-9]+/u, "");
+
+/** 🗂️ Resolves the cache class the workspace policy declares for one target name: a row that names the name exactly decides first, then the first row with a matching head, tail or token; a name no row classifies has none and never replays.
+ * @see ../../../../⚡️caching/🧬️schema/🔣️.json */
+export function targetClassV1(name, rows = POLICY.targetClasses) {
+  const bare = normalizedTargetName(name);
+  const row = rows.find((row) => row.exact?.includes(bare)) ?? rows.find((row) => row.heads?.some((head) => hasHead(bare, head)) || row.tails?.some((tail) => hasTail(bare, tail)) || row.tokens?.some((token) => hasToken(bare, token)));
+  return row && cacheDecisionV1(row.decision.class, row.decision.reason);
+}
+
+export const cacheableFamily = (name, rows) => targetClassV1(name, rows)?.class === "deterministic";
+
+/** 📌️ Admits the cache decision a target declares itself in `metadata.semio.cache`; a malformed or open record is refused instead of ignored. */
+function declaredCacheDecisionV1(value) {
+  if (value === undefined) return undefined;
+  const decision = cacheDecisionV1(value?.class, value?.reason);
+  if (Object.keys(value).length !== Object.keys(decision).length || value.version !== decision.version) throw Error(`Repository target cache decision refused: ${value?.class}/${value?.reason}`);
+  return decision;
+}
 
 const cacheDecisions = new Map();
 
@@ -43,15 +66,27 @@ export function uncachedDecisionV1(name) {
   return ["side-effecting", "mutates-workspace"];
 }
 
-/** 🛡️ Side effects and live processes cannot be replayed as completed task results. */
+/** 🛡️ Side effects and live processes cannot be replayed as completed task results, and neither can a target nothing classifies: a target replays only when the owner declared it deterministic, the policy classes its name as deterministic or its command verifies. */
 export function targetPolicy(name, target, policy = POLICY) {
-  if (matchesCommand(name, policy.continuous)) return withCacheDecision({ ...target, cache: false, continuous: true }, "continuous", "serves-until-stopped");
-  if (target.cache === false) return { inputs: ["default"], outputs: [], ...target, cache: false };
-  if (matchesUncached(name, policy)) return withCacheDecision({ ...target, cache: false }, ...uncachedDecisionV1(name));
-  if (policy.cachedExact.includes(name)) return { inputs: ["default", "^default"], outputs: [], ...target, cache: true };
-  if (mutatingName(name) || liveName(name)) return withCacheDecision({ ...target, cache: false }, ...uncachedDecisionV1(name));
-  if (cacheableFamily(name) || verifyCommand(target)) return { inputs: ["default", "^default"], outputs: [], ...target, cache: true };
-  return { ...target, cache: target.cache !== false };
+  const bare = normalizedTargetName(name);
+  if (matchesCommand(bare, policy.continuous)) return withCacheDecision({ ...target, cache: false, continuous: true }, "continuous", "serves-until-stopped");
+  if (target.cache === false) { declaredCacheDecisionV1(target.metadata?.semio?.cache); return { inputs: ["default"], outputs: [], ...target, cache: false }; }
+  if (matchesUncached(bare, policy)) return withCacheDecision({ ...target, cache: false }, ...uncachedDecisionV1(bare));
+  const exact = policy.cachedExact.includes(bare);
+  if (!exact && (mutatingName(bare) || liveName(bare))) return withCacheDecision({ ...target, cache: false }, ...uncachedDecisionV1(bare));
+  const decision = declaredCacheDecisionV1(target.metadata?.semio?.cache) ?? targetClassV1(bare, policy.targetClasses) ?? (exact || verifyCommand(target) ? cacheDecisionV1("deterministic", "check-without-outputs") : undefined);
+  if (!decision) return withCacheDecision({ ...target, cache: false }, "unclassified", "no-cache-classification");
+  if (decision.class !== "deterministic") return withCacheDecision({ ...target, cache: false }, decision.class, decision.reason);
+  return { inputs: ["default", "^default"], outputs: [], ...withCacheDecision(target, decision.class, decision.reason), cache: true };
+}
+
+/** 🚧️ A replayed producer must declare what it writes: a target classed `pure-function-of-inputs` that declares no output (and is neither a Rust build intent, a host-platform output declaration nor a pure ordering task) would replay as an empty success on a clean checkout, so it stops being replayable instead. */
+export function cachedOutputsAdmittedV1(target) {
+  const decision = target.metadata?.semio?.cache;
+  if (target.cache !== true || decision?.class !== "deterministic" || decision.reason !== "pure-function-of-inputs") return target;
+  const semio = target.metadata.semio;
+  if ((Array.isArray(target.outputs) && target.outputs.length > 0) || semio.rustBuildIntent !== undefined || semio.rustUnitAggregate !== undefined || semio.hostPlatformOutputsV1 !== undefined || target.executor === "repo:noop") return target;
+  return withCacheDecision({ ...target, cache: false }, "side-effecting", "mutates-workspace");
 }
 
 /** 🏃️ Admits one declared source or native command owner against its closed production contract. */

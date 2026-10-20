@@ -1,4 +1,4 @@
-import schema from "./🔣️.json";
+import schema from "./🔣️.json" with { type: "json" };
 
 export interface PlaygroundSessionPublicationRequestV1 { readonly contractId: string; readonly variant: string; readonly catalogPath: string; readonly outputRoot: string }
 

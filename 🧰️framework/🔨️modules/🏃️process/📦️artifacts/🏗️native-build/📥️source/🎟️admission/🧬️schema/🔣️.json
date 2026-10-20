@@ -85,6 +85,11 @@
     },
     "readCheckpoint": {
       "const": 8
+    },
+    "storageRecheck": {
+      "const": {
+        "intervalMilliseconds": 15000
+      }
     }
   }
 }

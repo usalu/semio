@@ -1,0 +1,7 @@
+{
+ "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🚀️apply/🟦️.ts",
+ "scopeLine": 36,
+ "stateName": "txn",
+ "lets": ["attemptOrdinal", "journalRelative", "selectedAttempt", "leaseHandle", "preflightReferenceBasis", "lockedResumeJournal"],
+ "lateInit": true
+}

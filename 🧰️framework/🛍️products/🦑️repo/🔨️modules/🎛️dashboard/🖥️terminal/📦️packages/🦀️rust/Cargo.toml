@@ -22,6 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-filesystem-workspace = { path = "../../../../../../../🔨️modules/📁️filesystem/📝️workspace/📦️packages/🦀️rust" }
 dashboard_core = { path = "../../../🧱️invocation-catalog/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-core" }
 dashboard_cli = { path = "../../../🧭️cli/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-cli" }
 dashboard_daemon = { path = "../../../🌀️daemon/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-daemon" }

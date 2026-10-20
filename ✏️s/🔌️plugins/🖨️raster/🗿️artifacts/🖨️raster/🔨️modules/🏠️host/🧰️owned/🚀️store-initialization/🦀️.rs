@@ -116,65 +116,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                 cx.consume_fuel(1);
                 Ok(None)
             }
-            RasterStoreInitializationPhase::CloneInitial => {
-                let source = &self.envelope.as_ref().expect("Raster envelope remains retained during initial clone").vcs.genesis.facts().snapshot();
-                let clone = self.clone.as_mut().expect("Raster initial clone authority remains retained");
-                let complete = match clone.step(source, cx) {
-                    Ok(complete) => complete,
-                    Err(code) => {
-                        self.fail(code.as_bytes());
-                        return Ok(None);
-                    }
-                };
-                if complete {
-                    let initial = clone.take_value().expect("Raster initial snapshot was built one semantic item at a time");
-                    drop(self.clone.take());
-                    match self.runtime.as_mut().expect("retained initializer runtime").adopt_current_owned(initial, std::sync::Arc::new(RasterSnapshotRetirementFactory)) {
-                        Ok(()) => self.phase = self.resume_phase.take().expect("retained mutation resume phase"),
-                        Err(initial) => {
-                            self.active.put(RasterDisplaced::Snapshot(initial));
-                            self.fail(b"initializer-owned-workspace-adoption");
-                        }
-                    }
-                }
-                Ok(None)
-            }
-            RasterStoreInitializationPhase::SeedHistory { edit, lane, index } => {
-                let envelope = self.envelope.as_ref().expect("Raster envelope remains retained while causal history is seeded");
-                let Some(entry) = envelope.vcs.edits.get(edit) else {
-                    self.phase = RasterStoreInitializationPhase::FoldSupersessions { transition: 0 };
-                    return Ok(None);
-                };
-                let runtime = self.runtime.as_mut().expect("Raster runtime remains retained while history is seeded");
-                match lane {
-                    0 => {
-                        if let Err(error) = runtime.seed_mutation(protocol::MutationId(entry.id.clone())) {
-                            self.fault = Some(error.into_bytes());
-                            self.phase = RasterStoreInitializationPhase::RetireFault;
-                        } else {
-                            runtime.observe_sequence(entry.sequence_number);
-                            self.phase = RasterStoreInitializationPhase::SeedHistory { edit, lane: 1, index: 0 };
-                        }
-                    }
-                    1 if index < entry.forwards.len() => {
-                        let id = entry.mutation_meta.get(index).and_then(|meta| meta.mutation_id.clone()).or_else(|| entry.forwards[index].mutation_id()).unwrap_or_else(|| protocol::MutationId(format!("{}#{index}", entry.id)));
-                        if let Err(error) = runtime.seed_edit_operation(&entry.id, id) {
-                            self.fault = Some(error.into_bytes());
-                            self.phase = RasterStoreInitializationPhase::RetireFault;
-                        } else {
-                            self.phase = RasterStoreInitializationPhase::SeedHistory { edit, lane, index: index + 1 };
-                        }
-                    }
-                    1 => self.phase = RasterStoreInitializationPhase::SeedHistory { edit, lane: 2, index: 0 },
-                    2 if index < entry.mutation_meta.len() => {
-                        runtime.observe_timestamp(entry.mutation_meta[index].timestamp);
-                        self.phase = RasterStoreInitializationPhase::SeedHistory { edit, lane, index: index + 1 };
-                    }
-                    _ => self.phase = RasterStoreInitializationPhase::SeedHistory { edit: edit + 1, lane: 0, index: 0 },
-                }
-                cx.consume_fuel(1);
-                Ok(None)
-            }
+            RasterStoreInitializationPhase::CloneInitial => self.phase_clone_initial(cx),
+            RasterStoreInitializationPhase::SeedHistory { edit, lane, index } => self.phase_seed_history(edit, lane, index, cx),
             RasterStoreInitializationPhase::FoldSupersessions { transition } => {
                 let envelope = self.envelope.as_ref().expect("Raster envelope remains retained while its supersessions fold");
                 match self.runtime.as_mut().expect("Raster runtime remains retained while its supersessions fold").fold_supersession_step(envelope, transition) {
@@ -188,82 +131,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                 cx.consume_fuel(1);
                 Ok(None)
             }
-            RasterStoreInitializationPhase::FindApplied { position } => {
-                let Some(id) = self.applied_id(position) else {
-                    let checkpoint = self.envelope.as_ref().and_then(|envelope| envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.clone()).or_else(|| envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone())));
-                    self.runtime.as_mut().expect("Raster runtime remains retained").set_current_checkpoint_id(checkpoint);
-                    self.phase = RasterStoreInitializationPhase::FindRedo { position: 0 };
-                    return Ok(None);
-                };
-                let scan = self.edit_index.position(&id).unwrap_or(usize::MAX);
-                let envelope = self.envelope.as_ref().expect("Raster envelope remains retained");
-                let Some(edit) = envelope.vcs.edits.get(scan) else {
-                    self.fail(b"raster-store.initializer-applied-edit-missing");
-                    return Ok(None);
-                };
-                if edit.id == id {
-                    self.phase = RasterStoreInitializationPhase::ApplyForward { position, edit: scan, mutation: 0 };
-                } else {
-                    self.fail(b"raster-store.initializer-applied-edit-missing");
-                }
-                cx.consume_fuel(1);
-                Ok(None)
-            }
-            RasterStoreInitializationPhase::ApplyForward { position, edit, mutation } => {
-                let needs_workspace = {
-                    let envelope = self.envelope.as_ref().expect("retained initializer envelope");
-                    let runtime = self.runtime.as_ref().expect("retained initializer runtime");
-                    envelope.vcs.edits.get(edit).and_then(|entry| runtime.effective_forward(entry, mutation, &envelope.schema)).is_some_and(|effective| effective.operation().is_some())
-                };
-                if needs_workspace && self.runtime.as_mut().expect("retained initializer runtime").current_mut().is_none() {
-                    self.resume_phase = Some(self.phase);
-                    *self.clone = Some(RasterSnapshotCloneAuthority::new());
-                    self.phase = RasterStoreInitializationPhase::CloneInitial;
-                    cx.consume_fuel(1);
-                    return Ok(None);
-                }
-                if self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).is_none_or(|entry| mutation >= entry.forwards.len()) {
-                    self.phase = RasterStoreInitializationPhase::CommitApplied { position, edit };
-                    return Ok(None);
-                }
-                let withdrawn = {
-                    let envelope = self.envelope.as_ref().expect("Raster envelope remains retained while its forwards fold");
-                    envelope.vcs.edits.get(edit).and_then(|entry| self.runtime.as_ref().and_then(|runtime| runtime.effective_forward(entry, mutation, &envelope.schema))).is_none_or(|effective| effective.operation().is_none())
-                };
-                if withdrawn {
-                    self.phase = RasterStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 };
-                    cx.consume_fuel(1);
-                    return Ok(None);
-                }
-                if self.mutation_candidate.is_none() {
-                    if !raster_reserve_unit(cx) {
-                        return Ok(None);
-                    }
-                    *self.mutation_candidate = Some(RasterMutationCandidateAuthority::new());
-                    return Ok(None);
-                }
-                let envelope = self.envelope.as_ref().expect("Raster envelope remains retained while its forwards fold");
-                let effective = envelope.vcs.edits.get(edit).and_then(|entry| self.runtime.as_ref().and_then(|runtime| runtime.effective_forward(entry, mutation, &envelope.schema))).expect("Raster applied forward remains retained");
-                let current = self.runtime.as_mut().and_then(store::ArtifactStoreInitializationRuntime::current_mut).expect("Raster runtime current snapshot remains retained");
-                let stepped = self.mutation_candidate.as_mut().expect("Raster mutation candidate remains retained").step(current, effective.operation().expect("Raster effective forward was checked"), cx);
-                drop(effective);
-                let candidate_complete = match stepped {
-                    Ok(value) => value,
-                    Err(code) => {
-                        self.fail(code.as_bytes());
-                        return Ok(None);
-                    }
-                };
-                if candidate_complete {
-                    let next = self.mutation_candidate.as_mut().expect("Raster completed mutation candidate remains retained").take().expect("Raster mutation candidate handoff");
-                    drop(self.mutation_candidate.take());
-                    let current = self.runtime.as_mut().and_then(store::ArtifactStoreInitializationRuntime::current_mut).expect("Raster runtime current snapshot remains retained");
-                    let previous = std::mem::replace(current, next);
-                    self.active.put(RasterDisplaced::Snapshot(previous));
-                    self.phase = RasterStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 };
-                }
-                Ok(None)
-            }
+            RasterStoreInitializationPhase::FindApplied { position } => self.phase_find_applied(position, cx),
+            RasterStoreInitializationPhase::ApplyForward { position, edit, mutation } => self.phase_apply_forward(position, edit, mutation, cx),
             RasterStoreInitializationPhase::CommitApplied { position, edit } => {
                 let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Raster applied edit remains retained");
 
@@ -278,26 +147,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                 cx.consume_fuel(1);
                 Ok(None)
             }
-            RasterStoreInitializationPhase::FindRedo { position } => {
-                let Some(id) = self.redo_id(position) else {
-                    self.edit_index.clear();
-                    self.phase = RasterStoreInitializationPhase::RetireActor;
-                    return Ok(None);
-                };
-                let scan = self.edit_index.position(&id).unwrap_or(usize::MAX);
-                let envelope = self.envelope.as_ref().expect("Raster envelope remains retained");
-                let Some(edit) = envelope.vcs.edits.get(scan) else {
-                    self.fail(b"raster-store.initializer-redo-edit-missing");
-                    return Ok(None);
-                };
-                if edit.id == id {
-                    self.phase = RasterStoreInitializationPhase::CommitRedo { position, edit: scan };
-                } else {
-                    self.fail(b"raster-store.initializer-redo-edit-missing");
-                }
-                cx.consume_fuel(1);
-                Ok(None)
-            }
+            RasterStoreInitializationPhase::FindRedo { position } => self.phase_find_redo(position, cx),
             RasterStoreInitializationPhase::CommitRedo { position, edit } => {
                 let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Raster redo edit remains retained");
                 if let Err(error) = self.runtime.as_mut().expect("Raster runtime remains retained").push_redo_edit(entry, self.envelope.as_ref().expect("retained history ledger").vcs.edits.key_at(edit).expect("authoritative retained edit key")) {
@@ -309,26 +159,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                 cx.consume_fuel(1);
                 Ok(None)
             }
-            RasterStoreInitializationPhase::RetireActor => {
-                if self.actor.is_none() && self.actor_close.is_none() {
-                    self.phase = RasterStoreInitializationPhase::BuildCandidate;
-                    return Ok(None);
-                }
-                match self.step_actor(cx.retained_grant()) {
-                    Ok(step) => {
-                        if let Err(error) = cx.consume_retained(step.progress()) {
-                            self.fault = Some(error.into_message().into_bytes());
-                            self.phase = RasterStoreInitializationPhase::RetireFault;
-                        }
-                    }
-                    Err(error) => {
-                        self.fault = Some(error.into_message().into_bytes());
-                        self.phase = RasterStoreInitializationPhase::RetireFault;
-                    }
-                }
-                cx.consume_fuel(1);
-                Ok(None)
-            }
+            RasterStoreInitializationPhase::RetireActor => self.phase_retire_actor(cx),
             RasterStoreInitializationPhase::BuildCandidate => {
                 if !raster_reserve_unit(cx) {
                     return Ok(None);
@@ -344,23 +175,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                 self.phase = RasterStoreInitializationPhase::Complete;
                 semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None)
             }
-            RasterStoreInitializationPhase::RetireCancelled | RasterStoreInitializationPhase::RetireFault => match self.pump_terminal_retirement(cx) {
-                Ok(false) => Ok(None),
-                Ok(true) => {
-                    self.terminal_handoff = true;
-                    if self.phase == RasterStoreInitializationPhase::RetireCancelled {
-                        self.phase = RasterStoreInitializationPhase::Cancelled;
-                        semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx)
-                    } else {
-                        self.phase = RasterStoreInitializationPhase::Fault;
-                        Ok(None)
-                    }
-                }
-                Err(error) => {
-                    self.fault = Some(error.into_message().into_bytes());
-                    Ok(None)
-                }
-            },
+            RasterStoreInitializationPhase::RetireCancelled | RasterStoreInitializationPhase::RetireFault => self.phase_retire_cancelled_or_retire_fault(cx),
             RasterStoreInitializationPhase::Complete => semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None),
             RasterStoreInitializationPhase::Cancelled => semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx),
             RasterStoreInitializationPhase::Fault => {
@@ -377,6 +192,244 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                     self.delivered = true;
                 }
                 Ok(result)
+            }
+        }
+    }
+
+    /// 🧱️ Runs the `clone initial` stage of `step`.
+    fn phase_clone_initial<'a>(
+        &'a mut self,
+        cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        let source = &self.envelope.as_ref().expect("Raster envelope remains retained during initial clone").vcs.genesis.facts().snapshot();
+        let clone = self.clone.as_mut().expect("Raster initial clone authority remains retained");
+        let complete = match clone.step(source, cx) {
+            Ok(complete) => complete,
+            Err(code) => {
+                self.fail(code.as_bytes());
+                return Ok(None);
+            }
+        };
+        if complete {
+            let initial = clone.take_value().expect("Raster initial snapshot was built one semantic item at a time");
+            drop(self.clone.take());
+            match self.runtime.as_mut().expect("retained initializer runtime").adopt_current_owned(initial, std::sync::Arc::new(RasterSnapshotRetirementFactory)) {
+                Ok(()) => self.phase = self.resume_phase.take().expect("retained mutation resume phase"),
+                Err(initial) => {
+                    self.active.put(RasterDisplaced::Snapshot(initial));
+                    self.fail(b"initializer-owned-workspace-adoption");
+                }
+            }
+        }
+        Ok(None)
+    }
+
+    /// 🪵️ Runs the `seed history` stage of `step`.
+    fn phase_seed_history<'a>(
+        &'a mut self,
+        edit: usize,
+        lane: u8,
+        index: usize,
+        cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        let envelope = self.envelope.as_ref().expect("Raster envelope remains retained while causal history is seeded");
+        let Some(entry) = envelope.vcs.edits.get(edit) else {
+            self.phase = RasterStoreInitializationPhase::FoldSupersessions { transition: 0 };
+            return Ok(None);
+        };
+        let runtime = self.runtime.as_mut().expect("Raster runtime remains retained while history is seeded");
+        match lane {
+            0 => {
+                if let Err(error) = runtime.seed_mutation(protocol::MutationId(entry.id.clone())) {
+                    self.fault = Some(error.into_bytes());
+                    self.phase = RasterStoreInitializationPhase::RetireFault;
+                } else {
+                    runtime.observe_sequence(entry.sequence_number);
+                    self.phase = RasterStoreInitializationPhase::SeedHistory { edit, lane: 1, index: 0 };
+                }
+            }
+            1 if index < entry.forwards.len() => {
+                let id = entry.mutation_meta.get(index).and_then(|meta| meta.mutation_id.clone()).or_else(|| entry.forwards[index].mutation_id()).unwrap_or_else(|| protocol::MutationId(format!("{}#{index}", entry.id)));
+                if let Err(error) = runtime.seed_edit_operation(&entry.id, id) {
+                    self.fault = Some(error.into_bytes());
+                    self.phase = RasterStoreInitializationPhase::RetireFault;
+                } else {
+                    self.phase = RasterStoreInitializationPhase::SeedHistory { edit, lane, index: index + 1 };
+                }
+            }
+            1 => self.phase = RasterStoreInitializationPhase::SeedHistory { edit, lane: 2, index: 0 },
+            2 if index < entry.mutation_meta.len() => {
+                runtime.observe_timestamp(entry.mutation_meta[index].timestamp);
+                self.phase = RasterStoreInitializationPhase::SeedHistory { edit, lane, index: index + 1 };
+            }
+            _ => self.phase = RasterStoreInitializationPhase::SeedHistory { edit: edit + 1, lane: 0, index: 0 },
+        }
+        cx.consume_fuel(1);
+        Ok(None)
+    }
+
+    /// 🔩️ Runs the `find applied` stage of `step`.
+    fn phase_find_applied<'a>(
+        &'a mut self,
+        position: usize,
+        cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        let Some(id) = self.applied_id(position) else {
+            let checkpoint = self.envelope.as_ref().and_then(|envelope| envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.clone()).or_else(|| envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone())));
+            self.runtime.as_mut().expect("Raster runtime remains retained").set_current_checkpoint_id(checkpoint);
+            self.phase = RasterStoreInitializationPhase::FindRedo { position: 0 };
+            return Ok(None);
+        };
+        let scan = self.edit_index.position(&id).unwrap_or(usize::MAX);
+        let envelope = self.envelope.as_ref().expect("Raster envelope remains retained");
+        let Some(edit) = envelope.vcs.edits.get(scan) else {
+            self.fail(b"raster-store.initializer-applied-edit-missing");
+            return Ok(None);
+        };
+        if edit.id == id {
+            self.phase = RasterStoreInitializationPhase::ApplyForward { position, edit: scan, mutation: 0 };
+        } else {
+            self.fail(b"raster-store.initializer-applied-edit-missing");
+        }
+        cx.consume_fuel(1);
+        Ok(None)
+    }
+
+    /// ⚙️ Runs the `apply forward` stage of `step`.
+    fn phase_apply_forward<'a>(
+        &'a mut self,
+        position: usize,
+        edit: usize,
+        mutation: usize,
+        cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        let needs_workspace = {
+            let envelope = self.envelope.as_ref().expect("retained initializer envelope");
+            let runtime = self.runtime.as_ref().expect("retained initializer runtime");
+            envelope.vcs.edits.get(edit).and_then(|entry| runtime.effective_forward(entry, mutation, &envelope.schema)).is_some_and(|effective| effective.operation().is_some())
+        };
+        if needs_workspace && self.runtime.as_mut().expect("retained initializer runtime").current_mut().is_none() {
+            self.resume_phase = Some(self.phase);
+            *self.clone = Some(RasterSnapshotCloneAuthority::new());
+            self.phase = RasterStoreInitializationPhase::CloneInitial;
+            cx.consume_fuel(1);
+            return Ok(None);
+        }
+        if self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).is_none_or(|entry| mutation >= entry.forwards.len()) {
+            self.phase = RasterStoreInitializationPhase::CommitApplied { position, edit };
+            return Ok(None);
+        }
+        let withdrawn = {
+            let envelope = self.envelope.as_ref().expect("Raster envelope remains retained while its forwards fold");
+            envelope.vcs.edits.get(edit).and_then(|entry| self.runtime.as_ref().and_then(|runtime| runtime.effective_forward(entry, mutation, &envelope.schema))).is_none_or(|effective| effective.operation().is_none())
+        };
+        if withdrawn {
+            self.phase = RasterStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 };
+            cx.consume_fuel(1);
+            return Ok(None);
+        }
+        if self.mutation_candidate.is_none() {
+            if !raster_reserve_unit(cx) {
+                return Ok(None);
+            }
+            *self.mutation_candidate = Some(RasterMutationCandidateAuthority::new());
+            return Ok(None);
+        }
+        let envelope = self.envelope.as_ref().expect("Raster envelope remains retained while its forwards fold");
+        let effective = envelope.vcs.edits.get(edit).and_then(|entry| self.runtime.as_ref().and_then(|runtime| runtime.effective_forward(entry, mutation, &envelope.schema))).expect("Raster applied forward remains retained");
+        let current = self.runtime.as_mut().and_then(store::ArtifactStoreInitializationRuntime::current_mut).expect("Raster runtime current snapshot remains retained");
+        let stepped = self.mutation_candidate.as_mut().expect("Raster mutation candidate remains retained").step(current, effective.operation().expect("Raster effective forward was checked"), cx);
+        drop(effective);
+        let candidate_complete = match stepped {
+            Ok(value) => value,
+            Err(code) => {
+                self.fail(code.as_bytes());
+                return Ok(None);
+            }
+        };
+        if candidate_complete {
+            let next = self.mutation_candidate.as_mut().expect("Raster completed mutation candidate remains retained").take().expect("Raster mutation candidate handoff");
+            drop(self.mutation_candidate.take());
+            let current = self.runtime.as_mut().and_then(store::ArtifactStoreInitializationRuntime::current_mut).expect("Raster runtime current snapshot remains retained");
+            let previous = std::mem::replace(current, next);
+            self.active.put(RasterDisplaced::Snapshot(previous));
+            self.phase = RasterStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 };
+        }
+        Ok(None)
+    }
+
+    /// 🧲️ Runs the `find redo` stage of `step`.
+    fn phase_find_redo<'a>(
+        &'a mut self,
+        position: usize,
+        cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        let Some(id) = self.redo_id(position) else {
+            self.edit_index.clear();
+            self.phase = RasterStoreInitializationPhase::RetireActor;
+            return Ok(None);
+        };
+        let scan = self.edit_index.position(&id).unwrap_or(usize::MAX);
+        let envelope = self.envelope.as_ref().expect("Raster envelope remains retained");
+        let Some(edit) = envelope.vcs.edits.get(scan) else {
+            self.fail(b"raster-store.initializer-redo-edit-missing");
+            return Ok(None);
+        };
+        if edit.id == id {
+            self.phase = RasterStoreInitializationPhase::CommitRedo { position, edit: scan };
+        } else {
+            self.fail(b"raster-store.initializer-redo-edit-missing");
+        }
+        cx.consume_fuel(1);
+        Ok(None)
+    }
+
+    /// 🪛️ Runs the `retire actor` stage of `step`.
+    fn phase_retire_actor<'a>(
+        &'a mut self,
+        cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        if self.actor.is_none() && self.actor_close.is_none() {
+            self.phase = RasterStoreInitializationPhase::BuildCandidate;
+            return Ok(None);
+        }
+        match self.step_actor(cx.retained_grant()) {
+            Ok(step) => {
+                if let Err(error) = cx.consume_retained(step.progress()) {
+                    self.fault = Some(error.into_message().into_bytes());
+                    self.phase = RasterStoreInitializationPhase::RetireFault;
+                }
+            }
+            Err(error) => {
+                self.fault = Some(error.into_message().into_bytes());
+                self.phase = RasterStoreInitializationPhase::RetireFault;
+            }
+        }
+        cx.consume_fuel(1);
+        Ok(None)
+    }
+
+    /// 🔧️ Runs the `retire cancelled` or `retire fault` stage of `step`.
+    fn phase_retire_cancelled_or_retire_fault<'a>(
+        &'a mut self,
+        cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        use semio_framework_job::JobOutcomeBorrow;
+        match self.pump_terminal_retirement(cx) {
+            Ok(false) => Ok(None),
+            Ok(true) => {
+                self.terminal_handoff = true;
+                if self.phase == RasterStoreInitializationPhase::RetireCancelled {
+                    self.phase = RasterStoreInitializationPhase::Cancelled;
+                    semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx)
+                } else {
+                    self.phase = RasterStoreInitializationPhase::Fault;
+                    Ok(None)
+                }
+            }
+            Err(error) => {
+                self.fault = Some(error.into_message().into_bytes());
+                Ok(None)
             }
         }
     }

@@ -22,6 +22,8 @@ type Fixture = Readonly<{
   repoLocalGitConfig: readonly (readonly [string, string])[];
   unixBootstrap: Readonly<{ path: string; packageManagers: readonly string[]; requiredTools: readonly string[]; forbidden: readonly string[]; installerInvocations: number }>;
   windowsBootstrap: Readonly<{ path: string; required: readonly string[]; forbidden: readonly string[] }>;
+  nativePins: Readonly<{ hosts: readonly string[]; tools: readonly string[]; platforms: readonly string[]; architectures: readonly string[]; rowShape: string; forbiddenInstallers: readonly string[]; playwrightCache: string }>;
+  windowsLongPaths: Readonly<{ cases: readonly Readonly<{ output: string; expected: boolean | null }>[] }>;
   nodePin: Readonly<{ manifest: string; dockerfile: string; dockerfileArg: string }>;
   workspaceManifests: Readonly<{ rootManifest: string }>;
   freshClone: Readonly<{ bootstrapSources: string; bootstrapSourcesSchema: string; entries: readonly string[]; deferredImports: Readonly<{ source: string; imports: readonly Readonly<{ path: string; kind: string }>[] }> }>;

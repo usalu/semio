@@ -5,7 +5,7 @@ import ts from "typescript";
 import { describe, expect, it, vi } from "vitest";
 import * as React from "react";
 import { fireEvent, render } from "@testing-library/react";
-import { type IntroductionDefinition } from "@semio-tech/framework";
+import { type IntroductionDefinition } from "@semio-tech/framework-onboarding/declaration";
 import { initUiLocaleSync } from "@semio-tech/ui-react/i18n";
 import { registerIntroductionSurfaceResolver as publicRegisterIntroductionSurfaceResolver } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/👋️introduction.ts";
 import { Vector2 } from "three";

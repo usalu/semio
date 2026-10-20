@@ -1,0 +1,53 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️owned-locale-detector-retirement/🧲️contextmenu-and-more/🟦️.tsx",
+ "function": "registerContextmenuAndMoreTests",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of registerContextmenuAndMoreTests. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️canvas-pick-menu",
+   "doc": "/** 🔶️ The canvas pick menu phase of registerContextmenuAndMoreTests. */",
+   "phases": [
+    {
+     "name": "buildCanvasPickMenuState",
+     "emoji": "🔷",
+     "doc": "Builds CanvasPickMenu, ContextMenu, ContextMenuController, TextSelectionContextMenuHost of registerContextmenuAndMoreTests.",
+     "from": 5,
+     "to": 8
+    }
+   ]
+  },
+  {
+   "dir": "🔸️context-menu",
+   "doc": "/** 🔸️ The context menu phase of registerContextmenuAndMoreTests. */",
+   "phases": [
+    {
+     "name": "registerContextMenuTests",
+     "emoji": "🔹",
+     "doc": "Registers the context menu tests of registerContextmenuAndMoreTests.",
+     "from": 10,
+     "to": 10
+    }
+   ]
+  },
+  {
+   "dir": "🟠️canvas-pick-menu",
+   "doc": "/** 🟠️ The canvas pick menu phase of registerContextmenuAndMoreTests. */",
+   "phases": [
+    {
+     "name": "registerCanvasPickMenuTests",
+     "emoji": "🟡",
+     "doc": "Registers the canvas pick menu tests of registerContextmenuAndMoreTests.",
+     "from": 448,
+     "to": 448
+    }
+   ]
+  }
+ ]
+}

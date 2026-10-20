@@ -1,0 +1,62 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🏗️project-checks/🦀️.rs",
+ "function": "check_project",
+ "nth": 0,
+ "types": {
+  "part1": "&str",
+  "part2": "&str",
+  "annex": "AnnexChoice",
+  "report": "CheckReport",
+  "approach": "DesignApproach",
+  "gwl": "f64",
+  "gk": "u8",
+  "part1054": "&str",
+  "design_situations": "Vec<String>"
+ },
+ "modes": {
+  "report": "mut",
+  "annex": "val",
+  "approach": "val",
+  "gwl": "val",
+  "gk": "val",
+  "design_situations": "ref"
+ },
+ "keep": [
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14,
+  15,
+  16,
+  17,
+  18,
+  26,
+  30,
+  209,
+  545,
+  554,
+  556,
+  557,
+  563,
+  582
+ ],
+ "phases": [
+  {
+   "name": "check_soil_layers",
+   "doc": "🧱️ Checks the strength parameters and the id uniqueness of every soil layer.",
+   "from": 57,
+   "to": 57
+  },
+  {
+   "name": "check_footings",
+   "doc": "🪵️ Checks the bearing, sliding, eccentricity and settlement of every spread foundation.",
+   "from": 218,
+   "to": 218
+  }
+ ]
+}

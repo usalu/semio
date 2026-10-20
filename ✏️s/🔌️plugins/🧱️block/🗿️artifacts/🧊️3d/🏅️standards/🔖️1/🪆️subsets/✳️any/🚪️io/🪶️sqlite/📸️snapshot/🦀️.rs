@@ -10,6 +10,11 @@ use store::{
     os_store::serialization::ArtifactSqliteSnapshotHost,
 };
 use semio_framework_value::ValueError;
+use semio_s_artifact_stdio_semio_kit_snapshot::schema::snapshot::SemioKitSnapshot;
+use semio_s_plugin_block::BlockKindIdentity;
+use semio_s_plugin_block::BlockAttribute;
+use semio_s_plugin_block::BlockAuthor;
+use semio_s_plugin_block::BlockCompatibilityRule;
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)}
 
 fn catalog_dialect(kind:&str,standard:&str,subset:&str)->Result<(),ValueError>{if !SemioKitSnapshot::admits_dialect_parts(kind,standard,subset){return Err(invalid("Block3d catalog requires the typed Semio Kit dialect"))}Ok(())}
@@ -461,14 +466,14 @@ fn from_sqlite_database(d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -
 }
 
 #[path="🛂️admission/🦀️.rs"]
-pub(crate)mod admission;
+pub mod admission;
 
 #[path="📏️preflight/🦀️.rs"]mod preflight;
 
 //#region 🪢️Mounts
 #[path = "."]
 pub mod tests {
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     #[path = "📏️preflight/🫳️borrowed/🦀️.rs"]
     pub mod exact_borrowed_wire;
 }

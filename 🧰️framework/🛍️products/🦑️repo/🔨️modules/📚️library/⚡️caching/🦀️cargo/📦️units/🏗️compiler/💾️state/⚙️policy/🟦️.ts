@@ -1,6 +1,6 @@
 import{readNativeArtifactCachePolicyV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/💾️cache/⚙️policy/🟦️.ts";
-import rawPolicy from"../🔣️policy.json";
-import rawSchema from"../🧬️schema/🔣️.json";
+import rawPolicy from"../🔣️policy.json" with { type: "json" };
+import rawSchema from"../🧬️schema/🔣️.json" with { type: "json" };
 import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 const schema=structuredClone(rawSchema),captured=structuredClone(rawPolicy);
 if(validateJsonSchemaSubset(schema.definitions.Policy,captured,schema).length)throw Error("Closed authored compiler state policy required");

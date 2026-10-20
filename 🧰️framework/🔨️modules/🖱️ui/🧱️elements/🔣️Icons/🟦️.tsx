@@ -8,7 +8,7 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { domSizePx, activeUiTheme, subscribeActiveUiTheme, STYLING_COMPACT_ROOT_PX, uiSpacingLen, type UiTheme } from "@semio-tech/ui-styling";
-import { ephemeralMap } from "../../../🫧️transient/🟦️.ts";
+import { ephemeralMap } from "@semio-tech/framework-transient";
 import {
   ICONS,
   isIconName,

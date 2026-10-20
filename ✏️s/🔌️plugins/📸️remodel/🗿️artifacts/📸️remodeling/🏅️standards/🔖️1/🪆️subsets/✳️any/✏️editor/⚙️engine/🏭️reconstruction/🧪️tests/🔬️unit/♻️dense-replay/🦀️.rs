@@ -1,10 +1,16 @@
 //! ♻️ Dense replay diagnostic of the staged reconstruction engine: the dense dump codec and the replay of a dumped dense stage through fusion and meshing. See [`super`].
 
 use super::*;
+use semio_s_artifact_remodel_remodeling_camera::editor::remodeling::engine::camera as remodeling_camera;
+use semio_s_artifact_remodel_remodeling_dense::editor::remodeling::engine::dense as remodeling_dense;
+use semio_s_artifact_remodel_remodeling_sfm::editor::remodeling::engine::sfm as remodeling_sfm;
+use semio_s_artifact_remodel_remodeling_mesh::editor::remodeling::engine::mesh as remodeling_mesh;
 
 /// 💾️ Binary snapshot of a finished dense stage (reconstruction, dense camera indices, depth maps)
 /// so fusion/TSDF/meshing experiments replay in seconds instead of re-running SfM and PatchMatch.
 pub(super) mod dense_dump {
+    use semio_s_artifact_remodel_remodeling_dense::editor::remodeling::engine::dense as remodeling_dense;
+    use semio_s_artifact_remodel_remodeling_camera::editor::remodeling::engine::camera as remodeling_camera;
     use super::*;
 
     struct Writer(Vec<u8>);
@@ -232,7 +238,7 @@ fn diagnose_dense_replay() {
             let status = remodeling_mesh::mesh_pipeline_step(&mut pipeline, 1);
             if pipeline.mesh().triangles.len() != last_triangles {
                 last_triangles = pipeline.mesh().triangles.len();
-                let report = remodeling_mesh::validate_watertight(pipeline.mesh(), false);
+                let report = semio_s_artifact_remodel_remodeling_mesh_repair::editor::remodeling::engine::mesh::repair::validate_watertight(pipeline.mesh(), false);
                 let worst = pipeline.mesh().positions.iter().map(|p| surface(sim.act(*p))).fold(0.0f64, f64::max);
                 trail.push(format!("{}t/b{}/nm{}/nv{}/c{}/worst{:.2}", report.triangle_count, report.boundary_edge_count, report.non_manifold_edge_count, report.non_manifold_vertex_count, report.connected_components, worst));
             }

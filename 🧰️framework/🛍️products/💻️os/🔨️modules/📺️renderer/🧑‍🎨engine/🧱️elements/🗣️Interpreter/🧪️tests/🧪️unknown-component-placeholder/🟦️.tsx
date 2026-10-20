@@ -2,15 +2,15 @@ type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../📃️UiDocumentStore/🟦️.tsx"), "DEFAULT_UI_DOCUMENT_LIMITS" | "UiDocumentStore"> & Pick<typeof import("../../🧱️node-tree/🟦️.tsx"), "UiNodeView"> & Pick<typeof import("../../📐️layout-accessibility/🟦️.tsx"), "accessibilityAriaProps"> & Pick<typeof import("react"), "Profiler">, source: TestSource): Promise<void> {
   const { DEFAULT_UI_DOCUMENT_LIMITS, Profiler, UiDocumentStore, UiNodeView, accessibilityAriaProps } = dependencies;
-  type AccessibilitySpec = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").AccessibilitySpec;
-  type Component = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").Component;
-  type PatchRejection = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").PatchRejection;
-  type StyleSpec = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").StyleSpec;
-  type UiDocumentLimits = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").UiDocumentLimits;
+  type AccessibilitySpec = import("@semio-tech/framework-manifest/ui-contract-and-canvas-types").AccessibilitySpec;
+  type Component = import("@semio-tech/framework-manifest/ui-contract-and-canvas-types").Component;
+  type PatchRejection = import("@semio-tech/framework-manifest/ui-contract-and-canvas-types").PatchRejection;
+  type StyleSpec = import("@semio-tech/framework-manifest/ui-contract-and-canvas-types").StyleSpec;
+  type UiDocumentLimits = import("@semio-tech/framework-manifest/ui-contract-and-canvas-types").UiDocumentLimits;
   type UiInterpreterContext = import("../../🧷️interpreter-context/🟦️.ts").UiInterpreterContext;
-  type UiNodeRecord = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").UiNodeRecord;
-  type UiPatch = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").UiPatch;
-  type UiSnapshot = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").UiSnapshot;
+  type UiNodeRecord = import("@semio-tech/framework-manifest/ui-contract-and-canvas-types").UiNodeRecord;
+  type UiPatch = import("@semio-tech/framework-manifest/ui-contract-and-canvas-types").UiPatch;
+  type UiSnapshot = import("@semio-tech/framework-manifest/ui-contract-and-canvas-types").UiSnapshot;
 
   const { describe, expect, it, vi } = vitest;
 

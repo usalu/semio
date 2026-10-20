@@ -1,4 +1,5 @@
 import{createIssuedResourceControlV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
 import{test,expect}from"bun:test";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
@@ -12,7 +13,7 @@ test("SDK clone publication charges actual copied bytes, every namespace entry a
 
 async function withActualSdkCapacityStore<T>(body:(workspace:string,store:import("../../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts").RepositoryToolingStoreV1,source:string,inputs:ReadonlyMap<string,Uint8Array>)=>Promise<T>):Promise<T>{
  const fs=await import("node:fs/promises"),path=await import("node:path"),{receiveScriptProcessInvocation}=await import("../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),{readNativeCallerAuthorityV1}=await import("../../../../../../📦️packages/🟦️typescript/📦️artifacts/🟦️.ts"),{withRepositoryToolingStoreV1}=await import("../../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts"),{withManagedToolingProvisionV1}=await import("../../../🧹️retention/📥️physical/🟦️.ts"),retention=(await import("../../../🧹️retention/📥️physical/🧬️schema/🔣️.json")).default;
- return receiveScriptProcessInvocation(process.env,async original=>{const workspace=readNativeCallerAuthorityV1(original.capabilities).repositoryRoot;return withRepositoryToolingStoreV1(workspace,original,createIssuedResourceControlV1(original,"cache:entry",0),async store=>{
+ return withBuildTestInvocationV1(async original=>{const workspace=readNativeCallerAuthorityV1(original.capabilities).repositoryRoot;return withRepositoryToolingStoreV1(workspace,original,createIssuedResourceControlV1(original,"cache:entry",0),async store=>{
   const generation=await fs.realpath(path.join(workspace,".nx/installation")),material=JSON.parse(await fs.readFile(path.join(generation,".semio-sdk-material.json"),"utf8")),source=path.join(store.root,"sdk",material.snapshot),inputs=new Map<string,Uint8Array>();for(const name of["package.json","bun.lock"])inputs.set(name,await fs.readFile(path.join(source,name)));const manifest=JSON.parse(Buffer.from(inputs.get("package.json")!).toString("utf8"));for(const name of Object.values(manifest.patchedDependencies)as string[])inputs.set(name,await fs.readFile(path.join(source,name)));
   return body(workspace,store,source,inputs);
  });});

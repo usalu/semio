@@ -171,6 +171,7 @@ pub fn mcp_conversation(profile: &str, requests: &[String]) -> Result<Vec<String
 
 /// 🚀️ Runs one repo CLI invocation on the process streams and answers its exit code.
 pub fn run(argv: &[String]) -> i32 {
+    if argv.is_empty() || argv.first().is_some_and(|value| matches!(value.as_str(), "--help" | "-h")) { println!("Repository build commands: run, run-many, affected, exec, watch, dependencies, cargo, tools, reset, cache, preflight, show, graph\nHuman control plane: repo dashboard [arguments]\nMCP stdio: repo mcp (SEMIO_REPO_MCP_CLIENT selects the profile)\nOS MCP stdio: repo dev mcp stdio os [arguments]"); }
     use std::io::IsTerminal;
     let stdout = std::io::stdout();
     let stderr = std::io::stderr();

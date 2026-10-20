@@ -125,7 +125,6 @@ fn text_value(value: &str) -> UiAssemblyResult<UiValue> {
 /// 🩹️ One `setSelectionFlag` toggle row over the live selection.
 fn flag_row(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, flag_name: &str, pressed: bool) -> UiAssemblyResult<()> {
     let mut builder = UiMapBuilder::try_new().ok_or_else(|| error("puzzle2d inspector action map admission failed"))?;
-    // 🔑️ `UiMapBuilder::push` admits keys in strictly ascending order only.
     builder.push("flag".to_owned(), text_value(flag_name)?).map_err(|_| error("puzzle2d inspector action map entry admission failed"))?;
     builder.push("value".to_owned(), UiValue::Bool(!pressed)).map_err(|_| error("puzzle2d inspector action map entry admission failed"))?;
     let action = ActionFactory::new(PUZZLE2D_PLAY_CONTROLLER_ID).action("setSelectionFlag", Some(UiValue::Map(builder.finish())))?;
@@ -139,7 +138,6 @@ fn flag_row(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, flag_nam
 /// different collection from a node's, so this never reuses [`flag_row`]'s `setSelectionFlag`.
 fn region_flag_row(fields: &mut UiFixedList<BuiltNode>, row_id: &str, label: &str, region_id: &str, flag_name: &str, pressed: bool) -> UiAssemblyResult<()> {
     let mut builder = UiMapBuilder::try_new().ok_or_else(|| error("puzzle2d inspector region action map admission failed"))?;
-    // 🔑️ `UiMapBuilder::push` admits keys in strictly ascending order only.
     builder.push("flag".to_owned(), text_value(flag_name)?).map_err(|_| error("puzzle2d inspector region action map entry admission failed"))?;
     builder.push("id".to_owned(), text_value(region_id)?).map_err(|_| error("puzzle2d inspector region action map entry admission failed"))?;
     builder.push("value".to_owned(), UiValue::Bool(!pressed)).map_err(|_| error("puzzle2d inspector region action map entry admission failed"))?;
@@ -213,8 +211,6 @@ fn handle_fields(node: &Value, handle: &Value, labels: &Puzzle2dLabels) -> UiAss
     read_only(&mut fields, "handle.id", labels.id.as_str(), text(handle, "id"))?;
     read_only(&mut fields, "handle.node", labels.node.as_str(), text(node, "id"))?;
     read_only(&mut fields, "handle.kind", labels.handle_kind.as_str(), text(handle, "handleKind"))?;
-    // 📐️ `patchInspectorNodes` reaches a handle by its own id (see `patch_inspector_nodes`), so the
-    // two geometric handle fields are editable through the same one verb the node rows use.
     stepper_row(&mut fields, "handle.angle", labels.angle.as_str(), id, "angle", stepper_value(handle, "angle", 0.0), 0.1)?;
     stepper_row(&mut fields, "handle.radius", labels.radius.as_str(), id, "radius", stepper_value(handle, "radius", 0.0), 1.0)?;
     Ok(fields)
@@ -245,7 +241,6 @@ fn selected_section(snapshot: &Value, interaction: &Puzzle2dInteractionSnapshot,
     if let Some(edge) = board_snapshot_edges(snapshot).iter().find(|edge| edge.get("id").and_then(Value::as_str) == Some(first)) {
         return Some(section(labels.edge.as_str(), "edge", edge_fields(edge, labels)));
     }
-    // 🎯️ Slice 2F: a region is resolved after nodes and edges, the same order the board hit-tests in.
     if let Some(region) = snapshot_target_regions(snapshot).iter().find(|region| region.get("id").and_then(Value::as_str) == Some(first)) {
         return Some(section(labels.target_region.as_str(), "target-region", target_region_fields(region, labels)));
     }

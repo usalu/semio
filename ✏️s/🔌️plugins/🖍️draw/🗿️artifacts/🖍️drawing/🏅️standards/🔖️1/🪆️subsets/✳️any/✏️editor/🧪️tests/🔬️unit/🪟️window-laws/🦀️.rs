@@ -2,6 +2,8 @@
 
 use super::*;
 use semio_framework_test_fixtures::fixture_text;
+use semio_framework_plugin::ArtifactView;
+use semio_framework::MediaPayload;
 
 #[semio_framework_async_macros::async_test]
 async fn canvas_pointer_up_direct_pick_selects_inline() {

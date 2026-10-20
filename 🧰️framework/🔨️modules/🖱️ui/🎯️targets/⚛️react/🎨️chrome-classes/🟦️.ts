@@ -1,7 +1,7 @@
-import { borderNormalClass } from "../../../🔨️modules/📏️border-presentation/🟦️.ts";
-import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { glassClass, surfaceClass } from "../../../🔨️modules/🌈️surface-presentation/🟦️.ts";
-import type { FlowInline } from "../../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
+import { borderNormalClass } from "@semio-tech/ui/modules/border-presentation";
+import { cn } from "@semio-tech/ui/modules/class-name-composition";
+import { glassClass, surfaceClass } from "@semio-tech/ui/modules/surface-presentation";
+import type { FlowInline } from "@semio-tech/ui/modules/flow-direction-context";
 import type { IconName } from "@semio-tech/assets";
 
 /** 📏️ Emphasized shell stroke for active/selected chrome accents. */

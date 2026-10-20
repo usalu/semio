@@ -2498,6 +2498,7 @@
     "moduleReceiving": {
       "owner": "⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
       "router": "⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts",
+    "commandModule": "⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🔬️script-commands/🟦️.ts",
       "operation": "prepareJavascriptDependencies",
       "scriptHeader": "#!/usr/bin/env bun",
       "operationExports": [
@@ -4300,6 +4301,745 @@
           "expected": "/fixture/domain/🟦️.ts"
         }
       ]
+    }
+  },
+  "targetInputRoles": {
+    "cases": [
+      {
+        "selected": true,
+        "declared": false,
+        "observations": [],
+        "expected": "compile"
+      },
+      {
+        "selected": false,
+        "declared": false,
+        "observations": [],
+        "expected": "freshness"
+      },
+      {
+        "selected": true,
+        "declared": false,
+        "observations": [
+          "freshness"
+        ],
+        "expected": "freshness"
+      },
+      {
+        "selected": true,
+        "declared": false,
+        "observations": [
+          "freshness",
+          "compile"
+        ],
+        "expected": "compile"
+      },
+      {
+        "selected": true,
+        "declared": true,
+        "observations": [
+          "freshness"
+        ],
+        "expected": "compile"
+      }
+    ],
+    "invalid": [
+      null,
+      "data",
+      {},
+      [
+        "freshness"
+      ],
+      1
+    ],
+    "configurations": [
+      {
+        "value": {
+          "env": {
+            "FIXTURE": "value"
+          }
+        },
+        "accepted": true
+      },
+      {
+        "value": {
+          "metadata": {
+            "semio": {
+              "sourceInputObservation": "freshness"
+            }
+          }
+        },
+        "accepted": false
+      },
+      {
+        "value": {
+          "metadata": {
+            "semio": {
+              "sourceInputObservation": "compile"
+            }
+          }
+        },
+        "accepted": false
+      }
+    ],
+    "groups": [
+      {
+        "id": "fresh-broad-compile-narrow",
+        "files": [
+          "domain/source.ts",
+          "domain/unrelated.ts"
+        ],
+        "scans": [
+          {
+            "patterns": [
+              "domain/**/*.ts"
+            ],
+            "compile": false
+          },
+          {
+            "patterns": [
+              "domain/source.ts"
+            ],
+            "compile": true
+          }
+        ],
+        "matched": [
+          "domain/source.ts",
+          "domain/unrelated.ts"
+        ],
+        "compileMatched": [
+          "domain/source.ts"
+        ]
+      },
+      {
+        "id": "scoped-exclusions",
+        "files": [
+          "domain/narrow/source.ts",
+          "domain/unrelated.ts"
+        ],
+        "scans": [
+          {
+            "patterns": [
+              "domain/**/*.ts",
+              "!domain/narrow/source.ts"
+            ],
+            "compile": false
+          },
+          {
+            "patterns": [
+              "domain/narrow/**/*.ts"
+            ],
+            "compile": true
+          }
+        ],
+        "matched": [
+          "domain/narrow/source.ts",
+          "domain/unrelated.ts"
+        ],
+        "compileMatched": [
+          "domain/narrow/source.ts"
+        ]
+      },
+      {
+        "id": "requested-input-freshness",
+        "files": [
+          "domain/source.ts",
+          "domain/unrelated.ts"
+        ],
+        "scans": [
+          {
+            "patterns": [
+              "domain/source.ts"
+            ],
+            "compile": true
+          },
+          {
+            "patterns": [
+              "domain/**/*.ts"
+            ],
+            "compile": false
+          }
+        ],
+        "matched": [
+          "domain/source.ts",
+          "domain/unrelated.ts"
+        ],
+        "compileMatched": [
+          "domain/source.ts"
+        ]
+      }
+    ]
+  },
+  "semanticTypeImports": {
+    "importer": "🧰️framework/🔨️modules/🪢️wire-contracts/🟦️.ts",
+    "bindings": [
+      {
+        "symbol": "MutationMessage",
+        "source": "🧰️framework/🔨️modules/🎠️kernel/🔄️merge-outcome/🟦️.ts"
+      },
+      {
+        "symbol": "Severity",
+        "source": "🧰️framework/🔨️modules/🎠️kernel/🚨️fault/🟦️.ts"
+      }
+    ],
+    "neutral": {
+      "entry": "/fixture/consumer.ts",
+      "files": {
+        "/fixture/consumer.ts": "import type { RecordValue } from \"./domain/outcome.ts\"; import type { Level } from \"./domain/fault.ts\";",
+        "/fixture/domain/outcome.ts": "import type { Level } from \"./fault.ts\"; export type RecordValue={readonly level:Level};",
+        "/fixture/domain/fault.ts": "export type Level=\"info\"|\"error\";"
+      },
+      "closure": [
+        "/fixture/consumer.ts",
+        "/fixture/domain/fault.ts",
+        "/fixture/domain/outcome.ts"
+      ],
+      "bindings": [
+        {
+          "symbol": "RecordValue",
+          "source": "/fixture/domain/outcome.ts"
+        },
+        {
+          "symbol": "Level",
+          "source": "/fixture/domain/fault.ts"
+        }
+      ],
+      "missing": "/fixture/domain/outcome.ts",
+      "unknown": "UnknownValue"
+    }
+  },
+  "sourceDemand": {
+    "cases": [
+      {
+        "previous": null,
+        "requested": "runtime",
+        "expected": "runtime"
+      },
+      {
+        "previous": null,
+        "requested": "compile",
+        "expected": "compile"
+      },
+      {
+        "previous": "runtime",
+        "requested": "runtime",
+        "expected": "runtime"
+      },
+      {
+        "previous": "runtime",
+        "requested": "compile",
+        "expected": "compile"
+      },
+      {
+        "previous": "compile",
+        "requested": "runtime",
+        "expected": "compile"
+      },
+      {
+        "previous": "compile",
+        "requested": "compile",
+        "expected": "compile"
+      }
+    ],
+    "invalid": [
+      "freshness",
+      "all",
+      "",
+      null,
+      {},
+      []
+    ],
+    "imports": [
+      {
+        "id": "bare-erasure",
+        "path": "entry.ts",
+        "source": "import type { T } from \"@fixture/types\"; import { value, type V } from \"@fixture/runtime\"; export { value };",
+        "runtime": [
+          "@fixture/runtime"
+        ],
+        "compile": [
+          "@fixture/types",
+          "@fixture/runtime"
+        ]
+      },
+      {
+        "id": "type-reexport",
+        "path": "entry.ts",
+        "source": "export type { T } from \"./types.ts\"; export { value } from \"./value.ts\";",
+        "runtime": [
+          "./value.ts"
+        ],
+        "compile": [
+          "./types.ts",
+          "./value.ts"
+        ]
+      },
+      {
+        "id": "declaration",
+        "path": "entry.d.ts",
+        "source": "export type { T } from \"./types.ts\";",
+        "runtime": [],
+        "compile": [
+          "./types.ts"
+        ]
+      },
+      {
+        "id": "optional-tests",
+        "path": "entry.ts",
+        "source": "export { value } from \"@fixture/runtime\"; if(import.meta.vitest){const x=await import(\"./tests.ts\");}",
+        "runtime": [
+          "@fixture/runtime"
+        ],
+        "compile": [
+          "@fixture/runtime",
+          "./tests.ts"
+        ]
+      },
+      {
+        "id": "type-import-expression",
+        "path": "entry.ts",
+        "source": "export type T=import(\"@fixture/types\").T; export const value=1;",
+        "runtime": [],
+        "compile": [
+          "@fixture/types"
+        ]
+      }
+    ],
+    "traversal": {
+      "files": {
+        "command.ts": "import { value } from \"fixture-peer\";",
+        "compiler.ts": "import { value } from \"./peer.ts\";",
+        "peer.ts": "export type { Shape } from \"./generated.ts\"; export const value=1;",
+        "unrequested.ts": "import \"./absent.ts\";"
+      },
+      "cases": [
+        {
+          "id": "runtime-type-erasure",
+          "runtime": [
+            "command.ts"
+          ],
+          "compile": [],
+          "expected": [
+            [
+              "command.ts",
+              "runtime"
+            ],
+            [
+              "peer.ts",
+              "runtime"
+            ]
+          ],
+          "refusal": null
+        },
+        {
+          "id": "typed-self-output",
+          "runtime": [],
+          "compile": [
+            "peer.ts"
+          ],
+          "expected": [
+            [
+              "peer.ts",
+              "compile"
+            ]
+          ],
+          "refusal": "compile"
+        },
+        {
+          "id": "runtime-self-output",
+          "runtime": [
+            "command.ts"
+          ],
+          "compile": [],
+          "peer": "import \"./generated.ts\"; export const value=1;",
+          "expected": [
+            [
+              "command.ts",
+              "runtime"
+            ],
+            [
+              "peer.ts",
+              "runtime"
+            ]
+          ],
+          "refusal": "runtime"
+        },
+        {
+          "id": "runtime-to-compiler-upgrade",
+          "runtime": [
+            "command.ts"
+          ],
+          "compile": [
+            "compiler.ts"
+          ],
+          "expected": [
+            [
+              "command.ts",
+              "runtime"
+            ],
+            [
+              "peer.ts",
+              "runtime"
+            ],
+            [
+              "compiler.ts",
+              "compile"
+            ],
+            [
+              "peer.ts",
+              "compile"
+            ]
+          ],
+          "refusal": "compile"
+        }
+      ]
+    }
+  },
+  "dataProducerInputRoles": [
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📋️project.json",
+      "target": "build",
+      "expected": "freshness"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📋️project.json",
+      "target": "test-dispatch-contract",
+      "expected": "compile"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📋️project.json",
+      "target": "typegen",
+      "expected": "freshness"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📋️project.json",
+      "target": "test",
+      "expected": "compile"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📋️project.json",
+      "target": "generate",
+      "expected": "freshness"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📋️project.json",
+      "target": "test",
+      "expected": "compile"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📋️project.json",
+      "target": "generate",
+      "expected": "freshness"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📋️project.json",
+      "target": "test",
+      "expected": "compile"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/📋️project.json",
+      "target": "generate",
+      "expected": "freshness"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/📋️project.json",
+      "target": "test",
+      "expected": "compile"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json",
+      "target": "generate",
+      "expected": "freshness"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json",
+      "target": "test",
+      "expected": "compile"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📋️project.json",
+      "target": "generate",
+      "expected": "freshness"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📋️project.json",
+      "target": "test",
+      "expected": "compile"
+    }
+  ],
+  "semanticValueImports": {
+    "bindings": [
+      {
+        "importer": "🧰️framework/🔨️modules/🎁️packs/🟦️.ts",
+        "symbol": "viewContextWithIntegerCarriers",
+        "source": "🧰️framework/🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts",
+        "specifier": "@semio-tech/framework-manifest/view-state-and-public-invocation"
+      },
+      {
+        "importer": "🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts",
+        "symbol": "dialectCoordinate",
+        "source": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts",
+        "specifier": "../../🚪️io/🧬️schema/🟦️.ts"
+      },
+      {
+        "importer": "🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts",
+        "symbol": "parseDialectCoordinate",
+        "source": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts",
+        "specifier": "../../🚪️io/🧬️schema/🟦️.ts"
+      },
+      {
+        "importer": "🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts",
+        "symbol": "parseSurfaceAppId",
+        "source": "🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts",
+        "specifier": "@semio-tech/framework-manifest/schema"
+      },
+      {
+        "importer": "🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts",
+        "symbol": "resolveOpeningApp",
+        "source": "🧰️framework/🔨️modules/🎠️kernel/📖️opening-resolver/🟦️.ts",
+        "specifier": "../../🎠️kernel/📖️opening-resolver/🟦️.ts"
+      },
+      {
+        "importer": "🧰️framework/🔨️modules/🛰️backbone/🌐️envelope-io/🟦️.ts",
+        "symbol": "fetchWithTimeout",
+        "source": "🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts",
+        "specifier": "../../🚪️io/🌐️fetch-timeout/🟦️.ts"
+      },
+      {
+        "importer": "🧰️framework/🔨️modules/🛰️backbone/🌐️envelope-io/🟦️.ts",
+        "symbol": "retryWithJitteredBackoff",
+        "source": "🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts",
+        "specifier": "../../⏳️async/🔁️jittered-backoff/🟦️.ts"
+      },
+      {
+        "importer": "🧰️framework/🔨️modules/📞️directory-client/🟦️.ts",
+        "symbol": "fetchWithTimeout",
+        "source": "🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts",
+        "specifier": "../🚪️io/🌐️fetch-timeout/🟦️.ts"
+      },
+      {
+        "importer": "🧰️framework/🔨️modules/📞️directory-client/🟦️.ts",
+        "symbol": "retryWithJitteredBackoff",
+        "source": "🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts",
+        "specifier": "../⏳️async/🔁️jittered-backoff/🟦️.ts"
+      },
+      {
+        "importer": "🧰️framework/🔨️modules/🧾️app-channel/⚖️replication-commands/🟦️.ts",
+        "symbol": "conflictResolutionAsU8",
+        "source": "🧰️framework/🔨️modules/🎠️kernel/🔄️merge-outcome/🟦️.ts",
+        "specifier": "../../🎠️kernel/🔄️merge-outcome/🟦️.ts"
+      },
+      {
+        "importer": "🧰️framework/🔨️modules/🧾️app-channel/⚖️replication-commands/🟦️.ts",
+        "symbol": "mergePolicyAsU8",
+        "source": "🧰️framework/🔨️modules/🎠️kernel/🔄️merge-outcome/🟦️.ts",
+        "specifier": "../../🎠️kernel/🔄️merge-outcome/🟦️.ts"
+      }
+    ],
+    "neutral": {
+      "entry": "/fixture/consumer.ts",
+      "source": "/fixture/domain/view.ts",
+      "symbol": "viewContext",
+      "unknown": "missingView",
+      "old": "import { viewContext } from \"./facade.ts\"; export const value=viewContext({id:1});",
+      "files": {
+        "/fixture/consumer.ts": "import { viewContext } from \"./domain/view.ts\"; export const value=viewContext({id:1});",
+        "/fixture/domain/view.ts": "export function viewContext(value:unknown){return value;}",
+        "/fixture/facade.ts": "export { viewContext } from \"./domain/view.ts\"; export * from \"./generated.ts\";"
+      },
+      "closure": [
+        "/fixture/consumer.ts",
+        "/fixture/domain/view.ts"
+      ]
+    }
+  },
+  "sourceContractScope": {
+    "project": {
+      "name": "app",
+      "namedInputs": {
+        "default": [
+          "{projectRoot}/**/*"
+        ],
+        "nested": [
+          "browser"
+        ],
+        "recursive": [
+          "recursive"
+        ]
+      },
+      "metadata": {
+        "sourceInputs": {
+          "browser": "bad.json",
+          "codec": "good.json"
+        }
+      }
+    },
+    "cases": [
+      {
+        "id": "inactive-contract",
+        "targetInputs": null,
+        "requested": [],
+        "expected": []
+      },
+      {
+        "id": "selected-nested-contract",
+        "targetInputs": [
+          "nested"
+        ],
+        "requested": [],
+        "expected": [
+          "browser"
+        ],
+        "refusal": true
+      },
+      {
+        "id": "selected-good-contract",
+        "targetInputs": [
+          "codec"
+        ],
+        "requested": [],
+        "expected": [
+          "codec"
+        ]
+      },
+      {
+        "id": "input-only-good-contract",
+        "targetInputs": null,
+        "requested": [
+          "codec"
+        ],
+        "expected": [
+          "codec"
+        ]
+      },
+      {
+        "id": "peer-project-is-not-own-contract",
+        "targetInputs": [
+          {
+            "input": "browser",
+            "projects": [
+              "peer"
+            ]
+          }
+        ],
+        "requested": [],
+        "expected": []
+      },
+      {
+        "id": "self-project-contract",
+        "targetInputs": [
+          {
+            "input": "browser",
+            "projects": [
+              "app"
+            ]
+          }
+        ],
+        "requested": [],
+        "expected": [
+          "browser"
+        ],
+        "refusal": true
+      },
+      {
+        "id": "caret-is-peer-demand",
+        "targetInputs": [
+          "^browser"
+        ],
+        "requested": [],
+        "expected": []
+      },
+      {
+        "id": "dependency-object-is-peer-demand",
+        "targetInputs": [
+          {
+            "input": "browser",
+            "dependencies": true
+          }
+        ],
+        "requested": [],
+        "expected": []
+      },
+      {
+        "id": "fileset-is-not-group",
+        "targetInputs": [
+          {
+            "fileset": "{workspaceRoot}/entry.ts"
+          }
+        ],
+        "requested": [],
+        "expected": []
+      }
+    ],
+    "invalid": [
+      [
+        "recursive"
+      ],
+      [
+        "unknown"
+      ],
+      [
+        {
+          "input": "browser",
+          "projects": "app"
+        }
+      ],
+      [
+        {
+          "input": "browser",
+          "unexpected": true
+        }
+      ]
+    ],
+    "oracleEdges": [
+      [
+        "nested",
+        "browser"
+      ]
+    ],
+    "namespaceContract": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⚙️browser-build/🔣️.json",
+    "requiredNamespaces": [
+      "@semio-tech/framework",
+      "@semio-tech/framework-canvas-ts",
+      "@semio-tech/framework-os",
+      "@semio-tech/plugin-registry",
+      "@semio-tech/ui-locale-rs"
+    ],
+    "revisionFiles": [
+      "🏗️build/🕸️graph/🚪️admission/🟦️.ts",
+      "🏗️build/🧬️schema/🚪️admission.json",
+      "🏗️build/🔣️policy.json"
+    ],
+    "workspacePolicy": {
+      "workspace": "🏗️build/🔣️policy.json",
+      "caching": "⚡️caching/🔣️policy.json",
+      "groups": [
+        "default",
+        "sharedGlobals",
+        "schemaSources",
+        "production",
+        "cargo",
+        "go",
+        "uv",
+        "dotnet",
+        "nativeSources",
+        "nativeTestSources"
+      ],
+      "project": {
+        "name": "fixture-app",
+        "metadata": {
+          "sourceInputs": {
+            "selectedContract": "contracts/selected.json"
+          }
+        }
+      },
+      "override": {
+        "sharedGlobals": [
+          "selectedContract"
+        ]
+      },
+      "unknown": "unregisteredSourceGroup",
+      "contract": "selectedContract"
     }
   }
 }

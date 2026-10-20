@@ -241,14 +241,14 @@ impl AssemblyJob<'_> {
 /// 🧮️ The shared, once-per-model assembly: DOF map, RCM permutation, free/constrained partition
 /// (partitioned BEFORE assembly per the design — only free×free entries feed the LDLT factor), and
 /// both the free-free `LdltFactor` (for solves) and the full `Csr` (for reactions/residuals).
-struct AssembledSystem {
-    dof_map: DofMap,
-    inv_perm: AssemblyOrder<usize>,
-    ndof: usize,
-    free_new: AssemblyOrder<usize>,
-    compact_of_new: AssemblyOrder<Option<usize>>,
-    k_factor: LdltFactor,
-    k_full: Csr,
+pub struct AssembledSystem {
+    pub dof_map: DofMap,
+    pub inv_perm: AssemblyOrder<usize>,
+    pub ndof: usize,
+    pub free_new: AssemblyOrder<usize>,
+    pub compact_of_new: AssemblyOrder<Option<usize>>,
+    pub k_factor: LdltFactor,
+    pub k_full: Csr,
 }
 
 impl AssembledSystem {

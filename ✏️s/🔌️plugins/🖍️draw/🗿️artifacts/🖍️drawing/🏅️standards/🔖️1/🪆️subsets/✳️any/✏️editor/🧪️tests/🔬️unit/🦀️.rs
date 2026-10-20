@@ -81,7 +81,7 @@ use semio_s_artifact_draw_drawing_editor_commands::nudge_selection::{nudge_selec
 mod clipboard_runtime;
 use semio_s_artifact_draw_drawing_model::layer_id;
 use semio_s_artifact_draw_drawing_model::default_drawing_document;
-use semio_s_artifact_draw_drawing_io::text::snapshot::snapshot_codec::semio_drawing_example_json;
+use semio_s_artifact_draw_drawing_examples::demo::semio_drawing_example_json;
 use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{artifact_app_laws as artifact_laws, PluginApp, ViewModel, SET_ACTIVE_UTILITY_ACTION_ID};

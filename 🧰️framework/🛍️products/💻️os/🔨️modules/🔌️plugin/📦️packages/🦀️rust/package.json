@@ -78,7 +78,19 @@
     "./testing/fixtures/natural-file-lifecycle.json": "./🧪️testing/🧫️fixtures/📄️natural-file-lifecycle/🔣️json/🟦️.ts",
     "./companions/test-support/plugin-family": "./🧷️companions/🧯️test-support/🔌️plugin-family/🟦️.ts",
     "./runtime-fault-vectors.json": "./🔣️json/runtime-fault-vectors/🟦️.ts",
-    "./window/transient/testing/retained-window-input": "./🪟️window/🫧️transient/🧪️testing/🪟️retained-window-input/🟦️.ts"
+    "./window/transient/testing/retained-window-input": "./🪟️window/🫧️transient/🧪️testing/🪟️retained-window-input/🟦️.ts",
+    "./browser-bundle/patch-handoff/schema.json": "./🌐️browser-bundle/🩹️patch-handoff/🧬️schema/🔣️json/🟦️.ts",
+    "./declaration/view/fixtures/entity-id.json": "./📜️declaration/👁️view/🧫️fixtures/🪪️entity-id/🔣️json/🟦️.ts",
+    "./declaration/view/fixtures/render-revision.json": "./📜️declaration/👁️view/🧫️fixtures/🪪️render-revision/🔣️json/🟦️.ts",
+    "./declaration/view/schema/entity-id": "./📜️declaration/👁️view/🧬️schema/🪪️entity-id/🟦️.ts",
+    "./declaration/view/schema/render-revision": "./📜️declaration/👁️view/🧬️schema/🪪️render-revision/🟦️.ts",
+    "./declaration/view/schema/render-revision.json": "./📜️declaration/👁️view/🧬️schema/🪪️render-revision/🔣️json/🟦️.ts",
+    "./presence/camera/testing": "./👥️presence/📷️camera/🧪️testing/🟦️.ts",
+    "./testing/fixtures/history-panel-command-window.json": "./🧪️testing/🧫️fixtures/history-panel-command-window/🔣️json/🟦️.ts",
+    "./testing/fixtures/tool-run/panel-running.json": "./🧪️testing/🧫️fixtures/⏯️tool-run/🔣️json/panel-running/🟦️.ts",
+    "./testing/tool-job-coverage": "./🧪️testing/🔬️tool-job-coverage/🟦️.ts",
+    "./testing/tool-job-latest-wins": "./🧪️testing/🔬️tool-job-latest-wins/🟦️.ts",
+    "./testing/worker-vm-source": "./🧪️testing/✂️worker-vm-source/🟦️.ts"
   },
   "scripts": {
     "test-command-ingress-consumer": "bun --cwd \"../../../../../../..\" repo run @semio-tech/framework-plugin:test-command-ingress-consumer",
@@ -88,11 +100,17 @@
     "test-original-reactor-receiving-source": "bun --cwd \"../../../../../../..\" repo run @semio-tech/framework-plugin:test-original-reactor-receiving-source"
   },
   "devDependencies": {
+    "@bytecodealliance/jco-transpile": "0.20.0",
+    "@semio-tech/framework-manifest": "workspace:*",
+    "@semio-tech/framework-trace": "workspace:*",
     "@semio-tech/process": "workspace:*",
     "@semio-tech/schema-ts": "workspace:*",
+    "@semio-tech/ui": "workspace:*",
+    "@semio-tech/ui-contract": "workspace:*",
     "ajv": "8.20.0"
   },
   "dependencies": {
+    "@semio-tech/framework-filesystem": "workspace:*",
     "@semio-tech/schema-validator-ts": "workspace:*",
     "@semio-tech/value-ts": "workspace:*"
   }

@@ -1,0 +1,2 @@
+repo:test-pruning	rc=1	pass=3	fail=1
+repo:test-caller-environment	rc=1	pass=1	fail=8

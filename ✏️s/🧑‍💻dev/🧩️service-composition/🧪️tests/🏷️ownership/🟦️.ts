@@ -95,8 +95,9 @@ export async function sDevCompositionSourceOwnershipV1(repoRoot:string):Promise<
   assert(worker.includes('import.meta.hot.dispose(retire)'));
   const receivingDirectory = join(repoRoot, `${specific}/🧩️service-composition/🧪️tests`);
   let receivingFixtures = 0;
-  for (const entry of readdirSync(receivingDirectory, { withFileTypes: true }).filter(row => row.isDirectory())) {
-    const receivingTests = ts.createSourceFile(`gis-worker-tests-${entry.name}.ts`, readFileSync(join(receivingDirectory, entry.name, "🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+  const receivingSources = readdirSync(receivingDirectory, { recursive: true, withFileTypes: true }).filter(row => row.isFile() && row.name === "🟦️.ts");
+  for (const entry of receivingSources) {
+    const receivingTests = ts.createSourceFile(`gis-worker-tests-${entry.parentPath}.ts`, readFileSync(join(entry.parentPath, entry.name), "utf8"), ts.ScriptTarget.Latest, true);
     const declarations: Array<{ name: string; value: string; position: number }> = [];
     const visit = (node: ts.Node): void => {
       if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer && ts.isStringLiteral(node.initializer)) declarations.push({ name: node.name.text, value: node.initializer.text, position: node.pos });

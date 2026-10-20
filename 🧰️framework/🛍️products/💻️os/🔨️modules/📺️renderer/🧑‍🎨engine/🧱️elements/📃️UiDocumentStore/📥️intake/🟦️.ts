@@ -1,8 +1,8 @@
 //#region 🧬️NativeIntakeContract
 import { OwnedNativeUiPatchAuthority } from "@semio-tech/framework/actor/shard-client/ui-patch";
-import type { OwnedUiInstance, OwnedUiInstanceSurface, OwnedUiInstancePatch, OwnedUiSurfaceLookup, OwnedUiPatchAcknowledgement } from "@semio-tech/framework/modules/ui/contract/retained/instance";
+import type { OwnedUiInstance, OwnedUiInstanceSurface, OwnedUiInstancePatch, OwnedUiSurfaceLookup, OwnedUiPatchAcknowledgement } from "@semio-tech/ui-contract/retained/instance";
 import type { NumericIndexGrant } from "@semio-tech/framework/value/ordered/numeric";
-import type { RetainedUiWireStep } from "@semio-tech/framework/modules/ui/contract/retained/wire";
+import type { RetainedUiWireStep } from "@semio-tech/ui-contract/retained/wire";
 
 type Phase = "lookup" | "lookup-read" | "lookup-take" | "lookup-close" | "patch" | "offer" | "input" | "input-release" | "seal" | "publication" | "ack" | "patch-close" | "ready";
 const admitted = (grant: NumericIndexGrant): boolean => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;

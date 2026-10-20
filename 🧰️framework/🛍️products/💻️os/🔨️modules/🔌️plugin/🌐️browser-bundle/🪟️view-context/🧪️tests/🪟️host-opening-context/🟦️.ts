@@ -4,7 +4,7 @@ import Ajv from "ajv";
 import { parseBrowserActorViewStateRequest } from "@semio-tech/framework/browser-bundle/view-context";
 import { encodeBackboneWorkerRequest, decodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";
 import schema from "../../🧬️schema/🔣️.json";
-import { manifestViewContextSchema as viewSchema } from "@semio-tech/framework/manifest/testing/fixtures";
+import { manifestViewContextSchema as viewSchema } from "@semio-tech/framework-manifest/testing/fixtures";
 import fixture from "../🧫️fixtures/🪟️host-opening-context/🔣️.json";
 
 export function testBrowserActorHostContext(): void {

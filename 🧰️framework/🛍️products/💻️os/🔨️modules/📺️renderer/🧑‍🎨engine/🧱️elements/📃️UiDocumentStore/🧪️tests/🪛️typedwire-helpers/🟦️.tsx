@@ -1,17 +1,17 @@
 /** 🪛 Shared schema readers, fixtures and cursor drivers of the UiDocumentStore typed-wire suites. */
 import { fixtureOriginalWorkStock } from "@semio-tech/framework/actor/retained-turn/bootstrap/testing/fixtures";
-import { loadRetainedResidentMetadataFixture, loadOperationsWirePagesFixture, loadRetainedResidentReaderFixture, loadResidentPageBindingFixture, loadRetainedResidentBuilderFixture, loadResidentEvidenceCancellationFixture, loadRetainedResidentPayloadFixture, loadRetainedResidentSlotFixture, loadRetainedResidentEvidenceFixture, loadRetainedResidentPageFixture } from "@semio-tech/framework/ui/testing/fixtures";
+import { loadRetainedResidentMetadataFixture, loadOperationsWirePagesFixture, loadRetainedResidentReaderFixture, loadResidentPageBindingFixture, loadRetainedResidentBuilderFixture, loadResidentEvidenceCancellationFixture, loadRetainedResidentPayloadFixture, loadRetainedResidentSlotFixture, loadRetainedResidentEvidenceFixture, loadRetainedResidentPageFixture } from "@semio-tech/ui/testing/fixtures";
 import { loadActivationReturnAdmissionFixture, loadInstanceOutputAdmissionFixture, loadActorCompositionFixture } from "@semio-tech/framework/actor/testing/fixtures";
 
 export type TypedWireVitest = NonNullable<ImportMeta["vitest"]>;
 export type TypedWireDependencies = Pick<typeof import("../../🟦️.tsx"), "DEFAULT_UI_DOCUMENT_LIMITS" | "UiDocumentStore" | "applyUiPatch" | "emitIntent" | "uiDocumentStateFromSnapshot" | "validateUiDocumentCore"> & Pick<typeof import("@semio-tech/framework"), "RetainedUiPatchCursor" | "RetainedUiSnapshotCursor" | "RetainedUiSurfaceOwner">;
 export type TypedWireSource = TestSource;
 
-type AccessibilitySpec = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").AccessibilitySpec;
+type AccessibilitySpec = import("@semio-tech/framework-manifest/ui-contract-and-canvas-types").AccessibilitySpec;
 
-type StyleSpec = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").StyleSpec;
+type StyleSpec = import("@semio-tech/framework-manifest/ui-contract-and-canvas-types").StyleSpec;
 
-export type UiNodeRecord = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").UiNodeRecord;
+export type UiNodeRecord = import("@semio-tech/framework-manifest/ui-contract-and-canvas-types").UiNodeRecord;
 
 export const exactSchemaDefinitionV1 = (source: unknown, name: string): object => {
   if (source === null || typeof source !== "object") throw new Error(`Missing schema module for ${name}`);
@@ -27,8 +27,8 @@ export const grant = { maxItems: 1, maxBytes: 4096 };
 
 //#region 🪪️NativeInstanceFixture
 export async function nativeInstanceFixture(sharedLedger?: import("@semio-tech/framework/value/resident").OwnedResidentLedger) {
-  const { ShardClient } = await import("@semio-tech/framework/actor/shard-client"); const { MAINTENANCE_LANE_DEFAULT_BUDGET } = await import("@semio-tech/framework/actor/shard-client/wire"); const { encodeActorInstanceLifecycle } = await import("../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
-  const { encodeActorUiPatchReceipt } = await import("../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts"); let nativePatchSequence = 50n;
+  const { ShardClient } = await import("@semio-tech/framework/actor/shard-client"); const { MAINTENANCE_LANE_DEFAULT_BUDGET } = await import("@semio-tech/framework/actor/shard-client/wire"); const { encodeActorInstanceLifecycle } = await import("@semio-tech/framework/actor/lifetime");
+  const { encodeActorUiPatchReceipt } = await import("@semio-tech/framework/actor/lifetime/patch"); let nativePatchSequence = 50n;
   class Worker {
     onmessage: ((event: { readonly data: unknown }) => void) | null = null;
     onerror: ((event: unknown) => void) | null = null;
@@ -110,7 +110,7 @@ export async function createTypedWireSupport(vitest: TypedWireVitest, dependenci
 
 
   async function nativePagedFieldFixture(fixtureIndex = 2, sharedLedger?: import("@semio-tech/framework/value/resident").OwnedResidentLedger) {
-    const native = await nativeInstanceFixture(sharedLedger); const { OwnedUiInstance } = await import("@semio-tech/framework/modules/ui/contract/retained/instance"); const { OwnedKernelReturnContent } = await import("@semio-tech/framework/kernel/return/content/input"); const { encodeActorReturnResult } = await import("@semio-tech/framework/actor/return"); const { createActorBytePage } = await import("../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts"); const { encodeActorUiPatchReceipt } = await import("../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts"); const { Buffer } = await import("node:buffer");
+    const native = await nativeInstanceFixture(sharedLedger); const { OwnedUiInstance } = await import("@semio-tech/ui-contract/retained/instance"); const { OwnedKernelReturnContent } = await import("@semio-tech/framework/kernel/return/content/input"); const { encodeActorReturnResult } = await import("@semio-tech/framework/actor/return"); const { createActorBytePage } = await import("@semio-tech/framework/actor/page"); const { encodeActorUiPatchReceipt } = await import("@semio-tech/framework/actor/lifetime/patch"); const { Buffer } = await import("node:buffer");
     const fixture = await loadOperationsWirePagesFixture(); const row = fixture.valid[fixtureIndex]!; const payload = Buffer.from(Array.from({ length: Number(row.declaredBytes) }, (_, i) => (73 * i + 19) & 255));
     const name = "@webassemblyjs/leb128/lib/leb.js"; const imported: unknown = await import(name); if (!imported || typeof imported !== "object") throw new Error("Missing LEB128 oracle"); const lib: unknown = "default" in imported ? imported.default : imported; if (!lib || typeof lib !== "object" || !("encodeUIntBuffer" in lib) || typeof lib.encodeUIntBuffer !== "function") throw new Error("Invalid LEB128 oracle");
     const encode = lib.encodeUIntBuffer; const uint = (value: number) => { const input = Buffer.alloc(8); input.writeBigUInt64LE(BigInt(value)); const output: unknown = encode(input); if (!(output instanceof Uint8Array)) throw new Error("Invalid LEB128 output"); return Buffer.from(output); }; const frame = (tag: number, body: Uint8Array) => Buffer.concat([Buffer.of(tag), uint(body.length), body]);
@@ -127,21 +127,21 @@ export async function createTypedWireSupport(vitest: TypedWireVitest, dependenci
   }
 
   async function residentPayloadFixture(fixtureIndex = 2, sharedLedger?: import("@semio-tech/framework/value/resident").OwnedResidentLedger) {
-    const { OwnedUiResidentPool } = await import("@semio-tech/framework/ui/contract/retained/resident"); const fixture = await loadRetainedResidentPayloadFixture(); const scopes = await loadRetainedResidentSlotFixture(); const composition = await loadActorCompositionFixture();
+    const { OwnedUiResidentPool } = await import("@semio-tech/ui-contract/retained/resident"); const fixture = await loadRetainedResidentPayloadFixture(); const scopes = await loadRetainedResidentSlotFixture(); const composition = await loadActorCompositionFixture();
     const native = await nativePagedFieldFixture(fixtureIndex, sharedLedger); for (const bytes of composition.poolPreparation.prepareBytes) expect(native.client.prepareUiResidentPool(native.residentLedger, { maxItems: 1, maxBytes: bytes }).kind).toBe("pending"); const pool = OwnedUiResidentPool.begin(native.client, native.residentLedger, grant).pool; if (!pool) throw new Error("Missing original pool"); const baseline = pool.usage;
-    let scope: import("@semio-tech/framework/ui/contract/retained/resident").OwnedUiResidentInstance | null = null; for (const bytes of scopes.firstChild.prepareBytes) scope = pool.bindInstance(native.owner, native.activation, native.lifetime, { maxItems: 1, maxBytes: bytes }).scope; if (!scope) throw new Error("Missing original scope");
+    let scope: import("@semio-tech/ui-contract/retained/resident").OwnedUiResidentInstance | null = null; for (const bytes of scopes.firstChild.prepareBytes) scope = pool.bindInstance(native.owner, native.activation, native.lifetime, { maxItems: 1, maxBytes: bytes }).scope; if (!scope) throw new Error("Missing original scope");
     return { native, pool, scope, fixture, baseline };
   }
 
   async function residentBuilderFixture(fixtureIndex = 2, sharedLedger?: import("@semio-tech/framework/value/resident").OwnedResidentLedger) {
-    const base = await residentPayloadFixture(fixtureIndex, sharedLedger); const { OwnedUiOperationPayloadBuilder } = await import("@semio-tech/framework/ui/contract/retained/operations/wire/pages"); const builderFixture = await loadRetainedResidentBuilderFixture(); const evidenceFixture = await loadRetainedResidentEvidenceFixture();
-    let payload: import("@semio-tech/framework/ui/contract/retained/resident").OwnedUiResidentPayload | null = null; for (const bytes of base.fixture.admissionBytes) payload = base.scope.beginPayload(base.native.field, { maxItems: 1, maxBytes: bytes }).payload; if (!payload) throw new Error("Missing original payload"); let builder: import("@semio-tech/framework/ui/contract/retained/operations/wire/pages").OwnedUiOperationPayloadBuilder | null = null; for (const bytes of builderFixture.grants) builder = OwnedUiOperationPayloadBuilder.begin(base.native.owner, base.native.activation, base.native.lifetime, base.native.field, payload, { maxItems: 1, maxBytes: bytes }).builder; if (!builder) throw new Error("Missing original builder"); return { ...base, payload, builder, evidenceFixture };
+    const base = await residentPayloadFixture(fixtureIndex, sharedLedger); const { OwnedUiOperationPayloadBuilder } = await import("@semio-tech/ui-contract/retained/operations/wire/pages"); const builderFixture = await loadRetainedResidentBuilderFixture(); const evidenceFixture = await loadRetainedResidentEvidenceFixture();
+    let payload: import("@semio-tech/ui-contract/retained/resident").OwnedUiResidentPayload | null = null; for (const bytes of base.fixture.admissionBytes) payload = base.scope.beginPayload(base.native.field, { maxItems: 1, maxBytes: bytes }).payload; if (!payload) throw new Error("Missing original payload"); let builder: import("@semio-tech/ui-contract/retained/operations/wire/pages").OwnedUiOperationPayloadBuilder | null = null; for (const bytes of builderFixture.grants) builder = OwnedUiOperationPayloadBuilder.begin(base.native.owner, base.native.activation, base.native.lifetime, base.native.field, payload, { maxItems: 1, maxBytes: bytes }).builder; if (!builder) throw new Error("Missing original builder"); return { ...base, payload, builder, evidenceFixture };
   }
 
   async function residentEvidenceFixture() { const base = await residentBuilderFixture(); base.builder.beginClose(); return base; }
 
   async function residentReaderFixture(fixtureIndex = 2) {
-    const base = await residentBuilderFixture(fixtureIndex); const readerFixture = await loadRetainedResidentReaderFixture(); let reader: import("@semio-tech/framework/ui/contract/retained/resident").OwnedUiResidentPayloadReader | null = null;
+    const base = await residentBuilderFixture(fixtureIndex); const readerFixture = await loadRetainedResidentReaderFixture(); let reader: import("@semio-tech/ui-contract/retained/resident").OwnedUiResidentPayloadReader | null = null;
     for (const bytes of readerFixture.admissionGrants) reader = base.payload.beginReader(base.builder, { maxItems: 1, maxBytes: bytes }).reader; if (!reader) throw new Error("Missing original reader"); return { ...base, reader, readerFixture };
   }
 

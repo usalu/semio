@@ -1,4 +1,5 @@
 use semio_framework_test_fixtures::fixture_text;
+use protocol::Mutation;
 use semio_s_artifact_stdio_semio_value_mutations::schema::mutations::*;
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA;
 #[cfg(test)] use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;

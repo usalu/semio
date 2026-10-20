@@ -1,7 +1,8 @@
 //! 🚪️ Apply boundary of the note mutation vocabulary: the only place in this facet that turns a mutation's diff into a snapshot, through the central applier.
 
 use super::NoteMutation;
-use crate::{NoteDiff, NoteSnapshot};
+use crate::{NoteSnapshot};
+use semio_s_artifact_note_note_diff::standards::v1::subsets::any::schema::diff::NoteDiff;
 
 /// ▶️ Applies `mutation` via its diff — the sole apply path (no hand-written match dispatch).
 pub fn apply_note_mutation(snapshot: &NoteSnapshot, mutation: &NoteMutation) -> protocol::MutationApplyResult<NoteSnapshot> {

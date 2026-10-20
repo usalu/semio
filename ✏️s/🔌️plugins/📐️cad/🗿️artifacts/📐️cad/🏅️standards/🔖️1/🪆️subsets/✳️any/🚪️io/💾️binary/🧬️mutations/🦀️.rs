@@ -46,7 +46,8 @@ pub fn decode_op(bytes: &[u8]) -> Result<CadMutation, protocol::ProtocolError> {
 mod native_codec {
 #[cfg(test)] use super::*;
 pub use crate::CadMutation;
-#[cfg(test)] pub use crate::{CadNodePatch, CadReferencePatch};
+#[cfg(test)] pub use semio_s_artifact_cad_cad_model_diff::CadNodePatch;
+pub use semio_s_artifact_cad_cad_model_diff::CadReferencePatch;
 
 impl protocol::OpBinary for CadMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

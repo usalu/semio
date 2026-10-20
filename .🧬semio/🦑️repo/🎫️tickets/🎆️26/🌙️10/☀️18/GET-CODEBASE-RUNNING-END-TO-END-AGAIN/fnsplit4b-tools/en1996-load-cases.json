@@ -1,0 +1,102 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚖️masonry/🧱️evaluate-wall/🏋️load-case-checks/🦀️.rs",
+ "function": "check_load_cases",
+ "nth": 0,
+ "types": {
+  "annex": "AnnexChoice",
+  "masonry_class": "MasonryClass",
+  "default_situation": "DesignSituation",
+  "wall": "&MasonryWall",
+  "out": "&mut Vec<CheckResult>",
+  "path_t": "&str",
+  "path_fb": "&str",
+  "path_mu": "&str",
+  "path_bearing": "&str",
+  "path_as_h": "&str",
+  "path_density": "&str",
+  "path_phi_inf": "&str",
+  "lambda": "f64",
+  "a": "f64",
+  "f_k": "f64",
+  "t": "f64",
+  "lc": "&WallLoadCase",
+  "effects": "Vec<DesignEffects>",
+  "sit": "DesignSituation",
+  "params": "AnnexParams",
+  "gamma_m": "f64",
+  "f_d": "f64"
+ },
+ "modes": {
+  "annex": "val",
+  "masonry_class": "val",
+  "default_situation": "val",
+  "lambda": "val",
+  "a": "val",
+  "f_k": "val",
+  "t": "val",
+  "sit": "val",
+  "params": "val",
+  "gamma_m": "val",
+  "f_d": "val",
+  "effects": "ref"
+ },
+ "keep": [
+  25,
+  26,
+  27,
+  28,
+  29
+ ],
+ "phases": [
+  {
+   "name": "check_wall_compression",
+   "doc": "🧱️ Checks the compression, the eccentricities and the slenderness of the wall under one load case.",
+   "from": 31,
+   "to": 31
+  },
+  {
+   "name": "check_wall_shear",
+   "doc": "🪵️ Checks the shear resistance of the wall under one load case.",
+   "from": 183,
+   "to": 183
+  },
+  {
+   "name": "check_wall_flexure",
+   "doc": "🔩️ Checks the lateral flexure of the wall under one load case.",
+   "from": 227,
+   "to": 227
+  },
+  {
+   "name": "check_wall_concentrated_load",
+   "doc": "⚙️ Checks the concentrated loads on the wall under one load case.",
+   "from": 294,
+   "to": 294
+  }
+ ],
+ "block_line": 24,
+ "context": {
+  "annex": "AnnexChoice",
+  "masonry_class": "MasonryClass",
+  "default_situation": "DesignSituation",
+  "wall": "&MasonryWall",
+  "out": "&mut Vec<CheckResult>",
+  "path_t": "&str",
+  "path_fb": "&str",
+  "path_mu": "&str",
+  "path_bearing": "&str",
+  "path_as_h": "&str",
+  "path_density": "&str",
+  "path_phi_inf": "&str",
+  "lambda": "f64",
+  "a": "f64",
+  "f_k": "f64",
+  "t": "f64",
+  "lc": "&WallLoadCase",
+  "effects": "Vec<DesignEffects>",
+  "sit": "DesignSituation",
+  "params": "AnnexParams",
+  "gamma_m": "f64",
+  "f_d": "f64"
+ },
+ "allow_reason": "the extracted check keeps the wall values of its original function as explicit parameters"
+}

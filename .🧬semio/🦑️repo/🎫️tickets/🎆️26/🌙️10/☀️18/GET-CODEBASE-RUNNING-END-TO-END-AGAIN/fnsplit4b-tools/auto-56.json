@@ -1,0 +1,146 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔮️oracles/🏗️structure-kinds/🦀️.rs",
+ "function": "apply_structure",
+ "nth": 0,
+ "match_line": 499,
+ "types": {},
+ "ret": "Result<(), String>",
+ "inline": true,
+ "arms": [
+  {
+   "line": 500,
+   "name": "structure_bind_default_scene",
+   "doc": "🧱️ Runs the `bind default scene` kind of `apply_structure`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 516,
+   "name": "structure_bind_node_camera_and_more",
+   "doc": "🪵️ Runs the `bind node camera` or `bind node mesh` kind of `apply_structure`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 563,
+   "name": "structure_change_node_name_and_more",
+   "doc": "🔩️ Runs the `change node name` or `change scene name` kind of `apply_structure`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 576,
+   "name": "structure_change_node_extra_data_and_more",
+   "doc": "⚙️ Runs the `change node extra data` or `change node extension data` kind of `apply_structure`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 596,
+   "name": "structure_change_node_morph_weights",
+   "doc": "🧲️ Runs the `change node morph weights` kind of `apply_structure`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 644,
+   "name": "structure_create_buffer_view",
+   "doc": "🪛️ Runs the `create buffer view` kind of `apply_structure`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 668,
+   "name": "structure_create_primitive",
+   "doc": "🔨️ Runs the `create primitive` kind of `apply_structure`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 679,
+   "name": "structure_delete_primitive",
+   "doc": "🪚️ Runs the `delete primitive` kind of `apply_structure`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 726,
+   "name": "structure_bind_primitive_attribute",
+   "doc": "🧰️ Runs the `bind primitive attribute` kind of `apply_structure`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 739,
+   "name": "structure_unbind_primitive_attribute_and_more",
+   "doc": "🧪️ Runs the `unbind primitive attribute` or `move primitive attribute` kind of `apply_structure`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 749,
+   "name": "structure_create_morph_target",
+   "doc": "🧫️ Runs the `create morph target` kind of `apply_structure`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 762,
+   "name": "structure_delete_morph_target",
+   "doc": "🧬️ Runs the `delete morph target` kind of `apply_structure`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  }
+ ],
+ "call_suffix": "?",
+ "fall_tail": "Ok(())",
+ "ensure_semicolon": true
+}

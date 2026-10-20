@@ -267,11 +267,8 @@ function ownerOracle(owner: PublicationOwner, source: string): boolean {
 
 /** 🏃️ Runs the `TestScript` command under the caller's roots and invocation. */
 export async function runTestScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {
-  const rendererContract = segments[0] === "renderer-contract";
-  const { rest } = resolveTestLevel(rendererContract ? segments.slice(1) : segments);
-  if (!rendererContract) await runVitest(context.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
-  if (rest[0] === "transform-gesture") return;
-  await runVitest(context.root, rendererContract ? rest : [], "../../🧪️tests/🎚️renderer-contract/🟦️.ts");
+  const { rest } = resolveTestLevel(segments);
+  await runVitest(context.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
 }
 
 /** 🏃️ Runs the `PublicationAuthorityAuditScript` command under the caller's roots and invocation. */

@@ -1,7 +1,7 @@
 // #region 🔌️Adapters
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineOwnedTestConfig } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
+import { defineOwnedTestConfig } from "@semio-tech/ui-react/build-tooling";
 
 const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 // #endregion 🔌️Adapters

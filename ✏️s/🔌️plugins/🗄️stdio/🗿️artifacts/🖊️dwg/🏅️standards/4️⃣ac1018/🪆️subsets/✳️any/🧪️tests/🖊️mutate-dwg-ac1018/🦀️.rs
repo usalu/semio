@@ -2,7 +2,7 @@
 //!
 //! ⚠️ This case has a problem its sibling does not, and the whole file is written around stating it
 //! rather than papering over it: **no AC1018-stamped file exists in this repository.** Both `.dwg`
-//! files committed outside `./compose` — the 148,638-byte `📚️examples/🏛️architectural/🖼️assets/
+//! files committed outside the retired compose tree — the 148,638-byte `📚️examples/🏛️architectural/🖼️assets/
 //! 🏛️architectural.dwg` and the 22-byte `📚️examples/🎬️demo/🖼️assets/🖊️example.dwg` — begin with the
 //! six characters `AC1024`, and the architectural example's own docstring says so. So this case
 //! reads an R2010 container, and what it can honestly claim is narrower than a native-fixture case:

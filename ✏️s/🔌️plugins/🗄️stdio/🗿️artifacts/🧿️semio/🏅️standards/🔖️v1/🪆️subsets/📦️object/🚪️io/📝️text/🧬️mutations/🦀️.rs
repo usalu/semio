@@ -123,7 +123,7 @@ impl protocol::OpText for SemioObjectMutation {
 /// `ops_grammar_conformance_law`/`protocol_walk_law` in `🚪️io/🦀️.rs`.
 #[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<SemioObjectMutation> {
+pub fn demo_mutation_cases() -> Vec<SemioObjectMutation> {
     let ref_of = |subset: &str, id: &str| semio_framework_artifact_reference::ArtifactRef { artifact_id: id.into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() } };
     vec![
         SemioObjectMutation::MoveObject(MoveObject { translation: SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 } }),

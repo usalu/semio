@@ -1,5 +1,6 @@
 use crate::standards::v1::subsets::any::schema::diff::*;
 use crate::schema::default_snapshot;
+use semio_s_artifact_imperative_procedure_schema::standards::v1::subsets::any::schema::ProcedureArtifact;
 
 /// 🔁️ A whole-artifact replacement absorbs every earlier field delta.
 #[semio_framework_async_macros::async_test]

@@ -63,6 +63,7 @@ Feature: Apply every typed EN 1999 mutation against an independent Python implem
       | change-plate-thickness        | 🧱change-plate-thickness         | ✅apply  |
       | change-weld-throat            | 🔥️change-weld-throat            | ✅apply  |
       | change-bolt-count             | 🔩change-bolt-count              | ✅apply  |
+      | remove-member-middle          | ➖remove-member                  | 🧭️middle |
 
   @id-inverse
   @level-exhaustive

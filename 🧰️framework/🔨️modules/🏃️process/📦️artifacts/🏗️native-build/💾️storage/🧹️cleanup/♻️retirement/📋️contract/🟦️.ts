@@ -1,7 +1,7 @@
 import{dirname,join,resolve}from"node:path";
 import{constants,type BigIntStats}from"node:fs";
 import{open,lstat}from"node:fs/promises";
-import{withArtifactDescriptorV1}from"../../../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import{withArtifactDescriptorV1}from"../../../../../../../📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import storageSchema from"../../../🧬️schema/🔣️.json" with{type:"json"};
 import{assertNativeSelectedDescriptorCustodyV1,nativeSelectedDescriptorProtocolV1,type NativeSelectedDescriptorGuardV1}from"../../../../../💾️cache/📂️descriptors/🟦️.ts";
 import{captureOwnedCommandResultV1}from"../../../../../../🎛️owned-execution/🟦️.ts";

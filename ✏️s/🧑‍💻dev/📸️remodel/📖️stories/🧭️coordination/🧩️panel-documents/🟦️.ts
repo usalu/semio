@@ -1,5 +1,5 @@
 /** 🧩️ The remodel panel tab documents, built as retained nodes from the scene and labels. */
-import type { AccessibilitySpec, BuiltNode, LayoutSpec, StyleSpec } from "@semio-tech/framework/manifest";
+import type { AccessibilitySpec, BuiltNode, LayoutSpec, StyleSpec } from "@semio-tech/framework-manifest";
 import type { RemodelConfig, RemodelScene } from "../📐️scene-model/🟦️.ts";
 import { type RemodelLabels, remodelLabelsFor } from "../🗣️labels/🟦️.ts";
 import { debugEnum, fixed, REMODEL_EDITOR_CONTROLLER_ID, REMODEL_MEDIA_ACCEPT, type RemodelPanelId } from "../🪟️window-scenes/🟦️.ts";

@@ -1,5 +1,5 @@
 import{realpathSync}from"node:fs";
-import imageSchema from"../../🧬️schema/🔣️.json";
+import imageSchema from"../../🧬️schema/🔣️.json" with { type: "json" };
 const protocol=imageSchema.definitions.ImageProtocol.const;
 /** 🔗️ Builds the closed `hdiutil attach` argument list; owners stay on so nested images can attach inside persistent parents. */
 export function nativeImageAttachArgumentsV1(root:string,image:string):readonly string[]{return Object.freeze(["attach",...protocol.attachArguments,"-mountpoint",root,image]);}

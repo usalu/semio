@@ -6,9 +6,9 @@ import{createHash}from"node:crypto";
 import{createRequire}from"node:module";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../🔒️leases/🟦️.ts";
 import{requireIssuedResourceControlV1}from"../../../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import{withArtifactDescriptorV1}from"@semio-tech/framework/filesystem/observation/descriptor";
+import{withArtifactDescriptorV1}from"@semio-tech/framework-filesystem/observation/descriptor";
 import{hasNativeImageVolumeSilenceMarkerV1}from"../../../🍎️image/🤫️silence/🟦️.ts";
-import schema from"../🧬️schema/🔣️.json";
+import schema from"../🧬️schema/🔣️.json" with { type: "json" };
 const service=schema.definitions.Protocol.const.service,systemLibrary=createRequire(import.meta.url),stamp=(row:BigIntStats)=>[row.dev,row.ino,row.mode,row.size,row.nlink,row.mtimeNs,row.ctimeNs].map(String).join(":"),facts=(row:BigIntStats)=>Object.freeze({ino:String(row.ino),mode:Number(row.mode&0o7777n),uid:String(row.uid),gid:String(row.gid)}),canonical=(value:string)=>/^[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}$/u.test(value);
 /** 🍎️ Identifies the explicitly reserved volume service domain; it does not attest authorship of individual log files. */
 export interface NativeVolumeEventServiceV1{readonly kind:"darwin-fsevents";readonly uuid:string;readonly directory:Readonly<{ino:string;mode:number;uid:string;gid:string}>;readonly file:Readonly<{ino:string;mode:number;uid:string;gid:string;sha256:string}>}

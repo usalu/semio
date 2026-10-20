@@ -203,11 +203,11 @@ semio_framework_plugin::view_commands! {
         "setSunElevation" as "sun-elevation" => set_sun_elevation::SetSunElevation,
         "setSunIntensity" as "sun-intensity" => set_sun_intensity::SetSunIntensity,
         "setContributions" as "set-contributions" => set_contributions::SetContributions,
-        "flowEvalTick" as "flow-eval-tick" => flow_eval_tick::FlowEvalTick,
-        "flowEvalResolve" as "flow-eval-resolve" => flow_eval_resolve::FlowEvalResolve,
-        "flowTessellateResolve" as "flow-tessellate-resolve" => flow_tessellate_resolve::FlowTessellateResolve,
-        "flowEvalRelease" as "flow-eval-release" => flow_eval_release::FlowEvalRelease,
-        "flowTessellateCancelResolve" as "flow-tessellate-cancel-resolve" => flow_tessellate_cancel_resolve::FlowTessellateCancelResolve,
+        "flowEvalTick" as "flow-eval-tick" => semio_s_artifact_procedural_3d_preview_eval::FlowEvalTick,
+        "flowEvalResolve" as "flow-eval-resolve" => semio_s_artifact_procedural_3d_preview_eval::FlowEvalResolve,
+        "flowTessellateResolve" as "flow-tessellate-resolve" => semio_s_artifact_procedural_3d_preview_eval::FlowTessellateResolve,
+        "flowEvalRelease" as "flow-eval-release" => semio_s_artifact_procedural_3d_preview_eval::FlowEvalRelease,
+        "flowTessellateCancelResolve" as "flow-tessellate-cancel-resolve" => semio_s_artifact_procedural_3d_preview_eval::FlowTessellateCancelResolve,
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "exportDocument" as "export-document" => export_document::ExportDocument}
 }

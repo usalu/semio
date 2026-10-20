@@ -39,7 +39,7 @@ func loadDirectiveVectors(ctx *host.Context) (directiveVectorFile, error) {
 	return file, err
 }
 
-// renderDirectives renders the parsed directives of one document as `line=prefix,prefix` rows.
+// 🌐️renderDirectives renders the parsed directives of one document as `line=prefix,prefix` rows.
 func renderDirectives(content string) []string {
 	parsed := statutes.ParseIgnoreDirectives(content)
 	lines := make([]int, 0, len(parsed))
@@ -114,7 +114,7 @@ func aDirectiveOnlyReachesForward(ctx *host.Context) (host.Outcome, error) {
 
 // region 🔖️Registration
 
-// Adapter is the registration entry point the generated host calls.
+// 🌉️Adapter is the registration entry point the generated host calls.
 func Adapter() *host.Adapter {
 	return host.NewAdapter("go").
 		Subject("a-directive-suppresses-its-prefixes", aDirectiveSuppressesItsPrefixes).

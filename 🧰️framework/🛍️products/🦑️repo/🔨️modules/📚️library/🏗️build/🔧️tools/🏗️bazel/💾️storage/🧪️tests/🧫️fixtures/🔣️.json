@@ -22,31 +22,28 @@
     "bazelrc": [
       "build --experimental_disk_cache_gc_idle_delay=10s",
       "build --experimental_disk_cache_gc_max_age=30d",
-      "build --repo_contents_cache_gc_max_age=3d",
-      "build --remote_cache_compression",
-      "build --remote_timeout=30s",
-      "build --remote_retries=3"
+      "build --repo_contents_cache_gc_max_age=3d"
     ],
     "workspaces": [
       {"workspace": "/bounded/products/bazel/workspaces/a1", "sha256Prefix": "060b59b17e73eee6"},
       {"workspace": "/bounded/products/bazel/workspaces/b2", "sha256Prefix": "4b16157afa2ef650"}
     ],
     "accepted": [
-      {"name": "default is disk only", "environment": {}, "command": ["--disk_cache={actions}", "--experimental_disk_cache_gc_max_size=10307502080"], "remote": false},
-      {"name": "empty values are unset", "environment": {"SEMIO_BAZEL_REMOTE_CACHE": "", "SEMIO_BAZEL_REMOTE_CACHE_UPLOAD": ""}, "command": ["--disk_cache={actions}", "--experimental_disk_cache_gc_max_size=10307502080"], "remote": false},
-      {"name": "remote is read only by default", "environment": {"SEMIO_BAZEL_REMOTE_CACHE": "grpcs://cache.example.test:443"}, "command": ["--disk_cache={actions}", "--experimental_disk_cache_gc_max_size=10307502080", "--remote_cache=grpcs://cache.example.test:443", "--noremote_upload_local_results"], "remote": true},
-      {"name": "upload and credential helper are explicit", "environment": {"SEMIO_BAZEL_REMOTE_CACHE": "http://127.0.0.1:9090", "SEMIO_BAZEL_REMOTE_CACHE_UPLOAD": "true", "SEMIO_BAZEL_REMOTE_CACHE_CREDENTIAL_HELPER": "/opt/tools/helper"}, "command": ["--disk_cache={actions}", "--experimental_disk_cache_gc_max_size=10307502080", "--remote_cache=http://127.0.0.1:9090", "--remote_upload_local_results", "--credential_helper=/opt/tools/helper"], "remote": true},
-      {"name": "unix socket endpoint", "environment": {"SEMIO_BAZEL_REMOTE_CACHE": "unix:/run/cache.sock", "SEMIO_BAZEL_REMOTE_CACHE_UPLOAD": "false"}, "command": ["--disk_cache={actions}", "--experimental_disk_cache_gc_max_size=10307502080", "--remote_cache=unix:/run/cache.sock", "--noremote_upload_local_results"], "remote": true},
-      {"name": "skip remote cache drops the endpoint", "environment": {"SEMIO_BAZEL_REMOTE_CACHE": "grpc://cache.example.test"}, "skipRemoteCache": true, "command": ["--disk_cache={actions}", "--experimental_disk_cache_gc_max_size=10307502080"], "remote": false},
-      {"name": "skip cache refuses cached results", "environment": {}, "skipCache": true, "command": ["--disk_cache={actions}", "--experimental_disk_cache_gc_max_size=10307502080", "--noremote_accept_cached"], "remote": false}
+      {"name": "default is disk only", "environment": {}, "command": ["--disk_cache={actions}", "--experimental_disk_cache_gc_max_size=10307502080"], "remote": false, "tokenEnvironment": {}, "helper": false},
+      {"name": "empty values are unset", "environment": {"SEMIO_REMOTE_CACHE_ENDPOINT": "", "SEMIO_REMOTE_CACHE_ACCESS": ""}, "command": ["--disk_cache={actions}", "--experimental_disk_cache_gc_max_size=10307502080"], "remote": false, "tokenEnvironment": {}, "helper": false},
+      {"name": "remote is read only by default and spells every switch", "environment": {"SEMIO_REMOTE_CACHE_ENDPOINT": "http://127.0.0.1:6090"}, "command": ["--disk_cache={actions}", "--experimental_disk_cache_gc_max_size=10307502080", "--remote_cache=http://127.0.0.1:6090/main", "--remote_instance_name=main", "--noremote_upload_local_results", "--remote_cache_compression", "--remote_download_outputs=toplevel", "--remote_timeout=30s", "--remote_retries=3"], "remote": true, "tokenEnvironment": {}, "helper": false},
+      {"name": "read-write with a token uses a credential helper and keeps the token out of every flag", "environment": {"SEMIO_REMOTE_CACHE_ENDPOINT": "https://cache.example.test:8443", "SEMIO_REMOTE_CACHE_INSTANCE": "team-a", "SEMIO_REMOTE_CACHE_ACCESS": "read-write", "SEMIO_REMOTE_CACHE_TOKEN": "tok-123"}, "command": ["--disk_cache={actions}", "--experimental_disk_cache_gc_max_size=10307502080", "--remote_cache=https://cache.example.test:8443/team-a", "--remote_instance_name=team-a", "--remote_upload_local_results", "--remote_cache_compression", "--remote_download_outputs=toplevel", "--remote_timeout=30s", "--remote_retries=3", "--credential_helper=cache.example.test={helper}"], "remote": true, "tokenEnvironment": {"SEMIO_REMOTE_CACHE_TOKEN": "tok-123"}, "helper": true},
+      {"name": "skip remote cache drops the endpoint and the token", "environment": {"SEMIO_REMOTE_CACHE_ENDPOINT": "http://127.0.0.1:6090", "SEMIO_REMOTE_CACHE_TOKEN": "tok-123"}, "skipRemoteCache": true, "command": ["--disk_cache={actions}", "--experimental_disk_cache_gc_max_size=10307502080"], "remote": false, "tokenEnvironment": {}, "helper": false},
+      {"name": "skip cache refuses cached results", "environment": {}, "skipCache": true, "command": ["--disk_cache={actions}", "--experimental_disk_cache_gc_max_size=10307502080", "--noremote_accept_cached"], "remote": false, "tokenEnvironment": {}, "helper": false},
+      {"name": "skip cache also asks the remote cache nothing", "environment": {"SEMIO_REMOTE_CACHE_ENDPOINT": "http://127.0.0.1:6090"}, "skipCache": true, "command": ["--disk_cache={actions}", "--experimental_disk_cache_gc_max_size=10307502080", "--noremote_accept_cached", "--remote_cache=http://127.0.0.1:6090/main", "--remote_instance_name=main", "--noremote_upload_local_results", "--remote_cache_compression", "--remote_download_outputs=toplevel", "--remote_timeout=30s", "--remote_retries=3"], "remote": true, "tokenEnvironment": {}, "helper": false}
     ],
     "refused": [
-      {"name": "endpoint without scheme", "environment": {"SEMIO_BAZEL_REMOTE_CACHE": "cache.example.test:443"}},
-      {"name": "endpoint with foreign scheme", "environment": {"SEMIO_BAZEL_REMOTE_CACHE": "ftp://cache.example.test"}},
-      {"name": "endpoint with whitespace", "environment": {"SEMIO_BAZEL_REMOTE_CACHE": "grpc://cache.example.test --remote_executor=grpc://evil"}},
-      {"name": "upload is not boolean", "environment": {"SEMIO_BAZEL_REMOTE_CACHE": "grpc://cache.example.test", "SEMIO_BAZEL_REMOTE_CACHE_UPLOAD": "yes"}},
-      {"name": "credential helper is a relative path", "environment": {"SEMIO_BAZEL_REMOTE_CACHE": "grpc://cache.example.test", "SEMIO_BAZEL_REMOTE_CACHE_CREDENTIAL_HELPER": "tools/helper"}},
-      {"name": "credential helper looks like a flag", "environment": {"SEMIO_BAZEL_REMOTE_CACHE": "grpc://cache.example.test", "SEMIO_BAZEL_REMOTE_CACHE_CREDENTIAL_HELPER": "--evil"}}
+      {"name": "endpoint without scheme", "environment": {"SEMIO_REMOTE_CACHE_ENDPOINT": "cache.example.test:443"}, "message": "Closed remote cache contract required"},
+      {"name": "endpoint with a foreign scheme", "environment": {"SEMIO_REMOTE_CACHE_ENDPOINT": "grpc://cache.example.test"}, "message": "Closed remote cache contract required"},
+      {"name": "endpoint with whitespace", "environment": {"SEMIO_REMOTE_CACHE_ENDPOINT": "http://cache.example.test --remote_executor=grpc://evil"}, "message": "Closed remote cache contract required"},
+      {"name": "upload is not boolean", "environment": {"SEMIO_REMOTE_CACHE_ENDPOINT": "http://127.0.0.1:6090", "SEMIO_REMOTE_CACHE_UPLOAD": "yes"}, "message": "Closed remote cache contract required"},
+      {"name": "token looks like a flag", "environment": {"SEMIO_REMOTE_CACHE_ENDPOINT": "http://127.0.0.1:6090", "SEMIO_REMOTE_CACHE_TOKEN": "a b --evil"}, "message": "Closed remote cache token required"},
+      {"name": "minimal download is refused by the contract, since the task adapter restores snapshots", "environment": {"SEMIO_REMOTE_CACHE_ENDPOINT": "http://127.0.0.1:6090", "SEMIO_REMOTE_CACHE_DOWNLOAD": "minimal"}, "message": "Closed remote cache contract required"}
     ]
   },
   "hostPaths": [
@@ -60,7 +57,10 @@
     {"name": "leading-dot emoji ticket tree output base on macOS", "platform": "darwin", "layout": {"install": "/Users/dev/repo/.cache/b/t/m/bazel/install", "outputs": "/Users/dev/repo/.🧬semio/🦑️repo/🎫️tickets/🗑️generated/ob", "server": "/Users/dev/repo/.🧬semio/🦑️repo/🎫️tickets/🗑️generated/ob/server", "workspace": "/Users/dev/repo/.cache/b/p/m/bazel/workspaces"}, "accepted": false},
     {"name": "accent server base on macOS", "platform": "darwin", "layout": {"install": "/Users/dev/repo/.cache/b/t/m/bazel/install", "outputs": "/Users/dev/repo/.cache/b/p/m/bazel/outputs", "server": "/Users/Jürgen/repo/.cache/b/p/m/bazel/outputs/server", "workspace": "/Users/dev/repo/.cache/b/p/m/bazel/workspaces"}, "accepted": false},
     {"name": "emoji workspace on macOS is fine", "platform": "darwin", "layout": {"install": "/Users/dev/repo/.cache/b/t/m/bazel/install", "outputs": "/Users/dev/repo/.cache/b/p/m/bazel/outputs", "server": "/Users/dev/repo/.cache/b/p/m/bazel/outputs/server", "workspace": "/Users/dev/repo/.cache/b/p/m/bazel/workspaces/🧰️w"}, "accepted": true},
-    {"name": "emoji install and output base on Linux", "platform": "linux", "layout": {"install": "/home/dev/🧰️repo/.cache/b/t/bazel/install", "outputs": "/home/dev/🧰️repo/.cache/b/p/bazel/outputs", "server": "/home/dev/🧰️repo/.cache/b/p/bazel/outputs/server", "workspace": "/Users/dev/repo/.cache/b/p/m/bazel/workspaces"}, "accepted": true},
+    {"name": "ascii checkout on Linux", "platform": "linux", "layout": {"install": "/home/dev/repo/.cache/b/t/m/bazel/install", "outputs": "/home/dev/repo/.cache/b/p/m/bazel/outputs", "server": "/home/dev/repo/.cache/b/p/m/bazel/outputs/server", "workspace": "/home/dev/repo/.cache/b/p/m/bazel/workspaces"}, "accepted": true},
+    {"name": "emoji install base on Linux", "platform": "linux", "layout": {"install": "/home/dev/🧰️repo/.cache/b/t/m/bazel/install", "outputs": "/home/dev/repo/.cache/b/p/m/bazel/outputs", "server": "/home/dev/repo/.cache/b/p/m/bazel/outputs/server", "workspace": "/home/dev/repo/.cache/b/p/m/bazel/workspaces"}, "accepted": false},
+    {"name": "accent install base on Linux", "platform": "linux", "layout": {"install": "/home/Jürgen/repo/.cache/b/t/m/bazel/install", "outputs": "/home/dev/repo/.cache/b/p/m/bazel/outputs", "server": "/home/dev/repo/.cache/b/p/m/bazel/outputs/server", "workspace": "/home/dev/repo/.cache/b/p/m/bazel/workspaces"}, "accepted": false},
+    {"name": "emoji output and server base on Linux are fine", "platform": "linux", "layout": {"install": "/home/dev/repo/.cache/b/t/m/bazel/install", "outputs": "/home/dev/🧰️repo/.cache/b/p/m/bazel/outputs", "server": "/home/dev/🧰️repo/.cache/b/p/m/bazel/outputs/server", "workspace": "/home/dev/🧰️repo/.cache/b/p/m/bazel/workspaces"}, "accepted": true},
     {"name": "accent output base on Windows", "platform": "win32", "layout": {"install": "C:\\Users\\Jürgen\\repo\\.cache\\b\\t\\bazel\\install", "outputs": "C:\\Users\\Jürgen\\repo\\.cache\\b\\p\\bazel\\outputs", "server": "C:\\Users\\Jürgen\\repo\\.cache\\b\\p\\bazel\\outputs/server", "workspace": "/Users/dev/repo/.cache/b/p/m/bazel/workspaces"}, "accepted": true}
   ],
   "sandbox": {"forbiddenRcFlags": ["spawn_strategy", "strategy", "genrule_strategy", "sandbox_base", "sandbox_add_mount_pair", "sandbox_writable_path", "ignore_unsupported_sandboxing", "incompatible_sandbox_hermetic_tmp", "experimental_sandbox_async_tree_delete_idle_threads"], "expectedRunner": "darwin-sandbox", "roots": {"tools": "/Users/dev/repo/.cache/b/t/m", "dependencies": "/Users/dev/repo/.cache/b/d/m", "products": "/Users/dev/repo/.cache/b/p/m"}, "workspace": "/Users/dev/repo/.cache/b/p/m/bazel/workspaces/0123456789abcdef"}

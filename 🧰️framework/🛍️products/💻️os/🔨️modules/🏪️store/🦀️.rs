@@ -419,6 +419,7 @@ pub use canonical_edit::{
     ARTIFACT_CANONICAL_JSON_CHUNK_BYTES, ARTIFACT_CANONICAL_JSON_DEPTH, ArtifactCanonicalJson, ArtifactCanonicalJsonArray, ArtifactCanonicalJsonCursor, ArtifactCanonicalJsonEncodeError, ArtifactCanonicalJsonNode, ArtifactCanonicalJsonObject, ArtifactCanonicalJsonText, ArtifactCanonicalJsonTree, ArtifactCanonicalJsonTreeCursor, ArtifactCanonicalJsonTreeStep,
     ArtifactCanonicalJsonReader, ArtifactCanonicalJsonValue, ArtifactCanonicalValue, ArtifactCanonicalValueAdmission, ArtifactCanonicalValueCheckpoint, ArtifactCanonicalValueCloseStep, ArtifactCanonicalValueGrant, ArtifactCanonicalValueLimits,
     ArtifactCanonicalValueStep, ArtifactStoreOneItemSealCheckpoint, ArtifactStoreOneItemSealer,
+    ArtifactCanonicalSourceIdentityBirth, ArtifactCanonicalSourceIdentityCursor, ArtifactCanonicalSourceIdentityStep,
 };
 
 mod prepared_operation_wire {
@@ -454,7 +455,7 @@ pub mod replay {
     pub use semio_framework_os_store_ledger::lifted_replay::*;
 }
 use replay::{DRAFT_SUPERSESSION_ID, EditReplay, EditReplayResult, EffectiveOperation, EffectiveSupersessions, PairMerge, ReplayEdits, ReplayMode, ReplayOwnedState, ReplayProgress, ReplayResultOwnedState, ReplayStep, admit_replacement, apply_operation, apply_outcome, draft_supersessions, effective_forwards, effective_operation, fold_operation};
-use replay::{FoldProjection, IndexedAppliedReplayEdits, PREFIX_SNAPSHOT_RING_CAPACITY, PREFIX_SNAPSHOT_RING_FLOOR, PrefixSnapshot, REPROJECTION_OWNER_SLOTS, ReplayConvergence, edit_supersession_digest, effective_operation_with_supersession, fold_effective_edit, fold_recorded, forward_prefix_digests, forward_prefix_genesis, forward_prefix_step, mirror_id_suffix, order_ledger_as, retire_shared_projection, same_effective_inputs, shared_prefix_len, superseded_positions, supersession_digest};
+use replay::{ColdFoldProjection, IndexedAppliedReplayEdits, PREFIX_SNAPSHOT_RING_CAPACITY, PREFIX_SNAPSHOT_RING_FLOOR, PrefixSnapshot, REPROJECTION_OWNER_SLOTS, ReplayConvergence, edit_supersession_digest, effective_operation_with_supersession, fold_effective_edit, fold_recorded, forward_prefix_digests, forward_prefix_genesis, forward_prefix_step, mirror_id_suffix, order_ledger_as, retire_shared_projection, same_effective_inputs, shared_prefix_len, superseded_positions, supersession_digest};
 
 //#endregion 🔖️PairMerge
 //#region 🔖️EffectiveForwards

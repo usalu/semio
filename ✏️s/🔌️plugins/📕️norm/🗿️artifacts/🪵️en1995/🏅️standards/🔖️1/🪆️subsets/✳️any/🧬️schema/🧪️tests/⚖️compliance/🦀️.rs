@@ -1,10 +1,12 @@
-use crate::*;
+use semio_s_artifact_norm_en1995_schema::checks::timber::*;
 use semio_framework_test_fixtures::fixture_path;
 use semio_s_plugin_norm_app_surface::{apply_remedy_edit, get_value_at_path, parse_path};
 use semio_s_plugin_norm_compliance::{CheckReport, CheckStatus};
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 use std::process::Command;
+use semio_s_artifact_norm_en1995_model::En1995Snapshot;
+use semio_s_plugin_norm_compliance::AnnexChoice;
 
 fn report_of(snap: &En1995Snapshot) -> CheckReport {
     evaluate_structure(snap.annex, &snap.members, &snap.connections)

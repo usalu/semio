@@ -23,7 +23,7 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
 
 fn case() -> Case {
     Case {
-        kind: "change-daylight-zone-window-transmittance", directory: "🥃️change-daylight-zone/✅️darkens", before: BEFORE, after: AFTER, mutation: MUTATION, diff: DIFF, outcome: OUTCOME, scenario
+        kind: "change-daylight-zone-window-transmittance", directory: "🌞️daylight-zone/🥃️change-window-transmittance/✅️darkens", before: BEFORE, after: AFTER, mutation: MUTATION, diff: DIFF, outcome: OUTCOME, scenario
     }
 }
 

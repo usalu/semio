@@ -1,0 +1,53 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🛂️directory-route/🟦️.ts",
+ "function": "useDirectoryAndRoute",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of useDirectoryAndRoute. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️catalog",
+   "doc": "/** 🔶️ The catalog phase of useDirectoryAndRoute. */",
+   "phases": [
+    {
+     "name": "useCatalogState",
+     "emoji": "🔷",
+     "doc": "Builds catalog, pluginFilter, plugins, scope of useDirectoryAndRoute.",
+     "from": 66,
+     "to": 234
+    }
+   ]
+  },
+  {
+   "dir": "🔸️retire-authenticated-inference",
+   "doc": "/** 🔸️ The retire authenticated inference phase of useDirectoryAndRoute. */",
+   "phases": [
+    {
+     "name": "useRetireAuthenticatedInferenceState",
+     "emoji": "🔹",
+     "doc": "Builds retireAuthenticatedInferencePresentation, cancelSessionAuthorityBootstrap of useDirectoryAndRoute.",
+     "from": 244,
+     "to": 288
+    }
+   ]
+  },
+  {
+   "dir": "🟠️shell-uri",
+   "doc": "/** 🟠️ The shell uri phase of useDirectoryAndRoute. */",
+   "phases": [
+    {
+     "name": "useShellUriState",
+     "emoji": "🟡",
+     "doc": "Builds shellUri, canGoBack, canGoForward, canGoUp of useDirectoryAndRoute.",
+     "from": 381,
+     "to": 478
+    }
+   ]
+  }
+ ]
+}

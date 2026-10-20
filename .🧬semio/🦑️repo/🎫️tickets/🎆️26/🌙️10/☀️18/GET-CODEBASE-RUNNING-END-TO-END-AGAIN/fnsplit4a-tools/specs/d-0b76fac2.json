@@ -1,0 +1,37 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🎤️presentation/🧪️tests/🪡️thought-expansion/🟦️.ts",
+ "describeLine": 5,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of the expandThoughtSlides suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️assigns-one-auto-animate",
+   "doc": "/** 🔶️ The assigns one auto animate tests of the expandThoughtSlides suite. */",
+   "name": "registerAssignsOneAutoAnimateTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the assigns one auto animate tests of the expandThoughtSlides suite.",
+   "from": 6,
+   "to": 119
+  },
+  {
+   "dir": "🔸️keeps-consecutive-morph-slides",
+   "doc": "/** 🔸️ The keeps consecutive morph slides tests of the expandThoughtSlides suite. */",
+   "name": "registerKeepsConsecutiveMorphSlidesTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the keeps consecutive morph slides tests of the expandThoughtSlides suite.",
+   "from": 163,
+   "to": 248
+  },
+  {
+   "dir": "🟠️starts-new-morph-run",
+   "doc": "/** 🟠️ The starts new morph run tests of the expandThoughtSlides suite. */",
+   "name": "registerStartsNewMorphRunTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the starts new morph run tests of the expandThoughtSlides suite.",
+   "from": 282,
+   "to": 282
+  }
+ ]
+}

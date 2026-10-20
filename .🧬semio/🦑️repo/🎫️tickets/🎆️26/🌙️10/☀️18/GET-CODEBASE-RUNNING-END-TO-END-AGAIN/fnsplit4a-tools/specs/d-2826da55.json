@@ -1,0 +1,46 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🐾️pets/🧪️tests/📡️surface-survey/🟦️.tsx",
+ "describeLine": 138,
+ "shared": {
+  "dir": "🟣️shared",
+  "doc": "/** 🟣️ The shared declarations of the 📡️ surface survey suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️ships-vectors-rule-survey",
+   "doc": "/** 🔶️ The ships vectors rule survey tests of the 📡️ surface survey suite. */",
+   "name": "registerShipsVectorsRuleSurveyTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the ships vectors rule survey tests of the 📡️ surface survey suite.",
+   "from": 139,
+   "to": 265
+  },
+  {
+   "dir": "🔸️tells-survey-went-stale",
+   "doc": "/** 🔸️ The tells survey went stale tests of the 📡️ surface survey suite. */",
+   "name": "registerTellsSurveyWentStaleTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the tells survey went stale tests of the 📡️ surface survey suite.",
+   "from": 290,
+   "to": 425
+  },
+  {
+   "dir": "🟠️turns-pointer-stage-events",
+   "doc": "/** 🟠️ The turns pointer stage events tests of the 📡️ surface survey suite. */",
+   "name": "registerTurnsPointerStageEventsTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the turns pointer stage events tests of the 📡️ surface survey suite.",
+   "from": 435,
+   "to": 560
+  },
+  {
+   "dir": "🟢️names-fixture-once-good",
+   "doc": "/** 🟢️ The names fixture once good tests of the 📡️ surface survey suite. */",
+   "name": "registerNamesFixtureOnceGoodTests",
+   "emoji": "🔵",
+   "fdoc": "Registers the names fixture once good tests of the 📡️ surface survey suite.",
+   "from": 584,
+   "to": 611
+  }
+ ]
+}

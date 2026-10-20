@@ -4,7 +4,7 @@
 @mutations-dwg-ac1018-any
 Feature: Stamp the empty DWG document R2004, refuse the R2004 stamp on a real R2010 container, and read the preamble back at the published offsets
   ⚠️ Read this first, because it is the case's own boundary rather than a footnote. **There is no
-  AC1018 file in this repository.** Both `.dwg` files committed outside `./compose` begin with the
+  AC1018 file in this repository.** Both `.dwg` files committed outside the retired compose tree begin with the
   six characters `AC1024`: the 148,638-byte `📚️examples/🏛️architectural/🖼️assets/🏛️architectural.dwg`
   this case reads (whose own docstring says so — "a real, non-trivial fixture (AC1024, ~145KB)") and
   the 22-byte `📚️examples/🎬️demo/🖼️assets/🖊️example.dwg` preamble stub. So this case reads an R2010

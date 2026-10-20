@@ -1,0 +1,4 @@
+useDocumentTransferAndTabs 3 phases, keep=-, final return=true
+103-226 buildScopeState
+261-424 useDocumentTransferRefState
+426-502 useWorkbenchLeftTabsState

@@ -64,7 +64,7 @@ use semio_framework_plugin_window_config::WindowConfigOwner;
 use semio_framework_plugin_window_config::WindowConfigReplaceMutation;
 use semio_framework_plugin_window_kits::WindowKit;
 use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
-use semio_framework_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::{RENDER_CONTEXT_PROBE, TEST_APP_TOOLS_NONE, TEST_APP_WINDOW_BODY_KEY, TestApp, TestCommand, TestRestartFactory, TestTaskSource, __semio_plugin_bundle, contract_app_raw, contract_registry, drive_job_close, fixture_close_grant, interaction_app_definition, interaction_app_raw, job_close_grant, meta, synthetic_play_app, test_app_surface_id, test_document_preparation_factory, test_task};
+use semio_framework_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::{RENDER_CONTEXT_PROBE, TEST_APP_TOOLS_NONE, TEST_APP_WINDOW_BODY_KEY, TestApp, TestCommand, TestRuntimeApps, TestRestartFactory, TestTaskSource, __semio_plugin_bundle, contract_app_raw, contract_registry, drive_job_close, fixture_close_grant, interaction_app_definition, interaction_app_raw, job_close_grant, meta, synthetic_play_app, test_app_surface_id, test_document_preparation_factory, test_task};
 use semio_framework_ui_contract::*;
 use semio_framework::*;
 use semio_framework::kernel::*;

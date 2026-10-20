@@ -1,0 +1,46 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🧪️tests/🧩️component/🟦️.tsx",
+ "describeLine": 63,
+ "shared": {
+  "dir": "🟣️shared",
+  "doc": "/** 🟣️ The shared declarations of the LayeredOverview suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️paints-controlled-camera-reveal",
+   "doc": "/** 🔶️ The paints controlled camera reveal tests of the LayeredOverview suite. */",
+   "name": "registerPaintsControlledCameraRevealTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the paints controlled camera reveal tests of the LayeredOverview suite.",
+   "from": 64,
+   "to": 224
+  },
+  {
+   "dir": "🔸️hides-other-cards-swipe",
+   "doc": "/** 🔸️ The hides other cards swipe tests of the LayeredOverview suite. */",
+   "name": "registerHidesOtherCardsSwipeTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the hides other cards swipe tests of the LayeredOverview suite.",
+   "from": 236,
+   "to": 388
+  },
+  {
+   "dir": "🟠️shows-no-overview-button",
+   "doc": "/** 🟠️ The shows no overview button tests of the LayeredOverview suite. */",
+   "name": "registerShowsNoOverviewButtonTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the shows no overview button tests of the LayeredOverview suite.",
+   "from": 396,
+   "to": 553
+  },
+  {
+   "dir": "🟢️holds-revealed-page-while",
+   "doc": "/** 🟢️ The holds revealed page while tests of the LayeredOverview suite. */",
+   "name": "registerHoldsRevealedPageWhileTests",
+   "emoji": "🔵",
+   "fdoc": "Registers the holds revealed page while tests of the LayeredOverview suite.",
+   "from": 566,
+   "to": 586
+  }
+ ]
+}

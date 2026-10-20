@@ -19,6 +19,7 @@
     "@semio-tech/process": "workspace:*",
     "@semio-tech/puzzle-3d-ts": "workspace:*",
     "@semio-tech/puzzle-js": "workspace:*",
-    "@semio-tech/schema-ts": "workspace:*"
+    "@semio-tech/schema-ts": "workspace:*",
+    "@semio-tech/ui-react": "workspace:*"
   }
 }

@@ -34,6 +34,7 @@ export type Body = { items: Item[]; refs: Ref[]; local: Set<string>; generics: S
 export type FileModel = { path: string; body: Body; cfg: string[]; errors: number[]; size: number; hash: string; useAt: number };
 
 const PRIV: Vis = { k: "priv" };
+const PUB: Vis = { k: "pub" };
 const HARMLESS_MACROS = new Set(["compile_error", "const_assert", "const_assert_eq", "assert", "assert_eq", "debug_assert", "static_assertions", "include_str", "include_bytes", "env", "concat", "stringify", "cfg"]);
 const ITEM_KINDS: Record<string, Item["kind"]> = {
   struct_item: "struct",
@@ -182,7 +183,7 @@ function leavesOf(n: any, prefix: string[], out: UseLeaf[], inList = false): voi
   }
 }
 
-type Attrs = { cfg: string[]; path?: string; dynEnum?: boolean; macroExport: boolean; proc: Item["proc"] | undefined };
+type Attrs = { cfg: string[]; path?: string; dynEnum?: boolean; mutationsDerive?: boolean; macroExport: boolean; proc: Item["proc"] | undefined };
 
 function attrsOf(pending: any[]): Attrs {
   const a: Attrs = { cfg: [], macroExport: false, proc: undefined };
@@ -200,6 +201,7 @@ function attrsOf(pending: any[]): Attrs {
     }
     if (/^#\[\s*macro_export\b/.test(t)) a.macroExport = true;
     if (/^#\[\s*(?:[A-Za-z_][\w]*::)*dyn_enum\b/.test(t)) a.dynEnum = true;
+    if (/^#\[\s*derive\s*\([^\]]*\b(?:[A-Za-z_]\w*::)*Mutations\b/.test(t)) a.mutationsDerive = true;
     const d = /^#\[\s*proc_macro_derive\s*\(\s*([A-Za-z0-9_]+)/.exec(t);
     if (d) a.proc = { ...(a.proc ?? {}), derive: [d[1]] };
     if (/^#\[\s*proc_macro_attribute\s*\]/.test(t)) a.proc = { ...(a.proc ?? {}), attr: true };
@@ -230,6 +232,8 @@ function collectGenerics(n: any, body: Body): void {
 }
 
 const LOCAL_ITEMS = new Set(["struct_item", "enum_item", "union_item", "trait_item", "function_item", "const_item", "static_item", "type_item", "mod_item", "macro_definition"]);
+
+const OWN_ATTR_NODES = new Set(["match_arm", "field_initializer", "shorthand_field_initializer", "field_declaration", "enum_variant", "field_pattern", "parameter", "closure_parameters"]);
 
 function visitRefs(n: any, body: Body, cfg: string[], prefixOf: any | null): void {
   const t = n.type;
@@ -283,6 +287,10 @@ function visitRefs(n: any, body: Body, cfg: string[], prefixOf: any | null): voi
     return;
   }
   if (t === "token_tree") return;
+  if (OWN_ATTR_NODES.has(t)) {
+    const own = attrsOf(n.children.filter((c: any) => c.type === "attribute_item")).cfg;
+    if (own.length) cfg = [...cfg, ...own];
+  }
   let pending: any[] = [];
   for (const c of n.children) {
     if (c.type === "attribute_item") {
@@ -351,6 +359,7 @@ function parseItems(node: any, body: Body, fileCfg: string[], onError: (line: nu
         it.variants = vl ? vl.namedChildren.filter((x: any) => x.type === "enum_variant").map((x: any) => x.childForFieldName("name")?.text ?? "") : [];
       }
       if (at.proc) it.proc = at.proc;
+      if ((kind === "enum" || kind === "struct") && at.mutationsDerive) body.items.push({ kind: "fn", name: `register_${name.replace(/([a-z0-9])([A-Z])/g, "$1_$2").replace(/([A-Z])([A-Z][a-z])/g, "$1_$2").toLowerCase()}_descriptors`, vis: PUB, ...base, fromMacro: true });
       if (kind === "trait" && at.dynEnum) body.items.push({ kind: "macro", name: `__semio_dispatch_${name}`, vis: PRIV, ...base, macroExport: true, fromMacro: true });
       const sub = body;
       collectGenerics(c.childForFieldName("type_parameters") ?? { namedChildren: [] }, sub);

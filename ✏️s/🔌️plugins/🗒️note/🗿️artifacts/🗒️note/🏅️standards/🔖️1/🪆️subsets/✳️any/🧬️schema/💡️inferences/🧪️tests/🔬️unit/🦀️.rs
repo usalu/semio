@@ -1,4 +1,4 @@
-use crate::NoteSnapshot;
+use semio_s_artifact_note_note_schema::NoteSnapshot;
 #[allow(unused_imports)]
 use framework_schema::ArtifactSchema;
 #[allow(unused_imports)]

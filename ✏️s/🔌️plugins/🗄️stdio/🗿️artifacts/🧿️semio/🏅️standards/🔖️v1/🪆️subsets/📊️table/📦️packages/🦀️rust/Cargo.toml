@@ -36,6 +36,7 @@ semio-s-artifact-stdio-semio-table-model = { workspace = true }
 semio-s-artifact-stdio-semio-table-mutations = { workspace = true }
 semio-s-artifact-stdio-semio-table-descriptor = { workspace = true }
 semio-s-artifact-stdio-semio-table-inferences = { workspace = true }
+semio-framework-pack = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-s-artifact-stdio-semio-table-mutations = { workspace = true, features = ["testkit"] }

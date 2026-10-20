@@ -1,6 +1,6 @@
 import Ajv2020 from "ajv/dist/2020.js";
 import { describe, expect, it } from "vitest";
-import { hostTemporalFormatSchema as schema, hostTemporalFormatFixture as fixture } from "@semio-tech/framework/ui/testing/fixtures";
+import { hostTemporalFormatSchema as schema, hostTemporalFormatFixture as fixture } from "@semio-tech/ui/testing/fixtures";
 import {
   HOST_TEMPORAL_DATE_OPTIONS,
   HOST_TEMPORAL_DATE_TIME_OPTIONS,
@@ -10,7 +10,7 @@ import {
   isHostTemporalIsoV1,
   type HostTemporalFormatReplyV1,
   type HostTemporalValueV1,
-} from "@semio-tech/framework/modules/ui/contract/presentation/host-temporal-format";
+} from "@semio-tech/ui-contract/presentation/host-temporal-format";
 import { createWgpuPageHostIo } from "@semio-tech/framework-renderer-wgpu/host-io";
 
 function relativeOracle(date: Date, nowMs: number, locale: string): string {

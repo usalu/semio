@@ -2,7 +2,8 @@
 
 use crate::standards::v1::subsets::any::io::note_document_bounds;
 use crate::schema::flatten_blocks;
-use crate::{NoteBlockNode, NoteSnapshot};
+use crate::{NoteBlockNode};
+use semio_s_artifact_note_note_schema::NoteSnapshot;
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};

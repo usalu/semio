@@ -1,7 +1,7 @@
 /** 📥️ Source: module exporting `SelectedRustSourceInputV1`, `readSelectedRustSourceInputsV1`. */
 import{types}from"node:util";
 import{validateJsonSchemaSubset}from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import publicSchema from"./🧬️schema/🔣️.json";
+import publicSchema from"./🧬️schema/🔣️.json" with { type: "json" };
 const schema=structuredClone(publicSchema);
 export interface SelectedRustSourceInputV1{readonly path:string;readonly digest:string;readonly bytes:number}
 /** 🔏️ Captures only closed owned Source triples before any asynchronous resource wait. */

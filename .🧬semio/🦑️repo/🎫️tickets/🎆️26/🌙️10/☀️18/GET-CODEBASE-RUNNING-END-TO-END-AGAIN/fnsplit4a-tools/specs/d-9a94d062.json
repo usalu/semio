@@ -1,0 +1,37 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🌎️world3d-camera-and-paint/🟦️.ts",
+ "describeLine": 15,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of the framework renderer hosts suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️renders-world-3d-empty",
+   "doc": "/** 🔶️ The renders world 3d empty tests of the framework renderer hosts suite. */",
+   "name": "registerRendersWorld3dEmptyTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the renders world 3d empty tests of the framework renderer hosts suite.",
+   "from": 16,
+   "to": 171
+  },
+  {
+   "dir": "🔸️framed-camera-puts-corner",
+   "doc": "/** 🔸️ The framed camera puts corner tests of the framework renderer hosts suite. */",
+   "name": "registerFramedCameraPutsCornerTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the framed camera puts corner tests of the framework renderer hosts suite.",
+   "from": 182,
+   "to": 348
+  },
+  {
+   "dir": "🟠️scopes-suggestion-menu-ownership",
+   "doc": "/** 🟠️ The scopes suggestion menu ownership tests of the framework renderer hosts suite. */",
+   "name": "registerScopesSuggestionMenuOwnershipTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the scopes suggestion menu ownership tests of the framework renderer hosts suite.",
+   "from": 355,
+   "to": 489
+  }
+ ]
+}

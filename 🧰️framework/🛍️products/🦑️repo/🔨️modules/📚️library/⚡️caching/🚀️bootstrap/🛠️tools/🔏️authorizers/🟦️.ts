@@ -1,4 +1,5 @@
 import{nxAuthorizerWorkspaceCandidateV1,nxAuthorizerWorkspaceIndexV1,resolveNxAuthorizerWorkspaceV1,type NxAuthorizerResolutionV1}from"./📦️workspace/🟦️.ts";
+import authorizerSchema from "./🧬️schema/🔣️.json" with { type: "json" };
 import{constants}from"node:fs";
 import {createHash} from "node:crypto";
 import {lstat,open,realpath} from "node:fs/promises";
@@ -14,7 +15,7 @@ export const nxAuthorizerExternalModulesV1=Object.freeze(["nx/src/tasks-runner/c
 const capturedBytes=new WeakMap<NxAuthorizerSourcesV1,ReadonlyMap<string,Uint8Array>>();
 /** 🧷️ Returns only the byte census issued by an actual no-follow Source capture. */
 export function nxAuthorizerCapturedBytesV1(source:NxAuthorizerSourcesV1):ReadonlyMap<string,Uint8Array>{const bytes=capturedBytes.get(source);if(!bytes)throw Error("Original captured authorizer bytes required");return new Map([...bytes].map(([path,value])=>[path,new Uint8Array(value)]));}
-const external=new Set(nxAuthorizerExternalModulesV1);
+const external=new Set(nxAuthorizerExternalModulesV1),maximumSourceFiles=authorizerSchema.properties.sources.maxItems,runtimeDataCompanions=new Map(authorizerSchema.$defs.RuntimeDataCompanions.const.map(row=>[row.owner,Object.freeze([...row.paths])]));
 const hash=(bytes:Uint8Array|string)=>createHash("sha256").update(bytes).digest("hex");
 const compare=(left:string,right:string)=>Buffer.compare(Buffer.from(left),Buffer.from(right));
 function scannedImport(path:string):string{
@@ -36,11 +37,12 @@ export async function readNxAuthorizerSourceV1(root:string,path:string,signal:Ab
 /** 📥️ Uses the system compiler's import scanner while refusing unresolved runtime dependencies. */
 export async function captureNxAuthorizerSourcesV1(workspace:string,entry:string,signal:AbortSignal):Promise<NxAuthorizerSourcesV1>{
  const root=resolve(workspace),files=new Map<string,string>(),contents=new Map<string,Uint8Array>(),pending=[entry],resolutions=new Map<string,string>();let total=0;
- const capture=async(path:string)=>{if(contents.has(path))return contents.get(path)!;const bytes=await readNxAuthorizerSourceV1(root,path,signal);signal.throwIfAborted();files.set(path,hash(bytes));contents.set(path,new Uint8Array(bytes));total+=bytes.byteLength;if(files.size>256||total>16_777_216)throw Error("Authorizer source closure capacity exceeded");return bytes;};
+ const capture=async(path:string)=>{if(contents.has(path))return contents.get(path)!;const bytes=await readNxAuthorizerSourceV1(root,path,signal);signal.throwIfAborted();files.set(path,hash(bytes));contents.set(path,new Uint8Array(bytes));total+=bytes.byteLength;if(files.size>maximumSourceFiles||total>16_777_216)throw Error(`Authorizer source closure capacity exceeded: files=${files.size}/${maximumSourceFiles}, bytes=${total}/16777216`);return bytes;};
  while(pending.length){signal.throwIfAborted();const path=pending.pop()!;if(files.has(path))continue;const bytes=await capture(path);signal.throwIfAborted();
+  for(const companion of runtimeDataCompanions.get(path)??[]){sourcePath(root,companion);pending.push(companion);}
   if(extname(path)===".json"){JSON.parse(Buffer.from(bytes).toString("utf8"));continue;}
   const source=Buffer.from(bytes).toString("utf8").replace(/^#![^\r\n]*/u,"");
-  const scan=new Bun.Transpiler({loader:/\.[cm]?tsx?$/u.test(path)?"ts":"js",target:"node",define:{"import.meta.vitest":"undefined"}}).scan(source).imports;
+  const scanner=new Bun.Transpiler({loader:/\.[cm]?tsx?$/u.test(path)?"ts":"js",target:"node",define:{"import.meta.vitest":"undefined"}}),scan=/\.c(?:js|ts)$/u.test(path)?scanner.scanImports(source):scanner.scan(source).imports;
   for(const row of scan){const specifier=scannedImport(row.path);if(specifier.startsWith("node:")||specifier==="bun:sqlite"||isBuiltin(specifier)||external.has(specifier))continue;let child:string;if(specifier.startsWith("."))child=relative(root,resolve(dirname(join(root,path)),specifier)).replaceAll("\\","/");else{const earlier=resolutions.get(specifier);if(earlier!==undefined)child=earlier;else{const rootBytes=await capture("package.json"),located=await Bun.resolve(specifier,dirname(join(root,path)));signal.throwIfAborted();const actual=await realpath(located);signal.throwIfAborted();const candidate=relative(root,actual).replaceAll("\\","/");sourcePath(root,candidate);const manifest=nxAuthorizerWorkspaceCandidateV1(rootBytes,candidate);await capture(manifest);signal.throwIfAborted();child=resolveNxAuthorizerWorkspaceV1(nxAuthorizerWorkspaceIndexV1(contents),specifier);if(child!==candidate)throw Error("Located package differs from its captured exact export");resolutions.set(specifier,child);}}sourcePath(root,child);pending.push(child);}
  }
  const manifest:NxAuthorizerSourceManifestV1=Object.freeze({version:1,mode:"release",entry,resolutions:Object.freeze([...resolutions].sort(([left],[right])=>compare(left,right)).map(([specifier,path])=>Object.freeze({specifier,path}))),sources:Object.freeze([...files].sort(([left],[right])=>compare(left,right)).map(([path,sha256])=>Object.freeze({path,sha256})))});

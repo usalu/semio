@@ -317,9 +317,9 @@ pub(crate) fn sweep_b() -> XlsxSnapshot {
 //#endregion 🔖️Fixtures
 
 /// 🧪️ The demo cases proper -- one representative `XlsxMutation` per variant.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<XlsxMutation> {
+pub fn demo_mutation_cases() -> Vec<XlsxMutation> {
     let base = fixture();
     let address = cell_address::xlsx_cell_address(&base, "Sheet1", 1, 0).expect("fixture cell address");
     let vacancy = cell_address::xlsx_cell_vacancy_address(&base, "Sheet1", 2, 1).expect("fixture cell vacancy address");

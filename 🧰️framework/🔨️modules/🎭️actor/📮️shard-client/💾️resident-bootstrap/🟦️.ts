@@ -1,8 +1,8 @@
 import type { ShardClientState } from "../🗃️state/🟦️.ts";
-import type { UiResidentComposition } from "../../../🖱️ui/🧬️contract/🧵️retained/🔌️host/🏦️composition/🟦️.ts";
+import type { UiResidentComposition } from "@semio-tech/ui-contract/retained/host/composition";
 import type { ShardClientHubPort } from "../🧩️hub/🟦️.ts";
 import { type OwnedResidentLedger, OwnedResidentRecordDetachment, OwnedResidentRetirement, type OwnedResidentAdmission, type OwnedResidentRecord, type ResidentGrant, type ResidentStep } from "@semio-tech/value-ts/resident";
-import { OwnedUiResidentPool, OwnedUiResidentPoolRetirement } from "@semio-tech/framework/ui/contract/retained/resident";
+import { OwnedUiResidentPool, OwnedUiResidentPoolRetirement } from "@semio-tech/ui-contract/retained/resident";
 import { NO_RESIDENT_FAULT, type ShardSlot, poolControllerEnvelope, poolRecordEnvelope, residentChild, residentGrant, residentStep, workerControllerEnvelope } from "../🔐️activation/🟦️.ts";
 
 /** 📋️ The phase fields of the UI resident pool admission and of the worker bootstrap admission; field names and order are the census the admission accounting prices. */

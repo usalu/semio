@@ -41,7 +41,7 @@ test("the actual JSON primitive package owns its definitions and depends directl
   expect(native).toEqual(TOML.parse(source) as typeof native);
   expect(native.package.name).toBe("semio-framework-pack-json");
   expect(native.lib).toEqual({name: "semio_framework_pack_json", path: "../../🦀️.rs"});
-  expect(Object.keys(native.dependencies)).toEqual(["semio-framework-pack-json-float","semio-framework-value"]);
+  expect(Object.keys(native.dependencies).sort()).toEqual(["semio-framework-pack-json-float","semio-framework-value","semio-framework-value-factory","semio-framework-value-native-owned","semio-framework-value-persistent"]);
   expect(tree()).not.toContain("protocol::value");
   expect(tree()).not.toContain("$crate::json::");
 });

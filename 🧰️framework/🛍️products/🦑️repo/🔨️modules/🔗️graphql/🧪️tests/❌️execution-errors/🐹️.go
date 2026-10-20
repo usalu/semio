@@ -114,7 +114,7 @@ func aRefusalWritesNoEventAndChangesNoRecord(ctx *host.Context) (host.Outcome, e
 
 // region 🔖️Registration
 
-// Adapter is the registration entry point the generated host calls.
+// 🌉️Adapter is the registration entry point the generated host calls.
 func Adapter() *host.Adapter {
 	return host.NewAdapter("go").
 		Subject("every-refusal-carries-its-verbatim-message", everyRefusalCarriesItsVerbatimMessage).

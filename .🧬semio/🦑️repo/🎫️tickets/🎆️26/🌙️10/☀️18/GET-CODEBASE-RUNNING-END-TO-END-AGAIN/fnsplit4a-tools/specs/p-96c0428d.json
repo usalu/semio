@@ -1,0 +1,67 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/🔨️modules/🫳️interaction/🧲️interactive-disposition/🟦️.tsx",
+ "function": "InteractiveDisposition",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "arrowVar": true,
+ "shared": {
+  "dir": "🟣️shared",
+  "doc": "/** 🟣️ The shared declarations of InteractiveDisposition. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️slide-epoch",
+   "doc": "/** 🔶️ The slide epoch phase of InteractiveDisposition. */",
+   "phases": [
+    {
+     "name": "useSlideEpochState",
+     "emoji": "🔷",
+     "doc": "Builds slideEpoch, interaction, registry, rootRef of InteractiveDisposition.",
+     "from": 49,
+     "to": 159
+    }
+   ]
+  },
+  {
+   "dir": "🔸️attach-pointer-gesture",
+   "doc": "/** 🔸️ The attach pointer gesture phase of InteractiveDisposition. */",
+   "phases": [
+    {
+     "name": "useAttachPointerGestureState",
+     "emoji": "🔹",
+     "doc": "Builds attachPointerGesture, seedCanvasTransform of InteractiveDisposition.",
+     "from": 189,
+     "to": 318
+    }
+   ]
+  },
+  {
+   "dir": "🟠️pointer-down",
+   "doc": "/** 🟠️ The pointer down phase of InteractiveDisposition. */",
+   "phases": [
+    {
+     "name": "buildPointerDownState",
+     "emoji": "🟡",
+     "doc": "Builds onPointerDown, onHandlePointerDown, onEnlargeClick, onResetClick of InteractiveDisposition.",
+     "from": 330,
+     "to": 479
+    }
+   ]
+  },
+  {
+   "dir": "🟢️wrapper-style",
+   "doc": "/** 🟢️ The wrapper style phase of InteractiveDisposition. */",
+   "phases": [
+    {
+     "name": "buildWrapperStyleState",
+     "emoji": "🔵",
+     "doc": "Builds wrapperStyle, resizeContentBaseline, resizeContentScale, contentScale of InteractiveDisposition.",
+     "from": 482,
+     "to": 515
+    }
+   ]
+  }
+ ]
+}

@@ -15,7 +15,7 @@ import { createByteLru, createBoundedSet, createLeadingTrailingDebounce } from "
 import { MapRenderer } from "../../🖼️map-renderer/🟦️.ts";
 import type { MapWasmSession } from "../../../🪪️WasmSessionLoader/🟦️.tsx";
 import repaintFixture from "../🧫️fixtures/🔁️repaint/🔣️.json";
-import lifecycleFixture from "@semio-tech/framework/os/modules/renderer/engine/testing/fixtures/tiled-map-gesture-lifecycle.json";
+import lifecycleFixture from "@semio-tech/framework-os/modules/renderer/engine/testing/fixtures/tiled-map-gesture-lifecycle.json";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readModuleTreeSource } from "@semio-tech/framework/compiler/syntax/module-tree";

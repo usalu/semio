@@ -4,6 +4,21 @@ use super::*;
 
 /// 🧱️ Pile, retaining wall, overall stability and uplift checks of [`check_project`]: the second half of its design loop, moved out unchanged.
 pub(super) fn check_piles_walls_slopes_and_uplift(doc: &En1997Snapshot, report: &mut CheckReport, approach: DesignApproach, annex: AnnexChoice, gwl: f64, part1: &str, part1054: &str, design_situations: &[String]) {
+    check_pile_resistances(doc, report, approach, annex, part1, design_situations);
+    check_retaining_walls(doc, report, approach, annex, gwl, part1, part1054, design_situations);
+    check_slopes(doc, report, annex, gwl, part1);
+    check_uplift(doc, report, annex, gwl, part1, design_situations);
+}
+
+/// 🪵️ Checks the axial resistance of every pile.
+fn check_pile_resistances(
+    doc: &En1997Snapshot,
+    report: &mut CheckReport,
+    approach: DesignApproach,
+    annex: AnnexChoice,
+    part1: &str,
+    design_situations: &[String],
+) {
     for pile in doc.piles.iter() {
         let label = loc(&format!("Pile {}", pile.id), &format!("Pfahl {}", pile.id));
         let a_base = std::f64::consts::PI * (pile.diameter * 0.5).powi(2);
@@ -155,7 +170,19 @@ pub(super) fn check_piles_walls_slopes_and_uplift(doc: &En1997Snapshot, report: 
                 .build(),
         );
     }
+}
 
+/// 🔩️ Checks the earth pressure, sliding and overturning of every retaining wall.
+fn check_retaining_walls(
+    doc: &En1997Snapshot,
+    report: &mut CheckReport,
+    approach: DesignApproach,
+    annex: AnnexChoice,
+    gwl: f64,
+    part1: &str,
+    part1054: &str,
+    design_situations: &[String],
+) {
     for wall in doc.retaining_walls.iter() {
         let label = loc(&format!("Wall {}", wall.id), &format!("Wand {}", wall.id));
         let (k_ep, k_label) = part_1::earth_pressure_coefficient(wall.backfill_phi_deg, &wall.earth_pressure_mode, wall.ocr, wall.wall_friction_deg);
@@ -361,7 +388,10 @@ pub(super) fn check_piles_walls_slopes_and_uplift(doc: &En1997Snapshot, report: 
                 .build(),
         );
     }
+}
 
+/// ⚙️ Checks the overall stability of every slope.
+fn check_slopes(doc: &En1997Snapshot, report: &mut CheckReport, annex: AnnexChoice, gwl: f64, part1: &str) {
     for slope in doc.slopes.iter() {
         let geo3 = DesignApproach::Geo3.annex_params(annex);
         let label = loc(&format!("Slope {}", slope.id), &format!("Böschung {}", slope.id));
@@ -441,7 +471,10 @@ pub(super) fn check_piles_walls_slopes_and_uplift(doc: &En1997Snapshot, report: 
                 .build(),
         );
     }
+}
 
+/// 🧲️ Checks the buoyancy uplift of every uplift case.
+fn check_uplift(doc: &En1997Snapshot, report: &mut CheckReport, annex: AnnexChoice, gwl: f64, part1: &str, design_situations: &[String]) {
     for u in doc.uplift_cases.iter() {
         let label = loc(&format!("Uplift {}", u.id), &format!("Aufschwimmen {}", u.id));
         let pore = if u.pore_pressure > 1.0 { u.pore_pressure } else { 9_810.0 * gwl.max(0.0) };

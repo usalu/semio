@@ -1,6 +1,8 @@
 //! 🧊️ Synthetic scene of the staged reconstruction engine tests: the vector helpers, the textured cube renderer, the orbiting frames and the tiny engine parameters. See [`super`].
 
 use super::*;
+use semio_s_artifact_remodel_remodeling_camera::editor::remodeling::engine::camera as remodeling_camera;
+use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::images as remodeling_image;
 
 // #region 🔖️SyntheticScene
 pub(super) fn add3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {

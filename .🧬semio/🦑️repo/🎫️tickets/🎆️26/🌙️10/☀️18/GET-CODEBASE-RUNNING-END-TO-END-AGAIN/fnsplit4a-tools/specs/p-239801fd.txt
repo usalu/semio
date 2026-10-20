@@ -1,0 +1,4 @@
+registerStatechartKernelAndModelSuites 3 phases, keep=-, final return=false
+7-128 buildActionIdState
+155-196 registerMachineTestHostTests
+277-360 registerMachinePersistRestoreTests

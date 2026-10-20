@@ -50,7 +50,7 @@
     },
     "generate-viz": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "inputs": [
         "default",
         "^default",
@@ -60,6 +60,11 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts generate viz"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "preview-generated": {
@@ -88,7 +93,12 @@
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
         "command": "bun ../../🔨️modules/🔤print-font-catalog/📜️script.ts build"
       },
-      "cache": true,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "managed-output", "reason": "outputs-in-managed-store" }
+        }
+      },
+      "cache": false,
       "outputs": [
         "{workspaceRoot}/.cache/b/p/m/print/{options.env.SEMIO_BUILD_MODE}/fonts"
       ],
@@ -108,7 +118,7 @@
     },
     "build": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "inputs": [
         "production",
         "^production",
@@ -119,6 +129,11 @@
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
         "command": "bun ../../🔨️modules/🖨️tectonic-template-compilation/📜️script.ts complete templates",
         "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "aggregate", "reason": "orders-prerequisites" }
+        }
       },
       "dependsOn": [
         "fonts",
@@ -207,11 +222,16 @@
         "^production",
         { "dependentTasksOutputFiles": "**/*" }
       ],
-      "cache": true,
+      "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
         "command": "bun ../../🔨️modules/🖨️tectonic-template-compilation/📜️script.ts complete visualizations",
         "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "aggregate", "reason": "orders-prerequisites" }
+        }
       },
       "dependsOn": [
         "fonts",
@@ -418,7 +438,12 @@
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
         "command": "bun ../../🔨️modules/🔤print-font-catalog/📜️script.ts metrics"
       },
-      "cache": true
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      },
+      "cache": false
     },
     "test-measurement": {
       "executor": "repo:script",

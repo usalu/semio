@@ -1,9 +1,9 @@
-import { reactHostPort } from "../../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
-import { type ElementsSurfaceDevice, elementsSurfaceDeviceIsMobile, UI_MOBILE_MEDIA_QUERY, UI_TABLET_MEDIA_QUERY, elementsSurfaceDeviceForMatches } from "../../../📱️device/🟦️.ts";
+import { reactHostPort } from "@semio-tech/ui/elements/Ports/react";
+import { type ElementsSurfaceDevice, elementsSurfaceDeviceIsMobile, UI_MOBILE_MEDIA_QUERY, UI_TABLET_MEDIA_QUERY, elementsSurfaceDeviceForMatches } from "@semio-tech/ui/device";
 import * as React from "react";
-import { UiMobileProvider, UiMobileContext } from "../../../🔨️modules/📱️ui-mobile-context/🟦️.tsx";
-import { useMediaQuery } from "../🌓️appearance/🟦️.ts";
-import { type InteractionCommands, InteractionContext, ActiveInteractionContext } from "../../../🧱️elements/👻️PanelGhost/🟦️.tsx";
+import { UiMobileProvider, UiMobileContext } from "@semio-tech/ui/modules/ui-mobile-context";
+import { useMediaQuery } from "@semio-tech/ui/appearance";
+import { type InteractionCommands, InteractionContext, ActiveInteractionContext } from "@semio-tech/ui/elements/PanelGhost";
 
 // #region 📱️UiMobile Context
 

@@ -3,7 +3,7 @@ import { strict as assert } from "node:assert";
 import { readFileSync } from "node:fs";
 import { Database } from "bun:sqlite";
 import Ajv from "ajv";
-import { KernelOriginalOperationIssuer, KernelOriginalResourcePool, OriginalOperationSource } from "@semio-tech/framework-actor/retained-turn";
+import { KernelOriginalOperationIssuer, KernelOriginalResourcePool, OriginalOperationSource } from "@semio-tech/framework/actor/retained-turn";
 import law from "./🔣️.json";
 import schema from "./🧬️schema/🔣️.json";
 export function verifyEnergyOriginalSessionOracle(): void {

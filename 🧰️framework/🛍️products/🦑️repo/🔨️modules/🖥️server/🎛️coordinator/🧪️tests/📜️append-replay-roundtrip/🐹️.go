@@ -44,7 +44,7 @@ func loadAppendVectors(ctx *host.Context) (appendVectors, []coordinator.EventInp
 	return vectors, inputs, nil
 }
 
-// freshScenarioDir is an empty directory of its own for one scenario, because the harness reuses one
+// 🌱️freshScenarioDir is an empty directory of its own for one scenario, because the harness reuses one
 // work directory per (case, role, implementation) and never empties it.
 func freshScenarioDir(ctx *host.Context, name string) (string, error) {
 	dir := filepath.Join(ctx.WorkDir, name)
@@ -158,7 +158,7 @@ func duplicateIsIdempotentAndCorruptionIsRefused(ctx *host.Context) (host.Outcom
 
 // region 🔖️Registration
 
-// Adapter is the registration entry point the generated host calls.
+// 🌉️Adapter is the registration entry point the generated host calls.
 func Adapter() *host.Adapter {
 	return host.NewAdapter("go").
 		Subject("append-then-replay-yields-frozen-sequences", appendThenReplayYieldsFrozenSequences).

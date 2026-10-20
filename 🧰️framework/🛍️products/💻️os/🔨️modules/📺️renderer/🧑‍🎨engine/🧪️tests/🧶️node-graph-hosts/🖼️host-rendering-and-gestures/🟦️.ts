@@ -2,8 +2,8 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import Ajv2020 from "ajv/dist/2020";
-import { uiViewport2dSchema as viewport2dSchema } from "@semio-tech/framework/ui/testing/fixtures";
-import { viewportPoseFixture } from "@semio-tech/framework/ui/testing/fixtures";
+import { uiViewport2dSchema as viewport2dSchema } from "@semio-tech/ui/testing/fixtures";
+import { viewportPoseFixture } from "@semio-tech/ui/testing/fixtures";
 import * as flowSessionLoader from "../../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
 import { cleanup, fireEvent, render, waitFor } from "@semio-tech/ui-react/test";
 import { afterEach, expect, it, vi } from "vitest";

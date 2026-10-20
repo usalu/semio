@@ -2,7 +2,7 @@
 //! relative leaf the drag gesture yields too (`drag-layers`, or `drag-path-points` under `editNodes`).
 use semio_s_artifact_draw_drawing_editor_tool::DrawingSelectionTargets;
 use semio_s_artifact_draw_drawing_editor_tool::drawing_selection_targets;
-use crate::editor::drawing::commands::canvas_pointer_down::canvas_tool;
+use semio_s_artifact_draw_drawing_editor_tool::canvas_tool;
 use semio_s_artifact_draw_drawing_editor_tool::{drawing_rebound_points, drawing_tool_emit, point_selection_effect, DrawingSession, DrawingTool};
 use semio_s_artifact_draw_drawing_editor_interaction::points;
 use semio_s_artifact_draw_drawing_transform::drag_layers::mutation::drag_layers;

@@ -1,5 +1,5 @@
 /** 🧊️ CAD renderer geometry targets: the tessellation worker hooks, the mesh transfers and the visible solid and face meshes of a model definition. */
-import { reactHostPort, type BufferGeometry as ThreeBufferGeometry } from "@semio-tech/framework/ui/targets/react";
+import { reactHostPort, type BufferGeometry as ThreeBufferGeometry } from "@semio-tech/ui-react";
 import {
   kernelGeometry,
   solidRef,

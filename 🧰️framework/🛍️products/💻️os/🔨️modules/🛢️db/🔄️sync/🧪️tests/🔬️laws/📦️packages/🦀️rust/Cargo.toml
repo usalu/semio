@@ -28,6 +28,7 @@ semio-framework-os-kernel-db-sync = { path = "../../../../📦️packages/🦀�
 semio-framework-async = { workspace = true, features = ["testkit"] }
 semio-framework-async-macros = { path = "../../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-hash = { path = "../../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
+semio-framework-trace-memory-testing = { path = "../../../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-actor = { path = "../../../../../🎭️actor/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-durability = { path = "../../../../../💾️durability/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-ids = { path = "../../../../../🆔️ids/📦️packages/🦀️rust" }

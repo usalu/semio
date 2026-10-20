@@ -1,0 +1,106 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🏗️model-build-job/🦀️.rs",
+ "function": "step_one",
+ "nth": 0,
+ "match_line": 165,
+ "types": {
+  "mesh_points": "usize",
+  "mesh_triangles": "usize"
+ },
+ "ret": "Result<bool, Vec<u8>>",
+ "inline": true,
+ "arms": [
+  {
+   "line": 203,
+   "name": "model_element_start",
+   "doc": "🧱️ Runs the `element start` stage of `step_one`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 222,
+   "name": "model_element_end",
+   "doc": "🪵️ Runs the `element end` stage of `step_one`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 238,
+   "name": "model_element_material",
+   "doc": "🔩️ Runs the `element material` stage of `step_one`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 254,
+   "name": "model_element_section",
+   "doc": "⚙️ Runs the `element section` stage of `step_one`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 293,
+   "name": "model_element_commit",
+   "doc": "🧲️ Runs the `element commit` stage of `step_one`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 354,
+   "name": "model_region_node_coordinate",
+   "doc": "🪛️ Runs the `region node coordinate` stage of `step_one`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 431,
+   "name": "model_region_element_material",
+   "doc": "🔧️ Runs the `region element material` stage of `step_one`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 494,
+   "name": "model_region_element_commit",
+   "doc": "🔨️ Runs the `region element commit` stage of `step_one`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  }
+ ],
+ "method": {
+  "self_param": "&mut self",
+  "call": "self.{name}({args})"
+ }
+}

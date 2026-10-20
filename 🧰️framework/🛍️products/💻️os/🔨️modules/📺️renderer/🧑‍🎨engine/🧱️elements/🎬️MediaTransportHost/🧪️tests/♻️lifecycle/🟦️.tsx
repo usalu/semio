@@ -11,7 +11,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     import("playwright"),
     import("node:path"),
     import("node:url"),
-    import("../../../../../../🔌️plugin/🪟️window-kits/🎬️media/🟦️.ts"),
+    import("@semio-tech/plugin-window-kits/media"),
     import("@semio-tech/framework/os/modules/renderer/engine/media/lifecycle"),
     import("../../../📤️SegmentedDownload/🟦️.ts"),
   ]);

@@ -28,7 +28,7 @@ test("the partition corpus validates against its closed schema with the independ
   const validate = new Ajv2020({ strict: true }).compile(JSON.parse(read("🧬️schema/🏛️crate-partition/🔣️.json")));
   expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
   expect(validate({ ...corpus, hidden: true })).toBe(false);
-  expect(corpus.crates.length).toBe(16);
+  expect(corpus.crates.length).toBe(17);
 });
 
 for (const row of corpus.crates) test(`${row.package} parses identically, lists exactly its table and keeps the exact source boundary`, () => {
@@ -40,7 +40,7 @@ for (const row of corpus.crates) test(`${row.package} parses identically, lists 
   const normal = edges(manifest, "dependencies"), dev = edges(manifest, "dev-dependencies");
   expect(normal.filter(name => names.has(name)).sort()).toEqual([...row.dependencies].sort());
   expect(dev.filter(name => names.has(name)).sort()).toEqual([...row.devDependencies].sort());
-  expect([...normal, ...dev].filter(name => corpus.peers.includes(name)).sort()).toEqual([...row.peerDependencies].sort());
+  expect([...new Set([...normal, ...dev])].filter(name => corpus.peers.includes(name)).sort()).toEqual([...row.peerDependencies].sort());
   expect([...normal, ...dev]).not.toContain(corpus.facade.package);
   const boundary = (manifest as unknown as { package: { metadata: { semio: { ["rust-source-boundary"]: Record<string, number> } } } }).package.metadata.semio["rust-source-boundary"];
   expect(boundary).toEqual({ maxSourceBytes: 262144, maxSourceFiles: 32, maxActiveLines: 4000 });

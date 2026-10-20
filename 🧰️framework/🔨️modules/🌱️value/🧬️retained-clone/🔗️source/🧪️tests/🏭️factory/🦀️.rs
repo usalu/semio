@@ -1,4 +1,4 @@
-use crate::{FactoryRetirement,FactoryAuthority,factory_arc_birth_bytes};
+use crate::{FactoryRetirement,FactoryAuthority,factory_arc_birth_bytes,retained_clone::RetainedCloneGrant};
 use std::sync::Arc;
 use semio_framework_value_factory::original_factory_fixture::*;
 #[test]
@@ -7,7 +7,7 @@ fn factory_authority_keeps_original_typed_source_until_admitted_close_and_report
     let fixture:serde_json::Value=serde_json::from_str(crate::text("♻️retirement/🏭️factory/🔗️authority/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     use std::io::Write;let mut oracle=std::process::Command::new("bun").args(["-e","const x=JSON.parse(await Bun.stdin.text());console.log(JSON.stringify([...new TextEncoder().encode(x.fixture.payload)]));"]).stdin(std::process::Stdio::piped()).stdout(std::process::Stdio::piped()).spawn().unwrap();oracle.stdin.take().unwrap().write_all(serde_json::json!({"fixture":fixture}).to_string().as_bytes()).unwrap();let output=oracle.wait_with_output().unwrap();assert!(output.status.success());let reference:Vec<u8>=serde_json::from_slice(&output.stdout).unwrap();assert_eq!(reference,fixture["payload"].as_str().unwrap().as_bytes());
     for work in fixture["copyGrants"].as_array().unwrap(){let work=work.as_u64().unwrap()as usize;
-        let mut payload=Vec::with_capacity(fixture["payloadCapacity"].as_u64().unwrap()as usize);payload.extend_from_slice(&reference);let payload_capacity=payload.capacity();let factory=Arc::new(OwnedFactory{payload});let factory_extent=arc_extent::<OwnedFactory>();
+        let mut payload=Vec::with_capacity(fixture["payloadCapacity"].as_u64().unwrap()as usize);payload.extend_from_slice(&reference);let payload_capacity=payload.capacity();let factory=Arc::new(OwnedFactory{payload});let factory_extent=factory_arc_birth_bytes::<OwnedFactory>();
         let original=String::from("source");let original_bytes=original.capacity();
         let authority=FactoryAuthority::new(factory.clone());let pointer=Arc::as_ptr(&factory);
         let (refused,heap)=crate::observe_retirement_allocations(||RetainedCloneSource::admit_owned(original,authority,Default::default()));assert_eq!(heap,(0,0));let (_,original,authority)=refused.err().unwrap();assert_eq!(authority.factory_address(),pointer as*const()as usize);

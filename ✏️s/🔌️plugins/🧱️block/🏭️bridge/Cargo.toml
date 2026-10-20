@@ -21,3 +21,10 @@ pack = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/📦️
 semio-s-artifact-block-2d = { path = "../🗿️artifacts/◻️2d/📦️packages/🦀️rust" }
 semio-s-artifact-block-3d = { path = "../🗿️artifacts/🧊️3d/📦️packages/🦀️rust" }
 semio-s-artifact-block-5d = { path = "../🗿️artifacts/🖐️5d/📦️packages/🦀️rust" }
+semio-s-artifact-block-2d-model = { path = "../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-block-2d-mutations = { path = "../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
+semio-s-artifact-block-3d-editor-modes = { path = "../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📦️packages/🦀️rust" }
+semio-s-artifact-block-3d-model = { path = "../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-block-3d-mutations = { path = "../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
+semio-s-artifact-block-5d-model = { path = "../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-block-5d-mutations = { path = "../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }

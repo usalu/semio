@@ -1,0 +1,40 @@
+// usage: node autod.cjs <file> <describeLine> <out.json> [maxLines=165] : proposes a dsplit spec; parts are cut at statement starts, named after the first test title of each part
+const ts = require("/Users/ueli/.cache/c6fin2/nm/node_modules/typescript");
+const fs = require("fs"), path = require("path");
+const [file, describeLine, out, max = "165"] = process.argv.slice(2);
+const V = "️";
+const text = fs.readFileSync(file, "utf8");
+const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, file.endsWith("x") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
+const L = (p) => sf.getLineAndCharacterOfPosition(p).line + 1;
+const d = sf.statements.find((s) => L(s.getStart(sf)) === +describeLine);
+const call = d.expression;
+const title = ts.isStringLiteralLike(call.arguments[0]) ? call.arguments[0].text : path.basename(path.dirname(file));
+const cb = call.arguments[call.arguments.length - 1];
+const st = [...cb.body.statements].map((n) => ({ a: L(n.getStart(sf)), b: L(n.getEnd()), n }));
+const STOP = new Set("the a an of and to is are with for in on by from as at or its it that this be into than then when without every each".split(" "));
+const words = (t) => t.toLowerCase().replace(/[^a-z0-9 ]+/g, " ").split(/\s+/).filter((w) => w && !STOP.has(w));
+const titleOf = (s) => { let t = null; const w = (n) => { if (t) return; if (ts.isCallExpression(n) && ts.isIdentifier(n.expression) && ["test", "it", "describe"].includes(n.expression.text) && n.arguments[0] && ts.isStringLiteralLike(n.arguments[0])) { t = n.arguments[0].text; return; } if (ts.isCallExpression(n) && ts.isPropertyAccessExpression(n.expression) && ["test", "it", "describe"].includes(n.expression.expression.getText(sf)) && n.arguments[0] && ts.isStringLiteralLike(n.arguments[0])) { t = n.arguments[0].text; return; } ts.forEachChild(n, w); }; w(s.n); return t; };
+const groups = [];
+let cur = [];
+let size = 0;
+for (const s of st) { const len = s.b - s.a + 1; if (cur.length && size + len > +max) { groups.push(cur); cur = []; size = 0; } cur.push(s); size += len; }
+if (cur.length) groups.push(cur);
+const POOL = "🔶 🔷 🔸 🔹 🟠 🟡 🟢 🔵 🟣 🟤 ⭐ 🌟 💠 🔰 🔱 ♦ ♣ ♠ ♥ 🎯 🎲 🧩 🧱 🪵 🪨 🧲 🪝 🔩 ⚙ 🔧 🔨 🪛 🪚 🧰 🗜 🔗 ⛓ 📌 📍 📎 🖇 📏 📐 ✂ 🗂 🗃 🗄 📂 📁 📦 📮 🏷 🔖 🧾 📜 📃 📄 📑 🔍 🔎 🔬 🔭 📡 🛰 🧭 🗺 🧳 🎒 🪁 🎈 🎀 🎁 🎐 🪅 🧸 🎨 🖌 🖍 🪄 🔮 🧿 🪬 🧪 🧫 🧬 💎 🔔 🔕 📣 📢 🎵 🎶 🎼 🥁 🪘 🎷 🎺 🎸 🪕 🎻 🪗 🏆 🥇 🎖 🏅 🚩 🏁 🏴 🏳 🪧 🚦 🚧 ⚓ ⛵ 🛶 🚀 🛸 🚁 🛩 🚂 🚃 🚲 🛴 🛹 🛼 ⛽ 🛞 🪂 ⏱ ⏲ ⏰ 🕰 ⌛ ⏳ 🌡 ☀ 🌙 ⭕ 🌈 🔥 💧 🌊 ❄ ⚡ ☔ 🍀 🌱 🌿 🌳 🌲 🌴 🌵 🌾 🍁 🍂 🌸 🌼 🌻 🌺 🪻 🪷 🐝 🐞 🦋 🐌 🐜 🪲 🕷 🦂".split(" ");
+const base = path.dirname(file);
+const used = new Set();
+for (const e of fs.existsSync(base) ? fs.readdirSync(base) : []) used.add(e.split(V)[0]);
+let pi = 0;
+const pick = () => { while (pi < POOL.length && (used.has(POOL[pi]) || text.includes(POOL[pi]))) pi++; const e = POOL[pi++]; used.add(e); return e; };
+const pascal = (ws) => ws.map((w) => w[0].toUpperCase() + w.slice(1)).join("");
+const parts = groups.map((g, i) => {
+  const t = g.map(titleOf).find(Boolean) || title;
+  const ws = words(t).slice(0, 4);
+  const slug = (ws.join("-") || "part-" + (i + 1)).slice(0, 40);
+  const nm = "register" + (pascal(ws) || "Part" + (i + 1)) + "Tests";
+  const e = pick(), fe = pick();
+  return { dir: e + V + slug, doc: `/** ${e}${V} The ${ws.join(" ")} tests of the ${title} suite. */`, name: nm, emoji: fe, fdoc: `Registers the ${ws.join(" ")} tests of the ${title} suite.`, from: g[0].a, to: g[g.length - 1].a };
+});
+const names = new Set();
+parts.forEach((p) => { while (names.has(p.name)) p.name += "More"; names.add(p.name); });
+fs.writeFileSync(out, JSON.stringify({ file: path.resolve(file), describeLine: +describeLine, sharedRewrite: [["dirname(fileURLToPath(import.meta.url))", "dirname(dirname(fileURLToPath(import.meta.url)))"]], shared: (() => { const e = pick(); return { dir: e + V + "shared", doc: `/** ${e}${V} The shared declarations of the ${title} suite tests. */` }; })(), parts }, null, 1));
+console.log(parts.map((p) => `${p.from}-${p.to} ${p.dir} ${p.name}`).join("\n"));

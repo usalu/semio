@@ -5,6 +5,7 @@ use semio_framework_pets_contract::schema::Ending;
 use semio_framework_pets_contract::schema::Gear;
 use semio_framework_pets_contract::schema::Waypoint;
 use semio_framework_pets_contract::schema::Course;
+use semio_framework_pets_clearance::Body as Solid;
 
 //#region 🔖️Courses
 /// 🪟️ Distance above the first footprint-sized perch or motionless head below the feet.

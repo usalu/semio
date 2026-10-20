@@ -72,8 +72,8 @@ import{observeNativeStorageJournalV1,readNativeStorageObservationPolicyV1,retain
 import type{NativeStoragePolicyV1}from"../📜️journal/🟦️.ts";
 import{acquireResourceLease,captureResourceLeaseWriterProofV1,requireMaterializedPathV1}from"../../../../🔒️leases/🟦️.ts";
 import{acceptNativeImageMaintenanceV1,acceptNativeImageBorrowerCleanupV1,withNativeImageBorrowerOperationV1,closeNativeImageBorrowerCleanupV1,type NativeImageBorrowerV1}from"../📥️borrower/🟦️.ts";
-import{requireArtifactDescriptorClosureV1}from"../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
-import storageSchema from"../🧬️schema/🔣️.json";
+import{requireArtifactDescriptorClosureV1}from"../../../../../📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import storageSchema from"../🧬️schema/🔣️.json" with { type: "json" };
 import type{AcceptedResourceLeaseCleanupV1,ResourceLease}from"../../../../🔒️leases/🟦️.ts";
 const protectedParents=new WeakMap<NativeProtectedParentV1,{control:ResourceLeaseControl;read:NativeProtectedParentReadV1;options:NativeFixedPlatformOptionsV1;live:boolean;accepting:boolean}>(),unresolvedProtectedParents=new Set<unknown>();
 /** 🏛️ Retains actual nonwaiting parent EX through a real maintenance borrower and its prefunded cleanup. */

@@ -41,3 +41,4 @@ semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mu
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-s-artifact-block-5d-mut-grips = { workspace = true }
 semio-s-plugin-block = { workspace = true, features = ["test-serde"] }
+semio-s-artifact-block-5d-mut-part-kind = { workspace = true }

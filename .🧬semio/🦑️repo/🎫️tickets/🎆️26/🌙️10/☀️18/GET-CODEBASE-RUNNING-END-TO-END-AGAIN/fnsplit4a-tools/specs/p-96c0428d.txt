@@ -1,0 +1,5 @@
+InteractiveDisposition (arrow) 4 phases, keep=-, final return=true
+49-159 useSlideEpochState
+189-318 useAttachPointerGestureState
+330-479 buildPointerDownState
+482-515 buildWrapperStyleState

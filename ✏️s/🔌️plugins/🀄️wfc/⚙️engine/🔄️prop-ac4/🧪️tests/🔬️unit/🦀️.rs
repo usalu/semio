@@ -29,8 +29,6 @@ fn initial_counts_match_full_domain_supporter_popcounts() {
     let mut domains = DomainStore::new_full(3, model.weights());
     let mut metrics = Metrics::default();
     let engine = Ac4Engine::new(&model, &topo, &mut domains, &mut metrics).unwrap();
-    // Node 1 has two incoming arcs (from 0 and from 2); each counted pattern's support should
-    // equal the full popcount of allowed(adj, p) intersected with the (full) target domain.
     let mut slots = Vec::new();
     topo.for_each_in_arc(NodeId(1), |_, _, slot| slots.push(slot));
     assert_eq!(slots.len(), 2);
@@ -141,7 +139,6 @@ fn sequential_and_batch_seed_application_agree() {
             }
         }
 
-        // Sequential: one propagate() call per removal, applied one at a time.
         let mut domains_seq = DomainStore::new_full(node_count, model.weights());
         let mut metrics_seq = Metrics::default();
         let seq_result = Ac4Engine::new(&model, &topo, &mut domains_seq, &mut metrics_seq).and_then(|mut engine| {
@@ -155,7 +152,6 @@ fn sequential_and_batch_seed_application_agree() {
             Ok(())
         });
 
-        // Batch: all removals applied up front, one propagate() call with the full worklist.
         let mut domains_batch = DomainStore::new_full(node_count, model.weights());
         let mut metrics_batch = Metrics::default();
         let batch_result = Ac4Engine::new(&model, &topo, &mut domains_batch, &mut metrics_batch).and_then(|mut engine| {
@@ -207,7 +203,6 @@ mod quick {
             let topo = tb.build().unwrap();
 
             let mut domains_a = DomainStore::new_full(node_count, model.weights());
-            // Apply a random set of initial single-pattern removals to both copies identically.
             let mut seed_events = Vec::new();
             let removal_count = rng.next_range(0, (node_count * pattern_count) as u64) as usize;
             for _ in 0..removal_count {
@@ -223,21 +218,12 @@ mod quick {
                 domains_b.get_mut(n).remove(p, model.weights());
             }
 
-            // AC-3 must start with every node dirty, not just the seed-touched ones — the same
-            // full-graph seeding crate::search performs at solve start, and necessary so both
-            // engines get a fair chance to discover patterns with zero support in the model
-            // itself (independent of these specific removals).
             let mut queue = PropQueue::new(node_count);
             queue.push_all(node_count);
             let mut trail = Trail::new();
             let mut metrics_a = Metrics::default();
             let result_a = prop_ac3::run_to_fixed_point(&model, &topo, &mut domains_a, &mut queue, &mut trail, &mut metrics_a);
 
-            // AC-4's own initial sweep (in `Ac4Engine::new`) is the AC-4-side equivalent of
-            // AC-3's full-queue seeding above — it must run directly against `domains_b` (not
-            // a throwaway full copy) since it mutates whatever store it is given. The random
-            // seed removals are then applied on top and fed in as a further worklist, mirroring
-            // a real decision's sibling removal.
             let mut metrics_b = Metrics::default();
             let result_b = match Ac4Engine::new(&model, &topo, &mut domains_b, &mut metrics_b) {
                 Err(w) => Err(w),
@@ -260,7 +246,7 @@ mod quick {
                         assert_eq!(domains_a.get(nid).bits(), domains_b.get(nid).bits(), "trial {trial}: node {n} domains diverged between AC-3 and AC-4");
                     }
                 }
-                (Err(_), Err(_)) => {} // both detected a contradiction; exact wiped node may differ by processing order
+                (Err(_), Err(_)) => {}
                 (a, b) => panic!("trial {trial}: AC-3 and AC-4 disagreed on satisfiability: ac3={a:?} ac4={b:?}"),
             }
         }

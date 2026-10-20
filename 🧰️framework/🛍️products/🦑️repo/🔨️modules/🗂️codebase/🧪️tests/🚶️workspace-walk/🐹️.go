@@ -25,7 +25,7 @@ type repoTree struct {
 	Entries []treeEntry `json:"entries"`
 }
 
-// materializeTree writes the committed tree into a private directory, points the repository root at
+// 🌳️materializeTree writes the committed tree into a private directory, points the repository root at
 // it and drops every cache the global-root Go implementation keeps.
 func materializeTree(ctx *host.Context) (string, error) {
 	data, err := ctx.InputBytes("shared://📡️repo-tree.json")
@@ -140,7 +140,7 @@ func walkProjectsTheSameDefinitions(ctx *host.Context) (host.Outcome, error) {
 
 // region 🔖️Registration
 
-// Adapter is the registration entry point the generated host calls.
+// 🌉️Adapter is the registration entry point the generated host calls.
 func Adapter() *host.Adapter {
 	return host.NewAdapter("go").
 		Subject("walk-reports-the-same-considered-files", walkReportsTheSameConsideredFiles).

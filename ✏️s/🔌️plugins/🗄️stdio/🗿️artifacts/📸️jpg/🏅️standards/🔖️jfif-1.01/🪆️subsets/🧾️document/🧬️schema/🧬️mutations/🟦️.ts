@@ -1,7 +1,7 @@
 /** 🧬️ Transparent JpgMutation union. */
-import type { ChangeJfifHeaderMutation } from './🪪️change-jfif/🟦️.ts';
-import type { InsertOtherSegmentMutation } from './📥️insert-other/🟦️.ts';
-import type { RemoveOtherSegmentMutation } from './🗑️remove-other/🟦️.ts';
+import type { ChangeJfifHeaderMutation } from './🪪️change-jfif-header/🟦️.ts';
+import type { InsertOtherSegmentMutation } from './📥️insert-other-segment/🟦️.ts';
+import type { RemoveOtherSegmentMutation } from './🗑️remove-other-segment/🟦️.ts';
 import type { ReplacePixelsMutation } from './🔲️replace-pixels/🟦️.ts';
 import type { ReplaceImage } from './🖼️replace-image/🟦️.ts';
 export type JpgMutation =

@@ -1,4 +1,5 @@
 
+use super::*;
 use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 
 #[test]

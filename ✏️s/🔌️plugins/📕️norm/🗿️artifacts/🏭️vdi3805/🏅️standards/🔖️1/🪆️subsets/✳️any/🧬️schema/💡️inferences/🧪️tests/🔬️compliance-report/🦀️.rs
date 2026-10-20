@@ -1,6 +1,7 @@
 use semio_s_artifact_norm_vdi3805_inferences::*;
 use semio_s_plugin_norm_compliance::CheckStatus;
 use std::collections::BTreeSet;
+use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
 
 #[semio_framework_async_macros::async_test]
 async fn evaluate_conforming_dataset_complies() {
@@ -33,7 +34,7 @@ async fn valve_min_kvs_worked_example_dn50() {
     if let SheetAttributes::ValveHeating(ref mut a) = doc.catalog.products[0].configuration.attributes {
         a.kvs_m3_s = 0.5 / 3600.0;
     }
-    semio_s_artifact_norm_vdi3805_checks::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
+    semio_s_artifact_norm_vdi3805_model::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
     let report = evaluate(&doc);
     let kvs = report.checks.iter().find(|c| c.id.contains("vdi3805.2.kvs")).expect("kvs check");
     assert_eq!(kvs.status, CheckStatus::Fail);
@@ -55,7 +56,7 @@ async fn remedy_law_applicable_writes_improve_or_pass() {
                 if let SheetAttributes::ValveHeating(ref mut a) = doc.catalog.products[0].configuration.attributes {
                     a.kvs_m3_s = remedy.required.value;
                 }
-                semio_s_artifact_norm_vdi3805_checks::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
+                semio_s_artifact_norm_vdi3805_model::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
                 let next = evaluate(&doc);
                 let again = next.checks.iter().find(|c| c.id == fail.id);
                 assert!(again.is_none_or(|c| c.status == CheckStatus::Pass || c.utilization <= 1.0), "kvs remedy on {} did not fix", fail.id);
@@ -64,7 +65,7 @@ async fn remedy_law_applicable_writes_improve_or_pass() {
                 if let SheetAttributes::ValveHeating(ref mut a) = doc.catalog.products[0].configuration.attributes {
                     a.dn = remedy.required.value as u16;
                 }
-                semio_s_artifact_norm_vdi3805_checks::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
+                semio_s_artifact_norm_vdi3805_model::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
                 let next = evaluate(&doc);
                 let again = next.checks.iter().find(|c| c.id == fail.id);
                 assert!(again.is_none_or(|c| c.status == CheckStatus::Pass || c.utilization <= 1.0), "dn remedy on {} did not fix", fail.id);

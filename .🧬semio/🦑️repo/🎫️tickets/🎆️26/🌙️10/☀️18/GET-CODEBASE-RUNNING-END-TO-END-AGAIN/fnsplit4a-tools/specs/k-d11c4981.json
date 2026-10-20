@@ -1,0 +1,69 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️owned-locale-detector-retirement/🪄️tree-helpers-1/🟦️.tsx",
+ "function": "registerTreeHelpers1Tests",
+ "kit": {
+  "dir": "💠️test-kit",
+  "doc": "/** 💠️ The shared test kit of registerTreeHelpers1Tests: the destructured dependencies and the shared fixtures. */",
+  "name": "createTreeHelpers1Kit",
+  "emoji": "🔰",
+  "fdoc": "Creates the shared test kit of registerTreeHelpers1Tests from the injected dependencies.",
+  "typeName": "TreeHelpers1Kit"
+ },
+ "groups": [
+  {
+   "dir": "🔶️tree-helpers",
+   "doc": "/** 🔶️ The tree helpers describe block of registerTreeHelpers1Tests: its wrapper and parts. */",
+   "name": "registerTreeHelpersSuite",
+   "emoji": "🔷",
+   "fdoc": "Registers the tree helpers describe block from its parts.",
+   "describeLine": 10,
+   "parts": [
+    {
+     "dir": "🟠️resolves-tree-drop-positions",
+     "doc": "/** 🟠️ The resolves tree drop positions tests of registerTreeHelpers1Tests. */",
+     "name": "registerResolvesTreeDropPositionsTests",
+     "emoji": "🟡",
+     "fdoc": "Registers the resolves tree drop positions tests of registerTreeHelpers1Tests.",
+     "from": 12,
+     "to": 158
+    },
+    {
+     "dir": "🟢️mark-ghost-tree-interaction",
+     "doc": "/** 🟢️ The mark ghost tree interaction tests of registerTreeHelpers1Tests. */",
+     "name": "registerMarkGhostTreeInteractionTests",
+     "emoji": "🔵",
+     "fdoc": "Registers the mark ghost tree interaction tests of registerTreeHelpers1Tests.",
+     "from": 176,
+     "to": 302
+    },
+    {
+     "dir": "🟣️ghost-provider-dims-navbar",
+     "doc": "/** 🟣️ The ghost provider dims navbar tests of registerTreeHelpers1Tests. */",
+     "name": "registerGhostProviderDimsNavbarTests",
+     "emoji": "🟤",
+     "fdoc": "Registers the ghost provider dims navbar tests of registerTreeHelpers1Tests.",
+     "from": 329,
+     "to": 471
+    },
+    {
+     "dir": "⭐️applies-tree-row-fill",
+     "doc": "/** ⭐️ The applies tree row fill tests of registerTreeHelpers1Tests. */",
+     "name": "registerAppliesTreeRowFillTests",
+     "emoji": "🌟",
+     "fdoc": "Registers the applies tree row fill tests of registerTreeHelpers1Tests.",
+     "from": 477,
+     "to": 477
+    }
+   ],
+   "helpers": {
+    "dir": "🔸️helpers",
+    "doc": "/** 🔸️ The callback-local helpers shared by the parts of the tree helpers describe block. */",
+    "name": "createTreeHelpersHelpers",
+    "emoji": "🔹",
+    "fdoc": "Creates the callback-local helpers shared by the parts of the tree helpers describe block.",
+    "typeName": "TreeHelpersHelpers"
+   }
+  }
+ ],
+ "rootKeep": []
+}

@@ -1,4 +1,5 @@
 use super::*;
+use semio_s_artifact_remodel_remodeling_sfm::editor::remodeling::engine::sfm as remodeling_sfm;
 use semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::So3;
 use geometry::random::{normal, Rng};
 

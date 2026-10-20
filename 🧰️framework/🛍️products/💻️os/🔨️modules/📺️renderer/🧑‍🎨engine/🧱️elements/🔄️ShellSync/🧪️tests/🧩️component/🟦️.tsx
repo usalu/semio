@@ -18,7 +18,7 @@ import { posix } from "node:path";
 import { HubConnectionIndicator, SyncAttachCard, hubConnectionSummaryV1, syncAttachTargetV1, syncStatusLabelV1, type HubLinkV1, type HubSessionPresenceV1, type SyncStatusTextsV1 } from "../../🟦️.tsx";
 import hubSummary from "../🧫️fixtures/📶️hub-connection-summary.json";
 import attachTargets from "../🧫️fixtures/🎯️sync-attach-target.json";
-import hubProjection from "@semio-tech/framework/os/modules/renderer/engine/testing/fixtures/hub-projection.json";
+import hubProjection from "@semio-tech/framework-os/modules/renderer/engine/testing/fixtures/hub-projection.json";
 // #endregion 🔌️Adapters
 
 //#region 🔖️Fixtures

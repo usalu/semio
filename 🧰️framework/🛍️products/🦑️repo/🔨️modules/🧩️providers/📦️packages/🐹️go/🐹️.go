@@ -2,7 +2,7 @@
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Package providers holds the composable provider integrations of the semio repository domain:
+// 🗜️Package providers holds the composable provider integrations of the semio repository domain:
 // issue/milestone management, version control, sandbox and the editor providers. Every external
 // process goes through ProcessRunner, so a provider is exercised without gh or git on the machine.
 package providers
@@ -242,7 +242,7 @@ const McpClientClaude McpClientKind = "claude"
 
 const McpClientCodex McpClientKind = "codex"
 
-// ParseMcpClientKind maps a CLI/MCP profile slug to an MCP server kind.
+// 📂️ParseMcpClientKind maps a CLI/MCP profile slug to an MCP server kind.
 func ParseMcpClientKind(raw string) (McpClientKind, error) {
 	switch strings.ToLower(strings.TrimSpace(raw)) {
 	case "", "generic", "client":
@@ -262,7 +262,7 @@ func ParseMcpClientKind(raw string) (McpClientKind, error) {
 	}
 }
 
-// HookClientForMcpKind maps an MCP entry binary to the hook client id used by ResolveHookEvent.
+// 🪝️HookClientForMcpKind maps an MCP entry binary to the hook client id used by ResolveHookEvent.
 func HookClientForMcpKind(kind McpClientKind) string {
 	switch kind {
 	case McpClientCursor:
@@ -288,7 +288,7 @@ func ResolveMcpTicketClient(kind McpClientKind, client string) string {
 	return HookClientForMcpKind(kind)
 }
 
-// McpKindFromResolvedClient maps a validated ticket client slug to an MCP surface kind for plan/spec attachment.
+// 📡️McpKindFromResolvedClient maps a validated ticket client slug to an MCP surface kind for plan/spec attachment.
 func McpKindFromResolvedClient(client string) McpClientKind {
 	switch strings.TrimSpace(client) {
 	case "cursor-chat", "cursor":
@@ -306,7 +306,7 @@ func McpKindFromResolvedClient(client string) McpClientKind {
 	}
 }
 
-// McpServerName returns the MCP server identifier string for the given kind.
+// 📜️McpServerName returns the MCP server identifier string for the given kind.
 func McpServerName(kind McpClientKind) string {
 	switch kind {
 	case McpClientCursor, McpClientKiro, McpClientCopilot, McpClientClaude, McpClientCodex, McpClientGeneric, "":

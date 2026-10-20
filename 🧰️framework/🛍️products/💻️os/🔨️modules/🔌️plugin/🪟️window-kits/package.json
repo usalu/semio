@@ -27,6 +27,7 @@
   "bundleKind": "library",
   "devDependencies": {
     "@semio-tech/process": "workspace:*",
+    "@semio-tech/ui": "workspace:*",
     "ajv": "8.20.0"
   }
 }

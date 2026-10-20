@@ -1,14 +1,14 @@
 #[semio_framework_async_macros::async_test]
 async fn primary_asset_is_nonempty() {
-    let text = semio_s_artifact_norm_vdi3805_examples::demo::PRIMARY_TEXT;
+    let text = crate::demo::PRIMARY_TEXT;
     assert!(text.len() > 8);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn primary_asset_decodes_to_conforming_valve_dataset() {
     use semio_s_artifact_norm_vdi3805_io::text::snapshot::decode_vdi3805_dsl;
-    use crate::{conforming_valve_dataset, reference_fixture};
-    let text = semio_s_artifact_norm_vdi3805_examples::demo::PRIMARY_TEXT;
+    use semio_s_artifact_norm_vdi3805_model::{conforming_valve_dataset, reference_fixture};
+    let text = crate::demo::PRIMARY_TEXT;
     let decoded = decode_vdi3805_dsl(text).expect("demo dsl");
     assert_eq!(decoded, conforming_valve_dataset());
     assert_eq!(decoded, reference_fixture());

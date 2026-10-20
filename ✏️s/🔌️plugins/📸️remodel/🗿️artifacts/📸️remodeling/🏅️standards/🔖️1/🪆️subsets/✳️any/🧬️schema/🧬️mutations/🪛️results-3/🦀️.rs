@@ -19,6 +19,7 @@ pub mod standards {
                         pub mod replace_dense {
                             #[path = "../☁️replace-dense/🦀️.rs"]
                             mod component;
+                            pub use component::*;
                             #[path = "../☁️replace-dense/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../☁️replace-dense/↩️inverse/🦀️.rs"]
@@ -28,6 +29,7 @@ pub mod standards {
                         pub mod replace_geo_products {
                             #[path = "../🗾replace-geo-products/🦀️.rs"]
                             mod component;
+                            pub use component::*;
                             #[path = "../🗾replace-geo-products/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../🗾replace-geo-products/↩️inverse/🦀️.rs"]

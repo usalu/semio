@@ -4,7 +4,7 @@ use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)] use semio_framework_value_derive::{FromValue, ToValue};
 #[allow(unused_imports)] use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::config::*;
 use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::transient::LayoutWindowTransient;
-use semio_s_artifact_layout_layout_editor_commands::editor::layout::modes::edit::windows::blueprint::transient::LayoutWindowTransientMutation;
+use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::transient::LayoutWindowTransientMutation;
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 
 fn block_on_layout_windows<F: std::future::Future>(future: F) -> F::Output {
@@ -28,7 +28,7 @@ fn layout_window_ownership_runtime_isolates_restores_and_resets_exact_windows() 
             use semio_s_artifact_layout_layout_editor_commands::{engagement_input, set_camera};
             use semio_s_artifact_layout_layout_editor::{create_layout_app, LayoutCommand, LayoutPlayApp};
             use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::LAYOUT_PLAY_BODY_BLUEPRINT;
-            use semio_s_artifact_layout_layout_editor_commands::editor::layout::modes::edit::windows::blueprint::transient::LayoutBlueprintWindowTransientOwner;
+            use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::transient::LayoutBlueprintWindowTransientOwner;
             use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
 
             async fn dispatch(app: &mut VcsArtifactApp<EditorApp<LayoutPlayApp>>, command: LayoutCommand, view: &ViewModel, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(usize, usize), String> {

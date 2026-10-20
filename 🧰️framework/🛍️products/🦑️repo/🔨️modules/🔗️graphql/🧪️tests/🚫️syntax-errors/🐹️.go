@@ -47,7 +47,7 @@ func malformedInputsAreRejected(ctx *host.Context) (host.Outcome, error) {
 
 // region 🔖️Registration
 
-// Adapter is the registration entry point the generated host calls.
+// 🌉️Adapter is the registration entry point the generated host calls.
 func Adapter() *host.Adapter {
 	return host.NewAdapter("go").Subject("malformed-inputs-are-rejected", malformedInputsAreRejected)
 }

@@ -1,11 +1,12 @@
 /** 🔗️ The kernel return input page, content, builder binding and evidence tests. */
 import { loadContentInputAuthorityFixture, loadContentInputBuilderDocument, loadContentInputBuilderFixture, loadContentInputReleaseDocument, loadContentInputReleaseFixture, loadContentInputPayloadDocument, loadContentInputPayloadFixture } from "@semio-tech/framework-kernel/testing/fixtures";
+import { OwnedKernelReturnContent } from "@semio-tech/framework-kernel/return/content/input";
 import type { ShardClientSettlementTestKit } from "../🧰️settlement-test-kit/🟦️.ts";
 import type { CapturedReturnHelpers } from "../🛠️captured-return-helpers/🟦️.ts";
 
 /** ⛓ Registers the kernel return input page, content, builder binding and detach evidence tests. */
 export function registerKernelReturnInputBindingTests(kit: ShardClientSettlementTestKit, helpers: CapturedReturnHelpers): void {
-  const { OwnedKernelReturnContent, OwnedShardReturnPage, OwnedUiInstance, capturedReturnState, expect, fixtureHosts, fixtureResidentBuilder, fixtureResidentPayload, fixtureResidentPool, fixtureResidentScope, it, testSource, vi } = kit;
+  const { OwnedShardReturnPage, OwnedUiInstance, capturedReturnState, expect, fixtureHosts, fixtureResidentBuilder, fixtureResidentPayload, fixtureResidentPool, fixtureResidentScope, it, testSource, vi } = kit;
   const { deliveredInput } = helpers;
   it("OwnedKernelReturnInput keeps decoded page storage behind its private facade", async () => {
     const { client, instance, source, response, report, vector } = await deliveredInput();
@@ -119,14 +120,14 @@ export function registerKernelReturnInputBindingTests(kit: ShardClientSettlement
     const binding = field.members.find(item => ts.isPropertyDeclaration(item) && item.name.getText(input) === "#builder"); expect(binding?.getText(input)).toContain("OwnedUiResidentBuilderRetirement");
   });
   it("OwnedKernelReturnBuilderBinding rejects premature and forged witnesses without releasing the original binding", async () => {
-    const { OwnedKernelReturnInputField } = await import("@semio-tech/framework-kernel/return/content/input"); const { OwnedUiResidentBuilderRetirement } = await import("@semio-tech/framework/ui/contract/retained/resident");
+    const { OwnedKernelReturnInputField } = await import("@semio-tech/framework-kernel/return/content/input"); const { OwnedUiResidentBuilderRetirement } = await import("@semio-tech/ui-contract/retained/resident");
     const { client, residentLedger, instance, source, response } = await deliveredInput(); const input = new OwnedKernelReturnContent(source, fixtureHosts.get(instance)!, instance.activation, instance.lifetime!);
     for (let turn = 0; turn < 256 && !input.field; turn++) input.advance({ maxItems: 1, maxBytes: 4096 }); const field = input.field!; const fragment = field.fragment;
     const detach = Reflect.get(field, "detachBuilder"); const settle = Reflect.get(field, "settleBuilder"); const detached = Reflect.get(OwnedKernelReturnInputField, "matchesBuilderDetached"); const settled = Reflect.get(OwnedKernelReturnInputField, "matchesBuilderSettled");
     expect([detach, settle, detached, settled].map(value => typeof value)).toEqual(["function", "function", "function", "function"]);
     const pool = await fixtureResidentPool(client, residentLedger); const scope = await fixtureResidentScope(pool, residentLedger, instance); const resident = await fixtureResidentPayload(scope, residentLedger, field);
     const held: { proof: unknown } = { proof: null }; const original = Object.freeze; const spy = vi.spyOn(Object, "freeze").mockImplementation(value => { if (value instanceof OwnedUiResidentBuilderRetirement) held.proof = value; return original(value); });
-    let builder: import("@semio-tech/framework/ui/contract/retained/operations/wire/pages").OwnedUiOperationPayloadBuilder | null = null;
+    let builder: import("@semio-tech/ui-contract/retained/operations/wire/pages").OwnedUiOperationPayloadBuilder | null = null;
     try { builder = (await fixtureResidentBuilder(residentLedger, field, resident)).builder; } finally { spy.mockRestore(); }
     if (!builder || !held.proof) throw new Error("Genuine original builder/witness missing"); expect(OwnedUiResidentBuilderRetirement.matchesBody(held.proof, builder, field)).toBe(false);
     let reads = 0; const forged = { get phase() { reads++; throw new Error("Foreign builder proof getter"); } }; const proxy = new Proxy({}, { get() { reads++; throw new Error("Foreign builder proof proxy"); } }); const before = residentLedger.usage;

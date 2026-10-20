@@ -10,6 +10,7 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
   - You MUST use `repo` binaryy for all commands.
     - You MUST NOT use IDEs.
       - All human devs are using `repo dashboard`.
+        - You MUST NOT use `repo dashboard`. 
 - You MUST NOT create runtime dependencies on external libraries.
   - You SHOULD NOT use external libraries for runtime purposes.
     - You SHOULD use existing libraries as possible to test our implementation.

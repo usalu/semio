@@ -1,17 +1,17 @@
 import type graphSnapshotPolicy from"../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🔣️policy.json";
 import type exactReadSchema from"../📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json";
-import{captureBoundedSourceRevisionV1}from"../📥️inputs/🔏️revision/🟨️.mjs";
+import{captureBoundedSourceRevisionV1,capturePhysicalSourceTextV1,physicalSourceOriginV1,type PhysicalSourceModuleMetaV1}from"../📥️inputs/🔏️revision/🟨️.mjs";
 import{fileURLToPath}from"node:url";
 import*as observationV1 from"../👁️observation/🟨️.mjs";
 import{withManagedGraphSourceReadBatchV1,readExactSourceInventoryV1}from"../📥️inputs/🧮️digest/📥️read/🟨️.mjs";
-import{captureInferenceInventoryReferencesV1,admitInferenceInventoryCohortV1}from"../👁️observation/📥️reuse/🟨️.mjs";
+import{captureInferenceInventoryReferencesV1,admitInferenceInventoryCohortV1,planInferenceInventoryCohortsV1}from"../👁️observation/📥️reuse/🟨️.mjs";
 import{requireCurrentSourceInventoryV1,captureSourceInputInventoryV1,captureCargoLockInventoryV1,admitExactSourceExtentV1}from"../📥️inputs/📋️data/📥️load/🟨️.mjs";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {withRepositoryBuildGraphConsumerV1,withRepositoryBuildGraphFactStoreV1,withRepositoryBuildGraphSelectionV1,buildGraphWriterResourceV1} from "../📥️inputs/💾️storage/🟨️.mjs";
 import {readBuildOwnerRegistryV1,readBuildGraphSelectionV1,closeBuildOwnerAdmissionV1,buildGraphScopeKeyV1,type BuildGraphSelectionV1,type BuildOwnerRegistryV1,type BuildOwnerAdmissionV1} from "./🚪️admission/🟦️.ts";
 import { readdir, readFile, open, mkdir, writeFile, rename, lstat, rm } from "node:fs/promises";
 import {constants} from "node:fs";
-import{withArtifactDescriptorV1}from"../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import{withArtifactDescriptorV1}from"../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import { join, dirname, relative, isAbsolute } from "node:path";
 import { randomUUID, randomBytes, createHash } from "node:crypto";
 import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -21,16 +21,16 @@ import {acquireQueuedResourceLease} from "../../../../../../🔨️modules/🏃�
 import type {RepositoryCacheStoreV1} from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 
-const graphSnapshotPolicyURLV1=new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🔣️policy.json",import.meta.url),exactReadPolicyURLV1=new URL("../📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json",import.meta.url),graphSnapshotPolicyCaptureV1=captureBoundedSourceRevisionV1(fileURLToPath(graphSnapshotPolicyURLV1),65536,true),exactReadPolicyCaptureV1=captureBoundedSourceRevisionV1(fileURLToPath(exactReadPolicyURLV1),65536,true);
+const graphSnapshotPolicyURLV1=new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🔣️policy.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),exactReadPolicyURLV1=new URL("../📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),graphSnapshotPolicyCaptureV1=captureBoundedSourceRevisionV1(fileURLToPath(graphSnapshotPolicyURLV1),65536,true),exactReadPolicyCaptureV1=captureBoundedSourceRevisionV1(fileURLToPath(exactReadPolicyURLV1),65536,true);
 const graphSnapshotPolicyV1:typeof graphSnapshotPolicy=Object.freeze(JSON.parse(graphSnapshotPolicyCaptureV1.text??"")),exactSourceReadPolicyV1:typeof exactReadSchema.definitions.Policy.const=Object.freeze(JSON.parse(exactReadPolicyCaptureV1.text??"").definitions.Policy.const);
 function requireCurrentGraphReadPoliciesV1():void{if(captureBoundedSourceRevisionV1(fileURLToPath(graphSnapshotPolicyURLV1),65536).sha256!==graphSnapshotPolicyCaptureV1.sha256||captureBoundedSourceRevisionV1(fileURLToPath(exactReadPolicyURLV1),65536).sha256!==exactReadPolicyCaptureV1.sha256)throw Error("Stale loaded Graph reader policy; restart required");}
 
 /** 📖️ Reads each declaration through the same exact source fact boundary as inference. */
-function graphDeclarationV1(path:string):any{return JSON.parse(observationV1.observedFs.readFileSync(new URL(path,import.meta.url),"utf8"));}
+function graphDeclarationV1(path:string):any{const url=new URL(path,physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),captured=capturePhysicalSourceTextV1(url,65536),observed=observationV1.observedFs.readFileSync(url,"utf8");if(observed!==captured)throw Error("Current graph declaration Source changed");return JSON.parse(observed);}
 
 /** 🧾️ Binds loaded graph behavior and its publication declaration to their original bytes. */
 export interface BuildGraphModuleAuthorityV1{implementation:string;publication:string}
-const graphModuleAuthorityV1=():BuildGraphModuleAuthorityV1=>{requireCurrentSourceInventoryV1();requireCurrentGraphReadPoliciesV1();const observation=observationV1;if(typeof observation.requireCurrentObservationV1!=="function")throw Error("Loaded observation current-instance guard required");observation.requireCurrentObservationV1();const implementation=createHash("sha256");for(const path of[new URL(import.meta.url),new URL("../👁️observation/🟨️.mjs",import.meta.url),new URL("../👁️observation/🧬️schema/🔣️.json",import.meta.url),new URL("../📥️inputs/🧮️digest/📥️read/🟨️.mjs",import.meta.url),new URL("../👁️observation/📥️reuse/🟨️.mjs",import.meta.url),new URL("../👁️observation/📥️reuse/🧬️schema/🔣️.json",import.meta.url),new URL("../📥️inputs/📋️data/🟨️.mjs",import.meta.url),new URL("../📥️inputs/📋️data/📥️load/🟨️.mjs",import.meta.url),new URL("../📥️inputs/📋️data/🧬️schema/🔣️.json",import.meta.url),new URL("../📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json",import.meta.url),new URL("./🚪️admission/🟦️.ts",import.meta.url),new URL("../🧬️schema/🚪️selection.json",import.meta.url),new URL("../🧬️schema/📋️owners.json",import.meta.url),new URL("../🧬️schema/🚪️admission.json",import.meta.url),new URL("../📥️inputs/💾️storage/🟨️.mjs",import.meta.url),new URL("../📥️inputs/💾️storage/🧬️schema/🔣️.json",import.meta.url),new URL("../📥️inputs/💾️storage/📒️ledger/🟨️.mjs",import.meta.url),new URL("../📥️inputs/🔏️revision/🟨️.mjs",import.meta.url),new URL("../📥️inputs/🔏️revision/🧬️schema/🔣️.json",import.meta.url),graphSnapshotPolicyURLV1])implementation.update(captureBoundedSourceRevisionV1(fileURLToPath(path),8388608).sha256);return {implementation:implementation.digest("hex"),publication:captureBoundedSourceRevisionV1(fileURLToPath(new URL("../🧬️schema/📣️publication.json",import.meta.url)),65536).sha256};};
+const graphModuleAuthorityV1=():BuildGraphModuleAuthorityV1=>{requireCurrentSourceInventoryV1();requireCurrentGraphReadPoliciesV1();const observation=observationV1;if(typeof observation.requireCurrentObservationV1!=="function")throw Error("Loaded observation current-instance guard required");observation.requireCurrentObservationV1();const implementation=createHash("sha256");for(const path of[new URL(physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../👁️observation/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../👁️observation/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🧮️digest/📥️read/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../👁️observation/📥️reuse/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../👁️observation/📥️reuse/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/📋️data/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/📋️data/📥️load/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/📋️data/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🚪️admission/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧬️schema/🚪️selection.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧬️schema/📋️owners.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧬️schema/🚪️admission.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/💾️storage/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/💾️storage/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/💾️storage/📒️ledger/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🔏️revision/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🔏️revision/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),graphSnapshotPolicyURLV1])implementation.update(captureBoundedSourceRevisionV1(fileURLToPath(path),8388608).sha256);return {implementation:implementation.digest("hex"),publication:captureBoundedSourceRevisionV1(fileURLToPath(new URL("../🧬️schema/📣️publication.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))),65536).sha256};};
 const loadedGraphModuleAuthorityV1=graphModuleAuthorityV1();
 
 /** 🔒️ Refuses a loaded implementation or declaration superseded while an original invocation waited. */
@@ -185,17 +185,35 @@ function portableInputs(root:string,value:unknown,invocation:ScriptInvocation,co
   }
   if(!tokens.size)return value;
   const expand=async()=>{
-    const entries=[...tokens.values()],expanded=new Map<string,string[]>(),policy=exactSourceReadPolicyV1,width=Math.min(policy.maximumInventories,Math.floor(policy.maximumMetadataBytes/policy.maximumClosureBytes));let bytes=0;
-    for(let offset=0;offset<entries.length;offset+=width){
-      const cohort=entries.slice(offset,offset+width);admitInferenceInventoryCohortV1(bytes,cohort.length);
-      await withManagedGraphSourceReadBatchV1(root,control,async batch=>{for(const compact of cohort){
-        checkScriptInvocation(invocation);checkResourceLeaseControl(control);
-        const file=await readExactSourceInventoryV1(batch,compact.directory as "build-input-closures"|"build-lock-closures",compact.digest);
-        checkScriptInvocation(invocation);checkResourceLeaseControl(control);
-        if(!file||file.sha256!==compact.digest)throw Error(`Build input closure content differs: ${compact.key}`);
-        bytes+=file.byteLength;const contract=file.value;expanded.set(compact.key,compact.directory==="build-input-closures"?captureSourceInputInventoryV1(contract,root).value.files.map(file=>"{workspaceRoot}/"+file):["{workspaceRoot}/Cargo.lock","{workspaceRoot}/"+captureCargoLockInventoryV1(contract,root).value.manifest]);
-      }});
-    }
+    const entries=[...tokens.values()],expanded=new Map<string,string[]>();
+    await withRepositoryBuildGraphConsumerV1(root,control,async(store,actual)=>{
+      const extents:number[]=[];let bytes=0,readRecords=0;
+      const cadence=exactSourceReadPolicyV1.maximumInventoryRecordsPerYield;
+      await store.recheck();checkResourceLeaseControl(actual);
+      if(invocation)await advanceScriptInvocation(invocation,"build:portable-inputs","running");
+      for(const compact of entries){
+        checkScriptInvocation(invocation);checkResourceLeaseControl(actual);
+        const path=join(store.root,compact.directory,compact.digest+".json"),row=await lstat(path);
+        checkScriptInvocation(invocation);checkResourceLeaseControl(actual);
+        if(!row.isFile()||row.isSymbolicLink()||row.nlink!==1||!Number.isSafeInteger(row.size)||row.size<0||row.size>exactSourceReadPolicyV1.maximumClosureBytes)throw Error("Single-link bounded regular inventory extent required");
+        extents.push(Math.max(1,row.size));
+        if(extents.length%cadence===0){await store.recheck();await actual.yieldContinuation();checkScriptInvocation(invocation);checkResourceLeaseControl(actual);if(invocation)await advanceScriptInvocation(invocation,"build:portable-inputs","running");}
+      }
+      await store.recheck();checkResourceLeaseControl(actual);
+      for(const cohort of planInferenceInventoryCohortsV1(extents)){
+        admitInferenceInventoryCohortV1(bytes,cohort.records,cohort.maximumBytes);
+        checkScriptInvocation(invocation);checkResourceLeaseControl(actual);
+        await withManagedGraphSourceReadBatchV1(root,actual,async batch=>{for(const compact of entries.slice(cohort.offset,cohort.offset+cohort.records)){
+          checkScriptInvocation(invocation);checkResourceLeaseControl(actual);
+          const file=await readExactSourceInventoryV1(batch,compact.directory as "build-input-closures"|"build-lock-closures",compact.digest,cohort.maximumBytes);
+          checkScriptInvocation(invocation);checkResourceLeaseControl(actual);
+          if(!file||file.sha256!==compact.digest)throw Error(`Build input closure content differs: ${compact.key}`);
+          bytes+=file.byteLength;const contract=file.value;expanded.set(compact.key,compact.directory==="build-input-closures"?captureSourceInputInventoryV1(contract,root).value.files.map(file=>"{workspaceRoot}/"+file):["{workspaceRoot}/Cargo.lock","{workspaceRoot}/"+captureCargoLockInventoryV1(contract,root).value.manifest]);
+          if(++readRecords%cadence===0){await actual.yieldContinuation();checkScriptInvocation(invocation);checkResourceLeaseControl(actual);if(invocation)await advanceScriptInvocation(invocation,"build:portable-inputs","running");}
+        }});
+        await store.recheck();checkResourceLeaseControl(actual);if(invocation)await advanceScriptInvocation(invocation,"build:portable-inputs","running");
+      }
+    });
     const copies=new WeakMap<object,unknown>();visited=0;
     const transform=(item:unknown):unknown=>{
       if(invocation&&visited++%1024===0)checkScriptInvocation(invocation);
@@ -211,7 +229,7 @@ function portableInputs(root:string,value:unknown,invocation:ScriptInvocation,co
       for(const[key,child]of Object.entries(item)){const next=transform(child);if(next!==child&&!result)result={...item};if(result)result[key]=next;}
       copies.set(item,result??item);return result??item;
     };
-    return transform(value);
+    const result=transform(value);if(invocation)await advanceScriptInvocation(invocation,"build:portable-inputs","complete");return result;
   };
   return expand();
 }
@@ -320,9 +338,9 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
   let captured:{value:BuildGraphV1|OwnerRegistryInvalidationV1;observations:readonly unknown[]},failedFacts:unknown[]=[],failedAuthority:unknown[]=[];
   phaseStarted=performance.now();
   try{captured=await observation.captureObservedSourceInputsV1(async()=>{
-    for(const source of [new URL(import.meta.url),new URL("../🧬️schema/📣️publication.json",import.meta.url),new URL("../🧬️schema/🔣️.json",import.meta.url),new URL("../🧬️schema/📥️authority.json",import.meta.url),new URL("../🔣️policy.json",import.meta.url),new URL("../../⚡️caching/🔣️policy.json",import.meta.url),new URL("../../🗂️workspaces/🔣️policy.json",import.meta.url),new URL("../📤️arguments/🧬️schema/🔣️.json",import.meta.url),new URL("../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",import.meta.url),new URL("../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🧬️schema/🔣️.json",import.meta.url)])observation.observedFs.readFileSync(source);
+    for(const source of [new URL(physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧬️schema/📣️publication.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧬️schema/📥️authority.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🔣️policy.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../⚡️caching/🔣️policy.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../🗂️workspaces/🔣️policy.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📤️arguments/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))])observation.observedFs.readFileSync(source);
     const admittedRegistry=readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root)));if(JSON.stringify(admittedRegistry)!==JSON.stringify(registry))return ownerRegistryInvalidationV1;
-    for(const source of [new URL("../🧬️schema/🚪️selection.json",import.meta.url),new URL("../🧬️schema/📋️owners.json",import.meta.url),new URL("../🧬️schema/🚪️admission.json",import.meta.url),new URL("./🚪️admission/🟦️.ts",import.meta.url)])observation.observedFs.readFileSync(source);
+    for(const source of [new URL("../🧬️schema/🚪️selection.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧬️schema/📋️owners.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧬️schema/🚪️admission.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🚪️admission/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))])observation.observedFs.readFileSync(source);
     return discoverBuildGraphV1(root,options.selection,registry!,invocation,phaseControl,files,initial.admission);
   },(rows:unknown[],authority:unknown[])=>{failedFacts=rows;failedAuthority=authority;});}
   catch(error){if(process.env.SEMIO_BUILD_TRACE_AUTHORITY==="true"){}if(invocation)checkScriptInvocation(invocation);if(buildGraphErrorCodeV1(error)==="BUILD_AUTHORITY_CHANGED")throw error;let current;try{current=await inventory();}catch(recheck){if(buildGraphErrorCodeV1(recheck)==="BUILD_MEMBERSHIP_CHANGED")return undefined;throw recheck;}if(isOwnerRegistryInvalidationV1(current))throw error;const stale:{kind:string;path:string;fact:unknown}[]=[],holds=await buildGraphSourceFactsHoldV1(failedFacts,invocation,row=>{if(stale.length<8)stale.push(row);});if(current.digest===before&&holds)throw error;if(process.env.SEMIO_BUILD_TRACE_AUTHORITY==="true"){}return undefined;}

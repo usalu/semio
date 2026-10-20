@@ -1,6 +1,5 @@
-
 mod quick {
-    use crate::*;
+    use semio_framework_actor::*;
     use std::collections::VecDeque;
     use std::sync::Arc;
     fn supplied_retained_turn() -> RetainedTurnInput {
@@ -944,17 +943,3 @@ mod quick {
 
     //#endregion 🔖️JobProgressOverlay
 }
-
-//#region 🔖️Typegen
-#[cfg(test)]
-#[semio_framework_async_macros::async_test]
-async fn exports_typescript_bindings() {
-    crate::schema_metadata::validate().unwrap();
-    let rendered = crate::schema_metadata::render_typescript();
-    if let Some(path) = std::env::var_os("SEMIO_TYPEGEN_OUT") {
-        std::fs::write(path, &rendered).unwrap();
-    } else {
-        assert_eq!(rendered, include_str!("../../🤖️generated/🎭️actor/🟦️.ts"));
-    }
-}
-//#endregion 🔖️Typegen

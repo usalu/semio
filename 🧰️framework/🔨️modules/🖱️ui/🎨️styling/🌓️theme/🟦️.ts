@@ -23,7 +23,7 @@ export {
   type StylingAppearanceName,
   type StylingTokenKey,
 } from "../🤖️generated/🔤️tokens/🟦️.ts";
-import { ephemeralBox } from "@semio-tech/framework/transient";
+import { ephemeralBox } from "@semio-tech/framework-transient";
 import { STYLING_BOARD_PALETTES, type StylingAppearanceName } from "../🤖️generated/🔤️tokens/🟦️.ts";
 
 export * from "./🏛️model/🟦️.ts";

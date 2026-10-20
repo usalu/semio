@@ -1,6 +1,7 @@
 //! 🪟️ Registered clipboard verbs publish mapped selection and one reversible history edit.
 use super::*;
 use semio_framework_test_fixtures::fixture_text;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 async fn reserved_clipboard(app:&mut DrawingAppFixture,verb:&str,args:Option<semio_framework_value::DslValue>,meta:&semio_framework_plugin::ActionMeta)->(semio_framework_plugin::InvocationResult,artifact_laws::TypedOperationFixtureReceipt){
  let admitted=semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, args.clone(), meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
  let result=semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.unwrap();

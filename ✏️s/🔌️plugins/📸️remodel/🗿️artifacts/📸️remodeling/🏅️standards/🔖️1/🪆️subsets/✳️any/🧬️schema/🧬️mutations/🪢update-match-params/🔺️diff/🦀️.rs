@@ -6,7 +6,7 @@ use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any:
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::UpdateMatchParams, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
+pub fn diff(payload: &crate::standards::v1::subsets::any::schema::mutations::update_match_params::component::UpdateMatchParams, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
     if !payload.params.ratio_test.is_finite() || payload.params.ratio_test <= 0.0 || payload.params.ratio_test > 1.0 {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Match ratio test {} must be finite and within (0, 1].", payload.params.ratio_test), Vec::<String>::new());
     }

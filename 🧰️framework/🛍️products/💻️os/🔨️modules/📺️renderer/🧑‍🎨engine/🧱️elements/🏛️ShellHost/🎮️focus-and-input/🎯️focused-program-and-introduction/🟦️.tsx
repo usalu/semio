@@ -1,5 +1,5 @@
 /** 🎯️ The focused program, history, time travel, introduction and tutorial state of the focus and input hook. */
-import { shouldStartIntroduction } from "@semio-tech/framework/modules/ui/introduction";
+import { shouldStartIntroduction } from "@semio-tech/ui/introduction";
 import { useCallback, useEffect, useMemo, useReducer, useRef, useSyncExternalStore } from "react";
 import { FRAMEWORK_PANEL_TAB_TOOL_RUN_ID, type TutorialDefinition } from "@semio-tech/framework";
 import { focusedProgramKeyV1, focusedProgramV1, programEntriesV1, programHistoryKeyV1, programHistoryProjectionV1, programHistoryProjectionsRetainedV1, spawnedBridgeCensusV1, spawnedProgramViewStateV1, spawnedProgramWindowInstancesV1, type FocusedProgramV1 } from "../../🪟️spawned-program/🟦️.ts";
@@ -16,7 +16,21 @@ import { timeTravelIndicatorTextV1, TimeTravelWindowIndicator } from "../../../�
 import type { BridgeInstanceRef } from "@semio-tech/framework/mcp/bridge";
 import type { ShellCoreAfterPluginLifecycle } from "../../🚀️plugin-lifecycle/🟦️.ts";
 
-/** 🧭 Binds the focused program, its history and time travel indicator and the introduction and tutorial state with their effects. */
+/**
+ * 🧭 Binds the focused program, its history and time travel indicator and the introduction and tutorial state with their effects.
+ *
+ * 🧾️ A spawned program's full history, read once when it takes the canvas. Its completions patch
+ * the projection incrementally from then on; without this first snapshot its ledger would start
+ * empty even for a document that already carries entries (a re-opened artifact).
+ *
+ * 📇️🪟️ Publishes the agent census — the live session PLUS every spawned program, the FOCUSED one
+ * first ({@link spawnedBridgeCensusV1}). Keyed on the spawned ROSTER, never on `panel` identity (a
+ * panel object churns on every action), on the loaded-plugin count (a spawned program's window
+ * kinds come from its manifest and a roster entry can be written before its plugin finished
+ * loading), and on the focused program, because focus is what entry 0 means.
+ *
+ * ⏺️ Dev/studio-only probe surface (mirrors `__semioCrossingCensus` in `🔌️PluginRuntime`).
+ */
 export function useFocusedProgramAndIntroductionState({ core }: { readonly core: ShellCoreAfterPluginLifecycle }) {
   const {
     surfaceSessionFactories, brand, suppressAutoIntroduction, scope, hostMode, shellState, dispatch, localInteraction,

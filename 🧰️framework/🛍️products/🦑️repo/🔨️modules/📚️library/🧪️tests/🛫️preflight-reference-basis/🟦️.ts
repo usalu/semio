@@ -257,14 +257,14 @@ test("basis identity cannot cross a repository, taxonomy object, plan or preflig
 });
 
 test("apply validates freshness after its publication callback and before source staging", () => {
-  const apply = syntax.statements.find((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && node.name?.text === "applyTaxonomyPlan")!.getText(syntax);
+  const apply = syntax.statements.find((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && node.name?.text === "stageTransactionOperations")!.getText(syntax);
   const publication = apply.indexOf('transactionProbe("transaction-attempt-canonical-published"');
   const staging = apply.indexOf('journal.state = "staging"');
   const validation = apply.indexOf("validatePreflightReferenceBasis(", publication);
   expect(publication).toBeGreaterThan(0);
   expect(validation).toBeGreaterThan(publication);
   expect(validation).toBeLessThan(staging);
-  expect(apply.slice(publication, staging)).toContain("if (preflightReferenceBasis)");
+  expect(apply.slice(publication, staging)).toContain("if (txn.preflightReferenceBasis)");
 });
 
 /** 🧾️ Allocates one new semantic owner; no existing run is removed or reused. */

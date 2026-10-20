@@ -1,11 +1,11 @@
-import { type CanvasPickRequest, type CanvasPickTarget, type CanvasHoverFocus, CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_PICK_MENU } from "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
-import { sortCanvasPickTargetsGeneralFirst, canvasPickTargetKey, canvasHoverFocusFromTarget, pickMostSpecificCanvasTarget } from "../../../🔨️modules/🎯️canvas-pick-targets/🟦️.ts";
+import { type CanvasPickRequest, type CanvasPickTarget, type CanvasHoverFocus, CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_PICK_MENU } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
+import { sortCanvasPickTargetsGeneralFirst, canvasPickTargetKey, canvasHoverFocusFromTarget, pickMostSpecificCanvasTarget } from "@semio-tech/ui/modules/canvas-pick-targets";
 import * as React from "react";
-import type { UiLabel } from "../../../🧱️elements/🎗️UiLabel/🟦️.tsx";
-import { useLabel } from "../../../🧱️elements/🏷️Label/🟦️.tsx";
-import { useShellScopeOptional } from "../../../🧱️elements/🐚️ShellScope/🟦️.tsx";
-import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { floatingMenuItemClass } from "../../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
+import type { UiLabel } from "@semio-tech/ui/elements/UiLabel";
+import { useLabel } from "@semio-tech/ui/elements/Label";
+import { useShellScopeOptional } from "@semio-tech/ui/elements/ShellScope";
+import { cn } from "@semio-tech/ui/modules/class-name-composition";
+import { floatingMenuItemClass } from "@semio-tech/ui/modules/chrome-class-names";
 import { createPortal } from "react-dom";
 import { floatingMenuSurfaceClass } from "../🎨️chrome-classes/🟦️.ts";
 
@@ -19,7 +19,7 @@ export type CanvasPickMenuProps = {
   readonly title?: UiLabel;
 };
 
-/** @emoji 🎯️ Fixed DOM pick list for overlapping canvas targets (not painted on the infinite canvas). */
+/** 🎯️ Fixed DOM pick list for overlapping canvas targets (not painted on the infinite canvas). */
 export function CanvasPickMenu({ request, hoveredKey, onHoverKey, onPick, onDismiss, renderRow, title }: CanvasPickMenuProps): React.ReactNode {
   const menuRef = React.useRef<HTMLDivElement | null>(null);
   const selectTargetLabel = useLabel("ui.common.selectTarget");
@@ -113,7 +113,7 @@ export type CanvasPickInteraction = {
   readonly onMenuPick: (target: CanvasPickTarget) => void;
 };
 
-/** @emoji 🎯️ Shared pointer routing for canvas hover (most-specific) and click disambiguation menus. */
+/** 🎯️ Shared pointer routing for canvas hover (most-specific) and click disambiguation menus. */
 export function useCanvasPickInteraction({ resolveTargetsAtClient, onHoverFocus, onSelectTarget, clickThresholdPx = 4 }: UseCanvasPickInteractionOptions): CanvasPickInteraction {
   const [pickMenu, setPickMenu] = React.useState<CanvasPickRequest | null>(null);
   const [menuHoveredKey, setMenuHoveredKey] = React.useState<string | null>(null);

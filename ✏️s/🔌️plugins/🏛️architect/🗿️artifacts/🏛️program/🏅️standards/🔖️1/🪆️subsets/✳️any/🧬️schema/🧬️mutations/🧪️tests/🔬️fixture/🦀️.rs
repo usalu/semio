@@ -1,12 +1,12 @@
-#[path = "../../🧲️adjacency/🧲️connect/🧪️tests/🧲️reception-waiting/🦀️.rs"]
+#[path = "../../🧲️adjacency/🧲️connect/🧪️tests/🧲️reception/🦀️.rs"]
 mod tests_connect_adjacency;
 #[path = "../../🧵️trace/🧵️connect/🧪️tests/🧵️requirement-decision/🦀️.rs"]
 mod tests_connect_trace;
-#[path = "../../🧲️adjacency/🫷️disconnect/🧪️tests/🫷️reception-waiting/🦀️.rs"]
+#[path = "../../🧲️adjacency/🫷️disconnect/🧪️tests/🫷️reception/🦀️.rs"]
 mod tests_disconnect_adjacency;
 #[path = "../../🧲️adjacency/🫷️disconnect/🧪️tests/🫷️disconnects-middle/🦀️.rs"]
 mod tests_disconnect_adjacency_middle;
-#[path = "../../🧵️trace/✂️disconnect/🧪️tests/✂️requirement-decision/🦀️.rs"]
+#[path = "../../🧵️trace/✂️disconnect/🧪️tests/✂️requirement/🦀️.rs"]
 mod tests_disconnect_trace;
 #[path = "../../🧵️trace/✂️disconnect/🧪️tests/✂️disconnects-middle/🦀️.rs"]
 mod tests_disconnect_trace_middle;

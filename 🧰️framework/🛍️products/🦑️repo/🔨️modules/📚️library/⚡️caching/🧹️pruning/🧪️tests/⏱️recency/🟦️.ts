@@ -7,11 +7,12 @@ import summaryFixture from"../../⏱️recency/🧪️tests/🔣️.json"with{ty
 import summarySchema from"../../⏱️recency/🧬️schema/🔣️.json"with{type:"json"};
 import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import{scanCargoBuildUnits,scanCargoIncrementalUnits}from"../../🟦️.ts";
-import{receiveScriptProcessInvocation,createIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {createIssuedResourceControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
 import{captureOwnedCommandV1}from"@semio-tech/process/execution";
 
 test("mixed timestamp maxima and backwards recency match independent physical SQLite oracle",async()=>{
- await receiveScriptProcessInvocation(process.env,async original=>{
+ await withBuildTestInvocationV1(async original=>{
   const data=original.capabilities as{command?:unknown;artifacts?:unknown};if(data.command!=="recency"||typeof data.artifacts!=="string"||!isAbsolute(data.artifacts))throw Error("Exact finite scanner fixture output required");const control=createIssuedResourceControlV1(original,"cache:recency-oracle",120000),python=Bun.which("python3")??Bun.which("python");if(!python)throw Error("Independent Python/SQLite oracle required");await mkdir(data.artifacts,{recursive:true});const root=await mkdtemp(join(data.artifacts,"rc-")),directory=join(root,"p/build/a/h");await mkdir(directory,{recursive:true});
   const initial:Record<string,string>={};for(const file of fixture.files){const path=join(directory,file.name);await writeFile(path,"x".repeat(file.bytes),{flag:"wx"});const stat=await lstat(path,{bigint:true});initial[file.name]=String(stat.dev)+":"+String(stat.ino);}
   const oracle="import os,sqlite3,json,sys\ndb=sqlite3.connect(':memory:');db.execute('create table facts(bytes,atime,mtime)')\nfor parent,dirs,files in os.walk(sys.argv[1],followlinks=False):\n for name in files:\n  s=os.lstat(os.path.join(parent,name));db.execute('insert into facts values(?,?,?)',(s.st_size,(s.st_atime_ns//1000000000)*1000+(s.st_atime_ns%1000000000)/1000000,(s.st_mtime_ns//1000000000)*1000+(s.st_mtime_ns%1000000000)/1000000))\nprint(json.dumps(dict(zip(['bytes','recencyMilliseconds'],db.execute('select sum(bytes),max(max(atime,mtime)) from facts').fetchone()))))";

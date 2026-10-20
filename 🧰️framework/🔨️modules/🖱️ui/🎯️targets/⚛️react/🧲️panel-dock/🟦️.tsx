@@ -1,12 +1,12 @@
-import { type PanelTabNode, type PanelDock, findPanelTabPath, findPanelTabNode, type PanelTreeUnit } from "../../../🧱️elements/🧭️PanelTabBar/🟦️.tsx";
-import { type Anchor, ANCHORS } from "../../../🔨️modules/⚓️panel-anchor/🟦️.ts";
-import { type PanelTabDockTarget, type PanelTreeUnitDockMove, type PanelDockContextValue, PanelDockContext } from "../../../🔨️modules/🧲️panel-dock/🟦️.tsx";
+import { type PanelTabNode, type PanelDock, findPanelTabPath, findPanelTabNode, type PanelTreeUnit } from "@semio-tech/ui/elements/PanelTabBar";
+import { type Anchor, ANCHORS } from "@semio-tech/ui/modules/panel-anchor";
+import { type PanelTabDockTarget, type PanelTreeUnitDockMove, type PanelDockContextValue, PanelDockContext } from "@semio-tech/ui/modules/panel-dock";
 import * as React from "react";
-import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { surfaceClass } from "../../../🔨️modules/🌈️surface-presentation/🟦️.ts";
-import { borderNormalClass } from "../../../🔨️modules/📏️border-presentation/🟦️.ts";
-import { usePanelGhost } from "../../../🧱️elements/👻️PanelGhost/🟦️.tsx";
-import { reactHostPort } from "../../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
+import { cn } from "@semio-tech/ui/modules/class-name-composition";
+import { surfaceClass } from "@semio-tech/ui/modules/surface-presentation";
+import { borderNormalClass } from "@semio-tech/ui/modules/border-presentation";
+import { usePanelGhost } from "@semio-tech/ui/elements/PanelGhost";
+import { reactHostPort } from "@semio-tech/ui/elements/Ports/react";
 
 /** 🌱️ One draggable tree granule inside a leaf tab — dockable between leaf tabs, rendered as its own collapsible section. */
 // Composable drag-and-drop: tabs dock between all eight anchors (pointer-capture drag, mirrors 🧭️ModeDockDrag);

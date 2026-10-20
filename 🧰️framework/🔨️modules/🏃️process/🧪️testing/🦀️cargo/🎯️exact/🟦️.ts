@@ -1,6 +1,6 @@
 import{readExactCargoExecutableV1,selectExactCargoLawsV1,requireExactCargoLawResultV1,requireExactCargoFingerprintV1,requireExactCargoTargetBoundaryV1,readExactCargoLawNamesV1}from"./📋️protocol/🟦️.ts";
 import{readExactCargoLawOutputSelectionV1,type ExactCargoLawOutputSelectionV1}from"./📦️outputs/🎯️selection/🟦️.ts";
-import exactOutputSchema from"./📦️outputs/🎯️selection/🧬️schema/🔣️.json";
+import exactOutputSchema from"./📦️outputs/🎯️selection/🧬️schema/🔣️.json" with { type: "json" };
 import{requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1,withIssuedResourceOperationV1,withRequestedIssuedResourceControlV1,withScriptInvocationSignalV1}from"../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { controlledExactExecutableFingerprint, type ExactCargoFingerprintControl } from "./🔬️fingerprint/🟦️.ts";
 import {captureOwnedProcess,type OwnedProcessCaptureOptions,type OwnedProcessCaptureResult} from "../../../📥️capture/🟦️.ts";

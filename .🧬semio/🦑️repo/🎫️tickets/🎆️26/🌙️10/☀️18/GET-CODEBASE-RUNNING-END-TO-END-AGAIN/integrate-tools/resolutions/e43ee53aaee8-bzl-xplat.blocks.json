@@ -1,0 +1,9 @@
+{
+ "tokenConflictSha256": "f91792084e436f582e0b01a92d481e9dd0ebd0e19ddc33f870dd80911f3671e9",
+ "choices": [
+  "import {BAZEL_HERMETIC_RUNNER,BAZEL_HERMETIC_STARLARK,bazelBunStorePathV1,bazelExecutionFlagsV1,bazelExecutionPlatformV1,bazelHermeticDecisionV1,bazelHermeticManifestV1,bazelRemoteExecutionV1,linkBazelToolchainsV1,prepareBazelBunV1,renderBazelExecutionBuildV1,type BazelExecutionPlanV1} from \"./🏃️execution/🟦️.ts\";\nimport {bazelPlatformProfileV1,bazelPlatformRulesV1} from \"./🌐️platform/🟦️.ts\";\nimport {readNativeWindowsLongPathsEnabledV1} from \"../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🪟️host/🟦️.ts\";\n",
+  "extension:bazelPlatformRulesV1(process.platform).launcherExtension,...(executionBuild===undefined?{}:{execution:executionBuild,remote:execution!.remote!==undefined})}",
+  "request.skipCache===true,{hermetic:true}),workers=planWorkersV1(workerPolicy,currentWorkerHostV1(),{...(request.parallel?{jobs:request.parallel}:{}),...(request.workers===undefined?{}:{workers:request.workers})}),settings=bazelWorkerSettingsV1(workers),",
+  "SEMIO_BAZEL_WORKER_PLAN:JSON.stringify(workers),...profile.environment}"
+ ]
+}

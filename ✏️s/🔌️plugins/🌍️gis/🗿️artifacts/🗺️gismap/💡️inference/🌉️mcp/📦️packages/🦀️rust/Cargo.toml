@@ -26,3 +26,4 @@ serde_json = { workspace = true }
 [dev-dependencies]
 semio-framework-async = { workspace = true }
 semio-framework-ui-locale = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+tokio = { workspace = true }

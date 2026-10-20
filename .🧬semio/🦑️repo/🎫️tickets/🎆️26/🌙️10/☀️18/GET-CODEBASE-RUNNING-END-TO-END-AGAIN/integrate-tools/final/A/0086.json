@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Repository Target Cache Decision",
+  "description": "💾️ Why one inferred target is replayed from a task cache or always executed. Backends read the class: only `deterministic` replays; every other class executes, and its reason names the physical fact that forbids replay.",
+  "oneOf": [
+    { "$ref": "#/definitions/Deterministic" },
+    { "$ref": "#/definitions/DriverOwned" },
+    { "$ref": "#/definitions/ManagedOutput" },
+    { "$ref": "#/definitions/Continuous" },
+    { "$ref": "#/definitions/SideEffecting" },
+    { "$ref": "#/definitions/Live" },
+    { "$ref": "#/definitions/Aggregate" },
+    { "$ref": "#/definitions/Diagnostic" },
+    { "$ref": "#/definitions/Unclassified" }
+  ],
+  "definitions": {
+    "Deterministic": {
+      "description": "A pure function of its declared inputs; every declared output is a plain restorable tree (or there is none).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "class", "reason"],
+      "properties": {
+        "version": { "const": 1 },
+        "class": { "const": "deterministic" },
+        "reason": { "enum": ["pure-function-of-inputs", "check-without-outputs"] }
+      }
+    },
+    "DriverOwned": {
+      "description": "The command compiles through the build driver, whose Cargo freshness and stage cache are the authority; its outputs are shared between variants.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "class", "reason"],
+      "properties": {
+        "version": { "const": 1 },
+        "class": { "const": "driver-owned" },
+        "reason": { "enum": ["freshness-owned-by-driver"] }
+      }
+    },
+    "ManagedOutput": {
+      "description": "Outputs live in the leased products store behind a binding or manifest protocol; restoring a copy would be refused or would bypass the store.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "class", "reason"],
+      "properties": {
+        "version": { "const": 1 },
+        "class": { "const": "managed-output" },
+        "reason": { "enum": ["outputs-are-store-links", "outputs-in-managed-store"] }
+      }
+    },
+    "Continuous": {
+      "description": "Runs until stopped.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "class", "reason"],
+      "properties": {
+        "version": { "const": 1 },
+        "class": { "const": "continuous" },
+        "reason": { "enum": ["serves-until-stopped"] }
+      }
+    },
+    "SideEffecting": {
+      "description": "Mutates state outside its declared outputs.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "class", "reason"],
+      "properties": {
+        "version": { "const": 1 },
+        "class": { "const": "side-effecting" },
+        "reason": { "enum": ["publishes-live-state", "publishes-remote", "mutates-workspace"] }
+      }
+    },
+    "Live": {
+      "description": "Observes or drives a running process.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "class", "reason"],
+      "properties": {
+        "version": { "const": 1 },
+        "class": { "const": "live" },
+        "reason": { "enum": ["drives-running-process"] }
+      }
+    },
+    "Aggregate": {
+      "description": "Orders prerequisites and does no work of its own.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "class", "reason"],
+      "properties": {
+        "version": { "const": 1 },
+        "class": { "const": "aggregate" },
+        "reason": { "enum": ["orders-prerequisites"] }
+      }
+    },
+    "Diagnostic": {
+      "description": "Reports a refusal or a measurement and is always re-evaluated.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "class", "reason"],
+      "properties": {
+        "version": { "const": 1 },
+        "class": { "const": "diagnostic" },
+        "reason": { "enum": ["admission-refusal", "measures-environment"] }
+      }
+    },
+    "Unclassified": {
+      "description": "No policy row, declaration or verifying command classifies the target, so it never replays until the workspace policy names its kind.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "class", "reason"],
+      "properties": {
+        "version": { "const": 1 },
+        "class": { "const": "unclassified" },
+        "reason": { "enum": ["no-cache-classification"] }
+      }
+    }
+  }
+}

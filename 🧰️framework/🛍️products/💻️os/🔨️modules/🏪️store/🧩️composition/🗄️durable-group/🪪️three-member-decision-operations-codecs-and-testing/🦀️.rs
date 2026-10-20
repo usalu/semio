@@ -275,12 +275,12 @@ pub fn durable_owned_group_journal_test_record_from_edits<ParentP, ParentMutatio
     value: DurableOwnedGroupTestMember<ValueP, ValueMutation>,
 ) -> Result<DurableOwnedGroupJournalRecordV1, DurableOwnedGroupDecisionError>
 where
-    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot,
-    ParentMutation: ValueToValue + ValueFromValue,
-    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot,
-    DrawingMutation: ValueToValue + ValueFromValue,
-    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot,
-    ValueMutation: ValueToValue + ValueFromValue,
+    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    ParentMutation: ValueToValue + ValueFromValue + semio_framework_value::retirement::RetireOwned + Send + 'static,
+    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    DrawingMutation: ValueToValue + ValueFromValue + semio_framework_value::retirement::RetireOwned + Send + 'static,
+    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    ValueMutation: ValueToValue + ValueFromValue + semio_framework_value::retirement::RetireOwned + Send + 'static,
 {
     let parent_outcome = durable_group_test_outcome(PARENT_RECOVERY_SCHEMA, 1, parent);
     let drawing_outcome = durable_group_test_outcome(DRAWING_RECOVERY_SCHEMA, 2, drawing);

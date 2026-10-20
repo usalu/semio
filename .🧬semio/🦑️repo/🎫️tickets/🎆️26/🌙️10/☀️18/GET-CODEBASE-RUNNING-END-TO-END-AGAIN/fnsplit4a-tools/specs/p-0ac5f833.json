@@ -1,0 +1,66 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🛫️spawned-session/🟦️.ts",
+ "function": "useSpawnedSession",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟣️shared",
+  "doc": "/** 🟣️ The shared declarations of useSpawnedSession. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️document-services",
+   "doc": "/** 🔶️ The document services phase of useSpawnedSession. */",
+   "phases": [
+    {
+     "name": "useDocumentServicesState",
+     "emoji": "🔷",
+     "doc": "Builds documentServices, scope, hostMode, dispatch of useSpawnedSession.",
+     "from": 102,
+     "to": 242
+    }
+   ]
+  },
+  {
+   "dir": "🔸️update-space-panel",
+   "doc": "/** 🔸️ The update space panel phase of useSpawnedSession. */",
+   "phases": [
+    {
+     "name": "useUpdateSpacePanelState",
+     "emoji": "🔹",
+     "doc": "Builds updateSpacePanel, retireSessionInstance, sessionHumanRef of useSpawnedSession.",
+     "from": 243,
+     "to": 330
+    }
+   ]
+  },
+  {
+   "dir": "🟠️switch-plugin-app",
+   "doc": "/** 🟠️ The switch plugin app phase of useSpawnedSession. */",
+   "phases": [
+    {
+     "name": "useSwitchPluginAppState",
+     "emoji": "🟡",
+     "doc": "Builds switchToPluginApp, syncSpawnedPluginDocument, ensureSpawnedPlugin of useSpawnedSession.",
+     "from": 357,
+     "to": 484
+    }
+   ]
+  },
+  {
+   "dir": "🟢️request-service-operation",
+   "doc": "/** 🟢️ The request service operation phase of useSpawnedSession. */",
+   "phases": [
+    {
+     "name": "useRequestServiceOperationState",
+     "emoji": "🔵",
+     "doc": "Builds requestServiceOperation, directBrowserActorForSession, dispatchDirectBrowserActorCommand of useSpawnedSession.",
+     "from": 493,
+     "to": 543
+    }
+   ]
+  }
+ ]
+}

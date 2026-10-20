@@ -1,5 +1,12 @@
 #!/usr/bin/env bun
-import{selectedCargoLockDigest}from"./📥️read/🟨️.mjs";
-import{receiveScriptProcessInvocation,createIssuedResourceControlV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-export{selectedCargoLockDigest}from"./📥️read/🟨️.mjs";
-if(import.meta.main)await receiveScriptProcessInvocation(process.env,async original=>{const[command,manifest,...extra]=process.argv.slice(2);if(command!=="digest"||!manifest||extra.length)throw new Error("Expected digest <manifest>");process.stdout.write(await selectedCargoLockDigest(process.cwd(),manifest,createIssuedResourceControlV1(original,"source:lock-digest",120000)));});
+import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter, runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptProgram } from "./🟦️.ts";
+/** 🚪️ `digest` — runs the program of this script. */
+class DigestScript extends BundleScript {
+  async run(): Promise<void> {
+    await runScriptProgram();
+  }
+}
+const router = new ScriptRouter(import.meta.dir).register("digest", DigestScript);
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, argv: ["digest"] }));

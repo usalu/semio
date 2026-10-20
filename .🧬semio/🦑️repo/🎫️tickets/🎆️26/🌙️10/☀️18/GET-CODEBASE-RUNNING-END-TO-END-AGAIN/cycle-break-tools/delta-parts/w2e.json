@@ -1,0 +1,293 @@
+{
+ "schema": "cycle-break/delta@1",
+ "stagedAt": "2026-10-20T03:03:49.195Z",
+ "manifestOps": [
+  {
+   "op": "remove",
+   "packageJson": "🧰️framework/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/framework",
+   "field": "exports",
+   "key": "./products/repo/modules/dashboard/installation",
+   "value": "./🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+   "wave": "w2e-dashboard-installer",
+   "why": "no importer uses the key; the module moved into the library"
+  }
+ ],
+ "newFiles": [],
+ "edits": [
+  {
+   "file": "🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+   "from": "../../../../../../../🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+   "to": "../../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+   "from": "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts",
+   "to": "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+   "from": "../../📚️library/📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "to": "../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+   "from": "../../📚️library/📦️packages/🟦️typescript/🦀️cargo/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts",
+   "to": "../../../../📦️packages/🟦️typescript/🦀️cargo/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+   "from": "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+   "to": "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+   "from": "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "to": "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+   "from": "../../📚️library/📦️packages/🟦️typescript/🦀️cargo/📥️dependencies/📋️contract/🟦️.ts",
+   "to": "../../../../📦️packages/🟦️typescript/🦀️cargo/📥️dependencies/📋️contract/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+   "from": "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts",
+   "to": "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+   "from": "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts",
+   "to": "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+   "from": "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+   "to": "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+   "from": "../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+   "to": "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+   "from": "../../📚️library/🏗️build/📥️caller/📤️orchestration/🧬️schema/🔣️.json",
+   "to": "../../../../🏗️build/📥️caller/📤️orchestration/🧬️schema/🔣️.json",
+   "mode": "specifier",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+   "from": "../../📚️library/🏗️build/🏃️execution/🧬️schema/🔣️.json",
+   "to": "../../../../🏗️build/🏃️execution/🧬️schema/🔣️.json",
+   "mode": "specifier",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+   "from": "../../../../../🔨️modules/🏃️process/🪓️termination/🟦️.ts",
+   "to": "../../../../../../../../🔨️modules/🏃️process/🪓️termination/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+   "from": "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts",
+   "to": "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📜️script.ts",
+   "from": "../../📦️installation/🟦️.ts",
+   "to": "../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎮️registry/🟦️.ts",
+   "from": "../../📦️installation/🟦️.ts",
+   "to": "../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧊️execution/🚀️launch/🟦️.ts",
+   "from": "../../../📦️installation/🧬️schema/🚀️launch/🔣️.json",
+   "to": "../../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🧬️schema/🚀️launch/🔣️.json",
+   "mode": "specifier",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧊️execution/🛠️bootstrap/🟦️.ts",
+   "from": "../../../📦️installation/🟦️.ts",
+   "to": "../../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧊️execution/🛠️bootstrap/🟦️.ts",
+   "from": "../../../📦️installation/🧬️schema/🚀️launch/🔣️.json",
+   "to": "../../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🧬️schema/🚀️launch/🔣️.json",
+   "mode": "specifier",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧊️execution/🟦️.ts",
+   "from": "../../📦️installation/🟦️.ts",
+   "to": "../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧊️execution/🟦️.ts",
+   "from": "../../📦️installation/🧬️schema/🔣️.json",
+   "to": "../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🧬️schema/🔣️.json",
+   "mode": "specifier",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️authority/🟦️.ts",
+   "from": "../../📦️installation/🟦️.ts",
+   "to": "../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️cli/🟦️.ts",
+   "from": "../../📦️installation/🟦️.ts",
+   "to": "../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/🧰️support/🟦️.ts",
+   "from": "../../../📦️installation/🟦️.ts",
+   "to": "../../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+   "from": "../../../🎛️dashboard/📦️installation/🟦️.ts",
+   "to": "./🎛️dashboard/📦️installation/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+   "from": "../../🎛️dashboard/📦️installation/🟦️.ts",
+   "to": "../⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/📤️child/🟦️.ts",
+   "from": "../../../../🎛️dashboard/📦️installation/🟦️.ts",
+   "to": "../../../⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  }
+ ],
+ "fileOps": [
+  {
+   "op": "move",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts",
+   "sha256": "0b95ba1fa79660f9264d0a6d3cf20acdd4046d031c12a8051bac56bce5902cd6",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "op": "move",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🧬️schema/🎚️publication/🔣️.json",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🧬️schema/🎚️publication/🔣️.json",
+   "sha256": "ea17f3d857b338d86900b11b9102dc0165ff166963a46e7fae9791eedaad92ae",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "op": "move",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🧬️schema/🔒️custody/🔣️.json",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🧬️schema/🔒️custody/🔣️.json",
+   "sha256": "a1f32050da433c33889825ab94518e21609e9cba576b306d2b16452689416006",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "op": "move",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🧬️schema/🔣️.json",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🧬️schema/🔣️.json",
+   "sha256": "741664b06f4ee3f531dd1e57480746d3e63ed04fdcf902ceacc7e52d61e8216e",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "op": "move",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🧬️schema/🚀️launch/🔣️.json",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🧬️schema/🚀️launch/🔣️.json",
+   "sha256": "03281217498218dc44ff8726303d89e1c7ddbbeacb74dfcdca6bb130f1e1cc04",
+   "wave": "w2e-dashboard-installer",
+   "why": "dashboard installation is library bootstrap"
+  },
+  {
+   "op": "delete",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+   "sha256": "c0c1a6c87288b12f7319d0eb6409bb8009b3dbf04a03b94514147624a1310b7a",
+   "wave": "w2e-dashboard-installer",
+   "why": "dead glue"
+  }
+ ],
+ "flags": []
+}

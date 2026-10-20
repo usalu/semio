@@ -13,7 +13,12 @@
     ".": {
       "types": "./dist/🟦️.d.ts",
       "import": "./dist/🟦️.js"
-    }
+    },
+    "./standards/1/subsets/any/schema/mutations/pv-system/change-heat-loss/schema.json": "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system/🧊️change-heat-loss/🧬️schema/🔣️json/🟦️.ts",
+    "./standards/1/subsets/any/schema/mutations/pv-system/change-mounting/schema.json": "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system/🏠️change-mounting/🧬️schema/🔣️json/🟦️.ts",
+    "./standards/1/subsets/any/schema/mutations/pv-system/change-temperature/schema.json": "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system/🌡️change-temperature/🧬️schema/🔣️json/🟦️.ts",
+    "./standards/1/subsets/any/schema/mutations/pv-system/change-wind-loss/schema.json": "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system/💨️change-wind-loss/🧬️schema/🔣️json/🟦️.ts",
+    "./standards/1/subsets/any/schema/mutations/pv-system/create/schema.json": "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system/✨️create/🧬️schema/🔣️json/🟦️.ts"
   },
   "scripts": {
     "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/energy-model:build",

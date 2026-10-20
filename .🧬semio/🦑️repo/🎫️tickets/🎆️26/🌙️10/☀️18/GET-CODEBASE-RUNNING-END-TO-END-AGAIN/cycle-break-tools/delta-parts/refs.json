@@ -1,0 +1,306 @@
+{
+ "schema": "cycle-break/delta@1",
+ "stagedAt": "2026-10-20T03:20:04.526Z",
+ "manifestOps": [],
+ "newFiles": [],
+ "edits": [
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+   "mode": "json",
+   "from": "renameKeys+retarget+arrayRemove+arrayInsert+arrayInsert+arrayInsert",
+   "to": "[{\"kind\":\"renameKeys\",\"pointer\":[\"generatorContracts\",\"wgpu-frame-worker\",\"packageGeneration\",\"browserProfile\",\"workspaceImports\"],\"map\":{\"@semio-tech/framework-kernel/spawned-job\":{\"to\":\"@semio-tech/framework-effect/spawned-job\",\"set\":{\"manifestPath\":\"🧰️framework/🔨️modules/🎠️kernel/⚡️effect/package.json\"}},\"@semio-tech/framework-kernel/video-render-program\":{\"to\":\"@semio-tech/framework-effect/video-render-program\",\"set\":{\"manifestPath\":\"🧰️framework/🔨️modules/🎠️kernel/⚡️effect/package.json\"}},\"@semio-tech/framework/hash\":{\"to\":\"@semio-tech/framework-hash\",\"set\":{\"manifestPath\":\"🧰️framework/🔨️modules/🔏️hash/package.json\"}},\"@semio-tech/framework/manifest\":{\"to\":\"@semio-tech/framework-manifest\",\"set\":{\"manifestPath\":\"🧰️framework/🔨️modules/🛂️manifest/package.json\"}},\"@semio-tech/framework/manifest/schema\":{\"to\":\"@semio-tech/framework-manifest/schema\",\"set\":{\"manifestPath\":\"🧰️framework/🔨️modules/🛂️manifest/package.json\"}},\"@semio-tech/framework/trace\":{\"to\":\"@semio-tech/framework-trace\",\"set\":{\"manifestPath\":\"🧰️framework/🔨️modules/⏱️trace/package.json\"}},\"@semio-tech/framework/trace/memory\":{\"to\":\"@semio-tech/framework-trace/memory\",\"set\":{\"manifestPath\":\"🧰️framework/🔨️modules/⏱️trace/package.json\"}}}},{\"kind\":\"retarget\",\"map\":{\"🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🛠️spawned-job/🟦️.ts\":\"🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🛠️spawned-job/🟦️.ts\",\"🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🎥️video-render-program/🟦️.ts\":\"🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🎥️video-render-program/🟦️.ts\",\"🧰️framework/📦️packages/🟦️typescript/🔏️hash/🟦️.ts\":\"🧰️framework/🔨️modules/🔏️hash/🟦️.ts\",\"🧰️framework/📦️packages/🟦️typescript/🛂️manifest/🟦️.ts\":\"🧰️framework/🔨️modules/🛂️manifest/🟦️.ts\",\"🧰️framework/📦️packages/🟦️typescript/🛂️manifest/🧬️schema/🟦️.ts\":\"🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts\",\"🧰️framework/📦️packages/🟦️typescript/⏱️trace/🟦️.ts\":\"🧰️framework/🔨️modules/⏱️trace/🟦️.ts\",\"🧰️framework/📦️packages/🟦️typescript/⏱️trace/🧮️memory/🟦️.ts\":\"🧰️framework/🔨️modules/⏱️trace/🧮️memory/🟦️.ts\",\"🧰️framework/🔨️modules/🎠️kernel/🎥️video-render-program/🟦️.ts\":\"🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🎥️video-render-program/🟦️.ts\",\"🧰️framework/🔨️modules/🎠️kernel/🛠️spawned-job/🟦️.ts\":\"🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🛠️spawned-job/🟦️.ts\",\"🧰️framework/🔨️modules/🖱️ui/🎬️scene/📋️context-menu/🟦️.ts\":\"🧰️framework/🔨️modules/🛂️manifest/📋️context-menu/🟦️.ts\",\"🧰️framework/🔨️modules/🛂️manifest/🗺️window-layout\":\"🧰️framework/🔨️modules/🎓️onboarding/🗺️window-layout\"}},{\"kind\":\"arrayRemove\",\"pointer\":[\"dependencyDirections\",\"roles\",\"ui-foundation\",\"ownerPaths\"],\"values\":[\"🧰️framework/📦️packages/🟦️typescript/🫧️transient\",\"🧰️framework/📦️packages/🟦️typescript/🕹️interaction\",\"🧰️framework/📦️packages/🟦️typescript/🛂️manifest/🤖️generated\"]},{\"kind\":\"arrayInsert\",\"pointer\":[\"dependencyDirections\",\"roles\",\"ui-foundation\",\"ownerPaths\"],\"after\":\"🧰️framework/🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types\",\"values\":[\"🧰️framework/🔨️modules/🛂️manifest/📋️context-menu\"]},{\"kind\":\"arrayInsert\",\"pointer\":[\"dependencyDirections\",\"roles\",\"ui-foundation\",\"ownerPaths\"],\"after\":\"🧰️framework/🔨️modules/🧩️action-argument-resolution\",\"values\":[\"🧰️framework/🔨️modules/🔏️hash\"]},{\"kind\":\"arrayInsert\",\"pointer\":[\"dependencyDirections\",\"roles\",\"ui-test-support\",\"ownerPaths\"],\"after\":\"🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing\",\"values\":[\"🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity\",\"🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution\"]}]",
+   "ops": [
+    {
+     "kind": "renameKeys",
+     "pointer": [
+      "generatorContracts",
+      "wgpu-frame-worker",
+      "packageGeneration",
+      "browserProfile",
+      "workspaceImports"
+     ],
+     "map": {
+      "@semio-tech/framework-kernel/spawned-job": {
+       "to": "@semio-tech/framework-effect/spawned-job",
+       "set": {
+        "manifestPath": "🧰️framework/🔨️modules/🎠️kernel/⚡️effect/package.json"
+       }
+      },
+      "@semio-tech/framework-kernel/video-render-program": {
+       "to": "@semio-tech/framework-effect/video-render-program",
+       "set": {
+        "manifestPath": "🧰️framework/🔨️modules/🎠️kernel/⚡️effect/package.json"
+       }
+      },
+      "@semio-tech/framework/hash": {
+       "to": "@semio-tech/framework-hash",
+       "set": {
+        "manifestPath": "🧰️framework/🔨️modules/🔏️hash/package.json"
+       }
+      },
+      "@semio-tech/framework/manifest": {
+       "to": "@semio-tech/framework-manifest",
+       "set": {
+        "manifestPath": "🧰️framework/🔨️modules/🛂️manifest/package.json"
+       }
+      },
+      "@semio-tech/framework/manifest/schema": {
+       "to": "@semio-tech/framework-manifest/schema",
+       "set": {
+        "manifestPath": "🧰️framework/🔨️modules/🛂️manifest/package.json"
+       }
+      },
+      "@semio-tech/framework/trace": {
+       "to": "@semio-tech/framework-trace",
+       "set": {
+        "manifestPath": "🧰️framework/🔨️modules/⏱️trace/package.json"
+       }
+      },
+      "@semio-tech/framework/trace/memory": {
+       "to": "@semio-tech/framework-trace/memory",
+       "set": {
+        "manifestPath": "🧰️framework/🔨️modules/⏱️trace/package.json"
+       }
+      }
+     }
+    },
+    {
+     "kind": "retarget",
+     "map": {
+      "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🛠️spawned-job/🟦️.ts": "🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🛠️spawned-job/🟦️.ts",
+      "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🎥️video-render-program/🟦️.ts": "🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🎥️video-render-program/🟦️.ts",
+      "🧰️framework/📦️packages/🟦️typescript/🔏️hash/🟦️.ts": "🧰️framework/🔨️modules/🔏️hash/🟦️.ts",
+      "🧰️framework/📦️packages/🟦️typescript/🛂️manifest/🟦️.ts": "🧰️framework/🔨️modules/🛂️manifest/🟦️.ts",
+      "🧰️framework/📦️packages/🟦️typescript/🛂️manifest/🧬️schema/🟦️.ts": "🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts",
+      "🧰️framework/📦️packages/🟦️typescript/⏱️trace/🟦️.ts": "🧰️framework/🔨️modules/⏱️trace/🟦️.ts",
+      "🧰️framework/📦️packages/🟦️typescript/⏱️trace/🧮️memory/🟦️.ts": "🧰️framework/🔨️modules/⏱️trace/🧮️memory/🟦️.ts",
+      "🧰️framework/🔨️modules/🎠️kernel/🎥️video-render-program/🟦️.ts": "🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🎥️video-render-program/🟦️.ts",
+      "🧰️framework/🔨️modules/🎠️kernel/🛠️spawned-job/🟦️.ts": "🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🛠️spawned-job/🟦️.ts",
+      "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📋️context-menu/🟦️.ts": "🧰️framework/🔨️modules/🛂️manifest/📋️context-menu/🟦️.ts",
+      "🧰️framework/🔨️modules/🛂️manifest/🗺️window-layout": "🧰️framework/🔨️modules/🎓️onboarding/🗺️window-layout"
+     }
+    },
+    {
+     "kind": "arrayRemove",
+     "pointer": [
+      "dependencyDirections",
+      "roles",
+      "ui-foundation",
+      "ownerPaths"
+     ],
+     "values": [
+      "🧰️framework/📦️packages/🟦️typescript/🫧️transient",
+      "🧰️framework/📦️packages/🟦️typescript/🕹️interaction",
+      "🧰️framework/📦️packages/🟦️typescript/🛂️manifest/🤖️generated"
+     ]
+    },
+    {
+     "kind": "arrayInsert",
+     "pointer": [
+      "dependencyDirections",
+      "roles",
+      "ui-foundation",
+      "ownerPaths"
+     ],
+     "after": "🧰️framework/🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types",
+     "values": [
+      "🧰️framework/🔨️modules/🛂️manifest/📋️context-menu"
+     ]
+    },
+    {
+     "kind": "arrayInsert",
+     "pointer": [
+      "dependencyDirections",
+      "roles",
+      "ui-foundation",
+      "ownerPaths"
+     ],
+     "after": "🧰️framework/🔨️modules/🧩️action-argument-resolution",
+     "values": [
+      "🧰️framework/🔨️modules/🔏️hash"
+     ]
+    },
+    {
+     "kind": "arrayInsert",
+     "pointer": [
+      "dependencyDirections",
+      "roles",
+      "ui-test-support",
+      "ownerPaths"
+     ],
+     "after": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing",
+     "values": [
+      "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity",
+      "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution"
+     ]
+    }
+   ],
+   "wave": "refs",
+   "why": "wgpu worker profile follows the carved packages; ui-foundation admits the carved module paths and drops the glue forms; ui-test-support admits the process helpers the ui tests use"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧬️schema/🔣️.json",
+   "mode": "json",
+   "from": "retarget",
+   "to": "[{\"kind\":\"retarget\",\"map\":{\"🧰️framework/📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts\":\"🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts\",\"🧰️framework/📦️packages/🟦️typescript/📁️filesystem/🧾️observation/🟦️.ts\":\"🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🟦️.ts\"}}]",
+   "ops": [
+    {
+     "kind": "retarget",
+     "map": {
+      "🧰️framework/📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts",
+      "🧰️framework/📦️packages/🟦️typescript/📁️filesystem/🧾️observation/🟦️.ts": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🟦️.ts"
+     }
+    }
+   ],
+   "wave": "refs",
+   "why": "retention reader sources point at the carved filesystem module"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🏗️construction/🧪️tests/🚫️resolved-boundary-classification/🧫️fixtures/🔣️.json",
+   "mode": "json",
+   "from": "retarget+dropRows",
+   "to": "[{\"kind\":\"retarget\",\"map\":{\"🧰️framework/📦️packages/🟦️typescript/🫧️transient/🟦️.ts\":\"🧰️framework/🔨️modules/🫧️transient/🟦️.ts\"}},{\"kind\":\"dropRows\",\"pointer\":[\"cases\"],\"where\":{\"id\":\"ui-foundation-transient-package-entry-is-allowed\"}}]",
+   "ops": [
+    {
+     "kind": "retarget",
+     "map": {
+      "🧰️framework/📦️packages/🟦️typescript/🫧️transient/🟦️.ts": "🧰️framework/🔨️modules/🫧️transient/🟦️.ts"
+     }
+    },
+    {
+     "kind": "dropRows",
+     "pointer": [
+      "cases"
+     ],
+     "where": {
+      "id": "ui-foundation-transient-package-entry-is-allowed"
+     }
+    }
+   ],
+   "wave": "refs",
+   "why": "the glue form of the transient entry no longer exists; the module-root entry row stays"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🦑️repo-source-ownership/🔣️.json",
+   "mode": "json",
+   "from": "retarget",
+   "to": "[{\"kind\":\"retarget\",\"map\":{\"🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🔌️ports/🟦️.ts\":\"🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🔌️ports/🟦️.ts\"}}]",
+   "ops": [
+    {
+     "kind": "retarget",
+     "map": {
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🔌️ports/🟦️.ts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🔌️ports/🟦️.ts"
+     }
+    }
+   ],
+   "wave": "refs",
+   "why": "the coordinator ports moved into the server library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/📦️workspace-exports/🧫️fixtures/🔣️.json",
+   "mode": "text",
+   "from": "{ \"manifest\": \"🧰️framework/📦️packages/🟦️typescript/package.json\", \"specifier\": \"@semio-tech/framework/manifest/generated/ui-axes\", \"target\": \"./🛂️manifest/🎚️ui-axes/🟦️.ts\", \"source\": \"",
+   "to": "{ \"manifest\": \"🧰️framework/🔨️modules/🛂️manifest/package.json\", \"specifier\": \"@semio-tech/framework-manifest/generated/ui-axes\", \"target\": \"./🤖️generated/🎚️ui-axes/🟦️.ts\", \"source\": \"",
+   "wave": "refs",
+   "why": "ui-axes moved to the manifest package"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧱️manifestless-source-closure/🔣️.json",
+   "mode": "text",
+   "from": "      \"specifier\": \"@semio-tech/framework/products/repo/modules/server/library/persistence\",\n      \"target\": \"../../../../../../../📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🗄️persistence/🟦️.ts\",",
+   "to": "      \"specifier\": \"@semio-tech/repo-server-library/persistence\",\n      \"target\": \"../../../📚️library/🗄️persistence/🟦️.ts\",",
+   "wave": "refs",
+   "why": "server library keys moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧱️manifestless-source-closure/🔣️.json",
+   "mode": "text",
+   "from": "      \"specifier\": \"@semio-tech/framework/products/repo/modules/server/library/source-index\",\n      \"target\": \"../../../../../../../📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🔎️source-index/🟦️.ts\",",
+   "to": "      \"specifier\": \"@semio-tech/repo-server-library/source-index\",\n      \"target\": \"../../../📚️library/🔎️source-index/🟦️.ts\",",
+   "wave": "refs",
+   "why": "server library keys moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧱️manifestless-source-closure/🔣️.json",
+   "mode": "text",
+   "from": "      \"specifier\": \"@semio-tech/framework/products/repo/modules/server/library/authentication\",\n      \"target\": \"../../../../../../../📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🔐️authentication/🟦️.ts\",",
+   "to": "      \"specifier\": \"@semio-tech/repo-server-library/authentication\",\n      \"target\": \"../../../📚️library/🔐️authentication/🟦️.ts\",",
+   "wave": "refs",
+   "why": "server library keys moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧱️manifestless-source-closure/🔣️.json",
+   "mode": "text",
+   "from": "      \"specifier\": \"@semio-tech/framework/products/repo/modules/server/library/event\",\n      \"target\": \"../../../../../../../📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/📡️event/🟦️.ts\",",
+   "to": "      \"specifier\": \"@semio-tech/repo-server-library/event\",\n      \"target\": \"../../../📚️library/📡️event/🟦️.ts\",",
+   "wave": "refs",
+   "why": "server library keys moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+   "mode": "text",
+   "from": "\"{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/⏱️trace/🟦️.ts\"",
+   "to": "\"{workspaceRoot}/🧰️framework/🔨️modules/⏱️trace/🟦️.ts\"",
+   "wave": "refs",
+   "why": "wgpu inputs follow the moved sources"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+   "mode": "text",
+   "from": "\"{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/⏱️trace/🧮️memory/🟦️.ts\"",
+   "to": "\"{workspaceRoot}/🧰️framework/🔨️modules/⏱️trace/🧮️memory/🟦️.ts\"",
+   "wave": "refs",
+   "why": "wgpu inputs follow the moved sources"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+   "mode": "text",
+   "from": "\"{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/🔏️hash/🟦️.ts\"",
+   "to": "\"{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/🟦️.ts\"",
+   "wave": "refs",
+   "why": "wgpu inputs follow the moved sources"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+   "mode": "text",
+   "from": "\"{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/🛂️manifest/🟦️.ts\"",
+   "to": "\"{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🟦️.ts\"",
+   "wave": "refs",
+   "why": "wgpu inputs follow the moved sources"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+   "mode": "text",
+   "from": "\"{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/🛂️manifest/🧬️schema/🟦️.ts\"",
+   "to": "\"{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts\"",
+   "wave": "refs",
+   "why": "wgpu inputs follow the moved sources"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+   "mode": "text",
+   "from": "\"{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🎥️video-render-program/🟦️.ts\"",
+   "to": "\"{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🎥️video-render-program/🟦️.ts\"",
+   "wave": "refs",
+   "why": "wgpu inputs follow the moved sources"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+   "mode": "text",
+   "from": "\"{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🛠️spawned-job/🟦️.ts\"",
+   "to": "\"{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🛠️spawned-job/🟦️.ts\"",
+   "wave": "refs",
+   "why": "wgpu inputs follow the moved sources"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+   "mode": "text",
+   "from": "\"{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/📋️context-menu/🟦️.ts\"",
+   "to": "\"{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/📋️context-menu/🟦️.ts\"",
+   "wave": "refs",
+   "why": "wgpu inputs follow the moved sources"
+  }
+ ],
+ "fileOps": [],
+ "flags": []
+}

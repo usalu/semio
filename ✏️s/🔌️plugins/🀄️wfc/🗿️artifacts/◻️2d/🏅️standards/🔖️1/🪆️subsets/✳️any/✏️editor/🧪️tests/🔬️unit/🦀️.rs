@@ -12,8 +12,6 @@ use semio_framework_plugin::Emit;
 use semio_framework_plugin::Fault;
 use semio_framework_plugin::InteractiveJobClassification;
 use crate::editor::wfc2d::{create_wfc2d_editor, Wfc2dEditor, Wfc2dEditorCommand};
-// 🔒️ The retained factory is private to the editor module, so the glob `pub use component::*`
-// re-export does not carry it — the roster law below reaches it through its defining module.
 use crate::editor::wfc2d::Wfc2dRetainedCommandJobFactory;
 use crate::editor::wfc2d::config::Wfc2dConfig;
 use crate::editor::wfc2d::modes::edit::windows::{graph, preview};

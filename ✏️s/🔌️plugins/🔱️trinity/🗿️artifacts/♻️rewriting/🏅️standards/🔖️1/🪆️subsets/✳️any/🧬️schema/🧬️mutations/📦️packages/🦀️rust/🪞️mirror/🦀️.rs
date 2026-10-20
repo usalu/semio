@@ -69,12 +69,12 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod change_parameter_binding {
-                            #[path = "../../../🔧️change-parameter/🦀️.rs"]
+                            #[path = "../../../🔧️change-parameter-binding/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "../../../🔧️change-parameter/🔺️diff/🦀️.rs"]
+                            #[path = "../../../🔧️change-parameter-binding/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "../../../🔧️change-parameter/↩️inverse/🦀️.rs"]
+                            #[path = "../../../🔧️change-parameter-binding/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                         }
                         #[path = "."]
@@ -89,22 +89,22 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod change_rule_layout_point {
-                            #[path = "../../../📐️change-rule-layout/🦀️.rs"]
+                            #[path = "../../../📐️change-rule-layout-point/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "../../../📐️change-rule-layout/🔺️diff/🦀️.rs"]
+                            #[path = "../../../📐️change-rule-layout-point/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "../../../📐️change-rule-layout/↩️inverse/🦀️.rs"]
+                            #[path = "../../../📐️change-rule-layout-point/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                         }
                         #[path = "."]
                         pub mod remove_rule_layout_point {
-                            #[path = "../../../🗑️remove-rule-layout/🦀️.rs"]
+                            #[path = "../../../🗑️remove-rule-layout-point/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "../../../🗑️remove-rule-layout/🔺️diff/🦀️.rs"]
+                            #[path = "../../../🗑️remove-rule-layout-point/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "../../../🗑️remove-rule-layout/↩️inverse/🦀️.rs"]
+                            #[path = "../../../🗑️remove-rule-layout-point/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                         }
                     }

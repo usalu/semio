@@ -35,3 +35,4 @@ semio-s-artifact-stdio-dwg-mutations = { workspace = true }
 semio-s-artifact-stdio-dwg-snapshot = { workspace = true }
 semio-s-artifact-stdio-dwg-snapshot-objects = { workspace = true }
 semio-s-artifact-stdio-dwg-write = { workspace = true }
+semio-framework-replication = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust" }

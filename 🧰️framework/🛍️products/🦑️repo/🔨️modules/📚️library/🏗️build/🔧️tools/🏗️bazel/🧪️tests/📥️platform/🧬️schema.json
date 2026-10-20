@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "profiles", "invalid", "unsupported", "forbiddenShell", "flagOracle", "buildRender"],
+  "properties": {
+    "version": {"const": 1},
+    "profiles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "input", "expect"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "input": {"type": "object"},
+          "expect": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["startup", "command", "environment", "launcherExtension", "sourceLink", "emojiLabels", "fits", "refusals", "warnings"],
+            "properties": {
+              "startup": {"type": "array", "items": {"type": "string"}},
+              "command": {"type": "array", "items": {"type": "string"}},
+              "environment": {"type": "object", "additionalProperties": {"type": "string"}},
+              "launcherExtension": {"enum": ["", ".exe"]},
+              "sourceLink": {"enum": ["dir", "junction"]},
+              "emojiLabels": {"enum": ["verified", "unverified"]},
+              "fits": {"type": "boolean"},
+              "refusals": {"type": "integer", "minimum": 0},
+              "warnings": {"type": "integer", "minimum": 0}
+            }
+          }
+        }
+      }
+    },
+    "invalid": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "object", "additionalProperties": false, "required": ["name", "input"], "properties": {"name": {"type": "string", "minLength": 1}, "input": {"type": "object"}}}
+    },
+    "unsupported": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "forbiddenShell": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "flagOracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["startupHelp", "commandHelp"],
+      "properties": {"startupHelp": {"type": "array", "items": {"type": "string"}}, "commandHelp": {"type": "array", "items": {"type": "string"}}}
+    },
+    "buildRender": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bun"],
+      "properties": {"bun": {"type": "object", "additionalProperties": {"type": "string", "minLength": 1}}}
+    }
+  }
+}

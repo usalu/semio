@@ -1,5 +1,5 @@
-import {DenseInverseCursor} from "../../../../../../../../../🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/↔️inverse/🟦️.ts";
-import type {DenseSolveBudget} from "../../../../../../../../../🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/🟦️.ts";
+import {DenseInverseCursor} from "@semio-tech/framework/math/algebra/dense/inverse";
+import type {DenseSolveBudget} from "@semio-tech/framework/math/algebra/dense";
 enum Phase{Faces,Factors,Reciprocal,Matrix,Inverse,Sum,Emit,Complete,Fault}
 export type EnclosureExchangeFault="Dimensions"|"InvalidArea"|"InvalidEmissivity"|"InvalidViewFactor"|"NonReciprocal"|"Singular"|"NonFiniteArithmetic"|"InvalidSnapshot";
 const faults:EnclosureExchangeFault[]=["Dimensions","InvalidArea","InvalidEmissivity","InvalidViewFactor","NonReciprocal","Singular","NonFiniteArithmetic","InvalidSnapshot"];

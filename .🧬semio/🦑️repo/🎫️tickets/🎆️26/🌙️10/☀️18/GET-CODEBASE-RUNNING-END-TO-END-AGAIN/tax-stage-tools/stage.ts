@@ -2,19 +2,21 @@
 import {mkdirSync, writeFileSync, rmSync} from "node:fs";
 import {STAGED, Vfs} from "./vfs.ts";
 import {planSimple} from "./plans/simple.ts";
-import {planChildren} from "./plans/children.ts";
-import {planModuleScripts} from "./plans/modules.ts";
 import {planGhosts} from "./plans/ghosts.ts";
+import {planLaws} from "./plans/laws.ts";
 import {planInPlace, planLifts} from "./plans/lifts.ts";
+import {planShims} from "./plans/shims.ts";
 
 const v = new Vfs();
 const log: Record<string, unknown>[] = [];
 planSimple(v);
 planGhosts(v, (row) => log.push(row));
-planModuleScripts(v, (row) => log.push(row));
 planLifts(v, (row) => log.push(row));
 planInPlace(v, (row) => log.push(row));
-planChildren(v, (row) => log.push(row));
+planLaws(v, (row) => log.push(row));
+planShims(v, (row) => log.push(row));
+const manifests = v.deferred();
+if (manifests.length) throw new Error(`unexpected manifest changes (package.json edits belong to the exports-stage batch, not here): ${manifests.map((row) => row.path).join(", ")}`);
 rmSync(`${STAGED}/blobs`, {recursive: true, force: true});
 mkdirSync(STAGED, {recursive: true});
 const ops = v.ops();

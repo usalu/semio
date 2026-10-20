@@ -54,9 +54,11 @@ export function auditReferenceConsumersAndMutationCatalog(audit: TaxonomyAudit):
     const coverage = projectionIds.fixtureCoverage;
     if (!coverage || typeof coverage !== "object") problems.push("mutationCatalogProjection.fixtureCoverage must be an object.");
     else {
-      exactKeys(coverage, ["implementationCase", "exhaustiveCase", "fixtureRunner"], "mutationCatalogProjection.fixtureCoverage");
+      exactKeys(coverage, ["implementationCase", "exhaustiveCase", "fixtureRunner", "leafCaseTable"], "mutationCatalogProjection.fixtureCoverage");
       exactKeys(coverage.exhaustiveCase, ["featureFileKindId", "stepUriPrefix", "bundleFacetDirectoryNames"], "mutationCatalogProjection.fixtureCoverage.exhaustiveCase");
       exactKeys(coverage.fixtureRunner, ["relativePath"], "mutationCatalogProjection.fixtureCoverage.fixtureRunner");
+      exactKeys(coverage.leafCaseTable, ["fileKindId", "casesField"], "mutationCatalogProjection.fixtureCoverage.leafCaseTable");
+      if (!taxonomy.fileKinds[coverage.leafCaseTable?.fileKindId] || typeof coverage.leafCaseTable?.casesField !== "string" || coverage.leafCaseTable.casesField === "") problems.push("mutationCatalogProjection.fixtureCoverage.leafCaseTable must name a registered file kind and the member that lists the cases.");
       if (coverage.implementationCase !== projectionIds.implementationDescendantContractId) problems.push("mutationCatalogProjection.fixtureCoverage.implementationCase must be the implementation descendant contract.");
       if (!taxonomy.fileKinds[coverage.exhaustiveCase?.featureFileKindId]) problems.push("mutationCatalogProjection.fixtureCoverage.exhaustiveCase.featureFileKindId is missing.");
       if (!String(coverage.exhaustiveCase?.stepUriPrefix).endsWith("/") || !Array.isArray(coverage.exhaustiveCase?.bundleFacetDirectoryNames) || coverage.exhaustiveCase.bundleFacetDirectoryNames.length === 0) problems.push("mutationCatalogProjection.fixtureCoverage.exhaustiveCase must name a slash-terminated step URI prefix and its bundle facets.");

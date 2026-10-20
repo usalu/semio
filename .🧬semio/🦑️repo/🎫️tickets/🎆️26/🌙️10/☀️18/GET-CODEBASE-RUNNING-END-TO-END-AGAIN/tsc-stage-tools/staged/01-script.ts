@@ -1,6 +1,6 @@
 import {readFileSync} from "node:fs";
 import {BundleScript,ScriptRouter} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {runArtifactTypeScriptPackageMain} from "../../📜️script.ts";
+import {runArtifactTypeScriptPackageMain} from "../../🟦️.ts";
 const fixture=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8")),index=Number(process.env.SEMIO_COMMAND_VECTOR);
 if(!Number.isSafeInteger(index)||index<0||index>=fixture.cases.length)throw new Error("A command corpus index is required");
 /** 🧪️ Observes the actual router's discrete arguments from an independently authored corpus. */

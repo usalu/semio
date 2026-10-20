@@ -3,7 +3,8 @@ use semio_framework_plugin::app::IoPayload;
 use semio_framework_test_fixtures::fixture_text;
 use serde_json::Value;
 #[allow(unused_imports)]
-use crate::{NoteSnapshot, NoteTextParagraph, NoteTextRun};
+use crate::{NoteTextParagraph, NoteTextRun};
+use semio_s_artifact_note_note_schema::NoteSnapshot;
 #[allow(unused_imports)]
 use {semio_framework_plugin::app::io_dispatch, semio_framework_artifact_reference::Dialect, semio_framework_plugin::app::ErasedComposeSource, semio_framework_plugin::app::IoDirection, semio_framework_plugin::app::IoKey, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId};
 #[allow(unused_imports)]

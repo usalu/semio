@@ -1,0 +1,812 @@
+{
+  "cover": {
+    "universe": [
+      "Cargo.toml",
+      "app/Cargo.toml",
+      "app/src/a.ts",
+      "app/src/deep/b.ts",
+      "app/src/deep/c.ts",
+      "app/tests/t.ts",
+      "lib/only/leaf/one.ts",
+      "lib/x.ts",
+      "lib/y/w.ts",
+      "lib/y/z.ts",
+      "🧰️fw/📦️pkg/🟦️.ts",
+      "🧰️fw/📦️pkg/📜️script.ts",
+      "🧰️fw/🧪️tests/🟦️.ts",
+      "sp ace/file one.ts"
+    ],
+    "cases": [
+      {
+        "name": "whole-workspace",
+        "selected": [
+          "Cargo.toml",
+          "app/Cargo.toml",
+          "app/src/a.ts",
+          "app/src/deep/b.ts",
+          "app/src/deep/c.ts",
+          "app/tests/t.ts",
+          "lib/only/leaf/one.ts",
+          "lib/x.ts",
+          "lib/y/w.ts",
+          "lib/y/z.ts",
+          "🧰️fw/📦️pkg/🟦️.ts",
+          "🧰️fw/📦️pkg/📜️script.ts",
+          "🧰️fw/🧪️tests/🟦️.ts",
+          "sp ace/file one.ts"
+        ],
+        "extra": [],
+        "groups": 1,
+        "loose": []
+      },
+      {
+        "name": "one-project",
+        "selected": [
+          "app/Cargo.toml",
+          "app/src/a.ts",
+          "app/src/deep/b.ts",
+          "app/src/deep/c.ts",
+          "app/tests/t.ts"
+        ],
+        "extra": [],
+        "groups": 1,
+        "loose": []
+      },
+      {
+        "name": "partial-directory-keeps-a-fully-selected-subtree",
+        "selected": [
+          "app/Cargo.toml",
+          "app/src/a.ts",
+          "app/src/deep/b.ts",
+          "app/src/deep/c.ts"
+        ],
+        "extra": [],
+        "groups": 1,
+        "loose": [
+          "app/Cargo.toml"
+        ]
+      },
+      {
+        "name": "single-child-chain-is-one-group",
+        "selected": [
+          "lib/only/leaf/one.ts"
+        ],
+        "extra": [],
+        "groups": 1,
+        "loose": []
+      },
+      {
+        "name": "emoji-directory",
+        "selected": [
+          "🧰️fw/📦️pkg/🟦️.ts",
+          "🧰️fw/📦️pkg/📜️script.ts"
+        ],
+        "extra": [],
+        "groups": 1,
+        "loose": []
+      },
+      {
+        "name": "group-and-loose-file",
+        "selected": [
+          "lib/x.ts",
+          "sp ace/file one.ts"
+        ],
+        "extra": [],
+        "groups": 1,
+        "loose": [
+          "lib/x.ts"
+        ]
+      },
+      {
+        "name": "two-groups-and-a-root-file",
+        "selected": [
+          "app/tests/t.ts",
+          "lib/y/w.ts",
+          "lib/y/z.ts",
+          "Cargo.toml"
+        ],
+        "extra": [],
+        "groups": 2,
+        "loose": [
+          "Cargo.toml"
+        ]
+      },
+      {
+        "name": "root-file-only",
+        "selected": [
+          "Cargo.toml"
+        ],
+        "extra": [],
+        "groups": 0,
+        "loose": [
+          "Cargo.toml"
+        ]
+      },
+      {
+        "name": "scattered-files",
+        "selected": [
+          "app/src/a.ts",
+          "app/src/deep/b.ts",
+          "lib/y/w.ts"
+        ],
+        "extra": [],
+        "groups": 0,
+        "loose": [
+          "app/src/a.ts",
+          "app/src/deep/b.ts",
+          "lib/y/w.ts"
+        ]
+      },
+      {
+        "name": "extra-file-outside-the-inventory",
+        "selected": [],
+        "extra": [
+          "outside/rust-toolchain.toml"
+        ],
+        "groups": 0,
+        "loose": [
+          "outside/rust-toolchain.toml"
+        ]
+      },
+      {
+        "name": "empty-selection",
+        "selected": [],
+        "extra": [],
+        "groups": 0,
+        "loose": []
+      }
+    ]
+  },
+  "transitive": {
+    "graph": {
+      "version": 1,
+      "projects": {
+        "a": {
+          "name": "a",
+          "root": "a",
+          "targets": {}
+        },
+        "b": {
+          "name": "b",
+          "root": "b",
+          "targets": {}
+        },
+        "c": {
+          "name": "c",
+          "root": "c",
+          "targets": {}
+        },
+        "d": {
+          "name": "d",
+          "root": "d",
+          "targets": {}
+        },
+        "e": {
+          "name": "e",
+          "root": "e",
+          "targets": {}
+        },
+        "x": {
+          "name": "x",
+          "root": "x",
+          "targets": {}
+        },
+        "y": {
+          "name": "y",
+          "root": "y",
+          "targets": {}
+        },
+        "m": {
+          "name": "m",
+          "root": "m",
+          "targets": {}
+        },
+        "n": {
+          "name": "n",
+          "root": "n",
+          "targets": {},
+          "namedInputs": {
+            "lean": [
+              "{projectRoot}/lean/**/*"
+            ]
+          }
+        },
+        "o": {
+          "name": "o",
+          "root": "o",
+          "targets": {}
+        },
+        "k": {
+          "name": "k",
+          "root": "k",
+          "targets": {}
+        },
+        "l": {
+          "name": "l",
+          "root": "l",
+          "targets": {},
+          "namedInputs": {
+            "lean": [
+              "{projectRoot}/lean/**/*"
+            ]
+          }
+        },
+        "p": {
+          "name": "p",
+          "root": "p",
+          "targets": {}
+        }
+      },
+      "dependencies": [
+        {
+          "source": "a",
+          "target": "b",
+          "type": "static"
+        },
+        {
+          "source": "b",
+          "target": "c",
+          "type": "static"
+        },
+        {
+          "source": "e",
+          "target": "a",
+          "type": "static"
+        },
+        {
+          "source": "x",
+          "target": "y",
+          "type": "static"
+        },
+        {
+          "source": "y",
+          "target": "x",
+          "type": "static"
+        },
+        {
+          "source": "m",
+          "target": "n",
+          "type": "static"
+        },
+        {
+          "source": "n",
+          "target": "o",
+          "type": "static"
+        },
+        {
+          "source": "k",
+          "target": "l",
+          "type": "static"
+        }
+      ]
+    },
+    "cases": [
+      {
+        "id": "caret-reaches-the-whole-closure",
+        "project": "a",
+        "inputs": [
+          "^default"
+        ],
+        "expected": [
+          "b/**/*",
+          "c/**/*"
+        ]
+      },
+      {
+        "id": "caret-three-deep",
+        "project": "e",
+        "inputs": [
+          "^default"
+        ],
+        "expected": [
+          "a/**/*",
+          "b/**/*",
+          "c/**/*"
+        ]
+      },
+      {
+        "id": "object-form-is-transitive",
+        "project": "a",
+        "inputs": [
+          {
+            "input": "default",
+            "dependencies": true
+          }
+        ],
+        "expected": [
+          "b/**/*",
+          "c/**/*"
+        ]
+      },
+      {
+        "id": "self-and-dependencies",
+        "project": "a",
+        "inputs": [
+          "default",
+          "^default"
+        ],
+        "expected": [
+          "a/**/*",
+          "b/**/*",
+          "c/**/*"
+        ]
+      },
+      {
+        "id": "no-dependencies",
+        "project": "p",
+        "inputs": [
+          "^default"
+        ],
+        "expected": []
+      },
+      {
+        "id": "cycle-excludes-the-project-itself",
+        "project": "x",
+        "inputs": [
+          "^default"
+        ],
+        "expected": [
+          "y/**/*"
+        ]
+      },
+      {
+        "id": "fileset-form-is-transitive",
+        "project": "a",
+        "inputs": [
+          "^{projectRoot}/src/**/*"
+        ],
+        "expected": [
+          "b/src/**/*",
+          "c/src/**/*"
+        ]
+      },
+      {
+        "id": "project-named-input-in-the-whole-closure",
+        "project": "k",
+        "inputs": [
+          "^lean"
+        ],
+        "expected": [
+          "l/lean/**/*"
+        ]
+      },
+      {
+        "id": "missing-named-input-in-a-transitive-dependency",
+        "project": "m",
+        "inputs": [
+          "^lean"
+        ],
+        "error": "Unknown build input group"
+      }
+    ]
+  },
+  "dangling": {
+    "graph": {
+      "version": 1,
+      "projects": {
+        "app": {
+          "name": "app",
+          "root": "app",
+          "targets": {
+            "build": {
+              "execution": {
+                "kind": "noop"
+              },
+              "dependsOn": [
+                "lib:generate",
+                "ghost:compile",
+                "lib:missing",
+                {
+                  "target": "ghost:other"
+                },
+                "^generate",
+                "prepare"
+              ]
+            },
+            "prepare": {
+              "execution": {
+                "kind": "noop"
+              }
+            },
+            "release": {
+              "execution": {
+                "kind": "noop"
+              },
+              "configurations": {
+                "ci": {
+                  "dependsOn": [
+                    "lib:absent"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "lib": {
+          "name": "lib",
+          "root": "lib",
+          "targets": {
+            "generate": {
+              "execution": {
+                "kind": "noop"
+              }
+            }
+          }
+        }
+      },
+      "dependencies": []
+    },
+    "expected": [
+      {
+        "task": "app:build",
+        "dependency": "ghost:compile",
+        "missing": "project"
+      },
+      {
+        "task": "app:build",
+        "dependency": "ghost:other",
+        "missing": "project"
+      },
+      {
+        "task": "app:build",
+        "dependency": "lib:missing",
+        "missing": "target"
+      },
+      {
+        "task": "app:release",
+        "dependency": "lib:absent",
+        "missing": "target"
+      }
+    ],
+    "refusals": [
+      {
+        "name": "absent-project",
+        "dependsOn": [
+          "ghost:compile"
+        ],
+        "message": "Unknown build task dependency: app:build depends on ghost:compile, but project ghost is not in the build graph"
+      },
+      {
+        "name": "absent-target",
+        "dependsOn": [
+          "lib:missing"
+        ],
+        "message": "Unknown build task dependency: app:build depends on lib:missing, but project lib defines no target missing"
+      },
+      {
+        "name": "absent-target-in-object-form",
+        "dependsOn": [
+          {
+            "target": "lib:missing",
+            "params": "forward"
+          }
+        ],
+        "message": "Unknown build task dependency: app:build depends on lib:missing, but project lib defines no target missing"
+      }
+    ],
+    "accepted": [
+      [
+        "lib:generate"
+      ],
+      [
+        "prepare"
+      ],
+      [
+        "^generate"
+      ],
+      [
+        {
+          "target": "generate",
+          "projects": [
+            "lib"
+          ]
+        }
+      ]
+    ]
+  },
+  "uncached": {
+    "graph": {
+      "version": 1,
+      "projects": {
+        "lib": {
+          "name": "lib",
+          "root": "lib",
+          "targets": {
+            "generate": {
+              "execution": {
+                "kind": "command",
+                "command": "bun ./📜️script.ts run"
+              },
+              "cache": true,
+              "outputs": [
+                "{projectRoot}/gen"
+              ]
+            },
+            "check": {
+              "execution": {
+                "kind": "command",
+                "command": "bun ./📜️script.ts run"
+              },
+              "cache": true
+            },
+            "lint": {
+              "execution": {
+                "kind": "command",
+                "command": "bun ./📜️script.ts run"
+              },
+              "metadata": {
+                "semio": {
+                  "cache": {
+                    "version": 1,
+                    "class": "deterministic",
+                    "reason": "check-without-outputs"
+                  }
+                }
+              }
+            },
+            "format": {
+              "execution": {
+                "kind": "command",
+                "command": "bun ./📜️script.ts run"
+              },
+              "cache": true,
+              "outputs": []
+            },
+            "serve": {
+              "execution": {
+                "kind": "command",
+                "command": "bun ./📜️script.ts run"
+              },
+              "continuous": true,
+              "cache": false
+            },
+            "publish": {
+              "execution": {
+                "kind": "command",
+                "command": "bun ./📜️script.ts run"
+              },
+              "cache": false
+            },
+            "unknown": {
+              "execution": {
+                "kind": "command",
+                "command": "bun ./📜️script.ts run"
+              }
+            }
+          }
+        },
+        "app": {
+          "name": "app",
+          "root": "apps/app",
+          "targets": {
+            "check": {
+              "execution": {
+                "kind": "command",
+                "command": "bun ./📜️script.ts run"
+              },
+              "cache": true
+            },
+            "build": {
+              "execution": {
+                "kind": "command",
+                "command": "bun ./📜️script.ts run"
+              },
+              "cache": true,
+              "outputs": [
+                "{projectRoot}/dist"
+              ]
+            }
+          }
+        }
+      },
+      "dependencies": []
+    },
+    "request": {
+      "tasks": [
+        "lib:generate",
+        "lib:check",
+        "lib:lint",
+        "lib:format",
+        "lib:serve",
+        "lib:publish",
+        "lib:unknown",
+        "app:check",
+        "app:build"
+      ]
+    },
+    "expected": {
+      "version": 1,
+      "actions": 9,
+      "cached": 3,
+      "uncached": {
+        "continuous": 1,
+        "declared": 1,
+        "undeclared": 1,
+        "unbounded": 3
+      },
+      "unbounded": [
+        {
+          "project": "app",
+          "root": "apps/app",
+          "targets": [
+            {
+              "target": "check",
+              "declared": "cache"
+            }
+          ]
+        },
+        {
+          "project": "lib",
+          "root": "lib",
+          "targets": [
+            {
+              "target": "check",
+              "declared": "cache"
+            },
+            {
+              "target": "lint",
+              "declared": "class"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "keys": {
+    "files": [
+      "a/1.ts",
+      "a/x/2.ts",
+      "a/x/y/3.ts",
+      "b/1.ts",
+      "b/y/2.ts",
+      "b/y/z/3.md",
+      "c/1.ts",
+      "package.json",
+      "root.json"
+    ],
+    "cases": [
+      {
+        "name": "disjoint-exclusions-split-per-pattern",
+        "inputs": [
+          "a/**/*",
+          "b/**/*",
+          "!a/x/**/*",
+          "!b/y/**/*"
+        ],
+        "keys": [
+          {
+            "include": "a/**/*",
+            "excludes": [
+              "a/x/**/*"
+            ]
+          },
+          {
+            "include": "b/**/*",
+            "excludes": [
+              "b/y/**/*"
+            ]
+          }
+        ],
+        "extra": [],
+        "oracle": true
+      },
+      {
+        "name": "unrelated-exclusion-is-dropped",
+        "inputs": [
+          "c/**/*",
+          "!a/x/**/*"
+        ],
+        "keys": [
+          {
+            "include": "c/**/*",
+            "excludes": []
+          }
+        ],
+        "extra": [],
+        "oracle": true
+      },
+      {
+        "name": "overlapping-prefix-keeps-the-exclusion",
+        "inputs": [
+          "a/x/**/*",
+          "!a/**/*.ts"
+        ],
+        "keys": [
+          {
+            "include": "a/x/**/*",
+            "excludes": [
+              "a/**/*.ts"
+            ]
+          }
+        ],
+        "extra": [],
+        "oracle": true
+      },
+      {
+        "name": "nested-prefix-keeps-the-narrower-exclusion",
+        "inputs": [
+          "a/**/*",
+          "!a/x/y/**/*",
+          "!b/**/*.md"
+        ],
+        "keys": [
+          {
+            "include": "a/**/*",
+            "excludes": [
+              "a/x/y/**/*"
+            ]
+          }
+        ],
+        "extra": [],
+        "oracle": true
+      },
+      {
+        "name": "literals-and-bundled-manifests",
+        "inputs": [
+          "root.json",
+          "missing.json",
+          {
+            "externalDependencies": [
+              "left-pad"
+            ]
+          }
+        ],
+        "keys": [
+          {
+            "include": "root.json",
+            "excludes": []
+          },
+          {
+            "include": "package.json",
+            "excludes": []
+          }
+        ],
+        "extra": [
+          "bun.lock",
+          "missing.json"
+        ],
+        "oracle": false
+      },
+      {
+        "name": "extglob-exclusion-is-inert-and-dropped",
+        "inputs": [
+          "a/**/*",
+          "!a/**/?(*.)+(stories|story).ts"
+        ],
+        "keys": [
+          {
+            "include": "a/**/*",
+            "excludes": []
+          }
+        ],
+        "extra": [],
+        "oracle": false
+      },
+      {
+        "name": "excluded-literal-outside-the-inventory-is-not-extra",
+        "inputs": [
+          "gone.json",
+          "!gone.json"
+        ],
+        "keys": [],
+        "extra": [],
+        "oracle": false
+      }
+    ],
+    "shared": [
+      {
+        "name": "same-include-in-two-tasks-with-different-unrelated-exclusions",
+        "first": [
+          "a/**/*",
+          "!b/y/**/*"
+        ],
+        "second": [
+          "a/**/*",
+          "!c/**/*",
+          "!b/**/*.md"
+        ],
+        "include": "a/**/*"
+      }
+    ]
+  }
+}

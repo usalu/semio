@@ -24,10 +24,10 @@ VECTOR_ROOTS = {
     "change-ideal-loads-system-max-heating-capacity-refuses-a-stray-value": "shared://🧬️mutations/💯️ideal-loads/⛽️change-max-heating-capacity/⛔️refuses",
     "change-ideal-loads-system-max-cooling-capacity-caps-the-cooling": "shared://🧬️mutations/💯️ideal-loads/🟧️change-max-cooling-capacity/✅️caps",
     "change-ideal-loads-system-max-cooling-capacity-refuses-a-stray-value": "shared://🧬️mutations/💯️ideal-loads/🟧️change-max-cooling-capacity/⛔️refuses",
-    "change-ideal-loads-system-outdoor-air-per-person-ventilates-per-head": "shared://🧬️mutations/🧍️change-ideal-loads-system-outdoor-air-per-person/✅️ventilates",
-    "change-ideal-loads-system-outdoor-air-per-person-refuses-a-negative": "shared://🧬️mutations/🧍️change-ideal-loads-system-outdoor-air-per-person/⛔️refuses",
-    "change-ideal-loads-system-outdoor-air-per-area-ventilates-per-area": "shared://🧬️mutations/🔳️change-ideal-loads-system-outdoor-air-per-area/✅️ventilates",
-    "change-ideal-loads-system-outdoor-air-per-area-refuses-a-negative": "shared://🧬️mutations/🔳️change-ideal-loads-system-outdoor-air-per-area/⛔️refuses",
+    "change-ideal-loads-system-outdoor-air-per-person-ventilates-per-head": "shared://🧬️mutations/💯️ideal-loads/🧍️change-outdoor-air-per-person/✅️ventilates",
+    "change-ideal-loads-system-outdoor-air-per-person-refuses-a-negative": "shared://🧬️mutations/💯️ideal-loads/🧍️change-outdoor-air-per-person/⛔️refuses",
+    "change-ideal-loads-system-outdoor-air-per-area-ventilates-per-area": "shared://🧬️mutations/💯️ideal-loads/🔳️change-outdoor-air-per-area/✅️ventilates",
+    "change-ideal-loads-system-outdoor-air-per-area-refuses-a-negative": "shared://🧬️mutations/💯️ideal-loads/🔳️change-outdoor-air-per-area/⛔️refuses",
 }
 # endregion 🔖️Fixtures
 

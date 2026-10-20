@@ -1,10 +1,10 @@
 import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
-import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
-import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/testing/cargo/exact";
-import { runAdmittedExactCargoLawsV1 as runExactCargoLaws } from "@semio-tech/process/cargo-test";
-import { readCargoTestPolicyV1 } from "@semio-tech/process/cargo-test";
-import { scriptInvocationBudget } from "@semio-tech/process/routing";
-import { runOwnedCommand } from "@semio-tech/process/owned-execution";
+import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/framework/process/compiler-capacity";
+import { configuredExactCargoLawPolicyV1 } from "@semio-tech/framework/process/cargo-laws";
+import { runAdmittedExactCargoLawsV1 as runExactCargoLaws } from "@semio-tech/framework/process/cargo-test";
+import { readCargoTestPolicyV1 } from "@semio-tech/framework/process/cargo-test";
+import { scriptInvocationBudget } from "@semio-tech/framework/process/routing";
+import { runOwnedCommand } from "@semio-tech/framework/process/execution";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -111,7 +111,7 @@ export async function runOwnedVerifyScript(context: Readonly<{ root: string; rep
     testFem3dMountedSourceOracle();
     const { verifyGeometricCellOracle } = await import("../../../../../../🔨️modules/🏗️fem/⚙️engine/🧱️elements3d/🧪️tests/🌀️geometric-cells/🟦️.ts");
     await verifyGeometricCellOracle();
-    const { verifyRetainedIndexSortOracle } = await import("../../../../../../../🧰️framework/🔨️modules/🌱️value/📶️sort/🧪️tests/🟦️.ts");
+    const { verifyRetainedIndexSortOracle } = await import("@semio-tech/framework/value/sort/testing");
     await verifyRetainedIndexSortOracle();
     const { verifyPositiveSpectrumOracle } = await import("../../../../../../🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/🎯️positive-spectrum/🟦️.ts");
     verifyPositiveSpectrumOracle();

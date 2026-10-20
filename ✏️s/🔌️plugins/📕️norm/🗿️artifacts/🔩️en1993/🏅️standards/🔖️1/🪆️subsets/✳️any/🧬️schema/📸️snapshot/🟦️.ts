@@ -4,39 +4,39 @@
 import { normWireArray, normWireInteger, normWireLiteral, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 
 export interface En1993Snapshot {
-  /** @state artifact */
+  /** 📑️ @state artifact */
   annex: "En" | "De";
-  /** @state artifact */
+  /** 🧱️ @state artifact */
   materials: SteelMaterial[];
-  /** @state artifact */
+  /** ✂️ @state artifact */
   sections: SteelSection[];
-  /** @state artifact */
+  /** 👤️ @state artifact */
   members: SteelMember[];
-  /** @state artifact */
+  /** ⚖️ @state artifact */
   loadCases: LoadCase[];
-  /** @state artifact */
+  /** 🧑️ @state artifact */
   memberActions: MemberAction[];
-  /** @state artifact */
+  /** 📜️ @state artifact */
   joints: SteelJoint[];
-  /** @state artifact */
+  /** 🧬️ @state artifact */
   fatigueDetails: FatigueDetail[];
-  /** @state artifact */
+  /** ⚡️ @state artifact */
   fireExposures: FireExposure[];
-  /** @state artifact */
+  /** 🌡️ @state artifact */
   coldFormedMembers: ColdFormedMember[];
-  /** @state artifact */
+  /** 🔲️ @state artifact */
   platedPanels: PlatedPanel[];
-  /** @state artifact */
+  /** 🐚️ @state artifact */
   siloShells: SiloShell[];
-  /** @state artifact */
+  /** 🏗️ @state artifact */
   tensionComponents: TensionComponent[];
-  /** @state artifact */
+  /** 🔌️ @state artifact */
   bridgeFatigue: BridgeFatigue[];
-  /** @state artifact */
+  /** 📐️ @state artifact */
   towerLegs: TowerLeg[];
-  /** @state artifact */
+  /** 🔬️ @state artifact */
   piles: SteelPile[];
-  /** @state artifact */
+  /** 🖼️ @state artifact */
   craneRunways: CraneRunway[];
 }
 

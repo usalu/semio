@@ -1,0 +1,432 @@
+{
+ "schema": "cycle-break/delta@1",
+ "stagedAt": "2026-10-20T02:22:39.372Z",
+ "manifestOps": [
+  {
+   "op": "remove",
+   "packageJson": "🧰️framework/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/framework",
+   "field": "exports",
+   "key": "./products/repo/modules/server/library/authentication",
+   "value": "./🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🔐️authentication/🟦️.ts",
+   "wave": "w2b-server-library",
+   "why": "key moves to @semio-tech/repo-server-library/authentication"
+  },
+  {
+   "op": "remove",
+   "packageJson": "🧰️framework/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/framework",
+   "field": "exports",
+   "key": "./products/repo/modules/server/library/event",
+   "value": "./🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/📡️event/🟦️.ts",
+   "wave": "w2b-server-library",
+   "why": "key moves to @semio-tech/repo-server-library/event"
+  },
+  {
+   "op": "remove",
+   "packageJson": "🧰️framework/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/framework",
+   "field": "exports",
+   "key": "./products/repo/modules/server/library/persistence",
+   "value": "./🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🗄️persistence/🟦️.ts",
+   "wave": "w2b-server-library",
+   "why": "key moves to @semio-tech/repo-server-library/persistence"
+  },
+  {
+   "op": "remove",
+   "packageJson": "🧰️framework/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/framework",
+   "field": "exports",
+   "key": "./products/repo/modules/server/library/source-index",
+   "value": "./🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🔎️source-index/🟦️.ts",
+   "wave": "w2b-server-library",
+   "why": "key moves to @semio-tech/repo-server-library/source-index"
+  },
+  {
+   "op": "remove",
+   "packageJson": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/repo-coordinator",
+   "field": "exports",
+   "key": "./ports",
+   "value": "./🔌️ports/🟦️.ts",
+   "wave": "w2b-server-library",
+   "why": "key moves to @semio-tech/repo-server-library/ports"
+  },
+  {
+   "op": "add",
+   "packageJson": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/repo-coordinator",
+   "field": "dependencies",
+   "key": "@semio-tech/repo-server-library",
+   "value": "workspace:*",
+   "wave": "carve",
+   "why": "@semio-tech/repo-coordinator imports @semio-tech/repo-server-library"
+  },
+  {
+   "op": "add",
+   "packageJson": "package.json",
+   "package": "workspace",
+   "field": "workspaces",
+   "key": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library",
+   "value": "",
+   "wave": "w2b-server-library",
+   "why": "workspace member @semio-tech/repo-server-library"
+  },
+  {
+   "op": "add",
+   "packageJson": "♻️mit-bestand/package.json",
+   "package": "semio-mit-bestand-workspace",
+   "field": "workspaces",
+   "key": "../🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library",
+   "value": "",
+   "wave": "w2b-server-library",
+   "why": "workspace member @semio-tech/repo-server-library"
+  },
+  {
+   "op": "add",
+   "packageJson": "✏️s/package.json",
+   "package": "semio-s-workspace",
+   "field": "workspaces",
+   "key": "../🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library",
+   "value": "",
+   "wave": "w2b-server-library",
+   "why": "workspace member @semio-tech/repo-server-library"
+  },
+  {
+   "op": "add",
+   "packageJson": "🌎️hub/package.json",
+   "package": "semio-hub-workspace",
+   "field": "workspaces",
+   "key": "../🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library",
+   "value": "",
+   "wave": "w2b-server-library",
+   "why": "workspace member @semio-tech/repo-server-library"
+  },
+  {
+   "op": "add",
+   "packageJson": "🎓️teaching/package.json",
+   "package": "semio-teaching-workspace",
+   "field": "workspaces",
+   "key": "../🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library",
+   "value": "",
+   "wave": "w2b-server-library",
+   "why": "workspace member @semio-tech/repo-server-library"
+  },
+  {
+   "op": "add",
+   "packageJson": "🏢️semio-tech/package.json",
+   "package": "semio-semio-tech-workspace",
+   "field": "workspaces",
+   "key": "../🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library",
+   "value": "",
+   "wave": "w2b-server-library",
+   "why": "workspace member @semio-tech/repo-server-library"
+  },
+  {
+   "op": "remove",
+   "packageJson": "🧰️framework/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/framework",
+   "field": "dependencies",
+   "key": "@semio-tech/repo-coordinator",
+   "value": "workspace:*",
+   "wave": "w2b-server-library",
+   "why": "framework no longer imports the coordinator: the server library moved out and owns its ports"
+  }
+ ],
+ "newFiles": [
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/package.json",
+   "content": "{\n  \"$schema\": \"https://json.schemastore.org/package.json\",\n  \"name\": \"@semio-tech/repo-server-library\",\n  \"version\": \"0.1.0\",\n  \"description\": \"repo · server library (persistence, authentication, events, source index, worker execution) and its ports\",\n  \"type\": \"module\",\n  \"private\": true,\n  \"exports\": {\n    \"./authentication\": \"./🔐️authentication/🟦️.ts\",\n    \"./event\": \"./📡️event/🟦️.ts\",\n    \"./persistence\": \"./🗄️persistence/🟦️.ts\",\n    \"./ports\": \"./🔌️ports/🟦️.ts\",\n    \"./source-index\": \"./🔎️source-index/🟦️.ts\"\n  },\n  \"dependencies\": {\n    \"@semio-tech/framework\": \"workspace:*\",\n    \"next\": \"^15.3.3\",\n    \"pg\": \"^8.16.0\",\n    \"pg-boss\": \"^10.3.2\"\n  },\n  \"license\": \"LGPL-3.0-or-later\",\n  \"bundleKind\": \"library\"\n}\n",
+   "wave": "w2b-server-library",
+   "why": "module-root package @semio-tech/repo-server-library"
+  }
+ ],
+ "edits": [
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/⚠️warnings/🟦️.ts",
+   "from": "@semio-tech/framework/products/repo/modules/server/library/persistence",
+   "to": "@semio-tech/repo-server-library/persistence",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "key @semio-tech/framework/products/repo/modules/server/library/persistence moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/⚠️warnings/🟦️.ts",
+   "from": "@semio-tech/framework/products/repo/modules/server/library/authentication",
+   "to": "@semio-tech/repo-server-library/authentication",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "key @semio-tech/framework/products/repo/modules/server/library/authentication moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🎫️ticket/🔎️detail/🟦️.ts",
+   "from": "@semio-tech/framework/products/repo/modules/server/library/persistence",
+   "to": "@semio-tech/repo-server-library/persistence",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "key @semio-tech/framework/products/repo/modules/server/library/persistence moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🎫️ticket/🔎️detail/🟦️.ts",
+   "from": "@semio-tech/framework/products/repo/modules/server/library/authentication",
+   "to": "@semio-tech/repo-server-library/authentication",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "key @semio-tech/framework/products/repo/modules/server/library/authentication moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🎫️ticket/🟦️.ts",
+   "from": "@semio-tech/framework/products/repo/modules/server/library/persistence",
+   "to": "@semio-tech/repo-server-library/persistence",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "key @semio-tech/framework/products/repo/modules/server/library/persistence moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🎫️ticket/🟦️.ts",
+   "from": "@semio-tech/framework/products/repo/modules/server/library/authentication",
+   "to": "@semio-tech/repo-server-library/authentication",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "key @semio-tech/framework/products/repo/modules/server/library/authentication moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🎫️ticket/🟦️.ts",
+   "from": "@semio-tech/framework/products/repo/modules/server/library/event",
+   "to": "@semio-tech/repo-server-library/event",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "key @semio-tech/framework/products/repo/modules/server/library/event moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🎯️scope/🟦️.ts",
+   "from": "@semio-tech/framework/products/repo/modules/server/library/persistence",
+   "to": "@semio-tech/repo-server-library/persistence",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "key @semio-tech/framework/products/repo/modules/server/library/persistence moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🎯️scope/🟦️.ts",
+   "from": "@semio-tech/framework/products/repo/modules/server/library/authentication",
+   "to": "@semio-tech/repo-server-library/authentication",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "key @semio-tech/framework/products/repo/modules/server/library/authentication moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📚️repository/🟦️.ts",
+   "from": "@semio-tech/framework/products/repo/modules/server/library/persistence",
+   "to": "@semio-tech/repo-server-library/persistence",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "key @semio-tech/framework/products/repo/modules/server/library/persistence moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📚️repository/🟦️.ts",
+   "from": "@semio-tech/framework/products/repo/modules/server/library/authentication",
+   "to": "@semio-tech/repo-server-library/authentication",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "key @semio-tech/framework/products/repo/modules/server/library/authentication moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📚️repository/🟦️.ts",
+   "from": "@semio-tech/framework/products/repo/modules/server/library/event",
+   "to": "@semio-tech/repo-server-library/event",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "key @semio-tech/framework/products/repo/modules/server/library/event moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📚️repository/🟦️.ts",
+   "from": "@semio-tech/framework/products/repo/modules/server/library/source-index",
+   "to": "@semio-tech/repo-server-library/source-index",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "key @semio-tech/framework/products/repo/modules/server/library/source-index moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📡️event/🟦️.ts",
+   "from": "@semio-tech/framework/products/repo/modules/server/library/persistence",
+   "to": "@semio-tech/repo-server-library/persistence",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "key @semio-tech/framework/products/repo/modules/server/library/persistence moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📡️event/🟦️.ts",
+   "from": "@semio-tech/framework/products/repo/modules/server/library/authentication",
+   "to": "@semio-tech/repo-server-library/authentication",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "key @semio-tech/framework/products/repo/modules/server/library/authentication moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📡️event/🟦️.ts",
+   "from": "@semio-tech/framework/products/repo/modules/server/library/event",
+   "to": "@semio-tech/repo-server-library/event",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "key @semio-tech/framework/products/repo/modules/server/library/event moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🔐️authentication/🟦️.ts",
+   "from": "@semio-tech/framework/products/repo/modules/server/library/persistence",
+   "to": "@semio-tech/repo-server-library/persistence",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "key @semio-tech/framework/products/repo/modules/server/library/persistence moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🔐️authentication/🟦️.ts",
+   "from": "@semio-tech/framework/products/repo/modules/server/library/authentication",
+   "to": "@semio-tech/repo-server-library/authentication",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "key @semio-tech/framework/products/repo/modules/server/library/authentication moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🚨️breaches/🟦️.ts",
+   "from": "@semio-tech/framework/products/repo/modules/server/library/persistence",
+   "to": "@semio-tech/repo-server-library/persistence",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "key @semio-tech/framework/products/repo/modules/server/library/persistence moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🚨️breaches/🟦️.ts",
+   "from": "@semio-tech/framework/products/repo/modules/server/library/authentication",
+   "to": "@semio-tech/repo-server-library/authentication",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "key @semio-tech/framework/products/repo/modules/server/library/authentication moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🧾️diff/🟦️.ts",
+   "from": "@semio-tech/framework/products/repo/modules/server/library/persistence",
+   "to": "@semio-tech/repo-server-library/persistence",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "key @semio-tech/framework/products/repo/modules/server/library/persistence moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🧾️diff/🟦️.ts",
+   "from": "@semio-tech/framework/products/repo/modules/server/library/authentication",
+   "to": "@semio-tech/repo-server-library/authentication",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "key @semio-tech/framework/products/repo/modules/server/library/authentication moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🧾️diff/🟦️.ts",
+   "from": "@semio-tech/framework/products/repo/modules/server/library/event",
+   "to": "@semio-tech/repo-server-library/event",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "key @semio-tech/framework/products/repo/modules/server/library/event moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🧾️diff/🟦️.ts",
+   "from": "@semio-tech/framework/products/repo/modules/server/library/source-index",
+   "to": "@semio-tech/repo-server-library/source-index",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "key @semio-tech/framework/products/repo/modules/server/library/source-index moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🪝️webhook/🐙️github/🟦️.ts",
+   "from": "@semio-tech/framework/products/repo/modules/server/library/event",
+   "to": "@semio-tech/repo-server-library/event",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "key @semio-tech/framework/products/repo/modules/server/library/event moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🪝️webhook/🐙️github/🟦️.ts",
+   "from": "@semio-tech/framework/products/repo/modules/server/library/persistence",
+   "to": "@semio-tech/repo-server-library/persistence",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "key @semio-tech/framework/products/repo/modules/server/library/persistence moved to @semio-tech/repo-server-library"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/👷️worker/🏃️execution/🟦️.ts",
+   "from": "@semio-tech/repo-coordinator/ports",
+   "to": "../../🔌️ports/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "import of @semio-tech/repo-server-library from inside itself becomes relative"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🔐️authentication/🟦️.ts",
+   "from": "@semio-tech/repo-coordinator/ports",
+   "to": "../🔌️ports/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "import of @semio-tech/repo-server-library from inside itself becomes relative"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🗄️persistence/🟦️.ts",
+   "from": "@semio-tech/repo-coordinator/ports",
+   "to": "../🔌️ports/🟦️.ts",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "import of @semio-tech/repo-server-library from inside itself becomes relative"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🗄️persistence/🟦️.ts",
+   "from": "../../../../../../🔨️modules/🫧️transient/🟦️.ts",
+   "to": "@semio-tech/framework/transient",
+   "mode": "specifier",
+   "wave": "w2b-server-library",
+   "why": "@semio-tech/repo-server-library imports @semio-tech/framework through its existing key"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🔌️ports/🟦️.ts",
+   "from": "new URL(\"../../🎛️coordinator/📦️packages/🟦️typescript/package.json\", import.meta.url)",
+   "to": "new URL(\"../package.json\", import.meta.url)",
+   "mode": "text",
+   "wave": "w2b-server-library",
+   "why": "the library package declares the drivers it adapts (pg, pg-boss, next)"
+  }
+ ],
+ "fileOps": [
+  {
+   "op": "delete",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🔐️authentication/🟦️.ts",
+   "sha256": "aeb1603dfed8e5172b36469468476863d6a2523c2e4c5ad25fb88f11c9d67c9e",
+   "wave": "carve",
+   "why": "glue of a moved key is dead after the carve"
+  },
+  {
+   "op": "delete",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/📡️event/🟦️.ts",
+   "sha256": "87856f76131cfeec9c96c3174433a8a01de4f62cb66b94569d73963f9cf20f6a",
+   "wave": "carve",
+   "why": "glue of a moved key is dead after the carve"
+  },
+  {
+   "op": "delete",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🗄️persistence/🟦️.ts",
+   "sha256": "af876e04db7d7d7e17f6ba8705bb6e695f0538c58587dd72c76e0f8918dca1e5",
+   "wave": "carve",
+   "why": "glue of a moved key is dead after the carve"
+  },
+  {
+   "op": "delete",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🔎️source-index/🟦️.ts",
+   "sha256": "d8a12a20ad4c20e2b0b11d3a4c46b5202ab7a3a4324828a2eaf0506be33fe5a4",
+   "wave": "carve",
+   "why": "glue of a moved key is dead after the carve"
+  },
+  {
+   "op": "delete",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/🔌️ports/🟦️.ts",
+   "sha256": "4e9c6545d91816c6735886ba3b4411717a8a358d2edb4d3b10aeee56fdb10685",
+   "wave": "carve",
+   "why": "glue of a moved key is dead after the carve"
+  }
+ ],
+ "flags": []
+}

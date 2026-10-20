@@ -1,6 +1,6 @@
 import{requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1,withIssuedResourceOperationV1,withRequestedIssuedResourceControlV1}from"../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../🔒️leases/🟦️.ts";
-import schema from"./🧬️schema/🔣️.json";
+import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 const policy=Object.freeze({...schema.const});
 
 /** 🧾️ Declares exact final Cargo arguments before repository-specific input admission. */

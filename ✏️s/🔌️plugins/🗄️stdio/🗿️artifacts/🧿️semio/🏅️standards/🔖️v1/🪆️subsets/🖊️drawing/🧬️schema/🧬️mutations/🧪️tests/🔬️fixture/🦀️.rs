@@ -1,4 +1,4 @@
-#[path = "../../🖌️change-stroke/🧪️tests/🎨️recolours/🦀️.rs"]
+#[path = "../../🖌️change-stroke-color/🧪️tests/🎨️recolours/🦀️.rs"]
 mod tests_change_stroke_color_recolours_the_primary_styles_stroke_to_translucent_white;
 #[path = "../../📐change-stroke-width/🧪️tests/📐️thickens/🦀️.rs"]
 mod tests_change_stroke_width_thickens_the_primary_styles_stroke;

@@ -64,18 +64,3 @@ rustflags = ["-Z", "threads=0", "-C", "linker-features=+lld", "-C", "link-self-c
 # headroom costs address space only. Same defect class as the wasm `-zstack-size` bump above.
 [env]
 RUST_MIN_STACK = "67108864"
-
-[profile.prototype]
-inherits = "dev"
-opt-level = 0
-debug = 1
-lto = false
-codegen-units = 256
-incremental = true
-
-[profile.release]
-opt-level = 3
-lto = "thin"
-codegen-units = 1
-strip = "debuginfo"
-incremental = false

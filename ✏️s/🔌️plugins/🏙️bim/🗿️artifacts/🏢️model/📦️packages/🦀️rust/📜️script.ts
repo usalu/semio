@@ -10,7 +10,7 @@ import { resolveTestLevel, testLevelBudgetMs } from "../../../../../../../🧰�
 import {readFileSync,writeFileSync} from "node:fs";
 import {Database} from "bun:sqlite";
 
-import { resolveTypescriptCompilerV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { resolveTypescriptCompilerV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 /** 🧩️ Qualifies the complete authored model input and actual owning semantic projection. */
 class CompleteSqliteSource extends BundleScript{
  async run(args:string[]):Promise<void>{

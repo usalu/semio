@@ -14,7 +14,7 @@ import {
   worldSceneContentBounds,
   type WorldCameraState,
   type WorldProjectionSpec
-} from "@semio-tech/infinite-world-r3f";
+} from "@semio-tech/framework/infinite/world/r3f";
 // #endregion 🔌️Adapters
 
 //#region 🔖️World3dHost

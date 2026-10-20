@@ -14,7 +14,7 @@ import { FlowGraphCanvasHost, InterpretedUiNode, builtNodeToSnapshot, resizeCanv
 import { meshDataFromKind } from "../../🧱️elements/🌐️World3dHost/🎨️mesh-render/🧱️mesh-parsing-and-residency/🟦️.ts";
 import { sceneMeshKindsFixture as sceneMeshKindFixture } from "@semio-tech/framework-mesh-engine-rs/testing/fixtures";
 import { buildContractNode, noopAction } from "../🧰️engine-contract-helpers/🟦️.ts";
-import { surfaceHostRetentionFixture } from "@semio-tech/framework/ui/testing/fixtures";
+import { surfaceHostRetentionFixture } from "@semio-tech/ui/testing/fixtures";
 
 //#region 🥽️SceneMeshKindReferences
 /** 🥽️ The local-space bounding box a resolved kind occupies — the ONE property the fixture pins across

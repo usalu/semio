@@ -48,7 +48,7 @@ export interface Fem2dNodePatch {
   y?: Binary64;
 }
 
-import { type Binary64, parseBinary64, binary64Value } from "@semio-tech/value-ts/ieee754";
+import { type Binary64, parseBinary64, binary64Value } from "@semio-tech/framework/value/ieee754";
 /** 🧱️ Sparse material field changes; stable identity belongs to the modification key. */
 export interface Fem2dMaterialPatch {
   name?: string;

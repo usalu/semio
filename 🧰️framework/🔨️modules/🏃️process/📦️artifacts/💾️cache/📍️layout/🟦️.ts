@@ -1,4 +1,4 @@
-import nativeSchema from"../../🏗️native-build/💾️storage/🧬️schema/🔣️.json";
+import nativeSchema from"../../🏗️native-build/💾️storage/🧬️schema/🔣️.json" with { type: "json" };
 import{join,resolve,isAbsolute}from"node:path";
 import{readNativeArtifactCachePolicyV1,type NativeArtifactCachePolicyV1}from"../⚙️policy/🟦️.ts";
 /** 🗺️ Derives literal bounded paths from a canonical parent and captured policy, without opening storage. */

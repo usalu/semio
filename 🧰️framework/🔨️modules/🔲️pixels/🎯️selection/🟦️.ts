@@ -1,4 +1,4 @@
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 export interface PixelSelectionSpanV1 { start: number; length: number; coverage: number }
 export interface PixelLayerSelectionV1 { layerId: string; target: "pixels" | "mask"; width: number; height: number; spans: PixelSelectionSpanV1[] }

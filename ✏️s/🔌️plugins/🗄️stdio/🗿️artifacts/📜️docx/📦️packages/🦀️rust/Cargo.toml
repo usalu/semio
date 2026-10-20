@@ -56,7 +56,6 @@ quick-xml = "0.39.4"
 semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-s-artifact-energy-model-mutations = { path = "../../../../../🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
 semio-framework-replication-mutation = { path = "../../../../../../../🧰️framework/🔨️modules/📡️replication/🎮️mutation/📦️packages/🦀️rust" }
 semio-s-artifact-animate-presentation-examples = { path = "../../../../../🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-xml-snapshot = { path = "../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }

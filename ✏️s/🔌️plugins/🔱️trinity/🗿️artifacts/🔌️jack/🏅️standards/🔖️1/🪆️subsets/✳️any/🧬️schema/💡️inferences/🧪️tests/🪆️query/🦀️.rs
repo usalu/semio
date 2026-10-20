@@ -88,12 +88,12 @@ fn graph_query_refuses_duplicate_ids_endpoints_and_unretained_root() {
 fn rich_read_preserves_literal_components_and_presented_geometry() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/💡️inferences/👁️rich-read/🔣️.json")).unwrap();
     for value in fixture["nodes"].as_array().unwrap(){
-        let node=semio_s_artifact_trinity_jack_graph_query::JackContentNodeView{id:value["id"].as_str().unwrap(),kind:value["kind"].as_str().unwrap(),label:value["label"].as_str().unwrap(),x:value["x"].as_f64().unwrap(),y:value["y"].as_f64().unwrap(),width:value["width"].as_f64().unwrap(),height:value["height"].as_f64().unwrap(),port_count:value["ports"].as_array().unwrap().len()};
+        let node=crate::rich_read::JackContentNodeView{id:value["id"].as_str().unwrap(),kind:value["kind"].as_str().unwrap(),label:value["label"].as_str().unwrap(),x:value["x"].as_f64().unwrap(),y:value["y"].as_f64().unwrap(),width:value["width"].as_f64().unwrap(),height:value["height"].as_f64().unwrap(),port_count:value["ports"].as_array().unwrap().len()};
         assert_eq!(node.presented_label(),value["expectedLabel"].as_str().unwrap());
         assert_eq!(node.presented_extent(),(value["expectedWidth"].as_f64().unwrap(),value["expectedHeight"].as_f64().unwrap()));
         assert!(node.id.contains('@'));
         let port=&value["ports"][0];
-        let view=semio_s_artifact_trinity_jack_graph_query::JackContentPortView{id:port["id"].as_str().unwrap(),label:port["label"].as_str().unwrap(),inbound:port["inbound"].as_bool().unwrap(),outbound:port["outbound"].as_bool().unwrap()};
+        let view=crate::rich_read::JackContentPortView{id:port["id"].as_str().unwrap(),label:port["label"].as_str().unwrap(),inbound:port["inbound"].as_bool().unwrap(),outbound:port["outbound"].as_bool().unwrap()};
         assert!(view.inbound&&view.outbound&&view.id.contains('@'));
     }
 }

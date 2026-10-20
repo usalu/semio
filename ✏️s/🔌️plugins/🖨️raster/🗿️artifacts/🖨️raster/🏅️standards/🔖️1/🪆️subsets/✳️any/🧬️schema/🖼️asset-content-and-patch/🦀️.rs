@@ -37,7 +37,7 @@ pub fn image_asset_child_handle(asset_id: &str, asset: &RasterImageAsset) -> Ras
 /// for what is honestly the same image; hashing the canonical DECODED content instead makes
 /// `decode → cache → re-encode → decode` idempotent at the handle level, which `add-layer-asset`'s
 /// inverse (`🧬️mutations/🖇️add-layer-asset/↩️inverse`) depends on to restore the exact prior handle.
-fn image_content_child_handle(asset_id: &str, image: &SemioImageSnapshot) -> RasterAssetChild {
+pub fn image_content_child_handle(asset_id: &str, image: &SemioImageSnapshot) -> RasterAssetChild {
     let child_id = raster_image_content_id("raster-asset", image);
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() };
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: format!("{asset_id}-image"), dialect };
@@ -218,7 +218,7 @@ impl<V:semio_framework_dsl_record::BorrowedDslField> semio_framework_dsl_record:
 
 impl semio_framework_dsl_record::BorrowedDslField for RasterAdjustmentNumber{const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Value;}
 
-const RASTER_OWNED_FIELD_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
+pub const RASTER_OWNED_FIELD_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 
 /// 🧹️ Closes one cold-owned Raster value to terminal-empty through grants sized exactly by the retirement's own quotes.
 pub fn retire_raster_value_cold<T: semio_framework_value::retirement::RetireOwned>(value: T) {

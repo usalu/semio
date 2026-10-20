@@ -5,38 +5,6 @@
     {
       "type": "object",
       "required": [
-        "command",
-        "file",
-        "editor"
-      ],
-      "properties": {
-        "command": {
-          "const": "open-source"
-        },
-        "file": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 256
-        },
-        "line": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 2147483647
-        },
-        "editor": {
-          "enum": [
-            "system",
-            "vscode",
-            "codium",
-            "sublime"
-          ]
-        }
-      },
-      "additionalProperties": false
-    },
-    {
-      "type": "object",
-      "required": [
         "command"
       ],
       "properties": {

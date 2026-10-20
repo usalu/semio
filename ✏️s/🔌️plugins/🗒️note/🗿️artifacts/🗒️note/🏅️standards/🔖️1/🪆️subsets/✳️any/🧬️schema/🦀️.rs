@@ -479,14 +479,6 @@ pub fn block_bounds(block: &NoteBlockNode) -> (f64, f64, f64, f64) {
 
 //#endregion 🔖️DocumentHelpers
 
-//#region 🏗️Construction
-/// 🏗️ Ordinary `Mutation`/`MutationDiff` algebra is all this subset needs (no custom analysis/
-/// composition logic beyond it) — the old hand-rolled `NoteBuilderConstruction` (which only
-/// differed from this in swallowing a failed `apply` into a diagnostics `Vec` instead of erroring)
-/// is retired in favor of the SDK's generic replacement (ticket
-/// 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, `📓️recipe-subset.md` §4d/step 6).
-pub type Construction = semio_framework_plugin::app::SnapshotBuilder<crate::NoteSnapshot, crate::NoteMutation>;
-//#endregion 🏗️Construction
 
 //#region 🧪️Tests
 
@@ -826,8 +818,6 @@ pub struct NoteImageAsset {
     pub height: Option<f64>,
 }
 
-pub use crate::schema::diff::NoteDiff;
-pub use crate::schema::mutations::NoteMutation;
 pub use crate::schema::snapshot::NoteSnapshot;
 
 //#endregion 🔖️Domain

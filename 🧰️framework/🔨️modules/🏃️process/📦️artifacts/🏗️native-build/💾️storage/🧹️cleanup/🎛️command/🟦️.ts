@@ -10,7 +10,7 @@ import{requireIssuedResourceControlInvocationV1}from"../../../../../🧭️routi
 import{requireNativeCreatorClaimRetiredV1,retireNativeCreatorClaimV1,withNativeCreatorClaimV1,createNativeCreatorDirectoriesV1}from"../../🌱️birth/🧾️claim/🟦️.ts";
 import{readNativeStorageFundedFactoryV1,type NativeStorageChildFundingV1}from"../../🌱️birth/🟦️.ts";
 import{withNativeOpenLifetimeV1}from"../📥️operation/🤲️lifetime/🟦️.ts";
-import{requireArtifactDescriptorClosureV1}from"../../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import{requireArtifactDescriptorClosureV1}from"../../../../../../📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import{requireEmptyNativeImageMountDirectoryV1,observeNativeImageMountDirectoryV1,readNativeImageMountDirectoryV1,requireNativeImageMountDirectoryV1,type NativeImageMountDirectoryV1}from"../../🌐️platform/📋️contract/📂️mount/🟦️.ts";
 import mountDirectorySchema from"../../🌐️platform/📋️contract/📂️mount/🧬️schema/🔣️.json" with{type:"json"};
 import{syncNativeDirectoryMetadataV1}from"../../🧾️metadata/🟦️.ts";

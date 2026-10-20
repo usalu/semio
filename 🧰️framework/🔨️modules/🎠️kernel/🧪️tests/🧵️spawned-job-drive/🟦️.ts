@@ -14,7 +14,7 @@ import {
   SPAWNED_JOB_STEP_CEILING,
   type SpawnedJobCompletion,
   type SpawnedJobStep
-} from "../../🛠️spawned-job/🟦️.ts";
+} from "@semio-tech/framework-effect/spawned-job";
 import { driveSpawnedJob, spawnedJobCompletedEvent, wireEffectToFriendly, wireJobStep, wireSpawnedJobs, type SpawnedJobPort, type WireVariant } from "@semio-tech/framework-actor/wire-turn";
 
 /** 🧵 TypeScript twin of `🧪️tests/🧵️spawned-job-drive/🦀️.rs`, driven from the SAME fixture

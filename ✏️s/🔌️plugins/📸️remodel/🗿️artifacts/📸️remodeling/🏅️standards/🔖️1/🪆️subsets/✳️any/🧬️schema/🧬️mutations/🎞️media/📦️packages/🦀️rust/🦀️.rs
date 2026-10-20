@@ -19,6 +19,7 @@ pub mod standards {
                         pub mod create_stream {
                             #[path = "../../../🌱create-stream/🦀️.rs"]
                             mod component;
+                            pub use component::*;
                             #[path = "../../../🌱create-stream/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../../../🌱create-stream/↩️inverse/🦀️.rs"]
@@ -28,6 +29,7 @@ pub mod standards {
                         pub mod delete_stream {
                             #[path = "../../../🪓delete-stream/🦀️.rs"]
                             mod component;
+                            pub use component::*;
                             #[path = "../../../🪓delete-stream/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../../../🪓delete-stream/↩️inverse/🦀️.rs"]
@@ -37,6 +39,7 @@ pub mod standards {
                         pub mod replace_stream_source {
                             #[path = "../../../🔁replace-stream/🦀️.rs"]
                             mod component;
+                            pub use component::*;
                             #[path = "../../../🔁replace-stream/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../../../🔁replace-stream/↩️inverse/🦀️.rs"]

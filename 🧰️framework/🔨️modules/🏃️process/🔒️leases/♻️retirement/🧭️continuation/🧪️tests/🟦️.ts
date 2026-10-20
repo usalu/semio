@@ -11,7 +11,7 @@ import contract from"../🧬️schema/🔣️.json";
 import{registerBuildTestLawV1}from"../../../../🧪️testing/📥️invocation/🟦️.ts";
 import{withIssuedResourceControlV1,withIssuedResourceOperationV1,scriptInvocationEnvironment}from"../../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{captureOwnedCommandResultV1}from"../../../../🎛️owned-execution/📥️capture/🟦️.ts";
-import{mapBoundedV1,CURRENT_PHYSICAL_CONCURRENCY_V1}from"@semio-tech/framework/filesystem/observation/current";
+import{mapBoundedV1,CURRENT_PHYSICAL_CONCURRENCY_V1}from"@semio-tech/framework-filesystem/observation/current";
 import*as api from"../../../🟦️.ts";
 import{resourceLeaseRetirementScanLimitsV1}from"../../🟦️.ts";
 const worker=fileURLToPath(new URL("./📦️child/📜️script.ts",import.meta.url));

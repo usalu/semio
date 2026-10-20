@@ -114,7 +114,7 @@ async fn every_applied_variant_inverse_sums_to_the_negative_diff() {
         let (diff, messages) = mutation.diff(&base).into_parts();
         protocol::MutationDiff::retire_cold(diff);
         if !messages.iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
-            protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&mutation, &base, <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>>::retire_projection, <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>>::retire_cold).await;
+            protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
         }
         protocol::Mutation::retire_cold(mutation);
     }
@@ -438,10 +438,10 @@ async fn deleting_or_moving_a_middle_layer_inverts_at_its_original_index() {
         base.layers.push(pixel_layer(id, name));
     }
     let delete = RasterMutation::DeleteLayer(semio_s_artifact_raster_raster_mutations_layers::delete_layer::mutation::DeleteLayer { layer_id: "b".into() });
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&delete, &base, <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>>::retire_projection, <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>>::retire_cold).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&delete, &base).await;
     let reorder = RasterMutation::ReorderLayers(semio_s_artifact_raster_raster_mutations_layers::reorder_layers::mutation::ReorderLayers { layer_id: "b".into(), parent_id: None, index: 0 });
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&reorder, &base, <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>>::retire_projection, <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>>::retire_cold).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&reorder, &base).await;
     let insert = RasterMutation::CreateLayer(semio_s_artifact_raster_raster_mutations_layers::create_layer::mutation::CreateLayer { parent_id: None, index: 1, layer: Box::new(pixel_layer("n", "N")) });
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&insert, &base, <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>>::retire_projection, <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>>::retire_cold).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&insert, &base).await;
     semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(base);
 }

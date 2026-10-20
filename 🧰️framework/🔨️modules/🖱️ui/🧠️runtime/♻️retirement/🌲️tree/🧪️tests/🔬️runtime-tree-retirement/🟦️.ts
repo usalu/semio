@@ -28,7 +28,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
-import { testBuiltTreeRetirementFixture } from "../../../../../🧬️contract/🏗️builder/♻️retirement/🧪️tests/🔬️built-tree-retirement/🟦️.ts";
+import { testBuiltTreeRetirementFixture } from "@semio-tech/ui-contract/builder/retirement/testing/built-tree-retirement";
 
 export function testRuntimeTreeRetirement(): void {
   const read = (path: string) => readFileSync(new URL(path, new URL("../..", import.meta.url)), "utf8");

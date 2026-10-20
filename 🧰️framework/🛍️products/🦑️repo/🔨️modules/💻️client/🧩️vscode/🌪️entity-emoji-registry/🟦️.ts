@@ -15,21 +15,21 @@ import { ENTITY_KIND_BY_EMOJI } from "@semio-tech/schema-ts/generated/entity-kin
 // The CLI's AllEntityEmojis() reads the same catalog through its generated Go projection.
 
 /**
- * Complete set of entity-identifying emojis that appear as kind prefixes in entity IDs.
+ * 🧩️ Complete set of entity-identifying emojis that appear as kind prefixes in entity IDs.
  * Projected from the framework-owned entity-kind catalog; the generated index is already FIRST-WINS,
  * so 🌱️ resolves to technology-mono and 📝️ to draft. Regex patterns are derived from it.
  **/
 export const ENTITY_EMOJIS: ReadonlyMap<string, string> = new Map([...ENTITY_KIND_BY_EMOJI].map(([emoji, kind]) => [emoji, kind.id]));
 
 /**
- * Escapes a string for safe use inside a regular expression character class or alternation.
+ * 🚪️ Escapes a string for safe use inside a regular expression character class or alternation.
  **/
 function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 /**
- * Builds a regex pattern that matches any entity emoji from the registry.
+ * 🏗️ Builds a regex pattern that matches any entity emoji from the registry.
  * Longer emojis are tried first to prevent partial matches (e.g. 🧑️‍💻️ before 🧑️).
  **/
 export function buildEntityEmojiPattern(): string {
@@ -40,7 +40,7 @@ export function buildEntityEmojiPattern(): string {
 }
 
 /**
- * Regex that matches entity IDs in text.
+ * 🔨️ Regex that matches entity IDs in text.
  * Matches either:
  * 1. Markdown link: [<emoji-id>](repo://...)
  * 2. Bare reference: <emoji-id> (emoji followed by non-whitespace, non-delimiter characters)
@@ -53,7 +53,7 @@ export function buildEntityIdRegex(): RegExp {
 }
 
 /**
- * Compiled entity ID regex, built once from the registry.
+ * 🏛️ Compiled entity ID regex, built once from the registry.
  **/
 export const ENTITY_ID_REGEX = buildEntityIdRegex();
 // #endregion 🌪️Entity Emoji Registry

@@ -139,6 +139,45 @@ where
     edit.forwards.iter().zip(ids).enumerate().map(move |(index, (operation, mutation_id))| effective_operation::<P, Mutation>(operation, index as u32, mutation_id, schema, supersessions))
 }
 
+/// 🪜️ A fold's running cold projection: it folds one effective operation with keep-and-record semantics, and installs its
+/// successor while retiring the projection it displaces.
+pub trait ColdFoldProjection<P, Mutation> {
+    fn fold_operation(&mut self, operation: &Mutation, op_index: u32);
+    fn advance(&mut self, next: P);
+}
+
+impl<P, Mutation> ColdFoldProjection<P, Mutation> for Arc<P>
+where
+    P: Clone,
+    Mutation: ColdMutation<P>,
+{
+    fn fold_operation(&mut self, operation: &Mutation, op_index: u32) {
+        if let (Some(next), _) = fold_operation::<P, Mutation>(self.as_ref(), operation, op_index) {
+            <Self as ColdFoldProjection<P, Mutation>>::advance(self, next);
+        }
+    }
+
+    fn advance(&mut self, next: P) {
+        match Arc::try_unwrap(std::mem::replace(self, Arc::new(next))) {
+            Ok(original) => <Mutation::ReferenceDiff as ColdMutationDiff<P>>::retire_projection(original),
+            Err(alias) => drop(alias),
+        }
+    }
+}
+
+impl<P, Mutation> ColdFoldProjection<P, Mutation> for semio_framework_os_store_ledger::ColdReplayProjection<P, Mutation>
+where
+    Mutation: ColdMutation<P>,
+{
+    fn fold_operation(&mut self, operation: &Mutation, op_index: u32) {
+        let _ = fold_operation_into::<P, Mutation>(self.projection_mut(), operation, op_index);
+    }
+
+    fn advance(&mut self, next: P) {
+        semio_framework_os_store_ledger::ColdReplayProjection::advance(self, next);
+    }
+}
+
 /// 🔂️ Folds the first `take` effective forwards of `edit` into `projection` with keep-and-record semantics
 /// ([`fold_operation`]) — the one loop every messageless fold site shares.
 pub fn fold_effective_edit<NativeP, P, Mutation>(projection: &mut impl ColdFoldProjection<P, Mutation>, edit: &Edit<Mutation>, schema: &str, supersessions: &EffectiveSupersessions, take: usize)

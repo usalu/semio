@@ -1,11 +1,11 @@
-import type { ScriptInvocation } from "@semio-tech/process/routing";
-import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
+import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
+import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/framework/process/compiler-capacity";
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
-import { scriptInvocationBudget } from "@semio-tech/process/routing";
-import { readCargoTestPolicyV1 } from "@semio-tech/process/cargo-test";
-import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/testing/cargo/exact";
-import { runAdmittedExactCargoLawsV1 as runExactCargoLaws } from "@semio-tech/process/cargo-test";
+import { scriptInvocationBudget } from "@semio-tech/framework/process/routing";
+import { readCargoTestPolicyV1 } from "@semio-tech/framework/process/cargo-test";
+import { configuredExactCargoLawPolicyV1 } from "@semio-tech/framework/process/cargo-laws";
+import { runAdmittedExactCargoLawsV1 as runExactCargoLaws } from "@semio-tech/framework/process/cargo-test";
 
 /** 🏃️ Runs the `MaterialScript` command under the caller's roots and invocation. */
 export async function runMaterialScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, args:string[]): Promise<void> {

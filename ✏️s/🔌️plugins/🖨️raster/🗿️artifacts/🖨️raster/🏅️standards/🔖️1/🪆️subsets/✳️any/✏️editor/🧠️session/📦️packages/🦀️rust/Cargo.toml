@@ -35,6 +35,7 @@ semio-s-artifact-raster-raster-io = { workspace = true }
 semio-s-artifact-raster-raster-model = { workspace = true }
 semio-s-artifact-raster-raster-mutations-pixels = { workspace = true }
 semio-s-artifact-stdio-semio-image = { workspace = true }
+semio-framework-pack = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

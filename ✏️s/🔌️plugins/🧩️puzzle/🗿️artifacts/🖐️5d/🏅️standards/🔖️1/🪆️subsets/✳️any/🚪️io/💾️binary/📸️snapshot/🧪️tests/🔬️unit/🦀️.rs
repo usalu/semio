@@ -22,10 +22,10 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
     use crate::host::owned::close_puzzle5d_store;
     use crate::standards::v1::subsets::any::schema::document_records::host::owned::puzzle5d_store;
-    use crate::Puzzle5dPart;
-    use crate::Puzzle5dPart2d;
-    use crate::Puzzle5dPart3d;
-    use crate::Puzzle5dPartAnchor;
+    use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart;
+    use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart2d;
+    use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart3d;
+    use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPartAnchor;
     use protocol::ArtifactId;
     use protocol::Edit;
     use protocol::SchemaId;

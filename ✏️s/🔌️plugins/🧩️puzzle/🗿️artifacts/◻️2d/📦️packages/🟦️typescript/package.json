@@ -6,6 +6,8 @@
   "description": "Puzzle 2D artifact-owned browser session factories.",
   "exports": {
     ".": "./🟦️.ts",
+    "./examples/concrete-forest/assets/forest": "./📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🟦️.ts",
+    "./examples/nakagin-capsule-tower/assets/tower": "./📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🟦️.ts",
     "./standards/1/subsets/any/schema/diff": "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts"
   },
   "dependencies": {

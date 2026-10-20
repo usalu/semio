@@ -18,7 +18,7 @@
   "targets": {
     "prepare-prototype": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "outputs": [],
       "inputs": [
         "activationSources",
@@ -72,11 +72,16 @@
           "SEMIO_BUILD_MODE": "prototype"
         }
       },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "driver-owned", "reason": "freshness-owned-by-driver" }
+        }
+      },
       "defaultConfiguration": "prototype"
     },
     "activate-prototype": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "outputs": [
         "{projectRoot}/dist/♻️activation/prototype"
       ],
@@ -131,6 +136,11 @@
         "forwardAllArgs": false,
         "env": {
           "SEMIO_BUILD_MODE": "prototype"
+        }
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "driver-owned", "reason": "freshness-owned-by-driver" }
         }
       },
       "defaultConfiguration": "prototype"

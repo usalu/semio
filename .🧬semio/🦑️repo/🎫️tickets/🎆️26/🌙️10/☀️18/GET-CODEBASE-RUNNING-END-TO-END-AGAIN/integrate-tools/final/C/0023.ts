@@ -1,0 +1,20 @@
+/** 🎮️ Public `@semio-tech/repo-lib/dev` entry (dev servers: Vite services, sessions and plugins, playground catalog, ports and native host); explicit re-exports of the library paths that own each member, nothing is defined here. */
+export { runViteBunxDev } from "../../../⚡️caching/🌐️vite/🌐️service/🟦️.ts";
+export { runViteBuild } from "../../../⚡️caching/🌐️vite/🏗️build/🟦️.ts";
+export { viteStorageLayoutV1, withViteArtifactV1, withViteStorageV1 } from "../../../⚡️caching/🌐️vite/💾️storage/🟦️.ts";
+export { viteCacheDirectory } from "../../../⚡️caching/🌐️vite/📂️paths/🟦️.ts";
+export { VITE_RUNTIME_CHANNELS_ENV_V1, readViteRuntimeChannelsV1, viteRuntimeEnvironmentV1, withoutViteRuntimeEnvironmentV1 } from "../../../⚡️caching/🌐️vite/📥️environment/🏃️runtime/🟦️.ts";
+export type { ViteRuntimeChannelV1 } from "../../../⚡️caching/🌐️vite/📥️environment/🏃️runtime/🟦️.ts";
+export { default as environmentRuntimeSchema } from "../../../⚡️caching/🌐️vite/📥️environment/🏃️runtime/🧬️schema/🔣️.json" with { type: "json" };
+export { projectViteCommandEnvironmentV1 } from "../../../⚡️caching/🌐️vite/📥️environment/🟦️.ts";
+export { withViteArtifactInputsV1 } from "../../../⚡️caching/🌐️vite/📥️inputs/🟦️.ts";
+export { canonicalWasmBuildVitePlugin } from "../../../⚡️caching/🌐️vite/🕸️wasm/🟦️.ts";
+export { buildViteArtifact, serveVite } from "../../../⚡️caching/🌐️vite/🟦️.ts";
+export { closeServiceSession, openServiceSession, parseServiceReadinessBudgetV1, publishServiceReady, readServiceSession, serviceReadyProgressLanguage, serviceReadyProgressLine, waitForServiceReady } from "../../../⚡️caching/🌐️vite/🧾️session/🟦️.ts";
+export type { ServiceReadinessBudget, ServiceReadyProgress, ServiceReadyWait } from "../../../⚡️caching/🌐️vite/🧾️session/🟦️.ts";
+export { describeDevPortOccupant, devServerUrl, isDevPortInUse } from "../../../🌐️network/🔌️ports/🟦️.ts";
+export { frameworkOsLockedPrefsEnv } from "../../../🎮️playground/🔒️preferences/🟦️.ts";
+export { admitPlaygroundNativeHostV1, nativeHostFilesystemViewV1, nativeHostTextSourceViewV1, parsePlaygroundNativeHostV1, playgroundNativeHostArtifactV1 } from "../../../🎮️playground/🖥️native-host/🟦️.ts";
+export type { PlaygroundNativeHostV1 } from "../../../🎮️playground/🖥️native-host/🟦️.ts";
+export { OS_HUB_PORT, OS_HUB_PORT_ENV, loadFrameworkOsPlaygroundCatalog, playgroundDevPortString, playgroundPortEnv } from "../../../🎮️playground/🟦️.ts";
+export { wgpuDevPlayUrl } from "../../../🎮️playground/🧊️wgpu-dev/🟦️.ts";

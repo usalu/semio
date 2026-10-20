@@ -1,0 +1,67 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/🧩️inner/🟦️.tsx",
+ "function": "DiagramInner",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "arrowVar": true,
+ "shared": {
+  "dir": "🟣️shared",
+  "doc": "/** 🟣️ The shared declarations of DiagramInner. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️force-config",
+   "doc": "/** 🔶️ The force config phase of DiagramInner. */",
+   "phases": [
+    {
+     "name": "useForceConfigState",
+     "emoji": "🔷",
+     "doc": "Builds forceConfig, simulationRef, forcePageRef, draggingNodeRef of DiagramInner.",
+     "from": 159,
+     "to": 310
+    }
+   ]
+  },
+  {
+   "dir": "🔸️handle-node-drag",
+   "doc": "/** 🔸️ The handle node drag phase of DiagramInner. */",
+   "phases": [
+    {
+     "name": "useHandleNodeDragState",
+     "emoji": "🔹",
+     "doc": "Builds handleNodeDragStart, handleNodeDrag, handleNodeDragStop, stableOnConnect of DiagramInner.",
+     "from": 320,
+     "to": 395
+    }
+   ]
+  },
+  {
+   "dir": "🟠️part3",
+   "doc": "/** 🟠️ The part3 phase of DiagramInner. */",
+   "phases": [
+    {
+     "name": "usePart3",
+     "emoji": "🟡",
+     "doc": "Runs the effects and registrations of DiagramInner.",
+     "from": 399,
+     "to": 536
+    }
+   ]
+  },
+  {
+   "dir": "🟢️part4",
+   "doc": "/** 🟢️ The part4 phase of DiagramInner. */",
+   "phases": [
+    {
+     "name": "usePart4",
+     "emoji": "🔵",
+     "doc": "Runs the effects and registrations of DiagramInner.",
+     "from": 552,
+     "to": 552
+    }
+   ]
+  }
+ ]
+}

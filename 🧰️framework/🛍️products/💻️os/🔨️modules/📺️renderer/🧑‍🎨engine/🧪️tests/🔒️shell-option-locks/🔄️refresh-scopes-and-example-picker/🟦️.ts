@@ -1,7 +1,7 @@
 /** 🔄️ The refresh scope and example picker tests. */
 import { SET_ACTIVE_EXAMPLE_ACTION_ID, buildActiveExampleAction } from "../../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🔀️example-switching/🟦️.ts";
 import { FRAMEWORK_HISTORY_BODY_KEY, resolveUiDirtyScope } from "@semio-tech/framework";
-import { manifestExamplePickerFixture as examplePickerFixture } from "@semio-tech/framework/manifest/testing/fixtures";
+import { manifestExamplePickerFixture as examplePickerFixture } from "@semio-tech/framework-manifest/testing/fixtures";
 import { examplesForApp, examplesForDialect, surfaceAppId, type AppRole } from "@semio-tech/framework";
 import { readModuleTreeSource, sliceModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { expect, it } from "vitest";

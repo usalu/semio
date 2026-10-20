@@ -1,0 +1,37 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🐾️pets/🧪️tests/🤏️pet-handling/🟦️.tsx",
+ "describeLine": 133,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of the 🤏️ pet handling suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️counts-controls-what-survey",
+   "doc": "/** 🔶️ The counts controls what survey tests of the 🤏️ pet handling suite. */",
+   "name": "registerCountsControlsWhatSurveyTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the counts controls what survey tests of the 🤏️ pet handling suite.",
+   "from": 134,
+   "to": 272
+  },
+  {
+   "dir": "🔸️takes-no-press-not",
+   "doc": "/** 🔸️ The takes no press not tests of the 🤏️ pet handling suite. */",
+   "name": "registerTakesNoPressNotTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the takes no press not tests of the 🤏️ pet handling suite.",
+   "from": 292,
+   "to": 447
+  },
+  {
+   "dir": "🟠️listens-capture-phase-window",
+   "doc": "/** 🟠️ The listens capture phase window tests of the 🤏️ pet handling suite. */",
+   "name": "registerListensCapturePhaseWindowTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the listens capture phase window tests of the 🤏️ pet handling suite.",
+   "from": 462,
+   "to": 462
+  }
+ ]
+}

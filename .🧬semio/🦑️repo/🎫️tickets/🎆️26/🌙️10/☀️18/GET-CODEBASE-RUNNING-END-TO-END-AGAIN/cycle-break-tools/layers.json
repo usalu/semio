@@ -1,0 +1,10 @@
+{
+ "@semio-tech/repo-lib": 0, "@semio-tech/nx-bootstrap-tools": 0,
+ "@semio-tech/framework": 1,
+ "@semio-tech/framework-os": 2, "@semio-tech/plugin-window-kits": 2, "@semio-tech/infinite-world-r3f": 2, "@semio-tech/canvas-react-renderer": 2,
+ "@semio-tech/print": 3, "@semio-tech/print-viz-inference": 3,
+ "@semio-tech/framework-os-node-graph-rs": 3, "@semio-tech/framework-plugin": 3,
+ "@semio-tech/plugin-registry": 4, "@semio-tech/plugin-extension-store": 4, "@semio-tech/framework-os-mcp": 4,
+ "@semio-tech/framework-renderer-react": 5, "@semio-tech/framework-renderer-wgpu": 5,
+ "@semio-tech/framework-os-dev": 6
+}

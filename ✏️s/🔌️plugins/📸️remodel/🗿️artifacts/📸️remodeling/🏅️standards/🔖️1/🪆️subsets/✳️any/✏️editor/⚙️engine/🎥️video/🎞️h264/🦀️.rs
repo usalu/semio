@@ -192,7 +192,7 @@ impl H264Decoder {
 
 /// 📐️ Recovers `(width, height)` from a raw SPS NAL (header byte + RBSP — [`h264_enc_sps_pps_nals`]'s
 /// own output shape) via this crate's own [`parse_nal`]/[`parse_sps`] — `(0, 0)` if not a valid SPS.
-fn sps_nal_dimensions(sps_nal: &[u8]) -> (u32, u32) {
+pub fn sps_nal_dimensions(sps_nal: &[u8]) -> (u32, u32) {
     parse_nal(sps_nal).ok().filter(|nal| nal.nal_unit_type == 7).and_then(|nal| parse_sps(&nal.rbsp).ok()).map_or((0, 0), |sps| (sps.width_px, sps.height_px))
 }
 

@@ -11,7 +11,7 @@ use semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::impo
 use semio_s_artifact_stdio_dwg_write::standards::v_ac1024::subsets::any::io::export::serializers::artifacts::binary::v_raw::any as raw_export;
 use semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::deserializers::artifacts::binary::v_raw::any as raw_import;
 use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::DwgAnalyzer;
-use protocol::command::DiffAlgebra;
+use protocol::DiffAlgebra;
 use protocol::{Mutation, MutationDiff};
 use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeSource,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
@@ -166,7 +166,7 @@ async fn exact_fixture_roundtrips_through_snapshot_diff_mutation_and_raw_io() {
 
     let empty = DwgDiff::default();
     assert!(empty.is_empty());
-    assert_fixture_bytes(&encode_dwg(&protocol::apply_diff(&empty, &original).expect("empty diff must apply")).expect("empty diff export"), "empty diff export").await;
+    assert_fixture_bytes(&encode_dwg(&protocol::apply_diff_cold(&empty, &original).expect("empty diff must apply")).expect("empty diff export"), "empty diff export").await;
 
     let mut no_op = original.clone();
     let no_op_diff = apply_mutation(&mut no_op, &DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version: original.version.clone(), maintenance_version: original.maintenance_version, codepage: original.codepage }));
@@ -175,17 +175,17 @@ async fn exact_fixture_roundtrips_through_snapshot_diff_mutation_and_raw_io() {
 
     let header_change = DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version: original.version.clone(), maintenance_version: original.maintenance_version.wrapping_add(1), codepage: original.codepage.wrapping_add(1) });
     let header_diff = header_change.diff(&original);
-    let changed = protocol::apply_diff(header_diff.diff(), &original).expect("header diff must apply");
+    let changed = protocol::apply_diff_cold(header_diff.diff(), &original).expect("header diff must apply");
     let changed_bytes = encode_dwg(&changed).expect("byte-patched header mutation export");
     let redecoded = decode_dwg(&changed_bytes).expect("mutated header re-decode");
     assert_eq!(redecoded.maintenance_version, changed.maintenance_version);
     assert_eq!(redecoded.codepage, changed.codepage);
 
     let inverse_diff = header_diff.diff().inverse(&original);
-    assert_fixture_bytes(&encode_dwg(&protocol::apply_diff(&inverse_diff, &changed).expect("inverse diff must apply")).expect("inverse diff export"), "inverse diff export").await;
+    assert_fixture_bytes(&encode_dwg(&protocol::apply_diff_cold(&inverse_diff, &changed).expect("inverse diff must apply")).expect("inverse diff export"), "inverse diff export").await;
     let mut absorbed = header_diff.diff().clone();
     absorbed.absorb(inverse_diff);
-    assert_fixture_bytes(&encode_dwg(&protocol::apply_diff(&absorbed, &original).expect("absorbed diff must apply")).expect("absorbed inverse export"), "absorbed inverse export").await;
+    assert_fixture_bytes(&encode_dwg(&protocol::apply_diff_cold(&absorbed, &original).expect("absorbed diff must apply")).expect("absorbed inverse export"), "absorbed inverse export").await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -256,13 +256,13 @@ async fn semantic_metadata_edits_materialize_from_logical_content() {
     let mut changed = original.clone();
     changed.summary.title = "Architectural Example".into();
     let diff = DwgDiff { summary: Some(changed.summary.clone()), ..DwgDiff::default() };
-    let dirty = protocol::apply_diff(&diff, &original).expect("metadata diff must apply");
+    let dirty = protocol::apply_diff_cold(&diff, &original).expect("metadata diff must apply");
     assert_eq!(dirty, changed);
     let dirty_bytes = encode_dwg(&dirty).expect("logical metadata export");
     let dirty_roundtrip = decode_dwg(&dirty_bytes).expect("logical section re-import");
     assert_eq!(dirty_roundtrip.version, dirty.version);
 
-    let dirty = protocol::apply_diff(&diff.inverse(&original), &dirty).expect("inverse metadata diff must apply");
+    let dirty = protocol::apply_diff_cold(&diff.inverse(&original), &dirty).expect("inverse metadata diff must apply");
     assert_eq!(dirty, original);
     assert_fixture_bytes(&encode_dwg(&dirty).expect("inverse mutation export"), "inverse mutation export").await;
 }

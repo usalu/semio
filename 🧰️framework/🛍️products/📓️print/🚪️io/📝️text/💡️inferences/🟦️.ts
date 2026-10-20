@@ -1,6 +1,6 @@
 import type {VizChartInference} from "@semio-tech/print-viz-inference";
 import type {VizChartDiagnostic} from "@semio-tech/print-viz-inference/validation";
-import document from "./🔣️.json";
+import document from "./🔣️.json" with { type: "json" };
 import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 
 export type VizChartTextOutput = (Extract<VizChartInference,{complete:true}> & {readonly tikz:string}) | (Extract<VizChartInference,{complete:false}> & {readonly tikz:""});

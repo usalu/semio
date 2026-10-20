@@ -6,7 +6,7 @@ import { BundleScript, scriptInvocationBudget, type ScriptInvocation } from "../
 import { runOwnedCommand } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { acquireQueuedResourceLease } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { repoCacheDirectory } from "@semio-tech/process/execution";
-import rebuildSchema from "./🧬️schema/🔣️.json";
+import rebuildSchema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 /** 🧱️ Dependency order shared by general and deployment-owned contributions. */
 export const REBUILD_STAGES = Object.freeze(rebuildSchema.$defs.RebuildStepV1.properties.stage.enum) as readonly ("inputs" | "descriptors" | "registry" | "guests" | "catalog")[];

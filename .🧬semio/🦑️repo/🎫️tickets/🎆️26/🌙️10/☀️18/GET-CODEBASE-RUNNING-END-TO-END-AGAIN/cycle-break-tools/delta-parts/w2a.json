@@ -1,0 +1,283 @@
+{
+ "schema": "cycle-break/delta@1",
+ "stagedAt": "2026-10-20T02:20:36.597Z",
+ "manifestOps": [
+  {
+   "op": "remove",
+   "packageJson": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/package.json",
+   "package": "@semio-tech/plugin-registry",
+   "field": "exports",
+   "key": "./publication/build",
+   "value": "./📣️publication/🏗️build/🟦️.ts",
+   "wave": "w2a-publication",
+   "why": "key moves to @semio-tech/plugin-registry-publication/build"
+  },
+  {
+   "op": "remove",
+   "packageJson": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/package.json",
+   "package": "@semio-tech/plugin-registry",
+   "field": "exports",
+   "key": "./publication",
+   "value": "./📣️publication/🟦️.ts",
+   "wave": "w2a-publication",
+   "why": "key moves to @semio-tech/plugin-registry-publication"
+  },
+  {
+   "op": "add",
+   "packageJson": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/package.json",
+   "package": "@semio-tech/plugin-registry",
+   "field": "dependencies",
+   "key": "@semio-tech/plugin-registry-publication",
+   "value": "workspace:*",
+   "wave": "w2a-publication",
+   "why": "binding manifest of 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts imports @semio-tech/plugin-registry-publication"
+  },
+  {
+   "op": "add",
+   "packageJson": "✏️s/package.json",
+   "package": "semio-s-workspace",
+   "field": "dependencies",
+   "key": "@semio-tech/plugin-registry-publication",
+   "value": "workspace:*",
+   "wave": "w2a-publication",
+   "why": "binding manifest of ✏️s/🧑‍💻dev/🧩️catalog/📣️publication/🟦️.ts imports @semio-tech/plugin-registry-publication"
+  },
+  {
+   "op": "add",
+   "packageJson": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/repo-lib",
+   "field": "dependencies",
+   "key": "@semio-tech/plugin-registry-publication",
+   "value": "workspace:*",
+   "wave": "carve",
+   "why": "@semio-tech/repo-lib imports @semio-tech/plugin-registry-publication"
+  },
+  {
+   "op": "add",
+   "packageJson": "✏️s/🧑‍💻dev/🧩️catalog/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/s-dev-catalog-ts",
+   "field": "dependencies",
+   "key": "@semio-tech/plugin-registry-publication",
+   "value": "workspace:*",
+   "wave": "carve",
+   "why": "@semio-tech/s-dev-catalog-ts imports @semio-tech/plugin-registry-publication"
+  },
+  {
+   "op": "add",
+   "packageJson": "package.json",
+   "package": "workspace",
+   "field": "workspaces",
+   "key": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication",
+   "value": "",
+   "wave": "w2a-publication",
+   "why": "workspace member @semio-tech/plugin-registry-publication"
+  },
+  {
+   "op": "add",
+   "packageJson": "♻️mit-bestand/package.json",
+   "package": "semio-mit-bestand-workspace",
+   "field": "workspaces",
+   "key": "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication",
+   "value": "",
+   "wave": "w2a-publication",
+   "why": "workspace member @semio-tech/plugin-registry-publication"
+  },
+  {
+   "op": "add",
+   "packageJson": "✏️s/package.json",
+   "package": "semio-s-workspace",
+   "field": "workspaces",
+   "key": "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication",
+   "value": "",
+   "wave": "w2a-publication",
+   "why": "workspace member @semio-tech/plugin-registry-publication"
+  },
+  {
+   "op": "add",
+   "packageJson": "🌎️hub/package.json",
+   "package": "semio-hub-workspace",
+   "field": "workspaces",
+   "key": "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication",
+   "value": "",
+   "wave": "w2a-publication",
+   "why": "workspace member @semio-tech/plugin-registry-publication"
+  },
+  {
+   "op": "add",
+   "packageJson": "🎓️teaching/package.json",
+   "package": "semio-teaching-workspace",
+   "field": "workspaces",
+   "key": "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication",
+   "value": "",
+   "wave": "w2a-publication",
+   "why": "workspace member @semio-tech/plugin-registry-publication"
+  },
+  {
+   "op": "add",
+   "packageJson": "🏢️semio-tech/package.json",
+   "package": "semio-semio-tech-workspace",
+   "field": "workspaces",
+   "key": "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication",
+   "value": "",
+   "wave": "w2a-publication",
+   "why": "workspace member @semio-tech/plugin-registry-publication"
+  }
+ ],
+ "newFiles": [
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/package.json",
+   "content": "{\n  \"$schema\": \"https://json.schemastore.org/package.json\",\n  \"name\": \"@semio-tech/plugin-registry-publication\",\n  \"version\": \"0.1.0\",\n  \"description\": \"plugin catalog · publication contract and build contribution (leaf)\",\n  \"type\": \"module\",\n  \"private\": true,\n  \"exports\": {\n    \".\": \"./🟦️.ts\",\n    \"./build\": \"./🏗️build/🟦️.ts\",\n    \"./build/schema/contribution.json\": \"./🏗️build/🧬️schema/📣️contribution/🔣️.json\",\n    \"./publication.json\": \"./🔣️.json\",\n    \"./schema.json\": \"./🧬️schema/🔣️.json\"\n  },\n  \"license\": \"LGPL-3.0-or-later\",\n  \"bundleKind\": \"library\",\n  \"devDependencies\": {\n    \"ajv\": \"8.20.0\"\n  }\n}\n",
+   "wave": "w2a-publication",
+   "why": "module-root package @semio-tech/plugin-registry-publication"
+  }
+ ],
+ "edits": [
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts",
+   "from": "../📣️publication/🔣️.json",
+   "to": "@semio-tech/plugin-registry-publication/publication.json",
+   "mode": "specifier",
+   "wave": "w2a-publication",
+   "why": "relative import crosses into carved package @semio-tech/plugin-registry-publication"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts",
+   "from": "../📣️publication/🟦️.ts",
+   "to": "@semio-tech/plugin-registry-publication",
+   "mode": "specifier",
+   "wave": "w2a-publication",
+   "why": "relative import crosses into carved package @semio-tech/plugin-registry-publication"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔄️refresh/🟦️.ts",
+   "from": "../📣️publication/🟦️.ts",
+   "to": "@semio-tech/plugin-registry-publication",
+   "mode": "specifier",
+   "wave": "w2a-publication",
+   "why": "relative import crosses into carved package @semio-tech/plugin-registry-publication"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🎮️playground-preparation/🟦️.ts",
+   "from": "../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts",
+   "to": "@semio-tech/plugin-registry-publication/build",
+   "mode": "specifier",
+   "wave": "w2a-publication",
+   "why": "relative import crosses into carved package @semio-tech/plugin-registry-publication"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🎮️playground-preparation/🧪️tests/🟦️.ts",
+   "from": "../../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🧬️schema/🔣️.json",
+   "to": "@semio-tech/plugin-registry-publication/schema.json",
+   "mode": "specifier",
+   "wave": "w2a-publication",
+   "why": "relative import crosses into carved package @semio-tech/plugin-registry-publication"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🎮️playground-preparation/🧪️tests/🟦️.ts",
+   "from": "../../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🧬️schema/📣️contribution/🔣️.json",
+   "to": "@semio-tech/plugin-registry-publication/build/schema/contribution.json",
+   "mode": "specifier",
+   "wave": "w2a-publication",
+   "why": "relative import crosses into carved package @semio-tech/plugin-registry-publication"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🎮️playground-preparation/🧪️tests/🟦️.ts",
+   "from": "../../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts",
+   "to": "@semio-tech/plugin-registry-publication/build",
+   "mode": "specifier",
+   "wave": "w2a-publication",
+   "why": "relative import crosses into carved package @semio-tech/plugin-registry-publication"
+  },
+  {
+   "file": "✏️s/🧑‍💻dev/🧩️catalog/📣️publication/🟦️.ts",
+   "from": "@semio-tech/plugin-registry/publication",
+   "to": "@semio-tech/plugin-registry-publication",
+   "mode": "specifier",
+   "wave": "w2a-publication",
+   "why": "key @semio-tech/plugin-registry/publication moved to @semio-tech/plugin-registry-publication"
+  },
+  {
+   "file": "✏️s/🧑‍💻dev/🧩️catalog/📣️publication/🟦️.ts",
+   "from": "@semio-tech/plugin-registry/publication/build",
+   "to": "@semio-tech/plugin-registry-publication/build",
+   "mode": "specifier",
+   "wave": "w2a-publication",
+   "why": "key @semio-tech/plugin-registry/publication/build moved to @semio-tech/plugin-registry-publication"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧊️preparation/🟦️.ts",
+   "from": "@semio-tech/plugin-registry/publication/build",
+   "to": "@semio-tech/plugin-registry-publication/build",
+   "mode": "specifier",
+   "wave": "w2a-publication",
+   "why": "key @semio-tech/plugin-registry/publication/build moved to @semio-tech/plugin-registry-publication"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧊️preparation/🧪️tests/🟦️.ts",
+   "from": "@semio-tech/plugin-registry/publication/build",
+   "to": "@semio-tech/plugin-registry-publication/build",
+   "mode": "specifier",
+   "wave": "w2a-publication",
+   "why": "key @semio-tech/plugin-registry/publication/build moved to @semio-tech/plugin-registry-publication"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/💾️cache/🟦️.ts",
+   "from": "@semio-tech/plugin-registry/publication/build",
+   "to": "@semio-tech/plugin-registry-publication/build",
+   "mode": "specifier",
+   "wave": "w2a-publication",
+   "why": "key @semio-tech/plugin-registry/publication/build moved to @semio-tech/plugin-registry-publication"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts",
+   "from": "@semio-tech/plugin-registry/publication/build",
+   "to": "@semio-tech/plugin-registry-publication/build",
+   "mode": "specifier",
+   "wave": "w2a-publication",
+   "why": "key @semio-tech/plugin-registry/publication/build moved to @semio-tech/plugin-registry-publication"
+  }
+ ],
+ "fileOps": [],
+ "flags": [
+  {
+   "wave": "w2a-publication",
+   "severity": "note",
+   "message": "zero-touch CLI closure file keeps its relative import: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🎮️playground-targets/🟨️.mjs -> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts"
+  },
+  {
+   "wave": "w2a-publication",
+   "severity": "note",
+   "message": "zero-touch CLI closure file keeps its relative import: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🎮️playground-targets/🟨️.mjs -> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts"
+  },
+  {
+   "wave": "w2a-publication",
+   "severity": "note",
+   "message": "zero-touch CLI closure file keeps its relative import: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs -> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts"
+  },
+  {
+   "wave": "w2a-publication",
+   "severity": "note",
+   "message": "zero-touch CLI closure file keeps its relative import: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.d.mts -> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts"
+  },
+  {
+   "wave": "w2a-publication",
+   "severity": "note",
+   "message": "zero-touch CLI closure file keeps its relative import: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.d.mts -> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts"
+  },
+  {
+   "wave": "w2a-publication",
+   "severity": "note",
+   "message": "zero-touch CLI closure file keeps its relative import: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.d.mts -> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts"
+  },
+  {
+   "wave": "w2a-publication",
+   "severity": "note",
+   "message": "zero-touch CLI closure file keeps its relative import: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.d.mts -> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts"
+  },
+  {
+   "wave": "w2a-publication",
+   "severity": "note",
+   "message": "zero-touch CLI closure file keeps its relative import: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.d.mts -> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts"
+  }
+ ]
+}

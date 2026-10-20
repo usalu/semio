@@ -5,5 +5,4 @@ await receiveScriptProcessInvocation(process.env, async (invocation: any) => {
   const root = "/Users/ueli/Documents/semio";
   if (which === "factory") await testClosedBrowserComponentFactory(root, invocation);
   else await testClosedBrowserActorProducerV1(root, invocation);
-  console.log("[DEBUG] bb-run done", which);
 });

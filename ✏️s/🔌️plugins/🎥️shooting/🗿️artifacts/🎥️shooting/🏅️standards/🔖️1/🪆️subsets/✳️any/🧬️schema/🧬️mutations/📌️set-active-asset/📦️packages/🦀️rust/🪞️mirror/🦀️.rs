@@ -25,72 +25,72 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod change_scene_sun_enabled {
-                            #[path = "../../../../☀️change-scene-sun/🦀️.rs"]
+                            #[path = "../../../../☀️change-scene-sun-enabled/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "../../../../☀️change-scene-sun/🔺️diff/🦀️.rs"]
+                            #[path = "../../../../☀️change-scene-sun-enabled/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "../../../../☀️change-scene-sun/↩️inverse/🦀️.rs"]
+                            #[path = "../../../../☀️change-scene-sun-enabled/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                         }
                         #[path = "."]
                         pub mod change_scene_sun_azimuth {
-                            #[path = "../../../../🧭️change-scene-sun/🦀️.rs"]
+                            #[path = "../../../../🧭️change-scene-sun-azimuth/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "../../../../🧭️change-scene-sun/🔺️diff/🦀️.rs"]
+                            #[path = "../../../../🧭️change-scene-sun-azimuth/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "../../../../🧭️change-scene-sun/↩️inverse/🦀️.rs"]
+                            #[path = "../../../../🧭️change-scene-sun-azimuth/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                         }
                         #[path = "."]
                         pub mod change_scene_sun_elevation {
-                            #[path = "../../../../🌅️change-scene-sun/🦀️.rs"]
+                            #[path = "../../../../🌅️change-scene-sun-elevation/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "../../../../🌅️change-scene-sun/🔺️diff/🦀️.rs"]
+                            #[path = "../../../../🌅️change-scene-sun-elevation/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "../../../../🌅️change-scene-sun/↩️inverse/🦀️.rs"]
+                            #[path = "../../../../🌅️change-scene-sun-elevation/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                         }
                         #[path = "."]
                         pub mod change_scene_sun_intensity {
-                            #[path = "../../../../💡️change-scene-sun/🦀️.rs"]
+                            #[path = "../../../../💡️change-scene-sun-intensity/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "../../../../💡️change-scene-sun/🔺️diff/🦀️.rs"]
+                            #[path = "../../../../💡️change-scene-sun-intensity/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "../../../../💡️change-scene-sun/↩️inverse/🦀️.rs"]
+                            #[path = "../../../../💡️change-scene-sun-intensity/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                         }
                         #[path = "."]
                         pub mod change_scene_ambient_intensity {
-                            #[path = "../../../../🔅️change-scene-ambient/🦀️.rs"]
+                            #[path = "../../../../🔅️change-scene-ambient-intensity/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "../../../../🔅️change-scene-ambient/🔺️diff/🦀️.rs"]
+                            #[path = "../../../../🔅️change-scene-ambient-intensity/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "../../../../🔅️change-scene-ambient/↩️inverse/🦀️.rs"]
+                            #[path = "../../../../🔅️change-scene-ambient-intensity/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                         }
                         #[path = "."]
                         pub mod change_scene_shadow_enabled {
-                            #[path = "../../../../🌑️change-scene-shadow/🦀️.rs"]
+                            #[path = "../../../../🌑️change-scene-shadow-enabled/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "../../../../🌑️change-scene-shadow/🔺️diff/🦀️.rs"]
+                            #[path = "../../../../🌑️change-scene-shadow-enabled/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "../../../../🌑️change-scene-shadow/↩️inverse/🦀️.rs"]
+                            #[path = "../../../../🌑️change-scene-shadow-enabled/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                         }
                         #[path = "."]
                         pub mod change_scene_material_roughness {
-                            #[path = "../../../../🪨️change-scene/🦀️.rs"]
+                            #[path = "../../../../🪨️change-scene-material-roughness/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "../../../../🪨️change-scene/🔺️diff/🦀️.rs"]
+                            #[path = "../../../../🪨️change-scene-material-roughness/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "../../../../🪨️change-scene/↩️inverse/🦀️.rs"]
+                            #[path = "../../../../🪨️change-scene-material-roughness/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                         }
                     }

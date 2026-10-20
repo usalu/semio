@@ -1,0 +1,4 @@
+64-224 🔶️paints-controlled-camera-reveal registerPaintsControlledCameraRevealTests
+236-388 🔸️hides-other-cards-swipe registerHidesOtherCardsSwipeTests
+396-553 🟠️shows-no-overview-button registerShowsNoOverviewButtonTests
+566-586 🟢️holds-revealed-page-while registerHoldsRevealedPageWhileTests

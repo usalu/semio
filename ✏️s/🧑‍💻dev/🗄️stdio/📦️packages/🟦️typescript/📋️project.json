@@ -135,6 +135,7 @@
       "inputs": [
         "stdioArtifactContract"
       ],
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts package-contract",
@@ -171,6 +172,7 @@
     },
     "verify-semio-member-store-producer-source": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify semio-member-store-producer-source",
@@ -191,6 +193,7 @@
         "stdioCompositionBuild",
         "^production"
       ],
+      "outputs": [],
       "dependsOn": [
         "^build"
       ],

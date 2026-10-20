@@ -1,0 +1,5 @@
+useCanvasAndFooter 4 phases, keep=-, final return=true
+94-94 buildPluginFilterState
+107-107 useCanvas
+261-399 useFooterItemsState
+432-467 useBuildShellContext

@@ -665,7 +665,7 @@
     },
     "test-root-clean-scaffold-source": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "inputs": [
         "sharedGlobals",
         "{workspaceRoot}/📜️script.ts",
@@ -682,6 +682,11 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test root-clean-scaffold-source"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       },
       "outputs": []
     },
@@ -1373,7 +1378,13 @@
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test inventory-artifact-shards"
       },
-      "cache": true
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
+      },
+      "cache": false,
+      "outputs": []
     },
     "test-root-script-compiler": {
       "executor": "repo:script",

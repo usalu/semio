@@ -287,14 +287,8 @@ async fn the_manifest_stitches_every_taxonomy_node() {
     assert_eq!(definition.modes.len(), 1);
     assert_eq!(definition.window_kinds.len(), 1);
     assert!(definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).all(|action| action.semantics.execution.interactive_job == InteractiveJobClassification::Migrated));
-    // 🧷️ gis3d declares no app panel tabs of its own; whatever is present comes from the framework.
     assert!(!definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref().is_some_and(|key| key.starts_with("gis3d.play."))), "gis3d declares no app panels");
     assert!(definition.artifact_kinds.iter().any(|kind| kind.id == semio_s_artifact_gis_gismap::GISMAP_DIALECT.artifact_kind));
-    // 🧱️ `3d.mesh` is NO LONGER independently registered here (ticket
-    // `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` — duplicate `ArtifactKindSpec` deleted, see
-    // `crate::🦀️.rs`'s removal comment). `scene:out`'s
-    // `kind_id: Some("3d.mesh".into())` media-port tag (asserted separately below) still
-    // references the canonical kind by id; this manifest just no longer redundantly declares it.
     assert!(!definition.artifact_kinds.iter().any(|kind| kind.id == "3d.mesh"), "3d.mesh is composed via GisTerrainSnapshot.mesh now, never a standalone ArtifactKindSpec");
 }
 
@@ -327,8 +321,6 @@ async fn retained_commands_publish_only_their_declared_store_lanes() {
     let exaggeration_lanes = exaggeration.lanes.iter().map(lane_name).map(str::to_string).collect::<Vec<_>>();
     assert_eq!(exaggeration_lanes, expected("setExaggeration"));
     assert_eq!(app.snapshot().expect("settled Terrain snapshot").exaggeration, 2.0);
-    // 🎬️ The example load publishes the ARTIFACT lane only — terrain's picker does not re-frame its
-    // window the way gismap's does, and the fixture above is the oracle for that difference.
     let example = dispatch(&mut app, Gis3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example::DEFAULT_EXAMPLE_ID.into() })).await;
     let example_lanes = example.lanes.iter().map(lane_name).map(str::to_string).collect::<Vec<_>>();
     assert_eq!(example_lanes, expected("setActiveExample"));

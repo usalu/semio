@@ -20,7 +20,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { describe, it } from "vitest";
-import { residentRefreshFixtureUrl } from "@semio-tech/framework/ui/testing/fixtures";
+import { residentRefreshFixtureUrl } from "@semio-tech/ui/testing/fixtures";
 
 //#region 🧫️Fixture
 type FixtureSurface = { readonly id: string; readonly nodes: number };

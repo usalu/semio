@@ -2,6 +2,8 @@
 use semio_s_artifact_draw_drawing_model::{create_drawing_image_layer, create_drawing_shape_layer_rect, default_layer_base};
 use semio_s_artifact_draw_drawing_model::default_drawing_document;
 use semio_s_artifact_draw_drawing_model::{DrawingImageAsset, DrawingLayerNode, DrawingTextBody, StrokeStyle};
+use semio_s_artifact_draw_drawing_model::FillStyle;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 /// 🎨️ The direct typed SVG route retains authored paint and positioned text.
 #[semio_framework_async_macros::async_test]

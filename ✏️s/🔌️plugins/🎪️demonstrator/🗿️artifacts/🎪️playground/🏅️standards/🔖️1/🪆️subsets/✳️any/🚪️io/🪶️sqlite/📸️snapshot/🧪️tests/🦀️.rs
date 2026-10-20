@@ -14,7 +14,7 @@ fn sqlite_snapshot_playground_actual_bare_owner_has_capability() {
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_playground_actual_declaration_registers_both_io_directions() {
-    use store::io::io_mechanism::{io_route, io_run};
+    use store::io::io_mechanism::io_route;use original_owners::io_run;
     use {semio_framework_artifact_reference::ArtifactDialect,store::io_schema::IoPayload,store::io_schema::SQLITE_SNAPSHOT};
     semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("demonstrator")
         .label("Playground SQLite Declaration")
@@ -30,10 +30,10 @@ async fn sqlite_snapshot_playground_actual_declaration_registers_both_io_directi
     for case in fixture()["nativeCases"].as_array().unwrap() {
         let source = PlaygroundSnapshot { schema: case["schema"].as_str().unwrap().into() };
         for payload in [IoPayload::Binary(source.encode_pack()), IoPayload::Text(source.print_dsl())] {
-            let exported = io_run(&into, payload.clone()).await.unwrap().value;
+            let exported = io_run(&into, payload.clone(), store::sqlite_snapshot::SqliteDatabaseLimits::default(), &mut |_| true).await.unwrap().value;
             let IoPayload::Binary(bytes) = &exported else { panic!("SQLite is not a binary file") };
             assert_eq!(&bytes[..16], b"SQLite format 3\0");
-            assert_eq!(io_run(&from, exported).await.unwrap().value, payload);
+            assert_eq!(io_run(&from, exported, store::sqlite_snapshot::SqliteDatabaseLimits::default(), &mut |_| true).await.unwrap().value, payload);
         }
     }
 }

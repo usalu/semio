@@ -104,5 +104,5 @@ fn bound_actions(values:&[MemberAction],b:&mut NativeEncodingBound<'_,'_>)->Resu
 fn admit_rows(b:&mut NativeEncodingBound<'_,'_>,rows:&mut usize,add:usize)->Result<(), ValueError>{*rows=rows.checked_add(add).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "EN1999 native row count overflow"))?;b.check_rows(*rows)?;b.checkpoint()}
 
 #[path="🛂️admission/🦀️.rs"]
-pub(crate)mod admission;
+pub mod admission;
 

@@ -1,0 +1,5 @@
+inputSchemaReader 4 phases, keep=-, final return=true
+162-302 buildRootState
+310-410 buildNumberState
+437-577 buildValueSchemaState
+584-666 buildFieldsState

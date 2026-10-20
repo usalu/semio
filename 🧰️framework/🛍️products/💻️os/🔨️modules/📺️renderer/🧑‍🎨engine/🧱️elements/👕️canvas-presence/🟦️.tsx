@@ -70,7 +70,7 @@ function useLocalPresenceActor(runtimeKey: string | null | undefined, fallback: 
   );
 }
 
-/** Hub-admitted local actor id for host self-exclusion (null until socket-actor). */
+/** 🏠️ Hub-admitted local actor id for host self-exclusion (null until socket-actor). */
 export function useLocalPresenceActorIdV1(runtimeKey: string | null | undefined): string | null {
   return useSyncExternalStore(subscribeLocalPresenceActorV1, () => admittedActorId(localPresenceActorV1(runtimeKey)), () => null);
 }

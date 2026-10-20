@@ -3,7 +3,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::forms::modes::blueprint::windows::try_wizard::config::*;
 use semio_s_artifact_forms_forms_commands_try::editor::forms::commands::{next_step, reset_try, set_try_value};
 use crate::editor::forms::modes::blueprint::windows::try_wizard::transient::{FormsTryWindowLease, FormsTryWindowTransient};
-use crate::{forms_snapshot_with_state, FormStep, FORMS_DOCUMENT_SCHEMA};
+use crate::{forms_snapshot_with_state, FORMS_DOCUMENT_SCHEMA};
+use semio_s_artifact_forms_forms_commands::FormStep;
 use semio_framework::kernel::Effect;
 use pack::snapshot::ArtifactPack;
 

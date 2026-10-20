@@ -1,7 +1,7 @@
 /** 💾️ Set: module exporting `RustUnitDescriptorWorkingSetV2`, `rustUnitDescriptorWorkingSetNodesV2`, `withRustUnitDescriptorWorkingSetV2`, `RustUnitDescriptorWorkingSetAppendV3` and more. */
 import{types}from"node:util";
-import schema from"./🧬️schema/🔣️.json";
-import cacheSchema from"../🧬️schema/🔣️.json";
+import schema from"./🧬️schema/🔣️.json" with { type: "json" };
+import cacheSchema from"../🧬️schema/🔣️.json" with { type: "json" };
 import{rustUnitDescriptorNodesV2,rustUnitDescriptorNodeArtifactV2,type RustUnitDescriptorGraphV2,type RustUnitDescriptorNodeV2}from"../../🕸️nodes/🟦️.ts";
 import{requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1,withRequestedIssuedResourceControlV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";

@@ -16,6 +16,28 @@ import { defaultSweepProfileWire, edgeIdsFromPicks, extrudeModelWire, geomEdgeTo
 import { cornerConnectorDiff, editExplodeDiff, editJoinDiff, editSplitDiff, editTrimDiff } from "../✂️edit-diffs/🟦️.ts";
 import { deriveValidSolidFromRecordOrPrimitive, extrusionDistanceFromParams } from "../🧊️solid-topology-and-fixture/🟦️.ts";
 
+const nextId = (kind: string) => `brepjs-${kind}-${Math.random().toString(36).slice(2, 9)}`;
+const asVec3 = (v: unknown, fallback: Vec3): Vec3 => (Array.isArray(v) && v.length >= 3 ? ([Number(v[0]), Number(v[1]), Number(v[2])] as Vec3) : fallback);
+const poleList = (raw: unknown): Vec3[] => {
+  if (!Array.isArray(raw)) return [];
+  const out: Vec3[] = [];
+  for (const p of raw) {
+    if (!Array.isArray(p) || p.length < 3) continue;
+    out.push([Number(p[0]), Number(p[1]), Number(p[2])]);
+  }
+  return out;
+};
+const createVertex = (pos: Vec3) => {
+  const id = nextId("v");
+  return { id: id as VertexRef, position: pos };
+};
+const fuseShapes = (shapes: readonly ValidSolid[]): ValidSolid | null => {
+  if (shapes.length === 0) return null;
+  if (shapes.length === 1) return shapes[0]!;
+  const fused = fuseAll(shapes as ValidSolid[]);
+  return isOk(fused) ? fused.value : null;
+};
+
 // #region 🔌️BrepjsWasmEngine
 /** 🔌️ WASM-side engine: exact solids keyed by `SolidRef` (runs in worker or local fallback). */
 export class BrepjsWasmEngine {
@@ -213,22 +235,6 @@ export class BrepjsWasmEngine {
   }
 
   async executeCommandDiff(commandId: string, params: Record<string, unknown>): Promise<{ readonly diff: ModelDiff }> {
-    const nextId = (kind: string) => `brepjs-${kind}-${Math.random().toString(36).slice(2, 9)}`;
-    const asVec3 = (v: unknown, fallback: Vec3): Vec3 => (Array.isArray(v) && v.length >= 3 ? ([Number(v[0]), Number(v[1]), Number(v[2])] as Vec3) : fallback);
-    const poleList = (raw: unknown): Vec3[] => {
-      if (!Array.isArray(raw)) return [];
-      const out: Vec3[] = [];
-      for (const p of raw) {
-        if (!Array.isArray(p) || p.length < 3) continue;
-        out.push([Number(p[0]), Number(p[1]), Number(p[2])]);
-      }
-      return out;
-    };
-
-    const createVertex = (pos: Vec3) => {
-      const id = nextId("v");
-      return { id: id as VertexRef, position: pos };
-    };
 
     if (commandId === "curve.line") {
       const p0 = asVec3(params.p0, [0, 0, 0]);
@@ -251,50 +257,13 @@ export class BrepjsWasmEngine {
       return { diff: { vertices: { added: verts }, edges: { added: edges }, wires: { added: [w] } } };
     }
     if (commandId === "curve.circle") {
-      const center = asVec3(params.center, [0, 0, 0]);
-      const radiusPoint = asVec3(params.radiusPoint, [1, 0, 0]);
-      const geom = circleFromCenterRadiusPoint(center, radiusPoint);
-      if (!geom) return { diff: {} };
-      const brepEdge = circle(geom.radius, { at: geom.center, axis: geom.normal });
-      const v = createVertex(radiusPoint);
-      const curve: EdgeCurve = { kind: "circle", center: geom.center, normal: geom.normal, radius: geom.radius };
-      const e = { id: nextId("e") as EdgeRef, vertexIds: [v.id, v.id], curve };
-      const w = { id: nextId("w") as WireRef, edgeIds: [e.id] };
-      void brepEdge;
-      return { diff: { vertices: { added: [v] }, edges: { added: [e] }, wires: { added: [w] } } };
+      return this.curveCircleDiff(params);
     }
     if (commandId === "curve.arc") {
-      const center = asVec3(params.center, [0, 0, 0]);
-      const start = params.start != null ? asVec3(params.start, [1, 0, 0]) : ([1, 0, 0] as Vec3);
-      const endRaw = params.end != null ? asVec3(params.end, start) : null;
-      const angle = typeof params.angle === "number" ? params.angle : null;
-      let endPos: Vec3;
-      if (endRaw) endPos = arcEndOnCircle(center, start, endRaw);
-      else if (angle !== null) endPos = arcEndFromAngle(center, start, angle) ?? start;
-      else endPos = start;
-      const mid = arcSamplePoints(center, start, endPos, 4)[2] ?? endPos;
-      const brepEdge = threePointArc(start, mid, endPos);
-      const vStart = createVertex(curveStartPoint(brepEdge));
-      const vEnd = createVertex(curveEndPoint(brepEdge));
-      const curve: EdgeCurve = { kind: "arc", center };
-      const e = { id: nextId("e") as EdgeRef, vertexIds: [vStart.id, vEnd.id], curve };
-      const w = { id: nextId("w") as WireRef, edgeIds: [e.id] };
-      return { diff: { vertices: { added: [vStart, vEnd] }, edges: { added: [e] }, wires: { added: [w] } } };
+      return this.curveArcDiff(params);
     }
     if (commandId === "curve.controlPointCurve" || commandId === "curve.interpolateCurve") {
-      const poles = poleList(params.points);
-      if (poles.length < 2) return { diff: {} };
-      const through = commandId === "curve.interpolateCurve";
-      const fitPoints = through ? [...nurbsDisplaySamplePoints(poles, 16)] : poles;
-      const brepResult = bsplineApprox(fitPoints);
-      if (!isOk(brepResult)) return { diff: {} };
-      const curve = nurbsCurveFromPoles(poles, through);
-      if (!curve) return { diff: {} };
-      const vStart = createVertex(curveStartPoint(brepResult.value));
-      const vEnd = createVertex(curveEndPoint(brepResult.value));
-      const e = { id: nextId("e") as EdgeRef, vertexIds: [vStart.id, vEnd.id], curve };
-      const w = { id: nextId("w") as WireRef, edgeIds: [e.id] };
-      return { diff: { vertices: { added: [vStart, vEnd] }, edges: { added: [e] }, wires: { added: [w] } } };
+      return this.curveControlPointCurveDiff(commandId, params);
     }
     if (commandId === "solid.sphere") {
       const center = asVec3(params.center, [0, 0, 0]);
@@ -307,88 +276,19 @@ export class BrepjsWasmEngine {
       return { diff: { solids: { added: [c] } } };
     }
     if (commandId === "solid.cylinder") {
-      const base = asVec3(params.base, [0, 0, 0]);
-      const radiusPoint = asVec3(params.radiusPoint, [1, 0, 0]);
-      const end = asVec3(params.end, base);
-      const radius = vec3Distance(base, radiusPoint);
-      const axisVec = vec3Sub(end, base);
-      const height = vec3Length(axisVec);
-      const axis = height > 1e-9 ? vec3Normalize(axisVec) : ([0, 0, 1] as Vec3);
-      const solid: SolidPrimitive = { kind: "cylinder", base, axis, radius, height: height > 1e-9 ? height : 1e-6 };
-      const c = { id: nextId("c") as SolidRef, shellIds: [], solid };
-      await this.ensureInit();
-      this.solids.set(c.id, this.solidFromSolidPrimitive(solid));
-      return { diff: { solids: { added: [c] } } };
+      return this.solidCylinderDiff(params);
     }
     if (commandId === "solid.cone") {
-      const base = asVec3(params.base, [0, 0, 0]);
-      const radiusPoint = asVec3(params.radiusPoint, [1, 0, 0]);
-      const end = asVec3(params.end, [0, 0, 1] as Vec3);
-      const radius = vec3Distance(base, radiusPoint);
-      const axisVec = vec3Sub(end, base);
-      const height = vec3Length(axisVec);
-      const axis = height > 1e-9 ? vec3Normalize(axisVec) : ([0, 0, 1] as Vec3);
-      const solid: SolidPrimitive = { kind: "cone", base, axis, radius, height: height > 1e-9 ? height : 1e-6, radiusTop: 0 };
-      const c = { id: nextId("c") as SolidRef, shellIds: [], solid };
-      await this.ensureInit();
-      this.solids.set(c.id, this.solidFromSolidPrimitive(solid));
-      return { diff: { solids: { added: [c] } } };
+      return this.solidConeDiff(params);
     }
-    const fuseShapes = (shapes: readonly ValidSolid[]): ValidSolid | null => {
-      if (shapes.length === 0) return null;
-      if (shapes.length === 1) return shapes[0]!;
-      const fused = fuseAll(shapes as ValidSolid[]);
-      return isOk(fused) ? fused.value : null;
-    };
     if (commandId === "solid.booleanUnion") {
-      const model = params.model instanceof Model ? params.model : null;
-      if (!model) return { diff: {} };
-      await this.ensureInit();
-      const refs = solidRefsFromSelectionRaw(model, params.targets);
-      if (refs.length < 2) return { diff: {} };
-      const shapes = this.validSolidsFromRefs(model, refs);
-      if (shapes.length < 2) return { diff: {} };
-      const fused = fuseAll(shapes);
-      if (!isOk(fused)) return { diff: {} };
-      const ref = kernelGeometry.solidRef(nextId("union"));
-      this.solids.set(ref, fused.value);
-      return { diff: { solids: { added: [{ id: ref, shellIds: [] }], removed: refs } } };
+      return this.solidBooleanUnionDiff(params);
     }
     if (commandId === "solid.booleanDifference") {
-      const model = params.model instanceof Model ? params.model : null;
-      if (!model) return { diff: {} };
-      await this.ensureInit();
-      const baseRefs = solidRefsFromSelectionRaw(model, params.baseObjects);
-      const toolRefs = solidRefsFromSelectionRaw(model, params.cutterObjects);
-      if (!baseRefs.length || !toolRefs.length) return { diff: {} };
-      const baseShape = fuseShapes(this.validSolidsFromRefs(model, baseRefs));
-      const toolShapes = this.validSolidsFromRefs(model, toolRefs);
-      if (!baseShape || !toolShapes.length) return { diff: {} };
-      let result = baseShape;
-      for (const tool of toolShapes) {
-        const cutResult = cut(result, tool);
-        if (!isOk(cutResult)) return { diff: {} };
-        result = cutResult.value;
-      }
-      const ref = kernelGeometry.solidRef(nextId("diff"));
-      this.solids.set(ref, result);
-      return { diff: { solids: { added: [{ id: ref, shellIds: [] }], removed: [...baseRefs, ...toolRefs] } } };
+      return this.solidBooleanDifferenceDiff(params);
     }
     if (commandId === "solid.booleanIntersection") {
-      const model = params.model instanceof Model ? params.model : null;
-      if (!model) return { diff: {} };
-      await this.ensureInit();
-      const firstRefs = solidRefsFromSelectionRaw(model, params.firstSet);
-      const secondRefs = solidRefsFromSelectionRaw(model, params.secondSet);
-      if (!firstRefs.length || !secondRefs.length) return { diff: {} };
-      const firstShape = fuseShapes(this.validSolidsFromRefs(model, firstRefs));
-      const secondShape = fuseShapes(this.validSolidsFromRefs(model, secondRefs));
-      if (!firstShape || !secondShape) return { diff: {} };
-      const isected = intersect(firstShape, secondShape);
-      if (!isOk(isected)) return { diff: {} };
-      const ref = kernelGeometry.solidRef(nextId("isect"));
-      this.solids.set(ref, isected.value);
-      return { diff: { solids: { added: [{ id: ref, shellIds: [] }], removed: [...firstRefs, ...secondRefs] } } };
+      return this.solidBooleanIntersectionDiff(params);
     }
     if (commandId.startsWith("solid.")) {
       return { diff: {} };
@@ -419,86 +319,16 @@ export class BrepjsWasmEngine {
       return { diff: {} };
     }
     if (commandId === "surface.extrudeCrv") {
-      const model = params.model instanceof Model ? params.model : null;
-      if (!model) return { diff: {} };
-      const distance = extrusionDistanceFromParams(params);
-      if (!(distance > 1e-9)) return { diff: {} };
-      const direction = asVec3(params.direction, [0, 0, 1]);
-      const wireIds = wireIdsFromSelectionPicks(model, selectionPicksFromParams(params));
-      if (!wireIds.length) return { diff: {} };
-      const diffs: ModelDiff[] = [];
-      for (const wireId of wireIds) {
-        const row = await this.extrudeWireDiff({ wireId, distance, direction, model });
-        if (!isEmptyModelDiff(row.diff)) diffs.push(row.diff);
-      }
-      return { diff: mergeSolidAdds(diffs) };
+      return this.surfaceExtrudeCrvDiff(params);
     }
     if (commandId === "surface.plane") {
-      const cornerA = asVec3(params.cornerA, [0, 0, 0]);
-      const cornerB = asVec3(params.cornerB, [1, 0, 0]);
-      const along = vec3Sub(cornerB, cornerA);
-      const side = vec3Length(along) > 1e-9 ? vec3Length(along) : 1;
-      const dir = vec3Length(along) > 1e-9 ? vec3Normalize(along) : ([1, 0, 0] as Vec3);
-      let perp = vec3Cross(dir, [0, 0, 1]);
-      if (vec3Length(perp) < 1e-9) perp = vec3Cross(dir, [0, 1, 0]);
-      perp = vec3Normalize(perp);
-      const p0 = cornerA;
-      const p1 = vec3Add(cornerA, vec3Scale(dir, side));
-      const p2 = vec3Add(p1, vec3Scale(perp, side));
-      const p3 = vec3Add(cornerA, vec3Scale(perp, side));
-      const corners = [p0, p1, p2, p3];
-      await this.ensureInit();
-      const brepEdges = corners.map((p, i) => line(p, corners[(i + 1) % 4]!));
-      const loopResult = wireLoop(brepEdges);
-      if (!isOk(loopResult)) return { diff: {} };
-      const faceResult = face(loopResult.value as Parameters<typeof face>[0]);
-      if (!isOk(faceResult)) return { diff: {} };
-      const verts = corners.map((p) => createVertex(p));
-      const edges: EdgeRecord[] = verts.map((v, i) => ({ id: nextId("e") as EdgeRef, vertexIds: [v.id, verts[(i + 1) % 4]!.id], curve: { kind: "line" as const } }));
-      const w = { id: nextId("w") as WireRef, edgeIds: edges.map((e) => e.id) };
-      const normal = vec3Normalize(vec3Cross(dir, perp));
-      const f: FaceRecord = { id: nextId("f") as FaceRef, wireIds: [w.id], surface: { kind: "plane", origin: p0, normal } };
-      return { diff: { vertices: { added: verts }, edges: { added: edges }, wires: { added: [w] }, faces: { added: [f] } } };
+      return this.surfacePlaneDiff(params);
     }
     if (commandId === "surface.loft" || commandId === "surface.networkSrf") {
-      const model = params.model instanceof Model ? params.model : null;
-      if (!model) return { diff: {} };
-      const wireIds = wireIdsFromSelectionPicks(model, picksFromRaw(params.curves));
-      if (!wireIds.length) return { diff: {} };
-      await this.ensureInit();
-      if (wireIds.length === 1) {
-        const planar = geomWireToOrientedFaceLoose(model, wireIds[0]!);
-        if (!planar) return { diff: {} };
-        const f: FaceRecord = { id: nextId("f") as FaceRef, wireIds: [wireIds[0]!] };
-        return { diff: { faces: { added: [f] } } };
-      }
-      const brepWires: Wire[] = [];
-      for (const wid of wireIds) {
-        const bw = geomWireToBrepWire(model, wid);
-        if (!bw) return { diff: {} };
-        brepWires.push(bw);
-      }
-      const lofted = loft(brepWires as Parameters<typeof loft>[0], { ruled: true });
-      if (!isOk(lofted)) return { diff: {} };
-      const f: FaceRecord = { id: nextId("f") as FaceRef, wireIds: [...wireIds] };
-      return { diff: { faces: { added: [f] } } };
+      return this.surfaceLoftDiff(params);
     }
     if (commandId === "surface.sweep1" || commandId === "surface.sweep2") {
-      const model = params.model instanceof Model ? params.model : null;
-      if (!model) return { diff: {} };
-      const railIds = wireIdsFromKeyedRaw(model, params.targets);
-      if (!railIds.length) return { diff: {} };
-      const sectionIds = wireIdsFromSelectionPicks(model, picksFromRaw(params.sections));
-      await this.ensureInit();
-      const railWire = geomWireToBrepWire(model, railIds[0]!);
-      if (!railWire) return { diff: {} };
-      const profileWire = sectionIds.length ? geomWireToBrepWire(model, sectionIds[0]!) : defaultSweepProfileWire(model, railIds[0]!);
-      if (!profileWire) return { diff: {} };
-      const swept = sweepAlongSpine(profileWire as Parameters<typeof sweepAlongSpine>[0], railWire as Parameters<typeof sweepAlongSpine>[1]);
-      if (!isOk(swept)) return { diff: {} };
-      const boundaryWireIds = sectionIds.length ? [railIds[0]!, sectionIds[0]!] : [railIds[0]!];
-      const f: FaceRecord = { id: nextId("f") as FaceRef, wireIds: boundaryWireIds };
-      return { diff: { faces: { added: [f] } } };
+      return this.surfaceSweep1Diff(params);
     }
     if (commandId === "edit.join") {
       const model = params.model instanceof Model ? params.model : null;
@@ -531,6 +361,236 @@ export class BrepjsWasmEngine {
     }
 
     return { diff: {} };
+  }
+
+  /** 🧱️ The `curve.circle` command of `executeCommandDiff`. */
+  private curveCircleDiff(params: Record<string, unknown>): { readonly diff: ModelDiff } {
+    const center = asVec3(params.center, [0, 0, 0]);
+    const radiusPoint = asVec3(params.radiusPoint, [1, 0, 0]);
+    const geom = circleFromCenterRadiusPoint(center, radiusPoint);
+    if (!geom) return { diff: {} };
+    const brepEdge = circle(geom.radius, { at: geom.center, axis: geom.normal });
+    const v = createVertex(radiusPoint);
+    const curve: EdgeCurve = { kind: "circle", center: geom.center, normal: geom.normal, radius: geom.radius };
+    const e = { id: nextId("e") as EdgeRef, vertexIds: [v.id, v.id], curve };
+    const w = { id: nextId("w") as WireRef, edgeIds: [e.id] };
+    void brepEdge;
+    return { diff: { vertices: { added: [v] }, edges: { added: [e] }, wires: { added: [w] } } };
+  }
+
+  /** 🪵️ The `curve.arc` command of `executeCommandDiff`. */
+  private curveArcDiff(params: Record<string, unknown>): { readonly diff: ModelDiff } {
+    const center = asVec3(params.center, [0, 0, 0]);
+    const start = params.start != null ? asVec3(params.start, [1, 0, 0]) : ([1, 0, 0] as Vec3);
+    const endRaw = params.end != null ? asVec3(params.end, start) : null;
+    const angle = typeof params.angle === "number" ? params.angle : null;
+    let endPos: Vec3;
+    if (endRaw) endPos = arcEndOnCircle(center, start, endRaw);
+    else if (angle !== null) endPos = arcEndFromAngle(center, start, angle) ?? start;
+    else endPos = start;
+    const mid = arcSamplePoints(center, start, endPos, 4)[2] ?? endPos;
+    const brepEdge = threePointArc(start, mid, endPos);
+    const vStart = createVertex(curveStartPoint(brepEdge));
+    const vEnd = createVertex(curveEndPoint(brepEdge));
+    const curve: EdgeCurve = { kind: "arc", center };
+    const e = { id: nextId("e") as EdgeRef, vertexIds: [vStart.id, vEnd.id], curve };
+    const w = { id: nextId("w") as WireRef, edgeIds: [e.id] };
+    return { diff: { vertices: { added: [vStart, vEnd] }, edges: { added: [e] }, wires: { added: [w] } } };
+  }
+
+  /** 🔩️ The `curve.controlPointCurve` command of `executeCommandDiff`. */
+  private curveControlPointCurveDiff(commandId: string, params: Record<string, unknown>): { readonly diff: ModelDiff } {
+    const poles = poleList(params.points);
+    if (poles.length < 2) return { diff: {} };
+    const through = commandId === "curve.interpolateCurve";
+    const fitPoints = through ? [...nurbsDisplaySamplePoints(poles, 16)] : poles;
+    const brepResult = bsplineApprox(fitPoints);
+    if (!isOk(brepResult)) return { diff: {} };
+    const curve = nurbsCurveFromPoles(poles, through);
+    if (!curve) return { diff: {} };
+    const vStart = createVertex(curveStartPoint(brepResult.value));
+    const vEnd = createVertex(curveEndPoint(brepResult.value));
+    const e = { id: nextId("e") as EdgeRef, vertexIds: [vStart.id, vEnd.id], curve };
+    const w = { id: nextId("w") as WireRef, edgeIds: [e.id] };
+    return { diff: { vertices: { added: [vStart, vEnd] }, edges: { added: [e] }, wires: { added: [w] } } };
+  }
+
+  /** 🧲️ The `solid.cylinder` command of `executeCommandDiff`. */
+  private async solidCylinderDiff(params: Record<string, unknown>): Promise<{ readonly diff: ModelDiff }> {
+    const base = asVec3(params.base, [0, 0, 0]);
+    const radiusPoint = asVec3(params.radiusPoint, [1, 0, 0]);
+    const end = asVec3(params.end, base);
+    const radius = vec3Distance(base, radiusPoint);
+    const axisVec = vec3Sub(end, base);
+    const height = vec3Length(axisVec);
+    const axis = height > 1e-9 ? vec3Normalize(axisVec) : ([0, 0, 1] as Vec3);
+    const solid: SolidPrimitive = { kind: "cylinder", base, axis, radius, height: height > 1e-9 ? height : 1e-6 };
+    const c = { id: nextId("c") as SolidRef, shellIds: [], solid };
+    await this.ensureInit();
+    this.solids.set(c.id, this.solidFromSolidPrimitive(solid));
+    return { diff: { solids: { added: [c] } } };
+  }
+
+  /** 🪛️ The `solid.cone` command of `executeCommandDiff`. */
+  private async solidConeDiff(params: Record<string, unknown>): Promise<{ readonly diff: ModelDiff }> {
+    const base = asVec3(params.base, [0, 0, 0]);
+    const radiusPoint = asVec3(params.radiusPoint, [1, 0, 0]);
+    const end = asVec3(params.end, [0, 0, 1] as Vec3);
+    const radius = vec3Distance(base, radiusPoint);
+    const axisVec = vec3Sub(end, base);
+    const height = vec3Length(axisVec);
+    const axis = height > 1e-9 ? vec3Normalize(axisVec) : ([0, 0, 1] as Vec3);
+    const solid: SolidPrimitive = { kind: "cone", base, axis, radius, height: height > 1e-9 ? height : 1e-6, radiusTop: 0 };
+    const c = { id: nextId("c") as SolidRef, shellIds: [], solid };
+    await this.ensureInit();
+    this.solids.set(c.id, this.solidFromSolidPrimitive(solid));
+    return { diff: { solids: { added: [c] } } };
+  }
+
+  /** 🔧️ The `solid.booleanUnion` command of `executeCommandDiff`. */
+  private async solidBooleanUnionDiff(params: Record<string, unknown>): Promise<{ readonly diff: ModelDiff }> {
+    const model = params.model instanceof Model ? params.model : null;
+    if (!model) return { diff: {} };
+    await this.ensureInit();
+    const refs = solidRefsFromSelectionRaw(model, params.targets);
+    if (refs.length < 2) return { diff: {} };
+    const shapes = this.validSolidsFromRefs(model, refs);
+    if (shapes.length < 2) return { diff: {} };
+    const fused = fuseAll(shapes);
+    if (!isOk(fused)) return { diff: {} };
+    const ref = kernelGeometry.solidRef(nextId("union"));
+    this.solids.set(ref, fused.value);
+    return { diff: { solids: { added: [{ id: ref, shellIds: [] }], removed: refs } } };
+  }
+
+  /** 🔨️ The `solid.booleanDifference` command of `executeCommandDiff`. */
+  private async solidBooleanDifferenceDiff(params: Record<string, unknown>): Promise<{ readonly diff: ModelDiff }> {
+    const model = params.model instanceof Model ? params.model : null;
+    if (!model) return { diff: {} };
+    await this.ensureInit();
+    const baseRefs = solidRefsFromSelectionRaw(model, params.baseObjects);
+    const toolRefs = solidRefsFromSelectionRaw(model, params.cutterObjects);
+    if (!baseRefs.length || !toolRefs.length) return { diff: {} };
+    const baseShape = fuseShapes(this.validSolidsFromRefs(model, baseRefs));
+    const toolShapes = this.validSolidsFromRefs(model, toolRefs);
+    if (!baseShape || !toolShapes.length) return { diff: {} };
+    let result = baseShape;
+    for (const tool of toolShapes) {
+      const cutResult = cut(result, tool);
+      if (!isOk(cutResult)) return { diff: {} };
+      result = cutResult.value;
+    }
+    const ref = kernelGeometry.solidRef(nextId("diff"));
+    this.solids.set(ref, result);
+    return { diff: { solids: { added: [{ id: ref, shellIds: [] }], removed: [...baseRefs, ...toolRefs] } } };
+  }
+
+  /** 🪚️ The `solid.booleanIntersection` command of `executeCommandDiff`. */
+  private async solidBooleanIntersectionDiff(params: Record<string, unknown>): Promise<{ readonly diff: ModelDiff }> {
+    const model = params.model instanceof Model ? params.model : null;
+    if (!model) return { diff: {} };
+    await this.ensureInit();
+    const firstRefs = solidRefsFromSelectionRaw(model, params.firstSet);
+    const secondRefs = solidRefsFromSelectionRaw(model, params.secondSet);
+    if (!firstRefs.length || !secondRefs.length) return { diff: {} };
+    const firstShape = fuseShapes(this.validSolidsFromRefs(model, firstRefs));
+    const secondShape = fuseShapes(this.validSolidsFromRefs(model, secondRefs));
+    if (!firstShape || !secondShape) return { diff: {} };
+    const isected = intersect(firstShape, secondShape);
+    if (!isOk(isected)) return { diff: {} };
+    const ref = kernelGeometry.solidRef(nextId("isect"));
+    this.solids.set(ref, isected.value);
+    return { diff: { solids: { added: [{ id: ref, shellIds: [] }], removed: [...firstRefs, ...secondRefs] } } };
+  }
+
+  /** 🧰️ The `surface.extrudeCrv` command of `executeCommandDiff`. */
+  private async surfaceExtrudeCrvDiff(params: Record<string, unknown>): Promise<{ readonly diff: ModelDiff }> {
+    const model = params.model instanceof Model ? params.model : null;
+    if (!model) return { diff: {} };
+    const distance = extrusionDistanceFromParams(params);
+    if (!(distance > 1e-9)) return { diff: {} };
+    const direction = asVec3(params.direction, [0, 0, 1]);
+    const wireIds = wireIdsFromSelectionPicks(model, selectionPicksFromParams(params));
+    if (!wireIds.length) return { diff: {} };
+    const diffs: ModelDiff[] = [];
+    for (const wireId of wireIds) {
+      const row = await this.extrudeWireDiff({ wireId, distance, direction, model });
+      if (!isEmptyModelDiff(row.diff)) diffs.push(row.diff);
+    }
+    return { diff: mergeSolidAdds(diffs) };
+  }
+
+  /** 🧫️ The `surface.plane` command of `executeCommandDiff`. */
+  private async surfacePlaneDiff(params: Record<string, unknown>): Promise<{ readonly diff: ModelDiff }> {
+    const cornerA = asVec3(params.cornerA, [0, 0, 0]);
+    const cornerB = asVec3(params.cornerB, [1, 0, 0]);
+    const along = vec3Sub(cornerB, cornerA);
+    const side = vec3Length(along) > 1e-9 ? vec3Length(along) : 1;
+    const dir = vec3Length(along) > 1e-9 ? vec3Normalize(along) : ([1, 0, 0] as Vec3);
+    let perp = vec3Cross(dir, [0, 0, 1]);
+    if (vec3Length(perp) < 1e-9) perp = vec3Cross(dir, [0, 1, 0]);
+    perp = vec3Normalize(perp);
+    const p0 = cornerA;
+    const p1 = vec3Add(cornerA, vec3Scale(dir, side));
+    const p2 = vec3Add(p1, vec3Scale(perp, side));
+    const p3 = vec3Add(cornerA, vec3Scale(perp, side));
+    const corners = [p0, p1, p2, p3];
+    await this.ensureInit();
+    const brepEdges = corners.map((p, i) => line(p, corners[(i + 1) % 4]!));
+    const loopResult = wireLoop(brepEdges);
+    if (!isOk(loopResult)) return { diff: {} };
+    const faceResult = face(loopResult.value as Parameters<typeof face>[0]);
+    if (!isOk(faceResult)) return { diff: {} };
+    const verts = corners.map((p) => createVertex(p));
+    const edges: EdgeRecord[] = verts.map((v, i) => ({ id: nextId("e") as EdgeRef, vertexIds: [v.id, verts[(i + 1) % 4]!.id], curve: { kind: "line" as const } }));
+    const w = { id: nextId("w") as WireRef, edgeIds: edges.map((e) => e.id) };
+    const normal = vec3Normalize(vec3Cross(dir, perp));
+    const f: FaceRecord = { id: nextId("f") as FaceRef, wireIds: [w.id], surface: { kind: "plane", origin: p0, normal } };
+    return { diff: { vertices: { added: verts }, edges: { added: edges }, wires: { added: [w] }, faces: { added: [f] } } };
+  }
+
+  /** 🧬️ The `surface.loft` command of `executeCommandDiff`. */
+  private async surfaceLoftDiff(params: Record<string, unknown>): Promise<{ readonly diff: ModelDiff }> {
+    const model = params.model instanceof Model ? params.model : null;
+    if (!model) return { diff: {} };
+    const wireIds = wireIdsFromSelectionPicks(model, picksFromRaw(params.curves));
+    if (!wireIds.length) return { diff: {} };
+    await this.ensureInit();
+    if (wireIds.length === 1) {
+      const planar = geomWireToOrientedFaceLoose(model, wireIds[0]!);
+      if (!planar) return { diff: {} };
+      const f: FaceRecord = { id: nextId("f") as FaceRef, wireIds: [wireIds[0]!] };
+      return { diff: { faces: { added: [f] } } };
+    }
+    const brepWires: Wire[] = [];
+    for (const wid of wireIds) {
+      const bw = geomWireToBrepWire(model, wid);
+      if (!bw) return { diff: {} };
+      brepWires.push(bw);
+    }
+    const lofted = loft(brepWires as Parameters<typeof loft>[0], { ruled: true });
+    if (!isOk(lofted)) return { diff: {} };
+    const f: FaceRecord = { id: nextId("f") as FaceRef, wireIds: [...wireIds] };
+    return { diff: { faces: { added: [f] } } };
+  }
+
+  /** 🔬️ The `surface.sweep1` command of `executeCommandDiff`. */
+  private async surfaceSweep1Diff(params: Record<string, unknown>): Promise<{ readonly diff: ModelDiff }> {
+    const model = params.model instanceof Model ? params.model : null;
+    if (!model) return { diff: {} };
+    const railIds = wireIdsFromKeyedRaw(model, params.targets);
+    if (!railIds.length) return { diff: {} };
+    const sectionIds = wireIdsFromSelectionPicks(model, picksFromRaw(params.sections));
+    await this.ensureInit();
+    const railWire = geomWireToBrepWire(model, railIds[0]!);
+    if (!railWire) return { diff: {} };
+    const profileWire = sectionIds.length ? geomWireToBrepWire(model, sectionIds[0]!) : defaultSweepProfileWire(model, railIds[0]!);
+    if (!profileWire) return { diff: {} };
+    const swept = sweepAlongSpine(profileWire as Parameters<typeof sweepAlongSpine>[0], railWire as Parameters<typeof sweepAlongSpine>[1]);
+    if (!isOk(swept)) return { diff: {} };
+    const boundaryWireIds = sectionIds.length ? [railIds[0]!, sectionIds[0]!] : [railIds[0]!];
+    const f: FaceRecord = { id: nextId("f") as FaceRef, wireIds: boundaryWireIds };
+    return { diff: { faces: { added: [f] } } };
   }
 
   async createBoxFromCornersDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }): Promise<{ readonly diff: ModelDiff; readonly solid: SolidRef }> {

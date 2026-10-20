@@ -2,7 +2,7 @@
 
 //#region 🗝️RegisteredKeyedDispatchFixture
     semio_framework_dispatch_macros::dyn_enum_close! {
-        enum TestRuntimeApps: PluginApp {
+        pub enum TestRuntimeApps: PluginApp {
             Test(VcsArtifactApp<TestApp>),
         }
     }

@@ -1,4 +1,4 @@
-import {encodeScopedIdentity} from "@semio-tech/framework-replication";
+import {encodeScopedIdentity} from "@semio-tech/framework/replication";
 import {parseSchemaRecord} from "@semio-tech/framework/schema/record";
 import {type Binary64,parseBinary64} from "@semio-tech/framework/value/ieee754";
 /** 🧬️ Fem3d snapshot schema — artifact-lane fields only. */

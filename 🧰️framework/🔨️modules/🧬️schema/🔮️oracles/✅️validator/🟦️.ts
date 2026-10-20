@@ -8,7 +8,7 @@ import { resolve } from "node:path";
 import Ajv, { type Options } from "ajv";
 import addFormats, { type FormatName } from "ajv-formats";
 import vocabulary from "../../🧬️vendor-annotation-vocabulary/🔣️.json" with { type: "json" };
-import { manifestSchema } from "@semio-tech/framework/manifest/schema";
+import { manifestSchema } from "@semio-tech/framework-manifest/schema";
 import { formatPolicySchema as formatPolicy } from "@semio-tech/schema-validator-ts/format-policy";
 
 export const SEMIO_SCHEMA_VENDOR_VOCABULARY_V1 = vocabulary;

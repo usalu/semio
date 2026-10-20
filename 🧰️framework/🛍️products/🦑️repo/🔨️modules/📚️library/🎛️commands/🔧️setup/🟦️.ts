@@ -1,7 +1,7 @@
 /** 🔧️ `setup` command family: native bootstrap, repo-local git settings, devcontainer lifecycle and postinstall.
  * @see 📜️script.ts
  */
-import { NativeDependenciesScript } from "../../⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts";
+import { NativeDependenciesScript } from "../../⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/🟦️.ts";
 import { ensureMcpBinary } from "../../../../../💻️os/🔨️modules/🌉️mcp/🟦️.ts";
 import { dispatchSubcommand } from "../../🚨️policy/🧭️entrypoints/🟦️.ts";
 import { runCmd } from "../../🏃️process/🟦️.ts";

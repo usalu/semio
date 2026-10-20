@@ -75,7 +75,7 @@ pub use sheet_attributes::{
 
 #[path = "📚️catalog-model/🦀️.rs"]
 mod catalog_model;
-pub use catalog_model::{BoundingBox, CatalogIndex, CatalogIndexEntry, CatalogueProduct, CharacteristicCurve, Configuration, ConnectionPoint, CurvePoint, ManufacturerCatalog, ParametricGeometry};
+pub use catalog_model::{sync_identity_into_records, sync_titles_into_records, sync_typed_attributes_into_records, BoundingBox, CatalogIndex, CatalogIndexEntry, CatalogueProduct, CharacteristicCurve, Configuration, ConnectionPoint, CurvePoint, ManufacturerCatalog, ParametricGeometry};
 
 #[path = "🩺️diagnostics-and-edition-profile/🦀️.rs"]
 mod diagnostics_and_edition_profile;
@@ -83,7 +83,10 @@ pub use diagnostics_and_edition_profile::{Diagnostic, EditionProfileChoice, Seve
 
 #[path = "🧪️reference-fixture/🦀️.rs"]
 mod reference_dataset;
-pub use reference_dataset::{conforming_valve_dataset, reference_fixture};
+pub use reference_dataset::{
+    all_conforming_blatt_examples, conforming_blatt_3_dataset, conforming_blatt_5_dataset, conforming_blatt_6_dataset, conforming_blatt_dataset, conforming_valve_dataset, nonconforming_blatt_3_dataset,
+    nonconforming_blatt_5_dataset, nonconforming_blatt_6_dataset, nonconforming_blatt_dataset, nonconforming_valve_dataset, reference_fixture, ASSESSED_BLATT_SHEETS,
+};
 
 //#region 🍃️FacetLeaves
 /// 🍃️ The five handcrafted leaves of the `snapshot` schema facet.

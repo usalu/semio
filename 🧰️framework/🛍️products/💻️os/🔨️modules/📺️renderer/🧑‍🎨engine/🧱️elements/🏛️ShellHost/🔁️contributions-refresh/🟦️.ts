@@ -49,7 +49,7 @@ import {
 import { retireSkippedWindowBodies } from "../🪟️mounted-window-refresh/🟦️.ts";
 import { createContributionsPublisher, type ContributionsPublishOutcome, type ContributionsSessionKey } from "../../🛠️ShellHelpers/🧩️contributions/🟦️.ts";
 import { guestIngressGenerationV1 } from "../../🔌️PluginRuntime/🟦️.tsx";
-import { hopTrace } from "@semio-tech/framework/trace";
+import { hopTrace } from "@semio-tech/framework-trace";
 import { seededActiveWindowId } from "../🎚️shell-model/🟦️.tsx";
 import { appCommandTakesPageRun, appOwnsCommand, encodeAppCommandInvocation } from "../📨️window-invocation/🟦️.ts";
 import { traceCommitToNextFrame } from "../🔌️extension-runtime/🟦️.ts";
@@ -81,6 +81,22 @@ type UiRefreshLaneRequest = { readonly session: ActiveSession; readonly scope: U
 
 export type ShellCoreAfterContributionsAndRefresh = ShellCoreAfterFocusAndInput & ReturnType<typeof useContributionsAndRefresh>;
 
+/**
+ * ♻️ Publishes contributions, runs the coalesced ui refresh pass and keeps window titles in the active locale.
+ *
+ * 🗣️ Keeps already-built window titles (workbench layout, extra spawned windows) in sync on every locale/terminology switch — `refreshUi` only rebuilds `shellLayout` from scratch on a session change, so an existing session's baked-in titles would otherwise go stale.
+ *
+ * 🌐️ And asks the GUEST to re-render, because the titles are only the shell's own half. Every label
+ * inside a guest-authored body — the outliner's section headings, its per-row Hide/Lock actions, the
+ * inspector's field names — is resolved by the program against `ViewModel::locale` at the moment it
+ * rendered (`🗣️terminology/🦀️.rs`'s `puzzle3d_labels`), so a language switch that requests no refresh
+ * leaves every one of those bodies in the previous language for as long as nothing else happens to
+ * dirty them. Measured on `:6013`: with the actor-revocation of §1 fixed, `locale-switch` brought the
+ * whole shell roster back German while the outliner still read "OBJECTS / Hide / Lock / REFERENCES"
+ * (ticket 26/09/02 wave B40 §3). `replaceBodies` because a language change re-authors EVERY string:
+ * the hash-conditional path must not be allowed to keep a body it cached under the old locale, and
+ * the live UI stores hold rendered text of their own.
+ */
 export function useContributionsAndRefresh(core: ShellCoreAfterFocusAndInput) {
   const {
     hostMode, dispatch, session, uiLocale, uiTerminology, forceReloadLiveUiStoresV1, appLabelsOverlay,

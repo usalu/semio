@@ -1,0 +1,8 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧪️tests/🕸️mutate-fem2d-1-mesh/🦀️.rs",
+ "function": "vector",
+ "table": "VECTORS",
+ "emoji": "🗃️",
+ "doc": "The committed specification vector of every registered scenario, read literally via `include_str!`.",
+ "copy_derive": "Vector"
+}

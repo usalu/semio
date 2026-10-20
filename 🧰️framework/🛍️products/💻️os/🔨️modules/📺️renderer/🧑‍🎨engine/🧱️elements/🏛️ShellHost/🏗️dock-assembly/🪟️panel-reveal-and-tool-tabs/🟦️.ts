@@ -16,7 +16,15 @@ import type { ShellCommand } from "@semio-tech/framework/shell";
 import type { useDockModel } from "../🧱️dock-model-and-persistence/🟦️.ts";
 import type { useOverrideAnchorsAndIntroductionIds } from "../🎓️override-anchors-and-introduction/🟦️.ts";
 
-/** 🗺 Derives the panel active paths and reveals the history tab, studio override and tool run panels. */
+/**
+ * 🗺 Derives the panel active paths and reveals the history tab, studio override and tool run panels.
+ *
+ * 🤖️ Fills {@link applyAgentShellCommandRef}: the MCP gateway's `ui_reveal`/`ui_focus` reach this
+ * host as SSOT `ShellCommand`s, and this is where they stop being a mirror update and become the
+ * real chrome moving. `setPanelPath` carries the shell SSOT's four-anchor vocabulary while this
+ * dock has six, so the TAB is the address — `findPanelTabInDock` answers where it actually lives,
+ * exactly as the tool-run reveal does, and the requested anchor is advisory.
+ */
 export function usePanelPathsAndOverrideReveals({ dock, panels, session, refreshHistorySnapshot, focusedProgram, hostOverrideTabId, studioOverrideAnchor, mobile, mobilePanelPath, mobilePanelTabs, dispatch, toolRunPanelNode, focusedTimeTravel, scope, applyAgentShellCommandRef }: Pick<ReturnType<typeof useDockModel>, "dock" | "panels" | "session" | "refreshHistorySnapshot" | "focusedProgram" | "mobile" | "mobilePanelPath" | "mobilePanelTabs" | "dispatch" | "toolRunPanelNode" | "focusedTimeTravel" | "scope" | "applyAgentShellCommandRef"> & Pick<ReturnType<typeof useOverrideAnchorsAndIntroductionIds>, "hostOverrideTabId" | "studioOverrideAnchor">) {
   /** 🧭️ Progressive reveal means a stored path can legitimately end at a branch (or be empty) — this is now a plain per-anchor truncation-validate, no override reassertion (see the write-through effects below). */
   const panelActivePaths = useMemo((): Record<Anchor, readonly string[]> => {
@@ -97,7 +105,27 @@ export function usePanelPathsAndOverrideReveals({ dock, panels, session, refresh
   return { panelActivePaths };
 }
 
-/** 🛠 Selects, activates and reveals the tool tabs and the focused panel and details override tabs. */
+/**
+ * 🛠 Selects, activates and reveals the tool tabs and the focused panel and details override tabs.
+ *
+ * 🗿️ Fills {@link agentArtifactRouteRef}: this is the LIVE artifact route — an MCP client's
+ * `action_prepare`/`action_invoke`/`history_undo`/`transaction_*` executing against the plugin
+ * instance the human is looking at, instead of against the gateway's own headless interpreter on
+ * a different `--folder` workspace (`📓️r2…` §12 finding 1).
+ *
+ * Three laws make it the human's edit and not a side channel:
+ * 1. **One dispatch lane.** A mutation leaves through `onActionRef.current`, the shell's ONE input
+ *    funnel — the same call the palette, the keybindings and the app's own buttons make. It mints
+ *    an input-ledger entry, obeys the active-window rules and settles with a typed outcome, so an
+ *    agent can never bypass a gate the UI respects.
+ * 2. **The agent is its own actor.** `provenance.origin = "agent"` rides along, so the edit is
+ *    attributable in the human's history rather than looking like something they did.
+ * 3. **The commit is where the mutation happens.** The gateway's protocol is
+ *    `ReadHistory → PureCommand → TransactionPrepare → TransactionCommit`; the shell has no
+ *    "compute the ops but do not apply them" seam, so `pureCommand` returns a DEFERRED plan and
+ *    `transactionCommit` is the one leg that dispatches. A rollback therefore really does leave
+ *    the document untouched, which is the property the two-phase shape exists to give.
+ */
 export function useToolTabSelectionEffects({ agentDeferredPlansRef, agentArtifactRouteRef, sessionRef, spawnedAppsRef, loadedPluginsRef, onActionRef, activeWindowIdRef, leftoverInspectionIdsRef, leftoverInspectionEpoch, dock, panels, dispatch, uiRefreshCacheRef, refreshUi, reportRefreshFault, activeWindowId, spawnedIdsRef, detailsOverrideTabId, detailsOverrideAnchor, studioOverrideAnchor, mobile, mobilePanelPath, mobilePanelTabs, session, panelActivePaths, activeToolId, onActionStable, toolGeneration }: Pick<ReturnType<typeof useDockModel>, "agentDeferredPlansRef" | "agentArtifactRouteRef" | "sessionRef" | "spawnedAppsRef" | "loadedPluginsRef" | "onActionRef" | "activeWindowIdRef" | "leftoverInspectionIdsRef" | "leftoverInspectionEpoch" | "dock" | "panels" | "dispatch" | "uiRefreshCacheRef" | "refreshUi" | "reportRefreshFault" | "activeWindowId" | "spawnedIdsRef" | "mobile" | "mobilePanelPath" | "mobilePanelTabs" | "session" | "activeToolId" | "onActionStable" | "toolGeneration"> & Pick<ReturnType<typeof useOverrideAnchorsAndIntroductionIds>, "detailsOverrideTabId" | "detailsOverrideAnchor" | "studioOverrideAnchor"> & Pick<ReturnType<typeof usePanelPathsAndOverrideReveals>, "panelActivePaths">) {
   useEffect(() => {
     const deferred = agentDeferredPlansRef.current;

@@ -193,11 +193,191 @@
       "usedBytes": -1,
       "records": 1,
       "accepted": false
+    },
+    {
+      "usedBytes": 0,
+      "records": 33,
+      "maximumBytes": 64,
+      "accepted": true
+    },
+    {
+      "usedBytes": 0,
+      "records": 16384,
+      "maximumBytes": 16384,
+      "accepted": true
+    },
+    {
+      "usedBytes": 0,
+      "records": 16385,
+      "maximumBytes": 1,
+      "accepted": false
+    },
+    {
+      "usedBytes": 0,
+      "records": 1,
+      "maximumBytes": 0,
+      "accepted": false
+    },
+    {
+      "usedBytes": 0,
+      "records": 1,
+      "maximumBytes": 134217729,
+      "accepted": false
+    },
+    {
+      "usedBytes": 4294966784,
+      "records": 8,
+      "maximumBytes": 64,
+      "accepted": true
+    },
+    {
+      "usedBytes": 4294966785,
+      "records": 8,
+      "maximumBytes": 64,
+      "accepted": false
     }
   ],
   "sourceRace": {
     "before": "first",
     "after": "changed",
     "calls": 2
-  }
+  },
+  "adaptiveCohorts": [
+    {
+      "id": "empty",
+      "runs": [],
+      "expected": []
+    },
+    {
+      "id": "small-records-one-cohort",
+      "runs": [
+        {
+          "count": 33,
+          "bytes": 64
+        }
+      ],
+      "expected": [
+        {
+          "offset": 0,
+          "records": 33,
+          "maximumBytes": 64
+        }
+      ]
+    },
+    {
+      "id": "exact-batch-budget",
+      "runs": [
+        {
+          "count": 2,
+          "bytes": 134217728
+        }
+      ],
+      "expected": [
+        {
+          "offset": 0,
+          "records": 2,
+          "maximumBytes": 134217728
+        }
+      ]
+    },
+    {
+      "id": "one-over-batch-budget",
+      "runs": [
+        {
+          "count": 3,
+          "bytes": 134217728
+        }
+      ],
+      "expected": [
+        {
+          "offset": 0,
+          "records": 2,
+          "maximumBytes": 134217728
+        },
+        {
+          "offset": 2,
+          "records": 1,
+          "maximumBytes": 134217728
+        }
+      ]
+    },
+    {
+      "id": "record-count-bound",
+      "runs": [
+        {
+          "count": 16385,
+          "bytes": 1
+        }
+      ],
+      "expected": [
+        {
+          "offset": 0,
+          "records": 16384,
+          "maximumBytes": 1
+        },
+        {
+          "offset": 16384,
+          "records": 1,
+          "maximumBytes": 1
+        }
+      ]
+    },
+    {
+      "id": "uniform-growing-cap",
+      "runs": [
+        {
+          "count": 1,
+          "bytes": 32
+        },
+        {
+          "count": 1,
+          "bytes": 96
+        },
+        {
+          "count": 1,
+          "bytes": 64
+        }
+      ],
+      "expected": [
+        {
+          "offset": 0,
+          "records": 3,
+          "maximumBytes": 96
+        }
+      ]
+    }
+  ],
+  "adaptiveInvalidExtents": [
+    [
+      0
+    ],
+    [
+      -1
+    ],
+    [
+      134217729
+    ]
+  ],
+  "adaptivePortable": [
+    {
+      "count": 0,
+      "batches": 0
+    },
+    {
+      "count": 1,
+      "batches": 1
+    },
+    {
+      "count": 3,
+      "batches": 1
+    },
+    {
+      "count": 33,
+      "batches": 1
+    },
+    {
+      "count": 1024,
+      "batches": 1
+    }
+  ]
 }

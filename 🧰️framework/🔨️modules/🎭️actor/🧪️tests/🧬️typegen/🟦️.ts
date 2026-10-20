@@ -79,7 +79,7 @@ describe("actor typegen ownership", () => {
   test("Nx inputs, native exporter and TypeScript consumers close over the semantic owners", () => {
     const project = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📋️project.json"), "utf8")) as { namedInputs: { default: string[] } };
     for (const suffix of ["🧬️typegen/📋️plan/🟦️.ts", "🧬️typegen/📤️publication/🟦️.ts", "🧬️typegen/🏃️execution/🟦️.ts", "🧪️tests/🧬️typegen/🟦️.ts"]) expect(project.namedInputs.default.some((path) => path.endsWith(suffix))).toBe(true);
-    const nativeExporter = readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🔬️unit/🦀️.rs"), "utf8");
+    const nativeExporter = readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🧬️typegen/🦀️.rs"), "utf8");
     expect(nativeExporter).toContain("SEMIO_TYPEGEN_OUT");
     expect(nativeExporter).toContain("include_str!(\"../../🤖️generated/🎭️actor/🟦️.ts\")");
     for (const consumer of ["📬️mailbox/🟦️.ts", "📮️shard-client/📜️wire/🟦️.ts"]) expect(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor", consumer), "utf8")).toContain("../🤖️generated/🎭️actor/🟦️.ts");

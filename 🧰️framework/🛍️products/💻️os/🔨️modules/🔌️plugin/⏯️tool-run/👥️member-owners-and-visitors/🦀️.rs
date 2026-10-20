@@ -109,12 +109,28 @@ pub(crate) struct ToolRunMemberFolded {
 
 /// 🔁️ Folds a member run's ops onto its overlay within the turn wall budget: a rebase restarts from the member head.
 #[doc(hidden)]
-pub struct ToolRunMemberFold<'a> {
+pub struct ToolRunMemberFold<'a, 'b> {
     pub owners: &'a mut Option<Box<dyn ToolRunMemberOwners>>,
     pub ops: &'a [Vec<u8>],
     pub shown: usize,
     pub rebase: bool,
     pub deadline_us: u64,
+    pub grant: RetainedCloneGrant,
+    pub receiving: &'a mut semio_framework_value::NativeDecodeControl<'b>,
+}
+
+/// 🚫️ Why one member fold step stopped: a native value refusal that keeps the retained progress it already paid for, or a
+/// semantic fault of the member store (a decode, a lost base, a derive refusal) that owes no retained receipt.
+#[doc(hidden)]
+pub enum ToolRunMemberFoldRefusal {
+    Native(ValueError),
+    Semantic(Fault),
+}
+
+impl From<Fault> for ToolRunMemberFoldRefusal {
+    fn from(fault: Fault) -> Self {
+        Self::Semantic(fault)
+    }
 }
 
 impl store::MemberStoreVisitor for ToolRunMemberFold<'_,'_> {

@@ -258,6 +258,7 @@ async fn dispatch_registers_semantic_descriptors_with_approved_verbs() {
 // 🎫️ 26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS — see
 // `📓️w3-f-block-puzzle-report.md` for the `assert_outcome_policy_matrix` pending-helper note.
 use semio_framework_os_kernel::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error};
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
 
 #[semio_framework_async_macros::async_test]
 async fn missing_target_is_error_per_verb_family() {

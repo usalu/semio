@@ -79,8 +79,10 @@ pub mod editor {
             pub mod create_edge;
             #[path = "../../../../🎮️commands/🧊️document/💔️delete-edge/🦀️.rs"]
             pub mod delete_edge;
-            #[path = "../../../../🎮️commands/🧊️document/🔗️proximity-connect/🦀️.rs"]
-            pub mod proximity_connect;
+            pub mod proximity_connect {
+                pub use semio_s_artifact_puzzle_2d_tests::editor::puzzle2d::commands::proximity_connect::*;
+                pub use crate::editor::puzzle2d::interaction::proximity_connect;
+            }
             #[path = "../../../../🎮️commands/🎛️runtime/📡️set-proximity-radius/🦀️.rs"]
             pub mod set_proximity_radius;
             #[path = "../../../../🎮️commands/🧊️document/🗑️delete-selection/🦀️.rs"]

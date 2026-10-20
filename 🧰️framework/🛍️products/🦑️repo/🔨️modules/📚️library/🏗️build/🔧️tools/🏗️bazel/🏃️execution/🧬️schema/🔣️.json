@@ -1,0 +1,597 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "environment",
+    "remote"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "environment": {
+      "type": "object"
+    },
+    "remote": {
+      "type": "object"
+    }
+  },
+  "definitions": {
+    "Contract": {
+      "const": {
+        "version": 1,
+        "toolchain": {
+          "type": "bun_toolchain_type",
+          "tool": "bun",
+          "directory": "tools/bun",
+          "executable": "bun",
+          "mnemonic": "RepoHermetic",
+          "runner": "hermetic-runner.mjs"
+        },
+        "settings": {
+          "os": "exec_os",
+          "cpu": "exec_cpu"
+        },
+        "platforms": [
+          {
+            "id": "darwin-arm64",
+            "platform": "darwin",
+            "arch": "arm64",
+            "os": "macos",
+            "cpu": "aarch64",
+            "properties": {
+              "OSFamily": "macos",
+              "Arch": "arm64"
+            }
+          },
+          {
+            "id": "darwin-x64",
+            "platform": "darwin",
+            "arch": "x64",
+            "os": "macos",
+            "cpu": "x86_64",
+            "properties": {
+              "OSFamily": "macos",
+              "Arch": "amd64"
+            }
+          },
+          {
+            "id": "linux-arm64",
+            "platform": "linux",
+            "arch": "arm64",
+            "os": "linux",
+            "cpu": "aarch64",
+            "properties": {
+              "OSFamily": "linux",
+              "Arch": "arm64"
+            }
+          },
+          {
+            "id": "linux-x64",
+            "platform": "linux",
+            "arch": "x64",
+            "os": "linux",
+            "cpu": "x86_64",
+            "properties": {
+              "OSFamily": "linux",
+              "Arch": "amd64"
+            }
+          },
+          {
+            "id": "windows-arm64",
+            "platform": "win32",
+            "arch": "arm64",
+            "os": "windows",
+            "cpu": "aarch64",
+            "properties": {
+              "OSFamily": "windows",
+              "Arch": "arm64"
+            }
+          },
+          {
+            "id": "windows-x64",
+            "platform": "win32",
+            "arch": "x64",
+            "os": "windows",
+            "cpu": "x86_64",
+            "properties": {
+              "OSFamily": "windows",
+              "Arch": "amd64"
+            }
+          }
+        ],
+        "environment": {
+          "endpoint": "SEMIO_REMOTE_EXECUTION_ENDPOINT",
+          "properties": "SEMIO_REMOTE_EXECUTION_PROPERTIES",
+          "platform": "SEMIO_REMOTE_EXECUTION_PLATFORM",
+          "jobs": "SEMIO_REMOTE_EXECUTION_JOBS"
+        },
+        "remote": {
+          "defaultPlatform": "linux-x64",
+          "defaultJobs": 128,
+          "maximumJobs": 512,
+          "localFallback": false
+        },
+        "actionEnvironment": {
+          "LC_ALL": "C",
+          "TZ": "UTC",
+          "SOURCE_DATE_EPOCH": "0",
+          "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0"
+        },
+        "inputLabel": "^[A-Za-z0-9_@=,+~%./\\-]+$"
+      }
+    },
+    "ContractShape": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "toolchain",
+        "settings",
+        "platforms",
+        "environment",
+        "remote",
+        "actionEnvironment",
+        "inputLabel"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "toolchain": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "tool",
+            "directory",
+            "executable",
+            "mnemonic",
+            "runner"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            "tool": {
+              "enum": [
+                "bun"
+              ]
+            },
+            "directory": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_/]*$"
+            },
+            "executable": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            "mnemonic": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Za-z0-9]*$"
+            },
+            "runner": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9.-]*$"
+            }
+          }
+        },
+        "settings": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "os",
+            "cpu"
+          ],
+          "properties": {
+            "os": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            "cpu": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            }
+          }
+        },
+        "platforms": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/Platform"
+          }
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "endpoint",
+            "properties",
+            "platform",
+            "jobs"
+          ],
+          "properties": {
+            "endpoint": {
+              "type": "string",
+              "pattern": "^SEMIO_[A-Z0-9_]+$"
+            },
+            "properties": {
+              "type": "string",
+              "pattern": "^SEMIO_[A-Z0-9_]+$"
+            },
+            "platform": {
+              "type": "string",
+              "pattern": "^SEMIO_[A-Z0-9_]+$"
+            },
+            "jobs": {
+              "type": "string",
+              "pattern": "^SEMIO_[A-Z0-9_]+$"
+            }
+          }
+        },
+        "remote": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "defaultPlatform",
+            "defaultJobs",
+            "maximumJobs",
+            "localFallback"
+          ],
+          "properties": {
+            "defaultPlatform": {
+              "type": "string"
+            },
+            "defaultJobs": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4096
+            },
+            "maximumJobs": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4096
+            },
+            "localFallback": {
+              "const": false
+            }
+          }
+        },
+        "actionEnvironment": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.:-]*$"
+          }
+        },
+        "inputLabel": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Platform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "platform",
+        "arch",
+        "os",
+        "cpu",
+        "properties"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^(darwin|linux|windows)-(arm64|x64)$"
+        },
+        "platform": {
+          "enum": [
+            "darwin",
+            "linux",
+            "win32"
+          ]
+        },
+        "arch": {
+          "enum": [
+            "arm64",
+            "x64"
+          ]
+        },
+        "os": {
+          "enum": [
+            "macos",
+            "linux",
+            "windows"
+          ]
+        },
+        "cpu": {
+          "enum": [
+            "aarch64",
+            "x86_64"
+          ]
+        },
+        "properties": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 16,
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.:/@=-]{1,256}$"
+          }
+        }
+      }
+    },
+    "Environment": {
+      "description": "Environment switch for optional remote execution of hermetic actions. Unset or empty keeps every action local. The endpoint is a grpc, grpcs or unix URI. Properties are comma separated name=value pairs added to every selected remote execution platform; the platform names the execution platform id that hermetic actions are routed to; jobs bounds concurrent actions while the executor is on. The cache endpoint, instance name, upload, compression, download mode and credentials stay with the remote cache contract.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "SEMIO_REMOTE_EXECUTION_ENDPOINT": {
+          "type": "string",
+          "pattern": "^((grpc|grpcs)://[^\\s\\u0000/][^\\s\\u0000]*|unix:[^\\s\\u0000]+)$",
+          "maxLength": 1024
+        },
+        "SEMIO_REMOTE_EXECUTION_PROPERTIES": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,63}=[A-Za-z0-9_.:/@=-]{1,256}(,[A-Za-z][A-Za-z0-9_.-]{0,63}=[A-Za-z0-9_.:/@=-]{1,256}){0,15}$",
+          "maxLength": 4096
+        },
+        "SEMIO_REMOTE_EXECUTION_PLATFORM": {
+          "type": "string",
+          "pattern": "^(darwin|linux|windows)-(arm64|x64)$"
+        },
+        "SEMIO_REMOTE_EXECUTION_JOBS": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]{0,3}$"
+        }
+      }
+    },
+    "Flags": {
+      "description": "Closed Bazel flags for remote execution; cache flags stay with the cache contract.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "command",
+        "remote",
+        "platform",
+        "jobs"
+      ],
+      "properties": {
+        "command": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^--(no)?[a-z][a-z_]*(=[^\\u0000]+)?$",
+            "maxLength": 4096
+          }
+        },
+        "remote": {
+          "type": "boolean"
+        },
+        "platform": {
+          "type": "string",
+          "pattern": "^(darwin|linux|windows)-(arm64|x64)$"
+        },
+        "jobs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        }
+      }
+    },
+    "Audit": {
+      "const": {
+        "version": 1,
+        "violations": {
+          "absolute-tool-path": "The executable is the orchestrator's own absolute bun path, not an action input, so the action key carries the user's install path and a remote worker cannot resolve it.",
+          "host-environment": "The action reads the orchestrator's complete environment from an out-of-tree runtime channel, so host variables reach the task without entering the action key.",
+          "host-implementation-root": "The captured implementation snapshot embeds the absolute checkout root and re-reads captured sources from it, so the input digest and the execution depend on one machine's path.",
+          "undeclared-inputs": "The task runs in the real checkout, so it can read any file, not only the declared inputs; the execution log lists only the declared ones.",
+          "undeclared-writes": "The task writes into the real checkout and the shared stores, not only into declared outputs.",
+          "live-authority": "The action obtains its authority from a live owning process over a loopback control socket, which a sandbox network namespace or a remote worker does not reach.",
+          "loopback-control": "Cancellation and birth rendezvous use a 127.0.0.1 socket of the orchestrating process.",
+          "umask-modes": "Captured snapshot modes copy the producing file's permission bits, which follow the executing machine's umask.",
+          "shared-transpiler-cache": "Bun's runtime transpiler cache is keyed by file content, not by the module's root, so identical sources under a second root resolve their relative imports against the first root's absolute paths and the captured loader refuses them; an action must disable the cache or give it a per-root path."
+        },
+        "kinds": {
+          "task": {
+            "hermetic": false,
+            "violations": [
+              "absolute-tool-path",
+              "host-environment",
+              "host-implementation-root",
+              "undeclared-inputs",
+              "undeclared-writes",
+              "live-authority",
+              "loopback-control",
+              "umask-modes",
+              "shared-transpiler-cache"
+            ]
+          },
+          "launcher": {
+            "hermetic": false,
+            "violations": [
+              "absolute-tool-path",
+              "host-implementation-root",
+              "live-authority",
+              "loopback-control",
+              "shared-transpiler-cache"
+            ]
+          },
+          "launch": {
+            "hermetic": false,
+            "violations": [
+              "absolute-tool-path",
+              "host-environment",
+              "host-implementation-root",
+              "undeclared-inputs",
+              "undeclared-writes",
+              "live-authority",
+              "loopback-control",
+              "shared-transpiler-cache"
+            ]
+          },
+          "noop": {
+            "hermetic": true,
+            "violations": []
+          },
+          "hermetic": {
+            "hermetic": true,
+            "violations": []
+          }
+        }
+      }
+    },
+    "AuditShape": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "violations",
+        "kinds"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "violations": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 40
+          }
+        },
+        "kinds": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "hermetic",
+              "violations"
+            ],
+            "properties": {
+              "hermetic": {
+                "type": "boolean"
+              },
+              "violations": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Reasons": {
+      "const": {
+        "undeclared": "The target carries no hermetic declaration, so it keeps host state.",
+        "unsupported-execution": "The execution uses a program, owner arguments, option tokens or readiness the hermetic runner does not interpret.",
+        "uncached": "A hermetic action must be cacheable: only declared sources and outputs make it a pure function of its inputs.",
+        "continuous": "A continuous task never terminates and cannot be a pure action.",
+        "orchestration": "An orchestrating target launches further builds through live authority.",
+        "tool": "The declaration names a tool this contract does not provision.",
+        "host-inputs": "An input is read from the host, as a runtime command or an environment variable, and cannot be a declared file."
+      }
+    },
+    "Manifest": {
+      "description": "Closed manifest of one hermetic task: the runner interprets exactly these fields and holds no path, environment or implementation identity.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "id",
+        "project",
+        "root",
+        "target",
+        "args",
+        "commands",
+        "outputs"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "project": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "configuration": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "root": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "cwd": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "args": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "type": "string",
+            "maxLength": 65536
+          }
+        },
+        "forwardAllArgs": {
+          "type": "boolean"
+        },
+        "parallel": {
+          "type": "boolean"
+        },
+        "commands": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 65536
+          }
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "maxLength": 65536
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        }
+      }
+    }
+  }
+}

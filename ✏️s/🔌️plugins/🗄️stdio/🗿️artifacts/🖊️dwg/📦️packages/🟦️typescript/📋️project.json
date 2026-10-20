@@ -62,7 +62,8 @@
         "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/**/*",
         "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🟦️.ts",
         "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🦀️.rs"
-      ]
+      ],
+      "outputs": []
     }
   }
 }

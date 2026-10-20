@@ -1,5 +1,5 @@
 /** 📇️ Explicit shipped family choices resolve genuine immutable font byte URLs. */
-import policy from "./🧪️tests/🧫️fixtures/🔣️.json";
+import policy from "./🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 import {FontFaceAdmissionJob,type FontFace,type FontOutlineLimits,type FontProgress} from "../🟦️.ts";
 import {UnitRetirement,type WorkRetirement} from "../../../🧹️retire/🟦️.ts";
 export type FontByteSource={family:string;id:string;bytes:Uint8Array};

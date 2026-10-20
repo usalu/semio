@@ -1,5 +1,5 @@
-import { DIAGRAM_LAYOUT_CODEC_KIND, type DiagramLayoutDescriptor, type DiagramLayoutIngressPage } from "@semio-tech/framework/modules/ui/elements/Diagram/layout/wire";
-import { createDiagramLayoutWorkerJob, type DiagramLayoutWorkerJob } from "@semio-tech/framework/modules/ui/elements/Diagram/layout";
+import { DIAGRAM_LAYOUT_CODEC_KIND, type DiagramLayoutDescriptor, type DiagramLayoutIngressPage } from "@semio-tech/ui/elements/Diagram/layout/wire";
+import { createDiagramLayoutWorkerJob, type DiagramLayoutWorkerJob } from "@semio-tech/ui/elements/Diagram/layout";
 import {
   INTERACTIVE_JOB_INPUT_BYTE_CAPACITY,
   INTERACTIVE_JOB_INPUT_ITEM_CAPACITY,

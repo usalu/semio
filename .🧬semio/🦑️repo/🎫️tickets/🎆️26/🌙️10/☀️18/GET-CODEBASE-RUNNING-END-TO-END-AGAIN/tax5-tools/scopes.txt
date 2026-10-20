@@ -1,0 +1,9 @@
+✏️s/🔌️plugins/➗️mathematical
+✏️s/🔌️plugins/🏛️architect
+✏️s/🔌️plugins/📋️forms
+✏️s/🔌️plugins/📐️cad
+✏️s/🔌️plugins/📕️norm
+✏️s/🔌️plugins/🖍️draw
+✏️s/🔌️plugins/🖨️raster
+✏️s/🔌️plugins/🗄️stdio
+✏️s/🔌️plugins/🧱️block

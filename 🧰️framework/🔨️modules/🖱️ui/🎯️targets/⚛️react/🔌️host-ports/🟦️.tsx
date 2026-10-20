@@ -1,14 +1,14 @@
 import { Canvas as ThreeCanvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei/core/OrbitControls.js";
 import { Grid } from "@react-three/drei/core/Grid.js";
-import { sceneHostPort, reactHostPort, flowHostPort, type ReactHostPort, type FlowHostPort, type SceneHostPort, setReactHostPort, setFlowHostPort, setSceneHostPort } from "../../../🧱️elements/🔌️Ports/🟦️.tsx";
+import { sceneHostPort, reactHostPort, flowHostPort, type ReactHostPort, type FlowHostPort, type SceneHostPort, setReactHostPort, setFlowHostPort, setSceneHostPort } from "@semio-tech/ui/elements/Ports";
 import type { IconRenderPort, IconRenderRequest, IconRenderCamera, IconRenderResult, IconRenderShape } from "@semio-tech/ui-styling";
-import { ephemeralMap } from "@semio-tech/framework/transient";
+import { ephemeralMap } from "@semio-tech/framework-transient";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { SVGRenderer } from "three/examples/jsm/renderers/SVGRenderer.js";
 import * as React from "react";
-import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
+import { cn } from "@semio-tech/ui/modules/class-name-composition";
 
 /** 🧊️ Host surface for three.js / R3F (implemented by 🔌️Adapters). */
 export interface ThreeHostPort {

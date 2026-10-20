@@ -34,6 +34,7 @@ struct RasterPixelRegionDsl {layer_id:String,target:String,x:u32,y:u32,width:u32
 struct RasterDiffDsl {schema:Option<String>,id:Option<String>,title:Option<Option<String>>,#[dsl(block)] layers:Option<RasterLayersDeltaDsl>,#[dsl(block)] assets:Option<RasterAssetsDeltaDsl>,#[dsl(table)] pixels:Vec<RasterPixelRegionDsl>}
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_s_artifact_raster_raster_model::io::text::snapshot::record::RasterNativeDocument;
+use semio_s_artifact_raster_raster_model::RasterOwnedMap;
 fn document_to_dsl(snapshot:RasterSnapshot)->RasterNativeDocument {
  let document=RasterNativeDocument::ordinary(&snapshot);
  semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(snapshot);

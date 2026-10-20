@@ -1,0 +1,6 @@
+🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🔗️remote/🦀️.rs.orig
+🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🔗️remote/🧪️tests/🔬️unit/🦀️.rs.orig
+🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🔐️authenticated-hub-workspace/🟦️.ts.orig
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/command-text-transfer/input
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/command-transport-neutral/input
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/retained-spr-command-context/doc.spr

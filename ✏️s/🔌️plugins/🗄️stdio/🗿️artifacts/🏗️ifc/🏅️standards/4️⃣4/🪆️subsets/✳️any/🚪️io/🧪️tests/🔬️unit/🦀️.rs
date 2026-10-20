@@ -28,6 +28,7 @@ async fn codec_round_trip() {
 /// — same shape as every P1-P3 pilot's own `conformance_laws` module and the sibling STEP
 /// artifact's own.
 mod conformance_laws {
+    #[cfg(test)] use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
     use semio_s_artifact_stdio_ifc_4::standards::v4::subsets::any::io::*;
     use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::diff;
     use semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema::mutations;

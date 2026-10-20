@@ -1,5 +1,7 @@
 use semio_s_artifact_norm_en1998_mutations::*;
 use protocol::{Mutation};
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
+use semio_s_artifact_norm_en1998_mut_buildings::update_site;
 
 fn every_mutation() -> Vec<En1998Mutation> {
     semio_s_artifact_norm_en1998_io::text::mutations::demo_mutation_cases()

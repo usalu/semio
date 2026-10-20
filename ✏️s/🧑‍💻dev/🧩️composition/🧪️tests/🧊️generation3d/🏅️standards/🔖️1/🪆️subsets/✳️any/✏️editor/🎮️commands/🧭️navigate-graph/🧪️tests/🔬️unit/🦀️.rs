@@ -3,7 +3,7 @@ use crate::editor_domain::editor_laws::context::{self, app_with_registry, dispat
 use semio_framework_test_fixtures::repo_text;
 use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 use crate::SnapshotRead;
-use semio_s_artifact_procedural_3d_model::example_snapshot;
+use semio_s_artifact_procedural_3d_io_text::snapshot::example_snapshot;
 use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_HEX_COLUMN;
 
 /// 🧫️ The ONE language-agnostic statement of graph keyboard traversal, answered here by the Rust

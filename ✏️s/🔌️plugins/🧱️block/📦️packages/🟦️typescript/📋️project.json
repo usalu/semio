@@ -4,6 +4,7 @@
   "targets": {
     "test": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
@@ -22,6 +23,7 @@
     "shared-schema": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts shared-schema",

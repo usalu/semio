@@ -11,6 +11,8 @@
         "artifactKind": "s.gis.gismap",
         "artifactSchema": "s.gis.gismap",
         "artifactSchemaVersion": 1,
+        "documentSchema": "gis.map",
+        "documentSchemaVersion": 1,
         "inferenceSchema": "s.gis.gismap.inference",
         "inferenceSchemaVersion": 1,
         "algorithmVersion": 1,

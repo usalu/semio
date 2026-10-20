@@ -8,7 +8,12 @@ import { installTextEditorCaretCadenceV1, type TextEditorCaretCadenceV1 } from "
 import type { EditorCore1 } from "../🧰️surface-state-and-delivery/🟦️.ts";
 
 // #region WasmEditorSurface
-/** 👥️ Syncs the session, publishes the local caret and projects peer carets. */
+/**
+ * 👥️ Syncs the session, publishes the local caret and projects peer carets.
+ *
+ * ⌨️ The typing run ends as ONE edit when the editor loses focus or the page is hidden or left (a run pending for less than the
+ * idle bound is never lost to a closed tab), and when the editor unmounts.
+ */
 export function useEditorSessionPresence(core: EditorCore1) {
   const { deliver, readOnlyRef, sessionRef, surfaceId, syncSession, typingRef , presenceRuntimeKey } = core;
   const [sessionEpoch, setSessionEpoch] = useState(0);

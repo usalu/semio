@@ -5,6 +5,9 @@
   "exports": {
     ".": "./🟦️.ts",
     "./artifact-reference": "./🗿️artifact-reference/🟦️.ts",
+    "./artifact-reference/blob/schema.json": "./🗿️artifact-reference/📦️blob/🧬️schema/🔣️json/🟦️.ts",
+    "./artifact-reference/child/schema.json": "./🗿️artifact-reference/🪆️child/🧬️schema/🔣️json/🟦️.ts",
+    "./artifact-reference/link/schema.json": "./🗿️artifact-reference/🔗️link/🧬️schema/🔣️json/🟦️.ts",
     "./entity-kinds/source": "./🏷️entity-kinds/📥️source/🟦️.ts",
     "./generated/entity-kinds": "./🤖️generated/🏷️entity-kinds/🟦️.ts",
     "./oracles/document": "./🔮️oracles/🪪️document/🟦️.ts",
@@ -13,7 +16,11 @@
     "./record/testing/unit": "./🧾️record/🧪️testing/🔬️unit/🟦️.ts"
   },
   "dependencies": {
-    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/framework-hash": "workspace:*",
     "@semio-tech/schema-validator-ts": "workspace:*"
+  },
+  "devDependencies": {
+    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/framework-manifest": "workspace:*"
   }
 }

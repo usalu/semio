@@ -1,4 +1,5 @@
-use crate::{NoteBlockNode, NoteSnapshot};
+use crate::{NoteBlockNode};
+use semio_s_artifact_note_note_schema::NoteSnapshot;
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 #[allow(unused_imports)]

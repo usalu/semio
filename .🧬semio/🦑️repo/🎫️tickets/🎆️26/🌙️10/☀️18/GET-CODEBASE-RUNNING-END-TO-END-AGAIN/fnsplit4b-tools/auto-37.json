@@ -1,0 +1,92 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧩️assembly/🧷️job-state-and-construction/🦀️.rs",
+ "function": "step_one",
+ "nth": 0,
+ "match_line": 471,
+ "types": {},
+ "ret": "Result<bool, FemError>",
+ "inline": true,
+ "arms": [
+  {
+   "line": 512,
+   "name": "assembly_validate_node_pairs",
+   "doc": "🪵️ Runs the `validate node pairs` stage of `step_one`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 528,
+   "name": "assembly_validate_element_references",
+   "doc": "🔩️ Runs the `validate element references` stage of `step_one`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 565,
+   "name": "assembly_discover_dofs",
+   "doc": "⚙️ Runs the `discover dofs` stage of `step_one`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 585,
+   "name": "assembly_emit_dofs",
+   "doc": "🧲️ Runs the `emit dofs` stage of `step_one`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 637,
+   "name": "assembly_mark_constraints",
+   "doc": "🪛️ Runs the `mark constraints` stage of `step_one`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 702,
+   "name": "assembly_build_partitions",
+   "doc": "🔧️ Runs the `build partitions` stage of `step_one`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 756,
+   "name": "assembly_build_merge_cursors",
+   "doc": "🔨️ Runs the `build merge cursors` stage of `step_one`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  }
+ ],
+ "method": {
+  "self_param": "&mut self",
+  "call": "self.{name}({args})"
+ }
+}

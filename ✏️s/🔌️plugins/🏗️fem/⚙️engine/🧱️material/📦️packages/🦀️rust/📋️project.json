@@ -3,6 +3,7 @@
     "test-native": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "metadata": {
         "semio": {
           "workspaceCommand": [
@@ -19,6 +20,7 @@
     "test-source": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "metadata": {
         "semio": {
           "workspaceCommand": [

@@ -1,0 +1,107 @@
+[
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+  "edits": [
+   {
+    "old": "the link is listed in `.bazelignore` so `//...` never crawls the checkout (its generated workspace lives inside it, an infinite symlink expansion otherwise)",
+    "new": "no `.bazelignore` is written (listing the link there removes it from the execroot and disables Bazel caching); queries name the root package with `//:all`, which never crawls the checkout",
+    "count": 1
+   },
+   {
+    "old": "await writeChanged(join(workspace,\".bazelignore\"),actions.sources.link+\"\\n\");",
+    "new": "await rm(join(workspace,\".bazelignore\"),{force:true});",
+    "count": 1
+   }
+  ]
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧾️store-receipt/🟨️.mjs",
+  "edits": [
+   {
+    "old": "if(!Array.isArray(outputs)||!outputs.includes(storeReceiptOutputV1(target)))return undefined;",
+    "new": "if(!Array.isArray(outputs)||!outputs.some(output=>typeof output===\"string\"&&output.startsWith(policy.projectRootToken+\"/\"+policy.directory+\"/\"))||!outputs.includes(storeReceiptOutputV1(target)))return undefined;",
+    "count": 1
+   }
+  ]
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧾️store-receipt/🧪️tests/🧫️fixtures/🔣️.json",
+  "edits": [
+   {
+    "old": "    {\n      \"name\": \"a project at the workspace root\",",
+    "new": "    {\n      \"name\": \"a target that declares no receipt output is never name-validated, whatever its characters\",\n      \"projectRoot\": \"a/b\",\n      \"target\": \"🏭️generator\",\n      \"outputs\": [],\n      \"expected\": null\n    },\n    {\n      \"name\": \"a target with other outputs only is never name-validated\",\n      \"projectRoot\": \"a/b\",\n      \"target\": \"🏭️generator-manifests\",\n      \"outputs\": [\n        \"{projectRoot}/dist\"\n      ],\n      \"expected\": null\n    },\n    {\n      \"name\": \"a project at the workspace root\",",
+    "count": 1
+   }
+  ]
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️workspace/🔣️.json",
+  "edits": [
+   {
+    "old": "  \"link\": {\n    \"name\": \"s\",\n    \"ignore\": \"s\\n\"\n  },",
+    "new": "  \"link\": {\n    \"name\": \"s\"\n  },",
+    "count": 1
+   }
+  ]
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️workspace/🧬️schema.json",
+  "edits": [
+   {
+    "old": "      \"required\": [\n        \"name\",\n        \"ignore\"\n      ],",
+    "new": "      \"required\": [\n        \"name\"\n      ],",
+    "count": 1
+   },
+   {
+    "old": "        \"name\": {\n          \"type\": \"string\",\n          \"minLength\": 1\n        },\n        \"ignore\": {\n          \"type\": \"string\",\n          \"pattern\": \"\\\\n$\"\n        }\n      }",
+    "new": "        \"name\": {\n          \"type\": \"string\",\n          \"minLength\": 1\n        }\n      }",
+    "count": 1
+   }
+  ]
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️workspace/🟦️.ts",
+  "edits": [
+   {
+    "old": "/** 🗺️ Contract: the generated Bazel workspace links the checkout without letting recursive queries crawl it, and a task's own Cargo directories are task data resolved against the workspace. */",
+    "new": "/** 🗺️ Contract: the generated Bazel workspace links the checkout without an ignore file (so the link stays in the execroot and actions are cached), and a task's own Cargo directories are task data resolved against the workspace. */",
+    "count": 1
+   },
+   {
+    "old": "import {existsSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,symlinkSync,utimesSync,writeFileSync} from \"node:fs\";",
+    "new": "import {existsSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,symlinkSync,writeFileSync} from \"node:fs\";",
+    "count": 1
+   },
+   {
+    "old": "expect(corpus.link.name).toBe(component.definitions.Actions.const.sources.link);expect(corpus.link.ignore).toBe(corpus.link.name+\"\\n\");",
+    "new": "expect(corpus.link.name).toBe(component.definitions.Actions.const.sources.link);",
+    "count": 1
+   },
+   {
+    "old": "test(\"Bazel links the checkout into the workspace and lists the link in .bazelignore, idempotently and replacing a stale link\",async()=>{",
+    "new": "test(\"Bazel links the checkout into the workspace without a .bazelignore, idempotently, replacing a stale link and removing a stale ignore file\",async()=>{",
+    "count": 1
+   },
+   {
+    "old": "  expect(readFileSync(join(space,\".bazelignore\"),\"utf8\")).toBe(corpus.link.ignore);expect(realpathSync(join(space,corpus.link.name))).toBe(realpathSync(checkout));expect(readFileSync(join(space,corpus.link.name,\"a.txt\"),\"utf8\")).toBe(\"a\\n\");\n  const past=new Date(Date.now()-60000);utimesSync(join(space,\".bazelignore\"),past,past);const before=lstatSync(join(space,\".bazelignore\")).mtimeMs;\n  await api.linkBazelSourcesV1(checkout,space);expect(lstatSync(join(space,\".bazelignore\")).mtimeMs).toBe(before);\n  writeFileSync(join(space,\".bazelignore\"),\"wrong\\n\");await api.linkBazelSourcesV1(checkout,space);expect(readFileSync(join(space,\".bazelignore\"),\"utf8\")).toBe(corpus.link.ignore);\n",
+    "new": "  expect(existsSync(join(space,\".bazelignore\"))).toBe(false);expect(realpathSync(join(space,corpus.link.name))).toBe(realpathSync(checkout));expect(readFileSync(join(space,corpus.link.name,\"a.txt\"),\"utf8\")).toBe(\"a\\n\");\n  const before=lstatSync(join(space,corpus.link.name)).ino;\n  await api.linkBazelSourcesV1(checkout,space);expect(lstatSync(join(space,corpus.link.name)).ino).toBe(before);\n  writeFileSync(join(space,\".bazelignore\"),corpus.link.name+\"\\n\");await api.linkBazelSourcesV1(checkout,space);expect(existsSync(join(space,\".bazelignore\"))).toBe(false);\n",
+    "count": 1
+   },
+   {
+    "old": "test.skipIf(!binary||process.platform===\"win32\")(\"the real Bazel crawls //... only with the link listed in .bazelignore, while explicit labels through the link keep resolving\",async()=>{",
+    "new": "test.skipIf(!binary||process.platform===\"win32\")(\"real Bazel: the linked checkout stays in the execroot so an action output reaches the disk cache, //:all never crawls the checkout and //... would\",async()=>{",
+    "count": 1
+   },
+   {
+    "old": "const directory=mkdtempSync(join(tmpdir(),\"bazel-ignore-\")),checkout=join(directory,\"checkout\"),space=join(directory,\"workspace\"),base=join(directory,\"base\"),install=join(directory,\"install\"),",
+    "new": "const directory=mkdtempSync(join(tmpdir(),\"bazel-link-\")),checkout=join(directory,\"checkout\"),space=join(directory,\"workspace\"),base=join(directory,\"base\"),install=join(directory,\"install\"),disk=join(directory,\"disk\"),",
+    "count": 1
+   },
+   {
+    "old": "  writeFileSync(join(space,\"MODULE.bazel\"),'module(name=\"ignore\")\\n');writeFileSync(join(space,\"BUILD.bazel\"),`filegroup(name = \"x\", srcs = [\"${corpus.link.name}/a.txt\"])\\n`);\n  await api.linkBazelSourcesV1(checkout,space);\n  const ignored=bazel([\"query\",\"--lockfile_mode=off\",\"//...\"]);expect(ignored.status,ignored.stderr).toBe(0);expect(ignored.stdout).toContain(\"//:x\");\n  const label=bazel([\"query\",\"--lockfile_mode=off\",`//:${corpus.link.name}/a.txt`]);expect(label.status,label.stderr).toBe(0);\n  rmSync(join(space,\".bazelignore\"));\n  const crawled=bazel([\"query\",\"--lockfile_mode=off\",\"//...\"]);expect(crawled.status).not.toBe(0);expect(crawled.stderr).toMatch(/infinite symlink expansion/iu);\n",
+    "new": "  writeFileSync(join(space,\"MODULE.bazel\"),'module(name=\"link\")\\n');writeFileSync(join(space,\"BUILD.bazel\"),`filegroup(name = \"x\", srcs = [\"${corpus.link.name}/a.txt\"])\\ngenrule(name = \"g\", srcs = [\"${corpus.link.name}/a.txt\"], outs = [\"g.txt\"], cmd = \"cat $(SRCS) > $@\")\\n`);\n  await api.linkBazelSourcesV1(checkout,space);\n  const all=bazel([\"query\",\"--lockfile_mode=off\",\"//:all\"]);expect(all.status,all.stderr).toBe(0);expect(all.stdout).toContain(\"//:x\");\n  const label=bazel([\"query\",\"--lockfile_mode=off\",`//:${corpus.link.name}/a.txt`]);expect(label.status,label.stderr).toBe(0);\n  const build=()=>bazel([\"build\",\"--lockfile_mode=off\",\"--spawn_strategy=local\",\"--guard_against_concurrent_changes\",`--disk_cache=${disk}`,\"//:g\"]);\n  const cold=build();expect(cold.status,cold.stderr).toBe(0);expect(cold.stderr).not.toContain(\"Skipping uploading\");\n  expect(bazel([\"clean\"]).status).toBe(0);\n  const warm=build();expect(warm.status,warm.stderr).toBe(0);expect(warm.stderr).toContain(\"1 disk cache hit\");\n  const crawled=bazel([\"query\",\"--lockfile_mode=off\",\"//...\"]);expect(crawled.status).not.toBe(0);expect(crawled.stderr).toMatch(/infinite symlink expansion/iu);\n",
+    "count": 1
+   }
+  ]
+ }
+]

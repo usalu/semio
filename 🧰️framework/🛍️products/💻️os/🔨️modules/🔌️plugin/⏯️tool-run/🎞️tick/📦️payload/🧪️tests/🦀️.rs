@@ -1,6 +1,6 @@
 //! 🧪️ Original product tick payload keeps caller authority, source identity and physical closure.
-use crate::original_tick_payload::advance_original_tick_payload;
-use crate::original_tick_payload::close_original_tick_payload;
+use super::advance_original_tick_payload;
+use super::close_original_tick_payload;
 use semio_framework_tool_run::{ToolRunId, ToolRunIdentity, ToolRunTickWriter, ToolRunTraceSubject, ToolRunVerdict};
 use semio_framework_tool_run_tick_wire::{ToolRunTickWireCursor, ToolRunTickPayloadSource};
 use semio_framework_value::RetainedCloneGrant as Grant;

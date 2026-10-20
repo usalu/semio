@@ -67,6 +67,7 @@ case "$product" in
   course)       pkg="@teaching/architecture-course"; port=6061; activate=0; dev_target=dev ;;
   *) echo "unknown product: $product (play|demonstrator|course)" >&2; exit 2 ;;
 esac
+[ "$release" = 1 ] && [ "$product" != course ] && { echo "--release applies to the course only" >&2; exit 2; }
 [ "$serve" = default ] && { if [ "$product" = course ]; then serve=0; else serve=1; fi; }
 
 log() { echo "[run-e2e $(date +%H:%M:%S)] $*"; }
@@ -121,7 +122,22 @@ preflight() {
   local free_gb; free_gb=$(df -Pk "$root" | awk 'NR==2{printf "%d", $4/1048576}')
   [ "$free_gb" -ge "${E2E_MIN_FREE_GB:-15}" ] || fail "only ${free_gb} GB free (need ${E2E_MIN_FREE_GB:-15}); free disk first" 3
   if [ "$serve" = 1 ] && port_open "$port"; then fail "port $port is already in use; stop the other serve first (lsof -nP -iTCP:$port -sTCP:LISTEN)" 3; fi
+  check_vite_config
   check_browsers
+}
+
+# Loads the product's Vite config with the loader its serve/build scripts name (default runner); catches config-load faults before any long step.
+check_vite_config() {
+  local config script loader
+  case "$product" in
+    play)         config="🏢️semio-tech/🎡️play/🏗️builder/🌐️vite/🟦️.ts"; script="🏢️semio-tech/🎡️play/🔨️modules/🧩️runtime/📜️script.ts" ;;
+    demonstrator) config="♻️mit-bestand/🧺️demonstrator/🏗️builder/🌐️vite/🟦️.ts"; script="♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/📜️script.ts" ;;
+    *) return 0 ;;
+  esac
+  loader=runner; grep -q 'configLoader: "native"' "$root/$script" && loader=native
+  local out; out=$(cd "$root" && perl -e 'alarm 240; exec @ARGV' -- bun "$here/resolve-vite-config.mjs" "$config" build "$loader" 2>&1); local code=$?
+  echo "$out" | grep -E '^(RESOLVED|FAILED)' | sed 's/^/  /'
+  [ "$code" = 0 ] || { echo "$out" | tail -n 12 | sed 's/^/  | /'; fail "Vite config of $product does not load with the $loader loader its scripts use" 3; }
 }
 
 browser_report() {
@@ -189,8 +205,6 @@ main() {
   preflight
   [ "$check" = 1 ] && { log "preflight ok"; return 0; }
   export SEMIO_TICKET_DIR="$ticket"
-  [ "$release" = 1 ] && export SEMIO_BUILD_MODE=release
-
   if [ "$activate" = 1 ] && [ "$skip_activate" = 0 ]; then
     run_step activate repo run "$pkg:activate-prototype" || fail "activate-prototype failed" 10
   fi
@@ -212,7 +226,7 @@ main() {
   elif [ ${#extra[@]} -gt 0 ]; then
     log "note: play/demonstrator test-e2e accept no free arguments; ignoring: ${extra[*]}"
   fi
-  run_step test-e2e repo "${args[@]}"
+  if [ "$release" = 1 ]; then SEMIO_BUILD_MODE=release run_step test-e2e repo "${args[@]}"; else run_step test-e2e repo "${args[@]}"; fi
   local code=$?
   stop_serve
   return "$code"

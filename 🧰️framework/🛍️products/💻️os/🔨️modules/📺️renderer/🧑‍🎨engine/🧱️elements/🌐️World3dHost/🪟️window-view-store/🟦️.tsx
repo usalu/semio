@@ -17,7 +17,7 @@ import {
   Vector3
 } from "@semio-tech/ui-react";
 // #endregion 🔌️Adapters
-import { worldProjectionSpecIconId, WorldProjectionKindSwitch, type WorldCameraState, type WorldProjectionSpec } from "@semio-tech/infinite-world-r3f";
+import { worldProjectionSpecIconId, WorldProjectionKindSwitch, type WorldCameraState, type WorldProjectionSpec } from "@semio-tech/framework/infinite/world/r3f";
 import { type WorldParsedCameraState } from "../🔭️scene-schema/🟦️.ts";
 import { worldRayFromNdc } from "../🎯️marquee-and-bridges/🟦️.tsx";
 

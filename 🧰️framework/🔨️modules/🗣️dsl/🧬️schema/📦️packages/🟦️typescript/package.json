@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./binding/ownership/testing": "./🪆️binding/🏛️ownership/🧪️testing/🟦️.ts"
+    "./binding/ownership/testing": "./🪆️binding/🏛️ownership/🧪️testing/🟦️.ts",
+    "./testing/variant-field": "./🧪️testing/🌿️variant-field/🟦️.ts"
   }
 }

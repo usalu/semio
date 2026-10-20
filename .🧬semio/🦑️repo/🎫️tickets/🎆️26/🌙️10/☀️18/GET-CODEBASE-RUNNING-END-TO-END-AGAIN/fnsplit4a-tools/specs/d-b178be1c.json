@@ -1,0 +1,46 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/🧪️tests/🧩️component/📐️layout-tests/🟦️.tsx",
+ "describeLine": 10,
+ "shared": {
+  "dir": "🟣️shared",
+  "doc": "/** 🟣️ The shared declarations of the owned Diagram directed layout suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️assigns-stable-ranks-direction",
+   "doc": "/** 🔶️ The assigns stable ranks direction tests of the owned Diagram directed layout suite. */",
+   "name": "registerAssignsStableRanksDirectionTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the assigns stable ranks direction tests of the owned Diagram directed layout suite.",
+   "from": 11,
+   "to": 132
+  },
+  {
+   "dir": "🔸️admits-publishes-only-through",
+   "doc": "/** 🔸️ The admits publishes only through tests of the owned Diagram directed layout suite. */",
+   "name": "registerAdmitsPublishesOnlyThroughTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the admits publishes only through tests of the owned Diagram directed layout suite.",
+   "from": 150,
+   "to": 236
+  },
+  {
+   "dir": "🟠️retains-committed-proxy-through",
+   "doc": "/** 🟠️ The retains committed proxy through tests of the owned Diagram directed layout suite. */",
+   "name": "registerRetainsCommittedProxyThroughTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the retains committed proxy through tests of the owned Diagram directed layout suite.",
+   "from": 269,
+   "to": 321
+  },
+  {
+   "dir": "🟢️retires-displayed-source-fallback",
+   "doc": "/** 🟢️ The retires displayed source fallback tests of the owned Diagram directed layout suite. */",
+   "name": "registerRetiresDisplayedSourceFallbackTests",
+   "emoji": "🔵",
+   "fdoc": "Registers the retires displayed source fallback tests of the owned Diagram directed layout suite.",
+   "from": 400,
+   "to": 468
+  }
+ ]
+}

@@ -13,6 +13,7 @@ import { pathEmojiStatuteFindings } from "@semio-tech/framework/identity/path";
 import { basename, dirname } from "node:path";
 import { pathBudgetCodes, pathBudgetFitsWithReserve, pathBudgetStatement, pathUtf16Units, type PathBudgetPolicy } from "../../🔍️discovery/📏️path-budget/🟦️.ts";
 import { mutationFixturesDeclaredByFeature } from "../../🔍️discovery/🥒️mutation-fixture-coverage/🟦️.ts";
+import { foldMutationCaseName, mutationLeafCaseTableProblems, parseMutationLeafCaseTable } from "../../🔍️discovery/🗂️mutation-leaf-case-table/🟦️.ts";
 import { type SemanticKindDescendantContract, type TaxonomyCapturedSourceRead, type TaxonomyInventoryEntry, type TaxonomyViolation, WINDOWS_RESERVED, requireTaxonomyValue } from "../📜️plan-contracts/🟦️.ts";
 import { absolutePath, isExcluded, violation } from "../🏷️file-kind-matching/🟦️.ts";
 import type { CandidatePath, MutableInventoryEntry } from "../📸️repository-capture/🟦️.ts";
@@ -404,13 +405,27 @@ function canonicalProjectedMutationOwner(name: string, identity: string, subsetR
   return owner && basename(owner) === name ? owner : null;
 }
 
-/** 🥒️ Whether a committed fixture bundle is covered without a per-case implementation: its subset ships the fixture runner that discovers every case at run time, or an exhaustive mutation case declares the bundle in a feature step. Both sources are the `mutationCatalogProjection.fixtureCoverage` schema. */
+/** 🥒️ Whether a committed fixture bundle is covered without a per-case implementation: its subset ships the fixture runner that discovers every case at run time, an exhaustive mutation case declares the bundle in a feature step, or the case table of its leaf lists it. All three sources are the `mutationCatalogProjection.fixtureCoverage` schema. */
 function fixtureCoverageOf(repoRoot: string, entries: ReadonlyMap<string, MutableInventoryEntry>, taxonomy: LoadedTaxonomy): (fixtureDirectory: string) => boolean {
   const coverage = taxonomy.schema.mutationCatalogProjection.fixtureCoverage, discovery = taxonomy.discoverySchema;
   const fixtureMarker = `/${discovery.testsDirName}/${discovery.testFixturesDirName}/${discovery.schemaScopeOwnerLevels.mutationsFacetDirName}/`;
   const featureKind = requireTaxonomyValue(discovery.fileKinds[coverage.exhaustiveCase.featureFileKindId], "exhaustive case feature file kind");
   const featureName = `${featureKind.emoji}${featureKind.extensionChains[0]}`.normalize("NFC");
   const policy = { stepUriPrefix: coverage.exhaustiveCase.stepUriPrefix, bundleFacetDirectoryNames: coverage.exhaustiveCase.bundleFacetDirectoryNames };
+  const tableKind = requireTaxonomyValue(discovery.fileKinds[coverage.leafCaseTable.fileKindId], "leaf case table file kind");
+  const tableName = `${tableKind.emoji}${tableKind.extensionChains[0]}`.normalize("NFC");
+  const leafTables = new Map<string, ReadonlySet<string> | null>();
+  const leafTableCases = (subsetRoot: string, owner: string): ReadonlySet<string> | null => {
+    const path = `${subsetRoot}/${discovery.schemaScopeOwnerLevels.facetDirName}/${discovery.schemaScopeOwnerLevels.mutationsFacetDirName}/${owner}/${discovery.testsDirName}/${tableName}`;
+    if (leafTables.has(path)) return leafTables.get(path)!;
+    let found: ReadonlySet<string> | null = null;
+    if (existsSync(absolutePath(repoRoot, path))) {
+      const table = parseMutationLeafCaseTable(readFileSync(absolutePath(repoRoot, path), "utf8"), coverage.leafCaseTable);
+      if ("cases" in table) found = new Set(table.cases.map(foldMutationCaseName));
+    }
+    leafTables.set(path, found);
+    return found;
+  };
   const subsets = new Map<string, Readonly<{ runner: boolean; declared: ReadonlySet<string> }>>();
   const subsetCoverage = (subsetRoot: string): Readonly<{ runner: boolean; declared: ReadonlySet<string> }> => {
     const cached = subsets.get(subsetRoot);
@@ -432,8 +447,8 @@ function fixtureCoverageOf(repoRoot: string, entries: ReadonlyMap<string, Mutabl
   return (fixtureDirectory) => {
     const at = fixtureDirectory.indexOf(fixtureMarker);
     if (at < 0) return false;
-    const found = subsetCoverage(fixtureDirectory.slice(0, at));
-    return found.runner || found.declared.has(fixtureDirectory.slice(at + fixtureMarker.length).replaceAll("\uFE0F", "").normalize("NFC"));
+    const subsetRoot = fixtureDirectory.slice(0, at), bundle = fixtureDirectory.slice(at + fixtureMarker.length), found = subsetCoverage(subsetRoot), split = bundle.lastIndexOf("/");
+    return found.runner || found.declared.has(foldMutationCaseName(bundle)) || split > 0 && leafTableCases(subsetRoot, bundle.slice(0, split))?.has(foldMutationCaseName(bundle.slice(split + 1))) === true;
   };
 }
 
@@ -620,5 +635,24 @@ export function validateMutationCasePairs(
     if (/\/🧪️tests\/🪆️[^/]+\/[^/]+\/🧪️[^/]+$/u.test(entry.sourcePath)) entry.violations.push(violation("mutation-projected-storage-forbidden", entry.sourcePath, "Mutation cases must use the subset-owned canonical implementation and fixture roots"));
     const looksLikeFixtureScenario = entry.sourcePath.includes("/🧪️tests/🧫️fixtures/🧬️mutations/") && entries.has(`${entry.sourcePath}/🦠️mutation`) && entries.has(`${entry.sourcePath}/📸️snapshot`) && entries.has(`${entry.sourcePath}/🔺️diff`) && entries.has(`${entry.sourcePath}/🎯️outcome`);
     if (looksLikeFixtureScenario && !expected.has(entry.sourcePath) && !covered(entry.sourcePath)) entry.violations.push(violation("mutation-fixture-unpaired", entry.sourcePath, "Fixture bundle has no canonical implementation case"));
+  }
+  const tableContract = taxonomy.schema.mutationCatalogProjection.fixtureCoverage.leafCaseTable, bundleFacets = taxonomy.schema.mutationCatalogProjection.fixtureCoverage.exhaustiveCase.bundleFacetDirectoryNames, discovery = taxonomy.discoverySchema;
+  const tableKind = requireTaxonomyValue(discovery.fileKinds[tableContract.fileKindId], "leaf case table file kind");
+  const tableName = `${tableKind.emoji}${tableKind.extensionChains[0]}`.normalize("NFC");
+  const schemaMarker = `/${discovery.schemaScopeOwnerLevels.facetDirName}/${discovery.schemaScopeOwnerLevels.mutationsFacetDirName}/`, tableSuffix = `/${discovery.testsDirName}/${tableName}`;
+  for (const entry of entries.values()) {
+    const at = entry.sourcePath.indexOf(schemaMarker);
+    if (entry.nodeKind !== "file" || at < 0 || !entry.sourcePath.normalize("NFC").endsWith(tableSuffix)) continue;
+    const owner = entry.sourcePath.slice(at + schemaMarker.length, entry.sourcePath.length - tableSuffix.length);
+    const fixtureLeaf = `${entry.sourcePath.slice(0, at)}/${discovery.testsDirName}/${discovery.testFixturesDirName}/${discovery.schemaScopeOwnerLevels.mutationsFacetDirName}/${owner}`;
+    let table;
+    try {
+      table = parseMutationLeafCaseTable(readFileSync(absolutePath(repoRoot, entry.sourcePath), "utf8"), tableContract);
+    } catch (error) {
+      table = { error: `cannot be read: ${(error as Error).message}` };
+    }
+    const bundles = entrySubtree(entries, fixtureLeaf).filter((row) => row.nodeKind === "directory" && dirname(row.sourcePath) === fixtureLeaf && bundleFacets.every((facet) => entries.has(`${row.sourcePath}/${facet}`))).map((row) => basename(row.sourcePath));
+    const problems = "error" in table ? [table.error] : entries.has(fixtureLeaf) || existsSync(absolutePath(repoRoot, fixtureLeaf)) ? mutationLeafCaseTableProblems(table.cases, bundles) : ["has no fixture leaf"];
+    for (const problem of problems) entry.violations.push(violation("mutation-case-table-invalid", entry.sourcePath, `Case table ${problem}`));
   }
 }

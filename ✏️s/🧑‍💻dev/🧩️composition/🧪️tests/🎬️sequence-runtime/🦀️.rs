@@ -28,9 +28,6 @@ async fn run_executes_default_snapshot_and_records_scope() {
     let result = host.run();
     assert_eq!(result.scope.get("counter").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(0.0));
     assert!(!result.effects.is_empty());
-    // 🧊️ `run` mints a fresh scope dictionary (and one per effect) that nothing else owns — dropping
-    // the result unretired trips `final Dictionary ownership must be explicitly retired or owned by a
-    // cold boundary`, which is why the crate publishes its own exact retirement for this shape.
     retire_run_result_cold(result);
 }
 

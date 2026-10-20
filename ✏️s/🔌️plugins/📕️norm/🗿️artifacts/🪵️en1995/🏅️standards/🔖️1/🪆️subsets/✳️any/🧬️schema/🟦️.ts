@@ -4,11 +4,11 @@
 import { type NormJson, normWireArray, normWireJson, normWireMap, normWireObject, type NormWireReader, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 
 export interface En1995Artifact {
-  /** @state artifact */
+  /** 📑️ @state artifact */
   annex: string;
-  /** @state artifact */
+  /** 👤️ @state artifact */
   members: { [key: string]: NormJson }[];
-  /** @state artifact */
+  /** 🔗️ @state artifact */
   connections: { [key: string]: NormJson }[];
 }
 

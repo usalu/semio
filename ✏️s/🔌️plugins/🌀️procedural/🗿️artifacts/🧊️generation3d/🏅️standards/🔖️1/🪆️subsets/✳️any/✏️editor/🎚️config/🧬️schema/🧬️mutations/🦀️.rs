@@ -16,7 +16,7 @@ mod set_camera;
 mod set_preview_camera;
 #[path = "🌞️set-sun/🦀️.rs"]
 mod set_sun;
-#[path = "🧬️set-selected/🦀️.rs"]
+#[path = "🧬️set-selected-generation/🦀️.rs"]
 mod set_selected_generation;
 
 pub use set_camera::SetCamera;

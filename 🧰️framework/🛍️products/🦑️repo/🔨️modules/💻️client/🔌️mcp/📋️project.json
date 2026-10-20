@@ -22,14 +22,7 @@
         "^production",
         "goToolchain"
       ],
-      "dependsOn": [
-        {
-          "target": "generate",
-          "projects": [
-            "@semio-tech/framework-schema"
-          ]
-        }
-      ],
+      "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp",
         "command": "bun ./📜️script.ts build"
@@ -37,6 +30,34 @@
       "outputs": [
         "{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/🗃️bin/{options.env.SEMIO_BUILD_MODE}/repo"
       ]
+    },
+    "install": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": ["default", "^default"],
+      "outputs": [],
+      "dependsOn": ["build"],
+      "options": { "command": "bun ./📜️script.ts install" },
+      "metadata": { "semio": { "dashboard": {
+        "verb": "setup",
+        "title": { "en": "Install Native Repository Command", "de": "Nativen Repository-Befehl Installieren" },
+        "description": { "en": "Publish the native repo command and persist its user PATH selection.", "de": "Den nativen repo-Befehl veröffentlichen und seinen Benutzer-PATH dauerhaft auswählen." }
+      } } }
+    },
+    "test-install": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": ["default", "^default"],
+      "outputs": [],
+      "options": { "command": "bun ./📜️script.ts test-install" },
+      "metadata": { "semio": {
+        "execution": { "version": 1, "kind": "source" },
+        "dashboard": {
+          "verb": "test",
+          "title": { "en": "Test Native Command Installation", "de": "Native Befehlsinstallation Testen" },
+          "description": { "en": "Check native installation, PATH and atomic publication against neutral vectors.", "de": "Native Installation, PATH und atomare Veröffentlichung mit neutralen Fällen prüfen." }
+        }
+      } }
     },
     "test": {
       "executor": "repo:script",

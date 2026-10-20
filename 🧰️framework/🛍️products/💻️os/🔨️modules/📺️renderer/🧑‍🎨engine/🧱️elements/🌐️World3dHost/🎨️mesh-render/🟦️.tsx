@@ -8,7 +8,7 @@ import { clearColorResolveCache, resolveColorHex, tokenVar } from "@semio-tech/u
 
 // #region 🔌️Adapters
 import { sceneHostPort, Box3, BufferGeometry, DoubleSide, Group, OrthographicCamera, ShaderMaterial, TextureLoader, Vector3 } from "@semio-tech/ui-react";
-import { DEFAULT_LOD_GRID_FACTOR, DEFAULT_MANUAL_LOD, frameWorldProjectionPose, lodFromCameraDistance, lodGridStepWorld, lodOrbitDistanceForCamera, WORLD_REFERENCE_DEFAULT_WIDTH, worldProjectionModeFov, worldSceneContentBoundsKey, type WorldCameraState, type WorldProjectionSpec, type WorldSceneContentBounds } from "@semio-tech/infinite-world-r3f";
+import { DEFAULT_LOD_GRID_FACTOR, DEFAULT_MANUAL_LOD, frameWorldProjectionPose, lodFromCameraDistance, lodGridStepWorld, lodOrbitDistanceForCamera, WORLD_REFERENCE_DEFAULT_WIDTH, worldProjectionModeFov, worldSceneContentBoundsKey, type WorldCameraState, type WorldProjectionSpec, type WorldSceneContentBounds } from "@semio-tech/framework/infinite/world/r3f";
 
 // #endregion 🔌️Adapters
 import { runtimeDiagnosticsEnabled } from "../../🏛️ShellHost/🔌️extension-runtime/🟦️.ts";

@@ -228,7 +228,7 @@ where
                     let effective = effective_operation::<P, Mutation>(&edit.forwards[index], index as u32, id, &self.schema, &self.supersessions);
                     if let Some(operation) = effective.operation() {
                         let state = self.state.as_mut().ok_or_else(|| VcsError::ValidationFailed("edit replay lost its running projection".into()))?;
-                        if let (Some(next), _) = fold_operation::<P, Mutation>(state, operation, index as u32) { <Arc<P> as FoldProjection<P, Mutation>>::advance(state, next); }
+                        if let (Some(next), _) = fold_operation::<P, Mutation>(state, operation, index as u32) { <Arc<P> as ColdFoldProjection<P, Mutation>>::advance(state, next); }
                     }
                     self.operation += 1;
                     completed_operations = completed_operations.saturating_add(1);

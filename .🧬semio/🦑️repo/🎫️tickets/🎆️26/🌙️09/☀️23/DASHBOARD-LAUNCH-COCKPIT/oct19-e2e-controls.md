@@ -275,7 +275,270 @@ Exact attribution consolidation currently contains76 unique bullet paths (73 imp
 The pending matrix preserves the actual authored `🧰️framework/⚙️configuration/🏃️process/🔣️.json` rustMinStack value134217728 explicitly. The native owner confirmed raw Cargo ingress preserves incoming stack configuration, while advertised CargoTestPolicy routes normally supply this value themselves. The existing prototype mode and ticket artifact output remain unchanged; no private Cargo target or fresh deadline is supplied. The prepared command, still **not executed** pending selected Core terminal, is:
 
 ```sh
-SEMIO_BUILD_MODE=prototype RUST_MIN_STACK=134217728 bun repo cargo --store=shared --configuration=prototype -- test --manifest-path '🧰️framework/Cargo.toml' --locked -p semio-framework-value-native-owned -p semio-framework-value-native-decoding -p semio-framework-value-edit -p semio-framework-value-registry -p semio-framework-value-persistent -p semio-framework-value-shared-issuance -p semio-framework-value -p semio-framework-value-tests -p semio-framework-value-retained-clone --lib -- --nocapture --test-threads=1
+SEMIO_BUILD_MODE=prototype RUST_MIN_STACK=134217728 repo cargo --store=shared --configuration=prototype -- test --manifest-path '🧰️framework/Cargo.toml' --locked -p semio-framework-value-native-owned -p semio-framework-value-native-decoding -p semio-framework-value-edit -p semio-framework-value-registry -p semio-framework-value-persistent -p semio-framework-value-shared-issuance -p semio-framework-value -p semio-framework-value-tests -p semio-framework-value-retained-clone --lib -- --nocapture --test-threads=1
 ```
 
 The actual invocation will also carry the ticket artifact directory and redirect captured output into generated. A single harness thread isolates allocation-observation laws while Cargo compilation retains its existing admitted concurrency policy.
+
+
+## Compiler And Host Pressure Readback After Resume
+
+Both previously admitted owned test sessions are now settled exit1 before any test body: controls1235 failed ENFILE while reading the shared leasequeue directory in retryInterruptedFilesystemRead/acquireQueuedResourceLease; deadline76629 failed ENFILE while lstat/realpath of the lease store in databasePath. Captured logs remain generated/e2e-controls-final.log and generated/e2e-process-deadline-native.log. Neither suite passed or executed its body. No duplicate retry was launched under unresolved host descriptor pressure.
+
+Core command43621 completed actual36 Source units then native compilation exited101 with166 value-edit errors, before the docking body. Its captured log is generated/e2e-tui-core-docking-after-row.log. Diagnostic inventory reduces those errors to one obsolete retirement.shared.sealed import and inherited RetireOwned bounds missing from three persistent ranked/root/transfer consumer owners. The narrow repair selects the existing crate.shared_issuance owner and explicitly propagates PersistentList's already-required owned retirement trait; no Clone predicate, compatibility API, unchecked blanket implementation, weakened receipt, or lifetime bypass is introduced. Existing language-neutral named-index/root/transfer fixtures and independent SQLite oracles continue to define behavior. The native nine-owner matrix is released by the terminal Core result but waits for the parent-owned repo binary/bootstrap recovery.
+
+Additional exact attributed repair paths:
+
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧳️ranked/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🦀️.rs`
+
+Static test-closure follow-through found four existing mounted Rust fixture declarations referring to crate-root derive macros that the physical edit library does not export; their default expansion owner also selected the absent facade dependency. Those declarations now directly use the already-declared semio_framework_value_derive proc macros and explicitly declare #[value(crate="crate")]. This preserves the current physical owner without facade dependency cycles or public compatibility aliases. Receiving laws remain mounted through named index tests→transfer tests→receiving tests; no new orphan mount or changed law semantics is introduced. Source review is requested, not yet accepted at this observation. Exact additional test paths:
+
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🧪️tests/🦀️.rs`
+
+
+## Post-Open Descriptor Custody
+
+Read-only audit identified two definite throw-path leaks, without establishing them as the host ENFILE cause: physical compiler lock admission opened a descriptor and called fstat/lstat before adding it to retained ownership; immutable baseline digest opened a descriptor then performed fstat/hash/buffer creation before its try/finally. Schema and eighteen portable failure vectors plus source-level regressions were authored before the repairs. There is no observed red or green execution for these new tests while the canonical repo entry and host descriptor capacity are under parent recovery.
+
+Physical admission now uses a private helper that holds provisional responsibility from successful open through fstat, named identity validation and held.push. Its finally closes the exact untransferred descriptor; only successful owner insertion transfers closure responsibility to the existing physical lock owner. The actual acquire loop calls this helper. Baseline digest now starts its existing finally immediately after open, protecting validation, hash creation, Buffer allocation, reads, updates, final identity and digest completion. Original controls, no-follow identities, bounds, cancellation and kernel ownership remain unchanged; no authority DTO or public helper was added.
+
+A genuine uncached test-descriptor-lifetime Source target calls the existing process script and has English/German dashboard metadata. Its eighteen neutral cases extract actual private functions with TypeScript/esbuild, inject closed failure points and compare opened/closed/retained observations against independent SQLite ownership equations. A separate case mounts the existing previously unreferenced provePhysicalFileLocksV1 oracle: independent Python flock must be blocked during actual original Bun ownership and acquire after owner close. That real-kernel case receives the actual Original once and uses its issued control; it is explicitly qualified for macOS/Linux, while neutral descriptor tests remain portable. No kernel test pass is claimed.
+
+Exact descriptor slice paths (shared process script/project entries were already attributed):
+
+- `🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/🔒️leases/📦️namespace/📒️baseline/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🧬️schema/📂️descriptors.json`
+- `🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🧪️tests/🧫️fixtures/📂️descriptors.json`
+- `🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🧪️tests/📂️descriptors/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🧪️tests/📂️descriptors/🥒️.feature`
+- `🧰️framework/🔨️modules/🏃️process/📜️script.ts`
+- `🧰️framework/🔨️modules/🏃️process/📋️project.json`
+
+Independent reviewer subsequently accepted the complete eight-file value compiler/test-owner slice and the descriptor source/regression slice. The exact source/removal array now has87 entries; longest absolute UTF16 path is143 characters. These are source-review and attribution results only. Canonical repo runtime admission, the new descriptor target, controls/deadline retries, and the nine-owner matrix remain required.
+
+The parent now coordinates canonical repo CLI restoration through native execution owner14897, whose fresh bootstrap passed the UI-axis import and waits for shared dependency access behind genuine producer63444. This slice has no active owned runner after both ENFILE terminal results. On actual repo CLI publication, it will run the single nine-library native matrix first and return its terminal result before the execution owner retries Core and cold installation. Parent Source verification will use one grouped run at a time and includes test-descriptor-lifetime; this slice will not duplicate that target. Controls and selected-deadline reruns remain owned here after canonical entry and their installed prerequisites are ready, without starting another dependency producer. These are coordinated next actions, not execution claims.
+
+## Native User Installation — 20 October
+
+The canonical native output was not on this host PATH. A genuine owned `repo-mcp:install` target now depends on the same current native build. It validates the platform native executable, probes its help under the original budget/control signal, publishes a physical executable through an exclusively created temporary file, persists user PATH, then probes `repo --help` by name before writing its receipt and minimal-PATH hook pin. No alias, wrapper, manual copied binary, fresh authority or automatic build side effect was introduced.
+
+Unix installs to `~/.local/bin/repo`; managed POSIX profile blocks remove exact repeated directory components, prepend once, and preserve other PATH components. Existing `.bash_profile`/`.bash_login` are updated only when present, so installation does not create a Bash login file that hides `.profile`. Windows selects one immutable digest directory below its stable LOCALAPPDATA installation root through User PATH. Only prior exact owned digest entries are removed; unrelated entries and order remain, and running old executables remain untouched. Windows bootstrap refreshes its own environment from the verified installation receipt. Devcontainer PATH and subsequent lifecycle commands use the native command; the old shell wrapper was removed. The Git hook resolver uses the official installation pin before PATH for GUI processes and the native micro-commit entrypoint. No Git operation was executed.
+
+Schema and neutral vectors were authored before implementation. Source tests cover both TypeScript/esbuild versions of the actual private publisher and actual installer class, independent SQLite path/custody equations, refusal of foreign/dangling destinations, same Original signal/deadline at both probes, and actual POSIX-shell PATH parity. Runtime body and official installation are pending canonical native build publication; there is no observed red or passing count yet.
+
+Additional exact attributed permanent files:
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📜️script.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📋️project.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📥️installation/🧪️tests/🥒️.feature`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📥️installation/🧪️tests/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📥️installation/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📥️installation/🧫️fixtures/🔣️.json`
+- `.devcontainer/devcontainer.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/🪝️hooks/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🔬️micro-commit/🟡️installmicrocommitgithooks-writes-portab/🟦️.ts`
+
+Installer source review corrected three concrete issues before runtime: the signal is `Original.control.signal`; no-follow `lstat` detects dangling foreign destinations; and PATH blocks remove all exact prior directory components before prepending, so repeated profile sourcing cannot duplicate them. Actual extracted installer-class vectors now test cancellation/expiration and foreign destinations; the POSIX oracle test receives its environment Original exactly once. The independent reviewer accepted these corrections.
+
+Availability readback correction: `14897` identifies a terminal-tool session, not its PID. The active native build entry is PID65212; the old 02:31 cache executable is not evidence of new publication. Its owner confirmed the build is still waiting behind genuine dependency writer72616. No old executable was invoked and no duplicate native/dependency producer was started.
+
+A bounded metadata-only host check found `/bin/zsh`; `.profile`, `.bashrc` and `.zshrc` are regular files, while `.bash_profile`, `.bash_login` and `.zprofile` are absent. The `.local/bin` and `.local/share/semio` ancestors are physical directories; both the repository installation root and native `~/.local/bin/repo` are absent. Existing host profile layout therefore has no observed symlink/foreign-binary refusal before the official install. This is read-only preflight evidence, not an installation success.
+
+## Cold Native Build Import Closure
+
+The build owner’s eager package aliases and testing/policy barrels pulled full taxonomy audits through `runCanonicalGoBuild`, making initial native installation depend on installed workspace packages. The MCP script now loads build/test implementations lazily; those implementations use relative semantic leaves. The existing no-follow taxonomy locator retains its authority and path checks, while its two transient cache boxes moved to an adjacent cache owner used only by the full taxonomy authority. A shared pure file-kind query now supplies both the full authority facade and the minimal schema-validated Go layout query. Go compiler admission and Source overlay generation remain in their existing owners. The stale framework-schema generation dependency was removed because its emitted TypeScript/Rust entity-kind outputs are not Go inputs.
+
+Exact-codepoint inventory corrected an initial visual suspicion: current source directory names are **452 entries and 452 unique strings**, with **zero actual duplicates**. The new query preserves existing strict duplicate refusal and authored order. No taxonomy data was modified or deduplicated. Neutral malformed/duplicate/overlap cases use firstparty validation, Ajv and independent SQLite constraints; a full canonical loader parity test is mounted with the installation Source target. No runtime result is claimed yet.
+
+The exported build and install actions accept an optional existing issued phase, verify its association with the same Original and retain its signal/deadline. The installer projects that phase into owned child environments; the early root recovery owner can invoke these actions without calling a received script directly or inventing a process envelope. The independent source review accepted the split and phase preservation. Parent/native owner owns early root recovery dispatch and its zero-touch closure roster.
+
+Additional exact attributed permanent files:
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧭️workspace-taxonomy-locator/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧭️workspace-taxonomy-locator/⚡️cache/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📄️file-kind-query/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🐹️go-plan/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🐹️go-layout/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🐹️go-layout/🧪️tests/🥒️.feature`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🐹️go-layout/🧪️tests/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🐹️go-layout/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🐹️go-layout/🧫️fixtures/🔣️.json`
+
+## Official Native Installation and Nine-Library Runtime — 20 October
+
+Native owner confirmed recovery session33711 whole-command exit0 using the new early root recovery and the official installer. Retained logs: `🗑️generated/e2e-unified-repo-recovery-install.log`, `e2e-native-repo-login-help.log`, `e2e-native-repo-build-help.log`. Fresh login-shell by-name `repo --help` and `repo run --help` both exited0; the parent also initialized the installed `repo mcp` and read goals successfully. The old cache executable was never substituted manually.
+
+After this explicit handoff, the sole nine-library Cargo matrix started as session62825 through the installed by-name `repo cargo`. The framework process policy was read and its actual `rustMinStack` value `134217728` carried through the environment. The exact admitted command uses the framework manifest, `--locked`, all nine physical owner packages, `--lib`, `--nocapture` and one test thread. Artifacts remain under `🗑️generated/value-native`; console output is retained in `🗑️generated/e2e-value-native-nine-libraries.log`. Initial actual output reached `cargo:workspace-selection`; no law body or pass count is claimed at this point. Root owns the serial Source groups, including descriptor and installation tests, and no duplicate Source runner was started here.
+
+The first matrix session62825 ended with whole-command exit1 **before compilation or any law body**. Unit23/57 was `semio-framework-value`; its authored boundary remains262144bytes/32files/4000active lines. The physical read error conflated file slots, byte availability and expected extent. No root cause was inferred from global counters. A schema-first bounded refusal cause now distinguishes `files`, `bytes` and `extent`, retaining exact admitted path, observed bigint byte size and unchanged request bounds. Four neutral actual-file cases compare Ajv and SQLite reasons; the independent reviewer accepted the unchanged guard and diagnostic-only addition. One justified identical matrix retry, session20422, is capturing exact refusal evidence in `🗑️generated/e2e-value-native-nine-diagnostic.log`. No limit was raised and no compiler bypass was introduced.
+
+Additional exact attributed permanent files:
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🧪️tests/🔣️.json`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🧪️tests/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🧪️tests/🥒️refusal.feature`
+
+
+## October 20: Strict Source Admission and Projection Ownership
+
+The admitted nine-library retry (session 20422) exited 1 before compilation or test bodies. The exact Source refusal named the facade's 33rd file, `value/📝️text/🚶️utf8/🧪️tests/🦀️.rs`: reason `files`, observed extent 4991 bytes, remaining byte allowance 5303, remaining file allowance zero. Its 262144-byte, 32-file and 4000-active-line limits remain unchanged. Global progress counters were not per-crate facts.
+
+A new semantic `semio-framework-value-snapshot-projection` crate owns the generic projection traits, original-bound cursors, owned field producer and their actual tests. It has no persistent-list dependency. The concrete PersistentList projection and RetainedClone implementation move into the persistent crate, where the type is local. The facade ordinarily reexports the projection module, with no duplicate physical mount. UTF8 stays facade-local.
+
+The SnapshotProjection macro now uses the same declared value-root parser as the other macros. Six schema-authored vectors cover default, crate and explicit domain roots for empty and field-bearing records; the actual expansion is checked by independent Syn syntax observations, and the shared vectors by Ajv and SQLite in the Source dispatch regression. Configured test derives name their true crate. Existing projection tests also now pass the actual bounded-body argument required by the cursor interface.
+
+OwnedProjection's exact native law moves to `semio_framework_value_snapshot_projection::snapshot_projection::tests::owned`; the immutable-list clone law moves to `semio_framework_value_persistent::immutable_clone::list_tests`. The companion custody law stays with its existing owner. The advertised quick immutable projection control now explicitly invokes its three real laws in the new owner. This preserves the prior 66 laws and explicitly adds those three previously implicit quick laws to the dispatch inventory. Runtime compilation and named-body results remain required.
+
+## October 20: Retired External Source Editors
+
+The external `open-source` request, planner branch, desktop-launch port, detached process implementation, router registration and project target were removed. The source editor README table row was removed while the native Files UI is owned by the dashboard implementation. Seven former platform/editor request vectors are retained as refusals. Production validation, independent Ajv admission and SQLite declaration observations must agree; actual execute ports must record zero effects even with a source-opener environment override. Existing Git, shell, debugger and LLDB provisioning controls retain their interfaces.
+
+Additional attributed permanent paths for the carve and external-editor removal (the old projection clone file is intentionally removed):
+
+- `🧰️framework/🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust/📋️project.json`
+- `🧰️framework/🔨️modules/🌱️value/📽️projection/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📽️projection/🧬️clone/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧬️clone/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🔨️modules/🌱️value/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📽️projection/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📽️projection/🧪️tests/📦️owned/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️sealed-shared-list/📋️list/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/📽️projection/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/📽️projection/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/📽️projection/🧪️tests/🔣️.json`
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/📽️projection/🧪️tests/🥒️.feature`
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/📽️projection/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/🧫️fixtures/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/📜️script.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/📋️project.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/🧪️tests/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/🧪️tests/🥒️.feature`
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/README.md` (external editor table row only; concurrent documentation remains).
+
+
+Independent review accepted the bounded projection dependency direction, the local concrete implementation ownership, all moved source and fixture paths after two path corrections, shared macro-root generation and the retired editor request effects boundary. A missing moved RetainedCloneProgress import was corrected before runtime. Current dispatch inventory is exactly 24 valueNativeRoutes wrappers plus BorrowedObservationScript: 25 wrappers, 69 unique package/library/law triples across 10 real law owners. The existing borrowed law remains the sole verified named body; the other 68 and the new derive Syn unit remain pending. A single coherent 11-package run is held until the root owner finishes shared workspace/member/dependency and lock edits. No concurrent Rust compiler was started.
+
+
+## Eleven-Package Runtime Attempt
+
+After the root owner refreshed the locks and restored every prior registry tuple, the official native 11-package matrix (session 57413, `e2e-value-native-eleven-libraries.log`) passed strict Source admission and reached actual Rust compilation. The previous facade file-count refusal was resolved with unchanged limits. The process exited 101 before test bodies: the new projection owner had five stale test API errors and native-owned had 101 errors dominated by unconfigured derive roots and obsolete wiring.
+
+The projection tests now pass the same 4096-byte bounded-body argument already used for their demand quotes. Its bad-receipt test observes the actual sealed original alias-return witness before capture, while the unadmitted duplicate remains held, and after funded closure. Native-owned tests now name their actual crate in the existing value attribute; their manifest-relative fixture locations and the current shared issuance import are corrected, and the missing ToValue derive import is wired in test configuration. No blanket implementation, fake crate alias or source-limit relaxation was added. The obsolete numeric alias-count call was replaced by authentic before/during/after original-return witnesses; the refusal, funded closure and physical heap assertions remain. Retry is held until the sibling's isolated filesystem test has fully settled.
+
+Additional attributed paths for the actual compilation repairs:
+
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️sealed-shared-receiver/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧳️receiver/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🔀️enum/🧪️tests/🦀️.rs`
+
+
+## Second Compiler Frontier and Source Dispatch Admission
+
+Retry 49696 exited 101 before bodies after all 99 Source units were admitted. The prior five projection errors and 101 native-owned namespace errors were resolved. Eleven remaining errors named stale bounded-body calls and two attempts to retain ownership from a borrow. Native flat/tuple and indexed commit tests now pass their existing 4096-byte demand quantum. Tuple construction retains the exact passed grant through its typed recipient.
+
+A safe owning RetainedCloneSource::retain_original operation now preserves the exact source projection coordinate through the existing private constructor. NamedPersistentRoot::project_rows delegates its genuine owning source. Using project_owned with an identity callback would create a child projection and fail exact index authentication, so no identity adapter or arbitrary borrowed ownership constructor was introduced. Actual native laws now refuse denied reader grants without allocation, authenticate the reader against the original before parent closure, and retain the existing post-closure index checks and physical release receipts. The neutral receiving schema/fixture declares that invariant, with the existing TypeScript/SQLite original-reader oracle retained. Independent bounded source review accepted the ownership boundary; actual bodies remain required.
+
+The updated dashboard dispatch Source test had no admitted owner route. A declared test-dispatch Source target now runs that law file through the actual owned Bun test port before any native installation selection. Its shared schema/fixture and extracted real class test verify Original identity, exact test argv, awaited completion and refusal of extra segments; SQLite independently observes the declared Source kind. Source-body execution remains pending.
+
+Additional attributed paths:
+
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🧪️tests/🟦️.ts`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🧪️tests/🥒️.feature`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🧪️tests/🧫️fixtures/🔣️.json`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🎛️dispatch/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🥒️.feature`
+
+
+Retry 17878 exited 101 after real compilation found one remaining facade namespace error, ReadLease.demands calling the removed retirement::shared::arc_bytes. It now names the existing arc_custody::arc_bytes owner, matching that same file's constructor and other release quote. The eleven earlier API compile errors are resolved; no bodies ran in this attempt. Additional path: `🧰️framework/🔨️modules/🌱️value/🔗️read/🦀️.rs`.
+
+
+Retry 49234 exited 101 before bodies on four dependency compilation errors in pack-json. Two production files now use the current shared issuance owner, the actual PersistentList RetireOwned predicate, and the genuine typed_source.retain_original operation. The typed receiving phase, exact projection coordinate, grant and receipts remain intact. Independent bounded source review accepted those changes. Retry 21450 retains the same 11 packages and authored stack; Cargo --no-fail-fast was added to collect every selected library's body failures once compilation succeeds. No pass is inferred from this launch.
+
+Additional attributed paths:
+
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🦀️.rs`
+
+
+Retry 21450 exited 101 before bodies on one DSL record model import error. The grammar field matcher calls parse_exact, ParseOptions and SourceMode, which are owned by the parser facade. Its existing physical module and ordinary export are now mounted in that facade rather than in the model binding crate. The matcher implementation is unchanged and the model has no upward facade dependency. Independent review accepted the bounded mount correction. The next value matrix retry is held while the sibling owns an isolated widgets library check.
+
+Additional attributed paths:
+
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🦀️.rs`
+
+### Model-local native receipt ownership and companion test imports
+
+The eleven-library grammar retry (session13095) exited101 before test bodies because NativeRecordSource was implemented for the external model RecordValue from the facade. The unchanged physical implementation is now mounted by the model owner, where RecordValue is local. Its test imports now use shared_issuance and explicit size_of. The next admitted eleven-library retry (session28669, e2e-value-native-eleven-model.log) exited101 before bodies with31 companion test import errors; the production orphan error was absent.
+
+The companion test fixes explicitly import ErasedSnapshotRetirement and RetainedCloneGrant, resolve the allocator observation through its current testing owner, and use factory_arc_birth_bytes instead of inaccessible arc_extent (the public function delegates that same implementation). Existing admission, physical allocation, closure assertions and all Source limits remain unchanged. Independent Core docking uses the sole native slot while the next matrix is held. No new law pass is claimed.
+
+Additional attributed source paths:
+
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📐️model/🦀️.rs`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🛬️receive/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🏭️factory/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️clone/🧪️tests/🔬️unit/🦀️.rs`
+
+Independent review accepted the companion imports and verified factory_arc_birth_bytes delegates the exact same private arc_extent. This is a source review only. Core session43175 (e2e-tui-core-after-production.log) holds the sole native slot; the repaired matrix has not been rerun while that job is active.
+
+### Companion private-field test ownership
+
+Session93656 (e2e-value-native-eleven-imports.log) exited101 before bodies. The prior31import errors were absent; the next13errors included private ScalarCursor/RetainedCloneClose fields in companion-mounted tests, missing conversion/demand traits, and OrderedMap lacking Serde Deserialize. The three private close laws and their RefusingCopyDemand fixture now live unchanged in the existing retained-clone contract close-test owner, preserving every private identity, no-allocation and funding assertion. They are additional whole-library laws; the69advertised exact triples are unchanged. Paged test traits now import their actual owners. The stringMap oracle parses through independent Serde BTreeMap then uses the existing OrderedMap FromIterator, preserving ordered entries. No runtime limits, dependencies or authority changed.
+
+Additional attributed source paths:
+
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧪️tests/♻️close/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📦️paged/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🧪️tests/🦀️.rs`
+
+Independent source review accepted the thirteen-error companion repair. Root framework lock update69841 and Root42441 both exited0, all612/706 registry tuples unchanged. The next sole eleven-library matrix is session85082, e2e-value-native-eleven-custody.log, with the same authored134217728 stack, locked shared store, no-fail-fast and unchanged69advertised selectors. No body result is inferred from source review or job start.
+
+### Actual native bodies and coherent test cleanup quotes
+
+Session85082 exited101 before bodies with nine additional ToValue trait imports missing from the paged test owner; that exact import was added. Session60945 (e2e-value-native-eleven-conversion.log) then compiled every selected library and ran actual bodies: facade4passed/0failed/0filtered; derive4passed/0failed/0filtered, including the projection Syn namespace regression. Value-edit entered its first large authored-field law and did not complete. A live macOS sample of test PID8387 showed repeated close_source→RetainedCloneSource::close_step→ControlledRetirement::step. The helper quoted capacity with body4096 but granted its separate minimum copy quote; the implementation selected a different event from the actual granted copy, returning no work indefinitely.
+
+Only owned entry7175 received SIGINT; session60945 settled1, and its Cargo8266/test8387 were confirmed absent. No other owner was interrupted. The eight completed passes remain actual partial evidence, not a whole matrix pass. Commit source/output cleanup helpers now use authentic next_close_demand/selected_demand at4096 and exactly the same issued copy4096; other currencies remain that selected quote. They assert the quoted minimum fits4096, exact physical allocation receipts, receipt.fits and a finite100000turn guard. The same concrete mismatch in adjacent named index source/output cleanup helpers was corrected identically before the next run. Main law assertions and runtime limits remain unchanged.
+
+### Selected-budget matrix runtime failures
+
+Session85051 (e2e-value-native-eleven-selected.log) again ran facade4/derive4 successfully, then completed several indexed/named laws. It exposed two actual commit finite-guard failures (large-field close_turns and normal turns), and the persistent named-index cleanup failed its100000turn guard with selected demand copy0/capacity0/release112/depth10. The next transfer body stopped producing progress for more than two minutes; Ctrl-C through exactly owned exec session85051 settled the whole command1. No foreign process was signaled and no whole matrix pass is claimed.
+
+The remaining commit caller paths also quoted4096 then issued only the minimum copy, allowing nested retirement to select a different action. Close-plan/owner-close now issue the same4096 budget used for their quotes, with an explicit minimum-fit assertion. Main advance retains its explicit4096 payload body while supplying max(4096,quotedcopy), including the quoted parent metadata; all other currencies remain exact and refusal assertions remain. These test caller fixes await a focused actual retry. The separate persistent-source failure is under investigation and has not been dismissed as the same cause.
+
+### Focused reproducer refused before test body
+
+After High Widgets18419 completed whole0 with eight actual laws, focused persistent closure session71631 exited1 before its test body. e2e-value-persistent-close-diagnostic.log reports Resource lease timed out: cache-prune. Current source shows recoverCompactCompilerHeadroomV1 enters only after actual available compiler storage is below the retained original required allocation, and calls retireInactiveCargoStoreV1 with wait:false. Its nonblocking exclusive cache-prune refusal is retained unchanged. The earlier registry queue holder27700 is not proof of cache-prune ownership and was not signalled. Temporary max-eight ControlledRetirement generic owner/demand/grant diagnostics have not executed. No forced lock release or cache deletion occurred.

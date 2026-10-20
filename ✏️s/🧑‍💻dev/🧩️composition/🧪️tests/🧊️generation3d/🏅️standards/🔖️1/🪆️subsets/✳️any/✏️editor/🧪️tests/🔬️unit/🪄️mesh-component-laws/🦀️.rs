@@ -7,7 +7,7 @@ fn mesh_gumball_splices_typed_transforms_and_preserves_analysis_consumers() {
     let _serial = test_serial();
     let fixture: Value = serde_json::from_str(repo_text!("🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture["gumball"].as_array().unwrap() {
-        let snapshot = semio_s_artifact_procedural_3d_model::example_snapshot(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
+        let snapshot = semio_s_artifact_procedural_3d_io_text::snapshot::example_snapshot(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
         semio_s_artifact_procedural_3d_model::with_host(&snapshot.host_snapshot, |host| {
             let operation = case["operation"].as_str().unwrap();
             let id = semio_s_artifact_procedural_3d_transforms::ensure_gumball_node(host, "extrude@meshOut#0", operation).unwrap();
@@ -86,7 +86,7 @@ fn mesh_component_edits_insert_typed_widgets_and_update_downstream_analysis() {
 #[test]
 fn mesh_component_gumball_pins_the_complete_component_set() {
     let _serial = test_serial();
-    let snapshot = semio_s_artifact_procedural_3d_model::example_snapshot(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
+    let snapshot = semio_s_artifact_procedural_3d_io_text::snapshot::example_snapshot(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
     let fixtures: Value = serde_json::from_str(repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️transforms/🧪️tests/🧫️fixtures/🧷️gesture/🔣️.json")).unwrap();
     for case in fixtures["cases"].as_array().unwrap() {
         let pinned: Vec<String> = serde_json::from_value(case["pinned"].clone()).unwrap();
@@ -118,7 +118,7 @@ fn land_component_inputs(host: &mut semio_framework_os_flow::FlowHost, id: &str,
 #[test]
 fn mesh_component_gumball_reuses_only_the_same_selection_and_operation() {
     let _serial = test_serial();
-    let snapshot = semio_s_artifact_procedural_3d_model::example_snapshot(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
+    let snapshot = semio_s_artifact_procedural_3d_io_text::snapshot::example_snapshot(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
     semio_s_artifact_procedural_3d_model::with_host(&snapshot.host_snapshot, |host| {
         for operation in ["translate", "rotate", "scale"] {
             let ids = ["extrude@meshOut#0.face.0".into(), "extrude@meshOut#0.face.0".into()];
@@ -153,7 +153,7 @@ fn a_first_component_grab_inserts_defaults_then_one_input_per_chosen_channel() {
     use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 
     let _serial = test_serial();
-    let committed = semio_s_artifact_procedural_3d_model::example_snapshot(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
+    let committed = semio_s_artifact_procedural_3d_io_text::snapshot::example_snapshot(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
     let (rows, targets, _) = transform_commands::gumball_splice(&committed.host_snapshot, &["extrude@meshOut#0.face.1".into()], "translate").expect("the first grab splices");
     let operator = targets[0].clone();
     let literal = |widget: &semio_framework_artifact_flow_flow::Widget, key: &str| match widget {
@@ -182,7 +182,7 @@ fn a_first_component_grab_inserts_defaults_then_one_input_per_chosen_channel() {
 #[test]
 fn mesh_component_gumball_projects_a_topology_pivot_and_live_dispatch() {
     let _serial = test_serial();
-    let snapshot = semio_s_artifact_procedural_3d_model::example_snapshot(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
+    let snapshot = semio_s_artifact_procedural_3d_io_text::snapshot::example_snapshot(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
     let evaluation = semio_s_artifact_procedural_3d_model::with_host(&snapshot.host_snapshot, |host| host.evaluate().unwrap());
     let marks = PreviewInteractionMarks {
         components: selection::ComponentSelection { granularity: "face".into(), selected: vec!["extrude@meshOut#0.face.0".into()], hovered: None },
@@ -421,7 +421,7 @@ async fn mesh_component_gumball_retains_selection_coalesces_drags_and_round_trip
         }
         let snapshot = context::snapshot(&app);
         semio_s_artifact_procedural_3d_model::with_host(&snapshot.host_snapshot, |host| {
-            let widget = semio_s_artifact_procedural_3d_model::gumball_widget_json(host, &id).unwrap();
+            let widget = semio_s_artifact_procedural_3d_transforms::gumball_widget_json(host, &id).unwrap();
             let params = widget.get("params").unwrap();
             let actual = match operation {
                 "translate" => params.get("offset").unwrap().get("x").unwrap().as_f64().unwrap(),

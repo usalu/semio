@@ -4,6 +4,48 @@
   "bindings": [
     {
       "scope": "prefix",
+      "action": "show-files",
+      "keys": [
+        "F"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "save-document",
+      "keys": [
+        "S"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "reload-document",
+      "keys": [
+        "R"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "discard-document",
+      "keys": [
+        "D"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "cancel-source",
+      "keys": [
+        "C"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "inspect-recovery",
+      "keys": [
+        "V"
+      ]
+    },
+    {
+      "scope": "prefix",
       "action": "new-task",
       "keys": [
         "n"

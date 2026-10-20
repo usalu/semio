@@ -19,19 +19,19 @@ mod tests {
     use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot as Fem2dDocument;
     use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot as Fem3dDocument;
     use semio_framework_artifact_flow_flow::FlowHostSnapshot;
-    use semio_s_artifact_norm_din16798::Din16798Snapshot as Din16798Document;
+    use semio_s_artifact_norm_din16798_model::Din16798Snapshot as Din16798Document;
     use semio_s_artifact_norm_din18599::Din18599Snapshot as Din18599Document;
-    use semio_s_artifact_norm_din4108::Din4108Snapshot as Din4108Document;
-    use semio_s_artifact_norm_en1990::En1990Snapshot as En1990Document;
-    use semio_s_artifact_norm_en1991::En1991Snapshot as En1991Document;
-    use semio_s_artifact_norm_en1992::En1992Snapshot as En1992Document;
+    use semio_s_artifact_norm_din4108_model::Din4108Snapshot as Din4108Document;
+    use semio_s_artifact_norm_en1990_model::En1990Snapshot as En1990Document;
+    use semio_s_artifact_norm_en1991_model::En1991Snapshot as En1991Document;
+    use semio_s_artifact_norm_en1992_model::En1992Snapshot as En1992Document;
     use semio_s_artifact_norm_en1993_model::En1993Snapshot as En1993Document;
-    use semio_s_artifact_norm_en1994::En1994Snapshot as En1994Document;
-    use semio_s_artifact_norm_en1995::En1995Snapshot as En1995Document;
-    use semio_s_artifact_norm_en1996::En1996Snapshot as En1996Document;
-    use semio_s_artifact_norm_en1997::En1997Snapshot as En1997Document;
-    use semio_s_artifact_norm_en1998::En1998Snapshot as En1998Document;
-    use semio_s_artifact_norm_en1999::En1999Snapshot as En1999Document;
+    use semio_s_artifact_norm_en1994_model::En1994Snapshot as En1994Document;
+    use semio_s_artifact_norm_en1995_model::En1995Snapshot as En1995Document;
+    use semio_s_artifact_norm_en1996_model::En1996Snapshot as En1996Document;
+    use semio_s_artifact_norm_en1997_model::En1997Snapshot as En1997Document;
+    use semio_s_artifact_norm_en1998_model::En1998Snapshot as En1998Document;
+    use semio_s_artifact_norm_en1999_model::En1999Snapshot as En1999Document;
     // 🌱️ 26/08/05/FORMS-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION: the old `forms` app facade
     // crate is gone (merged into `semio-s-plugin-forms`); `FormSpec` was always a bare `pub use` alias of
     // `playbook::PlaybookSpec` (forms never overrode `#[dsl(extension = ...)]`) so this repoints straight
@@ -43,8 +43,8 @@ mod tests {
     use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot as LayoutDocument;
     use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
     use semio_s_artifact_mathematical_equation::EquationSnapshot;
-    use semio_s_artifact_norm_iso16757::Iso16757Snapshot as Iso16757Document;
-    use semio_s_artifact_norm_vdi3805::Vdi3805Snapshot as Vdi3805Document;
+    use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot as Iso16757Document;
+    use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot as Vdi3805Document;
     use semio_s_artifact_note_note::NoteSnapshot as NoteDocument;
     // 📖️ `playbook::PlaybookSpec` is the FRAMEWORK kernel's playbook domain type, mounted inside
     // `flow_app` (`🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust`'s glue re-exports
@@ -60,7 +60,7 @@ mod tests {
     use semio_s_artifact_puzzle_5d::Puzzle5dSnapshot;
     use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
     use semio_s_artifact_reasoning_wires::WiresSnapshot as MindmapWiresDocument;
-    use semio_s_artifact_remodel_remodeling::RemodelingSnapshot;
+    use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
     use semio_framework_artifact_workflow_workflow::WorkflowSnapshot;
     use semio_s_artifact_sequence_sequence::SequenceSnapshot;
     use semio_s_artifact_shooting_shooting::ShootingSnapshot as ShootingFixture;

@@ -1,0 +1,52 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♿️wgpu-accessibility-interaction/🟦️.tsx",
+ "describeLine": 205,
+ "sharedRewrite": [
+  [
+   "dirname(fileURLToPath(import.meta.url))",
+   "dirname(dirname(fileURLToPath(import.meta.url)))"
+  ]
+ ],
+ "shared": {
+  "dir": "🟣️shared",
+  "doc": "/** 🟣️ The shared declarations of the wgpu accessibility interaction contract suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️validates-accepted-chrome-epoch",
+   "doc": "/** 🔶️ The validates accepted chrome epoch tests of the wgpu accessibility interaction contract suite. */",
+   "name": "registerValidatesAcceptedChromeEpochTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the validates accepted chrome epoch tests of the wgpu accessibility interaction contract suite.",
+   "from": 206,
+   "to": 328
+  },
+  {
+   "dir": "🔸️carries-one-mirror-activation",
+   "doc": "/** 🔸️ The carries one mirror activation tests of the wgpu accessibility interaction contract suite. */",
+   "name": "registerCarriesOneMirrorActivationTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the carries one mirror activation tests of the wgpu accessibility interaction contract suite.",
+   "from": 351,
+   "to": 476
+  },
+  {
+   "dir": "🟠️activates-actionable-tree-row",
+   "doc": "/** 🟠️ The activates actionable tree row tests of the wgpu accessibility interaction contract suite. */",
+   "name": "registerActivatesActionableTreeRowTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the activates actionable tree row tests of the wgpu accessibility interaction contract suite.",
+   "from": 506,
+   "to": 651
+  },
+  {
+   "dir": "🟢️keeps-canvas-keyboard-delivery",
+   "doc": "/** 🟢️ The keeps canvas keyboard delivery tests of the wgpu accessibility interaction contract suite. */",
+   "name": "registerKeepsCanvasKeyboardDeliveryTests",
+   "emoji": "🔵",
+   "fdoc": "Registers the keeps canvas keyboard delivery tests of the wgpu accessibility interaction contract suite.",
+   "from": 668,
+   "to": 683
+  }
+ ]
+}

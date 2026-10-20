@@ -1,5 +1,5 @@
 import type { ArtifactActorConfig, DocumentScope, DocumentLink, ArtifactSyncStatus, BackboneWorkerResponse, ArtifactEvent } from "../../../../🟦️";
-import type { ResolvedPluginViewState } from "@semio-tech/framework/manifest";
+import type { ResolvedPluginViewState } from "@semio-tech/framework-manifest";
 import type { MutationEnvelope, ExactWireMutationEnvelope, WireFrontierSummary, ArtifactBootstrapProgress } from "@semio-tech/framework-replication";
 import { ArtifactBootstrapAssembler } from "@semio-tech/framework-replication";
 import type { DocumentActorRecoveryMemoryV1 } from "../🚑️actor-recovery/🟦️.ts";

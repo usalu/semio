@@ -9,7 +9,7 @@ import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import { installedDashboard } from "../../../📦️installation/🟦️.ts";
+import { installedDashboard } from "../../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts";
 
 export const dashboard = resolve(import.meta.dir, "../../..");
 export const repository = resolve(dashboard, "../../../../..");

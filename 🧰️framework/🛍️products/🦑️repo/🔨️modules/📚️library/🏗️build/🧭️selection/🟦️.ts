@@ -3,8 +3,9 @@ import type { BuildWatchChildPortV1 } from "./👁️watch/🟦️.ts";
 import { checkScriptInvocation, scriptInvocationBudget, scriptInvocationEnvironment, advanceScriptInvocation, createRequestedIssuedResourceControlV1, requireIssuedResourceControlInvocationV1, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runOwnedCommand, captureOwnedCommandV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { scriptCompilerAdmissionControlV1, compilerAdmissionBudgetV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import cachePolicy from "../../⚡️caching/🔣️policy.json";
-import ownership from "../../🗂️workspaces/🔣️policy.json";
+import cachePolicy from "../../⚡️caching/🔣️policy.json" with { type: "json" };
+import {readWorkerSwitchV1} from "../👷️workers/🟦️.ts";
+import ownership from "../../🗂️workspaces/🔣️policy.json" with { type: "json" };
 import { watch } from "node:fs";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 
@@ -76,7 +77,7 @@ export function affectedBuildProjectsV1(graph:BuildGraphV1,files:readonly string
 }
 
 /** 🧮️ Resolves portable execution selections and forwards literal task arguments. */
-export async function selectBuildTasksV1(root:string,graph:BuildGraphV1,args:readonly string[],invocation:ScriptInvocation):Promise<{tasks:string[];args:string[];parallel?:number;skipCache:boolean;skipRemoteCache:boolean;excludeDependencies:boolean;bail:boolean;verbose:boolean;outputStyle?:"stream"|"stream-without-prefixes"|"static"}> {
+export async function selectBuildTasksV1(root:string,graph:BuildGraphV1,args:readonly string[],invocation:ScriptInvocation):Promise<{tasks:string[];args:string[];parallel?:number;workers?:boolean;skipCache:boolean;skipRemoteCache:boolean;excludeDependencies:boolean;bail:boolean;verbose:boolean;outputStyle?:"stream"|"stream-without-prefixes"|"static"}> {
   checkScriptInvocation(invocation);
   const boundary=args.indexOf("--"),head=args.slice(0,boundary<0?undefined:boundary),forwarded=boundary<0?[]:args.slice(boundary+1),operation=head[0];
   const enabled=(names:string[])=>buildBooleanOptionV1(head,names.map(name=>name.slice(2)))??false;
@@ -113,7 +114,8 @@ export async function selectBuildTasksV1(root:string,graph:BuildGraphV1,args:rea
   }else throw Error(`Unknown repository build command: ${operation??""}`);
   const parallelValue=buildOptionV1(head,"parallel")??process.env.SEMIO_BUILD_PARALLEL,parallel=parallelValue===undefined?undefined:Number(parallelValue);
   if(parallel!==undefined&&(!Number.isSafeInteger(parallel)||parallel<1))throw Error("Build parallelism must be a positive integer");
-  return {bail:buildBooleanOptionV1(head,"bail")??false,verbose:buildBooleanOptionV1(head,"verbose")??process.env.SEMIO_BUILD_VERBOSE==="true",outputStyle:(buildOptionV1(head,"output")??buildOptionV1(head,"output-style")) as "stream"|"stream-without-prefixes"|"static"|undefined,tasks,args:operation==="exec"?[]:[...forwarded],...(parallel?{parallel}:{}),skipCache:enabled(["--skip-cache"]),skipRemoteCache:enabled(["--skip-remote-cache"]),excludeDependencies:enabled(["--exclude-dependencies","--exclude-task-dependencies"])};
+  const workers=readWorkerSwitchV1(process.env.SEMIO_BUILD_WORKERS);
+  return {bail:buildBooleanOptionV1(head,"bail")??false,verbose:buildBooleanOptionV1(head,"verbose")??process.env.SEMIO_BUILD_VERBOSE==="true",outputStyle:(buildOptionV1(head,"output")??buildOptionV1(head,"output-style")) as "stream"|"stream-without-prefixes"|"static"|undefined,tasks,args:operation==="exec"?[]:[...forwarded],...(parallel?{parallel}:{}),...(workers===undefined?{}:{workers}),skipCache:enabled(["--skip-cache"]),skipRemoteCache:enabled(["--skip-remote-cache"]),excludeDependencies:enabled(["--exclude-dependencies","--exclude-task-dependencies"])};
 }
 
 /** 👁️ Watches source events beneath the exact active issued phase through descendant drainage. */

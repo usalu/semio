@@ -5,6 +5,7 @@ import {basename, dirname, join, relative, resolve} from "node:path";
 import ts from "typescript";
 import {accepts, ageMinutes, aliasSpecifier, GEN, ledger, read, recordOwn, REPO, rel, ROUTING, syntaxOk} from "./lib.ts";
 import {applyRepoint, buildIndex, planRepoint, termsOf} from "./repoint.ts";
+import {bareScript, dispatchOptions, isTestProgram} from "../lift-fix-tools/shape.ts";
 
 type Plan = {ok: true; script: string; module: string; modulePath: string; mergedInto: boolean; exported: boolean; commands: string[]; moved: string[]} | {ok: false; reason: string};
 const FROZEN = ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/"];
@@ -280,7 +281,7 @@ export function planRestructure(p: string, src: string): Plan {
     const cn = (c: string): string => { const n = c.split(/[^A-Za-z0-9]+/u).filter(Boolean).map((w) => w[0]!.toUpperCase() + w.slice(1)).join("") + "Script"; return /^[0-9]/u.test(n) ? "Command" + n : n; };
     const clsNames = list.map(cn);
     if (new Set(clsNames).size !== clsNames.length) return {ok: false, reason: "command-class-collision"};
-    extra = `${list.map((c, i) => `/** ${EMOJI[i % EMOJI.length]} \`${c}\` — runs the program of this script. */\nclass ${clsNames[i]} extends BundleScript {\n  async run(): Promise<void> {\n    await runScriptProgram();\n  }\n}\n`).join("")}const router = new ScriptRouter(import.meta.dir)${list.map((c, i) => `.register(${JSON.stringify(c)}, ${clsNames[i]})`).join("")};\nif (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original${fallback ? ', defaultCommand: "run"' : ""} }));\n`;
+    extra = `${list.map((c, i) => `/** ${EMOJI[i % EMOJI.length]} \`${c}\` — runs the program of this script. */\nclass ${clsNames[i]} extends BundleScript {\n  async run(): Promise<void> {\n    await runScriptProgram();\n  }\n}\n`).join("")}const router = new ScriptRouter(import.meta.dir)${list.map((c, i) => `.register(${JSON.stringify(c)}, ${clsNames[i]})`).join("")};\nif (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, ${dispatchOptions(list[0]!)}));\n`;
     for (const n of ["BundleScript", "ScriptRouter", "receiveScriptProcessInvocation", "runScriptMain"]) usedForScript.add(n);
     if (fallback) commands = ["run"];
     importNames.push("runScriptProgram");
@@ -290,7 +291,8 @@ export function planRestructure(p: string, src: string): Plan {
   const scriptImports = keepImports(usedForScript, false);
   const moduleSpec = (() => { const r = relative(scriptDir, join(REPO, modulePath)); return r.startsWith(".") ? r : "./" + r; })();
   const moduleImportLine = importNames.length ? `import { ${importNames.join(", ")} } from "${moduleSpec}";\n` : "";
-  const script = `${header ? header + "\n" : ""}${scriptImports.join("\n")}${scriptImports.length ? "\n" : ""}${routingImport}${moduleImportLine}${skeletonText}${extra}`;
+  const bare = program.length > 0 && isTestProgram(p) && !skeletonText.trim();
+  const script = bare ? bareScript(header, moduleSpec) : `${header ? header + "\n" : ""}${scriptImports.join("\n")}${scriptImports.length ? "\n" : ""}${routingImport}${moduleImportLine}${skeletonText}${extra}`;
   return {ok: true, script, module: moduleText, modulePath, mergedInto: merged, exported: st.some(isExported), commands, moved: [...movedNames]};
 }
 

@@ -11,7 +11,7 @@ import { act, cleanup, fireEvent, render, waitFor } from "@semio-tech/ui-react/t
 import { InkCanvasHost } from "../../🧱️elements/🖋️InkCanvasHost/🟦️.tsx";
 import { type InkItem } from "../../🧱️elements/🖋️InkCanvasHost/🧾️ink-model/🟦️.ts";
 import { cloneInkItemsWithOffset, inkClipboardPayload, inkItemsFromClipboardPayload } from "../../🧱️elements/🖋️InkCanvasHost/🌳️ink-document-ops/🟦️.ts";
-import { uiInkClipboardFixtureUrl } from "@semio-tech/framework/ui/testing/fixtures";
+import { uiInkClipboardFixtureUrl } from "@semio-tech/ui/testing/fixtures";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");

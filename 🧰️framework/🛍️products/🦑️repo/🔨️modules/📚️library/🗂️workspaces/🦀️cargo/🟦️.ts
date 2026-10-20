@@ -12,8 +12,7 @@ import {admitCargoPreparationObservationV1,assertCargoPreparationObservationCurr
 import custodySchema from "./🛠️preparation/🧾️custody/🧬️schema/🔣️.json" with { type: "json" };
 import invocationSchema from "./🧬️schema/🏃️invocation/🔣️.json" with { type: "json" };
 import { existsSync, lstatSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import {createRequire} from "node:module";
-const {workspaceTestingCollectionRoot: collectionRoot}:{workspaceTestingCollectionRoot:(root:string,directory:string)=>string|undefined}=createRequire(import.meta.url)("../🟨️.cjs");
+import {workspaceTestingCollectionRoot as collectionRoot} from "../🟨️.cjs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 
 export type CargoWorkspaceContributionV1 = Readonly<{ schemaVersion: 1; members: readonly string[]; exclude: readonly string[] }>;

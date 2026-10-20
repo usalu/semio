@@ -171,7 +171,7 @@ pub mod editor {
                 pub use component::*;
                 #[path = "."]
                 pub mod tools {
-                    #[path = "../../../🎭️modes/✏️edit/🛠️tools/🌡fill/🦀️.rs"]
+                    #[path = "../../../🎭️modes/✏️edit/🛠️tools/🌡️fill/🦀️.rs"]
                     pub mod fill;
                 }
                 #[path = "."]

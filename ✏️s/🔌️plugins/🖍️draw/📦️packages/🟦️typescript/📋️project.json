@@ -19,7 +19,8 @@
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       },
-      "cache": true
+      "cache": true,
+      "outputs": []
     },
     "publication-authority-audit": {
       "executor": "repo:script",
@@ -33,6 +34,7 @@
     "utility-action-policy": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts utility-action-policy",

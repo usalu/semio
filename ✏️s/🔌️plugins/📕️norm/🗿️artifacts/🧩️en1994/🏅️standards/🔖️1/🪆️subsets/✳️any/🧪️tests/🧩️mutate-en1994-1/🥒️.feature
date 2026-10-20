@@ -63,6 +63,9 @@ Feature: Apply every typed EN 1994 mutation against an independent Python implem
       | remove-slab                   | ➖remove-slab                    | ✅apply  |
       | change-slab-action-q-area-pa  | 📐️change-slab-action-q-area-pa  | ✅apply  |
       | change-slab-thickness-m       | 📏change-slab-thickness-m        | ✅apply  |
+      | remove-column-middle          | ⛔️remove-column                 | 🧭️middle |
+      | remove-slab-middle            | ➖remove-slab                    | 🧭️middle |
+      | remove-beam-middle            | ➖️remove-beam                   | 🧭️middle |
 
   @id-inverse
   @level-exhaustive

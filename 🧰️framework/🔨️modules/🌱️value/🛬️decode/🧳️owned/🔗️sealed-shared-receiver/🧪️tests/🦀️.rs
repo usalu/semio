@@ -13,7 +13,7 @@ fn source(value:DslValue)->RetainedCloneSource<DslValue>{let d=RetainedCloneSour
 fn close(receiver:&mut NativeSharedReceiver<DslValue,String>){receiver.begin_close();for _ in 0..100000{if receiver.terminal_is_empty(){return;}let d=receiver.close_demands(4096).unwrap();let g=funded(d);let(step,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||receiver.close_step(g).unwrap());assert!(step.progress().fits(g));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));}panic!("shared receiver cancellation did not settle");}
 #[test]
 fn native_shared_original_receive_exact_prefix_cancellation_and_transfer(){
- let vectors:serde_json::Value=serde_json::from_str(fixture_text!("../../🧳️owned/🔗️sealed-shared-receiver/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+ let vectors:serde_json::Value=serde_json::from_str(fixture_text!("../../🔗️sealed-shared-receiver/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for law in vectors["cases"].as_array().unwrap(){let mut complete=0;for cut in 0..1000{
   let original=source(DslValue::String(law["original"].as_str().unwrap().to_owned()));let foreign=source(DslValue::String(law["original"].as_str().unwrap().to_owned()));
   let d=<SealedShared<String> as NativeReceive<DslValue>>::receive_birth_demand();let g=funded(d);let((mut receiver,p),heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||<SealedShared<String> as NativeReceive<DslValue>>::begin_receive(g).unwrap());assert!(p.fits(g));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));
@@ -34,7 +34,7 @@ fn native_shared_original_callback_refusal_retains_paid_child_authority(){
  assert!(receiver.child.is_some());let pointer=receiver.child.as_deref().unwrap() as *const _;admitted.set(false);let g=funded(receiver.demands(original.borrow(),4096).unwrap());let(result,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||control.with_construction_recipient(&mut construction,|control|receiver.advance(original.borrow(),control,4096,g)));assert!(result.is_err());assert_eq!(heap,(0,0));assert_eq!(receiver.child.as_deref().unwrap() as *const _,pointer);assert!(!receiver.output_ready());close(&mut receiver);drain(original);eprintln!("[DEBUG] shared native callback refusal retained original child allocation until funded cancellation");
 }
 
-#[derive(crate::RetireOwned,crate::NativeReceive)]
+#[derive(crate::RetireOwned,crate::NativeReceive)]#[value(crate="crate")]
 struct WideRecord{
  a:SealedShared<String>,b:SealedShared<String>,c:SealedShared<String>,d:SealedShared<String>,e:SealedShared<String>,
  f:SealedShared<String>,g:SealedShared<String>,h:SealedShared<String>,i:SealedShared<String>,j:SealedShared<String>,
@@ -61,14 +61,14 @@ fn native_record32_single_active_child_fits4096_and_preserves_every_original_pre
  assert!(finished>0);eprintln!("[DEBUG] original32-field shared record completed {finished} paid turns; one active child, every4096 prefix closed with exact physical receipts");
 }
 
-#[derive(crate::RetireOwned,crate::NativeReceive)]
+#[derive(crate::RetireOwned,crate::NativeReceive)]#[value(crate="crate")]
 struct GroupName{name:SealedShared<String>}
-#[derive(crate::RetireOwned,crate::NativeReceive)]
+#[derive(crate::RetireOwned,crate::NativeReceive)]#[value(crate="crate")]
 struct GroupVolume{volume:f64}
 
-#[derive(Default,crate::RetireOwned,crate::NativeReceive,crate::ToValue)]
+#[derive(Default,crate::RetireOwned,crate::NativeReceive,crate::ToValue)]#[value(crate="crate")]
 enum OriginalDefaultMedia { #[default] Empty,Text(String) }
-#[derive(crate::RetireOwned,crate::NativeReceive,crate::ToValue)]
+#[derive(crate::RetireOwned,crate::NativeReceive,crate::ToValue)]#[value(crate="crate")]
 struct OriginalDeclaredDefaults {
  id:String,
  #[value(default)]values:Vec<String>,
@@ -79,7 +79,7 @@ struct OriginalDeclaredDefaults {
 }
 #[test]
 fn native_declared_defaults_keep_missing_fields_original_and_heapless() {
- let law:serde_json::Value=serde_json::from_str(fixture_text!("../../🧳️owned/📥️default/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let mut finished=0;
+ let law:serde_json::Value=serde_json::from_str(fixture_text!("../../📥️default/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let mut finished=0;
  for cut in 0..2048 {
   let source=source(DslValue::from(&law["input"]));let demand=<OriginalDeclaredDefaults as NativeReceive<DslValue>>::receive_birth_demand();let(mut receiver,_)=<OriginalDeclaredDefaults as NativeReceive<DslValue>>::begin_receive(funded(demand)).unwrap();let mut callback=|_|true;let mut control=NativeDecodeControl::new(1<<24,&mut callback);let mut turns=0;
   while !receiver.output_ready()&&turns<cut {
@@ -95,7 +95,7 @@ fn native_declared_defaults_keep_missing_fields_original_and_heapless() {
  let demand=Vec::<String>::native_default_demand();let grant=funded(demand);let((value,p),heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||Vec::<String>::native_default(grant).unwrap());assert_eq!(heap,(0,0));assert_eq!(value.capacity(),0);assert_eq!(p.retained_capacity_bytes,0);assert!(p.fits(grant));
  eprintln!("[DEBUG] native declared defaults completed={finished} turns; every prefix/zero grant retains original, schema defaults construct no heap backing");
 }
-#[derive(crate::RetireOwned,crate::NativeReceive)]
+#[derive(crate::RetireOwned,crate::NativeReceive)]#[value(crate="crate")]
 struct FlattenedRecord{
  #[value(flatten)]name:SealedShared<GroupName>,
  #[value(flatten)]volume:SealedShared<GroupVolume>,

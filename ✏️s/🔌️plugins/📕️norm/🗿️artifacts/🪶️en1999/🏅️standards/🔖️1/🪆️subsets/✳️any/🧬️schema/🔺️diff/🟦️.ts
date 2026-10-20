@@ -5,23 +5,23 @@ import { normWireArray, normWireBoolean, normWireDefault, normWireInteger, normW
 import { type AluminiumConnection, type AluminiumMaterial, type AluminiumMember, type AluminiumSection, type AluminiumShell, type AnnexChoice, type ColdFormedSheet, type FatigueDetail, type FireScenario, type MemberAction, parseAluminiumConnection, parseAluminiumMaterial, parseAluminiumMember, parseAluminiumSection, parseAluminiumShell, parseAnnexChoice, parseColdFormedSheet, parseFatigueDetail, parseFireScenario, parseMemberAction, parsePlateElement, type PlateElement } from "../📸️snapshot/🟦️.ts";
 
 export interface En1999Diff {
-  /** @state artifact */
+  /** 📑️ @state artifact */
   annex: AnnexChoice | null;
-  /** @state artifact */
+  /** 🧱️ @state artifact */
   materials: En1999MaterialsRows | null;
-  /** @state artifact */
+  /** ✂️ @state artifact */
   sections: En1999SectionsRows | null;
-  /** @state artifact */
+  /** 👤️ @state artifact */
   members: En1999MembersRows | null;
-  /** @state artifact */
+  /** 🔗️ @state artifact */
   connections: En1999ConnectionsRows | null;
-  /** @state artifact */
+  /** ⚡️ @state artifact */
   fireScenarios: En1999FireScenariosRows | null;
-  /** @state artifact */
+  /** 🔄️ @state artifact */
   fatigueDetails: En1999FatigueDetailsRows | null;
-  /** @state artifact */
+  /** 🔥️ @state artifact */
   coldFormed: En1999ColdFormedRows | null;
-  /** @state artifact */
+  /** 🐚️ @state artifact */
   shells: En1999ShellsRows | null;
 }
 

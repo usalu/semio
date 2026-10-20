@@ -1,0 +1,4 @@
+useShellCoreState 3 phases, keep=-, final return=true
+184-336 useScopeState
+350-536 useWindowUiWindowState
+537-629 useRememberOpenSpaceState

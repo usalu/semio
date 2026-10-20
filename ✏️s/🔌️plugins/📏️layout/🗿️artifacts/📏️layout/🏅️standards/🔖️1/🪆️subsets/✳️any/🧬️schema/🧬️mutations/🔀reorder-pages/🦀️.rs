@@ -3,7 +3,7 @@
 
 
 use semio_s_artifact_layout_layout_diff::LayoutPagesDelta;
-use crate::standards::v1::subsets::any::schema::diff::LayoutPageRelocation;
+use semio_s_artifact_layout_layout_diff::LayoutPageRelocation;
 use semio_s_artifact_layout_layout_diff::LayoutDiff;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};

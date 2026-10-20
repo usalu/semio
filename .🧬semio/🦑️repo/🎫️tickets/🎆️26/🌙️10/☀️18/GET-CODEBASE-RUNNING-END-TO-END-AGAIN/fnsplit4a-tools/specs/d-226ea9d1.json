@@ -1,0 +1,46 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/🧪️tests/🧩️component/🧲️force-tests/🟦️.tsx",
+ "describeLine": 11,
+ "shared": {
+  "dir": "🟣️shared",
+  "doc": "/** 🟣️ The shared declarations of the owned Diagram force suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️replays-identity-remains-close",
+   "doc": "/** 🔶️ The replays identity remains close tests of the owned Diagram force suite. */",
+   "name": "registerReplaysIdentityRemainsCloseTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the replays identity remains close tests of the owned Diagram force suite.",
+   "from": 12,
+   "to": 146
+  },
+  {
+   "dir": "🔸️cursorizes-live-controlled-20",
+   "doc": "/** 🔸️ The cursorizes live controlled 20 tests of the owned Diagram force suite. */",
+   "name": "registerCursorizesLiveControlled20Tests",
+   "emoji": "🔹",
+   "fdoc": "Registers the cursorizes live controlled 20 tests of the owned Diagram force suite.",
+   "from": 172,
+   "to": 248
+  },
+  {
+   "dir": "🟠️enqueues-coalesces-pins-unpins",
+   "doc": "/** 🟠️ The enqueues coalesces pins unpins tests of the owned Diagram force suite. */",
+   "name": "registerEnqueuesCoalescesPinsUnpinsTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the enqueues coalesces pins unpins tests of the owned Diagram force suite.",
+   "from": 275,
+   "to": 383
+  },
+  {
+   "dir": "🟢️resolves-exact-colliding-sample",
+   "doc": "/** 🟢️ The resolves exact colliding sample tests of the owned Diagram force suite. */",
+   "name": "registerResolvesExactCollidingSampleTests",
+   "emoji": "🔵",
+   "fdoc": "Registers the resolves exact colliding sample tests of the owned Diagram force suite.",
+   "from": 433,
+   "to": 487
+  }
+ ]
+}

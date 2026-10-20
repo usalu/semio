@@ -3,9 +3,9 @@
  * `🤖️generated/🔤️tokens/🟦️.ts` exists, and the theme barrel that re-exports this model imports those tokens. */
 import { resolveThemeSpacingPx } from "../📐️geometry/🟦️.ts";
 export { resolveThemeSpacingPx, themeCompactSpacingUi } from "../📐️geometry/🟦️.ts";
-import geometryContract from "../📐️geometry/🧬️contract/🔣️.json";
-import geometryBindings from "../📐️geometry/🔣️.json";
-import canonicalTokens from "../../🔣️.json";
+import geometryContract from "../📐️geometry/🧬️contract/🔣️.json" with { type: "json" };
+import geometryBindings from "../📐️geometry/🔣️.json" with { type: "json" };
+import canonicalTokens from "../../🔣️.json" with { type: "json" };
 
 //#region 🔖️types
 /** 🖌️ A single paint reference: a primitive token, a literal hex, or a blend of two tokens. */

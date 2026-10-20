@@ -203,7 +203,7 @@ impl protocol::OpText for Vdi3805Mutation {
 /// 🧪️ One representative value per variant — reused by the round-trip law test below.
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<Vdi3805Mutation> {
-    use crate::{GenericAttributes, 
+    use semio_s_artifact_norm_vdi3805_model::{GenericAttributes, 
         BoundingBox, CatalogueProduct, CharacteristicCurve, Configuration, ConnectionPoint, CurvePoint, EditionId, EditionProfileChoice, ExtensionBag, ParametricGeometry, ProductIdentity, SheetAttributes, SheetId, ValveHeatingAttributes,
         VdiQuantityKind, VdiUnit,
     };

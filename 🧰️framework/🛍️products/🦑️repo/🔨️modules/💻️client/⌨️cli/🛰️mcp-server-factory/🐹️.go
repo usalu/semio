@@ -256,7 +256,7 @@ func CreateMcpServer(kind McpClientKind, toolTimeout time.Duration) *server.MCPS
 	return s
 }
 
-// RunMcpServerFor starts the MCP stdio server for the given kind.
+// 🏃️RunMcpServerFor starts the MCP stdio server for the given kind.
 func RunMcpServerFor(kind McpClientKind, toolTimeout time.Duration) error {
 	if err := BindWorkingDirectory(); err != nil {
 		return err
@@ -284,7 +284,7 @@ func newTicketReopenHandler(kind McpClientKind) func(context.Context, mcp.CallTo
 	}
 }
 
-// RunHookFor runs a hook for the IDE kind (client is implied; stdin is hook JSON payload).
+// ▶️RunHookFor runs a hook for the IDE kind (client is implied; stdin is hook JSON payload).
 func RunHookFor(kind McpClientKind, eventStr string, stdin []byte) error {
 	client := HookClientForMcpKind(kind)
 	if client == "" {
@@ -305,7 +305,7 @@ func RunHookFor(kind McpClientKind, eventStr string, stdin []byte) error {
 	return runHookExecutionCtx(ctx, client, eventStr, "", "", "", "", repoRoot, input, false, os.Stdout, os.Stderr)
 }
 
-// RunMCPFor starts the MCP stdio server for the given IDE kind.
+// 🚀️RunMCPFor starts the MCP stdio server for the given IDE kind.
 func RunMCPFor(kind McpClientKind) error {
 	return RunMcpServerFor(kind, DefaultCommandTimeout)
 }

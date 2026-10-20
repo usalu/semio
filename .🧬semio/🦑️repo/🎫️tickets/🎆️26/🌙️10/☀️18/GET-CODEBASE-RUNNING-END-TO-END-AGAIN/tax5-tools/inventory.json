@@ -1,0 +1,58 @@
+{
+ "targets": [
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📜️taxonomy-contracts/🟦️.ts",
+   "kind": "patch",
+   "staged": null,
+   "stagedSha": null
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🗂️mutation-leaf-case-table/🟦️.ts",
+   "kind": "create",
+   "staged": "staged/new/discovery/🗂️mutation-leaf-case-table/🟦️.ts",
+   "stagedSha": "3ed1a986f199a75456d3ce01a6283be80976cd341b3bd33b3e5997b09b42a3cd"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🗞️audit-reference-consumers-and-catalog/🟦️.ts",
+   "kind": "patch",
+   "staged": null,
+   "stagedSha": null
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+   "kind": "patch",
+   "staged": null,
+   "stagedSha": null
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔏️path-emoji-statutes/🟦️.ts",
+   "kind": "patch",
+   "staged": null,
+   "stagedSha": null
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🗂️mutation-leaf-case-table/🟦️.ts",
+   "kind": "create",
+   "staged": "staged/new/tests/🗂️mutation-leaf-case-table/🟦️.ts",
+   "stagedSha": "3ccd6d41897f1f3b6a1d635b59b47c4317ceaaf39faf9746c7441e3d37e99884"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🗂️mutation-leaf-case-table/🔣️.json",
+   "kind": "create",
+   "staged": "staged/new/fixtures/🗂️mutation-leaf-case-table/🔣️.json",
+   "stagedSha": "935ce909ff723724e8b85feb5e21070a9807fbd29e71754f2d87c3b4103feaf3"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/👥️mutation-projection/🟦️.ts",
+   "kind": "patch",
+   "staged": null,
+   "stagedSha": null
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🔣️taxonomy/🪞️projections-and-consumers/🟦️.ts",
+   "kind": "patch",
+   "staged": null,
+   "stagedSha": null
+  }
+ ]
+}

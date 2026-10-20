@@ -159,6 +159,14 @@ pub fn check_full_actions(document: &En1991Snapshot) -> CheckReport {
     let annex = document.annex;
     let mut report = CheckReport::default();
     push_referential_integrity(&mut report, document);
+    check_imposed_and_fire_actions(document, annex, &mut report);
+    check_wind_thermal_and_accidental_actions(document, annex, &mut report);
+    check_traffic_and_crane_actions(document, annex, &mut report);
+    report
+}
+
+/// 🧱️ Checks the self weight, imposed and fire actions of the full actions check.
+fn check_imposed_and_fire_actions(document: &En1991Snapshot, annex: semio_s_plugin_norm_compliance::AnnexChoice, report: &mut CheckReport) {
     let storeys = document.storey_count;
 
     if document.floors.is_empty() {
@@ -262,6 +270,10 @@ pub fn check_full_actions(document: &En1991Snapshot) -> CheckReport {
     if document.wind_faces.is_empty() {
         report.push(CheckResult::assess("en1991.1-4.wind.none", "DIN EN 1991-1-4", ClauseId::new("EN 1991-1-4", "§5.2", "5.2"), SubjectRef::whole(copy("Wind faces", "Windflächen")), copy("Wind pressure", "Winddruck")).not_applicable(copy("No wind faces defined.", "Keine Windflächen definiert.")).annex(annex).build());
     }
+}
+
+/// 🪵️ Checks the wind, thermal, construction and accidental actions of the full actions check.
+fn check_wind_thermal_and_accidental_actions(document: &En1991Snapshot, annex: semio_s_plugin_norm_compliance::AnnexChoice, report: &mut CheckReport) {
     let vb = part_1_4::design_vb(annex, document.wind_zone, document.en_vb);
     let e_ref = part_1_4::reference_e(document.width, document.height);
     let h_over_d = document.height / document.depth.max(0.1);
@@ -362,7 +374,10 @@ pub fn check_full_actions(document: &En1991Snapshot) -> CheckReport {
             report.push(assess_covers(&format!("en1991.1-7.explosion.{}", case.id), "DIN EN 1991-1-7", ClauseId::new("EN 1991-1-7", "Annex D", "D"), SubjectRef::new(&case.id, &path, copy(&format!("Case {}", case.id), &format!("Fall {}", case.id))), copy("Explosion pressure", "Explosionsdruck"), pressure(ex.assumed_pressure), pressure(required), copy(&format!("Required p = {:.2} kN/m²; assumed {:.2} kN/m².", required / 1000.0, ex.assumed_pressure / 1000.0), &format!("Erforderliches p = {:.2} kN/m²; angenommen {:.2} kN/m².", required / 1000.0, ex.assumed_pressure / 1000.0)), annex, remedy));
         }
     }
+}
 
+/// 🔩️ Checks the bridge traffic, crane and silo actions of the full actions check.
+fn check_traffic_and_crane_actions(document: &En1991Snapshot, annex: semio_s_plugin_norm_compliance::AnnexChoice, report: &mut CheckReport) {
     if document.structure_kind != semio_s_artifact_norm_en1991_model::StructureKind::Bridge {
         report.push(CheckResult::assess("en1991.2.bridge.none", "DIN EN 1991-2", ClauseId::new("EN 1991-2", "§4", "4"), SubjectRef::whole(copy("Bridge", "Brücke")), copy("Bridge traffic loads", "Verkehrslasten auf Brücken")).not_applicable(copy("Structure kind is building — bridge traffic not applicable.", "Tragwerksart ist Gebäude — Brückenverkehr nicht anwendbar.")).annex(annex).build());
     } else {
@@ -514,8 +529,6 @@ pub fn check_full_actions(document: &En1991Snapshot) -> CheckReport {
         let remedy_w = if document.assumed_silo_wall_friction + 1e-9 < req_w { Some(raise_pressure_remedy(path_w, "", "wall friction", "Wandreibung", document.assumed_silo_wall_friction, req_w)) } else { None };
         report.push(assess_covers("en1991.4.silo-wall-friction", "DIN EN 1991-4", ClauseId::new("EN 1991-4", "Eq. (5.3)", "5.2"), SubjectRef::new("", path_w, copy("Silo wall friction", "Silowandreibung")), copy("Wall friction traction", "Wandreibungstraktion"), pressure(document.assumed_silo_wall_friction), pressure(req_w), copy(&format!("Required p_w = {:.1} kN/m²; assumed {:.1} kN/m².", req_w / 1000.0, document.assumed_silo_wall_friction / 1000.0), &format!("Erforderliches p_w = {:.1} kN/m²; angenommen {:.1} kN/m².", req_w / 1000.0, document.assumed_silo_wall_friction / 1000.0)), annex, remedy_w));
     }
-
-    report
 }
 
 pub fn evaluate(document: &En1991Snapshot) -> CheckReport {

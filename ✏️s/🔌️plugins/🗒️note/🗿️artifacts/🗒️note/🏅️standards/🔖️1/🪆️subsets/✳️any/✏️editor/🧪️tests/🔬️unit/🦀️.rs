@@ -3,7 +3,7 @@ use crate::editor::note::dispatch_ctx::NoteDispatchCtx;
 use crate::editor::note::support::NOTE_INTERACTION_BLOCKS;
 use crate::op::NoteMutation;
 use crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot;
-use crate::NoteSnapshot;
+use semio_s_artifact_note_note_schema::NoteSnapshot;
 use semio_framework_plugin::ActionKind;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
@@ -89,7 +89,6 @@ use crate::editor::note::dispatch_ctx::NoteDispatchCtx;
 use crate::editor::note::support::NOTE_INTERACTION_BLOCKS;
 use crate::op::NoteMutation;
 use crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot;
-use crate::NoteSnapshot;
 use semio_framework_plugin::ActionKind;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
@@ -102,7 +101,7 @@ use semio_framework_plugin::NoConfigMutation;
 use semio_framework_plugin::UtilityCategory;
     use crate::editor::note::command_enum::NoteCommand;
     use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
-    use semio_framework_plugin::{ActionMeta, App, EditorApp, Fault, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
+    use semio_framework_plugin::{ActionMeta, App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
 
     pub type NoteApp = VcsArtifactApp<EditorApp<NotePlayApp>>;
 

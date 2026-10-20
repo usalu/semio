@@ -2,8 +2,8 @@
 import { test } from "bun:test";
 import { fixedListStorageSelfTests } from "../🔬️fixed-list-storage/🟦️.ts";
 import { testBuiltTreeRetirementFixture } from "../../🏗️builder/♻️retirement/🧪️tests/🔬️built-tree-retirement/🟦️.ts";
-import { surfaceOwnershipSelfTests } from "../../../🧠️runtime/🧪️tests/🔬️surface-ownership/🟦️.ts";
-import { testRuntimeTreeRetirement } from "../../../🧠️runtime/♻️retirement/🌲️tree/🧪️tests/🔬️runtime-tree-retirement/🟦️.ts";
+import { surfaceOwnershipSelfTests } from "@semio-tech/ui/runtime/testing/surface-ownership";
+import { testRuntimeTreeRetirement } from "@semio-tech/ui/runtime/retirement/tree/testing/runtime-tree-retirement";
 
 test("fixed lists preserve independent byte arithmetic, copying and owner masks", () => { fixedListStorageSelfTests(); });
 test("built tree retirement preserves independent ownership observations", testBuiltTreeRetirementFixture);

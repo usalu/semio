@@ -1,5 +1,5 @@
 /** ✅️ Chart validity is inferred with the framework's owned schema validator. */
-import resultDocument from "../🔣️.json";
+import resultDocument from "../🔣️.json" with { type: "json" };
 import { printSchema as document } from "@semio-tech/print/schema";
 import type { VizAuthoredChartSpecification } from "@semio-tech/print/schema/snapshot";
 import type { VizChartSpecification } from "@semio-tech/print/schema/snapshot/chart";

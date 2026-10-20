@@ -3,6 +3,7 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::*;
 use std::collections::BTreeMap;
 use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{Cell,RowWriter,NativeEncodingBound,reconstruct_text},validate_sqlite_database_schema,SnapshotEncoding,SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase,ValueError,ValueRefusalKind},os_store::serialization::ArtifactSqliteSnapshotHost};
+use semio_framework_pack_json::ArtifactCanonicalJsonText as Text;
 
 type Entities<'a>=BTreeMap<i64,&'a SqliteRow>;
 pub fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}

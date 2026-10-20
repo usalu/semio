@@ -76,5 +76,28 @@ export async function testServiceReadiness(workspace: string, output: string,inv
     assert.equal(existsSync(join(sessionRoot, String(current.pid), "session.json")), false);
     const hostile = join(root, "hostile", String(fixture.pids[0])); mkdirSync(hostile, { recursive: true }); writeFileSync(join(hostile, "unowned"), "preserve");
     await assert.rejects(() => api.openServiceSession(join(root, "hostile"), fixture.owner, fixture.pids[0]), /unowned/i);
+    const budgetSchema = { $ref: schema.$id + "#/$defs/ReadinessBudget" }, budgets: any[] = [];
+    for (const row of fixture.readiness.products) {
+      const budget = JSON.parse(readFileSync(join(workspace, row.budget), "utf8")); budgets.push(budget);
+      assert.ok(ajv.validate(budgetSchema, budget), `${row.budget}: ${ajv.errorsText()}`);
+      assert.deepEqual(api.parseServiceReadinessBudgetV1(budget), budget);
+      assert.ok(budget.readyTimeoutMs >= budget.evidence.coldBootMs.maximum * budget.evidence.marginFactor, row.budget);
+      assert.ok(budget.readyTimeoutMs >= row.minimumTimeoutMs, row.budget);
+    }
+    for (const row of fixture.readiness.invalid) {
+      const value = structuredClone(budgets[0]); let target = value;
+      for (const key of row.path.slice(0, -1)) target = target[key];
+      if (row.remove) delete target[row.path.at(-1)]; else target[row.path.at(-1)] = row.value;
+      assert.equal(ajv.validate(budgetSchema, value), row.schema, row.reason);
+      assert.throws(() => api.parseServiceReadinessBudgetV1(value), /readiness budget/i, row.reason);
+    }
+    const waiting = join(root, "progress"), idle = await api.openServiceSession(waiting, fixture.owner, fixture.pids[0]), progress = fixture.readiness.progress, events: any[] = [];
+    await assert.rejects(() => api.waitForServiceReady(waiting, idle, new AbortController().signal, progress.timeoutMs, { intervalMs: progress.intervalMs, report: (event: any) => events.push(event) }), new RegExp(`within ${progress.timeoutMs} ms`));
+    assert.ok(events.length >= progress.minimumEvents, `progress events: ${events.length}`);
+    assert.ok(events[0].elapsedMs < progress.intervalMs);
+    assert.ok(events.every((event, index) => event.timeoutMs === progress.timeoutMs && event.phase === "awaiting-ready-record" && (index === 0 || event.elapsedMs >= events[index - 1].elapsedMs + progress.intervalMs - 5)));
+    await assert.rejects(() => api.waitForServiceReady(waiting, idle, new AbortController().signal, 0), /declared positive timeout/i);
+    for (const row of progress.lines) for (const language of ["en", "de"]) assert.equal(api.serviceReadyProgressLine(row.owner, row.progress, language), row[language]);
+    for (const row of progress.languages) assert.equal(api.serviceReadyProgressLanguage(row.environment), row.language, JSON.stringify(row.environment));
   } finally { rmSync(root, { recursive: true, force: true }); }
 }

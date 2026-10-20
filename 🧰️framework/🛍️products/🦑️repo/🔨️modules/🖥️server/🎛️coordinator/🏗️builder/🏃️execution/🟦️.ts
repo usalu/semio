@@ -6,7 +6,7 @@ import {scriptCompilerAdmissionControlV1,compilerAdmissionBudgetV1} from "../../
 import {withCompilerState} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗃️state/🟦️.ts";
 import {runOwnedCommand} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import {receiveScriptProcessInvocation,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { receiveScriptProcessInvocation, type ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {withCoordinatorNextInputsV1} from "../📥️inputs/🟦️.ts";
 import {withNextStorageV1} from "../💾️storage/🟦️.ts";
 import storageSchema from "../💾️storage/🧬️schema/🔣️.json" with {type:"json"};

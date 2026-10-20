@@ -1,0 +1,65 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️owned-locale-detector-retirement/📌️tree-helpers-4-and-more/🟦️.tsx",
+ "function": "registerTreeHelpers4AndMoreTests",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "shared": {
+  "dir": "🟣️shared",
+  "doc": "/** 🟣️ The shared declarations of registerTreeHelpers4AndMoreTests. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️tree-helpers",
+   "doc": "/** 🔶️ The tree helpers phase of registerTreeHelpers4AndMoreTests. */",
+   "phases": [
+    {
+     "name": "registerTreeHelpersTests",
+     "emoji": "🔷",
+     "doc": "Registers the tree helpers tests of registerTreeHelpers4AndMoreTests.",
+     "from": 7,
+     "to": 10
+    }
+   ]
+  },
+  {
+   "dir": "🔸️virtual-file-system",
+   "doc": "/** 🔸️ The virtual file system phase of registerTreeHelpers4AndMoreTests. */",
+   "phases": [
+    {
+     "name": "registerVirtualFileSystemTests",
+     "emoji": "🔹",
+     "doc": "Registers the virtual file system tests of registerTreeHelpers4AndMoreTests.",
+     "from": 146,
+     "to": 146
+    }
+   ]
+  },
+  {
+   "dir": "🟠️scene-helpers",
+   "doc": "/** 🟠️ The scene helpers phase of registerTreeHelpers4AndMoreTests. */",
+   "phases": [
+    {
+     "name": "registerSceneHelpersTests",
+     "emoji": "🟡",
+     "doc": "Registers the scene helpers tests of registerTreeHelpers4AndMoreTests.",
+     "from": 310,
+     "to": 310
+    }
+   ]
+  },
+  {
+   "dir": "🟢️elements-surface-chrome",
+   "doc": "/** 🟢️ The elements surface chrome phase of registerTreeHelpers4AndMoreTests. */",
+   "phases": [
+    {
+     "name": "registerElementsSurfaceChromeTests",
+     "emoji": "🔵",
+     "doc": "Registers the elements surface chrome tests of registerTreeHelpers4AndMoreTests.",
+     "from": 386,
+     "to": 386
+    }
+   ]
+  }
+ ]
+}

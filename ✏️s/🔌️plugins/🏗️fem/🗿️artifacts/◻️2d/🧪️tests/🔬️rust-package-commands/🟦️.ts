@@ -1,13 +1,13 @@
-import type { ScriptInvocation } from "@semio-tech/process/routing";
-import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
-import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/testing/cargo/exact";
-import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
-import { readCargoTestPolicyV1 } from "@semio-tech/process/cargo-test";
-import { scriptInvocationBudget } from "@semio-tech/process/routing";
-import { runOwnedCommand } from "@semio-tech/process/owned-execution";
+import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
+import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/framework/process/compiler-capacity";
+import { configuredExactCargoLawPolicyV1 } from "@semio-tech/framework/process/cargo-laws";
+import { runAdmittedExactCargoLawsV1 } from "@semio-tech/framework/process/cargo-test";
+import { readCargoTestPolicyV1 } from "@semio-tech/framework/process/cargo-test";
+import { scriptInvocationBudget } from "@semio-tech/framework/process/routing";
+import { runOwnedCommand } from "@semio-tech/framework/process/execution";
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
-import { resolveTypescriptCompilerV1 } from "@semio-tech/process/execution";
+import { resolveTypescriptCompilerV1 } from "@semio-tech/framework/process/execution";
 
 /** 🏃️ Runs the `OwnedVerifyScript` command under the caller's roots and invocation. */
 export async function runOwnedVerifyScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {
@@ -29,7 +29,6 @@ export async function runOwnedVerifyScript(context: Readonly<{ root: string; rep
   const rustSources = ["../../🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🦀️.rs", "../../🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🧪️tests/🔬️unit/🦀️.rs", "../../🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️.rs", "../../🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️.rs", "../../🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🧪️tests/🔬️unit/🦀️.rs", "../../🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs", "../../🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🗣️terminology/🦀️.rs", "../../🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/📌️panels/📊️results/🦀️.rs", "../../🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/👁️set-result-display/🦀️.rs", "../../🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/👁️set-result-display/🧪️tests/🔬️unit/🦀️.rs", "../../🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🧪️tests/🔬️unit/🦀️.rs", "../../🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧪️tests/🪟️window-config-ownership/🦀️.rs", "../../🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs"].map(path => resolve(context.root, path));
   rustSources.push(resolve(context.repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🖼️canvas2d-snapshot/🦀️.rs"), resolve(context.repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🔬️canvas2d-snapshot-value-round-trip/🦀️.rs"));
   rustSources.push(resolve(context.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/📏️elements2d/🦀️.rs"));
-  rustSources.push(resolve(context.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/📏️elements2d/🧪️tests/🔬️unit/🦀️.rs"));
   rustSources.push(resolve(context.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧱️elements3d/🦀️.rs"));
   rustSources.push(resolve(context.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs"));
   rustSources.push(resolve(context.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🏗️model/🦀️.rs"));

@@ -31,8 +31,10 @@ semio-s-artifact-block-3d-model = { workspace = true }
 semio-s-artifact-block-3d-schema = { workspace = true }
 semio-s-artifact-block-3d-viewer = { workspace = true }
 semio-s-artifact-stdio-semio-kit = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-block-3d-io-sqlite = { workspace = true, features = ["testkit"] }
 semio-s-artifact-block-3d-editor-modes = { workspace = true }
 pack = { workspace = true }
 semio-framework-async-macros = { workspace = true }
@@ -48,3 +50,4 @@ semio-s-artifact-block-3d-mutations = { workspace = true }
 semio-s-plugin-block = { workspace = true, features = ["test-serde"] }
 serde_json = { workspace = true }
 semio-framework-test-original-snapshot-owners = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }
+semio-framework-schema-state = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }

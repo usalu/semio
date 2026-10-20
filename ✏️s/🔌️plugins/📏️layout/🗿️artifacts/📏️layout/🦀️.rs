@@ -169,10 +169,3 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
-
-
-// ---- Shims: keep pre-migration module paths resolving for external callers ----
-
-
-pub use crate::standards::v1::subsets::any::io::{LayoutBuilderFacets, LayoutBuilder, LayoutAnalyzer, LayoutComposer};
-

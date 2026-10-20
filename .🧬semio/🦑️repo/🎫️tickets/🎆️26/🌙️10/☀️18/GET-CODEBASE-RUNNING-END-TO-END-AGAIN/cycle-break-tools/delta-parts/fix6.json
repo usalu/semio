@@ -1,0 +1,34 @@
+{
+ "schema": "cycle-break/delta@1",
+ "stagedAt": "2026-10-20T03:17:30.869Z",
+ "manifestOps": [],
+ "newFiles": [],
+ "edits": [
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🧰️settlement-test-kit/🟦️.ts",
+   "mode": "text",
+   "from": "import { fixtureOriginalWorkStock } from \"@semio-tech/framework-actor/retained-turn/bootstrap/testing/fixtures\";",
+   "to": "import { fixtureOriginalWorkStock } from \"@semio-tech/framework-actor/retained-turn/bootstrap/testing/fixtures\";\nimport { OwnedKernelReturnContent as OwnedKernelReturnContentClass } from \"@semio-tech/framework-kernel/return/content/input\";",
+   "wave": "fix-d6",
+   "why": "the shard client no longer re-exports the kernel return content; the kit imports it from its owner"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🧰️settlement-test-kit/🟦️.ts",
+   "mode": "text",
+   "from": "OwnedActorTurnOutput, OwnedActorTurnOutputs, OwnedKernelReturnContent, OwnedNativeUiPatchAuthority",
+   "to": "OwnedActorTurnOutput, OwnedActorTurnOutputs, OwnedNativeUiPatchAuthority",
+   "wave": "fix-d6",
+   "why": "the shard client no longer re-exports the kernel return content; the kit imports it from its owner"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🧰️settlement-test-kit/🟦️.ts",
+   "mode": "text",
+   "from": "NO_RESIDENT_FAULT, OwnedActorTurnOutputs, OwnedKernelReturnContent, OwnedNativeUiPatchAuthority",
+   "to": "NO_RESIDENT_FAULT, OwnedActorTurnOutputs, OwnedKernelReturnContent: OwnedKernelReturnContentClass, OwnedNativeUiPatchAuthority",
+   "wave": "fix-d6",
+   "why": "the shard client no longer re-exports the kernel return content; the kit imports it from its owner"
+  }
+ ],
+ "fileOps": [],
+ "flags": []
+}

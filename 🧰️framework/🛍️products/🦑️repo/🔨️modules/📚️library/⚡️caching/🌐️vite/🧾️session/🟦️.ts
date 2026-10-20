@@ -2,7 +2,7 @@ import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, renameSync
 import { randomUUID } from "node:crypto";
 import { dirname, join, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import { withResourceLeases } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 
 export type ServiceSession = { readonly schema: "semio.nx.service/v1"; readonly id: string; readonly owner: string; readonly pid: number };
@@ -95,12 +95,75 @@ export async function publishServiceReady(root: string, session: ServiceSession,
   });
 }
 
-/** ⏳️ Requires the current generation's HTTP identity before allowing its consumer to proceed. */
-export async function waitForServiceReady(root: string, session: ServiceSession, signal: AbortSignal, timeoutMs = 60000): Promise<string> {
+/** ⏱️ A product's declared E2E service readiness: the timeout, the progress cadence and the boot evidence that timeout derives from. */
+export type ServiceReadinessBudget = {
+  readonly schemaVersion: 1;
+  readonly readyTimeoutMs: number;
+  readonly progressIntervalMs: number;
+  readonly evidence: {
+    readonly kind: "estimate" | "measurement";
+    readonly coldBootMs: { readonly minimum: number; readonly maximum: number };
+    readonly warmBootMs: { readonly minimum: number; readonly maximum: number };
+    readonly marginFactor: number;
+    readonly source: string;
+  };
+};
+/** 📈️ One progress observation while a consumer waits for a service generation. */
+export type ServiceReadyProgress = { readonly elapsedMs: number; readonly timeoutMs: number; readonly phase: "awaiting-ready-record" | "verifying-listener" };
+/** 📣️ Progress cadence and sink of one readiness wait. */
+export type ServiceReadyWait = { readonly intervalMs: number; readonly report: (progress: ServiceReadyProgress) => void };
+const budgetSchema = schema.$defs.ReadinessBudget, bootRangeSchema = schema.$defs.BootRange;
+const inRange = (value: unknown, bounds: { readonly minimum: number; readonly maximum: number }): value is number => Number.isSafeInteger(value) && Number(value) >= bounds.minimum && Number(value) <= bounds.maximum;
+const bootRange = (value: unknown): value is { minimum: number; maximum: number } => keys(value, "maximum,minimum") && inRange(value.minimum, bootRangeSchema.properties.minimum) && inRange(value.maximum, bootRangeSchema.properties.maximum) && Number(value.minimum) <= Number(value.maximum);
+
+/** 🧮️ Admits a declared readiness budget only when its timeout covers the cold-boot maximum times the declared margin. */
+export function parseServiceReadinessBudgetV1(value: unknown): ServiceReadinessBudget {
+  const reject = (reason: string): never => { throw new Error(`Invalid service readiness budget: ${reason}`); };
+  if (!keys(value, "evidence,progressIntervalMs,readyTimeoutMs,schemaVersion") || value.schemaVersion !== 1) return reject("closed versioned record required");
+  const evidence = value.evidence;
+  if (!keys(evidence, "coldBootMs,kind,marginFactor,source,warmBootMs") || !budgetSchema.properties.evidence.properties.kind.enum.includes(evidence.kind as never)) return reject("closed evidence record required");
+  if (!bootRange(evidence.coldBootMs) || !bootRange(evidence.warmBootMs) || evidence.warmBootMs.maximum > evidence.coldBootMs.maximum) return reject("ordered boot ranges required");
+  const margin = budgetSchema.properties.evidence.properties.marginFactor;
+  if (typeof evidence.marginFactor !== "number" || !(evidence.marginFactor >= margin.minimum && evidence.marginFactor <= margin.maximum)) return reject("margin factor out of range");
+  if (typeof evidence.source !== "string" || !evidence.source.length || evidence.source.length > budgetSchema.properties.evidence.properties.source.maxLength) return reject("evidence source required");
+  if (!inRange(value.readyTimeoutMs, budgetSchema.properties.readyTimeoutMs) || !inRange(value.progressIntervalMs, budgetSchema.properties.progressIntervalMs)) return reject("timeout or cadence out of range");
+  if (Number(value.readyTimeoutMs) < Math.ceil(evidence.coldBootMs.maximum * evidence.marginFactor)) return reject("timeout below cold-boot maximum times margin");
+  if (Number(value.progressIntervalMs) > Number(value.readyTimeoutMs)) return reject("cadence beyond timeout");
+  return value as ServiceReadinessBudget;
+}
+
+const progressText = {
+  en: { "awaiting-ready-record": "waiting for the dev server to publish its ready record", "verifying-listener": "verifying the listener identity", of: "of" },
+  de: { "awaiting-ready-record": "warte darauf, dass der Dev-Server seinen Bereitschaftseintrag veröffentlicht", "verifying-listener": "prüfe die Identität des Listeners", of: "von" },
+} as const;
+
+/** 🗣️ Chooses the progress language like the CLI help: SEMIO_LANGUAGE, then the locale, then the first catalogue language. */
+export function serviceReadyProgressLanguage(environment: Readonly<Record<string, string | undefined>>): "en" | "de" {
+  for (const candidate of [environment.SEMIO_LANGUAGE, environment.LC_ALL, environment.LC_MESSAGES, environment.LANG]) {
+    const language = candidate?.toLowerCase().slice(0, 2);
+    if (language === "en" || language === "de") return language;
+  }
+  return "en";
+}
+
+/** 🔤️ Renders one readiness progress observation as a single log line. */
+export function serviceReadyProgressLine(owner: string, progress: ServiceReadyProgress, language: "en" | "de"): string {
+  const text = progressText[language], seconds = (milliseconds: number): number => Math.floor(milliseconds / 1000);
+  return `[e2e] ${owner}: ${text[progress.phase]} (${seconds(progress.elapsedMs)} s ${text.of} ${seconds(progress.timeoutMs)} s)`;
+}
+
+/** ⏳️ Requires the current generation's HTTP identity before allowing its consumer to proceed within the caller's declared timeout, reporting progress on the declared cadence. */
+export async function waitForServiceReady(root: string, session: ServiceSession, signal: AbortSignal, timeoutMs: number, wait?: ServiceReadyWait): Promise<string> {
   signal.throwIfAborted();
-  const path = join(serviceDirectory(root, session.pid), "ready.json"), deadline = performance.now() + timeoutMs;
+  if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1) throw new Error("Service readiness requires a declared positive timeout");
+  const path = join(serviceDirectory(root, session.pid), "ready.json"), start = performance.now(), deadline = start + timeoutMs;
+  let nextReport = start;
   while (performance.now() < deadline) {
     signal.throwIfAborted();
+    if (wait && performance.now() >= nextReport) {
+      wait.report({ elapsedMs: Math.round(performance.now() - start), timeoutMs, phase: existsSync(path) ? "verifying-listener" : "awaiting-ready-record" });
+      nextReport = performance.now() + wait.intervalMs;
+    }
     if (readServiceSession(root, session.owner, session.pid).id !== session.id) throw new Error("Service generation changed while waiting");
     if (existsSync(path)) {
       const ready = parseReady(readRecord(path));
@@ -121,7 +184,7 @@ export async function waitForServiceReady(root: string, session: ServiceSession,
     }
     await delay(Math.max(1, Math.min(40, deadline - performance.now())), undefined, { signal });
   }
-  throw new Error(`Service did not become ready with the expected identity: ${session.owner}`);
+  throw new Error(`Service did not become ready with the expected identity within ${timeoutMs} ms: ${session.owner}`);
 }
 
 /** 🧹️ Removes only this completed generation's records and preserves unrelated or newer state. */

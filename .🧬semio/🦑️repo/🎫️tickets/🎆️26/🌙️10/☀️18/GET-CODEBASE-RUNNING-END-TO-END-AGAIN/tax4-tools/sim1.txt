@@ -1,0 +1,5 @@
+✏️s/🔌️plugins/✒️writer
+✏️s/🔌️plugins/🗄️stdio
+✏️s/🔌️plugins/📕️norm
+✏️s/🔌️plugins/🧱️block
+✏️s/🔌️plugins/🖨️raster

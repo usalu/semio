@@ -4,54 +4,29 @@
   "from": "L/⚡️caching/🚀️bootstrap/🛠️tools/📜️script.ts",
   "to": "L/⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts",
   "touched": [
-   "L/⚡️caching/🚀️bootstrap/🛠️tools/package.json",
    "L/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/📥️scope/🟦️.ts",
    "L/⚡️caching/🚀️bootstrap/🛠️tools/🧪️tests/🟦️.ts",
    "L/⚡️caching/🚀️bootstrap/🛠️tools/🧪️tests/🧹️cleanup/🟦️.ts"
   ]
  },
  {
-  "kind": "module-script",
-  "from": "L/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts",
-  "to": "L/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/🟦️.ts",
-  "referencers": 6,
-  "touched": [
-   "L/⚡️caching/🚀️bootstrap/🛠️tools/package.json",
-   "L/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/🧪️tests/🟦️.ts",
-   "L/🏗️build/📜️script.ts",
-   "L/🏗️build/📥️source/🛗️zero-touch/🗂️closures/🔣️.json",
-   "L/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
-   "L/🏗️build/🧪️tests/🎟️phase/🟦️.ts"
-  ]
+  "kind": "lift",
+  "script": "L/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️purpose/📜️script.ts",
+  "result": "argv-program-needs-a-command-name"
  },
  {
-  "kind": "module-script",
-  "from": "L/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
-  "to": "L/🏗️build/🔧️tools/🏗️bazel/🟦️.ts",
-  "referencers": 21,
-  "touched": [
-   "L/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/📥️phase/📋️callers.json",
-   "L/🏗️build/📜️script.ts",
-   "L/🏗️build/🔧️tools/🏗️bazel/⚙️operations/🧪️tests/🟦️.ts",
-   "L/🏗️build/🔧️tools/🏗️bazel/💾️storage/🧪️tests/📥️runtime/🟦️.ts",
-   "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📤️arguments/🟦️.ts",
-   "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️actions/🔣️.json",
-   "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️actions/🟦️.ts",
-   "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️control/🟦️.ts",
-   "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️delegation/🟦️.ts",
-   "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️fingerprint/🟦️.ts",
-   "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️framing/🟦️.ts",
-   "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️inventory/🟦️.ts",
-   "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️purpose/📜️script.ts",
-   "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️purpose/🟦️.ts",
-   "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📦️snapshot/🟦️.ts",
-   "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/🔏️implementation/🟦️.ts",
-   "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/🕸️dependencies/🟦️.ts",
-   "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/🟦️.ts",
-   "L/🏗️build/🕸️graph/🦀️rust/📥️intent/🧪️tests/🟦️.ts",
-   "L/🏗️build/🧪️tests/🕸️graph/🟦️.ts",
-   "L/🧪️tests/🔧️build-surfaces/🟦️.ts"
-  ]
+  "kind": "lift",
+  "script": "L/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/📥️purpose/📜️script.ts",
+  "result": "lifted",
+  "module": "L/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/📥️purpose/🧪️tests/🔬️script-commands/🟦️.ts",
+  "merged": false,
+  "commands": [
+   "actual",
+   "ledger-model"
+  ],
+  "repointed": 0,
+  "sourceReaders": [],
+  "unboundReads": []
  },
  {
   "kind": "lift",
@@ -62,8 +37,10 @@
   "commands": [],
   "repointed": 0,
   "sourceReaders": [
+   "L/⚡️caching/🧪️tests/📐️phases/🟦️.ts",
    "L/🏃️process/🦀️cargo/🚪️launcher/🧪️tests/🟦️.ts"
-  ]
+  ],
+  "unboundReads": []
  },
  {
   "kind": "lift",
@@ -73,7 +50,8 @@
   "merged": false,
   "commands": [],
   "repointed": 0,
-  "sourceReaders": []
+  "sourceReaders": [],
+  "unboundReads": []
  },
  {
   "kind": "lift",
@@ -83,7 +61,8 @@
   "merged": false,
   "commands": [],
   "repointed": 1,
-  "sourceReaders": []
+  "sourceReaders": [],
+  "unboundReads": []
  },
  {
   "kind": "lift",
@@ -96,8 +75,15 @@
   ],
   "repointed": 3,
   "sourceReaders": [
+   "L/🏗️build/🟦️typescript/📚️libraries/🧪️tests/🟦️.ts",
    "L/⚡️caching/📦️artifacts/💾️storage/🧪️tests/🟦️.ts"
-  ]
+  ],
+  "unboundReads": []
+ },
+ {
+  "kind": "lift",
+  "script": "L/⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/📜️script.ts",
+  "result": "argv-program-needs-a-command-name"
  },
  {
   "kind": "lift",
@@ -107,7 +93,39 @@
   "merged": false,
   "commands": [],
   "repointed": 0,
-  "sourceReaders": []
+  "sourceReaders": [],
+  "unboundReads": []
+ },
+ {
+  "kind": "lift",
+  "script": "L/⚡️caching/🕸️graph/🏁️startup/🚦️service/🧪️tests/📜️script.ts",
+  "result": "lifted",
+  "module": "L/⚡️caching/🕸️graph/🏁️startup/🚦️service/🧪️tests/🧪️tests/🔬️script-commands/🟦️.ts",
+  "merged": false,
+  "commands": [
+   "child"
+  ],
+  "repointed": 0,
+  "sourceReaders": [],
+  "unboundReads": []
+ },
+ {
+  "kind": "lift",
+  "script": "L/⚡️caching/🕸️graph/📤️publication/🧪️tests/📦️transaction/📜️script.ts",
+  "result": "lifted",
+  "module": "L/⚡️caching/🕸️graph/📤️publication/🧪️tests/📦️transaction/🧪️tests/🔬️script-commands/🟦️.ts",
+  "merged": false,
+  "commands": [
+   "faults",
+   "close",
+   "race",
+   "foreign",
+   "recover",
+   "seed"
+  ],
+  "repointed": 0,
+  "sourceReaders": [],
+  "unboundReads": []
  },
  {
   "kind": "lift",
@@ -117,7 +135,8 @@
   "merged": false,
   "commands": [],
   "repointed": 2,
-  "sourceReaders": []
+  "sourceReaders": [],
+  "unboundReads": []
  },
  {
   "kind": "lift",
@@ -127,9 +146,25 @@
   "merged": false,
   "commands": [],
   "repointed": 2,
-  "sourceReaders": [
-   "L/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts"
+  "sourceReaders": [],
+  "unboundReads": [
+   "L/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts:99",
+   "L/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts:219",
+   "L/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts:270"
   ]
+ },
+ {
+  "kind": "lift",
+  "script": "L/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts",
+  "result": "invalid-output",
+  "scriptOk": false,
+  "moduleOk": true,
+  "module": "L/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/🟦️.ts"
+ },
+ {
+  "kind": "lift",
+  "script": "L/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🧪️tests/📥️purpose/📜️script.ts",
+  "result": "argv-program-needs-a-command-name"
  },
  {
   "kind": "lift",
@@ -141,7 +176,8 @@
    "compile"
   ],
   "repointed": 0,
-  "sourceReaders": []
+  "sourceReaders": [],
+  "unboundReads": []
  },
  {
   "kind": "lift",
@@ -153,7 +189,26 @@
   "repointed": 3,
   "sourceReaders": [
    "L/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🧪️tests/🔏️tool-fingerprint/🟦️.ts"
-  ]
+  ],
+  "unboundReads": []
+ },
+ {
+  "kind": "lift",
+  "script": "L/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📏️headroom/🧪️tests/📜️script.ts",
+  "result": "argv-program-needs-a-command-name"
+ },
+ {
+  "kind": "lift",
+  "script": "L/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/📜️script.ts",
+  "result": "lifted",
+  "module": "L/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🧪️tests/🔬️script-commands/🟦️.ts",
+  "merged": false,
+  "commands": [
+   "negative"
+  ],
+  "repointed": 0,
+  "sourceReaders": [],
+  "unboundReads": []
  },
  {
   "kind": "lift",
@@ -163,7 +218,13 @@
   "merged": false,
   "commands": [],
   "repointed": 0,
-  "sourceReaders": []
+  "sourceReaders": [],
+  "unboundReads": []
+ },
+ {
+  "kind": "lift",
+  "script": "L/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/📚️dependencies/🧪️tests/📦️child/📜️script.ts",
+  "result": "module-level-uses-program-name:encoded"
  },
  {
   "kind": "lift",
@@ -174,11 +235,39 @@
   "commands": [],
   "repointed": 3,
   "sourceReaders": [
-   "L/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/🧪️tests/🎟️funding/🟦️.ts",
    "L/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/📚️dependencies/🧪️tests/🟦️.ts",
+   "L/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/🧪️tests/🎟️funding/🟦️.ts",
+   "L/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/🧪️tests/🎟️funding/🟦️.ts",
    "L/⚡️caching/🦀️cargo/📦️units/📥️inputs/🔏️snapshot/🧪️tests/🟦️.ts",
    "L/⚡️caching/🦀️cargo/📦️units/📥️inputs/🧪️tests/🟦️.ts"
-  ]
+  ],
+  "unboundReads": []
+ },
+ {
+  "kind": "lift",
+  "script": "L/⚡️caching/🧪️tests/🌐️next-runtime/📜️script.ts",
+  "result": "module-level-uses-program-name:directory"
+ },
+ {
+  "kind": "lift",
+  "script": "L/⚡️caching/🧪️tests/📦️native-dependencies/📥️purpose/📜️script.ts",
+  "result": "module-level-uses-program-name:root"
+ },
+ {
+  "kind": "lift",
+  "script": "L/⚡️caching/🧹️pruning/🏪️budget/📜️history/🧪️tests/📜️script.ts",
+  "result": "lifted",
+  "module": "L/⚡️caching/🧹️pruning/🏪️budget/📜️history/🧪️tests/🧪️tests/🔬️script-commands/🟦️.ts",
+  "merged": false,
+  "commands": [
+   "prototype",
+   "release"
+  ],
+  "repointed": 0,
+  "sourceReaders": [
+   "L/⚡️caching/🧹️pruning/🏪️budget/📜️history/🧪️tests/🟦️.ts"
+  ],
+  "unboundReads": []
  },
  {
   "kind": "lift",
@@ -190,7 +279,13 @@
    "execute"
   ],
   "repointed": 0,
-  "sourceReaders": []
+  "sourceReaders": [],
+  "unboundReads": []
+ },
+ {
+  "kind": "lift",
+  "script": "L/🏗️build/📥️caller/🧪️tests/📥️birth/📜️script.ts",
+  "result": "argv-program-needs-a-command-name"
  },
  {
   "kind": "lift",
@@ -202,7 +297,13 @@
    "digest"
   ],
   "repointed": 0,
-  "sourceReaders": []
+  "sourceReaders": [],
+  "unboundReads": []
+ },
+ {
+  "kind": "lift",
+  "script": "L/🏗️build/📥️inputs/🧪️tests/📏️windows/📜️script.ts",
+  "result": "module-level-uses-program-name:sink"
  },
  {
   "kind": "lift",
@@ -215,7 +316,45 @@
    "source"
   ],
   "repointed": 1,
-  "sourceReaders": []
+  "sourceReaders": [],
+  "unboundReads": []
+ },
+ {
+  "kind": "lift",
+  "script": "L/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+  "result": "moved-bail"
+ },
+ {
+  "kind": "lift",
+  "script": "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📤️arguments/📜️script.ts",
+  "result": "argv-program-needs-a-command-name"
+ },
+ {
+  "kind": "lift",
+  "script": "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️purpose/📜️script.ts",
+  "result": "module-level-uses-program-name:wire"
+ },
+ {
+  "kind": "lift",
+  "script": "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/🕸️dependencies/📜️script.ts",
+  "result": "argv-program-needs-a-command-name"
+ },
+ {
+  "kind": "lift",
+  "script": "L/🏗️build/🧭️selection/👁️watch/🧪️tests/📜️script.ts",
+  "result": "lifted",
+  "module": "L/🏗️build/🧭️selection/👁️watch/🧪️tests/🧪️tests/🔬️script-commands/🟦️.ts",
+  "merged": false,
+  "commands": [
+   "authority",
+   "receive",
+   "fault-error",
+   "fault-undefined",
+   "fault-overflow"
+  ],
+  "repointed": 0,
+  "sourceReaders": [],
+  "unboundReads": []
  },
  {
   "kind": "lift",
@@ -227,19 +366,13 @@
    "run"
   ],
   "repointed": 1,
-  "sourceReaders": []
+  "sourceReaders": [],
+  "unboundReads": []
  },
  {
   "kind": "lift",
   "script": "L/🔍️discovery/🕸️runtime/📜️script.ts",
-  "result": "lifted",
-  "module": "L/🔍️discovery/🕸️runtime/🧪️tests/🔬️script-commands/🟦️.ts",
-  "merged": false,
-  "commands": [
-   "run"
-  ],
-  "repointed": 0,
-  "sourceReaders": []
+  "result": "argv-program-needs-a-command-name"
  },
  {
   "kind": "lift",
@@ -249,7 +382,8 @@
   "merged": false,
   "commands": [],
   "repointed": 0,
-  "sourceReaders": []
+  "sourceReaders": [],
+  "unboundReads": []
  },
  {
   "kind": "lift",
@@ -262,7 +396,8 @@
    "resolve-program"
   ],
   "repointed": 0,
-  "sourceReaders": []
+  "sourceReaders": [],
+  "unboundReads": []
  },
  {
   "kind": "lift",
@@ -272,7 +407,17 @@
   "merged": false,
   "commands": [],
   "repointed": 0,
-  "sourceReaders": []
+  "sourceReaders": [
+   "L/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📋️owner-cmd-policy/🟦️.ts",
+   "L/🧪️tests/🎚️tool-configuration-ownership/🟦️.ts",
+   "L/🧪️tests/↪️rust-divergence-callback/🟦️.ts",
+   "L/🧪️tests/✍️rust-writable-path-authority/🟦️.ts",
+   "L/🧪️tests/🥤️rust-finite-target-consumption/🟦️.ts",
+   "L/🧪️tests/🧫️fixtures/↪️rust-divergence-callback/🔣️.json",
+   "L/🧪️tests/🧫️fixtures/✍️rust-writable-path-authority/🔣️.json",
+   "L/🧪️tests/🧫️fixtures/🥤️rust-finite-target-consumption/🔣️.json"
+  ],
+  "unboundReads": []
  },
  {
   "kind": "in-place",
@@ -280,151 +425,18 @@
   "result": "edited"
  },
  {
-  "kind": "child",
-  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️purpose/📜️script.ts",
-  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️purpose/📦️child/🟦️.ts",
-  "touched": [
-   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️purpose/🟦️.ts (1 spawn sites)",
-   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️purpose/🧪️tests/🟦️.ts (1 references)"
-  ]
+  "kind": "law",
+  "test": "L/🏗️build/🧪️tests/🕸️graph/🟦️.ts",
+  "fixture": "L/🏗️build/🧪️tests/🧫️fixtures/🕸️graph/🔣️.json"
  },
  {
-  "kind": "child",
-  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/📥️purpose/📜️script.ts",
-  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/📥️purpose/📦️child/🟦️.ts",
-  "touched": [
-   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/📥️purpose/🟦️.ts (1 spawn sites)"
-  ]
- },
- {
-  "kind": "child",
-  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/📜️script.ts",
-  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/📦️child/🟦️.ts",
-  "touched": [
-   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/🟦️.ts (1 spawn sites)"
-  ]
- },
- {
-  "kind": "child",
-  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🧪️tests/📜️script.ts",
-  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🧪️tests/📦️child/🟦️.ts",
-  "touched": [
-   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🧪️tests/🟦️.ts (1 spawn sites)"
-  ]
- },
- {
-  "kind": "child",
-  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/📤️publication/🧪️tests/📦️transaction/📜️script.ts",
-  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/📤️publication/🧪️tests/📦️transaction/📦️child/🟦️.ts",
-  "touched": [
-   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/📤️publication/🧪️tests/📦️transaction/🟦️.ts (1 spawn sites)"
-  ]
- },
- {
-  "kind": "child",
-  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🧪️tests/📥️purpose/📜️script.ts",
-  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🧪️tests/📥️purpose/📦️child/🟦️.ts",
-  "touched": [
-   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🧪️tests/📥️purpose/🟦️.ts (1 spawn sites)"
-  ]
- },
- {
-  "kind": "child",
-  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📏️headroom/🧪️tests/📜️script.ts",
-  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📏️headroom/🧪️tests/📦️child/🟦️.ts",
-  "touched": [
-   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📏️headroom/🧪️tests/🟦️.ts (1 spawn sites)"
-  ]
- },
- {
-  "kind": "child",
-  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/📜️script.ts",
-  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/📦️child/🟦️.ts",
-  "touched": [
-   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts (1 spawn sites)",
-   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/📥️negative/🟦️.ts (1 references)"
-  ]
- },
- {
-  "kind": "child",
-  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/📚️dependencies/🧪️tests/📦️child/📜️script.ts",
-  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/📚️dependencies/🧪️tests/📦️child/🟦️.ts",
-  "touched": [
-   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/📚️dependencies/🧪️tests/🟦️.ts (2 references)"
-  ]
- },
- {
-  "kind": "child",
-  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🌐️next-runtime/📜️script.ts",
-  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🌐️next-runtime/📦️child/🟦️.ts",
-  "touched": [
-   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🌐️next-runtime/🟦️.ts (1 spawn sites)"
-  ]
- },
- {
-  "kind": "child",
-  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️native-dependencies/📥️purpose/📜️script.ts",
-  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️native-dependencies/📥️purpose/📦️child/🟦️.ts",
-  "touched": [
-   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️native-dependencies/📥️purpose/🟦️.ts (1 spawn sites)"
-  ]
- },
- {
-  "kind": "child",
-  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📜️history/🧪️tests/📜️script.ts",
-  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📜️history/🧪️tests/📦️child/🟦️.ts",
-  "touched": [
-   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📜️history/🧪️tests/🟦️.ts (1 spawn sites)"
-  ]
- },
- {
-  "kind": "child",
-  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🧪️tests/📥️birth/📜️script.ts",
-  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🧪️tests/📥️birth/📦️child/🟦️.ts",
-  "touched": [
-   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🧪️tests/📥️birth/🟦️.ts (1 spawn sites)"
-  ]
- },
- {
-  "kind": "child",
-  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/📏️windows/📜️script.ts",
-  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/📏️windows/📦️child/🟦️.ts",
-  "touched": [
-   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/📏️windows/🟦️.ts (1 spawn sites)"
-  ]
- },
- {
-  "kind": "child",
-  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📤️arguments/📜️script.ts",
-  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📤️arguments/📦️child/🟦️.ts",
-  "touched": [
-   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📤️arguments/🟦️.ts (2 spawn sites)",
-   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📤️arguments/🔣️.json (7 command literals)"
-  ]
- },
- {
-  "kind": "child",
-  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️purpose/📜️script.ts",
-  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️purpose/📦️child/🟦️.ts",
-  "touched": [
-   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️purpose/🟦️.ts (1 spawn sites)",
-   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️purpose/🧪️tests/🌱️birth/🟦️.ts (2 references)"
-  ]
- },
- {
-  "kind": "child",
-  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/🕸️dependencies/📜️script.ts",
-  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/🕸️dependencies/📦️child/🟦️.ts",
-  "touched": [
-   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/🕸️dependencies/🟦️.ts (1 spawn sites)"
-  ]
- },
- {
-  "kind": "child",
-  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/👁️watch/🧪️tests/📜️script.ts",
-  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/👁️watch/🧪️tests/📦️child/🟦️.ts",
-  "touched": [
-   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/👁️watch/🧪️tests/🟦️.ts (1 spawn sites)"
+  "kind": "shim-removal",
+  "removed": [
+   "sourceClosureDigest",
+   "selectedCargoLockDigest"
+  ],
+  "importers": [
+   "L/⚡️caching/🧪️tests/🎚️build-mode/🟦️.ts"
   ]
  }
 ]

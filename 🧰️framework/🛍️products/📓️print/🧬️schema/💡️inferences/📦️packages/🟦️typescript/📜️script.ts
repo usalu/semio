@@ -8,6 +8,7 @@ import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runTestScript, runBuildScript } from "../../🧪️tests/🔬️typescript-package-commands/🟦️.ts";
+export { verifyVizChartInferences } from "../../🧪️tests/🔬️typescript-package-commands/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {

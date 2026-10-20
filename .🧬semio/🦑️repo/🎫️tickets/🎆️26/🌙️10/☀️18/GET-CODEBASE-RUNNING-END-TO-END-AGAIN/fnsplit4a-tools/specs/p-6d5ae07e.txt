@@ -1,0 +1,3 @@
+registerShellComponents8Tests 2 phases, keep=23, final return=false
+7-10 buildCanvasState
+40-40 registerShellComponentsTests

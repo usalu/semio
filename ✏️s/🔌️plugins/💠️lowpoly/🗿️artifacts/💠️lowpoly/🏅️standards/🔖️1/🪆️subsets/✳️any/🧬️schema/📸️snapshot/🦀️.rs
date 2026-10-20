@@ -7,6 +7,7 @@ use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 use managed_mesh::LowpolyMeshState;
 
 use framework_schema::ArtifactSchema;
+use crate::managed_mesh;
 
 
 

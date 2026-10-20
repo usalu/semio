@@ -11,8 +11,8 @@
       "vectors": [
         {
           "mutationId": "change-material-alpha-mode",
-          "sourceMutationDirectoryName": "🌫️change",
-          "mutationDirectoryName": "🌫️change",
+          "sourceMutationDirectoryName": "🌫️change-alpha",
+          "mutationDirectoryName": "🌫️change-alpha",
           "scenarios": [
             {
               "id": "switches-the-default-material-from-opaque-to-mask",
@@ -22,8 +22,8 @@
         },
         {
           "mutationId": "change-material-double-sided",
-          "sourceMutationDirectoryName": "🪞️change",
-          "mutationDirectoryName": "🪞️change",
+          "sourceMutationDirectoryName": "🪞️change-sides",
+          "mutationDirectoryName": "🪞️change-sides",
           "scenarios": [
             {
               "id": "makes-the-default-material-double-sided",
@@ -83,6 +83,10 @@
             {
               "id": "removes-the-albedo-image-and-renumbers-the-texture-source",
               "directoryName": "🖼️removes"
+            },
+            {
+              "id": "middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -94,6 +98,10 @@
             {
               "id": "removes-the-glass-material-and-renumbers-the-primitive-binding",
               "directoryName": "🔬️t051"
+            },
+            {
+              "id": "middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -105,6 +113,10 @@
             {
               "id": "removes-the-linear-sampler-and-renumbers-the-texture",
               "directoryName": "🚫️removes"
+            },
+            {
+              "id": "middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },
@@ -116,6 +128,10 @@
             {
               "id": "removes-the-albedo-texture-and-renumbers-the-base-colour-binding",
               "directoryName": "🔬️t049"
+            },
+            {
+              "id": "middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },

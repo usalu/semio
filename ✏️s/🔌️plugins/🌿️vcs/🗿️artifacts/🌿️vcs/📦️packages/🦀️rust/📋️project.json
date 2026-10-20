@@ -40,18 +40,22 @@
     },
     "test-snapshot-sqlite": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {"cwd":"✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite","forwardAllArgs":true}
     },
     "test-snapshot-sqlite-source": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {"cwd":"✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite source","forwardAllArgs":true}
     },
     "test-snapshot-sqlite-native": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {"cwd":"✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite native","forwardAllArgs":true}
     },
     "test": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import { resolveSemanticColorHex, resolveColorHex, themeColorVar } from "@semio-tech/ui-styling";
-import { ephemeralBox } from "../../../../🫧️transient/🟦️.ts";
+import { ephemeralBox } from "@semio-tech/framework-transient";
 import type { Plane, Point, Vector } from "../📐️geometry/🟦️.ts";
 import * as THREE from "three";
 import type { ThreeEvent } from "@react-three/fiber";

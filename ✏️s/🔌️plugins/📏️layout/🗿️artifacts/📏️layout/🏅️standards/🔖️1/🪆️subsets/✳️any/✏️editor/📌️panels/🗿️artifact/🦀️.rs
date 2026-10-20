@@ -14,7 +14,7 @@
 //! keep their own app actions.
 
 use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::config::LayoutWindowConfig;
-use semio_s_artifact_layout_layout_editor_panels::terminology::LayoutLabels;
+use crate::terminology::LayoutLabels;
 use semio_s_artifact_layout_layout_editor_commands::{layout_action, ui_value_map, ui_value_text, LAYOUT_GRANULARITY_ELEMENT, LAYOUT_INTERACTION_ELEMENTS, LAYOUT_PLAY_APP_ID};
 use semio_s_artifact_layout_layout_model::{Frame, LAYOUT_DOCUMENT_SCHEMA};
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;

@@ -17,7 +17,7 @@ include!("🔮️oracle-and-remedy-laws/🦀️.rs");
 
 #[test]
 fn compliant_dsl_asset_complies() {
-    let text = include_str!("../../../🖼️assets/🏗compliant/🗣️.dsl.semio");
+    let text = include_str!("../../../🖼️assets/🏗️compliant/🗣️.dsl.semio");
     let doc = decode_en1997_dsl(text).expect("decode compliant DSL");
     assert!(check_project(&doc).complies(), "compliant DSL must Pass");
 }

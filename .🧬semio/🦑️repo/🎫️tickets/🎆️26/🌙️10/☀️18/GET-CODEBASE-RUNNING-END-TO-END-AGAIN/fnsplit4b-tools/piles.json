@@ -1,0 +1,34 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🧱️pile-wall-slope-and-uplift-checks/🦀️.rs",
+ "function": "check_piles_walls_slopes_and_uplift",
+ "nth": 0,
+ "types": {},
+ "modes": {},
+ "keep": [],
+ "phases": [
+  {
+   "name": "check_pile_resistances",
+   "doc": "🪵️ Checks the axial resistance of every pile.",
+   "from": 7,
+   "to": 150
+  },
+  {
+   "name": "check_retaining_walls",
+   "doc": "🔩️ Checks the earth pressure, sliding and overturning of every retaining wall.",
+   "from": 159,
+   "to": 356
+  },
+  {
+   "name": "check_slopes",
+   "doc": "⚙️ Checks the overall stability of every slope.",
+   "from": 365,
+   "to": 436
+  },
+  {
+   "name": "check_uplift",
+   "doc": "🧲️ Checks the buoyancy uplift of every uplift case.",
+   "from": 445,
+   "to": 445
+  }
+ ]
+}

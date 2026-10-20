@@ -69,10 +69,10 @@ pub fn project(p:&mut Projection<'_,'_>,id:i64,v:&DwgAssoc2dConstraintGroup)->Re
  }
  }Ok(())
 }
-fn read_core(r:&mut Reader<'_,'_,'_>,row:super::number::Row<'_>)->Result<DwgConstraintNodeCore,ValueError>{Ok(DwgConstraintNodeCore{id:signed_integer(row,4)?,connected_node_ids:r.list("dwg_constraint_connected_node_identifier",1,row.rowid,2)?.into_iter().map(|row|unsigned(row,3)).collect::<Result<_,_>>()?})}
+fn read_core(r:&mut Reader<'_,'_,'_>,row:semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::number::Row<'_>)->Result<DwgConstraintNodeCore,ValueError>{Ok(DwgConstraintNodeCore{id:signed_integer(row,4)?,connected_node_ids:r.list("dwg_constraint_connected_node_identifier",1,row.rowid,2)?.into_iter().map(|row|unsigned(row,3)).collect::<Result<_,_>>()?})}
 fn read_geometric(r:&mut Reader<'_,'_,'_>,id:i64,node:DwgConstraintNodeCore)->Result<DwgGeometricConstraint,ValueError>{let row=r.component("dwg_geometric_constraint",id)?;Ok(DwgGeometricConstraint{node,owner_node_id:unsigned(row,1)?,implied:boolean(row,2)?,active:boolean(row,3)?})}
 fn read_geometry(r:&mut Reader<'_,'_,'_>,id:i64,node:DwgConstraintNodeCore)->Result<DwgConstraintGeometry,ValueError>{let row=r.component("dwg_constraint_geometry",id)?;Ok(DwgConstraintGeometry{node,geometry_dependency_handle:optional_unsigned(row,1,2)?,geometry_node_id:unsigned(row,3)?})}
-fn read_node(r:&mut Reader<'_,'_,'_>,row:super::number::Row<'_>)->Result<DwgConstraintNode,ValueError>{
+fn read_node(r:&mut Reader<'_,'_,'_>,row:semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::number::Row<'_>)->Result<DwgConstraintNode,ValueError>{
  let id=row.rowid;let kind=row.text(3)?;let node=read_core(r,row)?;let mut vectors:[Vec<f64>;5]=std::array::from_fn(|_|Vec::new());let mut prior=0;
  for row in r.list("dwg_constraint_coordinate",1,id,3)?{
  let index=match row.text(2)?{"point"=>0,"origin"=>1,"direction"=>2,"start_point"=>3,"end_point"=>4,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG constraint coordinate vector is unknown"))};

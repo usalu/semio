@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "pairs": [
+    {"platform": "darwin", "arch": "arm64", "bazel": "bazel-8.4.2-darwin-arm64", "bun": "bun-darwin-aarch64.zip", "nx": "@nx/nx-darwin-arm64"},
+    {"platform": "darwin", "arch": "x64", "bazel": "bazel-8.4.2-darwin-x86_64", "bun": "bun-darwin-x64-baseline.zip", "nx": "@nx/nx-darwin-x64"},
+    {"platform": "linux", "arch": "arm64", "bazel": "bazel-8.4.2-linux-arm64", "bun": "bun-linux-aarch64.zip", "nx": "@nx/nx-linux-arm64-gnu"},
+    {"platform": "linux", "arch": "x64", "bazel": "bazel-8.4.2-linux-x86_64", "bun": "bun-linux-x64-baseline.zip", "nx": "@nx/nx-linux-x64-gnu"},
+    {"platform": "win32", "arch": "arm64", "bazel": "bazel-8.4.2-windows-arm64.exe", "bun": "bun-windows-aarch64.zip", "nx": "@nx/nx-win32-arm64-msvc"},
+    {"platform": "win32", "arch": "x64", "bazel": "bazel-8.4.2-windows-x86_64.exe", "bun": "bun-windows-x64-baseline.zip", "nx": "@nx/nx-win32-x64-msvc"}
+  ],
+  "dockerfile": {"linux/x64": "x64-baseline", "linux/arm64": "aarch64"},
+  "upstream": {"bazelChecksum": "https://releases.bazel.build/{version}/release/{file}.sha256"}
+}

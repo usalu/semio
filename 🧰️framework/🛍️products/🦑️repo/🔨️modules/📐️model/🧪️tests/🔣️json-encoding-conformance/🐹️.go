@@ -13,7 +13,7 @@ import (
 
 // region 🔖️Domain Types
 
-// domainTypes is the decoder table: one fresh, zero-valued destination per golden document type.
+// 🌐️domainTypes is the decoder table: one fresh, zero-valued destination per golden document type.
 var domainTypes = map[string]func() any{
 	"Statute":                         func() any { return new(model.Statute) },
 	"Range":                           func() any { return new(model.Range) },
@@ -121,7 +121,7 @@ func goldenDocumentsRoundTrip(ctx *host.Context) (host.Outcome, error) {
 
 // region 🔖️Registration
 
-// Adapter is the registration entry point the generated host calls.
+// 🌉️Adapter is the registration entry point the generated host calls.
 func Adapter() *host.Adapter {
 	return host.NewAdapter("go").Subject("golden-documents-round-trip", goldenDocumentsRoundTrip)
 }

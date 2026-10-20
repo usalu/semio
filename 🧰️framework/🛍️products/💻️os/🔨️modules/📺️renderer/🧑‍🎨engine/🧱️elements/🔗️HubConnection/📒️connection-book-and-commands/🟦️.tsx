@@ -182,7 +182,17 @@ export function useHubConnectionBook({ port }: { readonly port: HubConnectionPor
   return { captureOperationOwner, commandAbort, setSpacesPhase, portRef, operationOwnerCurrent, session, setRows, loadSpaces, loadMembers, watchedSpaceIdRef, spacesAbort, connection, rebootstrapped, dispatchSession, readAuthority, operationGeneration, signInAbort, signOutAbort, authorityAbort, membersAbort, redemptionAbort, delegationAbort, book, operationConnectionId, retireOperationsForConnection, setAuthority, setMemberRows, setInvite, setRedemption, setAgentCredential, setDelegationSummaries, setDelegationPhase, setDelegationError, persist, setSearch, connectionRef, invite, loadDelegations, agentCredential, rows, search, memberRows, delegationSummaries, authority, spacesPhase, redemption, delegationPhase, delegationError, watchSpaceMembers };
 }
 
-/** ⌨ Builds the hub command runner and the sign in cancellation callbacks. */
+/**
+ * ⌨ Builds the hub command runner and the sign in cancellation callbacks.
+ *
+ * ♻️ Re-bootstrap on mount: the browsing context already holds a session (a reload, or this surface reopened after a
+ * sign-in), so it is presumed live only until the hub's own `me` answer confirms or refuses it. Mount-only — a later
+ * sign-out must not resurrect the session it just ended.
+ *
+ * ♻️ Re-authentication without a round trip per render: once the locally known deadline has
+ * passed, one `me` read confirms it with the hub (which may have extended or revoked it) instead
+ * of the shell deciding from its own clock.
+ */
 export function useHubCommandCallbacks({ captureOperationOwner, commandAbort, setSpacesPhase, portRef, operationOwnerCurrent, session, setRows, loadSpaces, loadMembers, watchedSpaceIdRef, spacesAbort, connection, rebootstrapped, dispatchSession, readAuthority, operationGeneration, signInAbort, signOutAbort, authorityAbort, membersAbort, redemptionAbort, delegationAbort, book, operationConnectionId, retireOperationsForConnection, setAuthority, setMemberRows, setInvite, setRedemption, setAgentCredential, setDelegationSummaries, setDelegationPhase, setDelegationError, persist }: Pick<ReturnType<typeof useHubConnectionBook>, "captureOperationOwner" | "commandAbort" | "setSpacesPhase" | "portRef" | "operationOwnerCurrent" | "session" | "setRows" | "loadSpaces" | "loadMembers" | "watchedSpaceIdRef" | "spacesAbort" | "connection" | "rebootstrapped" | "dispatchSession" | "readAuthority" | "operationGeneration" | "signInAbort" | "signOutAbort" | "authorityAbort" | "membersAbort" | "redemptionAbort" | "delegationAbort" | "book" | "operationConnectionId" | "retireOperationsForConnection" | "setAuthority" | "setMemberRows" | "setInvite" | "setRedemption" | "setAgentCredential" | "setDelegationSummaries" | "setDelegationPhase" | "setDelegationError" | "persist">) {
   const runCommand = useCallback(
     (command: DirectoryCommand, onReceipt: (receipt: DirectoryCommandReceiptV1) => void) => {

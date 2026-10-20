@@ -6,12 +6,6 @@ use crate::CursorRevisionAccumulator;
 /// replacement input every fold site reads in place of the recorded forward, which is never modified.
 pub type EffectiveSupersessions = protocol::HistoryFoldIndex<MutationId, protocol::EffectiveSupersession>;
 
-/// 🪜️ A fold's running projection: what the next operation diffs against, and how its successor displaces it.
-pub trait FoldProjection<P, Mutation> {
-    fn projection(&self) -> &P;
-    fn advance(&mut self, next: P);
-}
-
 /// 🔏️ Content digest of one effective supersession: which transition installed it and what it replaces the input with.
 pub fn supersession_digest(mutation_id: &MutationId, supersession: &protocol::EffectiveSupersession) -> [u8; 32] {
     let (kind, schema, payload): (&[u8], &[u8], &[u8]) = match &supersession.replacement {

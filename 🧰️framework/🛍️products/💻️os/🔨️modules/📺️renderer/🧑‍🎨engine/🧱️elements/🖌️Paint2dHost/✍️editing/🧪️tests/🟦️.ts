@@ -2,7 +2,7 @@
 import { expect, test } from "bun:test";
 import sharp from "sharp";
 import { editSelection, maskLayers, pixelLayers, layerPoint, selectionSpans, selectionBounds, type SelectionScanOptions } from "../🟦️.ts";
-import { surfacePaintEditingFixture as fixtures, paintStrokeRevisionFixture as revisions, paintMaskStrokeFixture as maskStrokes } from "@semio-tech/framework/surface/testing/fixtures";
+import { surfacePaintEditingFixture as fixtures, paintStrokeRevisionFixture as revisions, paintMaskStrokeFixture as maskStrokes } from "@semio-tech/framework-surface-ts/testing/fixtures";
 
 for(const fixture of fixtures.cases) test(fixture.name,()=>{
   const [layer]=pixelLayers(JSON.stringify(fixture.document),JSON.stringify(fixture.assets));

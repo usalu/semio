@@ -18,7 +18,7 @@ import { treeWindowRowAriaAttributes, treeWindowRowExtentPx } from "../🔭️vi
 import { TreeBranchContent } from "../🌲️branch/🟦️.tsx";
 
 /**
- * Single tree item row with icon, label, and interaction handlers.
+ * 🌳️ Single tree item row with icon, label, and interaction handlers.
  *
  * 🖱️ Every `role="treeitem"` row here activates from the SHELL — the element carrying `id` — not from its
  * label span, and every one of them publishes `aria-selected`. Both used to hold only for the leaf layout:
@@ -552,7 +552,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
 };
 
 /**
- * Iterator rendering a list of tree item children.
+ * 🌲️ Iterator rendering a list of tree item children.
  **/
 export const TreeItems: React.FC<{ children: React.ReactNode[]; renderItem: (child: React.ReactNode, index: number, isLast: boolean) => React.ReactNode }> = ({ children, renderItem }) => {
   return <>{children.map((child, index) => renderItem(child, index, index === children.length - 1))}</>;

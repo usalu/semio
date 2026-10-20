@@ -69,13 +69,6 @@ function main(argv: readonly string[]): number {
     console.error(`[probe] unknown probe ${JSON.stringify(probe)} — expected ${PROBES.join(" | ")}`);
     return 2;
   }
-  // 🏭️`--offline` skipped on purpose (unlike the cad probe): this crate has no lockfile checked in
-  // against a pre-warmed offline registry mirror in every environment this runs in, and a stale
-  // `--offline` failure here would read as "the carrier disagrees" rather than "cargo couldn't
-  // resolve deps" — a worse failure mode than the network round-trip cargo's own cache makes cheap
-  // on every call after the first.
-  // 📎️cargo must run in the CRATE directory, so every caller-supplied path is resolved against the
-  // caller's cwd FIRST — the same fix `…✳️cad/🔬️probes/📜️script.ts` needed for the same reason.
   const resolved = argv.map((argument, index) => (index > 0 && argv[index - 1] === "--input" && !isAbsolute(argument) ? resolve(process.cwd(), argument) : argument));
   const run = spawnSync("cargo", ["run", "--quiet", "--bin", "note-oracle-codec", "--", ...resolved], {
     cwd: CRATE_DIR,

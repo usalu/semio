@@ -135,9 +135,6 @@ impl CollisionPenetrationState {
     /// 📍️ Records `point` as a depth probe into `solid`'s part, keeping the deepest one; answers `true` once the depth is past
     /// the tolerance, which ends the measure (an infinite tolerance measures the full depth).
     fn probe(&mut self, point: rigid::Point3, solid_bounds: &CollisionAabb, solid_pose: rigid::Isometry3, solid: &CollisionShape) -> bool {
-        // 📦️ A point outside the solid's world bounds cannot be inside it: the surface query and the containment test are only
-        // paid for probes where the two bodies' bounds meet, and containment (BVH ray parity) only for a probe whose surface
-        // distance would deepen the measure.
         let outside = |axis: usize, value: f32| value < solid_bounds.min[axis] || value > solid_bounds.max[axis];
         if outside(0, point.x) || outside(1, point.y) || outside(2, point.z) {
             return false;
@@ -210,18 +207,12 @@ impl CollisionPenetrationState {
         for index in near {
             let face = solid_part.shape.shape.world_triangle_outward(solid_pose, index as usize);
             let clipped = collision::clip_behind_triangle(triangle, face);
-            // 📏️ A clipped point sits behind `face` inside its prism, so its distance to the solid's surface is at most its
-            // distance to that face's plane: a polygon whose every corner is within the tolerance of the plane cannot probe
-            // deeper, and skips the surface queries.
             let normal = (face[1] - face[0]).cross(face[2] - face[0]);
             let Some(unit) = normal.try_normalize(1e-12) else { continue };
             let deepest = clipped.points().iter().map(|point| f64::from(-unit.dot(*point - face[0]))).fold(0.0, f64::max);
             if deepest <= COLLISION_CONTACT_NOISE_M || deepest <= self.depth {
                 continue;
             }
-            // 📍️ Depth into a solid is the smallest distance over ALL its faces, which peaks inside the polygon (an edge cutting
-            // into a face between two other faces reads 0 at both ends and its full depth at the middle), so the polygon's
-            // edges and centroid are probed too.
             let points = clipped.points();
             let mut centroid = rigid::Vector3::new(0.0, 0.0, 0.0);
             for (index, point) in points.iter().enumerate() {

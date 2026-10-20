@@ -8,7 +8,7 @@ import type{ScriptInvocation}from"../../../🧭️routing/📥️invocation/🟦
 import type{ResourceLeaseControl}from"../../../🔒️leases/🟦️.ts";
 import{checkResourceLeaseControl}from"../../../🔒️leases/🟦️.ts";
 import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
-import schema from"./🧬️schema/🔣️.json";
+import schema from"./🧬️schema/🔣️.json" with { type: "json" };
 const contract=structuredClone(schema);
 
 /** 🧮️ Bounds actual file concurrency and both per-child and complete-cohort output. */

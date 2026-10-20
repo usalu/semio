@@ -93,6 +93,14 @@ VECTORS = {
     "retire-product-index": ("🗑️retire-product-index", "✅apply"),
     "introduce-geometry-object": ("📐introduce-geometry-object", "✅apply"),
     "retire-geometry-object": ("🗑️retire-geometry-object", "✅apply"),
+    "retire-subject-middle": ("retire-subject", "✂️retire-subject", "🧭️middle"),
+    "remove-selection-constraint-middle": ("remove-selection-constraint", "🔓️remove-selection-constraint", "🧭️middle"),
+    "retire-product-class-middle": ("retire-product-class", "🗑️retire-product-class", "🧭️middle"),
+    "retire-product-index-middle": ("retire-product-index", "🗑️retire-product-index", "🧭️middle"),
+    "retire-product-series-middle": ("retire-product-series", "🗑️retire-product-series", "🧭️middle"),
+    "retire-product-middle": ("retire-product", "🚫️retire-product", "🧭️middle"),
+    "retire-product-group-middle": ("retire-product-group", "🧹️retire-product-group", "🧭️middle"),
+    "retire-property-definition-middle": ("retire-property-definition", "🧽️retire-property-definition", "🧭️middle"),
 }
 
 #: 🗣️ The real committed ISO 16757 document, read where the domain already keeps it.

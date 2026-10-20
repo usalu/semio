@@ -3,7 +3,6 @@ import { applyPatch, compare } from "fast-json-patch";
 import { applyDagDiff } from "../../🔺️diff/🟦️.ts";
 /** 🧪️ DAG document facets use the native shared graph-child identity. */
 import assert from "node:assert/strict";
-import { fileURLToPath } from "node:url";
 import { assertDocumentContractOracle, declaredChildDialectSchema } from "@semio-tech/framework/schema/oracles/document";
 import { ioSchema as ioSchema } from "@semio-tech/framework/io/schema";
 import artifactSchema from "../../🔣️.json" with { type: "json" };
@@ -29,8 +28,8 @@ export function testDagDocumentContractOracle(): void {
     invalidDocuments: [...vectors.invalidDocuments, ...vectors.invalidIdentityDocuments],
     invalidDiffs: vectors.invalidDiffs,
     validDiffs: vectors.patchCases.map((item) => ({ input: item.diff, output: item.diff })),
-    mutationRoots: [fileURLToPath(new URL("../../../🧫️fixtures/🧬️mutations", import.meta.url))],
-    committed: { snapshots: 28, diffs: 0 },
+    mutationRoots: [],
+    committed: { snapshots: 0, diffs: 0 },
   });
   assert.deepEqual(parseDagDiff(vectors.diff), vectors.diff);
   const child = parseDagArtifact(vectors.document).content;

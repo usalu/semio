@@ -6,22 +6,20 @@ import Ajv from "ajv";
 import { applyPatch } from "fast-json-patch";
 import { parse, buildASTSchema } from "graphql";
 import { Root } from "protobufjs";
-import { binary64, binary64Value, type Binary64 } from "@semio-tech/value-ts/ieee754";
-import { parseFem2dMaterialPatch, parseFem2dMaterialsDelta } from "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts";
-import { parseFem3dMaterialPatch, parseFem3dMaterialsDelta } from "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts";
+import { binary64, binary64Value, type Binary64 } from "@semio-tech/framework/value/ieee754";
 
 const owner = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-console.log("[DEBUG] FEM material field-intent mirror suite loaded");
 const fixture = JSON.parse(readFileSync(resolve(owner, "🧪️tests/🧫️fixtures/🧱️field-intent/🔣️.json"), "utf8")) as { cases: { dimension: "2d" | "3d"; before: Record<string, unknown>; events: { mutation: string; id: string; patch: Record<string, unknown> }[]; after: Record<string, unknown> }[]; refusedPatches: unknown[] };
 const capturePatch = (patch: unknown): unknown => patch && typeof patch === "object" ? Object.fromEntries(Object.entries(patch).map(([key, value]) => [key, typeof value === "number" ? binary64(value) : value])) : patch;
 
-describe("material field intent mirrors", () => {
-  for (const testCase of fixture.cases) {
+/** 🧱️ Registers the material field-intent laws of one dimension against that artifact's own diff parsers. */
+export function registerMaterialFieldIntent(dimension: "2d" | "3d", parsers: { parsePatch(patch: any): unknown; parseDelta(delta: any): { modified: readonly { patch: object }[] } }): void {
+describe(`${dimension} material field intent mirrors`, () => {
+  for (const testCase of fixture.cases.filter(row => row.dimension === dimension)) {
     const schemaOwner = resolve(owner, `🗿️artifacts/${testCase.dimension === "2d" ? "◻️2d" : "🧊️3d"}/🏅️standards/🔖️1/🪆️subsets`);
     const schema = JSON.parse(readFileSync(resolve(schemaOwner, "🧱️material/🧬️schema/🧬️mutations/🩹️change-material/🧬️schema/🔣️.json"), "utf8"));
     const validate = new Ajv({ strict: false, allErrors: true, validateFormats: false }).compile(schema);
-    const parsePatch = testCase.dimension === "2d" ? parseFem2dMaterialPatch : parseFem3dMaterialPatch;
-    const parseDelta = testCase.dimension === "2d" ? parseFem2dMaterialsDelta : parseFem3dMaterialsDelta;
+    const { parsePatch, parseDelta } = parsers;
 
     it(`${testCase.dimension} preserves both independent field edits in either arrival order`, () => {
       for (const events of [testCase.events, [...testCase.events].reverse()]) {
@@ -64,3 +62,4 @@ describe("material field intent mirrors", () => {
     });
   }
 });
+}

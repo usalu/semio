@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "cases": [
+    {"name":"Open Admission","pending":0,"topOpen":true,"nestedLive":false,"framePending":0,"refused":false},
+    {"name":"Scope Full","pending":32,"topOpen":true,"nestedLive":false,"framePending":0,"refused":true},
+    {"name":"Closed Top Admission","pending":0,"topOpen":false,"nestedLive":false,"framePending":0,"refused":true},
+    {"name":"Current Frame Full","pending":0,"topOpen":true,"nestedLive":false,"framePending":32,"refused":true},
+    {"name":"Retained Nested Admission","pending":0,"topOpen":false,"nestedLive":true,"framePending":0,"refused":false}
+  ]
+}

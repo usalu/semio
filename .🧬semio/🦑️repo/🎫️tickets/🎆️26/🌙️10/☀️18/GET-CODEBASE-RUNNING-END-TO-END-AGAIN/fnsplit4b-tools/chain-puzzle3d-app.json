@@ -1,0 +1,13 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️manifest/🦀️.rs",
+ "function": "create_puzzle3d_app",
+ "nth": 0,
+ "max_lines": 110,
+ "builder_type": "semio_framework_plugin::app::EditorBuilder",
+ "keep_tail": 1,
+ "types": {
+  "envelope": "Puzzle3dScene"
+ },
+ "noun": "manifest",
+ "what": "its builder calls"
+}

@@ -5,145 +5,145 @@ import { normWireArray, normWireBoolean, normWireDefault, normWireInteger, normW
 import { type AccidentalCase, type AccidentalExplosion, type AccidentalImpact, type FloorArea, parseAccidentalCase, parseAccidentalExplosion, parseAccidentalImpact, parseFloorArea, parseRoofArea, parseSelfWeightElement, parseWindFace, type RoofArea, type SelfWeightElement, type WindFace } from "../📸️snapshot/🟦️.ts";
 
 export interface En1991Diff {
-  /** @state artifact */
+  /** 📑️ @state artifact */
   annex: ("En" | "De") | null;
-  /** @state artifact */
+  /** 🌬️ @state artifact */
   snowZone: string | null;
-  /** @state artifact */
+  /** 🔄️ @state artifact */
   altitude: number | null;
-  /** @state artifact */
+  /** 📏️ @state artifact */
   enSk: number | null;
-  /** @state artifact */
+  /** 🌐️ @state artifact */
   northGermanLowlandSnow: boolean | null;
-  /** @state artifact */
+  /** ❄️ @state artifact */
   windZone: number | null;
-  /** @state artifact */
+  /** 🏛️ @state artifact */
   enVb: number | null;
-  /** @state artifact */
+  /** 🗺️ @state artifact */
   terrainCategory: number | null;
-  /** @state artifact */
+  /** 🌍️ @state artifact */
   mixedTerrainUpwind: number | null;
-  /** @state artifact */
+  /** 🏔️ @state artifact */
   mixedTerrainDistance: number | null;
-  /** @state artifact */
+  /** 🔍️ @state artifact */
   orographyFactor: number | null;
-  /** @state artifact */
+  /** ✏️ @state artifact */
   coastOrIsland: boolean | null;
-  /** @state artifact */
+  /** 💨️ @state artifact */
   airDensity: number | null;
-  /** @state artifact */
+  /** ↕️ @state artifact */
   height: number | null;
-  /** @state artifact */
+  /** ↔️ @state artifact */
   width: number | null;
-  /** @state artifact */
+  /** 📐️ @state artifact */
   depth: number | null;
-  /** @state artifact */
+  /** 📝️ @state artifact */
   assumedDeltaT: number | null;
-  /** @state artifact */
+  /** 🎚️ @state artifact */
   tMax: number | null;
-  /** @state artifact */
+  /** 🚧️ @state artifact */
   tMin: number | null;
-  /** @state artifact */
+  /** 🧬️ @state artifact */
   t0: number | null;
-  /** @state artifact */
+  /** 🌋️ @state artifact */
   thermalElementType: string | null;
-  /** @state artifact */
+  /** 🌡️ @state artifact */
   thermalBridgeType: number | null;
-  /** @state artifact */
+  /** 📜️ @state artifact */
   deltaTM: number | null;
-  /** @state artifact */
+  /** 🪜️ @state artifact */
   storeyCount: number | null;
-  /** @state artifact */
+  /** ⚡️ @state artifact */
   fireMode: ("none" | "nominal" | "parametric") | null;
-  /** @state artifact */
+  /** 📣️ @state artifact */
   fireCurve: ("standard" | "external" | "hydrocarbon" | "parametric") | null;
-  /** @state artifact */
+  /** 🎆️ @state artifact */
   fireDuration: number | null;
-  /** @state artifact */
+  /** 🔥️ @state artifact */
   assumedGasTemperature: number | null;
-  /** @state artifact */
+  /** 🛰️ @state artifact */
   assumedHNet: number | null;
-  /** @state artifact */
+  /** 🔔️ @state artifact */
   fireCompartmentArea: number | null;
-  /** @state artifact */
+  /** 🎬️ @state artifact */
   fireCompartmentHeight: number | null;
-  /** @state artifact */
+  /** 🧯️ @state artifact */
   fireOpeningFactor: number | null;
-  /** @state artifact */
+  /** 🚒️ @state artifact */
   fireThermalInertia: number | null;
-  /** @state artifact */
+  /** 🧨️ @state artifact */
   fireOccupancy: string | null;
-  /** @state artifact */
+  /** 🏋️ @state artifact */
   fireLoadDensityQf: number | null;
-  /** @state artifact */
+  /** 🧱️ @state artifact */
   assumedQfD: number | null;
-  /** @state artifact */
+  /** 🏗️ @state artifact */
   constructionActivity: string | null;
-  /** @state artifact */
+  /** 🔨️ @state artifact */
   assumedConstructionQk: number | null;
-  /** @state artifact */
+  /** 🔩️ @state artifact */
   structureKind: ("building" | "bridge") | null;
-  /** @state artifact */
+  /** 🌉️ @state artifact */
   bridgeLane: number | null;
-  /** @state artifact */
+  /** 🔌️ @state artifact */
   bridgeSpan: number | null;
-  /** @state artifact */
+  /** 🎁️ @state artifact */
   bridgeLaneWidth: number | null;
-  /** @state artifact */
+  /** 🪞️ @state artifact */
   assumedBridgeTandem: number | null;
-  /** @state artifact */
+  /** 🧥️ @state artifact */
   assumedBridgeUdl: number | null;
-  /** @state artifact */
+  /** 🔬️ @state artifact */
   assumedBridgeLm2: number | null;
-  /** @state artifact */
+  /** 💠️ @state artifact */
   assumedBridgeFootway: number | null;
-  /** @state artifact */
+  /** 📘️ @state artifact */
   assumedBridgeLm3: number | null;
-  /** @state artifact */
+  /** 🪔️ @state artifact */
   assumedBridgeLm4: number | null;
-  /** @state artifact */
+  /** ⚖️ @state artifact */
   bridgeLoadGroup: string | null;
-  /** @state artifact */
+  /** 📙️ @state artifact */
   craneClaimed: boolean | null;
-  /** @state artifact */
+  /** 🏷️ @state artifact */
   craneClass: string | null;
-  /** @state artifact */
+  /** 🗂️ @state artifact */
   hoistClass: string | null;
-  /** @state artifact */
+  /** 🏁️ @state artifact */
   hoistingSpeed: number | null;
-  /** @state artifact */
+  /** 📍️ @state artifact */
   assumedCraneWheel: number | null;
-  /** @state artifact */
+  /** ⬅️ @state artifact */
   assumedCraneHorizontal: number | null;
-  /** @state artifact */
+  /** 📔️ @state artifact */
   siloClaimed: boolean | null;
-  /** @state artifact */
+  /** 🚦️ @state artifact */
   siloKind: string | null;
-  /** @state artifact */
+  /** 💧️ @state artifact */
   siloBulkDensity: number | null;
-  /** @state artifact */
+  /** 🗼️ @state artifact */
   siloHeight: number | null;
-  /** @state artifact */
+  /** 🚰️ @state artifact */
   siloHydraulicRadius: number | null;
-  /** @state artifact */
+  /** ⛓️ @state artifact */
   siloMu: number | null;
-  /** @state artifact */
+  /** 🐙️ @state artifact */
   siloK: number | null;
-  /** @state artifact */
+  /** 🪢️ @state artifact */
   assumedSiloPressure: number | null;
-  /** @state artifact */
+  /** 🛠️ @state artifact */
   assumedSiloPatch: number | null;
-  /** @state artifact */
+  /** 🏠️ @state artifact */
   assumedSiloWallFriction: number | null;
-  /** @state artifact */
+  /** 🏢️ @state artifact */
   floors?: En1991FloorDelta;
-  /** @state artifact */
+  /** 🧲️ @state artifact */
   selfWeightElements?: En1991SelfWeightElementDelta;
-  /** @state artifact */
+  /** 🛖️ @state artifact */
   roofs?: En1991RoofDelta;
-  /** @state artifact */
+  /** 🔲️ @state artifact */
   windFaces?: En1991WindFaceDelta;
-  /** @state artifact */
+  /** 💥️ @state artifact */
   accidentalCases?: En1991AccidentalCaseDelta;
 }
 

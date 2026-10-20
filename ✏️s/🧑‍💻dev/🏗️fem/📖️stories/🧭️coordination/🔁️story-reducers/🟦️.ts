@@ -3,8 +3,8 @@ import { parseViewport3dOrbit, type Viewport3dOrbit } from "@semio-tech/framewor
 import { FEM2D_DEMO_SNAPSHOT, FEM2D_STORY_EXAMPLE_ID, FEM3D_DEMO_SNAPSHOT, FEM3D_STORY_EXAMPLE_ID, femNextId, femStoryActionArgs, femStoryLabel, type FemStoryLocale } from "../🟦️.ts";
 import { EMPTY_FEM2D_SNAPSHOT, EMPTY_FEM3D_SNAPSHOT, type Fem2dSnapshot, type Fem3dSnapshot } from "../📸️snapshot-projection/🟦️.ts";
 import { FEM2D_DEFAULT_CAMERA, FEM3D_INITIAL_HOVER, FEM3D_INITIAL_SELECTION, FEM3D_INITIAL_VIEWPORT, FEM3D_INTERACTION_DOMAIN, FEM3D_SELECTION_SPEC, fem3dStoryTopology } from "../🎞️scenes/🟦️.ts";
-import { type DomainHover, type DomainSelection, parseInteractionTarget, parseMergeMode } from "../../../../../../🧰️framework/🔨️modules/🕹️interaction/🧬️schema/🟦️.ts";
-import { DEFAULT_HOVER_SPEC, nextHover, nextSelection } from "@semio-tech/framework/interaction";
+import { type DomainHover, type DomainSelection, parseInteractionTarget, parseMergeMode } from "@semio-tech/framework-interaction/schema";
+import { DEFAULT_HOVER_SPEC, nextHover, nextSelection } from "@semio-tech/framework-interaction";
 
 //#region 🔖️ResultDisplay
 /** 👁️ Result presentation owned by the current window and translated at the render boundary. */

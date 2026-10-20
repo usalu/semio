@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🎨️change-result-field",
+  "semanticKind": "change-result-field",
+  "displayName": "Change Result Field",
+  "emoji": "🎨️",
+  "aggregateVariant": "ChangeResultField",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-result-field",
+  "binaryTag": 1,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema"
+  ]
+}

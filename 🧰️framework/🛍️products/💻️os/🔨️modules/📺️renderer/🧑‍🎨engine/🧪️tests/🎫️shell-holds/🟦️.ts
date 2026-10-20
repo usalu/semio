@@ -1,7 +1,7 @@
 /** 🎫 The shell says what it holds, plus gizmo, virtual file system, replay refusal and locale source. */
 import { readUiPreferences } from "../../🧱️elements/🎚️UiPreferences/🟦️.ts";
 import explicitLocaleFixture from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/⏳️compute-locale.json";
-import { gizmoTipBoundsFixture, sceneListTransferFixture, treeDragHandleFixture, vfsDescriptorFixture } from "@semio-tech/framework/ui/testing/fixtures";
+import { gizmoTipBoundsFixture, sceneListTransferFixture, treeDragHandleFixture, vfsDescriptorFixture } from "@semio-tech/ui/testing/fixtures";
 import { renderVirtualFileSystemDescriptorCell, type DescriptorKind, type FileNodeDescriptorValue } from "@semio-tech/ui-react";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -31,7 +31,7 @@ describe("🎫️ the shell says what it holds", () => {
     const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../../../..");
     const nodeGraph = readModuleTreeSource(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🟦️.tsx"));
     const manifest = readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🛂️manifest/🔘️definitions-action-ids-and-shell-brand/🟦️.ts"), "utf8");
-    const { nodeGraphActions } = await import("@semio-tech/framework/modules/ui/scene/node-graph");
+    const { nodeGraphActions } = await import("@semio-tech/ui/scene/node-graph");
 
     const reserved = /export const CLEAR_SELECTION_ACTION_ID = "([^"]+)";/u.exec(manifest)?.[1];
     expect(reserved, "the framework declares the reserved clear verb").toBe("clearSelection");

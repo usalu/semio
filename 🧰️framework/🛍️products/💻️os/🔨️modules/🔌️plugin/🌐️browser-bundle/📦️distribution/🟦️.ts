@@ -1,7 +1,7 @@
 import { constants } from "node:fs";
 import { copyFile, lstat, mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, relative, resolve } from "node:path";
-import schemaModule from "../🧬️schema/🔣️.json";
+import schemaModule from "../🧬️schema/🔣️.json" with { type: "json" };
 import { rewritePreview2ShimImportSource } from "../🕸️imports/🟦️.ts";
 
 export type BrowserArtifactSource = {

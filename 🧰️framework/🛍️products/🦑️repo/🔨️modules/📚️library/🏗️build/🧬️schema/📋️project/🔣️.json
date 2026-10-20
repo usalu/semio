@@ -117,7 +117,9 @@
     },
     "LiteralArguments": {
       "type": "array",
-      "items": {"type": "string"}
+      "items": {
+        "type": "string"
+      }
     },
     "Task": {
       "type": "object",
@@ -134,7 +136,9 @@
         "options": {
           "type": "object",
           "properties": {
-            "args": {"$ref": "#/$defs/LiteralArguments"}
+            "args": {
+              "$ref": "#/$defs/LiteralArguments"
+            }
           },
           "allOf": [
             {
@@ -208,6 +212,13 @@
                       "$ref": "#/$defs/ReadyDeclaration"
                     }
                   }
+                },
+                "sourceInputObservation": {
+                  "type": "string",
+                  "enum": [
+                    "compile",
+                    "freshness"
+                  ]
                 }
               }
             }

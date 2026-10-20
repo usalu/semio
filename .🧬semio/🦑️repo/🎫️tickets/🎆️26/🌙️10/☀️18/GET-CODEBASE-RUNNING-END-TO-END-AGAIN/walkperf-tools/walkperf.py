@@ -204,13 +204,13 @@ def absolute(relative):
 
 def apply_ops(text, ops, name):
     for index, (anchor, replacement) in enumerate(ops):
-        found = text.count(anchor)
-        if text.count(replacement) >= 1:
+        found, done = text.count(anchor), text.count(replacement)
+        if done == 1 and (found == 0 or anchor in replacement):
             continue
-        elif found == 1:
+        if found == 1 and done == 0:
             text = text.replace(anchor, replacement)
-        else:
-            raise SystemExit("anchor %s[%d] occurs %d times (expected 1): %s" % (name, index, found, anchor[:90]))
+            continue
+        raise SystemExit("anchor %s[%d] occurs %d times and its replacement %d times (expected one of them exactly once): %s" % (name, index, found, done, anchor[:90]))
     return text
 
 
@@ -218,8 +218,20 @@ def bases_path():
     return os.path.join(HERE, "bases.json")
 
 
-def cmd_bases():
-    data = {name: sha(read(absolute(path))) for name, path in TARGET.items()}
+def cmd_bases(tree=None):
+    def source(path):
+        staged = os.path.join(os.path.abspath(tree), path) if tree else None
+        marker = os.path.join(os.path.abspath(tree), ".materialized.json") if tree else None
+        gone = set(json.load(open(marker, encoding="utf-8"))["deleted"]) if marker and os.path.isfile(marker) else set()
+        if path in gone:
+            raise SystemExit("target deleted by a predecessor: " + path)
+        return read(staged) if staged and os.path.isfile(staged) else read(absolute(path))
+
+    data = {}
+    for name, path in TARGET.items():
+        raw = source(path)
+        apply_ops(raw.decode("utf-8"), PATCHES[name], name)
+        data[name] = sha(raw)
     json.dump(data, open(bases_path(), "w"), indent=1)
     print(json.dumps(data, indent=1))
 
@@ -254,9 +266,9 @@ def sync_running():
         if not words or str(os.getpid()) == pid:
             continue
         executable = os.path.basename(words[0])
-        if executable == "bun" and "dependencies sync" in command:
+        if executable == "bun" and ("dependencies sync" in command or "dependencies lock" in command):
             found.append(line)
-        elif executable in ("sh", "bash", "zsh") and any(name in command for name in ("deps4-run.sh", "deps4-loop.sh")) and "-c" not in words[1:2]:
+        elif executable in ("sh", "bash", "zsh") and any(name in command for name in ("deps4-run.sh", "deps4-loop.sh", "deps4-loop2.sh")) and "-c" not in words[1:2]:
             found.append(line)
     return found
 
@@ -426,15 +438,75 @@ def cmd_mirror(args):
     print("mirror", mirror)
 
 
+def cmd_overlap(args):
+    others = [os.path.abspath(value) for value in args if not value.startswith("--")] or [os.path.join(HERE, "..", "lease-fair-tools")]
+    mine = {path.replace(os.sep, "/") for path in list(TARGET.values()) + list(NEW.values())}
+    virtual = {path.replace(os.sep, "/"): read(os.path.join(HERE, "staged", key)) for key, path in NEW.items()}
+    for name, text in patched_texts(False).items():
+        virtual[TARGET[name].replace(os.sep, "/")] = text.encode("utf-8")
+    closure = set(closure_files(virtual))
+    for other in others:
+        bases_file = os.path.join(other, "bases.json")
+        patches_file = os.path.join(other, "patches.json")
+        if os.path.isfile(patches_file):
+            rows = json.load(open(patches_file, encoding="utf-8"))
+            print("== " + os.path.basename(os.path.normpath(other)) + ": " + str(len(rows)) + " anchored target(s)")
+            for path, row in sorted(rows.items()):
+                if path.replace(os.sep, "/") not in mine and path not in closure:
+                    continue
+                name = next((key for key, value in TARGET.items() if value.replace(os.sep, "/") == path), None)
+                print("  " + ("same target as walkperf " + name if name else "inside the walkperf runtime closure") + ": " + path)
+                if name:
+                    base = read(absolute(path)).decode("utf-8")
+                    for label, first, second in (("walkperf then theirs", PATCHES[name], row["ops"]), ("theirs then walkperf", row["ops"], PATCHES[name])):
+                        try:
+                            text = apply_ops(base, [tuple(op) for op in first], name)
+                            apply_ops(text, [tuple(op) for op in second], name)
+                            print("    " + label + ": every anchor occurs exactly once (commutes)")
+                        except SystemExit as error:
+                            print("    " + label + ": CONFLICT " + str(error))
+            continue
+        if not os.path.isfile(bases_file):
+            print("no bases.json or patches.json in", other)
+            continue
+        theirs = json.load(open(bases_file, encoding="utf-8"))
+        print("== " + os.path.basename(os.path.normpath(other)) + ": " + str(len(theirs)) + " target(s)")
+        shared = sorted(set(theirs) & mine)
+        print("same target file in both: " + (", ".join(shared) if shared else "none"))
+        inside = sorted(path for path in theirs if path in closure)
+        print("their targets inside the walkperf runtime closure (a receipt published before they apply becomes stale once, never wrong):")
+        for path in inside:
+            print("  " + path)
+        print("their targets outside the closure: " + str(len(theirs) - len(inside)))
+    print("order: apply every other staged library change first, then walkperf, then publish; a closure change after publication costs one complete walk.")
+
+
+FLAGS = {"--dry-run", "--ignore-sync", "--rebase", "--overwrite-new", "--closure"}
+
+
 if __name__ == "__main__":
     command = sys.argv[1] if len(sys.argv) > 1 else ""
+    unknown = [word for index, word in enumerate(sys.argv[2:], 2) if word.startswith("-") and word not in FLAGS and sys.argv[index - 1] != "--copy"]
+    if unknown:
+        raise SystemExit("refusing unknown flag(s) " + " ".join(unknown))
     if command == "bases":
         cmd_bases()
+    elif command == "bases-from":
+        cmd_bases(sys.argv[2])
     elif command == "check":
         cmd_check("--rebase" not in sys.argv)
     elif command == "apply":
         cmd_apply(sys.argv[2:])
     elif command == "mirror":
         cmd_mirror(sys.argv[2:])
+    elif command == "overlap":
+        cmd_overlap(sys.argv[2:])
+    elif command == "closure":
+        virtual = {}
+        for key, path in NEW.items():
+            virtual[path.replace(os.sep, "/")] = read(os.path.join(HERE, "staged", key))
+        for name, text in patched_texts("--rebase" not in sys.argv).items():
+            virtual[TARGET[name].replace(os.sep, "/")] = text.encode("utf-8")
+        print(json.dumps(sorted(closure_files(virtual)), ensure_ascii=False))
     else:
-        raise SystemExit("usage: walkperf.py bases|check [--rebase]|apply [--dry-run] [--rebase] [--ignore-sync] [--overwrite-new]|mirror DIR [--rebase] [--closure] [--copy RELATIVE_DIR]...")
+        raise SystemExit("usage: walkperf.py bases|bases-from TREE|closure [--rebase]|overlap [DIR...]|check [--rebase]|apply [--dry-run] [--rebase] [--ignore-sync] [--overwrite-new]|mirror DIR [--rebase] [--closure] [--copy RELATIVE_DIR]...")

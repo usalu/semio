@@ -27,6 +27,7 @@ original-actor-context-testing = []
 
 [dependencies]
 semio-framework-plugin-actor-host = { path = "../../../../🌐host/📦️packages/🦀️rust" }
+semio-framework-actor = { workspace = true }
 semio-framework-plugin-interaction = { path = "../../../../🕹️interaction/📦️packages/🦀️rust" }
 semio-framework-plugin-job = { path = "../../../../👷️job/📦️packages/🦀️rust" }
 semio-framework-plugin-reactor-app = { path = "../../../🔌️app/📦️packages/🦀️rust" }

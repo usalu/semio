@@ -33,6 +33,8 @@ TARGET = {
     "admission": J(ADM, TS),
     "admission-schema": J(ADM, SCHEMA, JSON_),
     "read": J(ADM, READ, TS),
+    "feature": J(ADM, TESTS, E(0x1F952) + ".feature"),
+    "admission-test": J(ADM, TESTS, TS),
 }
 NEW = {
     "recheck.test.ts": J(ADM, TESTS, RECHECK, TS),
@@ -52,11 +54,21 @@ PATCHES = {
     "admission": [
         (staged("interface.old.txt"), staged("interface.new.txt")),
         (staged("port.old.txt"), staged("port.new.txt")),
-        ('await publish("cfg");const limits=', 'await publish("cfg");await port.recheck?.(control,"unit");const limits='),
-        ('await publish("complete");\n }\n}\n', 'await publish("complete");\n }\n await port.recheck?.(control,"complete");\n}\n'),
+        ('await publish("cfg");const limits=', 'await publish("cfg");await port.recheck(control,"unit");const limits='),
+        ('await publish("complete");\n }\n}\n', 'await publish("complete");\n }\n await port.recheck(control,"complete");\n}\n'),
     ],
     "admission-schema": [
         ('    "readCheckpoint": {\n      "const": 8\n    }\n', '    "readCheckpoint": {\n      "const": 8\n    },\n    "storageRecheck": {\n      "const": {\n        "intervalMilliseconds": 15000\n      }\n    }\n'),
+    ],
+    "feature": [
+        ("      | original cancellation |\n", "      | original cancellation |\n" + staged("feature.add.txt")),
+    ],
+    "admission-test": [
+        ("{async cfg(unit){cfgCalls++;return[unit.compilerFlags[1]!];}", "{async recheck(){},async cfg(unit){cfgCalls++;return[unit.compilerFlags[1]!];}"),
+        ("{async cfg(_unit,received){expect(received).toBe(control);return[];}", "{async recheck(){},async cfg(_unit,received){expect(received).toBe(control);return[];}"),
+        ("{async cfg(_unit,received){expect(received).toBe(control);cfgCalls++;return[];}", "{async recheck(){},async cfg(_unit,received){expect(received).toBe(control);cfgCalls++;return[];}"),
+        ("{async cfg(){return[];},async read(){reads++;", "{async recheck(){},async cfg(){return[];},async read(){reads++;"),
+        ("{async cfg(){calls.cfg++;", "{async recheck(){},async cfg(){calls.cfg++;"),
     ],
     "read": [
         ("const bytes=Buffer.alloc(Number(facts.size));let offset=0;while(offset<bytes.byteLength){await recheck();", "const bytes=Buffer.alloc(Number(facts.size));let offset=0;while(offset<bytes.byteLength){if(offset>0)await recheck();"),
@@ -84,12 +96,13 @@ def bases_path():
 
 def apply_ops(text, ops, name):
     for index, (anchor, replacement) in enumerate(ops):
-        if replacement in text:
+        found, done = text.count(anchor), text.count(replacement)
+        if done == 1 and (found == 0 or anchor in replacement):
             continue
-        found = text.count(anchor)
-        if found != 1:
-            raise SystemExit("anchor %s[%d] occurs %d times (expected 1): %s" % (name, index, found, anchor[:90]))
-        text = text.replace(anchor, replacement)
+        if found == 1 and done == 0:
+            text = text.replace(anchor, replacement)
+            continue
+        raise SystemExit("anchor %s[%d] occurs %d times and its replacement %d times (expected one of them exactly once): %s" % (name, index, found, done, anchor[:90]))
     return text
 
 
@@ -112,7 +125,10 @@ def sync_running():
         words = command.split()
         if not words or str(os.getpid()) == pid:
             continue
-        if os.path.basename(words[0]) == "bun" and "dependencies sync" in command:
+        executable = os.path.basename(words[0])
+        if executable == "bun" and ("dependencies sync" in command or "dependencies lock" in command):
+            found.append(line)
+        elif executable in ("sh", "bash", "zsh") and any(name in command for name in ("deps4-run.sh", "deps4-loop.sh", "deps4-loop2.sh")) and "-c" not in words[1:2]:
             found.append(line)
     return found
 
@@ -206,8 +222,18 @@ def cmd_mirror(args):
     print("mirror", mirror)
 
 
+FLAGS = {"--dry-run", "--ignore-sync", "--rebase", "--overwrite-new", "--recovery-head"}
+
+
+def refuse_unknown(args):
+    unknown = [word for index, word in enumerate(args) if word.startswith("-") and word not in FLAGS and not (index and args[index - 1] == "--copy")]
+    if unknown:
+        raise SystemExit("refusing unknown flag(s) " + " ".join(unknown))
+
+
 if __name__ == "__main__":
     command = sys.argv[1] if len(sys.argv) > 1 else ""
+    refuse_unknown(sys.argv[2:])
     if command == "bases":
         cmd_bases()
     elif command == "check":

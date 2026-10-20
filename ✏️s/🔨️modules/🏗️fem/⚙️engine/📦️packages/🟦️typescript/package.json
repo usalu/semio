@@ -3,12 +3,22 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./analyses/result-source": "./🧮️analyses/🏷️result-source/🟦️.ts",
+    "./analyses/result-source/testing": "./🧮️analyses/🏷️result-source/🧪️testing/🟦️.ts",
+    "./analyses/testing/combination-stress": "./🧮️analyses/🧪️testing/⚖️combination-stress/🟦️.ts",
     "./analyses/testing/merge-refusal": "./🧮️analyses/🧪️testing/🔀️merge-refusal/🟦️.ts",
     "./analyses/testing/step-grant": "./🧮️analyses/🧪️testing/⛽️step-grant/🟦️.ts",
+    "./analyses/testing/triplet-csr": "./🧮️analyses/🧪️testing/🧮️triplet-csr/🟦️.ts",
+    "./elements3d/testing/geometric-cells": "./🧱️elements3d/🧪️testing/🌀️geometric-cells/🟦️.ts",
     "./elements3d/testing/mounted-stiffness": "./🧱️elements3d/🧪️testing/🧱️mounted-stiffness/🟦️.ts",
     "./mesh/testing/edge-authority": "./🕸️mesh/🧪️testing/🕸️edge-authority/🟦️.ts",
     "./sparse/testing/paged-csr": "./🔢️sparse/🧪️testing/📚️paged-csr/🟦️.ts",
+    "./sparse/testing/paged-ldlt": "./🔢️sparse/🧪️testing/📚️paged-ldlt/🟦️.ts",
+    "./sparse/testing/pencil": "./🔢️sparse/🧪️testing/🎼️pencil/🟦️.ts",
+    "./sparse/testing/positive-spectrum": "./🔢️sparse/🧪️testing/🎯️positive-spectrum/🟦️.ts",
     "./sparse/testing/publication-grant": "./🔢️sparse/🧪️testing/⛽️publication-grant/🟦️.ts",
-    "./sparse/testing/scalar-owners": "./🔢️sparse/🧪️testing/🔢️scalar-owners/🟦️.ts"
+    "./sparse/testing/restore-funding": "./🔢️sparse/🧪️testing/⛽️restore-funding/🟦️.ts",
+    "./sparse/testing/scalar-owners": "./🔢️sparse/🧪️testing/🔢️scalar-owners/🟦️.ts",
+    "./sparse/testing/shape": "./🔢️sparse/🧪️testing/🎼️shape/🟦️.ts"
   }
 }

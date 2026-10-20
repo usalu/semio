@@ -37,32 +37,32 @@ pub mod rename_paint_layer {
 }
 #[path = "."]
 pub mod change_paint_layer_visible {
-    #[path = "../👁️change-paint-layer/🦀️.rs"]
+    #[path = "../👁️change-paint-layer-visible/🦀️.rs"]
     mod component;
     pub use component::*;
-    #[path = "../👁️change-paint-layer/🔺️diff/🦀️.rs"]
+    #[path = "../👁️change-paint-layer-visible/🔺️diff/🦀️.rs"]
     pub mod diff;
-    #[path = "../👁️change-paint-layer/↩️inverse/🦀️.rs"]
+    #[path = "../👁️change-paint-layer-visible/↩️inverse/🦀️.rs"]
     pub mod inverse;
 }
 #[path = "."]
 pub mod change_paint_layer_opacity {
-    #[path = "../🌫️change-paint-layer/🦀️.rs"]
+    #[path = "../🌫️change-paint-layer-opacity/🦀️.rs"]
     mod component;
     pub use component::*;
-    #[path = "../🌫️change-paint-layer/🔺️diff/🦀️.rs"]
+    #[path = "../🌫️change-paint-layer-opacity/🔺️diff/🦀️.rs"]
     pub mod diff;
-    #[path = "../🌫️change-paint-layer/↩️inverse/🦀️.rs"]
+    #[path = "../🌫️change-paint-layer-opacity/↩️inverse/🦀️.rs"]
     pub mod inverse;
 }
 #[path = "."]
 pub mod change_paint_layer_blend_mode {
-    #[path = "../🎛️change-paint-layer/🦀️.rs"]
+    #[path = "../🎛️change-paint-layer-blend-mode/🦀️.rs"]
     mod component;
     pub use component::*;
-    #[path = "../🎛️change-paint-layer/🔺️diff/🦀️.rs"]
+    #[path = "../🎛️change-paint-layer-blend-mode/🔺️diff/🦀️.rs"]
     pub mod diff;
-    #[path = "../🎛️change-paint-layer/↩️inverse/🦀️.rs"]
+    #[path = "../🎛️change-paint-layer-blend-mode/↩️inverse/🦀️.rs"]
     pub mod inverse;
 }
 #[path = "."]

@@ -1,0 +1,370 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "labels",
+    "graph",
+    "request",
+    "selected",
+    "expectedActions",
+    "decisions",
+    "sources",
+    "build",
+    "requirements",
+    "sourceClasses",
+    "names",
+    "classDecisions"
+  ],
+  "properties": {
+    "labels": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^t_[a-f0-9]{16}$"
+      }
+    },
+    "names": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "label",
+          "bazel"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "label": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string",
+                "pattern": "^s/"
+              }
+            ]
+          },
+          "bazel": {
+            "enum": [
+              "accepts",
+              "rejects"
+            ]
+          }
+        }
+      }
+    },
+    "graph": {
+      "type": "object"
+    },
+    "request": {
+      "type": "object",
+      "required": [
+        "tasks"
+      ],
+      "properties": {
+        "tasks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "selected": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "expectedActions": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "restore",
+          "cache"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "task",
+              "noop",
+              "launch",
+              "test"
+            ]
+          },
+          "restore": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "cache": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "task",
+          "skipCache",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "task": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "cache": {
+                "type": "boolean"
+              },
+              "continuous": {
+                "type": "boolean"
+              },
+              "outputs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "noop": {
+                "type": "boolean"
+              }
+            }
+          },
+          "skipCache": {
+            "type": "boolean"
+          },
+          "expected": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "files",
+        "cases"
+      ],
+      "properties": {
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "inputs",
+              "expected"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "inputs": {
+                "type": "array"
+              },
+              "expected": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "build": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "hostState",
+          "cache",
+          "reason",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "hostState": {
+            "type": "boolean"
+          },
+          "cache": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "expected": {
+            "oneOf": [
+              {
+                "const": "refusal"
+              },
+              {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "sourceClasses": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "files",
+        "links",
+        "paths",
+        "expected"
+      ],
+      "properties": {
+        "files": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "links": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "files",
+            "hashed"
+          ],
+          "properties": {
+            "files": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "hashed": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "classDecisions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "task",
+          "skipCache",
+          "valid",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "task": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "cache": {
+                "type": "boolean"
+              },
+              "continuous": {
+                "type": "boolean"
+              },
+              "noop": {
+                "type": "boolean"
+              },
+              "outputs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "metadata": {
+                "type": "object"
+              }
+            }
+          },
+          "skipCache": {
+            "type": "boolean"
+          },
+          "valid": {
+            "type": "boolean"
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "cache": {
+                "type": "boolean"
+              },
+              "reason": {
+                "type": "string"
+              },
+              "error": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

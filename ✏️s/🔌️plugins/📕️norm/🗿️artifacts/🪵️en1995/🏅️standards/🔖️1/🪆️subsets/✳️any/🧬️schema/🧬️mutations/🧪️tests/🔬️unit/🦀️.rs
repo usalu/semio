@@ -4,6 +4,7 @@ use semio_s_artifact_norm_en1995_io::text::mutations::decode_en1995_mutation_jso
 use semio_s_artifact_norm_en1995_mutations::*;
 use semio_s_artifact_norm_en1995_mutations::mutation_bridge::{apply_en1995_mutation, inverse_en1995_mutation};
 use protocol::SemanticMutation;
+use semio_s_artifact_norm_en1995_model::En1995Snapshot;
 
 fn every_mutation() -> Vec<En1995Mutation> {
     let base = En1995Snapshot::compliant_building_beam();

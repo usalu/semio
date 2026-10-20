@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "lifecycle": [
+    {"id":"default-cache","ports":1,"failures":0,"injected":false,"injectedFlush":false,"swaps":[0,0],"binds":1,"calls":2,"refusals":0},
+    {"id":"failed-binding-retry","ports":1,"failures":1,"injected":false,"injectedFlush":false,"swaps":[0,0,0],"binds":2,"calls":2,"refusals":1},
+    {"id":"explicit-call-and-flush","ports":1,"failures":0,"injected":true,"injectedFlush":true,"swaps":[0,0],"binds":0,"calls":2,"refusals":0},
+    {"id":"per-port-cache","ports":2,"failures":0,"injected":false,"injectedFlush":false,"swaps":[0,0,1],"binds":2,"calls":3,"refusals":0}
+  ],
+  "outcomes": [
+    {"id":"linux-success","platform":"linux","status":0,"errno":22,"outcome":"success"},
+    {"id":"linux-unsupported-95","platform":"linux","status":-1,"errno":95,"outcome":"unsupported"},
+    {"id":"linux-unsupported-38","platform":"linux","status":-1,"errno":38,"outcome":"unsupported"},
+    {"id":"linux-unsupported-22","platform":"linux","status":-1,"errno":22,"outcome":"unsupported"},
+    {"id":"linux-failed","platform":"linux","status":-1,"errno":13,"outcome":"failed"},
+    {"id":"darwin-success","platform":"darwin","status":0,"errno":45,"outcome":"success"},
+    {"id":"darwin-unsupported-45","platform":"darwin","status":-1,"errno":45,"outcome":"unsupported"},
+    {"id":"darwin-unsupported-22","platform":"darwin","status":-1,"errno":22,"outcome":"unsupported"},
+    {"id":"darwin-failed","platform":"darwin","status":-7,"errno":5,"outcome":"failed"}
+  ]
+}

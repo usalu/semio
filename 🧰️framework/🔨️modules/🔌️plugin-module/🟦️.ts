@@ -1,5 +1,5 @@
 /** 🧩️ The trusted plugin module wire contract shared by publishers and clients: the value shapes of a module bundle and a generation index, the refusal type, and the byte-level admission of one module file. The JSON schema authority, the field-level validators and the canonical encoding stay with the plugin registry deployment module. */
-import { blake3Hex } from "../🔏️hash/🟦️.ts";
+import { blake3Hex } from "@semio-tech/framework-hash";
 
 const utf8 = new TextEncoder();
 

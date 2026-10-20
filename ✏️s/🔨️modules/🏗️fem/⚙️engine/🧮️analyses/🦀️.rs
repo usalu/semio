@@ -28,7 +28,7 @@ use semio_s_fem_sparse_ldlt::ldlt_factor;
 use semio_s_fem_sparse::rcm_order;
 use semio_s_fem_sparse_subspace::subspace_iteration;
 use semio_s_fem_sparse::Coo;
-use crate::sparse::Csr;
+use semio_s_fem_sparse::Csr;
 use semio_s_fem_sparse_subspace::EigenPairs;
 use semio_s_fem_sparse_ldlt::LdltFactor;
 use semio_framework_value_paged_list::list::PagedList;
@@ -63,6 +63,8 @@ use semio_s_fem_analyses_model::node_index_of;
 use semio_s_fem_analyses_model::positions_of;
 use semio_s_fem_analyses_model::validate_case;
 use semio_s_fem_analyses_assembly::AssembledSystem;
+#[cfg(test)]
+use semio_s_fem_analyses_assembly::{AnalysisModelOwner, AssemblyConstructionStage, PendingElementBuildStage, UnfactoredSystem};
 use semio_s_fem_analyses_assembly::assemble_system;
 use semio_s_fem_analyses_assembly::case_rhs_old;
 use semio_s_fem_model::BeamStation;

@@ -4,7 +4,7 @@ use crate::standards::v1::subsets::any::io::sqlite::snapshot::{encoding};
 use semio_framework_test_original_snapshot_owners as original_owners;
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::standards::v1::subsets::any::io::sqlite::snapshot::PropertyValue;
+use semio_framework_graph_manifest::PropertyValue;
 use crate::standards::v1::subsets::any::schema::rule::{Assignment, Lhs, ParameterKind, ParameterSpec, Pattern, Rhs};
 use crate::standards::v1::subsets::any::schema::model::LayoutPoint;
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
@@ -298,7 +298,7 @@ fn sqlite_snapshot_rewriting_composed_child_retains_actual_rich_graph_fields() {
 
 mod populated_public_owner {
     use crate::standards::v1::subsets::any::io::sqlite::snapshot::tests::*;
-    use semio_framework_plugin::__semio_dispatch_PluginApp;
+    use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
     use semio_framework_plugin::plugin_app_close_prelude::*;
     semio_framework_dispatch_macros::dyn_enum_close! {
         /// ♻️ Actual two Rewriting declared app wrappers close public persistence.

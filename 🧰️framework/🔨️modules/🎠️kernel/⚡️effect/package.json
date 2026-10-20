@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@semio-tech/framework-effect",
+  "version": "0.1.0",
+  "description": "framework · effect vocabulary (effects, spawned jobs, video render programs) shared by kernel, actor and manifest",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./🟦️.ts",
+    "./spawned-job": "./🛠️spawned-job/🟦️.ts",
+    "./video-render-program": "./🎥️video-render-program/🟦️.ts"
+  },
+  "license": "LGPL-3.0-or-later",
+  "bundleKind": "library"
+}

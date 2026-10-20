@@ -102,39 +102,39 @@ export interface En1993CraneRunwayModification { id: string; patch: En1993CraneR
 export interface En1993CraneRunwayDelta { removed: En1993CraneRunwayRemoval[]; inserted: En1993CraneRunwayInsertion[]; moved: En1993CraneRunwayRelocation[]; modified: En1993CraneRunwayModification[]; }
 
 export interface En1993Diff {
-  /** @state artifact */
+  /** 📑️ @state artifact */
   annex: ("En" | "De") | null;
-  /** @state artifact */
+  /** 🧱️ @state artifact */
   materials: En1993MaterialDelta;
-  /** @state artifact */
+  /** ✂️ @state artifact */
   sections: En1993SectionDelta;
-  /** @state artifact */
+  /** 👤️ @state artifact */
   members: En1993MemberDelta;
-  /** @state artifact */
+  /** 🏋️ @state artifact */
   loadCases: En1993LoadCaseDelta;
-  /** @state artifact */
+  /** 🧑️ @state artifact */
   memberActions: En1993MemberActionDelta;
-  /** @state artifact */
+  /** 🔄️ @state artifact */
   joints: En1993JointDelta;
-  /** @state artifact */
+  /** ✏️ @state artifact */
   fatigueDetails: En1993FatigueDetailDelta;
-  /** @state artifact */
+  /** ⚡️ @state artifact */
   fireExposures: En1993FireExposureDelta;
-  /** @state artifact */
+  /** 🔥️ @state artifact */
   coldFormedMembers: En1993ColdFormedMemberDelta;
-  /** @state artifact */
+  /** 🔲️ @state artifact */
   platedPanels: En1993PlatedPanelDelta;
-  /** @state artifact */
+  /** 🐚️ @state artifact */
   siloShells: En1993SiloShellDelta;
-  /** @state artifact */
+  /** 🏗️ @state artifact */
   tensionComponents: En1993TensionComponentDelta;
-  /** @state artifact */
+  /** 🌉️ @state artifact */
   bridgeFatigue: En1993BridgeFatigueDelta;
-  /** @state artifact */
+  /** 📝️ @state artifact */
   towerLegs: En1993TowerLegDelta;
-  /** @state artifact */
+  /** 🧬️ @state artifact */
   piles: En1993PileDelta;
-  /** @state artifact */
+  /** 📐️ @state artifact */
   craneRunways: En1993CraneRunwayDelta;
 }
 

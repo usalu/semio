@@ -1,0 +1,14 @@
+{
+ "steps": [
+  {"op": "write", "text": "event-1\n", "equalToPrevious": null},
+  {"op": "observe", "equalToPrevious": true},
+  {"op": "append", "text": "event-2\n", "equalToPrevious": false},
+  {"op": "observe", "equalToPrevious": true},
+  {"op": "rewrite", "text": "event-1\nevent-2\n", "equalToPrevious": false},
+  {"op": "touch", "equalToPrevious": false},
+  {"op": "replace", "text": "event-1\nevent-2\n", "equalToPrevious": false},
+  {"op": "observe", "equalToPrevious": true},
+  {"op": "link", "equalToPrevious": null},
+  {"op": "unlink", "equalToPrevious": null}
+ ]
+}

@@ -44171,7 +44171,7 @@
       }
     },
     "s.mathematical.equation.1.graph.mutation.change-graph-directed": {
-      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧭️change-graph/🧬️schema",
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧭️change-graph-directed/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -44189,7 +44189,7 @@
       }
     },
     "s.mathematical.equation.1.graph.mutation.change-node-label": {
-      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🏷️change-node/🧬️schema",
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🏷️change-node-label/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -44351,7 +44351,7 @@
       }
     },
     "s.mathematical.equation.1.graph.mutation.update-graph-algorithm": {
-      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧮️update-graph/🧬️schema",
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧮️update-graph-algorithm/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {

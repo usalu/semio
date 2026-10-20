@@ -21,7 +21,6 @@ pub fn snapshot_from_obj_geometry(from: &ObjSnapshot) -> Result<LowpolySnapshot,
     let positions: Vec<[f32; 3]> = from.vertices.iter().map(|v| [v.x as f32, v.y as f32, v.z as f32]).collect();
     let polygon = |face_index: usize| -> Vec<u32> { from.faces[face_index].vertices.iter().map(|fv| fv.vertex).collect() };
 
-    // 🏷️ Face ownership: `o` objects first, else the first `g` group naming the face.
     let named: Vec<(String, &Vec<u64>)> = if !from.objects.is_empty() {
         from.objects.iter().map(|o| (o.name.clone(), &o.faces)).collect()
     } else {

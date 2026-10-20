@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { applyPatch } from "fast-json-patch";
 import Ajv from "ajv";
 import { blake3 } from "@noble/hashes/blake3.js";
-import { blake3Hex } from "@semio-tech/framework/hash";
+import { blake3Hex } from "@semio-tech/framework-hash";
 
 test("fold backing birth preserves every independent refusal before allocating source storage", () => {
   const law = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", import.meta.url), "utf8"));

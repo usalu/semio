@@ -5,7 +5,7 @@
 mod component;
 
 pub use component::{
-    artifact, transfer, PhysicalExportFrame, PhysicalImportFrame, export_sqlite_database_receiving_into, import_sqlite_database_receiving_into, export_sqlite_database, export_sqlite_database_controlled,
+    artifact, composition, transfer, PhysicalExportFrame, PhysicalImportFrame, export_sqlite_database_receiving_into, import_sqlite_database_receiving_into, export_sqlite_database, export_sqlite_database_controlled,
     import_sqlite_database, import_sqlite_database_controlled, validate_sqlite_database_schema,
     validate_sqlite_database_schema_controlled, validate_sqlite_table_schema,
     validate_sqlite_table_schema_controlled, SnapshotEncoding, SqliteDatabase, SqliteDatabaseLimits, SqliteRow,

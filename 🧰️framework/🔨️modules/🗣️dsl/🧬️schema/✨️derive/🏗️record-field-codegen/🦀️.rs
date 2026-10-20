@@ -13,25 +13,25 @@ pub(super) struct FieldPlan {
     pub(super) kind: FieldKind,
     pub(super) elem_ty: Type,
     pub(super) field_ty: Type,
-    /// `#[dsl(block)]` on a field whose `FieldKind` doesn't already imply its own `{ }` wrapping
+    /// 🧱️ `#[dsl(block)]` on a field whose `FieldKind` doesn't already imply its own `{ }` wrapping
     /// (`VecBlockStatements` handles that itself) — wraps whatever shape that kind would otherwise
     /// produce in `Shape::Block`, e.g. a single nested `#[derive(DslRecord)]` field printed as a
     /// bare `camera { x=0 y=0 zoom=1 }` line instead of a `camera=...` attribute.
     pub(super) block: bool,
-    /// `#[dsl(unit = "...")]`, only meaningful for `FieldKind::Scalar`/`OptionScalar`.
+    /// 📏️ `#[dsl(unit = "...")]`, only meaningful for `FieldKind::Scalar`/`OptionScalar`.
     pub(super) unit: Option<String>,
-    /// `#[dsl(angle = "...")]`, only meaningful for `FieldKind::Scalar`/`OptionScalar`.
+    /// 📐️ `#[dsl(angle = "...")]`, only meaningful for `FieldKind::Scalar`/`OptionScalar`.
     pub(super) angle: Option<String>,
-    /// `#[dsl(refs = "...")]`, only meaningful for `FieldKind::Scalar`/`OptionScalar`.
+    /// 🔗️ `#[dsl(refs = "...")]`, only meaningful for `FieldKind::Scalar`/`OptionScalar`.
     pub(super) refs: Option<String>,
-    /// `#[dsl(defines = "...")]` — sets `FieldSpec.defines`, independent of `Shape`.
+    /// 📚️ `#[dsl(defines = "...")]` — sets `FieldSpec.defines`, independent of `Shape`.
     pub(super) defines: Option<String>,
-    /// `#[dsl(lang = "...")]`, only meaningful for `FieldKind::Scalar`/`OptionScalar`.
+    /// 💎️ `#[dsl(lang = "...")]`, only meaningful for `FieldKind::Scalar`/`OptionScalar`.
     pub(super) lang: Option<String>,
     pub(super) lang_from: Option<String>,
-    /// `#[dsl(coord)]`, only meaningful for `FieldKind::Scalar`/`OptionScalar` on an array type.
+    /// 🧐️ `#[dsl(coord)]`, only meaningful for `FieldKind::Scalar`/`OptionScalar` on an array type.
     pub(super) coord: bool,
-    /// `#[dsl(dir)]`, ditto.
+    /// 📁️ `#[dsl(dir)]`, ditto.
     pub(super) dir: bool,
 }
 

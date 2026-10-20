@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_UI_DRIVER, UiDriverProvider, detectShellLocale, uiI18n } from "@semio-tech/ui-react";
 import { isShellLocale } from "@semio-tech/framework";
 import { BlockListHost } from "../../🧱️elements/🧩️BlockListHost/🟦️.tsx";
-import { blockListPresentationFixture as fixture } from "@semio-tech/framework/ui/testing/fixtures";
+import { blockListPresentationFixture as fixture } from "@semio-tech/ui/testing/fixtures";
 
 afterEach(() => cleanup());
 

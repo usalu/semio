@@ -11,7 +11,7 @@ import type {
   UndoGroup,
   UndoPolicy
 } from "@semio-tech/framework";
-import { viewContextWithIntegerCarriers } from "@semio-tech/framework";
+import { viewContextWithIntegerCarriers } from "@semio-tech/framework-manifest/view-state-and-public-invocation";
 import type { MutationEnvelope } from "@semio-tech/framework-replication";
 import {
   decodeCausalEnvelopeBatch,
@@ -21,7 +21,7 @@ import {
   writeF64,
   writeVarintU64
 } from "@semio-tech/framework-replication";
-import { GUEST_HOST_ANSWER_CEILING_BYTES } from "../⏱️trace/🧮️memory/🟦️.ts";
+import { GUEST_HOST_ANSWER_CEILING_BYTES } from "@semio-tech/framework-trace/memory";
 
 export const replicationPackCodec = { encode: encodePackValue, decode: decodePackValue };
 

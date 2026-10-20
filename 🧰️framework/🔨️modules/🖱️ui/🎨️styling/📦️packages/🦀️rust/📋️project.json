@@ -4,6 +4,11 @@
   "targets": {
     "generate": {
       "executor": "repo:script",
+      "metadata": {
+        "semio": {
+          "sourceInputObservation": "freshness"
+        }
+      },
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts generate",
@@ -28,6 +33,7 @@
     "check-generated": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check-generated"

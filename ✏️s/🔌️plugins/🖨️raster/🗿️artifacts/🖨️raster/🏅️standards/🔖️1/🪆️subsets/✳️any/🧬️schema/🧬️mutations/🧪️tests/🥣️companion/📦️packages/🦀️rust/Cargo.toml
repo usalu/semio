@@ -32,3 +32,4 @@ semio-s-artifact-raster-raster-mutations-layers = { workspace = true }
 semio-s-artifact-raster-raster-mutations-pixels = { workspace = true }
 semio-s-artifact-stdio-semio-image = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-mutation-diff = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff/📦️packages/🦀️rust" }

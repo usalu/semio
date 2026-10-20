@@ -2,7 +2,7 @@
 
 #[cfg(test)] use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PagePatch, page_override_rows};
-use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+use semio_s_artifact_layout_layout_diff::LayoutPagesModification;
 use semio_s_artifact_layout_layout_model::{LayoutBounds, PageOverride};
 use semio_s_artifact_layout_layout_diff::LayoutDiff;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;

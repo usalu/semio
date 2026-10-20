@@ -12,6 +12,7 @@
     "verify-note-document-contract": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🗒️note/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify note-document-contract",

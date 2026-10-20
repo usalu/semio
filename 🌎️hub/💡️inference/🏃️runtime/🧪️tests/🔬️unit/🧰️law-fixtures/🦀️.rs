@@ -28,7 +28,7 @@ fn input(identity: &Identity) -> InferencePrivateBytesV1 {
 fn canonical_map_pack() -> InferencePrivateBytesV1 {
     use pack::snapshot::ArtifactPack as _;
     let descriptor = ledger_fixture()["input"].as_str().expect("literal Map descriptor").to_owned();
-    let snapshot = semio_s_artifact_gis_gismap::schema::gis_map_document_from_descriptor_json(&descriptor);
+    let snapshot = semio_s_artifact_gis_gismap::standards::v1::subsets::any::io::text::snapshot::gis_map_document_from_descriptor_json(&descriptor);
     InferencePrivateBytesV1::new(snapshot.encode_pack(), INPUT_MAX_BYTES).expect("bounded canonical Map pack")
 }
 

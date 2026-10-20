@@ -6,8 +6,8 @@
 import { type FeatureStep } from "@semio-tech/framework/test/adapter";
 import { type SchemaDiagnostic, readSchemaCatalog } from "../../../📦️packages/🟦️typescript/🟦️.ts";
 import { parseFeature } from "@semio-tech/framework/test/gherkin";
-import { mutationInputInstance } from "@semio-tech/framework/manifest";
-import { parseSchemaInvariants } from "@semio-tech/framework/manifest/schema";
+import { mutationInputInstance } from "@semio-tech/framework-manifest";
+import { parseSchemaInvariants } from "@semio-tech/framework-manifest/schema";
 import { readFileSync } from "node:fs";
 import { Validator } from "jsonschema";
 import { join } from "node:path";

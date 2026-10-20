@@ -1,13 +1,13 @@
-import { type PanelTabSelectionOptions, usePanelTabSelection, PanelTabBar } from "../../../🧱️elements/🧭️PanelTabBar/🟦️.tsx";
-import { type Anchor, flowFromAnchor } from "../../../🔨️modules/⚓️panel-anchor/🟦️.ts";
+import { type PanelTabSelectionOptions, usePanelTabSelection, PanelTabBar } from "@semio-tech/ui/elements/PanelTabBar";
+import { type Anchor, flowFromAnchor } from "@semio-tech/ui/modules/panel-anchor";
 import * as React from "react";
-import { usePanelDockContext } from "../../../🔨️modules/🧲️panel-dock/🟦️.tsx";
-import { reactHostPort } from "../../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
-import { LevelProvider } from "../../../🧱️elements/🌈️Surface/🟦️.tsx";
-import { GhostRegionShell } from "../../../🧱️elements/👻️PanelGhost/🟦️.tsx";
-import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { PanelEmptyDockZone } from "../../../🧱️elements/🖼️Panel/🟦️.tsx";
-import { WindowChrome } from "../../../🧱️elements/🗂️WindowChrome/🟦️.tsx";
+import { usePanelDockContext } from "@semio-tech/ui/modules/panel-dock";
+import { reactHostPort } from "@semio-tech/ui/elements/Ports/react";
+import { LevelProvider } from "@semio-tech/ui/elements/Surface";
+import { GhostRegionShell } from "@semio-tech/ui/elements/PanelGhost";
+import { cn } from "@semio-tech/ui/modules/class-name-composition";
+import { PanelEmptyDockZone } from "@semio-tech/ui/elements/Panel";
+import { WindowChrome } from "@semio-tech/ui/elements/WindowChrome";
 
 //#region 🎛️PanelChromeTabBar
 

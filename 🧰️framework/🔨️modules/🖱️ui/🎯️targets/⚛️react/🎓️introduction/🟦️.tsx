@@ -1,21 +1,21 @@
-import type { IntroductionDefinition, IntroductionLogo, IntroductionStepDefinition, IntroductionDemonstration } from "../../../../🎓️onboarding/🏷️declaration/🟦️.ts";
-import { reactHostPort } from "../../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
+import type { IntroductionDefinition, IntroductionLogo, IntroductionStepDefinition, IntroductionDemonstration } from "@semio-tech/framework-onboarding/declaration";
+import { reactHostPort } from "@semio-tech/ui/elements/Ports/react";
 import * as React from "react";
-import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { useShellScopeOptional, useIsActiveShellRoot, NULL_SHELL_ROOT_REF } from "../../../🧱️elements/🐚️ShellScope/🟦️.tsx";
-import { useUiTerminology, resolveUiLocalizedText } from "../../../🔨️modules/🗣️ui-terminology/🟦️.tsx";
-import { detectShellLocale, uiI18n } from "../🌐️i18n/🟦️.ts";
-import { elementIdSelector } from "../../../🧱️elements/🆔️ElementId/🟦️.tsx";
-import { useSurfaceActive } from "../../../🧱️elements/🌈️Surface/🟦️.tsx";
-import { availableViewportHeightPx } from "../../../📱️device/🟦️.ts";
-import { useLabel } from "../../../🧱️elements/🏷️Label/🟦️.tsx";
-import { usePointerDrag } from "../../../🧱️elements/🖼️Panel/🟦️.tsx";
-import { useControlKeybinding } from "../../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
-import { veilClass } from "../../../🔨️modules/🌈️surface-presentation/🟦️.ts";
-import { WindowChrome, windowChromeTitleChipClass } from "../../../🧱️elements/🗂️WindowChrome/🟦️.tsx";
-import { DragHandle } from "../../../🧱️elements/🧱️DragHandle/🟦️.tsx";
-import { CloseIcon, Icon } from "../../../🧱️elements/🔣️Icons/🟦️.tsx";
-import { Button } from "../../../🧱️elements/🔘️Button/🟦️.tsx";
+import { cn } from "@semio-tech/ui/modules/class-name-composition";
+import { useShellScopeOptional, useIsActiveShellRoot, NULL_SHELL_ROOT_REF } from "@semio-tech/ui/elements/ShellScope";
+import { useUiTerminology, resolveUiLocalizedText } from "@semio-tech/ui/modules/ui-terminology";
+import { detectShellLocale, uiI18n } from "@semio-tech/ui/i18n";
+import { elementIdSelector } from "@semio-tech/ui/elements/ElementId";
+import { useSurfaceActive } from "@semio-tech/ui/elements/Surface";
+import { availableViewportHeightPx } from "@semio-tech/ui/device";
+import { useLabel } from "@semio-tech/ui/elements/Label";
+import { usePointerDrag } from "@semio-tech/ui/elements/Panel";
+import { useControlKeybinding } from "@semio-tech/ui/modules/control-keybinding-context";
+import { veilClass } from "@semio-tech/ui/modules/surface-presentation";
+import { WindowChrome, windowChromeTitleChipClass } from "@semio-tech/ui/elements/WindowChrome";
+import { DragHandle } from "@semio-tech/ui/elements/DragHandle";
+import { CloseIcon, Icon } from "@semio-tech/ui/elements/Icons";
+import { Button } from "@semio-tech/ui/elements/Button";
 import { createPortal } from "react-dom";
 import { type IntroductionInfoBoxPosition, clampIntroductionInfoBoxPosition, introductionRectRelativeToHost, resolveIntroductionPlacement, splitIntroductionBodyParagraphs, useIntroductionAnchorRect, useIntroductionElevation } from "../📐️introduction-geometry/🟦️.ts";
 import { INTRODUCTION_DEMO_NEXT_BUTTON_DEMONSTRATION, IntroductionDemonstrationOverlay } from "../🎬️introduction-demo/🟦️.tsx";
@@ -30,7 +30,7 @@ export type UIIntroductionProps = {
   readonly onDismiss: (completed: boolean) => void;
 };
 
-/** @emoji 📐️ One row of an introduction step's {@link IntroductionLogo}s, all sharing one computed height
+/** 📐️ One row of an introduction step's {@link IntroductionLogo}s, all sharing one computed height
  * so the row fills its full width edge-to-edge with no logo dominating over another — the height isn't
  * guessed: it's solved from the row's measured width and each logo's own natural aspect ratio (`width /
  * sum-of-aspect-ratios`, accounting for the `gap-double` between logos), so it's exactly right for
@@ -87,7 +87,7 @@ function IntroductionLogoRow({ logos }: { readonly logos: readonly IntroductionL
   );
 }
 
-/** @emoji 🎓️ Full-screen first-run walkthrough: a single fullscreen glass veil covers the screen, the
+/** 🎓️ Full-screen first-run walkthrough: a single fullscreen glass veil covers the screen, the
  * current step's `introduce`/`show` elements elevate above it (see `useIntroductionElevation`) and stay
  * crisp and interactive — `introduce` additionally pulses the introduced border on the precise element —
  * and an info box explains it (header {@link DragHandle} between title and step count repositions the box

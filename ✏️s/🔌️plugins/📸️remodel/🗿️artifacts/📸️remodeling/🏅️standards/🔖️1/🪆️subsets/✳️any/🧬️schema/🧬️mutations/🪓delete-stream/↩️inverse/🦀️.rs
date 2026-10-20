@@ -7,7 +7,7 @@ use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::sche
 use crate::standards::v1::subsets::any::schema::mutations::delete_stream::component::DeleteStream;
 
 //#region 🔖️Inverse
-pub fn inverse<Op: From<CreateStream>>(payload: &super::DeleteStream, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<CreateStream>>(payload: &crate::standards::v1::subsets::any::schema::mutations::delete_stream::component::DeleteStream, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     match base.streams.iter().find(|stream| stream.id == payload.id) {
         Some(stream) => vec![crate::standards::v1::subsets::any::schema::mutations::create_stream::create_stream(stream.clone())],

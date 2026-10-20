@@ -58,11 +58,11 @@ pub mod schema {
         }
         #[path = "."]
         pub mod change_stroke_color {
-            #[path = "../../../🖌️change-stroke/🦀️.rs"]
+            #[path = "../../../🖌️change-stroke-color/🦀️.rs"]
             mod component;
-            #[path = "../../../🖌️change-stroke/🔺️diff/🦀️.rs"]
+            #[path = "../../../🖌️change-stroke-color/🔺️diff/🦀️.rs"]
             pub mod diff;
-            #[path = "../../../🖌️change-stroke/↩️inverse/🦀️.rs"]
+            #[path = "../../../🖌️change-stroke-color/↩️inverse/🦀️.rs"]
             pub mod inverse;
             pub use component::*;
         }

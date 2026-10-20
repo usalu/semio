@@ -36,9 +36,42 @@ def live(path):
     return read(full) if os.path.isfile(full) else None
 
 
+def settle(text, edit):
+    old, new, want = edit["old"], edit["new"], edit["count"]
+    if old in new and text.count(new) >= want:
+        return text, "applied"
+    if text.count(old) == want:
+        return text.replace(old, new), "ready"
+    if text.count(old) == 0 and text.count(new) >= want:
+        return text, "applied"
+    return None, "conflict"
+
+
+def patch_result(op, current):
+    if current is None:
+        return None, "conflict"
+    text, states = current.decode("utf8"), []
+    for edit in op["edits"]:
+        text, state = settle(text, edit)
+        if text is None:
+            return None, "conflict"
+        states.append(state)
+    return text.encode("utf8"), ("applied" if all(state == "applied" for state in states) else "ready")
+
+
+def payload_of(op):
+    if op["kind"] == "write":
+        return read(os.path.join(STAGED, "blobs", op["blob"]))
+    if op["kind"] == "patch":
+        return patch_result(op, live(op["path"]))[0]
+    return b""
+
+
 def classify(op):
     current = live(op["path"])
     now = None if current is None else sha(current)
+    if op["kind"] == "patch":
+        return patch_result(op, current)[1]
     if op["kind"] == "write":
         if now == op["sha"]:
             return "applied"
@@ -57,9 +90,9 @@ def sync_running():
         if not words or str(os.getpid()) == pid:
             continue
         executable = os.path.basename(words[0])
-        if executable == "bun" and "dependencies sync" in command:
+        if executable == "bun" and ("dependencies sync" in command or "dependencies lock" in command):
             found.append(line)
-        elif executable in ("sh", "bash", "zsh") and any(name in command for name in ("deps4-run.sh", "deps4-loop.sh")) and "-c" not in words[1:2]:
+        elif executable in ("sh", "bash", "zsh") and any(name in command for name in ("deps4-run.sh", "deps4-loop.sh", "deps4-loop2.sh")) and "-c" not in words[1:2]:
             found.append(line)
     return found
 
@@ -80,7 +113,7 @@ def cmd_check(args):
 def cmd_diff(args):
     for op in load():
         old = live(op["path"])
-        new = read(os.path.join(STAGED, "blobs", op["blob"])) if op["kind"] == "write" else b""
+        new = payload_of(op) or b""
         a = [] if old is None else old.decode("utf8").splitlines(keepends=True)
         b = new.decode("utf8").splitlines(keepends=True)
         if args and not any(arg in op["path"] for arg in args):
@@ -89,6 +122,10 @@ def cmd_diff(args):
 
 
 def cmd_apply(args):
+    unknown = [word for word in args if word not in ("--dry-run", "--ignore-sync")]
+    if unknown:
+        print("refusing unknown argument(s) %s (this set has no rebase mode and no manifest edits)" % " ".join(unknown))
+        return 64
     running = sync_running()
     if running and "--ignore-sync" not in args:
         print("refusing: a dependency sync is running (the freeze is not lifted):")
@@ -110,15 +147,15 @@ def cmd_apply(args):
         print("%d pending, %d already applied" % (len(pending), len(ops) - len(pending)))
         return 0
     for op in pending:
-        if op["kind"] != "write":
+        if op["kind"] == "delete":
             continue
         target = os.path.join(ROOT, op["path"])
         os.makedirs(os.path.dirname(target), exist_ok=True)
         tmp = target + ".taxstage.tmp"
         with open(tmp, "wb") as handle:
-            handle.write(read(os.path.join(STAGED, "blobs", op["blob"])))
+            handle.write(payload_of(op))
         os.replace(tmp, target)
-        print("wrote", op["path"])
+        print("wrote" if op["kind"] == "write" else "patched", op["path"])
     for op in pending:
         if op["kind"] != "delete":
             continue
@@ -140,7 +177,12 @@ def overlay(real, mirror, entries):
     if os.path.isdir(real):
         for name in os.listdir(real):
             if name not in children:
-                os.symlink(os.path.join(real, name), os.path.join(mirror, name))
+                source = os.path.join(real, name)
+                if os.path.isfile(source) and not os.path.islink(source):
+                    with open(os.path.join(mirror, name), "wb") as handle:
+                        handle.write(read(source))
+                else:
+                    os.symlink(source, os.path.join(mirror, name))
     for name, rest in children.items():
         if len(rest) == 1 and not rest[0][0]:
             payload = rest[0][1]
@@ -180,8 +222,8 @@ def cmd_mirror(args):
             payload[path] = data
     for path in ("package.json", "\U0001F4CB️project.json"):
         payload[path] = read(os.path.join(ROOT, path))
-    for op in load():
-        payload[op["path"]] = read(os.path.join(STAGED, "blobs", op["blob"])) if op["kind"] == "write" else None
+    for op in ([] if "--no-ops" in args else load()):
+        payload[op["path"]] = None if op["kind"] == "delete" else payload_of(op)
     entries = [(path.split("/"), data) for path, data in payload.items()]
     if os.path.lexists(mirror):
         subprocess.run(["rm", "-rf", mirror], check=True)

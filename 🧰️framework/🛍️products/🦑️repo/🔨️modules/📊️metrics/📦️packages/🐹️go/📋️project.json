@@ -16,7 +16,7 @@
   "targets": {
     "build": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "inputs": [
         "production",
         "^production",
@@ -26,6 +26,11 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📊️metrics/📦️packages/🐹️go",
         "command": "bun ./📜️script.ts build"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "test": {

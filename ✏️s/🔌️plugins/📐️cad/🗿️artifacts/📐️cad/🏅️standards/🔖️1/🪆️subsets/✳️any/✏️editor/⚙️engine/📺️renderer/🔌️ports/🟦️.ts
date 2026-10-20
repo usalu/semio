@@ -3,7 +3,7 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | renderer}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
-import { sceneHostPort } from "@semio-tech/framework/ui/targets/react";
+import { sceneHostPort } from "@semio-tech/ui-react";
 import { kernelGeometry, type Vec3 } from "@semio-tech/cad-engine-ts/registry";
 import { type SpatialPreviewKernel } from "@semio-tech/s-spatial-kernel-ts/spatial";
 import { PreciseSpatialKernelMath, preciseSpatialKernelMath } from "@semio-tech/s-spatial-kernel-ts/preview";

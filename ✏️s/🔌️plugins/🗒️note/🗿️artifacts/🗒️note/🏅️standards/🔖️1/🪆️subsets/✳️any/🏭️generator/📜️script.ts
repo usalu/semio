@@ -172,9 +172,6 @@ async function main(argv: readonly string[]): Promise<number> {
     return 0;
   }
 
-  // 🧬️A NARROWED run MERGES into the manifest index; it does not replace it — same guard
-  // `…✳️mesh/🏭️generator/📜️script.ts` uses, for the same incident (a sequence of `--only` runs
-  // silently destroying every other fixture's manifest record while leaving its files on disk).
   const indexPath = committed ? join(COMMITTED_FIXTURES, "🔣️.json") : join(outDir, "🔣️.json");
   const previous = (() => {
     if (only.length === 0 || !existsSync(indexPath)) return [];

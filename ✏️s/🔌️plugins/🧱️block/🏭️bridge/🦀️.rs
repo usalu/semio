@@ -18,10 +18,10 @@ fn descriptors<S, M: Mutation<S>>() -> &'static [MutationLeafDescriptor] {
 
 /// 🧭️ Every mutation aggregate the artifact crates below mount, with its type name.
 const AGGREGATES: &[(&str, fn() -> &'static [MutationLeafDescriptor])] = &[
-    ("Block2dMutation", descriptors::<semio_s_artifact_block_2d::standards::v1::subsets::any::schema::snapshot::Block2dSnapshot, semio_s_artifact_block_2d::standards::v1::subsets::any::schema::mutations::Block2dMutation>),
-    ("Block3dWorldWindowTransientMutation", descriptors::<semio_s_artifact_block_3d::editor::block3d::modes::edit::windows::world::transient::Block3dWorldWindowTransient, semio_s_artifact_block_3d::editor::block3d::modes::edit::windows::world::transient::Block3dWorldWindowTransientMutation>),
-    ("Block3dMutation", descriptors::<semio_s_artifact_block_3d::standards::v1::subsets::any::schema::snapshot::Block3dSnapshot, semio_s_artifact_block_3d::standards::v1::subsets::any::schema::mutations::Block3dMutation>),
-    ("Block5dMutation", descriptors::<semio_s_artifact_block_5d::standards::v1::subsets::any::schema::snapshot::Block5dSnapshot, semio_s_artifact_block_5d::standards::v1::subsets::any::schema::mutations::Block5dMutation>),
+    ("Block2dMutation", descriptors::<semio_s_artifact_block_2d_model::Block2dSnapshot, semio_s_artifact_block_2d_mutations::Block2dMutation>),
+    ("Block3dWorldWindowTransientMutation", descriptors::<semio_s_artifact_block_3d_editor_modes::edit::windows::world::transient::Block3dWorldWindowTransient, semio_s_artifact_block_3d_editor_modes::edit::windows::world::transient::Block3dWorldWindowTransientMutation>),
+    ("Block3dMutation", descriptors::<semio_s_artifact_block_3d_model::Block3dSnapshot, semio_s_artifact_block_3d_mutations::Block3dMutation>),
+    ("Block5dMutation", descriptors::<semio_s_artifact_block_5d_model::Block5dSnapshot, semio_s_artifact_block_5d_mutations::Block5dMutation>),
 ];
 
 /// 🗺️ Manifest coordinate (artifact, standard, subset, state-lane surface or `""` for the document) → the owner

@@ -1,0 +1,3 @@
+registerShellComponents6Tests 2 phases, keep=-, final return=false
+6-9 buildComposeWindowTemplateState
+11-11 registerShellComponentsTests

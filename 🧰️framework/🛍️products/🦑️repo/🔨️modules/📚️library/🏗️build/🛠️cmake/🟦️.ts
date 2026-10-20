@@ -1,4 +1,4 @@
-import{Script,ScriptRouter,findWorkspaceRoot,receiveScriptProcessInvocation,runScriptMain}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{receiveScriptProcessInvocation,Script,ScriptRouter,findWorkspaceRoot,runScriptMain}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{scriptCompilerAdmissionControlV1}from"@semio-tech/process/compiler-capacity";
 import{readBuildMode}from"@semio-tech/process/build-mode";
 import{buildBudgetMs}from"@semio-tech/process/budget";

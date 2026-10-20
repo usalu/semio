@@ -56,6 +56,7 @@
     },
     "test": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -73,7 +74,8 @@
         "production",
         "^production",
         "{projectRoot}/../../🏅️standards/**/*"
-      ]
+      ],
+      "outputs": []
     },
     "verify-snapshot-sqlite-source": {
       "executor": "repo:script",
@@ -86,7 +88,8 @@
         "production",
         "^production",
         "{projectRoot}/../../🏅️standards/**/*"
-      ]
+      ],
+      "outputs": []
     },
     "test-snapshot-sqlite-source": {
       "executor": "repo:script",
@@ -99,7 +102,8 @@
         "production",
         "^production",
         "{projectRoot}/../../🏅️standards/**/*"
-      ]
+      ],
+      "outputs": []
     },
     "test-snapshot-sqlite-native": {
       "executor": "repo:script",
@@ -112,7 +116,8 @@
         "production",
         "^production",
         "{projectRoot}/../../🏅️standards/**/*"
-      ]
+      ],
+      "outputs": []
     },
     "test-recursive-retirement": {
       "executor": "repo:script",

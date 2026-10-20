@@ -2,7 +2,7 @@ import{test,expect}from"bun:test";
 import{readFileSync}from"node:fs";
 import ts from"typescript";
 test("neutral unit Source verification delegates to the exact bounded descriptor reader",()=>{const source=readFileSync(new URL("../../📤️receipt/🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("receipt.ts",source,ts.ScriptTarget.Latest,true),owner=tree.statements.filter(ts.isFunctionDeclaration).find(row=>row.name?.text==="verifyRustUnitInputsV1")!,body=owner.body!.getText(tree);expect(body).not.toContain("readFileSync");expect(body).toContain("expectedBytes:input.bytes");});
-test("neutral actual unit Script rediscovery consumes early unique file and byte admission",()=>{const source=readFileSync(new URL("../../📜️script.ts",import.meta.url),"utf8");expect(source).toContain("verifyRustUnitSourceSnapshotV1");expect(readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8")).toContain("readRustUnitSourceClosureV1");expect(source).not.toContain("row.size>boundary.maxSourceBytes");});
+test("neutral actual unit Script rediscovery consumes early unique file and byte admission",()=>{const source=readFileSync(new URL("../../🧪️tests/🔬️script-commands/🟦️.ts",import.meta.url),"utf8");expect(source).toContain("verifyRustUnitSourceSnapshotV1");expect(readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8")).toContain("readRustUnitSourceClosureV1");expect(source).not.toContain("row.size>boundary.maxSourceBytes");});
 
 import{spyOn}from"bun:test";
 import Ajv from"ajv";

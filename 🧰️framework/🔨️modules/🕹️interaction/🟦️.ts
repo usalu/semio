@@ -4,7 +4,6 @@
  * Tree/React consume in wave 2, replacing Tree's private `getTreeNextSelectionState`. Plain readonly
  * types/functions only, no external runtime libraries; same semantics, same field names (camelCase
  * mirrors Rust's `#[serde(rename_all = "camelCase")]`), same function names in camelCase. */
-export { encodeScopedIdentity, decodeScopedIdentity, SCOPED_IDENTITY_MAX_BYTES, SCOPED_IDENTITY_MAX_SEGMENTS } from "../📡️replication/🧾️wire/🪪️scoped-identity/🟦️.ts";
 import type { IconName } from "@semio-tech/assets";
 import type { LocalizedLabel } from "../🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts";
 export type { IconName, LocalizedLabel };

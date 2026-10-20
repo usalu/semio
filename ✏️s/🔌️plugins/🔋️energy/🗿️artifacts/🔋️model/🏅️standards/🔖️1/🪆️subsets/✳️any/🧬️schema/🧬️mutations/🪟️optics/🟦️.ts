@@ -1,4 +1,4 @@
-import {binary64Value} from "@semio-tech/value-ts/ieee754";
+import {binary64Value} from "@semio-tech/framework/value/ieee754";
 import {parseBinary64Transport} from "@semio-tech/framework/io/text/ieee754";
 import type {EnergyModelMutation} from "../🟦️.ts";
 import type {EnergyModelDiff} from "../../🔺️diff/🟦️.ts";

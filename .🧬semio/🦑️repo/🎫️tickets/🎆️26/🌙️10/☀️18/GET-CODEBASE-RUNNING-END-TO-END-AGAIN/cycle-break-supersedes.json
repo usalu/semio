@@ -1,0 +1,1603 @@
+{
+ "schema": "cycle-break/supersedes@1",
+ "note": "Batch entries already applied live whose key the delta moves to the carved package, and batch glue files the delta deletes. Re-run exports-stage-tools/stage.ts after the delta and the sync; these entries then no longer exist as candidates.",
+ "entries": [
+  {
+   "id": "E0133",
+   "package": "@semio-tech/framework",
+   "key": "./interaction/schema",
+   "movedTo": "@semio-tech/framework-interaction/schema"
+  },
+  {
+   "id": "E0137",
+   "package": "@semio-tech/framework",
+   "key": "./interaction/testing/set-laws",
+   "movedTo": "@semio-tech/framework-interaction/testing/set-laws"
+  },
+  {
+   "id": "E0151",
+   "package": "@semio-tech/framework",
+   "key": "./ui/axes/plan",
+   "movedTo": "@semio-tech/ui/axes/plan"
+  },
+  {
+   "id": "E0153",
+   "package": "@semio-tech/framework",
+   "key": "./ui/axes/publication",
+   "movedTo": "@semio-tech/ui/axes/publication"
+  },
+  {
+   "id": "E0155",
+   "package": "@semio-tech/framework",
+   "key": "./ui/axes/source",
+   "movedTo": "@semio-tech/ui/axes/source"
+  },
+  {
+   "id": "E0157",
+   "package": "@semio-tech/framework",
+   "key": "./ui/contract/retained/host",
+   "movedTo": "@semio-tech/ui-contract/retained/host"
+  },
+  {
+   "id": "E0159",
+   "package": "@semio-tech/framework",
+   "key": "./ui/contract/retained/host/composition",
+   "movedTo": "@semio-tech/ui-contract/retained/host/composition"
+  },
+  {
+   "id": "E0161",
+   "package": "@semio-tech/framework",
+   "key": "./ui/contract/retained/host/input",
+   "movedTo": "@semio-tech/ui-contract/retained/host/input"
+  },
+  {
+   "id": "E0163",
+   "package": "@semio-tech/framework",
+   "key": "./ui/contract/retained/host/return-content",
+   "movedTo": "@semio-tech/ui-contract/retained/host/return-content"
+  },
+  {
+   "id": "E0165",
+   "package": "@semio-tech/framework",
+   "key": "./ui/contract/testing/color-input",
+   "movedTo": "@semio-tech/ui-contract/testing/color-input"
+  },
+  {
+   "id": "E0167",
+   "package": "@semio-tech/framework",
+   "key": "./ui/device",
+   "movedTo": "@semio-tech/ui/device"
+  },
+  {
+   "id": "E0169",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/ActionGroup",
+   "movedTo": "@semio-tech/ui/elements/ActionGroup"
+  },
+  {
+   "id": "E0171",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Button",
+   "movedTo": "@semio-tech/ui/elements/Button"
+  },
+  {
+   "id": "E0173",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/ButtonGroup",
+   "movedTo": "@semio-tech/ui/elements/ButtonGroup"
+  },
+  {
+   "id": "E0175",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Canvas",
+   "movedTo": "@semio-tech/ui/elements/Canvas"
+  },
+  {
+   "id": "E0177",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Canvas/corners",
+   "movedTo": "@semio-tech/ui/elements/Canvas/corners"
+  },
+  {
+   "id": "E0179",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Canvas/drop",
+   "movedTo": "@semio-tech/ui/elements/Canvas/drop"
+  },
+  {
+   "id": "E0181",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Canvas/join-corners",
+   "movedTo": "@semio-tech/ui/elements/Canvas/join-corners"
+  },
+  {
+   "id": "E0183",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Canvas/layout",
+   "movedTo": "@semio-tech/ui/elements/Canvas/layout"
+  },
+  {
+   "id": "E0185",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Canvas/template-drag",
+   "movedTo": "@semio-tech/ui/elements/Canvas/template-drag"
+  },
+  {
+   "id": "E0187",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Checkbox",
+   "movedTo": "@semio-tech/ui/elements/Checkbox"
+  },
+  {
+   "id": "E0189",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/ChromeControlHint",
+   "movedTo": "@semio-tech/ui/elements/ChromeControlHint"
+  },
+  {
+   "id": "E0191",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Collapsible",
+   "movedTo": "@semio-tech/ui/elements/Collapsible"
+  },
+  {
+   "id": "E0193",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Command",
+   "movedTo": "@semio-tech/ui/elements/Command"
+  },
+  {
+   "id": "E0195",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/ContextMenu",
+   "movedTo": "@semio-tech/ui/elements/ContextMenu"
+  },
+  {
+   "id": "E0197",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/ContextMenu/chrome",
+   "movedTo": "@semio-tech/ui/elements/ContextMenu/chrome"
+  },
+  {
+   "id": "E0199",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/ContextMenu/navigation",
+   "movedTo": "@semio-tech/ui/elements/ContextMenu/navigation"
+  },
+  {
+   "id": "E0201",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/ContextMenu/text-selection",
+   "movedTo": "@semio-tech/ui/elements/ContextMenu/text-selection"
+  },
+  {
+   "id": "E0203",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Diagram",
+   "movedTo": "@semio-tech/ui/elements/Diagram"
+  },
+  {
+   "id": "E0205",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Diagram/force-model",
+   "movedTo": "@semio-tech/ui/elements/Diagram/force-model"
+  },
+  {
+   "id": "E0207",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Diagram/inner",
+   "movedTo": "@semio-tech/ui/elements/Diagram/inner"
+  },
+  {
+   "id": "E0209",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Diagram/keyboard",
+   "movedTo": "@semio-tech/ui/elements/Diagram/keyboard"
+  },
+  {
+   "id": "E0211",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Diagram/layout-hook",
+   "movedTo": "@semio-tech/ui/elements/Diagram/layout-hook"
+  },
+  {
+   "id": "E0213",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Dialog",
+   "movedTo": "@semio-tech/ui/elements/Dialog"
+  },
+  {
+   "id": "E0215",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/DragHandle",
+   "movedTo": "@semio-tech/ui/elements/DragHandle"
+  },
+  {
+   "id": "E0217",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/ElementId",
+   "movedTo": "@semio-tech/ui/elements/ElementId"
+  },
+  {
+   "id": "E0219",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Engagement",
+   "movedTo": "@semio-tech/ui/elements/Engagement"
+  },
+  {
+   "id": "E0221",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Field",
+   "movedTo": "@semio-tech/ui/elements/Field"
+  },
+  {
+   "id": "E0223",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Footer",
+   "movedTo": "@semio-tech/ui/elements/Footer"
+  },
+  {
+   "id": "E0225",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Form",
+   "movedTo": "@semio-tech/ui/elements/Form"
+  },
+  {
+   "id": "E0227",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/HistoryTable",
+   "movedTo": "@semio-tech/ui/elements/HistoryTable"
+  },
+  {
+   "id": "E0229",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/I18n",
+   "movedTo": "@semio-tech/ui/elements/I18n"
+  },
+  {
+   "id": "E0231",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Icons",
+   "movedTo": "@semio-tech/ui/elements/Icons"
+  },
+  {
+   "id": "E0233",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/IconSelector",
+   "movedTo": "@semio-tech/ui/elements/IconSelector"
+  },
+  {
+   "id": "E0235",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Input",
+   "movedTo": "@semio-tech/ui/elements/Input"
+  },
+  {
+   "id": "E0237",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Label",
+   "movedTo": "@semio-tech/ui/elements/Label"
+  },
+  {
+   "id": "E0239",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/LayeredOverview",
+   "movedTo": "@semio-tech/ui/elements/LayeredOverview"
+  },
+  {
+   "id": "E0241",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/LayeredOverview/pane-helpers",
+   "movedTo": "@semio-tech/ui/elements/LayeredOverview/pane-helpers"
+  },
+  {
+   "id": "E0243",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/LayeredOverview/types",
+   "movedTo": "@semio-tech/ui/elements/LayeredOverview/types"
+  },
+  {
+   "id": "E0245",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Layout",
+   "movedTo": "@semio-tech/ui/elements/Layout"
+  },
+  {
+   "id": "E0247",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/MenuItem",
+   "movedTo": "@semio-tech/ui/elements/MenuItem"
+  },
+  {
+   "id": "E0249",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Navbar",
+   "movedTo": "@semio-tech/ui/elements/Navbar"
+  },
+  {
+   "id": "E0251",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/NavbarExampleSelect",
+   "movedTo": "@semio-tech/ui/elements/NavbarExampleSelect"
+  },
+  {
+   "id": "E0253",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/OverviewCard",
+   "movedTo": "@semio-tech/ui/elements/OverviewCard"
+  },
+  {
+   "id": "E0255",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Panel",
+   "movedTo": "@semio-tech/ui/elements/Panel"
+  },
+  {
+   "id": "E0257",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Panel/tree-source",
+   "movedTo": "@semio-tech/ui/elements/Panel/tree-source"
+  },
+  {
+   "id": "E0259",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/PanelGhost",
+   "movedTo": "@semio-tech/ui/elements/PanelGhost"
+  },
+  {
+   "id": "E0261",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/PanelTabBar",
+   "movedTo": "@semio-tech/ui/elements/PanelTabBar"
+  },
+  {
+   "id": "E0263",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Popover",
+   "movedTo": "@semio-tech/ui/elements/Popover"
+  },
+  {
+   "id": "E0265",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Ports",
+   "movedTo": "@semio-tech/ui/elements/Ports"
+  },
+  {
+   "id": "E0267",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Ports/react",
+   "movedTo": "@semio-tech/ui/elements/Ports/react"
+  },
+  {
+   "id": "E0269",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/PresenceBar",
+   "movedTo": "@semio-tech/ui/elements/PresenceBar"
+  },
+  {
+   "id": "E0271",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Resizable",
+   "movedTo": "@semio-tech/ui/elements/Resizable"
+  },
+  {
+   "id": "E0273",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Ribbon",
+   "movedTo": "@semio-tech/ui/elements/Ribbon"
+  },
+  {
+   "id": "E0275",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Ring",
+   "movedTo": "@semio-tech/ui/elements/Ring"
+  },
+  {
+   "id": "E0277",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Scene",
+   "movedTo": "@semio-tech/ui/elements/Scene"
+  },
+  {
+   "id": "E0279",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Scene/geometry",
+   "movedTo": "@semio-tech/ui/elements/Scene/geometry"
+  },
+  {
+   "id": "E0281",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Scene/gizmo-snap",
+   "movedTo": "@semio-tech/ui/elements/Scene/gizmo-snap"
+  },
+  {
+   "id": "E0283",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Scene/gumball",
+   "movedTo": "@semio-tech/ui/elements/Scene/gumball"
+  },
+  {
+   "id": "E0285",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Scene/gumball-handles",
+   "movedTo": "@semio-tech/ui/elements/Scene/gumball-handles"
+  },
+  {
+   "id": "E0287",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Scene/gumball-model",
+   "movedTo": "@semio-tech/ui/elements/Scene/gumball-model"
+  },
+  {
+   "id": "E0289",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Scene/gumball-pick",
+   "movedTo": "@semio-tech/ui/elements/Scene/gumball-pick"
+  },
+  {
+   "id": "E0291",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Scene/gumball-visual",
+   "movedTo": "@semio-tech/ui/elements/Scene/gumball-visual"
+  },
+  {
+   "id": "E0293",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Scene/objects",
+   "movedTo": "@semio-tech/ui/elements/Scene/objects"
+  },
+  {
+   "id": "E0295",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Scrollable",
+   "movedTo": "@semio-tech/ui/elements/Scrollable"
+  },
+  {
+   "id": "E0297",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Select",
+   "movedTo": "@semio-tech/ui/elements/Select"
+  },
+  {
+   "id": "E0299",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/ShellScope",
+   "movedTo": "@semio-tech/ui/elements/ShellScope"
+  },
+  {
+   "id": "E0301",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Skeletons",
+   "movedTo": "@semio-tech/ui/elements/Skeletons"
+  },
+  {
+   "id": "E0303",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Slider",
+   "movedTo": "@semio-tech/ui/elements/Slider"
+  },
+  {
+   "id": "E0305",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Stepper",
+   "movedTo": "@semio-tech/ui/elements/Stepper"
+  },
+  {
+   "id": "E0307",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Surface",
+   "movedTo": "@semio-tech/ui/elements/Surface"
+  },
+  {
+   "id": "E0309",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Table",
+   "movedTo": "@semio-tech/ui/elements/Table"
+  },
+  {
+   "id": "E0311",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/TableAvatar",
+   "movedTo": "@semio-tech/ui/elements/TableAvatar"
+  },
+  {
+   "id": "E0313",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Tabs",
+   "movedTo": "@semio-tech/ui/elements/Tabs"
+  },
+  {
+   "id": "E0315",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Textarea",
+   "movedTo": "@semio-tech/ui/elements/Textarea"
+  },
+  {
+   "id": "E0317",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Toggle",
+   "movedTo": "@semio-tech/ui/elements/Toggle"
+  },
+  {
+   "id": "E0319",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/ToggleGroup",
+   "movedTo": "@semio-tech/ui/elements/ToggleGroup"
+  },
+  {
+   "id": "E0321",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Tree",
+   "movedTo": "@semio-tech/ui/elements/Tree"
+  },
+  {
+   "id": "E0323",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Tree/actions",
+   "movedTo": "@semio-tech/ui/elements/Tree/actions"
+  },
+  {
+   "id": "E0325",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Tree/branch",
+   "movedTo": "@semio-tech/ui/elements/Tree/branch"
+  },
+  {
+   "id": "E0327",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Tree/catalogue",
+   "movedTo": "@semio-tech/ui/elements/Tree/catalogue"
+  },
+  {
+   "id": "E0329",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Tree/chrome",
+   "movedTo": "@semio-tech/ui/elements/Tree/chrome"
+  },
+  {
+   "id": "E0331",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Tree/control-tree",
+   "movedTo": "@semio-tech/ui/elements/Tree/control-tree"
+  },
+  {
+   "id": "E0333",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Tree/data",
+   "movedTo": "@semio-tech/ui/elements/Tree/data"
+  },
+  {
+   "id": "E0335",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Tree/drag-drop",
+   "movedTo": "@semio-tech/ui/elements/Tree/drag-drop"
+  },
+  {
+   "id": "E0337",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Tree/hover-path",
+   "movedTo": "@semio-tech/ui/elements/Tree/hover-path"
+  },
+  {
+   "id": "E0339",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Tree/item",
+   "movedTo": "@semio-tech/ui/elements/Tree/item"
+  },
+  {
+   "id": "E0341",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Tree/pane-chrome-toggle",
+   "movedTo": "@semio-tech/ui/elements/Tree/pane-chrome-toggle"
+  },
+  {
+   "id": "E0343",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Tree/path-marking",
+   "movedTo": "@semio-tech/ui/elements/Tree/path-marking"
+  },
+  {
+   "id": "E0345",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Tree/props",
+   "movedTo": "@semio-tech/ui/elements/Tree/props"
+  },
+  {
+   "id": "E0347",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Tree/row",
+   "movedTo": "@semio-tech/ui/elements/Tree/row"
+  },
+  {
+   "id": "E0349",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Tree/row-alignment",
+   "movedTo": "@semio-tech/ui/elements/Tree/row-alignment"
+  },
+  {
+   "id": "E0351",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Tree/section",
+   "movedTo": "@semio-tech/ui/elements/Tree/section"
+  },
+  {
+   "id": "E0353",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Tree/selection",
+   "movedTo": "@semio-tech/ui/elements/Tree/selection"
+  },
+  {
+   "id": "E0355",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Tree/sortable-item",
+   "movedTo": "@semio-tech/ui/elements/Tree/sortable-item"
+  },
+  {
+   "id": "E0357",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Tree/state",
+   "movedTo": "@semio-tech/ui/elements/Tree/state"
+  },
+  {
+   "id": "E0359",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Tree/virtual-window",
+   "movedTo": "@semio-tech/ui/elements/Tree/virtual-window"
+  },
+  {
+   "id": "E0361",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Tree/window-measures",
+   "movedTo": "@semio-tech/ui/elements/Tree/window-measures"
+  },
+  {
+   "id": "E0363",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/UIDialog",
+   "movedTo": "@semio-tech/ui/elements/UIDialog"
+  },
+  {
+   "id": "E0365",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/UiDriver",
+   "movedTo": "@semio-tech/ui/elements/UiDriver"
+  },
+  {
+   "id": "E0367",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/UiLabel",
+   "movedTo": "@semio-tech/ui/elements/UiLabel"
+  },
+  {
+   "id": "E0369",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/VirtualFileSystem",
+   "movedTo": "@semio-tech/ui/elements/VirtualFileSystem"
+  },
+  {
+   "id": "E0371",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/Window",
+   "movedTo": "@semio-tech/ui/elements/Window"
+  },
+  {
+   "id": "E0373",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/WindowChrome",
+   "movedTo": "@semio-tech/ui/elements/WindowChrome"
+  },
+  {
+   "id": "E0375",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/WindowContentDeadLine",
+   "movedTo": "@semio-tech/ui/elements/WindowContentDeadLine"
+  },
+  {
+   "id": "E0377",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/WindowPane",
+   "movedTo": "@semio-tech/ui/elements/WindowPane"
+  },
+  {
+   "id": "E0379",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/WindowSearch",
+   "movedTo": "@semio-tech/ui/elements/WindowSearch"
+  },
+  {
+   "id": "E0381",
+   "package": "@semio-tech/framework",
+   "key": "./ui/elements/WindowSilhouette",
+   "movedTo": "@semio-tech/ui/elements/WindowSilhouette"
+  },
+  {
+   "id": "E0383",
+   "package": "@semio-tech/framework",
+   "key": "./ui/modules/border-presentation",
+   "movedTo": "@semio-tech/ui/modules/border-presentation"
+  },
+  {
+   "id": "E0385",
+   "package": "@semio-tech/framework",
+   "key": "./ui/modules/chrome-class-names",
+   "movedTo": "@semio-tech/ui/modules/chrome-class-names"
+  },
+  {
+   "id": "E0387",
+   "package": "@semio-tech/framework",
+   "key": "./ui/modules/chrome-control-presentation",
+   "movedTo": "@semio-tech/ui/modules/chrome-control-presentation"
+  },
+  {
+   "id": "E0389",
+   "package": "@semio-tech/framework",
+   "key": "./ui/modules/chrome-safe-area",
+   "movedTo": "@semio-tech/ui/modules/chrome-safe-area"
+  },
+  {
+   "id": "E0391",
+   "package": "@semio-tech/framework",
+   "key": "./ui/modules/class-name-composition",
+   "movedTo": "@semio-tech/ui/modules/class-name-composition"
+  },
+  {
+   "id": "E0393",
+   "package": "@semio-tech/framework",
+   "key": "./ui/modules/control-hotkey-presentation",
+   "movedTo": "@semio-tech/ui/modules/control-hotkey-presentation"
+  },
+  {
+   "id": "E0395",
+   "package": "@semio-tech/framework",
+   "key": "./ui/modules/control-tooltip-presentation",
+   "movedTo": "@semio-tech/ui/modules/control-tooltip-presentation"
+  },
+  {
+   "id": "E0397",
+   "package": "@semio-tech/framework",
+   "key": "./ui/modules/dom-event-binding",
+   "movedTo": "@semio-tech/ui/modules/dom-event-binding"
+  },
+  {
+   "id": "E0399",
+   "package": "@semio-tech/framework",
+   "key": "./ui/modules/element-identity",
+   "movedTo": "@semio-tech/ui/modules/element-identity"
+  },
+  {
+   "id": "E0401",
+   "package": "@semio-tech/framework",
+   "key": "./ui/modules/flow-direction-context",
+   "movedTo": "@semio-tech/ui/modules/flow-direction-context"
+  },
+  {
+   "id": "E0403",
+   "package": "@semio-tech/framework",
+   "key": "./ui/modules/form-control-presentation",
+   "movedTo": "@semio-tech/ui/modules/form-control-presentation"
+  },
+  {
+   "id": "E0405",
+   "package": "@semio-tech/framework",
+   "key": "./ui/modules/fuzzy-ranking",
+   "movedTo": "@semio-tech/ui/modules/fuzzy-ranking"
+  },
+  {
+   "id": "E0407",
+   "package": "@semio-tech/framework",
+   "key": "./ui/modules/interaction-presentation",
+   "movedTo": "@semio-tech/ui/modules/interaction-presentation"
+  },
+  {
+   "id": "E0409",
+   "package": "@semio-tech/framework",
+   "key": "./ui/modules/keybinding-persistence",
+   "movedTo": "@semio-tech/ui/modules/keybinding-persistence"
+  },
+  {
+   "id": "E0411",
+   "package": "@semio-tech/framework",
+   "key": "./ui/modules/layered-overview-geometry",
+   "movedTo": "@semio-tech/ui/modules/layered-overview-geometry"
+  },
+  {
+   "id": "E0413",
+   "package": "@semio-tech/framework",
+   "key": "./ui/modules/menu-item-presentation",
+   "movedTo": "@semio-tech/ui/modules/menu-item-presentation"
+  },
+  {
+   "id": "E0415",
+   "package": "@semio-tech/framework",
+   "key": "./ui/modules/panel-anchor",
+   "movedTo": "@semio-tech/ui/modules/panel-anchor"
+  },
+  {
+   "id": "E0417",
+   "package": "@semio-tech/framework",
+   "key": "./ui/modules/panel-dock",
+   "movedTo": "@semio-tech/ui/modules/panel-dock"
+  },
+  {
+   "id": "E0419",
+   "package": "@semio-tech/framework",
+   "key": "./ui/modules/presence-presentation",
+   "movedTo": "@semio-tech/ui/modules/presence-presentation"
+  },
+  {
+   "id": "E0421",
+   "package": "@semio-tech/framework",
+   "key": "./ui/modules/shell-floor-presentation",
+   "movedTo": "@semio-tech/ui/modules/shell-floor-presentation"
+  },
+  {
+   "id": "E0423",
+   "package": "@semio-tech/framework",
+   "key": "./ui/modules/status-border-presentation",
+   "movedTo": "@semio-tech/ui/modules/status-border-presentation"
+  },
+  {
+   "id": "E0425",
+   "package": "@semio-tech/framework",
+   "key": "./ui/modules/style-variants",
+   "movedTo": "@semio-tech/ui/modules/style-variants"
+  },
+  {
+   "id": "E0427",
+   "package": "@semio-tech/framework",
+   "key": "./ui/modules/surface-presentation",
+   "movedTo": "@semio-tech/ui/modules/surface-presentation"
+  },
+  {
+   "id": "E0429",
+   "package": "@semio-tech/framework",
+   "key": "./ui/modules/ui-mobile-context",
+   "movedTo": "@semio-tech/ui/modules/ui-mobile-context"
+  },
+  {
+   "id": "E0431",
+   "package": "@semio-tech/framework",
+   "key": "./ui/modules/ui-terminology",
+   "movedTo": "@semio-tech/ui/modules/ui-terminology"
+  },
+  {
+   "id": "E0433",
+   "package": "@semio-tech/framework",
+   "key": "./ui/modules/window-layout",
+   "movedTo": "@semio-tech/ui/modules/window-layout"
+  },
+  {
+   "id": "E0435",
+   "package": "@semio-tech/framework",
+   "key": "./ui/modules/window-measures",
+   "movedTo": "@semio-tech/ui/modules/window-measures"
+  }
+ ],
+ "glue": [
+  {
+   "id": "G0134",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🕹️interaction/🧬️schema/🟦️.ts",
+   "entry": "E0133"
+  },
+  {
+   "id": "G0138",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🕹️interaction/🧪️testing/🎯️set-laws/🟦️.ts",
+   "entry": "E0137"
+  },
+  {
+   "id": "G0152",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🎚️axes/📋️plan/🟦️.ts",
+   "entry": "E0151"
+  },
+  {
+   "id": "G0154",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🎚️axes/📤️publication/🟦️.ts",
+   "entry": "E0153"
+  },
+  {
+   "id": "G0156",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🎚️axes/📥️source/🟦️.ts",
+   "entry": "E0155"
+  },
+  {
+   "id": "G0158",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧬️contract/🧵️retained/🔌️host/🟦️.ts",
+   "entry": "E0157"
+  },
+  {
+   "id": "G0160",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧬️contract/🧵️retained/🔌️host/🏦️composition/🟦️.ts",
+   "entry": "E0159"
+  },
+  {
+   "id": "G0162",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧬️contract/🧵️retained/🔌️host/📥️input/🟦️.ts",
+   "entry": "E0161"
+  },
+  {
+   "id": "G0164",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧬️contract/🧵️retained/🔌️host/📦️return-content/🟦️.ts",
+   "entry": "E0163"
+  },
+  {
+   "id": "G0166",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧬️contract/🧪️testing/🧪️color-input/🟦️.ts",
+   "entry": "E0165"
+  },
+  {
+   "id": "G0168",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/📱️device/🟦️.ts",
+   "entry": "E0167"
+  },
+  {
+   "id": "G0170",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/⚡️ActionGroup/🟦️.tsx",
+   "entry": "E0169"
+  },
+  {
+   "id": "G0172",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🔘️Button/🟦️.tsx",
+   "entry": "E0171"
+  },
+  {
+   "id": "G0174",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🔳️ButtonGroup/🟦️.tsx",
+   "entry": "E0173"
+  },
+  {
+   "id": "G0176",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx",
+   "entry": "E0175"
+  },
+  {
+   "id": "G0178",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🎨️Canvas/📐️corners/🟦️.ts",
+   "entry": "E0177"
+  },
+  {
+   "id": "G0180",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🎨️Canvas/🎯️drop/🟦️.ts",
+   "entry": "E0179"
+  },
+  {
+   "id": "G0182",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🎨️Canvas/🔗️join-corners/🟦️.ts",
+   "entry": "E0181"
+  },
+  {
+   "id": "G0184",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🎨️Canvas/🗺️layout/🟦️.ts",
+   "entry": "E0183"
+  },
+  {
+   "id": "G0186",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🎨️Canvas/🪟️template-drag/🟦️.ts",
+   "entry": "E0185"
+  },
+  {
+   "id": "G0188",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/☑️Checkbox/🟦️.tsx",
+   "entry": "E0187"
+  },
+  {
+   "id": "G0190",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/💡️ChromeControlHint/🟦️.tsx",
+   "entry": "E0189"
+  },
+  {
+   "id": "G0192",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/↕️Collapsible/🟦️.tsx",
+   "entry": "E0191"
+  },
+  {
+   "id": "G0194",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/⌨️Command/🟦️.tsx",
+   "entry": "E0193"
+  },
+  {
+   "id": "G0196",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🖱️ContextMenu/🟦️.tsx",
+   "entry": "E0195"
+  },
+  {
+   "id": "G0198",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🖱️ContextMenu/🥣️chrome/🟦️.tsx",
+   "entry": "E0197"
+  },
+  {
+   "id": "G0200",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🖱️ContextMenu/🧭️navigation/🟦️.tsx",
+   "entry": "E0199"
+  },
+  {
+   "id": "G0202",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🖱️ContextMenu/📝️text-selection/🟦️.ts",
+   "entry": "E0201"
+  },
+  {
+   "id": "G0204",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🕸️Diagram/🟦️.tsx",
+   "entry": "E0203"
+  },
+  {
+   "id": "G0206",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🕸️Diagram/📋️force-model/🟦️.ts",
+   "entry": "E0205"
+  },
+  {
+   "id": "G0208",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🕸️Diagram/🧩️inner/🟦️.tsx",
+   "entry": "E0207"
+  },
+  {
+   "id": "G0210",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🕸️Diagram/⌨️keyboard/🟦️.tsx",
+   "entry": "E0209"
+  },
+  {
+   "id": "G0212",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🕸️Diagram/🪢️layout-hook/🟦️.ts",
+   "entry": "E0211"
+  },
+  {
+   "id": "G0214",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/💬️Dialog/🟦️.tsx",
+   "entry": "E0213"
+  },
+  {
+   "id": "G0216",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🧱️DragHandle/🟦️.tsx",
+   "entry": "E0215"
+  },
+  {
+   "id": "G0218",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🆔️ElementId/🟦️.tsx",
+   "entry": "E0217"
+  },
+  {
+   "id": "G0220",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🎮️Engagement/🟦️.tsx",
+   "entry": "E0219"
+  },
+  {
+   "id": "G0222",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/📝️Field/🟦️.tsx",
+   "entry": "E0221"
+  },
+  {
+   "id": "G0224",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🔚️Footer/🟦️.tsx",
+   "entry": "E0223"
+  },
+  {
+   "id": "G0226",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🧾️Form/🟦️.tsx",
+   "entry": "E0225"
+  },
+  {
+   "id": "G0228",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🕰️HistoryTable/🟦️.tsx",
+   "entry": "E0227"
+  },
+  {
+   "id": "G0230",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/📚️I18n/🟦️.tsx",
+   "entry": "E0229"
+  },
+  {
+   "id": "G0232",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🔣️Icons/🟦️.tsx",
+   "entry": "E0231"
+  },
+  {
+   "id": "G0234",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🎴️IconSelector/🟦️.tsx",
+   "entry": "E0233"
+  },
+  {
+   "id": "G0236",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/✏️Input/🟦️.tsx",
+   "entry": "E0235"
+  },
+  {
+   "id": "G0238",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🏷️Label/🟦️.tsx",
+   "entry": "E0237"
+  },
+  {
+   "id": "G0240",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🥞️LayeredOverview/🟦️.tsx",
+   "entry": "E0239"
+  },
+  {
+   "id": "G0242",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🥞️LayeredOverview/🧰️pane-helpers/🟦️.ts",
+   "entry": "E0241"
+  },
+  {
+   "id": "G0244",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🥞️LayeredOverview/📋️types/🟦️.ts",
+   "entry": "E0243"
+  },
+  {
+   "id": "G0246",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/📐️Layout/🟦️.tsx",
+   "entry": "E0245"
+  },
+  {
+   "id": "G0248",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/📋️MenuItem/🟦️.tsx",
+   "entry": "E0247"
+  },
+  {
+   "id": "G0250",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🔝️Navbar/🟦️.tsx",
+   "entry": "E0249"
+  },
+  {
+   "id": "G0252",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🧪️NavbarExampleSelect/🟦️.tsx",
+   "entry": "E0251"
+  },
+  {
+   "id": "G0254",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🃏️OverviewCard/🟦️.tsx",
+   "entry": "E0253"
+  },
+  {
+   "id": "G0256",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🖼️Panel/🟦️.tsx",
+   "entry": "E0255"
+  },
+  {
+   "id": "G0258",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🖼️Panel/🌲️tree-source/🟦️.ts",
+   "entry": "E0257"
+  },
+  {
+   "id": "G0260",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/👻️PanelGhost/🟦️.tsx",
+   "entry": "E0259"
+  },
+  {
+   "id": "G0262",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🧭️PanelTabBar/🟦️.tsx",
+   "entry": "E0261"
+  },
+  {
+   "id": "G0264",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🗨️Popover/🟦️.tsx",
+   "entry": "E0263"
+  },
+  {
+   "id": "G0266",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🔌️Ports/🟦️.tsx",
+   "entry": "E0265"
+  },
+  {
+   "id": "G0268",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🔌️Ports/⚛️react/🟦️.ts",
+   "entry": "E0267"
+  },
+  {
+   "id": "G0270",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/👥️PresenceBar/🟦️.tsx",
+   "entry": "E0269"
+  },
+  {
+   "id": "G0272",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/↔️Resizable/🟦️.tsx",
+   "entry": "E0271"
+  },
+  {
+   "id": "G0274",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🎀️Ribbon/🟦️.tsx",
+   "entry": "E0273"
+  },
+  {
+   "id": "G0276",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/⭕️Ring/🟦️.tsx",
+   "entry": "E0275"
+  },
+  {
+   "id": "G0278",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🎬️Scene/🟦️.tsx",
+   "entry": "E0277"
+  },
+  {
+   "id": "G0280",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🎬️Scene/📐️geometry/🟦️.ts",
+   "entry": "E0279"
+  },
+  {
+   "id": "G0282",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🎬️Scene/🧭️gizmo-snap/🟦️.ts",
+   "entry": "E0281"
+  },
+  {
+   "id": "G0284",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🎬️Scene/🕹️gumball/🟦️.tsx",
+   "entry": "E0283"
+  },
+  {
+   "id": "G0286",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🎬️Scene/🔩️gumball-handles/🟦️.tsx",
+   "entry": "E0285"
+  },
+  {
+   "id": "G0288",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🎬️Scene/🧿️gumball-model/🟦️.ts",
+   "entry": "E0287"
+  },
+  {
+   "id": "G0290",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🎬️Scene/🎯️gumball-pick/🟦️.ts",
+   "entry": "E0289"
+  },
+  {
+   "id": "G0292",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🎬️Scene/🎨️gumball-visual/🟦️.tsx",
+   "entry": "E0291"
+  },
+  {
+   "id": "G0294",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🎬️Scene/🗿️objects/🟦️.tsx",
+   "entry": "E0293"
+  },
+  {
+   "id": "G0296",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/📜️Scrollable/🟦️.tsx",
+   "entry": "E0295"
+  },
+  {
+   "id": "G0298",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🔽️Select/🟦️.tsx",
+   "entry": "E0297"
+  },
+  {
+   "id": "G0300",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🐚️ShellScope/🟦️.tsx",
+   "entry": "E0299"
+  },
+  {
+   "id": "G0302",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🦴️Skeletons/🟦️.tsx",
+   "entry": "E0301"
+  },
+  {
+   "id": "G0304",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🎚️Slider/🟦️.tsx",
+   "entry": "E0303"
+  },
+  {
+   "id": "G0306",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🪜️Stepper/🟦️.tsx",
+   "entry": "E0305"
+  },
+  {
+   "id": "G0308",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🌈️Surface/🟦️.tsx",
+   "entry": "E0307"
+  },
+  {
+   "id": "G0310",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/📊️Table/🟦️.tsx",
+   "entry": "E0309"
+  },
+  {
+   "id": "G0312",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/📻️TableAvatar/🟦️.tsx",
+   "entry": "E0311"
+  },
+  {
+   "id": "G0314",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/📑️Tabs/🟦️.tsx",
+   "entry": "E0313"
+  },
+  {
+   "id": "G0316",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🔤️Textarea/🟦️.tsx",
+   "entry": "E0315"
+  },
+  {
+   "id": "G0318",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🔀️Toggle/🟦️.tsx",
+   "entry": "E0317"
+  },
+  {
+   "id": "G0320",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🎛️ToggleGroup/🟦️.tsx",
+   "entry": "E0319"
+  },
+  {
+   "id": "G0322",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🌳️Tree/🟦️.tsx",
+   "entry": "E0321"
+  },
+  {
+   "id": "G0324",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🌳️Tree/⚡️actions/🟦️.tsx",
+   "entry": "E0323"
+  },
+  {
+   "id": "G0326",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🌳️Tree/🌲️branch/🟦️.tsx",
+   "entry": "E0325"
+  },
+  {
+   "id": "G0328",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🌳️Tree/📚️catalogue/🟦️.tsx",
+   "entry": "E0327"
+  },
+  {
+   "id": "G0330",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🌳️Tree/🎨️chrome/🟦️.tsx",
+   "entry": "E0329"
+  },
+  {
+   "id": "G0332",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🌳️Tree/🕹️control-tree/🟦️.tsx",
+   "entry": "E0331"
+  },
+  {
+   "id": "G0334",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🌳️Tree/📋️data/🟦️.ts",
+   "entry": "E0333"
+  },
+  {
+   "id": "G0336",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🌳️Tree/🧲️drag-drop/🟦️.tsx",
+   "entry": "E0335"
+  },
+  {
+   "id": "G0338",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🌳️Tree/🧭️hover-path/🟦️.ts",
+   "entry": "E0337"
+  },
+  {
+   "id": "G0340",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🌳️Tree/🍃️item/🟦️.tsx",
+   "entry": "E0339"
+  },
+  {
+   "id": "G0342",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🌳️Tree/🔀️pane-chrome-toggle/🟦️.tsx",
+   "entry": "E0341"
+  },
+  {
+   "id": "G0344",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🌳️Tree/🧷️path-marking/🟦️.ts",
+   "entry": "E0343"
+  },
+  {
+   "id": "G0346",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🌳️Tree/🧩️props/🟦️.ts",
+   "entry": "E0345"
+  },
+  {
+   "id": "G0348",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🌳️Tree/📄️row/🟦️.tsx",
+   "entry": "E0347"
+  },
+  {
+   "id": "G0350",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🌳️Tree/📏️row-alignment/🟦️.tsx",
+   "entry": "E0349"
+  },
+  {
+   "id": "G0352",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🌳️Tree/🌱️section/🟦️.tsx",
+   "entry": "E0351"
+  },
+  {
+   "id": "G0354",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🌳️Tree/🎚️selection/🟦️.ts",
+   "entry": "E0353"
+  },
+  {
+   "id": "G0356",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🌳️Tree/↕️sortable-item/🟦️.tsx",
+   "entry": "E0355"
+  },
+  {
+   "id": "G0358",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🌳️Tree/🌿️state/🟦️.tsx",
+   "entry": "E0357"
+  },
+  {
+   "id": "G0360",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🌳️Tree/🔭️virtual-window/🟦️.tsx",
+   "entry": "E0359"
+  },
+  {
+   "id": "G0362",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🌳️Tree/🔢️window-measures/🟦️.tsx",
+   "entry": "E0361"
+  },
+  {
+   "id": "G0364",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/📨️UIDialog/🟦️.tsx",
+   "entry": "E0363"
+  },
+  {
+   "id": "G0366",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🚗️UiDriver/🟦️.tsx",
+   "entry": "E0365"
+  },
+  {
+   "id": "G0368",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🎗️UiLabel/🟦️.tsx",
+   "entry": "E0367"
+  },
+  {
+   "id": "G0370",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/⚙️VirtualFileSystem/🟦️.tsx",
+   "entry": "E0369"
+  },
+  {
+   "id": "G0372",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🪟️Window/🟦️.tsx",
+   "entry": "E0371"
+  },
+  {
+   "id": "G0374",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🗂️WindowChrome/🟦️.tsx",
+   "entry": "E0373"
+  },
+  {
+   "id": "G0376",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🚧️WindowContentDeadLine/🟦️.tsx",
+   "entry": "E0375"
+  },
+  {
+   "id": "G0378",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/📌️WindowPane/🟦️.tsx",
+   "entry": "E0377"
+  },
+  {
+   "id": "G0380",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🔍️WindowSearch/🟦️.tsx",
+   "entry": "E0379"
+  },
+  {
+   "id": "G0382",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🧱️elements/🔲️WindowSilhouette/🟦️.tsx",
+   "entry": "E0381"
+  },
+  {
+   "id": "G0384",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🔨️modules/📏️border-presentation/🟦️.ts",
+   "entry": "E0383"
+  },
+  {
+   "id": "G0386",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🔨️modules/🎨️chrome-class-names/🟦️.ts",
+   "entry": "E0385"
+  },
+  {
+   "id": "G0388",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🔨️modules/🎛️chrome-control-presentation/🟦️.ts",
+   "entry": "E0387"
+  },
+  {
+   "id": "G0390",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🔨️modules/🛟️chrome-safe-area/🟦️.tsx",
+   "entry": "E0389"
+  },
+  {
+   "id": "G0392",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🔨️modules/🏷️class-name-composition/🟦️.ts",
+   "entry": "E0391"
+  },
+  {
+   "id": "G0394",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🔨️modules/⌨️control-hotkey-presentation/🟦️.tsx",
+   "entry": "E0393"
+  },
+  {
+   "id": "G0396",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🔨️modules/💡️control-tooltip-presentation/🟦️.ts",
+   "entry": "E0395"
+  },
+  {
+   "id": "G0398",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🔨️modules/👂️dom-event-binding/🟦️.ts",
+   "entry": "E0397"
+  },
+  {
+   "id": "G0400",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🔨️modules/🆔️element-identity/🟦️.ts",
+   "entry": "E0399"
+  },
+  {
+   "id": "G0402",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🔨️modules/🧭️flow-direction-context/🟦️.tsx",
+   "entry": "E0401"
+  },
+  {
+   "id": "G0404",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🔨️modules/📝️form-control-presentation/🟦️.ts",
+   "entry": "E0403"
+  },
+  {
+   "id": "G0406",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🔨️modules/🔎️fuzzy-ranking/🟦️.ts",
+   "entry": "E0405"
+  },
+  {
+   "id": "G0408",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🔨️modules/🖱️interaction-presentation/🟦️.ts",
+   "entry": "E0407"
+  },
+  {
+   "id": "G0410",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🔨️modules/💾️keybinding-persistence/🟦️.ts",
+   "entry": "E0409"
+  },
+  {
+   "id": "G0412",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🔨️modules/🥞️layered-overview-geometry/🟦️.ts",
+   "entry": "E0411"
+  },
+  {
+   "id": "G0414",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🔨️modules/📋️menu-item-presentation/🟦️.ts",
+   "entry": "E0413"
+  },
+  {
+   "id": "G0416",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🔨️modules/⚓️panel-anchor/🟦️.ts",
+   "entry": "E0415"
+  },
+  {
+   "id": "G0418",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🔨️modules/🧲️panel-dock/🟦️.tsx",
+   "entry": "E0417"
+  },
+  {
+   "id": "G0420",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🔨️modules/👥️presence-presentation/🟦️.ts",
+   "entry": "E0419"
+  },
+  {
+   "id": "G0422",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🔨️modules/🏠️shell-floor-presentation/🟦️.ts",
+   "entry": "E0421"
+  },
+  {
+   "id": "G0424",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🔨️modules/🌀️status-border-presentation/🟦️.ts",
+   "entry": "E0423"
+  },
+  {
+   "id": "G0426",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🔨️modules/🧬️style-variants/🟦️.ts",
+   "entry": "E0425"
+  },
+  {
+   "id": "G0428",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🔨️modules/🌈️surface-presentation/🟦️.ts",
+   "entry": "E0427"
+  },
+  {
+   "id": "G0430",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🔨️modules/📱️ui-mobile-context/🟦️.tsx",
+   "entry": "E0429"
+  },
+  {
+   "id": "G0432",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🔨️modules/🗣️ui-terminology/🟦️.tsx",
+   "entry": "E0431"
+  },
+  {
+   "id": "G0434",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🔨️modules/🗺️window-layout/🟦️.ts",
+   "entry": "E0433"
+  },
+  {
+   "id": "G0436",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🔨️modules/📐️window-measures/🟦️.ts",
+   "entry": "E0435"
+  }
+ ]
+}

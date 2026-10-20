@@ -9,6 +9,7 @@
     "test": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test",
         "cwd": "✏️s/🧪️tests/🗂️native-ownership"

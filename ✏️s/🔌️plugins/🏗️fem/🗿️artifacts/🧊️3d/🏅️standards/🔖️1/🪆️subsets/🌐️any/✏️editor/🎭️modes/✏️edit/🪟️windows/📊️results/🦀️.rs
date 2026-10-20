@@ -354,7 +354,7 @@ pub fn render(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig, interaction: 
 /// ⏳️ Gestures and pending generations retain the last admitted visualization without solving.
 pub fn render_pending(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig, interaction: &Fem3dInteractionSnapshot, operation: Option<semio_framework_plugin::AppRenderOperationContext>, authority: Option<semio_framework_plugin::WindowConfigAuthorityIdentity>, live: &dyn Fem3dLiveSession) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let mode = cfg.result_mode.display(cfg.result_mode_index);
-    let stage = result_request(doc, cfg.result_source_id.as_deref(), match mode { DisplayMode::Modal(index) => Some(index), _ => None }).ok().and_then(|mut request| { request.buckling = match mode { DisplayMode::Buckling(index) => Some(index), _ => None }; crate::live_visual::result_stage(operation, authority) });
+    let stage = result_request(doc, cfg.result_source_id.as_deref(), match mode { DisplayMode::Modal(index) => Some(index), _ => None }).ok().and_then(|mut request| { request.buckling = match mode { DisplayMode::Buckling(index) => Some(index), _ => None }; live.result_stage(operation, authority) });
     live.with_live_visual(operation, &mut |visual| {
         with_caption(results_scene_with_visual(doc, cfg, interaction, None, doc.analysis.deformation_scale, None, visual)?, progress_caption(stage).into())
     })

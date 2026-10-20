@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "enabled": true,
+  "protocol": "json",
+  "localJobs": {
+    "maximum": 8
+  },
+  "memory": {
+    "hostShareBasisPoints": 3000,
+    "perWorkerMegabytes": 512
+  },
+  "sandboxing": false,
+  "cancellation": true,
+  "resetAfterRequests": 256,
+  "classification": [
+    {
+      "kind": "service",
+      "continuous": true
+    },
+    {
+      "kind": "test",
+      "pattern": "^(?:test|smoke|mutation|bench|e2e)(?:-|$)"
+    },
+    {
+      "kind": "check",
+      "pattern": "^(?:check|lint|verify|typecheck|format-check|contract|schema|stdio)(?:-|$)|-check$"
+    },
+    {
+      "kind": "generate",
+      "pattern": "(?:^|[^a-z])(?:generate|generator)(?:-|$)"
+    },
+    {
+      "kind": "build",
+      "pattern": "^(?:build|prepare|activate|wasm|native|package|bundle|cpp|publish|canonical|preview|setup|deps)(?:-|$)"
+    }
+  ],
+  "defaultKind": "script",
+  "kinds": {
+    "test": {
+      "workers": true,
+      "maxInstances": 8,
+      "multiplex": false,
+      "inProcess": true
+    },
+    "check": {
+      "workers": true,
+      "maxInstances": 8,
+      "multiplex": false,
+      "inProcess": true
+    },
+    "generate": {
+      "workers": true,
+      "maxInstances": 4,
+      "multiplex": false,
+      "inProcess": true
+    },
+    "build": {
+      "workers": true,
+      "maxInstances": 2,
+      "multiplex": false,
+      "inProcess": true
+    },
+    "script": {
+      "workers": true,
+      "maxInstances": 4,
+      "multiplex": false,
+      "inProcess": true
+    },
+    "service": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+    }
+  }
+}

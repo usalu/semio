@@ -258,7 +258,7 @@ impl ArtifactCommandWork<EditorApp<Wfc2dEditor>> for Wfc2dCommandWork {
 /// 🏭️ The app-owned retained command job factory — `factory_type:` in the proof block binds this exact
 /// Rust type to `EditorApp<Wfc2dEditor>`, which is what turns a bare (and therefore dispatch-dead)
 /// bounded proof into an exact-owner proof.
-pub(super) struct Wfc2dRetainedCommandJobFactory {
+pub struct Wfc2dRetainedCommandJobFactory {
     keys: Vec<ToolFactoryKey>,
 }
 

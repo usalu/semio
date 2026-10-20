@@ -167,11 +167,11 @@ fn ranges_union(a: ByteRange, b: ByteRange) -> ByteRange {
 
 /// 🌱️ Lifecycle of one coalesced physical read.
 enum GroupState {
-    /// Still open: newly arriving requests whose range touches `range` are folded in.
+    /// 📂️ Still open: newly arriving requests whose range touches `range` are folded in.
     Gathering,
-    /// Closed for merging; a physical read for `range` is (or is about to be) in flight.
+    /// 📡️ Closed for merging; a physical read for `range` is (or is about to be) in flight.
     Dispatched,
-    /// Finished; every waiter gets a clone of this shared result.
+    /// ✅️ Finished; every waiter gets a clone of this shared result.
     Done(Result<Arc<Vec<u8>>, PackError>),
 }
 
@@ -333,7 +333,7 @@ impl PartialOrd for DemandWaiter {
 }
 
 impl Ord for DemandWaiter {
-    /// `BinaryHeap` is a max-heap; the *highest priority* (lowest rank, earliest seq) waiter
+    /// ↔️ `BinaryHeap` is a max-heap; the *highest priority* (lowest rank, earliest seq) waiter
     /// must compare greatest so it pops first.
     fn cmp(&self, other: &Self) -> CmpOrdering {
         other.rank.cmp(&self.rank).then_with(|| other.seq.cmp(&self.seq))

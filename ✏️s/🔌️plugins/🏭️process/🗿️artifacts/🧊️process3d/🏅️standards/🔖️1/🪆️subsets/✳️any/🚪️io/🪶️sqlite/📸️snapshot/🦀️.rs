@@ -1,5 +1,5 @@
 //! 🏭️ Explicit Process3d parent projection into its authored semantic entities.
-use crate::snapshot::Process3dSnapshot;
+pub use crate::snapshot::Process3dSnapshot;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::{snapshot::CapabilityRule, snapshot::MeasureRecipe, snapshot::Pose, snapshot::ProcessMeasure, snapshot::StockQuantity, snapshot::WorkingSolid};
 #[path="🔍️rows/🦀️.rs"]

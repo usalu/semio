@@ -366,5 +366,5 @@ pub mod extension_guest {
 fn out_step() -> ChannelSpec { ChannelSpec::named("S","Stp","step","StepExport").with_value_types(&["text"]) }
 
 pub fn operation_quality(method:&str) -> semio_framework_3d_brep_representation::contract::OpQuality {
-    if semio_s_artifact_stdio_step_geometry::geometry::STEP_GEOMETRY_OPERATIONS.contains(&method) { semio_s_artifact_stdio_step_geometry::geometry::operation_quality(method) } else { semio_framework_3d_brep_representation::contract::operation_quality(method) }
+    if semio_s_artifact_stdio_step::geometry::STEP_GEOMETRY_OPERATIONS.contains(&method) { crate::component::operation_quality(method) } else { semio_framework_3d_brep_representation::contract::operation_quality(method) }
 }

@@ -1,0 +1,53 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/💓️heartbeat-and-liveness-watchdogs/🟦️.ts",
+ "function": "registerHeartbeatAndLivenessTests",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of registerHeartbeatAndLivenessTests. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️shard-client-heartbeat-watchdog",
+   "doc": "/** 🔶️ The shard client heartbeat watchdog phase of registerHeartbeatAndLivenessTests. */",
+   "phases": [
+    {
+     "name": "registerShardClientHeartbeatWatchdogTests",
+     "emoji": "🔷",
+     "doc": "Registers the shard client heartbeat watchdog tests of registerHeartbeatAndLivenessTests.",
+     "from": 9,
+     "to": 10
+    }
+   ]
+  },
+  {
+   "dir": "🔸️shard-client-liveness-watchdog",
+   "doc": "/** 🔸️ The shard client liveness watchdog phase of registerHeartbeatAndLivenessTests. */",
+   "phases": [
+    {
+     "name": "registerShardClientLivenessWatchdogTests",
+     "emoji": "🔹",
+     "doc": "Registers the shard client liveness watchdog tests of registerHeartbeatAndLivenessTests.",
+     "from": 65,
+     "to": 65
+    }
+   ]
+  },
+  {
+   "dir": "🟠️shard-client-sab-heartbeat",
+   "doc": "/** 🟠️ The shard client sab heartbeat phase of registerHeartbeatAndLivenessTests. */",
+   "phases": [
+    {
+     "name": "registerShardClientSabHeartbeatTests",
+     "emoji": "🟡",
+     "doc": "Registers the shard client sab heartbeat tests of registerHeartbeatAndLivenessTests.",
+     "from": 379,
+     "to": 379
+    }
+   ]
+  }
+ ]
+}

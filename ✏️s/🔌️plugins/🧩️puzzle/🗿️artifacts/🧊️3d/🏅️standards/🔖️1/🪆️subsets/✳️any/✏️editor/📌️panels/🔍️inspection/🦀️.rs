@@ -96,9 +96,6 @@ fn id_list_value(ids: &[String]) -> UiAssemblyResult<UiValue> {
 /// `ids`, the two fields that command accepts for any entity.
 fn flag_row(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, entity: &str, ids: &[String], field: &str, pressed: bool) -> UiAssemblyResult<()> {
     let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| error("puzzle3d inspector action map admission failed"))?;
-    // 🔑️ `UiMapBuilder::push` admits keys in STRICTLY ASCENDING order only (`🎬️action.rs`: a key that
-    // does not exceed the last one is refused, allocation returned) — `entity`, `ids`, `field`, `value`
-    // regressed at `field` and killed every flag row on a live selection.
     for (key, value) in [("entity", text_value(entity)?), ("field", text_value(field)?), ("ids", id_list_value(ids)?), ("value", UiValue::Bool(!pressed))] {
         builder.push(key.to_owned(), value).map_err(|_| error("puzzle3d inspector action map entry admission failed"))?;
     }
@@ -177,7 +174,6 @@ fn entity_tree(id: &str, label: &str, ids: &[String], fields: UiAssemblyResult<U
     let fields = fields?;
     let mut builder = PanelTreeBuilder::new(ROOT)?;
     if !ids.is_empty() {
-        // 🪟️ Keyed by the RAW id so a scrolled window never reuses a row key.
         builder = builder.window_section(windows, IDS_SECTION, Some(ui_label(labels.id.as_str())?), true, ids, |id: &String| tree_item_desc(format!("{IDS_SECTION}.{id}"), ui_label(labels.id.as_str())?, Some(id.clone())))?;
     }
     builder.section(format!("{ROOT}.{id}"), Some(ui_label(label)?), true, fields)?.build()

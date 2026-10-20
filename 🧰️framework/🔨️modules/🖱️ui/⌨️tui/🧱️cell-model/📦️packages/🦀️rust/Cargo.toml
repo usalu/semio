@@ -28,5 +28,3 @@ ui_styling = { path = "../../../../🎨️styling/📦️packages/🦀️rust", 
 semio-framework-pack-json = { path = "../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 unicode-segmentation = "1.13.2"
 unicode-width = "0.2.2"
-tiny-skia = "0.11.4"
-semio-framework-ui-tui-widgets = { path = "../../../🧩️widgets/📦️packages/🦀️rust" }

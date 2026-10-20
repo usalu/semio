@@ -9,13 +9,13 @@ import{mkdtempSync,rmSync,existsSync,readFileSync}from"node:fs";
 import{join,resolve}from"node:path";
 import{build}from"esbuild";
 import{withNxDaemonServiceBirthV1}from"../🟦️.ts";
-import{receiveScriptProcessInvocation}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
 import{withRepositoryCacheStoreV1}from"../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import{withRepositoryNxStorageV1,nxDaemonNamespaceResourceV1}from"../../../../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
 import{nxToolingUseStorageV1}from"@semio-tech/nx-bootstrap-tools/use";
 
 /** 🧪️ Actual Node provider scopes survive parent handoff and callback return until real server settlement. */
-test("issued daemon service holds its actual images and SDK after finite parent callback closes",async()=>receiveScriptProcessInvocation(process.env,async original=>{
+test("issued daemon service holds its actual images and SDK after finite parent callback closes",async()=>withBuildTestInvocationV1(async original=>{
  const root=process.cwd(),toolkitRoot=process.env.SEMIO_NX_TOOLING_ROOT;if(!toolkitRoot)throw Error("Original loaded SDK root required");const identity=JSON.parse(readFileSync(join(toolkitRoot,".semio-nx-tooling.json"),"utf8")).digest,implementation=process.env.SEMIO_NX_IMPLEMENTATION_IDENTITY;if(!implementation)throw Error("Original Nx implementation identity required");
  await withRepositoryCacheStoreV1(root,"diagnostics",original,createIssuedResourceControlV1(original,"cache:store-entry",0),async(diagnostics,diagnosticPhase)=>{const directory=mkdtempSync(join(diagnostics.root,"ds-")),entry=join(directory,"child.mjs");let child:ChildProcess|undefined,terminal:Promise<number|null>|undefined,timer:ReturnType<typeof setTimeout>|undefined,kill:ReturnType<typeof setTimeout>|undefined,errors="";
  try{

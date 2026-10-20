@@ -4,6 +4,7 @@ use semio_s_artifact_block_3d_inferences::*;
 use semio_s_artifact_block_3d_model::{BLOCK_3D_SCHEMA, Block3dVortexTemplate};
 use semio_s_plugin_block::{BlockKindIdentity, BlockRepresentation};
 use protocol::Inference;
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
 
 //#region 🧸️Fixtures
 fn vortex(id: &str, position: [f64; 3], radius: f64) -> Block3dVortexTemplate {

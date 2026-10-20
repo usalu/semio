@@ -3,6 +3,7 @@ use super::*;
 use semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue;
 use semio_s_artifact_procedural_3d_geometry::registry;
 use semio_s_artifact_procedural_3d_geometry_construction_support as support;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetStep;
 
 const FIXTURE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🏗️brep-solid/🔣️.json");
 

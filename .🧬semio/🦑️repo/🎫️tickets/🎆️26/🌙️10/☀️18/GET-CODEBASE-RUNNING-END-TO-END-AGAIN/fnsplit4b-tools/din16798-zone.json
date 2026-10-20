@@ -1,0 +1,80 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🏠️zone-evaluation/🦀️.rs",
+ "function": "evaluate_zone",
+ "nth": 0,
+ "types": {
+  "out": "Vec<CheckResult>",
+  "cat": "ComfortCategory",
+  "usage": "OccupancyType",
+  "pollution": "PollutionClass",
+  "method": "VentMethod",
+  "path": "dyn Fn(&str) -> String",
+  "linked": "Option<&semio_s_artifact_norm_din16798_model::VentSystemDocument>",
+  "linked_name": "&str",
+  "linked_type": "Option<VentSystemType>"
+ },
+ "modes": {
+  "out": "mut",
+  "cat": "val",
+  "usage": "val",
+  "pollution": "val",
+  "method": "val",
+  "linked_type": "val",
+  "path": "ref",
+  "linked": "val"
+ },
+ "keep": [
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14,
+  15,
+  358
+ ],
+ "phases": [
+  {
+   "name": "check_zone_ventilation_link",
+   "doc": "🧱️ Checks the ventilation system a zone links to.",
+   "from": 17,
+   "to": 17
+  },
+  {
+   "name": "check_zone_temperatures",
+   "doc": "🪵️ Checks the operative and the adaptive temperature of a zone against its comfort category.",
+   "from": 62,
+   "to": 108
+  },
+  {
+   "name": "check_zone_clothing_insulation",
+   "doc": "🔩️ Checks the clothing insulation and the seasonal comfort bands of a zone.",
+   "from": 110,
+   "to": 112
+  },
+  {
+   "name": "check_zone_air_quality",
+   "doc": "⚙️ Checks the ventilation method, the outdoor air flow and the carbon dioxide level of a zone.",
+   "from": 209,
+   "to": 285
+  },
+  {
+   "name": "check_zone_humidity_light_noise_and_draught",
+   "doc": "🧲️ Checks the humidity, illuminance, noise and draught of a zone.",
+   "from": 287,
+   "to": 356,
+   "allow_control": [
+    346
+   ]
+  }
+ ],
+ "prelude_ifs": [
+  {
+   "regex": "\\b(acoustic_limit_db|adaptive_band_k|adaptive_comfort_temperature_c|co2_above_outdoor_ppm|draught_limit_percent|draught_rate_percent|humidity_band|illuminance_min_lx|invert_t_op_for_pmv|metabolic_co2_generation_l_s|operative_temp_band|outdoor_air_per_area_l_s_m2|outdoor_air_per_person_l_s|pmv_iso7730|pmv_limit|pollution_scale|ppd_from_pmv|ppd_limit|predefined_outdoor_air_l_s_m2|required_outdoor_air_for_method|required_outdoor_air_m3_h)\\b",
+   "line": "use part_1::*;"
+  }
+ ]
+}

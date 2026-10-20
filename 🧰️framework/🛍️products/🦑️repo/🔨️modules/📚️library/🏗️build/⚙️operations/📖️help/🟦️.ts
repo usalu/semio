@@ -1,4 +1,4 @@
-import catalogue from "../🔣️catalog.json";
+import catalogue from "../🔣️catalog.json" with { type: "json" };
 
 /** 🌐️ A text in every language the catalogue declares. */
 export type BuildHelpTextV1=Readonly<Record<string,string>>;
@@ -18,7 +18,7 @@ export type BuildHelpCatalogV1=Readonly<{languages:readonly string[];labels:Read
 /** 🎯️ Names what a help request asks for: the whole CLI, one operation or one subcommand. */
 export type BuildHelpRequestV1=Readonly<{operation?:string;subcommand?:string}>;
 
-const root="bun repo [--tool=nx|bazel]",columnLimit=46;
+const root="repo [--tool=nx|bazel]",columnLimit=46;
 
 /** 🗣️ Picks the help language: `--lang`, then SEMIO_LANGUAGE, then the locale, then the first language the catalogue declares. */
 export function resolveBuildHelpLanguageV1(languages:readonly string[],args:readonly string[],environment:Readonly<Record<string,string|undefined>>):string{
@@ -58,14 +58,14 @@ export function renderBuildHelpV1(catalog:BuildHelpCatalogV1,request:BuildHelpRe
  const globals=()=>["",`${label("globalOptions")}:`,...table(global.map(row=>[spelling(row),text(row.description)] as const))];
  const languageChoice=catalog.languages.join("|");
  if(request.operation===undefined){
-  lines.push(`bun repo - ${text(catalog.labels.tagline!)}`,"",`${label("usage")}:`,`  ${root} <command> [${label("options").toLowerCase()}] [-- <arguments>]`,`  bun repo <command> --help [--lang=${languageChoice}]`,"",`${label("commands")}:`,...table(catalog.operations.map(row=>[row.synopsis,text(row.summary)] as const)));
+  lines.push(`repo - ${text(catalog.labels.tagline!)}`,"",`${label("usage")}:`,`  ${root} <command> [${label("options").toLowerCase()}] [-- <arguments>]`,`  repo <command> --help [--lang=${languageChoice}]`,"",`${label("commands")}:`,...table(catalog.operations.map(row=>[row.synopsis,text(row.summary)] as const)));
   const scoped=catalog.flags.filter(row=>row.operations!==undefined);
   lines.push("",`${label("options")}:`,...table(scoped.map(row=>[spelling(row),`${text(row.description)} (${label("usedBy")}: ${row.operations!.join(", ")})`] as const)),...globals(),"",`${label("examples")}:`);
   for(const row of catalog.operations)lines.push(`  ${row.examples[0]!.command}`,`      ${text(row.examples[0]!.description)}`);
   return lines.join("\n");
  }
  const operation=catalog.operations.find(row=>row.name===request.operation)!,subcommand=operation.subcommands?.find(row=>row.name===request.subcommand);
- lines.push(`bun repo ${subcommand?.synopsis.split(/\s/u).slice(0,2).join(" ")??operation.name} - ${text((subcommand??operation).summary)}`,"",`${label("usage")}:`,`  ${root} ${(subcommand??operation).synopsis}${operation.flags.length?` [${label("options").toLowerCase()}]`:""}`);
+ lines.push(`repo ${subcommand?.synopsis.split(/\s/u).slice(0,2).join(" ")??operation.name} - ${text((subcommand??operation).summary)}`,"",`${label("usage")}:`,`  ${root} ${(subcommand??operation).synopsis}${operation.flags.length?` [${label("options").toLowerCase()}]`:""}`);
  if(operation.subcommands&&!subcommand)lines.push("",`${label("subcommands")}:`,...table(operation.subcommands.map(row=>[row.synopsis,text(row.summary)] as const)));
  if(operation.flags.length)lines.push("",`${label("options")}:`,...table(operation.flags.map(name=>[spelling(flag(name)),text(flag(name).description)] as const)));
  lines.push(...globals(),"",`${label("examples")}:`);

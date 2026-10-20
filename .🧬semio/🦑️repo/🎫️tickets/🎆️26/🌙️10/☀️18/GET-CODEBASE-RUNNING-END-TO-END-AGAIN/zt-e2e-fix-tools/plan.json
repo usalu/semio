@@ -1,0 +1,398 @@
+{
+ "version": 1,
+ "files": [
+  {
+   "path": "bun.lock",
+   "frozen": true,
+   "sha256": "281fb5934757d0889f5793579f28f4f9b622bb57cd67b083e60d45138cd948e5",
+   "afterSha256": "29a17db3b79bb784f27355dbaa6532600a5ac59f65be62d9c0689058b3730360",
+   "replacements": [
+    {
+     "old": "        \"@nxlv/python\": \"23.0.2\",\n        \"@semio-tech/framework-filesystem\": \"workspace:*\",\n        \"nx\": \"23.2.0\",",
+     "new": "        \"@nxlv/python\": \"23.0.2\",\n        \"nx\": \"23.2.0\",",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "path": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧪️e2e/🟦️.ts",
+   "frozen": false,
+   "sha256": "e00c5bc3287899d21d89516e29f69137e624e3551809f5f9d307c5d285243262",
+   "afterSha256": "52117d9ba67438c3c8295d32a085d204618b7fd0ad3a70505979d6601f20cc1a",
+   "replacements": [
+    {
+     "old": "import { readServiceSession, waitForServiceReady } from \"@semio-tech/repo-lib/dev\";",
+     "new": "import { parseServiceReadinessBudgetV1, readServiceSession, serviceReadyProgressLanguage, serviceReadyProgressLine, waitForServiceReady } from \"@semio-tech/repo-lib/dev\";\nimport readinessBudget from \"../🧩️runtime/🧪️e2e/🔣️.json\" with { type: \"json\" };",
+     "count": 1
+    },
+    {
+     "old": "    const baseURL = await waitForServiceReady(sessionRoot, session, controller.signal);",
+     "new": "    const budget = parseServiceReadinessBudgetV1(readinessBudget), language = serviceReadyProgressLanguage(process.env);\n    const baseURL = await waitForServiceReady(sessionRoot, session, controller.signal, budget.readyTimeoutMs, { intervalMs: budget.progressIntervalMs, report: progress => console.log(serviceReadyProgressLine(DEMONSTRATOR_E2E_OWNER, progress, language)) });",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "path": "🏢️semio-tech/🎡️play/🔨️modules/🧪️e2e/🟦️.ts",
+   "frozen": false,
+   "sha256": "e704d8ffe06b12c3a7e941c00e9796553b3a0447132582d93b801328fe292150",
+   "afterSha256": "0c46839aee561ece9be2ac2d1e4f4ca12ecdedb1fb0900f19f1864c4a959438f",
+   "replacements": [
+    {
+     "old": "import { readServiceSession, waitForServiceReady } from \"../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts\";",
+     "new": "import { parseServiceReadinessBudgetV1, readServiceSession, serviceReadyProgressLanguage, serviceReadyProgressLine, waitForServiceReady } from \"../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts\";\nimport readinessBudget from \"../🧩️runtime/🧪️e2e/🔣️.json\" with { type: \"json\" };",
+     "count": 1
+    },
+    {
+     "old": "      const baseURL = await waitForServiceReady(sessionRoot, session, controller.signal);",
+     "new": "      const budget = parseServiceReadinessBudgetV1(readinessBudget), language = serviceReadyProgressLanguage(process.env);\n      const baseURL = await waitForServiceReady(sessionRoot, session, controller.signal, budget.readyTimeoutMs, { intervalMs: budget.progressIntervalMs, report: progress => console.log(serviceReadyProgressLine(PLAY_E2E_OWNER, progress, language)) });",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🧾️session/🟦️.ts",
+   "frozen": false,
+   "sha256": "852ea9072be54f661afc4426dc389bcbd41877ee1093a0fd46e0b2fee0aab454",
+   "afterSha256": "62f0214a739141546e74cdd27dd5d69bfa9c87b3591312334e31c5207a7765c4",
+   "replacements": [
+    {
+     "old": "/** ⏳️ Requires the current generation's HTTP identity before allowing its consumer to proceed. */\nexport async function waitForServiceReady(root: string, session: ServiceSession, signal: AbortSignal, timeoutMs = 60000): Promise<string> {\n  signal.throwIfAborted();\n  const path = join(serviceDirectory(root, session.pid), \"ready.json\"), deadline = performance.now() + timeoutMs;\n  while (performance.now() < deadline) {\n    signal.throwIfAborted();\n",
+     "new": "/** ⏱️ A product's declared E2E service readiness: the timeout, the progress cadence and the boot evidence that timeout derives from. */\nexport type ServiceReadinessBudget = {\n  readonly schemaVersion: 1;\n  readonly readyTimeoutMs: number;\n  readonly progressIntervalMs: number;\n  readonly evidence: {\n    readonly kind: \"estimate\" | \"measurement\";\n    readonly coldBootMs: { readonly minimum: number; readonly maximum: number };\n    readonly warmBootMs: { readonly minimum: number; readonly maximum: number };\n    readonly marginFactor: number;\n    readonly source: string;\n  };\n};\n/** 📈️ One progress observation while a consumer waits for a service generation. */\nexport type ServiceReadyProgress = { readonly elapsedMs: number; readonly timeoutMs: number; readonly phase: \"awaiting-ready-record\" | \"verifying-listener\" };\n/** 📣️ Progress cadence and sink of one readiness wait. */\nexport type ServiceReadyWait = { readonly intervalMs: number; readonly report: (progress: ServiceReadyProgress) => void };\nconst budgetSchema = schema.$defs.ReadinessBudget, bootRangeSchema = schema.$defs.BootRange;\nconst inRange = (value: unknown, bounds: { readonly minimum: number; readonly maximum: number }): value is number => Number.isSafeInteger(value) && Number(value) >= bounds.minimum && Number(value) <= bounds.maximum;\nconst bootRange = (value: unknown): value is { minimum: number; maximum: number } => keys(value, \"maximum,minimum\") && inRange(value.minimum, bootRangeSchema.properties.minimum) && inRange(value.maximum, bootRangeSchema.properties.maximum) && Number(value.minimum) <= Number(value.maximum);\n\n/** 🧮️ Admits a declared readiness budget only when its timeout covers the cold-boot maximum times the declared margin. */\nexport function parseServiceReadinessBudgetV1(value: unknown): ServiceReadinessBudget {\n  const reject = (reason: string): never => { throw new Error(`Invalid service readiness budget: ${reason}`); };\n  if (!keys(value, \"evidence,progressIntervalMs,readyTimeoutMs,schemaVersion\") || value.schemaVersion !== 1) return reject(\"closed versioned record required\");\n  const evidence = value.evidence;\n  if (!keys(evidence, \"coldBootMs,kind,marginFactor,source,warmBootMs\") || !budgetSchema.properties.evidence.properties.kind.enum.includes(evidence.kind as never)) return reject(\"closed evidence record required\");\n  if (!bootRange(evidence.coldBootMs) || !bootRange(evidence.warmBootMs) || evidence.warmBootMs.maximum > evidence.coldBootMs.maximum) return reject(\"ordered boot ranges required\");\n  const margin = budgetSchema.properties.evidence.properties.marginFactor;\n  if (typeof evidence.marginFactor !== \"number\" || !(evidence.marginFactor >= margin.minimum && evidence.marginFactor <= margin.maximum)) return reject(\"margin factor out of range\");\n  if (typeof evidence.source !== \"string\" || !evidence.source.length || evidence.source.length > budgetSchema.properties.evidence.properties.source.maxLength) return reject(\"evidence source required\");\n  if (!inRange(value.readyTimeoutMs, budgetSchema.properties.readyTimeoutMs) || !inRange(value.progressIntervalMs, budgetSchema.properties.progressIntervalMs)) return reject(\"timeout or cadence out of range\");\n  if (Number(value.readyTimeoutMs) < Math.ceil(evidence.coldBootMs.maximum * evidence.marginFactor)) return reject(\"timeout below cold-boot maximum times margin\");\n  if (Number(value.progressIntervalMs) > Number(value.readyTimeoutMs)) return reject(\"cadence beyond timeout\");\n  return value as ServiceReadinessBudget;\n}\n\nconst progressText = {\n  en: { \"awaiting-ready-record\": \"waiting for the dev server to publish its ready record\", \"verifying-listener\": \"verifying the listener identity\", of: \"of\" },\n  de: { \"awaiting-ready-record\": \"warte darauf, dass der Dev-Server seinen Bereitschaftseintrag veröffentlicht\", \"verifying-listener\": \"prüfe die Identität des Listeners\", of: \"von\" },\n} as const;\n\n/** 🗣️ Chooses the progress language like the CLI help: SEMIO_LANGUAGE, then the locale, then the first catalogue language. */\nexport function serviceReadyProgressLanguage(environment: Readonly<Record<string, string | undefined>>): \"en\" | \"de\" {\n  for (const candidate of [environment.SEMIO_LANGUAGE, environment.LC_ALL, environment.LC_MESSAGES, environment.LANG]) {\n    const language = candidate?.toLowerCase().slice(0, 2);\n    if (language === \"en\" || language === \"de\") return language;\n  }\n  return \"en\";\n}\n\n/** 🔤️ Renders one readiness progress observation as a single log line. */\nexport function serviceReadyProgressLine(owner: string, progress: ServiceReadyProgress, language: \"en\" | \"de\"): string {\n  const text = progressText[language], seconds = (milliseconds: number): number => Math.floor(milliseconds / 1000);\n  return `[e2e] ${owner}: ${text[progress.phase]} (${seconds(progress.elapsedMs)} s ${text.of} ${seconds(progress.timeoutMs)} s)`;\n}\n\n/** ⏳️ Requires the current generation's HTTP identity before allowing its consumer to proceed within the caller's declared timeout, reporting progress on the declared cadence. */\nexport async function waitForServiceReady(root: string, session: ServiceSession, signal: AbortSignal, timeoutMs: number, wait?: ServiceReadyWait): Promise<string> {\n  signal.throwIfAborted();\n  if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1) throw new Error(\"Service readiness requires a declared positive timeout\");\n  const path = join(serviceDirectory(root, session.pid), \"ready.json\"), start = performance.now(), deadline = start + timeoutMs;\n  let nextReport = start;\n  while (performance.now() < deadline) {\n    signal.throwIfAborted();\n    if (wait && performance.now() >= nextReport) {\n      wait.report({ elapsedMs: Math.round(performance.now() - start), timeoutMs, phase: existsSync(path) ? \"verifying-listener\" : \"awaiting-ready-record\" });\n      nextReport = performance.now() + wait.intervalMs;\n    }\n",
+     "count": 1
+    },
+    {
+     "old": "  throw new Error(`Service did not become ready with the expected identity: ${session.owner}`);",
+     "new": "  throw new Error(`Service did not become ready with the expected identity within ${timeoutMs} ms: ${session.owner}`);",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🧾️session/🧫️cases.json",
+   "frozen": false,
+   "sha256": "ada520fc4e0d1c962e0c4c7ceaa68836b0b7b3d6e0093837b87fdc4bc2e2306b",
+   "afterSha256": "03150c9d6ddfb66ddd4ed1754f740619d68dac42cb7b68ecaa5f33ffb0e002f6",
+   "replacements": [
+    {
+     "old": "  \"readinessRace\": [\"request\", \"replace-session\", \"respond\", \"reject-stale-session\"]\n}",
+     "new": "  \"readinessRace\": [\"request\", \"replace-session\", \"respond\", \"reject-stale-session\"],\n  \"readiness\": {\n    \"products\": [\n      { \"budget\": \"🏢️semio-tech/🎡️play/🔨️modules/🧩️runtime/🧪️e2e/🔣️.json\", \"minimumTimeoutMs\": 600000 },\n      { \"budget\": \"♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/🧪️e2e/🔣️.json\", \"minimumTimeoutMs\": 600000 }\n    ],\n    \"invalid\": [\n      { \"reason\": \"timeout below cold-boot maximum times margin\", \"path\": [\"readyTimeoutMs\"], \"value\": 100000, \"schema\": true },\n      { \"reason\": \"timeout below the schema minimum\", \"path\": [\"readyTimeoutMs\"], \"value\": 1000, \"schema\": false },\n      { \"reason\": \"margin factor below two\", \"path\": [\"evidence\", \"marginFactor\"], \"value\": 1, \"schema\": false },\n      { \"reason\": \"unknown evidence kind\", \"path\": [\"evidence\", \"kind\"], \"value\": \"guess\", \"schema\": false },\n      { \"reason\": \"unknown member\", \"path\": [\"extra\"], \"value\": 1, \"schema\": false },\n      { \"reason\": \"cold minimum above cold maximum\", \"path\": [\"evidence\", \"coldBootMs\", \"minimum\"], \"value\": 200000, \"schema\": true },\n      { \"reason\": \"warm maximum above cold maximum\", \"path\": [\"evidence\", \"warmBootMs\", \"maximum\"], \"value\": 190000, \"schema\": true },\n      { \"reason\": \"missing evidence source\", \"path\": [\"evidence\", \"source\"], \"remove\": true, \"schema\": false },\n      { \"reason\": \"unknown schema version\", \"path\": [\"schemaVersion\"], \"value\": 2, \"schema\": false }\n    ],\n    \"progress\": {\n      \"timeoutMs\": 450,\n      \"intervalMs\": 100,\n      \"minimumEvents\": 3,\n      \"lines\": [\n        { \"owner\": \"fixture:e2e\", \"progress\": { \"elapsedMs\": 45000, \"timeoutMs\": 600000, \"phase\": \"awaiting-ready-record\" }, \"en\": \"[e2e] fixture:e2e: waiting for the dev server to publish its ready record (45 s of 600 s)\", \"de\": \"[e2e] fixture:e2e: warte darauf, dass der Dev-Server seinen Bereitschaftseintrag veröffentlicht (45 s von 600 s)\" },\n        { \"owner\": \"fixture:e2e\", \"progress\": { \"elapsedMs\": 61999, \"timeoutMs\": 600000, \"phase\": \"verifying-listener\" }, \"en\": \"[e2e] fixture:e2e: verifying the listener identity (61 s of 600 s)\", \"de\": \"[e2e] fixture:e2e: prüfe die Identität des Listeners (61 s von 600 s)\" }\n      ],\n      \"languages\": [\n        { \"environment\": { \"SEMIO_LANGUAGE\": \"de\", \"LANG\": \"en_US.UTF-8\" }, \"language\": \"de\" },\n        { \"environment\": { \"LANG\": \"de_DE.UTF-8\" }, \"language\": \"de\" },\n        { \"environment\": { \"SEMIO_LANGUAGE\": \"fr\", \"LC_ALL\": \"de_CH\" }, \"language\": \"de\" },\n        { \"environment\": { \"LANG\": \"C\" }, \"language\": \"en\" },\n        { \"environment\": {}, \"language\": \"en\" }\n      ]\n    }\n  }\n}",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🧾️session/🧬️schema/🔣️.json",
+   "frozen": false,
+   "sha256": "86b2e183486d9ccbaba0cfd0819186913af87b66517bcf0f633a09a5b400174d",
+   "afterSha256": "24872b0d9d2c9aababadeaeda3f59bf1994d34b427cb05afdb3e2bde7718f4d0",
+   "replacements": [
+    {
+     "old": "    \"ReadinessRace\": { \"const\": [\"request\", \"replace-session\", \"respond\", \"reject-stale-session\"] },\n",
+     "new": "    \"ReadinessRace\": { \"const\": [\"request\", \"replace-session\", \"respond\", \"reject-stale-session\"] },\n    \"ReadinessBudget\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\"schemaVersion\", \"readyTimeoutMs\", \"progressIntervalMs\", \"evidence\"],\n      \"properties\": {\n        \"schemaVersion\": { \"const\": 1 },\n        \"readyTimeoutMs\": { \"type\": \"integer\", \"minimum\": 60000, \"maximum\": 3600000 },\n        \"progressIntervalMs\": { \"type\": \"integer\", \"minimum\": 1000, \"maximum\": 60000 },\n        \"evidence\": {\n          \"type\": \"object\",\n          \"additionalProperties\": false,\n          \"required\": [\"kind\", \"coldBootMs\", \"warmBootMs\", \"marginFactor\", \"source\"],\n          \"properties\": {\n            \"kind\": { \"enum\": [\"estimate\", \"measurement\"] },\n            \"coldBootMs\": { \"$ref\": \"#/$defs/BootRange\" },\n            \"warmBootMs\": { \"$ref\": \"#/$defs/BootRange\" },\n            \"marginFactor\": { \"type\": \"number\", \"minimum\": 2, \"maximum\": 20 },\n            \"source\": { \"type\": \"string\", \"minLength\": 1, \"maxLength\": 512 }\n          }\n        }\n      }\n    },\n    \"BootRange\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\"minimum\", \"maximum\"],\n      \"properties\": {\n        \"minimum\": { \"type\": \"integer\", \"minimum\": 1, \"maximum\": 3600000 },\n        \"maximum\": { \"type\": \"integer\", \"minimum\": 1, \"maximum\": 3600000 }\n      }\n    },\n",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/👓️reading/🟦️.ts",
+   "frozen": false,
+   "sha256": "3c7ecd78c2932f3b2216f4d261d2817091b33130ffebe4420be85fe1e0314ac6",
+   "afterSha256": "4d0952261b2e23f238050a0457865706f7ff4987cc5cb59627fb849c2cac3aef",
+   "replacements": [
+    {
+     "old": "from \"@semio-tech/schema-validator-ts\"",
+     "new": "from \"../../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts\"",
+     "count": 1
+    },
+    {
+     "old": "from \"@semio-tech/process/routing/invocation/process/json\"",
+     "new": "from \"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/📥️json/🟦️.ts\"",
+     "count": 1
+    },
+    {
+     "old": "from \"@semio-tech/process/leases\"",
+     "new": "from \"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts\"",
+     "count": 1
+    },
+    {
+     "old": "from \"@semio-tech/process/artifacts/native-build/source/admission/read\"",
+     "new": "from \"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts\"",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🟦️.ts",
+   "frozen": false,
+   "sha256": "0b8c8bf4276d3f1ff8ed8681beea3355071e303d74bd4a26f11911545d9e06e6",
+   "afterSha256": "a562ca2da2873627abcfc3c1a864b6f65b33364f224e61769fcf4a93eaac108f",
+   "replacements": [
+    {
+     "old": "from \"@semio-tech/nx-bootstrap-tools/use\"",
+     "new": "from \"../../../🚀️bootstrap/🛠️tools/📥️use/🟦️.ts\"",
+     "count": 1
+    },
+    {
+     "old": "from \"@semio-tech/process/artifacts/native-build/source/admission/read\"",
+     "new": "from \"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts\"",
+     "count": 1
+    },
+    {
+     "old": "from \"@semio-tech/nx-bootstrap-tools/use/schema/witness.json\"",
+     "new": "from \"../../../🚀️bootstrap/🛠️tools/📥️use/🧬️schema/📥️witness.json\"",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/📥️journal/🌐️rpc/🟦️.ts",
+   "frozen": false,
+   "sha256": "4dd9c891b91f001ff8d14a0f217e79a856ff1ef3c14ecf70479b08b7cce2ef10",
+   "afterSha256": "4c3269b98ab4a9ef19ec4d0145628bbf707f967843ce437ef5e85ed6c950afd2",
+   "replacements": [
+    {
+     "old": "from \"@semio-tech/nx-bootstrap-tools/authorizers/receipt\"",
+     "new": "from \"../../../../../🚀️bootstrap/🛠️tools/🔏️authorizers/📤️receipt/🟦️.ts\"",
+     "count": 1
+    },
+    {
+     "old": "from \"@semio-tech/framework-filesystem/observation/journal/schema.json\"",
+     "new": "from \"../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📥️journal/🧬️schema/🔣️.json\"",
+     "count": 1
+    },
+    {
+     "old": "from \"@semio-tech/schema-validator-ts\"",
+     "new": "from \"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts\"",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/📥️journal/👷️worker/🟦️.ts",
+   "frozen": false,
+   "sha256": "bcdec293bf4b407bd3b71247627137f03036eefdd78c7b7c039fd5ae67e5d539",
+   "afterSha256": "e15aad023c7e86195f61445d8bbea67065664f3e6d27b0f502e5a884828f6e23",
+   "replacements": [
+    {
+     "old": "from \"@semio-tech/schema-validator-ts\"",
+     "new": "from \"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts\"",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/📥️journal/🟦️.ts",
+   "frozen": false,
+   "sha256": "756ba902c41c8ad295ce4b08d9684ba6fc322e2035dd030c53b56a45fa026035",
+   "afterSha256": "2f9e4e8384c9c9c682e4ae039fc8e6d467f1551fe3362a9a1e5bf50c0678c110",
+   "replacements": [
+    {
+     "old": "from \"@semio-tech/framework-filesystem/observation/journal\"",
+     "new": "from \"../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📥️journal/🟦️.ts\"",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/package.json",
+   "frozen": true,
+   "sha256": "dbd8ebd5e60d31b2d8b313b0871af8e8785f8cbfe9bbcb5588be73eacf8c726d",
+   "afterSha256": "1da0bbcc9da53d34d859e514078c199b0d51387ceee23eeafb3de02a3248a1c6",
+   "replacements": [
+    {
+     "old": "    \"typescript\": \"5.9.3\",\n    \"@semio-tech/framework-filesystem\": \"workspace:*\"\n  },",
+     "new": "    \"typescript\": \"5.9.3\"\n  },",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️runtime/🟦️.ts",
+   "frozen": false,
+   "sha256": "6600db82ae3048cdf18d9364fc838f7272b093e7cd1175c305cf0d365c64f7f1",
+   "afterSha256": "69037ae89309ea666ff4b48b75b69757731c4ccfc07c8f7d4a632773d2f19839",
+   "replacements": [
+    {
+     "old": "from \"@semio-tech/framework-filesystem/observation/journal\"",
+     "new": "from \"../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📥️journal/🟦️.ts\"",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🔬️script-commands/🟦️.ts",
+   "frozen": false,
+   "sha256": "2abd05ad85215924aa00b3acd4003b1b62361b6ef9ba8535e439396808d6255b",
+   "afterSha256": "85f8bf36af68db9a0833d6d3cf31e1404c0a812de473d8d029fa4ab03140bdde",
+   "replacements": [
+    {
+     "old": "from \"@semio-tech/process/artifacts/native-build/storage/platform/contract\"",
+     "new": "from \"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts\"",
+     "count": 1
+    },
+    {
+     "old": "from \"@semio-tech/process/leases\"",
+     "new": "from \"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts\"",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️inputs/🔏️snapshot/🟦️.ts",
+   "frozen": false,
+   "sha256": "8e0d1d1262137ebed1f05f308a4986adfbd843b7a863ad669d14b644c64893b0",
+   "afterSha256": "8a0cccc2b433329612d4ba713fdbaaa72f9207e5f8d26ae538f6a631c1ae00c8",
+   "replacements": [
+    {
+     "old": "from\"@semio-tech/schema-validator-ts\"",
+     "new": "from\"../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts\"",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️inputs/🟦️.ts",
+   "frozen": false,
+   "sha256": "e2b037a0c3119c7655a7e13899bcce647a0f607626d6443b6d17f67d98cd654e",
+   "afterSha256": "654021d84fbbc8dbf9686983d8fad2ee2fe50d43269e45618573750714b349ea",
+   "replacements": [
+    {
+     "old": "from\"@semio-tech/process/leases\"",
+     "new": "from\"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts\"",
+     "count": 1
+    },
+    {
+     "old": "from\"@semio-tech/schema-validator-ts\"",
+     "new": "from\"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts\"",
+     "count": 1
+    },
+    {
+     "old": "from\"@semio-tech/process/artifacts/native-build/source/admission/read\"",
+     "new": "from\"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts\"",
+     "count": 1
+    },
+    {
+     "old": "from\"@semio-tech/process/artifacts/native-build/source\"",
+     "new": "from\"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🟦️.ts\"",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/🔬️script-commands/🟦️.ts",
+   "frozen": false,
+   "sha256": "298dc99da3ff9b73974d08bdb073124c32bdd15ed61d33e772a7b52c8c4c1553",
+   "afterSha256": "9fc879cc635ad1f00a5f9f87a59d8a19e8b4e17b8ddfedfa19981ab140eb5e89",
+   "replacements": [
+    {
+     "old": "from \"@semio-tech/process/artifacts/native-build/storage/platform/contract\"",
+     "new": "from \"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts\"",
+     "count": 1
+    },
+    {
+     "old": "from \"@semio-tech/process/artifacts/native-build/storage\"",
+     "new": "from \"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts\"",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🌐️service-readiness/🟦️.ts",
+   "frozen": false,
+   "sha256": "1e8ee3a4b79808507f97d8a17b3dc8ef05b773d1cf3abab4a42fbd9f666da0a1",
+   "afterSha256": "b33381c9dab231c0ba6ec0b6fba14423660c4c6e3441d66b201601cd616030aa",
+   "replacements": [
+    {
+     "old": "    await assert.rejects(() => api.openServiceSession(join(root, \"hostile\"), fixture.owner, fixture.pids[0]), /unowned/i);\n  } finally { rmSync(root, { recursive: true, force: true }); }",
+     "new": "    await assert.rejects(() => api.openServiceSession(join(root, \"hostile\"), fixture.owner, fixture.pids[0]), /unowned/i);\n    const budgetSchema = { $ref: schema.$id + \"#/$defs/ReadinessBudget\" }, budgets: any[] = [];\n    for (const row of fixture.readiness.products) {\n      const budget = JSON.parse(readFileSync(join(workspace, row.budget), \"utf8\")); budgets.push(budget);\n      assert.ok(ajv.validate(budgetSchema, budget), `${row.budget}: ${ajv.errorsText()}`);\n      assert.deepEqual(api.parseServiceReadinessBudgetV1(budget), budget);\n      assert.ok(budget.readyTimeoutMs >= budget.evidence.coldBootMs.maximum * budget.evidence.marginFactor, row.budget);\n      assert.ok(budget.readyTimeoutMs >= row.minimumTimeoutMs, row.budget);\n    }\n    for (const row of fixture.readiness.invalid) {\n      const value = structuredClone(budgets[0]); let target = value;\n      for (const key of row.path.slice(0, -1)) target = target[key];\n      if (row.remove) delete target[row.path.at(-1)]; else target[row.path.at(-1)] = row.value;\n      assert.equal(ajv.validate(budgetSchema, value), row.schema, row.reason);\n      assert.throws(() => api.parseServiceReadinessBudgetV1(value), /readiness budget/i, row.reason);\n    }\n    const waiting = join(root, \"progress\"), idle = await api.openServiceSession(waiting, fixture.owner, fixture.pids[0]), progress = fixture.readiness.progress, events: any[] = [];\n    await assert.rejects(() => api.waitForServiceReady(waiting, idle, new AbortController().signal, progress.timeoutMs, { intervalMs: progress.intervalMs, report: (event: any) => events.push(event) }), new RegExp(`within ${progress.timeoutMs} ms`));\n    assert.ok(events.length >= progress.minimumEvents, `progress events: ${events.length}`);\n    assert.ok(events[0].elapsedMs < progress.intervalMs);\n    assert.ok(events.every((event, index) => event.timeoutMs === progress.timeoutMs && event.phase === \"awaiting-ready-record\" && (index === 0 || event.elapsedMs >= events[index - 1].elapsedMs + progress.intervalMs - 5)));\n    await assert.rejects(() => api.waitForServiceReady(waiting, idle, new AbortController().signal, 0), /declared positive timeout/i);\n    for (const row of progress.lines) for (const language of [\"en\", \"de\"]) assert.equal(api.serviceReadyProgressLine(row.owner, row.progress, language), row[language]);\n    for (const row of progress.languages) assert.equal(api.serviceReadyProgressLanguage(row.environment), row.language, JSON.stringify(row.environment));\n  } finally { rmSync(root, { recursive: true, force: true }); }",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🛗️zero-touch/🗂️closures/🔣️.json",
+   "frozen": false,
+   "sha256": "e327f913729b6f8f9a19cf8f012deb3a4f08ef011657151222c2530a43769c12",
+   "afterSha256": "4c1825d6ccc82ee20ac60d12530e22da2a6b1347db8629343c35c77eb1ccefdd",
+   "replacements": [
+    {
+     "old": "      \"reason\": \"bun repo tools setup bazel provisions Bazel before dependencies exist\"\n    },\n",
+     "new": "      \"reason\": \"bun repo tools setup bazel provisions Bazel before dependencies exist\"\n    },\n    {\n      \"id\": \"nx-authorizer-runtime\",\n      \"entry\": \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️runtime/🟦️.ts\",\n      \"mode\": \"full\",\n      \"reason\": \"bun repo tools setup nx captures this closure by source before any workspace link exists; a bare workspace specifier fails the capture\"\n    },\n    {\n      \"id\": \"nx-authorizer-compiler\",\n      \"entry\": \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📜️script.ts\",\n      \"mode\": \"full\",\n      \"reason\": \"bun repo tools setup nx captures and compiles this closure before any workspace link exists\"\n    },\n    {\n      \"id\": \"cargo-compiler\",\n      \"entry\": \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/📥️entry/📜️script.ts\",\n      \"mode\": \"full\",\n      \"reason\": \"bun repo cargo captures this closure by source on a checkout whose workspace links are not installed yet\"\n    },\n",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/💾️development/🟦️.ts",
+   "frozen": false,
+   "sha256": "2a981dc76182a125d9a126dc3747b311d3860c8a6e435477f644e4c0b5e09627",
+   "afterSha256": "42957a78666a2df0897d19326837986ca54d92bd2475a685763b82526bf678e5",
+   "replacements": [
+    {
+     "old": "from\"@semio-tech/process/state\"",
+     "new": "from\"../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/💾️state/🟦️.ts\"",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts",
+   "frozen": false,
+   "sha256": "3c83edb3f8efe6dd58db1be31daca57c17907484af0cd69454a6fe14b6470937",
+   "afterSha256": "bbe7ecb0098cbf6cda8ced9fc695252ce7e9a8d47dabd388d12152abcc9f8791",
+   "replacements": [
+    {
+     "old": "export { closeServiceSession, openServiceSession, publishServiceReady, readServiceSession, waitForServiceReady } from \"../../../⚡️caching/🌐️vite/🧾️session/🟦️.ts\";",
+     "new": "export { closeServiceSession, openServiceSession, parseServiceReadinessBudgetV1, publishServiceReady, readServiceSession, serviceReadyProgressLanguage, serviceReadyProgressLine, waitForServiceReady } from \"../../../⚡️caching/🌐️vite/🧾️session/🟦️.ts\";\nexport type { ServiceReadinessBudget, ServiceReadyProgress, ServiceReadyWait } from \"../../../⚡️caching/🌐️vite/🧾️session/🟦️.ts\";",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts",
+   "frozen": false,
+   "sha256": "0f33e337a756387eeda329ea1ccae1a0d2d75fb7d16584760d8dba8a6cf478d9",
+   "afterSha256": "8a1979116635ee85e8a45a06d102be01fd1d1a26699c9bf406aafb3c9f085f18",
+   "replacements": [
+    {
+     "old": "from \"@semio-tech/nx-bootstrap-tools/wasm\"",
+     "new": "from \"../../../⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🟦️.ts\"",
+     "count": 1
+    },
+    {
+     "old": "from \"@semio-tech/nx-bootstrap-tools/bun/script\"",
+     "new": "from \"../../../⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🟦️.ts\"",
+     "count": 1
+    },
+    {
+     "old": "from \"@semio-tech/nx-bootstrap-tools/bun/schema.json\"",
+     "new": "from \"../../../⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🧬️schema/🔣️.json\"",
+     "count": 1
+    },
+    {
+     "old": "from \"@semio-tech/nx-bootstrap-tools/rustup/installation\"",
+     "new": "from \"../../../⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🟦️.ts\"",
+     "count": 2
+    },
+    {
+     "old": "from \"@semio-tech/nx-bootstrap-tools/retention/headroom\"",
+     "new": "from \"../../../⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📏️headroom/🟦️.ts\"",
+     "count": 1
+    }
+   ]
+  }
+ ],
+ "newFiles": [
+  {
+   "path": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/🧪️e2e/🔣️.json",
+   "sha256": "344bd7c7f0fd7e955c0fdb125a2e195271d986002ed1c3272c4cc307c80e7fc4",
+   "content": "{\n  \"schemaVersion\": 1,\n  \"readyTimeoutMs\": 600000,\n  \"progressIntervalMs\": 15000,\n  \"evidence\": {\n    \"kind\": \"estimate\",\n    \"coldBootMs\": { \"minimum\": 60000, \"maximum\": 180000 },\n    \"warmBootMs\": { \"minimum\": 30000, \"maximum\": 60000 },\n    \"marginFactor\": 3,\n    \"source\": \"audit-e2e-readiness-1020.md section 4 and R1: demonstrator serve boot cold 1-3 min, warm 30-60 s (estimate, not yet measured); timeout = 3 x the 180 s cold maximum, rounded up to the audit's 600 s floor\"\n  }\n}\n"
+  },
+  {
+   "path": "🏢️semio-tech/🎡️play/🔨️modules/🧩️runtime/🧪️e2e/🔣️.json",
+   "sha256": "caedd870279ea3bb64a280b83a720cdcf62c66535cdd3a51dc711a36fafd00ea",
+   "content": "{\n  \"schemaVersion\": 1,\n  \"readyTimeoutMs\": 600000,\n  \"progressIntervalMs\": 15000,\n  \"evidence\": {\n    \"kind\": \"estimate\",\n    \"coldBootMs\": { \"minimum\": 60000, \"maximum\": 180000 },\n    \"warmBootMs\": { \"minimum\": 30000, \"maximum\": 60000 },\n    \"marginFactor\": 3,\n    \"source\": \"audit-e2e-readiness-1020.md section 4 and R1: play serve boot (Vite, 20+ wasm plugins) cold 1-3 min, warm 30-60 s (estimate, not yet measured); timeout = 3 x the 180 s cold maximum, rounded up to the audit's 600 s floor\"\n  }\n}\n"
+  }
+ ]
+}

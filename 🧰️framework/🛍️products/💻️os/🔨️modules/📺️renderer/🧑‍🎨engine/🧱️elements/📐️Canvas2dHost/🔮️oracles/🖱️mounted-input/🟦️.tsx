@@ -2,7 +2,7 @@ import { render } from "@semio-tech/ui-react/test";
 import { createElement, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
 import { vi } from "vitest";
 import { Tree, catalogueTreeDragController } from "@semio-tech/ui-react";
-import fixture from "../../🧪️tests/🧫️fixtures/🖱️input-contract/🔣️.json";
+import fixture from "../../🧪️tests/🧫️fixtures/🖱️input-contract/🔣️.json" with { type: "json" };
 const seam = vi.hoisted(() => ({ sessions: [] as any[] }));
 
 vi.mock("@semio-tech/canvas-react-renderer", async (importOriginal) => {

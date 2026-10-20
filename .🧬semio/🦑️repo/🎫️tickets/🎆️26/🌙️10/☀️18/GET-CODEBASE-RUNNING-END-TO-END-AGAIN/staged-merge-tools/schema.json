@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "staged-merge",
+  "description": "Contracts of the staged-patch merger: the registry of staged sets, the optional per-set inventory a set may declare itself, and the emitted plan.",
+  "$defs": {
+    "Sha": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+    "Verify": {
+      "type": "object",
+      "required": ["name", "argv"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string"},
+        "argv": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "gate": {"type": "boolean"},
+        "heavy": {"type": "boolean"},
+        "timeoutSeconds": {"type": "integer"}
+      }
+    },
+    "Spec": {
+      "type": "object",
+      "required": ["id", "dir"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+        "dir": {"type": "string"},
+        "result": {"type": "string"},
+        "adapter": {"enum": ["declared", "ops-json", "patches-json", "edits-json", "batch-json", "py-module", "tree-bases", "tree"]},
+        "entry": {"type": "array", "items": {"type": "string"}},
+        "ignoreSync": {"type": ["string", "null"]},
+        "confirm": {"type": "string", "pattern": "^--[a-z-]+$"},
+        "restage": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "after": {"type": "array", "items": {"type": "string"}},
+        "note": {"type": "string"},
+        "verify": {"type": "array", "items": {"$ref": "#/$defs/Verify"}}
+      }
+    },
+    "Registry": {
+      "type": "object",
+      "required": ["version", "sets"],
+      "additionalProperties": false,
+      "properties": {
+        "version": {"const": 1},
+        "sets": {"type": "array", "items": {"$ref": "#/$defs/Spec"}}
+      }
+    },
+    "DeclaredTarget": {
+      "type": "object",
+      "required": ["path", "kind"],
+      "additionalProperties": false,
+      "properties": {
+        "path": {"type": "string"},
+        "kind": {"enum": ["patch", "write", "create", "delete"]},
+        "staged": {"type": ["string", "null"]},
+        "baseSha": {"$ref": "#/$defs/Sha"},
+        "stagedSha": {"$ref": "#/$defs/Sha"},
+        "alsoTouches": {"type": "array", "items": {"type": "string"}},
+        "ops": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["anchor", "replacement"],
+            "additionalProperties": false,
+            "properties": {"anchor": {"type": "string"}, "replacement": {"type": "string"}}
+          }
+        }
+      }
+    },
+    "Inventory": {
+      "type": "object",
+      "required": ["version", "targets"],
+      "additionalProperties": false,
+      "properties": {
+        "version": {"const": 1},
+        "targets": {"type": "array", "items": {"$ref": "#/$defs/DeclaredTarget"}}
+      }
+    },
+    "PlanTarget": {
+      "type": "object",
+      "required": ["path", "kind", "staged", "baseState", "anchors"],
+      "additionalProperties": false,
+      "properties": {
+        "path": {"type": "string"},
+        "kind": {"enum": ["patch", "write", "create", "delete"]},
+        "staged": {"type": ["string", "null"]},
+        "baseState": {"enum": ["base", "applied", "drifted", "absent", "unknown"]},
+        "alsoTouches": {"type": "array", "items": {"type": "string"}},
+        "anchors": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "Run": {
+      "type": "object",
+      "required": ["status", "args"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string"},
+        "status": {"enum": ["applied", "noop", "refused"]},
+        "args": {"type": "array", "items": {"type": "string"}},
+        "message": {"type": "string"},
+        "changed": {"type": "integer"},
+        "undeclared": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "PlanSet": {
+      "type": "object",
+      "required": ["id", "dir", "state", "note"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string"},
+        "dir": {"type": "string"},
+        "state": {"enum": ["ready", "provisional", "skipped"]},
+        "note": {"type": "string"},
+        "adapter": {"type": "string"},
+        "entry": {"type": "array", "items": {"type": "string"}},
+        "result": {"type": ["string", "null"]},
+        "fingerprint": {"$ref": "#/$defs/Sha"},
+        "targets": {"type": "array", "items": {"$ref": "#/$defs/PlanTarget"}},
+        "solo": {"$ref": "#/$defs/Run"}
+      }
+    },
+    "Pair": {
+      "type": "object",
+      "required": ["a", "b", "shared", "verdict"],
+      "additionalProperties": false,
+      "properties": {
+        "a": {"type": "string"},
+        "b": {"type": "string"},
+        "shared": {"type": "array", "items": {"type": "string"}},
+        "files": {"type": "array", "items": {"type": "object", "required": ["path", "detail"], "additionalProperties": false, "properties": {"path": {"type": "string"}, "detail": {"type": "string"}}}},
+        "regionOverlap": {"type": ["boolean", "null"]},
+        "verdict": {"enum": ["independent", "commute", "ordered", "order-dependent", "conflict"]},
+        "first": {"type": ["string", "null"]},
+        "ab": {"type": "array", "items": {"$ref": "#/$defs/Run"}},
+        "ba": {"type": "array", "items": {"$ref": "#/$defs/Run"}},
+        "diff3": {"enum": ["agree", "differs", "conflict", "skipped", "unavailable"]}
+      }
+    },
+    "Step": {
+      "type": "object",
+      "required": ["index", "id", "applyArgs", "needs", "provisional", "verify"],
+      "additionalProperties": false,
+      "properties": {
+        "index": {"type": "integer"},
+        "id": {"type": "string"},
+        "applyArgs": {"type": "array", "items": {"type": "string"}},
+        "needs": {"type": "array", "items": {"type": "string"}},
+        "provisional": {"type": "boolean"},
+        "verify": {"type": "array", "items": {"$ref": "#/$defs/Verify"}}
+      }
+    },
+    "Plan": {
+      "type": "object",
+      "required": ["version", "generatedAt", "prefer", "rebase", "inventoryFingerprint", "liveFingerprint", "sets", "pairs", "order", "excluded", "replay", "unregistered"],
+      "additionalProperties": false,
+      "properties": {
+        "version": {"const": 1},
+        "generatedAt": {"type": "string"},
+        "prefer": {"type": "array", "items": {"type": "string"}},
+        "rebase": {"type": "array", "items": {"type": "string"}},
+        "inventoryFingerprint": {"$ref": "#/$defs/Sha"},
+        "liveFingerprint": {"$ref": "#/$defs/Sha"},
+        "sets": {"type": "array", "items": {"$ref": "#/$defs/PlanSet"}},
+        "pairs": {"type": "array", "items": {"$ref": "#/$defs/Pair"}},
+        "order": {"type": "array", "items": {"$ref": "#/$defs/Step"}},
+        "excluded": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "reason", "detail"],
+            "additionalProperties": false,
+            "properties": {
+              "id": {"type": "string"},
+              "reason": {"enum": ["not-ready", "blocked", "already-applied", "conflict", "replay-refused", "predecessor-excluded"]},
+              "detail": {"type": "string"}
+            }
+          }
+        },
+        "replay": {
+          "type": "object",
+          "required": ["status", "steps", "changedFiles", "imports"],
+          "additionalProperties": false,
+          "properties": {
+            "status": {"enum": ["ok", "failed", "empty"]},
+            "steps": {"type": "array", "items": {"$ref": "#/$defs/Run"}},
+            "changedFiles": {"type": "integer"},
+            "undeclared": {"type": "array", "items": {"type": "string"}},
+            "syntax": {
+              "type": "object",
+              "required": ["checked", "errors"],
+              "additionalProperties": false,
+              "properties": {"checked": {"type": "integer"}, "errors": {"type": "array", "items": {"type": "string"}}}
+            },
+            "imports": {
+              "type": "object",
+              "required": ["checked", "regressions", "unresolved"],
+              "additionalProperties": false,
+              "properties": {
+                "checked": {"type": "integer"},
+                "regressions": {"type": "array", "items": {"type": "string"}},
+                "unresolved": {"type": "array", "items": {"type": "string"}}
+              }
+            }
+          }
+        },
+        "unregistered": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}

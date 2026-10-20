@@ -36,6 +36,7 @@ semio-s-artifact-stdio-semio-audio-descriptor = { workspace = true }
 semio-s-artifact-stdio-semio-audio-inferences = { workspace = true }
 semio-s-artifact-stdio-semio-audio-model = { workspace = true }
 semio-s-artifact-stdio-semio-audio-mutations = { workspace = true }
+semio-framework-pack = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-s-artifact-stdio-semio-audio-mut-family = { workspace = true }

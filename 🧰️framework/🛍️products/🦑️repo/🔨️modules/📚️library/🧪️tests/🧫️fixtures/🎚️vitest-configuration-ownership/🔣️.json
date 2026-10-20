@@ -27,7 +27,7 @@
       "previousPath": "✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript/vitest.config.ts",
       "ownerPath": "✏️s/🔌️plugins/🏗️fem/🧪️tests/🎚️config/🟦️.ts",
       "expectedName": "@semio-tech/fem-js",
-      "projectionSha256": "69d26ae7985d85ae326c1f0656272e0b6689b25c024dbf0484d1882fd414fe7f"
+      "projectionSha256": "ba50607b3720319bcdb305b923262f95db7c5aeda2ac7863246945b6b2bcce85"
     },
     {
       "configurationRoot": "✏️s/🔌️plugins/📐️cad",
@@ -90,7 +90,7 @@
       "previousPath": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/vitest.config.ts",
       "ownerPath": "✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🎚️config/🟦️.ts",
       "expectedName": "@semio-tech/puzzle-js",
-      "projectionSha256": "3f549a65ed2d570b8c756d9fb953d1f9b6ec0276cd7c9d2f4f9aa0b7d8cac5ba"
+      "projectionSha256": "fa6092ae12e7b2990bb8ce8a1c10c07d1fc543ab331fceb52c8b27121019acb0"
     },
     {
       "configurationRoot": "🌎️hub/📦️packages/🟦️typescript",
@@ -202,7 +202,7 @@
       "previousPath": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/vitest.config.ts",
       "ownerPath": "🧰️framework/🛍️products/💻️os/🧪️tests/🎚️config/🟦️.ts",
       "expectedName": "@semio-tech/framework-os",
-      "projectionSha256": "d77c6c4a6a9ba522521f59fe1669168c0b3d7a051ded3982f5ea295cff1c6cb5"
+      "projectionSha256": "9516dff5ed597d2c70783da56140a20557c4b564ff5fc0f890e69c57833114c2"
     },
     {
       "configurationRoot": "🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript",
@@ -317,32 +317,11 @@
       "projectionSha256": "7eee45b1f4a41e24c88eb3c247a30cb02d0628fd03383065b983c2c86c3ac2ce"
     },
     {
-      "configurationRoot": "✏️s/🔌️plugins/🧩️puzzle",
-      "previousPath": "✏️s/🔌️plugins/🧩️puzzle/vitest.config.ts",
-      "ownerPath": "✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🎚️renderer-contract/🟦️.ts",
-      "expectedName": "puzzle-renderer-contract",
-      "projectionSha256": "39b9f0f2228dba5d946409b51977c0ca9e968ed6dc2dce5fabc0d6d077467890"
-    },
-    {
-      "configurationRoot": "✏️s/🔌️plugins/📏️layout",
-      "previousPath": "✏️s/🔌️plugins/📏️layout/vitest.config.ts",
-      "ownerPath": "✏️s/🔌️plugins/📏️layout/🧪️tests/🎚️renderer-contract/🟦️.ts",
-      "expectedName": "layout-renderer-contract",
-      "projectionSha256": "68e90611a79e173a39b33ebbe7d7765045a50f55deed31150411da01a2407c7f"
-    },
-    {
       "configurationRoot": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
       "previousPath": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/vitest.config.ts",
       "ownerPath": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🎚️config/🟦️.ts",
       "expectedName": "gis-gismap-service-composition",
       "projectionSha256": "e26ce9dfc5578f2e0f9def8807069cc0405adffff4b0185f0b8ecb39e95ce34a"
-    },
-    {
-      "configurationRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript",
-      "previousPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/vitest.config.ts",
-      "ownerPath": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧪️tests/🎚️config/📺️renderer/🟦️.ts",
-      "expectedName": "gis-gismap-presentation",
-      "projectionSha256": "6a707199fbb04f89afcf85112858c388202f86ea3770eaa8b0d7c78cf1d8bd29"
     },
     {
       "configurationRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
@@ -385,6 +364,13 @@
       "ownerPath": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts",
       "expectedName": "@semio-tech/course-react",
       "projectionSha256": "6134e09620a2d89e39daf547a7b26a2265b218970a3aa38836ae2c41f25e30f9"
+    },
+    {
+      "configurationRoot": "✏️s/🧪️tests/🏘️plugin-composition",
+      "previousPath": "✏️s/🧪️tests/🏘️plugin-composition/vitest.config.ts",
+      "ownerPath": "✏️s/🧪️tests/🏘️plugin-composition/🎚️renderer-contract/🟦️.ts",
+      "expectedName": "plugin-composition-renderer-contract",
+      "projectionSha256": "80d2115d295936e17e7a670877dbe3790cb9bfe320eee94e96a3aef8d6c76eb2"
     }
   ],
   "selector": {

@@ -6,7 +6,9 @@ import { basename, dirname, join, relative, resolve } from "node:path";
 import type { SemanticDescendantNode } from "../📜️taxonomy-contracts/🟦️.ts";
 import { type SemanticPackageAdapter, type SemanticPackageProjectionCase, parseCurrentJcoPackageDestination } from "../📦️package-projection-contracts/🟦️.ts";
 import type { Taxonomy } from "../📑️taxonomy-document/🟦️.ts";
-import { cachedCatalogTaxonomy, cachedTaxonomy, readTaxonomyUnchecked, taxonomyWorkspaceRoot } from "../🧭️workspace-taxonomy-locator/🟦️.ts";
+import { readTaxonomyUnchecked, taxonomyWorkspaceRoot } from "../🧭️workspace-taxonomy-locator/🟦️.ts";
+import { cachedCatalogTaxonomy, cachedTaxonomy } from "../🧭️workspace-taxonomy-locator/⚡️cache/🟦️.ts";
+import { taxonomyFileKindFilenamesV1, taxonomySingleFileKindFilenameV1 } from "../📄️file-kind-query/🟦️.ts";
 import { type SemanticDirectoryMatchContext, canonicalSemanticDirectoryName, resolveSemanticDirectoryKindId, semanticDirectoryKindIds } from "../📂️semantic-directory-kinds/🟦️.ts";
 import { isDiscoverySkipDirectory, readdirVanishing, retryOnEintr } from "../🪧️owner-markers/🟦️.ts";
 import { type RegistryCatalogInputView, registryCatalogGitlinkBoundaries } from "../📇️registry-catalog-inputs/🟦️.ts";
@@ -61,15 +63,12 @@ export function loadTaxonomy(): Taxonomy {
 
 /** 📄️ Returns every canonical kind-only filename for one file kind. */
 export function canonicalFilenamesForKind(kindId: string, taxonomy: Taxonomy = loadTaxonomy()): string[] {
-  const kind = taxonomy.fileKinds[kindId];
-  return kind ? kind.extensionChains.map((extension) => `${kind.emoji}${extension}`) : [];
+  return taxonomyFileKindFilenamesV1(kindId,taxonomy);
 }
 
 /** 📄️ Returns the single canonical filename for a one-extension file kind. */
 export function canonicalFilenameForKind(kindId: string, taxonomy: Taxonomy = loadTaxonomy()): string {
-  const names = canonicalFilenamesForKind(kindId, taxonomy);
-  if (names.length !== 1) throw new Error(`File kind ${JSON.stringify(kindId)} must have exactly one extension chain, got ${names.length}.`);
-  return names[0]!;
+  return taxonomySingleFileKindFilenameV1(kindId,taxonomy);
 }
 
 /** 🍃️ Renders the schema-ordered primary physical leaf for new authored content. */

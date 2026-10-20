@@ -1,4 +1,4 @@
-import schema from"./🧬️schema/🔣️.json";
+import schema from"./🧬️schema/🔣️.json" with { type: "json" };
 /** 🧾️ Carries bounded metadata observations without granting file or retirement custody. */
 export type RecencyFileV1=Readonly<{path:string;device:string;inode:string;bytes:string;atimeNs:string;mtimeNs:string;ctimeNs:string}>;
 /** 🔎️ Identifies the exact file and clock field supplying a sampled maximum. */

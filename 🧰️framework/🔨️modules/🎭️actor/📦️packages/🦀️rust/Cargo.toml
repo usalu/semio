@@ -70,3 +70,11 @@ semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦�
 [[test]]
 name = "original-owned-async-turn"
 path = "../../🎟️retained-turn/💼️job/⏸️park/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "kernel-unit"
+path = "../../🧪️tests/🔬️unit/🦀️.rs"
+
+[[test]]
+name = "typegen"
+path = "../../🧪️tests/🧬️typegen/🦀️.rs"

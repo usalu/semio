@@ -1,0 +1,4 @@
+[
+  { "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json", "target": "build", "id": "@semio-tech/framework-os-dev:build", "removeInputs": true },
+  { "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust/📋️project.json", "target": "test-bestest-regenerate", "id": "@semio-tech/energy-model-rs:test-bestest-regenerate", "decision": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" } }
+]

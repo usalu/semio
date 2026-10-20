@@ -1,5 +1,5 @@
 /** 🧩️ Shared trusted plugin module wire contract for publishers and clients. */
-import schemaModule from "./🔣️.json";
+import schemaModule from "./🔣️.json" with { type: "json" };
 import { MODULE_BRIDGE_FILE, MODULE_VENDOR_DIRECTORY } from "../🟦️.ts";
 import { COMPONENT_RECEIPT_FILE } from "@semio-tech/framework-plugin/describe/component-receipt/schema";
 import { TrustedPluginModuleRefusalV1, utf8OrderV1, type TrustedPluginModulePathV1, type TrustedPluginModuleFileV1, type TrustedPluginModuleBundleV1, type TrustedPluginModuleIndexEntryV1, type TrustedPluginModuleIndexV1, type TrustedPluginModuleSourceV1 } from "@semio-tech/framework/plugin-module";

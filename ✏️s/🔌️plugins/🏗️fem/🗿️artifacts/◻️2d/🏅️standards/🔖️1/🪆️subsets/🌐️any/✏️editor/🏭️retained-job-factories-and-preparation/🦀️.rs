@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🧵️RetainedCommands
-pub(super) struct Fem2dRetainedCommandJobFactory {
+pub struct Fem2dRetainedCommandJobFactory {
     keys: Vec<ToolFactoryKey>,
 }
 

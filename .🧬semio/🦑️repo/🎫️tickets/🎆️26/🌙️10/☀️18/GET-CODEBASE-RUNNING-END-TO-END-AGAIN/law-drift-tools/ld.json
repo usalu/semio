@@ -1,0 +1,1815 @@
+[
+ {
+  "file": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 7,
+  "failed": 1,
+  "secs": 0.3,
+  "owner": "✏️s",
+  "cls": "law-drift",
+  "note": "sqlite snapshot receiving source moved (mount/needle)",
+  "firstError": "error: expect(received).toBe(expected)",
+  "fails": [
+   "(fail) unlinked public artifact resolves its own exports in independent Bun runtime [27.97ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_s_plugins_wfc_artifacts_bitmap_standards_1_subsets_any_io_sqlite_snapshot_tests_ts.log"
+ },
+ {
+  "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 18,
+  "failed": 1,
+  "secs": 1.0,
+  "owner": "✏️s",
+  "cls": "law-drift",
+  "note": "sqlite snapshot receiving source moved (mount/needle)",
+  "firstError": "error: ./🦀️.rs",
+  "fails": [
+   "(fail) TSV original typed receiving and bounded quote Rust syntax parses [201.60ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_s_plugins_stdio_artifacts_tsv_standards_iana_subsets_any_io_sqlite_snapshot_tests_ts.log"
+ },
+ {
+  "file": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📐️surface/🧪️tests/🔬️neutral/🟦️.ts",
+  "rc": 1,
+  "passed": 1,
+  "failed": 1,
+  "secs": 0.3,
+  "owner": "✏️s",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toBe(expected)",
+  "fails": [
+   "(fail) all nine real neutral region surfaces retain binary64 topology volume and independent Earcut footprint [0.41ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_s_modules_fem_engine_mesh_surface_tests_neutral_ts.log"
+ },
+ {
+  "file": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📐️surface/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 4,
+  "failed": 1,
+  "secs": 0.3,
+  "owner": "✏️s",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toBe(expected)",
+  "fails": [
+   "(fail) actual received neutral and both installed exports preserve complete portable corpus [0.45ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_s_modules_fem_engine_mesh_surface_tests_ts.log"
+ },
+ {
+  "file": "✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/📥️checked/🟦️.ts",
+  "rc": 1,
+  "passed": 2,
+  "failed": 1,
+  "secs": 1.9,
+  "owner": "✏️s",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "",
+  "fails": [
+   "(fail) neutral actual s-dev defining owners preserve independent AST bundle and TOML oracles [410.39ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_s_dev_service_composition_tests_checked_ts.log"
+ },
+ {
+  "file": "✏️s/🔌️plugins/🧪️tests/📁fixture-placement/🟦️.ts",
+  "rc": 1,
+  "passed": 37,
+  "failed": 2,
+  "secs": 84.2,
+  "owner": "✏️s",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toBeGreaterThan(expected)",
+  "fails": [
+   "(fail) original example generators default to physical test owners [197.38ms]",
+   "(fail) original Cargo-manifest example coordinates remain test owned [35.84ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_s_plugins_tests_fixture_placement_ts.log"
+ },
+ {
+  "file": "✏️s/🧪️tests/🗂️native-ownership/🟦️.ts",
+  "rc": 1,
+  "passed": 3,
+  "failed": 1,
+  "secs": 17.7,
+  "owner": "✏️s",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "",
+  "fails": [
+   "(fail) Every Discovered S Native Package Has Its Nearest Owner And Complete Dependency Admission [17411.88ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_s_tests_native_ownership_ts.log"
+ },
+ {
+  "file": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/🧪️tests/🖊️drawing-reader/🟦️.ts",
+  "rc": 1,
+  "passed": 6,
+  "failed": 1,
+  "secs": 0.3,
+  "owner": "hub",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toContain(expected)",
+  "fails": [
+   "(fail) additive complete lower native cohort preserves the original full oracle route [0.92ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_hub_compositions_stdio_oracles_tests_drawing_reader_ts.log"
+ },
+ {
+  "file": "🌎️hub/🧩️compositions/🗄️stdio/🧩️component/🏗️compiler/♻️capture/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 2,
+  "failed": 1,
+  "secs": 4.6,
+  "owner": "hub",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toBe(expected)",
+  "fails": [
+   "(fail) Hub compiler capture defining router resolves current first-party source owners [57.43ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_hub_compositions_stdio_component_compiler_capture_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/⏪️time-travel/♻️retirement/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 8,
+  "failed": 1,
+  "secs": 0.8,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toContain(expected)",
+  "fails": [
+   "(fail) accepted time travel drafts own native paged ordered rows [63.59ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_time_travel_retirement_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🧩️ownership/🟦️.ts",
+  "rc": 1,
+  "passed": 2,
+  "failed": 1,
+  "secs": 1.3,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toContain(expected)",
+  "fails": [
+   "(fail) neutral value roots mount the owned decode laws [5.71ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_value_decode_tests_ownership_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧪️tests/🧱️ownership/🟦️.ts",
+  "rc": 1,
+  "passed": 6,
+  "failed": 1,
+  "secs": 0.5,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) the actual error provider is independent of Replication and preserves an owned ValueError directly [3.35ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_pack_error_tests_ownership_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧱️ownership/🟦️.ts",
+  "rc": 1,
+  "passed": 1,
+  "failed": 1,
+  "secs": 0.2,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) one actual Pack record library owns the codec and the facade exposes it with no product source authority [4.73ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_pack_value_tests_ownership_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧪️testing/📥️invocation/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 1,
+  "failed": 1,
+  "secs": 0.2,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toBe(expected)",
+  "fails": [
+   "(fail) JSON source command consumes its mandatory admitted child ceiling [0.67ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_pack_json_decode_testing_invocation_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🧱️ownership/🟦️.ts",
+  "rc": 1,
+  "passed": 9,
+  "failed": 1,
+  "secs": 0.6,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) the actual JSON primitive package owns its definitions and depends directly on Value [5.47ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_pack_json_tests_ownership_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🛟️custodian/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 1,
+  "secs": 30.1,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "",
+  "fails": [
+   "(fail) Paid custodian retains actual direct-child capacity through drain, replay refusal and cancellation [30002.18ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_process_build_capacity_custodian_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/🎛️command/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 3,
+  "failed": 1,
+  "secs": 0.6,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toBe(expected)",
+  "fails": [
+   "(fail) canceled native cleanup retains actual EX and token without reviving its Original [1.67ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_process_artifacts_native_build_storage_cleanup_command_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🧪️tests/🏎️overlap/🟦️.ts",
+  "rc": 1,
+  "passed": 1,
+  "failed": 1,
+  "secs": 0.6,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toBe(expected)",
+  "fails": [
+   "(fail) Pinned Cargo same-profile builders overlap and preserve correct private captures and recipe warm state [4.24ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_process_artifacts_native_build_lease_tests_overlap_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🎯️target/🧪️tests/📋️callers/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 1,
+  "secs": 42.3,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: /Users/ueli/.bun/bin/bun /Users/ueli/Documents/semio/.cache/b/d/m/j/ecafa95add9056aaed6a/node_modules/.bun/typescript@5.9.3/node_modules/typescript/bin/tsc --ignoreConfig --noEmit --allowJs --s",
+  "fails": [
+   "(fail) Cargo compiler target custody is required across every active caller [42223.41ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_process_artifacts_native_build_lease_target_tests_callers_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/📥️sources/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 16,
+  "failed": 5,
+  "secs": 2.6,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toBe(expected)",
+  "fails": [
+   "(fail) source failure error closes the actual capture under its carried cleanup before Original rejects [0.51ms]",
+   "(fail) source failure undefined closes the actual capture under its carried cleanup before Original rejects [0.08ms]",
+   "(fail) source failure partial closes the actual capture under its carried cleanup before Original rejects [0.11ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_process_artifacts_publication_sources_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧹️retirement/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 56,
+  "failed": 1,
+  "secs": 13.4,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: bun test v1.3.14 (0d9b296a)",
+  "fails": [
+   "(fail) compiler cache cold namespace child [191.89ms]",
+   "(fail) neutral compiler cache retirement consumes a durable bounded journal [10134.19ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_process_artifacts_cache_retirement_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/📁️files/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 1,
+  "failed": 1,
+  "secs": 45.7,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: [script] {\"owner\":\"tst7\",\"command\":\"test:file-observation-controls\",\"stage\":\"running\",\"activity\":{\"resource\":\"/Users/ueli/.bun/bin/bun\",\"mode\":\"shared\",\"elapsedMs\":1004.2328749999999}}",
+  "fails": [
+   "(fail) neutral physical file preserves caller primary and captured control [43164.96ms]",
+   "(fail) neutral owned Bun files preserve actual process births terminal failures and bounded drains [44718.03ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_process_testing_bun_files_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🧪️tests/🚧️boundary/🟦️.ts",
+  "rc": 1,
+  "passed": 1,
+  "failed": 2,
+  "secs": 9.7,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) all General Nx executable entries and router imports remain inside their defining owner [6662.52ms]",
+   "(fail) every actual General router and public export independently bundles with Specific sources refused [1381.14ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_process_routing_command_tests_boundary_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🧪️tests/❄️cold/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 1,
+  "secs": 33.5,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toContain(expected)",
+  "fails": [
+   "(fail) an actual configured General repo:script command starts with all Specific sources absent [19289.70ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_process_routing_command_tests_cold_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🧪️tests/🎛️control/🟦️.ts",
+  "rc": 1,
+  "passed": 1,
+  "failed": 1,
+  "secs": 121.6,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "",
+  "fails": [
+   "(fail) neutral physical file preserves caller primary and captured control [120000.74ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_filesystem_observation_tests_control_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🏛️crate-partition/🟦️.ts",
+  "rc": 1,
+  "passed": 18,
+  "failed": 4,
+  "secs": 26.0,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) semio-framework-replication-history-index parses identically, lists exactly its table and keeps the exact source boundary [2.75ms]",
+   "(fail) every Rust file below the replication module has exactly one owning crate or is declared [338.38ms]",
+   "(fail) every crate stays inside the source budget for each target and the deflate feature [23349.41ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_replication_tests_crate_partition_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/📦️crate-boundaries/🟦️.ts",
+  "rc": 1,
+  "passed": 61,
+  "failed": 1,
+  "secs": 23.0,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) semio-framework-ui-prepared owns an acyclic production contract [331.35ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_ui_tests_crate_boundaries_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️publication/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 1,
+  "secs": 2.3,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toContain(expected)",
+  "fails": [
+   "(fail) neutral Infinite fonts retain managed scratch, actual Rust reader and selected publication mode [17.04ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_canvas_fonts_publication_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🗜️deflate/🧪️tests/🧱️ownership/🟦️.ts",
+  "rc": 1,
+  "passed": 1,
+  "failed": 1,
+  "secs": 0.5,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) controlled signatures and retained faults use the actual Value owner without text erasure [359.86ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_deflate_tests_ownership_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🗣️dsl/🧪️tests/🚮️absence/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 1,
+  "secs": 20.5,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) actual neutral packages expose canonical lexical and diagnostic ownership [6.15ms]",
+   "(fail) the actual canonical reference package command executes with products, S and Hub physically absent [20382.40ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_dsl_tests_absence_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🗣️dsl/🧪️tests/🧱️ownership/🟦️.ts",
+  "rc": 1,
+  "passed": 5,
+  "failed": 1,
+  "secs": 2.2,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) actual neutral packages expose canonical lexical and diagnostic ownership [7.44ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_dsl_tests_ownership_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🧪️tests/🧱️ownership/🟦️.ts",
+  "rc": 1,
+  "passed": 7,
+  "failed": 1,
+  "secs": 2.9,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toContain(expected)",
+  "fails": [
+   "(fail) generic derivation native commands survive product removal [1386.29ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_dsl_schema_derive_tests_ownership_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🧱️ownership/🟦️.ts",
+  "rc": 1,
+  "passed": 12,
+  "failed": 1,
+  "secs": 1.9,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) actual generic record metadata has one independent canonical package below the container [7.67ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_dsl_schema_tests_ownership_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 1,
+  "failed": 2,
+  "secs": 1.6,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) actual package has only owned general dependencies and an explicit complete export surface [16.44ms]",
+   "(fail) neutral vocabulary namespace closure resolves only its actual owned dependencies [361.06ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_io_schema_ownership_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🫴️receiving/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 1,
+  "secs": 0.7,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "sqlite snapshot receiving source moved (mount/needle)",
+  "firstError": "error: expect(received).toBe(expected)",
+  "fails": [
+   "(fail) original SQLite receiving preserves plain declaration and extent oracles without trial admission [567.67ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_io_sqlite_snapshot_artifact_receiving_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🏛️ownership/🟦️.ts",
+  "rc": 1,
+  "passed": 4,
+  "failed": 1,
+  "secs": 0.6,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "sqlite snapshot receiving source moved (mount/needle)",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) the SQLite package has only neutral normal dependencies [2.02ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_io_sqlite_snapshot_tests_ownership_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🤝️interoperability/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 3,
+  "secs": 0.4,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "sqlite snapshot receiving source moved (mount/needle)",
+  "firstError": "",
+  "fails": [
+   "(fail) Semantic SQLite Rust, TypeScript and Independent Engine Interoperability > shared language-neutral entities, relationships and scalar types [4.16ms]",
+   "(fail) Semantic SQLite Rust, TypeScript and Independent Engine Interoperability > many entity rows, schema pages and overflow cells [13.77ms]",
+   "(fail) Semantic SQLite Rust, TypeScript and Independent Engine Interoperability > SQL edits are imported as semantic entities without a native codec [21.42ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_io_sqlite_snapshot_tests_interoperability_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🛠️modeling/✂️clipping/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 13,
+  "failed": 2,
+  "secs": 13.7,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) mesh packaging schema fixes actual owners, direct codec imports and independent manifest parity [493.05ms]",
+   "(fail) all live mesh locks contain exact handcrafted production edges and workspace development owners [4004.77ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_3d_mesh_modeling_clipping_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧪️tests/📦️targets/🧪️packaging/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 2,
+  "secs": 3.5,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) mesh packaging schema fixes actual owners, direct codec imports and independent manifest parity [572.19ms]",
+   "(fail) all live mesh locks contain exact handcrafted production edges and workspace development owners [2664.72ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_3d_mesh_tests_targets_packaging_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🚪️command/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 1,
+  "failed": 2,
+  "secs": 3.0,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) canonical selected Cargo command equals independent Execa and SQLite [490.96ms]",
+   "(fail) artifact host entry forwards exact stdout and actual native refusal code [737.52ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_test_mutation_inventory_execution_command_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/🧪️tests/🚮️absence/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 1,
+  "secs": 18.0,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "",
+  "fails": [
+   "(fail) owned public source API typechecks and has no product or foreign runtime imports [6670.50ms]",
+   "(fail) all actual schema closure and JSON syntax laws execute with products, S and Hub absent [17764.77ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_schema_source_closure_tests_absence_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 1,
+  "secs": 0.5,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) durable link schema owns its full native codec independently of Store [263.61ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_schema_artifact_reference_link_schema_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/🧱️neutrality/🟦️.ts",
+  "rc": 1,
+  "passed": 13,
+  "failed": 1,
+  "secs": 0.7,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) StateClass has one Value-backed lower owner rather than a protocol or product declaration [1.54ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_schema_tests_neutrality_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 8,
+  "failed": 1,
+  "secs": 1.5,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "",
+  "fails": [
+   "(fail) original receiving keeps all five simultaneous causes and actual effects [27.46ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_job_failure_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📏️extent/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 1,
+  "secs": 0.8,
+  "owner": "framework/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toBe(expected)",
+  "fails": [
+   "(fail) original payload page extents use the same narrow capacity and exact ledger release [527.03ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_job_outcome_builder_extent_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 22,
+  "failed": 4,
+  "secs": 4.0,
+  "owner": "framework/products/os",
+  "cls": "law-drift",
+  "note": "sqlite snapshot receiving source moved (mount/needle)",
+  "firstError": "error: expect(received).toBe(expected)",
+  "fails": [
+   "(fail) actual native isolated law admits explicit owner registration and generic constructors remain owner-neutral [64.51ms]",
+   "(fail) actual owner literals and existing GUI source/native routes identify the same SpaceHistory boundary [96.15ms]",
+   "(fail) closed native ownership corpus separates physical and reconstruction ceilings on both encodings [67.69ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_os_modules_store_space_history_io_sqlite_snapshot_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🌊️hydration-and-source-birth/🟦️.ts",
+  "rc": 1,
+  "passed": 16,
+  "failed": 5,
+  "secs": 6.6,
+  "owner": "framework/products/os",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toBe(expected)",
+  "fails": [
+   "(fail) hydration normal pack retirement retains physical backing until granted [13.84ms]",
+   "(fail) hydration fold consumes supplied independent physical authority [11.02ms]",
+   "(fail) hydration target decoder preserves original supplied physical authority [16.85ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_os_modules_store_composition_open_tests_unit_retirement_hydration_and_source_birth_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/📸️snapshot-custody/🟦️.ts",
+  "rc": 1,
+  "passed": 25,
+  "failed": 3,
+  "secs": 11.0,
+  "owner": "framework/products/os",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toBeLessThan(expected)",
+  "fails": [
+   "(fail) genesis admission preserves original payload and envelope metadata under supplied grant [265.26ms]",
+   "(fail) envelope birth retains original phased catalogs before hydration advancement [447.91ms]",
+   "(fail) snapshot native consumers retain the genuine caller controls and progress domains [1.69ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_os_modules_store_composition_open_tests_unit_retirement_snapshot_custody_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧳️source/🎟️control/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 1,
+  "failed": 1,
+  "secs": 1.0,
+  "owner": "framework/products/os",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toContain(expected)",
+  "fails": [
+   "(fail) actual Sealer receives mandatory original metadata and records it separately before source work [0.88ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_os_modules_store_canonical_edit_source_control_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧪️tests/🧭️ownership/🟦️.ts",
+  "rc": 1,
+  "passed": 3,
+  "failed": 1,
+  "secs": 0.7,
+  "owner": "framework/products/os",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: 1 | /** 🧩️ Describes a non-null, non-array object whose member values are unknown. */",
+  "fails": [
+   "(fail) complete owned suite [85.27ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_os_modules_renderer_engine_elements_Paint2dHost_editing_tests_ownership_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 55,
+  "failed": 1,
+  "secs": 5.7,
+  "owner": "framework/products/os",
+  "cls": "law-drift",
+  "note": "sqlite snapshot receiving source moved (mount/needle)",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) Run complete independent SQL cell extent preserves both trigger branches and exact IEEE words [11.39ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_os_modules_workflow_artifacts_run_io_sqlite_snapshot_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 41,
+  "failed": 1,
+  "secs": 8.0,
+  "owner": "framework/products/os",
+  "cls": "law-drift",
+  "note": "sqlite snapshot receiving source moved (mount/needle)",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) Workflow complete independent SQL cell extent admits equality and refuses one byte short [215.08ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_os_modules_workflow_artifacts_workflow_io_sqlite_snapshot_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧬️semantic-source-pairs/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 1,
+  "secs": 30.3,
+  "owner": "framework/products/os",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: writer: emitted descriptor JSON and pack forms disagree",
+  "fails": [
+   "(fail) committed semantic source pairs agree with current schema and independent Ajv [24028.12ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_os_modules_plugin_registry_tests_semantic_source_pairs_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/📦️units/🟦️.ts",
+  "rc": 1,
+  "passed": 6,
+  "failed": 7,
+  "secs": 12.4,
+  "owner": "framework/products/os",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: Unrecorded original law: retained_rejected_completion_closes_original_artifact_and_ephemeral_owners",
+  "fails": [
+   "(fail) actual builder laws retain every name and original or explicitly adapted issuer body [908.73ms]",
+   "(fail) actual feature verdict owner preserves immutable definitions and defining-owner laws [341.38ms]",
+   "(fail) actual independent private child-group target preserves16 obligations from32 duplicate instances [215.49ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_os_modules_plugin_tests_units_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🟦️.ts",
+  "rc": 1,
+  "passed": 24,
+  "failed": 6,
+  "secs": 5.2,
+  "owner": "framework/products/os",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toBe(expected)",
+  "fails": [
+   "(fail) mounted worker forwards its original paid turn before a separate borrowed semantic turn [1589.44ms]",
+   "(fail) publication continuations borrow the original driver identity authority [23.02ms]",
+   "(fail) tool run receipt preserves the original grant through every runtime handoff [21.09ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_os_modules_plugin_tests_plugin_runtime_runtime_close_budget_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🧪️tests/📦️crate-boundaries/🟦️.ts",
+  "rc": 1,
+  "passed": 39,
+  "failed": 6,
+  "secs": 20.1,
+  "owner": "framework/products/os",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) semio-framework-os-kernel-db-sync owns an acyclic, registered and gate-sized contract [3.97ms]",
+   "(fail) semio-framework-os-kernel-db-artifact-engine owns an acyclic, registered and gate-sized contract [1.62ms]",
+   "(fail) semio-framework-os-kernel-db-io-core owns an acyclic, registered and gate-sized contract [0.70ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_os_modules_db_tests_crate_boundaries_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/📥️emission/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 1,
+  "failed": 1,
+  "secs": 2.3,
+  "owner": "framework/products/other",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toContain(expected)",
+  "fails": [
+   "(fail) actual native emitter Script and Rust producers own DATA rather than ambient output paths [14.50ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_print_tests_native_chart_grammar_emission_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/⌨️controls/🟦️.ts",
+  "rc": 1,
+  "passed": 4,
+  "failed": 1,
+  "secs": 0.7,
+  "owner": "repo/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: Terminal bytes become the canonical key spellings of the keymap: terminal_bytes_become_the_keymaps_canonical_spellings",
+  "fails": [
+   "(fail) every scenario of the keymap feature is proved by a test of this file and by the named Rust tests [23.24ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_dashboard_tests_controls_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts",
+  "rc": 1,
+  "passed": 3,
+  "failed": 2,
+  "secs": 3.1,
+  "owner": "repo/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toContain(expected)",
+  "fails": [
+   "(fail) dashboard window tests select the native test owners after the crate split [53.07ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_dashboard_tests_dispatch_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📇️indexed-generated-output/🧪️tests/🗂️indexed-generated-output/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 1,
+  "secs": 1.9,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) indexed generated output law > git does not index wasm, wasm-pack bindings, jco browser bundles, or generated trees [1799.38ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_laws_indexed_generated_output_tests_indexed_generated_output_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️authority/🟦️.ts",
+  "rc": -14,
+  "passed": 0,
+  "failed": 0,
+  "secs": 300.1,
+  "owner": "repo/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toContain(expected)",
+  "fails": [
+   "(fail) dashboard window tests select the native test owners after the crate split [244.56ms]",
+   "(fail) active inventory fails closed and only excludes declared generated roots and dependency boundaries [8.19ms]",
+   "(fail) protected instructions are an exact explicit root constraint and never exempt mutable documentation [1.53ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_dashboard_tests_authority_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/📐️layout/🟦️.ts",
+  "rc": 1,
+  "passed": 2,
+  "failed": 1,
+  "secs": 1.6,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toBe(expected)",
+  "fails": [
+   "(fail) common Products entry repairs derived receipt from current journal after publication faults [782.19ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_caching_storage_enforcement_budget_opening_tests_layout_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/📋️registration/🟦️.ts",
+  "rc": 1,
+  "passed": 1,
+  "failed": 1,
+  "secs": 0.8,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toBe(expected)",
+  "fails": [
+   "(fail) toolkit output laws have a neutral permanent owner and bilingual dashboard control [151.58ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_caching_storage_enforcement_nx_outputs_tests_registration_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🧪️tests/🟦️.ts",
+  "rc": -14,
+  "passed": 0,
+  "failed": 0,
+  "secs": 300.1,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: Actual incoming immutable SDK identity required",
+  "fails": [
+   "(fail) each fixture scenario holds exactly when nothing graph-relevant changed [100002.87ms]",
+   "(fail) a seal is refused for another process's receipts or a graph older than the invocation [100003.76ms]",
+   "(fail) verified immutable whole graph readers preserve the portable custody corpus and refuse a foreign owner [0.79ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_caching_graph_seal_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📥️invocation/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 3,
+  "failed": 1,
+  "secs": 2.4,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: Received value must be an array type, or both received and expected values must be strings.",
+  "fails": [
+   "(fail) Process suite runner keeps the incoming per-test timeout and exact law type check [0.75ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_caching_bootstrap_invocation_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️snapshot/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 19,
+  "failed": 23,
+  "secs": 16.9,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "sqlite snapshot receiving source moved (mount/needle)",
+  "firstError": "error: Original native caller capabilities required",
+  "fails": [
+   "(fail) issued derivative inputs write exact captured images once under real registry custody [5.61ms]",
+   "(fail) issued derivative copy retains real exclusion and independent module paths [0.69ms]",
+   "(fail) detached derivative copy drains before quote input base and registry retirement [0.19ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_caching_bootstrap_tools_sdk_snapshot_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧱️command-source/🟦️.ts",
+  "rc": 1,
+  "passed": 10,
+  "failed": 1,
+  "secs": 32.6,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) resolves every anonymous owner and cache semantic context [3587.01ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_caching_tests_command_source_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/📉️pressure/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 3,
+  "failed": 1,
+  "secs": 2.7,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: /Users/ueli/.bun/bin/bun /Users/ueli/Documents/semio/.cache/b/d/m/j/ecafa95add9056aaed6a/node_modules/.bun/typescript@5.9.3/node_modules/typescript/bin/tsc --ignoreConfig --noEmit --strict --sk",
+  "fails": [
+   "(fail) storage pressure policy and defining owner have complete strict and dashboard registration [1241.36ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_caching_pruning_pressure_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 3,
+  "failed": 1,
+  "secs": 123.8,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "",
+  "fails": [
+   "(fail) isolated Cargo stores are removed on every owner settlement and swept only after their kernel claim is released [120006.64ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_process_cargo_launcher_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📜️history/🧪️tests/📏️recensus/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 1,
+  "secs": 121.7,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "",
+  "fails": [
+   "(fail) actual compact custody emits exact recensus refusal without deleting changed data [120100.53ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_caching_pruning_budget_history_tests_recensus_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 51,
+  "failed": 1,
+  "secs": 108.8,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toBe(expected)",
+  "fails": [
+   "(fail) observed TOML receives literal astral paths and refuses surrogate escapes with exact original source context [85.28ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_build_observation_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️selected/📦️snapshot/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 1,
+  "failed": 1,
+  "secs": 0.8,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "sqlite snapshot receiving source moved (mount/needle)",
+  "firstError": "error: Original snapshot fixture required",
+  "fails": [
+   "(fail) closed physical selected Source snapshot retains genuine funding and Native reader until settlement [7.02ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_build_inputs_selected_snapshot_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🚪️admission/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 2,
+  "secs": 2.9,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toBe(expected)",
+  "fails": [
+   "(fail) graph writer admission reconciles exactly once before pressure-free work [857.61ms]",
+   "(fail) (unnamed) [1.82ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_build_inputs_storage_tests_admission_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧾️store-receipt/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 13,
+  "failed": 1,
+  "secs": 2.7,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: ♻️mit-bestand/🧺️demonstrator/📋️project.json build publishes through /Users/ueli/Documents/semio/♻️mit-bestand/🧺️demonstrator/🔨️modules/📦️site/📜️script.ts",
+  "fails": [
+   "(fail) every declared receipt output belongs to its own target and to a handler that publishes through a recording publisher [482.53ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_build_store_receipt_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖱️ui/🧪️tests/🧭️router-ownership/🟦️.ts",
+  "rc": 1,
+  "passed": 3,
+  "failed": 2,
+  "secs": 5.6,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: UI_PRIMITIVES_SKIP_DIRS",
+  "fails": [
+   "(fail) all original workspace census declarations retain their exact TypeScript AST text [1.36ms]",
+   "(fail) the original Storybook handlers preserve root commands, caller arguments and UI environment [14.33ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_ui_tests_router_ownership_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🧭️native-discovery/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 1,
+  "secs": 69.4,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "Error:",
+  "fails": [
+   "(fail) current root patterns discover every authored native owner before preparation [69058.82ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_workspaces_cargo_tests_native_discovery_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⏱️process-budgets/🟦️.ts",
+  "rc": 1,
+  "passed": 10,
+  "failed": 7,
+  "secs": 145.3,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: [script] {\"owner\":\"tst7\",\"command\":\"test-snapshot-sqlite\",\"stage\":\"loading\"}",
+  "fails": [
+   "(fail) owned snapshot source groups retain exact coverage and finite per-group budgets [690.42ms]",
+   "(fail) process budgets let captured nextest compilation finish before budgeted assertions [10042.57ms]",
+   "(fail) process budgets separate coverage compilation from assertions: nextest=true [10037.12ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_process_budgets_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🪆️ownership/🟦️.ts",
+  "rc": -14,
+  "passed": 0,
+  "failed": 0,
+  "secs": 300.1,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "",
+  "fails": [],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_workspaces_cargo_tests_ownership_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/♻️taxonomy-pattern-compiler-reuse/🟦️.ts",
+  "rc": 1,
+  "passed": 90,
+  "failed": 3,
+  "secs": 24.9,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) every normalizer pattern query has a required invocation-owned matcher and fresh load [84.40ms]",
+   "(fail) actual load caches content facts while capturing fresh isolated schema and matcher sessions: bun [4.51ms]",
+   "(fail) actual load caches content facts while capturing fresh isolated schema and matcher sessions: typescript [0.59ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_taxonomy_pattern_compiler_reuse_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/❄️frozen-markdown-coordinates/🟦️.ts",
+  "rc": 1,
+  "passed": 35,
+  "failed": 1,
+  "secs": 11.5,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: Producer static import lacks exact workspace authority: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts -> @semio-tech/process/build-mode",
+  "fails": [
+   "(fail) a scoped transaction preserves Markdown and escaped JSON history while rewriting its live neighboring reference [364.73ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_frozen_markdown_coordinates_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/✂️node-native-typescript/🟦️.ts",
+  "rc": 1,
+  "passed": 2,
+  "failed": 1,
+  "secs": 43.3,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) the packages vite/vitest configs externalize are exactly the declared native surface [7778.16ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_node_native_typescript_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🍃️artifact-support-leaf-authority/🟦️.ts",
+  "rc": 1,
+  "passed": 5,
+  "failed": 14,
+  "secs": 16.0,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toBe(expected)",
+  "fails": [
+   "(fail) artifact support leaf authority > projects only the three physically evidenced support leaves [1957.99ms]",
+   "(fail) artifact support leaf authority > rejects unproven payload ownership: missing-descriptor [1221.54ms]",
+   "(fail) artifact support leaf authority > rejects unproven payload ownership: wrong-descriptor-pointer [567.75ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_artifact_support_leaf_authority_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎚️vitest-configuration-ownership/🟦️.ts",
+  "rc": 1,
+  "passed": 5,
+  "failed": 2,
+  "secs": 138.9,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: 🌎️hub/🔨️modules/🛡️admin/🧪️tests/🎚️config/🟦️.ts",
+  "fails": [
+   "(fail) Vitest configuration ownership > loads every explicit owner and preserves its behavioral projection [130403.75ms]",
+   "(fail) Vitest configuration ownership > requires every runVitest call to select an anonymous semantic configuration [6214.23ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_vitest_configuration_ownership_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📏️lib-wiring-budget/🟦️.ts",
+  "rc": 1,
+  "passed": 1,
+  "failed": 2,
+  "secs": 31.9,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) library wiring budget of plugin crates > no plugin crate lib root exceeds the wiring budget unless the ratchet pins it, and pinned roots only shrink [31200.24ms]",
+   "(fail) library wiring budget of plugin crates > the ratchet lists no root that complies, vanished or was not measured [0.53ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_lib_wiring_budget_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📜️historical-document-evidence/🟦️.ts",
+  "rc": 1,
+  "passed": 6,
+  "failed": 1,
+  "secs": 2.9,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) ticket narrative, evidence and scratch never block a move, a production file still does, and a ticket-embedded package boundary is never swept in [1723.02ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_historical_document_evidence_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📣️plugin-publication-source-ownership/🟦️.ts",
+  "rc": 1,
+  "passed": 6,
+  "failed": 1,
+  "secs": 2.7,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: 🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust/📜️script.ts",
+  "fails": [
+   "(fail) plugin publication source ownership > closes every direct consumer on semantic owners [426.74ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_plugin_publication_source_ownership_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📱️app-verification-source-ownership/🟦️.ts",
+  "rc": 1,
+  "passed": 2,
+  "failed": 4,
+  "secs": 3.3,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: ✏️s/🔌️plugins/🌍️gis/🧬️schema/🟦️.ts",
+  "fails": [
+   "(fail) app verification source ownership > keeps executable behavior under test or oracle owners with anonymous leaves [187.15ms]",
+   "(fail) app verification source ownership > keeps package command files as admitted routers without verifier or provisioning bodies [80.69ms]",
+   "(fail) app verification source ownership > closes every direct app verifier consumer on semantic owners [9.47ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_app_verification_source_ownership_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔧️build-surfaces/🟦️.ts",
+  "rc": 1,
+  "passed": 20,
+  "failed": 1,
+  "secs": 20.9,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "",
+  "fails": [
+   "(fail) native executable producers admit portable project declarations [137.68ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_build_surfaces_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️cad-presence-retirement/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 1,
+  "secs": 4.7,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: peer capture census rejected its real exact helper/base/factory authority",
+  "fails": [
+   "(fail) CAD presence retirement byte oracles and presence Store source guards hold and reject every hostile mutation [4318.80ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_cad_presence_retirement_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔏️path-emoji-statutes/🟦️.ts",
+  "rc": 1,
+  "passed": 36,
+  "failed": 1,
+  "secs": 74.5,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "",
+  "fails": [
+   "(fail) the normalization reader accepts the same current reserved-name contracts [49372.03ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_path_emoji_statutes_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/📖️taxonomy-loading/🟦️.ts",
+  "rc": 1,
+  "passed": 54,
+  "failed": 2,
+  "secs": 43.5,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: Undeclared generator stderr refused",
+  "fails": [
+   "(fail) loadTaxonomy > the actual empty General publisher passes the strict normalization receiver [2597.23ms]",
+   "(fail) validateTaxonomy > declares canonical semantic collection and module ownership contracts [1.25ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_workspace_contract_taxonomy_loading_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/📦️package-language-handoff/🟦️.ts",
+  "rc": 1,
+  "passed": 1,
+  "failed": 5,
+  "secs": 3.0,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toHaveLength(expected)",
+  "fails": [
+   "(fail) package language semantic handoff > the actual directory classifier agrees with independent compilers and JSON Schema semantic matching [740.03ms]",
+   "(fail) package language semantic handoff > resident native metadata binds the exact semantic owner and one Cargo identity [1027.05ms]",
+   "(fail) package language semantic handoff > resident native metadata router preserves exact sequential bounded commands without executing Cargo [4.02ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_workspace_contract_package_language_handoff_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🔗️registry-and-cargo-providers/🟦️.ts",
+  "rc": 1,
+  "passed": 5,
+  "failed": 1,
+  "secs": 5.0,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🏷️rename/🦀️.rs",
+  "fails": [
+   "(fail) mutation metadata source provider > proves current STDIO TXT and GLTF wrapped origins through kernel aliases [4.85ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_workspace_contract_registry_and_cargo_providers_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🧬️mutation-taxonomy/🟦️.ts",
+  "rc": 1,
+  "passed": 13,
+  "failed": 3,
+  "secs": 9.8,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toBe(expected)",
+  "fails": [
+   "(fail) direct mutation taxonomy > models direct ownership plus behavior and organizational child facets [2060.51ms]",
+   "(fail) semantic collection census > accepts mutation codecs only as explicit bidirectional I/O transport boundaries [959.42ms]",
+   "(fail) semantic collection census > places inference codecs below I/O rather than the inference result collection [0.16ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_workspace_contract_mutation_taxonomy_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🧿️mutation-ownership/🟦️.ts",
+  "rc": 1,
+  "passed": 156,
+  "failed": 3,
+  "secs": 78.6,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: mutation-leaf-scope",
+  "fails": [
+   "(fail) schema scope catalog > catalogues declared scopes and reports every retired placement and unresolved binding: mutation-leaf-scope [4.67ms]",
+   "(fail) schema scope catalog > catalogues declared scopes and reports every retired placement and unresolved binding: schema-mutation-leaf-id [5.56ms]",
+   "(fail) schema scope catalog > catalogues declared scopes and reports every retired placement and unresolved binding: facet-document-keeps-scope-path [3.82ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_workspace_contract_mutation_ownership_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🚚️readme-move-source-authority/🟦️.ts",
+  "rc": 1,
+  "passed": 13,
+  "failed": 4,
+  "secs": 9.5,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: revised-exact-authority: [{\"instancePath\":\"/sourceAuthority/kind\",\"schemaPath\":\"#/properties/kind/const\",\"keyword\":\"const\",\"params\":{\"allowedValue\":\"exact-owner-current-source-approval-v1\"},\"me",
+  "fails": [
+   "(fail) move source authority has a closed neutral grammar with independent JSON and file-hash parity [305.03ms]",
+   "(fail) Bun exact plan parser preserves the new authority and rejects closed-shape negatives [27.04ms]",
+   "(fail) TypeScript exact plan parser preserves the new authority and rejects closed-shape negatives [25.91ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_readme_move_source_authority_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🚦️test-dispatch/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 1,
+  "secs": 5.4,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: Module not found \"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/ta/r5fmdutsa/go-cancellation-2QkTog/temporary/client",
+  "fails": [
+   "(fail) (unnamed) [539.96ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_test_dispatch_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛟️transaction-recovery-authority/🟦️.ts",
+  "rc": 1,
+  "passed": 4,
+  "failed": 2,
+  "secs": 4.4,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: unchanged-index",
+  "fails": [
+   "(fail) Bun preserves physical index observations against the actual Git stage oracle [195.10ms]",
+   "(fail) TypeScript preserves physical index observations against the actual Git stage oracle [177.61ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_transaction_recovery_authority_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️mutation-leaf-identity/🟦️.ts",
+  "rc": 1,
+  "passed": 9,
+  "failed": 1,
+  "secs": 102.7,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: descriptorless-helper-module",
+  "fails": [
+   "(fail) mutation leaf identity agrees with the Ajv descriptor oracle: descriptorless-helper-module [0.19ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_mutation_leaf_identity_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧰️framework-root-source-topology/🟦️.ts",
+  "rc": 1,
+  "passed": 3,
+  "failed": 1,
+  "secs": 0.2,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toBe(expected)",
+  "fails": [
+   "(fail) framework root source topology > preserves Cargo and Node package identities and typegen activation [32.60ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_framework_root_source_topology_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️cargo-transaction-command-source/🟦️.ts",
+  "rc": 1,
+  "passed": 8,
+  "failed": 1,
+  "secs": 5.3,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: 🌎️hub/🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts -> ⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts",
+  "fails": [
+   "(fail) moves behavior out of command modules and rebinds every live API consumer [21.37ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_cargo_transaction_command_source_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️framework-source-topology/🟦️.ts",
+  "rc": 1,
+  "passed": 5,
+  "failed": 1,
+  "secs": 2.3,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toContain(expected)",
+  "fails": [
+   "(fail) Hub WGPU command vectors retain source laws without corpus schema authority [26.79ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_framework_source_topology_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧭️fixture-placement/🟦️.ts",
+  "rc": 1,
+  "passed": 9,
+  "failed": 1,
+  "secs": 126.2,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) all semantic-owner examples have true test ancestry [123264.68ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_fixture_placement_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️root-artifact-dependency-source/🟦️.ts",
+  "rc": 1,
+  "passed": 3,
+  "failed": 3,
+  "secs": 6.8,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/🧪️source-and-native-tests/🟦️.ts -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📽️projection/🧩️package-adapter/📦️publication/🟦️.ts",
+  "fails": [
+   "(fail) root artifact and dependency source ownership > binds every implementation API to an anonymous semantic owner and direct consumer [116.60ms]",
+   "(fail) root artifact and dependency source ownership > dispatches projected WGPU inputs and cancels through the same package command [3736.87ms]",
+   "(fail) admits the worker continuation through its schema, Nx cache and independent bundler [2034.82ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_root_artifact_dependency_source_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️root-clean-scaffold-source/🟦️.ts",
+  "rc": 1,
+  "passed": 7,
+  "failed": 1,
+  "secs": 10.9,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🧱️taxonomy-normalization/🟦️.ts -> 🧼️workspace-cleanup/🎮️command/🟦️.ts",
+  "fails": [
+   "(fail) removes root implementations and binds every direct and source-text consumer [2.61ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_root_clean_scaffold_source_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️rust-source-direction/🔐️pool-use-ownership/🟦️.ts",
+  "rc": 1,
+  "passed": 1,
+  "failed": 1,
+  "secs": 1.7,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) neutral pool and mounted database have separate closed authority and original native clients [113.09ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_rust_source_direction_pool_use_ownership_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️rust-source-direction/🔔️deferred-wake-ownership/🟦️.ts",
+  "rc": 1,
+  "passed": 1,
+  "failed": 1,
+  "secs": 0.8,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) general deferred wake and specific writer have closed separate current fixture authority [186.88ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_rust_source_direction_deferred_wake_ownership_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️rust-source-direction/🧫️fixture-ownership/🟦️.ts",
+  "rc": 1,
+  "passed": 1,
+  "failed": 1,
+  "secs": 0.8,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🛂️mutation-source-authority/🟦️.ts",
+  "fails": [
+   "(fail) all original shared fixture bytes have one neutral physical owner and exact direct clients [321.22ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_rust_source_direction_fixture_ownership_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️root-surface-abstraction-law-source/🟦️.ts",
+  "rc": 1,
+  "passed": 8,
+  "failed": 1,
+  "secs": 111.4,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: [verify abstraction-ownership] ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts: missing document declaration Generation2dArtifact.",
+  "fails": [
+   "(fail) retains abstraction source-data and Ajv proof behavior [1492.93ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_root_surface_abstraction_law_source_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️tests/🏗️source-services/🟦️.ts",
+  "rc": 1,
+  "passed": 3,
+  "failed": 1,
+  "secs": 2.9,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: 🔣️taxonomy/🟦️.ts",
+  "fails": [
+   "(fail) current canonical source owners have exact acyclic imports and no forwarding exports [58.60ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_normalization_tests_source_services_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️tests/📦️package-boundary-classification/🟦️.ts",
+  "rc": 1,
+  "passed": 106,
+  "failed": 14,
+  "secs": 35.5,
+  "owner": "repo/library",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toBe(expected)",
+  "fails": [
+   "(fail) package boundary glue-content classification > rust-module-include-reexport-wiring [401.13ms]",
+   "(fail) package boundary glue-content classification > rust-cfg-backend-alias-wiring [109.04ms]",
+   "(fail) package boundary glue-content classification > rust-domain-type-alias [207.04ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_normalization_tests_package_boundary_classification_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/🏃️execution/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 1,
+  "secs": 5.9,
+  "owner": "repo/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toBeLessThanOrEqual(expected)",
+  "fails": [
+   "(fail) Next compiler command has a closed dedicated defining Source owner [5818.64ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_server_coordinator_builder_execution_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/📐️test-layout/🟦️.ts",
+  "rc": 1,
+  "passed": 84,
+  "failed": 1,
+  "secs": 7.5,
+  "owner": "repo/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: Undeclared external source import @semio-tech/plugin-registry/runtime in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎬️renderer-boot/",
+  "fails": [
+   "(fail) 📐️ canonical test layout > Nx hashes semantic-owner cases while production excludes them [430.96ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_test_tests_test_layout_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧪️mutation-history-gates/🟦️.ts",
+  "rc": 1,
+  "passed": 43,
+  "failed": 1,
+  "secs": 13.4,
+  "owner": "repo/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) schema-mutation-editability > a leaf's references resolve through the plugins its crate depends on, never a local copy [1116.34ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_test_tests_mutation_history_gates_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧱️command-composition-source/🟦️.ts",
+  "rc": 1,
+  "passed": 10,
+  "failed": 1,
+  "secs": 13.0,
+  "owner": "repo/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: Traceback (most recent call last):",
+  "fails": [
+   "(fail) prioritizes each declared Python source over the anonymous host leaf [318.04ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_test_tests_command_composition_source_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧬️schema-invariants/🟦️.ts",
+  "rc": 1,
+  "passed": 126,
+  "failed": 1,
+  "secs": 26.9,
+  "owner": "repo/modules",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) 🩺️ the committed tree is measured by the same checkers > the test platform's own subtree carries no schema-contract finding [2607.19ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_test_tests_schema_invariants_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🧪️tests/🧭️fixture-placement/🟦️.ts",
+  "rc": 1,
+  "passed": 2,
+  "failed": 1,
+  "secs": 12.7,
+  "owner": "framework/products/other",
+  "cls": "law-drift",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) Framework product examples belong strictly to neutral tests [2962.93ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_tests_fixture_placement_ts.log"
+ }
+]

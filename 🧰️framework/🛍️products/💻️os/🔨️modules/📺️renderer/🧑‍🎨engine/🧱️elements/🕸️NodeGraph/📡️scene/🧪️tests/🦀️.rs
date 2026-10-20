@@ -1,6 +1,6 @@
 //! 🧪️ Retained receiving input grants preserve the original source across finite upload, decode and close.
 use super::{SceneInputCursor,SceneInputGrant};
-use semio_framework_pack::intrinsic::IntrinsicFormat;
+use pack::intrinsic::IntrinsicFormat;
 use semio_framework_surface::node_graph::SceneDecodeLimits;
 use semio_framework_value::{ValueRefusalKind,retained_clone::RetainedCloneGrant};
 use serde_json::Value;
@@ -8,7 +8,7 @@ use serde_json::Value;
 fn corpus()->Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 fn wire()->Vec<u8>{let value:Value=serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🗺️surface/🕸️node-graph/📡️scene/🧪️tests/🧫️fixtures/📦️body/🔣️.json")).unwrap();value["bodyHex"].as_str().unwrap().as_bytes().chunks_exact(2).map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect()}
 fn limits()->SceneDecodeLimits{let value=corpus();SceneDecodeLimits{maximum_owned_bytes:value["maximumOwnedBytes"].as_u64().unwrap()as usize,maximum_depth:value["maximumDepth"].as_u64().unwrap()as usize,maximum_items:value["maximumItems"].as_u64().unwrap()as usize}}
-fn input(format:IntrinsicFormat)->Vec<u8>{if format==IntrinsicFormat::Body{return wire()}let value=semio_framework_value::DslValue::from(&serde_json::json!({"nodes":[{"id":corpus()["expectedNode"]}],"edges":[]}));let mut allow=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1<<22,&mut allow);semio_framework_pack::record::intrinsic::encode_document(&value,&Default::default(),&mut control).unwrap()}
+fn input(format:IntrinsicFormat)->Vec<u8>{if format==IntrinsicFormat::Body{return wire()}let value=semio_framework_value::DslValue::from(&serde_json::json!({"nodes":[{"id":corpus()["expectedNode"]}],"edges":[]}));let mut allow=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1<<22,&mut allow);pack::record::intrinsic::encode_document(&value,&Default::default(),&mut control).unwrap()}
 fn close(cursor:&mut SceneInputCursor){for _ in 0..1000000{if cursor.terminal_is_empty(){return}let copy=cursor.next_close_copy_byte_demand().max(3);let release=cursor.next_close_release_byte_demand().unwrap();let capacity=cursor.next_close_capacity_byte_demand(copy.max(release)).unwrap();let depth=cursor.next_close_depth_demand().unwrap();cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth}).unwrap();}panic!("receiving input owner did not close")}
 
 #[test]

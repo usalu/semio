@@ -86,8 +86,6 @@ pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels, window_id: Opti
             stepper_field(&format!("{ROOT}.fill-count"), &format!("{} · {}", labels.fill.as_str(), labels.count.as_str()), f64::from(runtime.fill_count), 1.0, "setFillCount", window_id),
             stepper_field(&format!("{ROOT}.suggestion-offset"), &format!("{} {}", labels.suggestion.as_str(), labels.offset.as_str()), runtime.suggestion_offset, 4.0, "setSuggestionOffset", window_id),
             stepper_field(&format!("{ROOT}.grid-factor"), &format!("{} {}", labels.grid.as_str(), labels.grid_factor.as_str()), runtime.grid_factor, 0.25, "setGridFactor", window_id),
-            // 🚧️🫂️ Placement tuning — the 2d twins of puzzle3d's contact-tolerance/proximity-radius
-            // pair. Both are real `ToolRunSettingsReads` config pointers a live fill run re-reads.
             stepper_field(&format!("{ROOT}.contact-tolerance"), labels.contact_tolerance.as_str(), runtime.contact_tolerance, 0.5, "setBrushPlacementContactTolerance", window_id),
             stepper_field(&format!("{ROOT}.overlap-budget"), labels.overlap_budget.as_str(), runtime.brush_placement_overlap_budget, 0.5, "setBrushPlacementOverlapBudget", window_id),
             stepper_field(&format!("{ROOT}.proximity-radius"), labels.proximity_radius.as_str(), runtime.proximity_radius, 1.0, "setProximityRadius", window_id),

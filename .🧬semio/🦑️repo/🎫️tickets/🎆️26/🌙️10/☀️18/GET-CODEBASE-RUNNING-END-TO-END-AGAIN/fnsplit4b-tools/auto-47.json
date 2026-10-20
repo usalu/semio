@@ -1,0 +1,103 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🧵️visual-job/🦀️.rs",
+ "function": "step_one",
+ "nth": 0,
+ "match_line": 205,
+ "types": {},
+ "ret": "Result<bool, Vec<u8>>",
+ "inline": true,
+ "arms": [
+  {
+   "line": 206,
+   "name": "visual_reserve_snapshot",
+   "doc": "🧱️ Runs the `reserve snapshot` stage of `step_one`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 233,
+   "name": "visual_read_progress_scalar",
+   "doc": "🪵️ Runs the `read progress scalar` stage of `step_one`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 277,
+   "name": "visual_build_region",
+   "doc": "🔩️ Runs the `build region` stage of `step_one`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 336,
+   "name": "visual_build_mesh_element",
+   "doc": "⚙️ Runs the `build mesh element` stage of `step_one`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 393,
+   "name": "visual_build_load_glyph",
+   "doc": "🧲️ Runs the `build load glyph` stage of `step_one`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 421,
+   "name": "visual_build_displacement_entry_and_more",
+   "doc": "🪛️ Runs the `build displacement entry` or `build residual entry` stage of `step_one`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 451,
+   "name": "visual_build_label_entry",
+   "doc": "🔧️ Runs the `build label entry` stage of `step_one`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 499,
+   "name": "visual_publish_lease",
+   "doc": "🔨️ Runs the `publish lease` stage of `step_one`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  }
+ ],
+ "method": {
+  "self_param": "&mut self",
+  "call": "self.{name}({args})"
+ }
+}

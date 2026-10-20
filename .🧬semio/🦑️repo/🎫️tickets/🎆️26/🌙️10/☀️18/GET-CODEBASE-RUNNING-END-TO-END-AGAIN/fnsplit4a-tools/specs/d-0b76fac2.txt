@@ -1,0 +1,3 @@
+6-119 🔶️assigns-one-auto-animate registerAssignsOneAutoAnimateTests
+163-248 🔸️keeps-consecutive-morph-slides registerKeepsConsecutiveMorphSlidesTests
+282-282 🟠️starts-new-morph-run registerStartsNewMorphRunTests

@@ -11,7 +11,7 @@ import { TreeItem } from "../../🍃️item/🟦️.tsx";
 import { TreeSection } from "../../🌱️section/🟦️.tsx";
 import { type TreeDataSection } from "../../📋️data/🟦️.ts";
 import { treeRowHeightPx } from "../../📏️row-alignment/🟦️.tsx";
-import type { TreeWindowRowExtent } from "../../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
+import type { TreeWindowRowExtent } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
 import { uiDataLabel } from "../../../🎗️UiLabel/🟦️.tsx";
 import rowExtentFixture from "../../../../🧪️tests/🧫️fixtures/🌳️tree-window-row-extent/🔣️.json";
 import disclosureCases from "../🧫️fixtures/♿️disclosure/🔣️.json";

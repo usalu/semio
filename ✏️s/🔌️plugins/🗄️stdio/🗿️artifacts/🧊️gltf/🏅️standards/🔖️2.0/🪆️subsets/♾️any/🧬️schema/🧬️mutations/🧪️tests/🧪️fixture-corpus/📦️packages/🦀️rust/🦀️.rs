@@ -4,7 +4,6 @@
 #![allow(long_running_const_eval)]
 
 extern crate semio_framework_os_kernel as protocol;
-#[cfg(test)]
 extern crate semio_framework_schema as framework_schema;
 
 #[path = "."]

@@ -1,0 +1,4 @@
+registerContextmenuAndMoreTests 3 phases, keep=-, final return=false
+5-8 buildCanvasPickMenuState
+10-10 registerContextMenuTests
+448-448 registerCanvasPickMenuTests

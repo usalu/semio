@@ -102,7 +102,6 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
     let b0 = beam.steel.width_m;
     let b_eff = part_1_1::effective_width_m(beam.span_m, b0, beam.spacing_m);
     let b_uncapped = part_1_1::uncapped_effective_width_m(beam.span_m, b0);
-
     let uls = part_en1990::uls_composite(&beam.actions, beam.span_m, &beam.support, beam.spacing_m, annex);
     let uls_c = part_en1990::uls_construction(&beam.actions, beam.span_m, &beam.support, beam.spacing_m, annex);
     let sls_char = part_en1990::sls_characteristic(&beam.actions, beam.span_m, &beam.support, beam.spacing_m, annex);
@@ -110,10 +109,18 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
     let sls_qp = part_en1990::sls_quasi_permanent(&beam.actions, beam.span_m, &beam.support, beam.spacing_m, annex);
     let m_ed = uls.m_nm;
     let v_ed = uls.v_n;
+    check_beam_effective_width_and_class(report, annex, f_y, &beam, b_eff, b_uncapped);
+    let v_l_ed = check_beam_flexure_and_shear_connection(report, annex, f_y, &beam, b_eff, &uls, &uls_c, m_ed);
+    check_beam_vertical_shear_and_stud_resistance(report, annex, f_y, &beam, b_eff, &uls, &uls_c, v_ed, v_l_ed);
+    check_beam_serviceability_stresses(report, annex, f_y, &beam, &sls_char);
+    check_beam_cracking_and_vibration(report, annex, &beam, b_eff, &sls_char, &sls_freq, &sls_qp);
+}
 
+/// 🧱️ Checks the effective width and the steel section class of a composite beam.
+fn check_beam_effective_width_and_class(report: &mut CheckReport, annex: AnnexChoice, f_y: f64, beam: &CompositeBeam, b_eff: f64, b_uncapped: f64) {
     let mut beff = CheckResult::assess(
         format!("en1994.5.4.1.2.beff.{}", beam.id), "DIN EN 1994-1-1",
-        ClauseId::new("EN 1994-1-1", "§5.4.1.2", "5.4.1.2"), beam_ref(&beam, "spacingM"),
+        ClauseId::new("EN 1994-1-1", "§5.4.1.2", "5.4.1.2"), beam_ref(beam, "spacingM"),
         lc("Effective width b_eff vs beam spacing", "Mitwirkende Breite b_eff gegen Trägerabstand"),
     )
     .utilization(Quantity::length_m(b_uncapped), Quantity::length_m(beam.spacing_m))
@@ -123,7 +130,7 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
         format!("Unbegrenzt 2·be1 = {b_uncapped:.3} m, Abstand = {:.3} m → b_eff = {b_eff:.3} m.", beam.spacing_m),
     ));
     if b_uncapped > beam.spacing_m {
-        beff = beff.remedy(Remedy::at_least(beam_ref(&beam, "spacingM"), Quantity::length_m(beam.spacing_m), Quantity::length_m(b_uncapped),
+        beff = beff.remedy(Remedy::at_least(beam_ref(beam, "spacingM"), Quantity::length_m(beam.spacing_m), Quantity::length_m(b_uncapped),
             lc(format!("Increase spacing to ≥ {b_uncapped:.3} m."), format!("Trägerabstand auf ≥ {b_uncapped:.3} m erhöhen."))));
     }
     report.push(beff.build());
@@ -132,7 +139,7 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
     let mut cls = CheckResult::assess(
         format!("en1994.5.5.class.{}", beam.id), "DIN EN 1994-1-1",
         ClauseId::new("EN 1994-1-1", "§5.5 / EN 1993-1-1 Table 5.2", "5.5"),
-        beam_ref(&beam, "steel.twM"),
+        beam_ref(beam, "steel.twM"),
         lc("Steel section classification", "Querschnittsklasse Stahlprofil"),
     )
     .utilization(Quantity::new(QuantityKind::Dimensionless, class as f64), Quantity::new(QuantityKind::Dimensionless, 3.0))
@@ -149,30 +156,43 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
                 .collect();
             if !clearing.is_empty() {
                 cls = cls.remedy(Remedy::one_of(
-                    beam_ref(&beam, "steel.designation"),
+                    beam_ref(beam, "steel.designation"),
                     clearing,
                     lc("Select a catalogue section of class 1–3. Plate thickness is overwritten from the designation.", "Katalogquerschnitt der Klasse 1–3 wählen. Die Blechdicke wird aus der Bezeichnung überschrieben."),
                 ));
             }
         } else {
-            cls = cls.remedy(Remedy::at_least(beam_ref(&beam, "steel.twM"), Quantity::length_m(beam.steel.tw_m), Quantity::length_m(beam.steel.tw_m * 1.2),
+            cls = cls.remedy(Remedy::at_least(beam_ref(beam, "steel.twM"), Quantity::length_m(beam.steel.tw_m), Quantity::length_m(beam.steel.tw_m * 1.2),
                 lc("Increase web/flange thickness to improve class.", "Steg-/Flanschdicke erhöhen, um die Klasse zu verbessern.")));
         }
     }
     report.push(cls.build());
+}
 
+/// 🪵️ Checks the plastic flexure, the degree of shear connection and the longitudinal shear of a composite beam.
+#[allow(clippy::too_many_arguments, reason = "the extracted check keeps the composite beam values of its original function as explicit parameters")]
+fn check_beam_flexure_and_shear_connection(
+    report: &mut CheckReport,
+    annex: AnnexChoice,
+    f_y: f64,
+    beam: &CompositeBeam,
+    b_eff: f64,
+    uls: &part_en1990::DesignEffects,
+    uls_c: &part_en1990::DesignEffects,
+    m_ed: f64,
+) -> f64 {
     let m_pla = part_1_1::steel_mpl_from_plates_nm(&beam.steel, f_y, AnnexParams::for_annex(annex).gamma_m0)
         .max(part_1_1::steel_plastic_moment_nm(beam.steel.w_pl_y_m3, f_y, AnnexParams::for_annex(annex).gamma_m0));
-    let m_pl_rd = part_1_1::full_plastic_moment_nm(&beam, b_eff, f_y, annex);
-    let n_req = part_1_1::n_f_req(&beam, b_eff, f_y, annex);
-    let n_layout = part_1_1::studs_in_shear_span(&beam);
+    let m_pl_rd = part_1_1::full_plastic_moment_nm(beam, b_eff, f_y, annex);
+    let n_req = part_1_1::n_f_req(beam, b_eff, f_y, annex);
+    let n_layout = part_1_1::studs_in_shear_span(beam);
     let n_f = beam.studs.total_count.max(n_layout);
     let eta = part_1_1::shear_connection_degree(n_f, n_req);
     let m_rd = part_1_1::plastic_moment_partial_nm(m_pla, m_pl_rd, eta);
 
     let mut bending = CheckResult::assess(
         format!("en1994.6.2.1.3.mrd.{}", beam.id), "DIN EN 1994-1-1",
-        ClauseId::new("EN 1994-1-1", "§6.2.1.3", "6.2.1.3"), beam_ref(&beam, "actions"),
+        ClauseId::new("EN 1994-1-1", "§6.2.1.3", "6.2.1.3"), beam_ref(beam, "actions"),
         lc("Composite plastic bending resistance", "Plastische Verbund-Biegetragfähigkeit"),
     )
     .utilization(Quantity::new(QuantityKind::Moment, m_ed), Quantity::new(QuantityKind::Moment, m_rd))
@@ -190,10 +210,10 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
                     format!("actions[id={}].qAreaPa", a.id)
                 } else { "spanM".into() };
                 let q_cur = beam.actions.iter().find(|a| a.q_area_pa.abs() > 1e-9).map(|a| a.q_area_pa.abs()).unwrap_or(2.0e3);
-                Remedy::at_most(beam_ref(&beam, &q_leaf), Quantity::new(QuantityKind::Dimensionless, q_cur), Quantity::new(QuantityKind::Dimensionless, q_cur * m_rd / m_ed.max(1.0) * 0.95),
+                Remedy::at_most(beam_ref(beam, &q_leaf), Quantity::new(QuantityKind::Dimensionless, q_cur), Quantity::new(QuantityKind::Dimensionless, q_cur * m_rd / m_ed.max(1.0) * 0.95),
                 lc("Reduce imposed floor load.", "Nutzlast reduzieren."))
             })
-            .remedy(Remedy::at_least(beam_ref(&beam, "slabThicknessM"), Quantity::length_m(beam.slab_thickness_m), Quantity::length_m((beam.slab_thickness_m * m_ed / m_rd.max(1.0)).min(0.30)),
+            .remedy(Remedy::at_least(beam_ref(beam, "slabThicknessM"), Quantity::length_m(beam.slab_thickness_m), Quantity::length_m((beam.slab_thickness_m * m_ed / m_rd.max(1.0)).min(0.30)),
                 lc("Increase slab thickness.", "Plattendicke erhöhen.")));
         let clearing: Vec<String> = SteelSection::heavier_heb_options(&beam.steel.designation)
             .into_iter()
@@ -207,7 +227,7 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
             .collect();
         let heavier = if clearing.is_empty() { SteelSection::heavier_heb_options(&beam.steel.designation) } else { clearing };
         if !heavier.is_empty() {
-            bending = bending.remedy(Remedy::one_of(beam_ref(&beam, "steel.designation"), heavier,
+            bending = bending.remedy(Remedy::one_of(beam_ref(beam, "steel.designation"), heavier,
                 lc("Select a heavier steel section. The first option covers M_Ed when a catalogue section can.", "Schwereren Stahlquerschnitt wählen. Die erste Option deckt M_Ed, wenn ein Katalogquerschnitt das kann.")));
         }
     }
@@ -216,7 +236,7 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
     let m_c = uls_c.m_nm;
     let mut cst = CheckResult::assess(
         format!("en1994.6.2.1.construction.{}", beam.id), "DIN EN 1994-1-1",
-        ClauseId::new("EN 1994-1-1", "§6.2.1 / §9.3", "6.2.1"), beam_ref(&beam, "actions"),
+        ClauseId::new("EN 1994-1-1", "§6.2.1 / §9.3", "6.2.1"), beam_ref(beam, "actions"),
         lc("Construction-stage steel bending", "Biegung Stahl im Bauzustand"),
     )
     .utilization(Quantity::new(QuantityKind::Moment, m_c), Quantity::new(QuantityKind::Moment, m_pla))
@@ -226,15 +246,15 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
         format!("Herstellung {}: M_Ed,c = {:.1} kNm ({}), M_pl,a,Rd = {:.1} kNm.", uls_c.label_de, m_c / 1e3, beam.construction, m_pla / 1e3),
     ));
     if m_c > m_pla {
-        cst = cst.remedy(Remedy::at_most(beam_ref(&beam, "actions[id=Q-constr].qAreaPa"), Quantity::new(QuantityKind::Dimensionless, 1.0e3), Quantity::new(QuantityKind::Dimensionless, 1.0e3 * m_pla / m_c.max(1.0)),
+        cst = cst.remedy(Remedy::at_most(beam_ref(beam, "actions[id=Q-constr].qAreaPa"), Quantity::new(QuantityKind::Dimensionless, 1.0e3), Quantity::new(QuantityKind::Dimensionless, 1.0e3 * m_pla / m_c.max(1.0)),
             lc("Reduce construction load.", "Belastung im Bauzustand reduzieren.")));
     }
     report.push(cst.build());
 
-    let (s_min, s_max) = part_1_1::stud_spacing_limits_m(&beam);
+    let (s_min, s_max) = part_1_1::stud_spacing_limits_m(beam);
     let mut ssp = CheckResult::assess(
         format!("en1994.6.6.5.5.spacing.{}", beam.id), "DIN EN 1994-1-1",
-        ClauseId::new("EN 1994-1-1", "§6.6.5.5", "6.6.5.5"), beam_ref(&beam, "studs.spacingM"),
+        ClauseId::new("EN 1994-1-1", "§6.6.5.5", "6.6.5.5"), beam_ref(beam, "studs.spacingM"),
         lc("Stud longitudinal spacing limits", "Grenzwerte Bolzenlängsabstand"),
     )
     .utilization(Quantity::length_m(beam.studs.spacing_m), Quantity::length_m(s_max))
@@ -244,12 +264,12 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
         format!("s = {:.0} mm; Grenzen {:.0}–{:.0} mm; Anordnung n_f = {n_layout} (deklariert {}).", beam.studs.spacing_m * 1000.0, s_min * 1000.0, s_max * 1000.0, beam.studs.total_count),
     ));
     if beam.studs.spacing_m > s_max || beam.studs.spacing_m < s_min {
-        ssp = ssp.remedy(Remedy::at_most(beam_ref(&beam, "studs.spacingM"), Quantity::length_m(beam.studs.spacing_m), Quantity::length_m(s_max.min(beam.studs.spacing_m.max(s_min))),
+        ssp = ssp.remedy(Remedy::at_most(beam_ref(beam, "studs.spacingM"), Quantity::length_m(beam.studs.spacing_m), Quantity::length_m(s_max.min(beam.studs.spacing_m.max(s_min))),
             lc(format!("Set stud spacing within {:.0}–{:.0} mm.", s_min * 1000.0, s_max * 1000.0), format!("Bolzenabstand auf {:.0}–{:.0} mm einstellen.", s_min * 1000.0, s_max * 1000.0))));
     }
     report.push(ssp.build());
 
-    let p_rd = part_1_1::connector_resistance_n(&beam, annex);
+    let p_rd = part_1_1::connector_resistance_n(beam, annex);
     let n_cf = {
         let p = AnnexParams::for_annex(annex);
         let n_a = beam.steel.a_m2 * f_y / p.gamma_m0;
@@ -261,7 +281,7 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
     let v_ed_stud = v_l_ed / n_f.max(1) as f64;
     let mut stud = CheckResult::assess(
         format!("en1994.6.6.3.1.prd.{}", beam.id), "DIN EN 1994-1-1",
-        ClauseId::new("EN 1994-1-1", "§6.6.3.1", "6.6.3.1"), beam_ref(&beam, "studs.diameterM"),
+        ClauseId::new("EN 1994-1-1", "§6.6.3.1", "6.6.3.1"), beam_ref(beam, "studs.diameterM"),
         lc("Headed stud resistance P_Rd", "Tragfähigkeit Kopfbolzen P_Rd"),
     )
     .utilization(Quantity::new(QuantityKind::Force, v_ed_stud), Quantity::new(QuantityKind::Force, p_rd))
@@ -272,9 +292,9 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
     ));
     if v_ed_stud > p_rd {
         let n_need = ((v_l_ed / p_rd).ceil() as u32).max(n_f + 1);
-        stud = stud.remedy(Remedy::at_least(beam_ref(&beam, "studs.totalCount"), Quantity::new(QuantityKind::Dimensionless, beam.studs.total_count as f64), Quantity::new(QuantityKind::Dimensionless, n_need as f64),
+        stud = stud.remedy(Remedy::at_least(beam_ref(beam, "studs.totalCount"), Quantity::new(QuantityKind::Dimensionless, beam.studs.total_count as f64), Quantity::new(QuantityKind::Dimensionless, n_need as f64),
             lc(format!("Increase stud count to ≥ {n_need}."), format!("Bolzenanzahl auf ≥ {n_need} erhöhen."))));
-        stud = stud.remedy(Remedy::at_most(beam_ref(&beam, "studs.spacingM"), Quantity::length_m(beam.studs.spacing_m), Quantity::length_m((beam.span_m / 2.0) / (n_need as f64 / beam.studs.count_per_rib.max(1) as f64).max(1.0)),
+        stud = stud.remedy(Remedy::at_most(beam_ref(beam, "studs.spacingM"), Quantity::length_m(beam.studs.spacing_m), Quantity::length_m((beam.span_m / 2.0) / (n_need as f64 / beam.studs.count_per_rib.max(1) as f64).max(1.0)),
             lc("Tighten stud spacing.", "Bolzenabstand verringern.")));
     }
     report.push(stud.build());
@@ -282,7 +302,7 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
     let eta_min = part_1_1::min_shear_connection_degree(beam.span_m, f_y);
     let mut eta_chk = CheckResult::assess(
         format!("en1994.6.6.1.2.etamin.{}", beam.id), "DIN EN 1994-1-1",
-        ClauseId::new("EN 1994-1-1", "§6.6.1.2", "6.6.1.2"), beam_ref(&beam, "studs.spacingM"),
+        ClauseId::new("EN 1994-1-1", "§6.6.1.2", "6.6.1.2"), beam_ref(beam, "studs.spacingM"),
         lc("Minimum degree of shear connection", "Mindestverdübelungsgrad"),
     )
     .minimum(Quantity::new(QuantityKind::Dimensionless, eta), Quantity::new(QuantityKind::Dimensionless, eta_min))
@@ -290,16 +310,31 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
     .explanation(lc(format!("η = {eta:.3} (n_f={n_f}), η_min = {eta_min:.3}."), format!("η = {eta:.3} (n_f={n_f}), η_min = {eta_min:.3}. (DE-NA)")));
     if eta < eta_min {
         let n_need = ((eta_min * n_req as f64).ceil() as u32).max(n_f + 1);
-        eta_chk = eta_chk.remedy(Remedy::at_least(beam_ref(&beam, "studs.totalCount"), Quantity::new(QuantityKind::Dimensionless, beam.studs.total_count as f64), Quantity::new(QuantityKind::Dimensionless, n_need as f64),
+        eta_chk = eta_chk.remedy(Remedy::at_least(beam_ref(beam, "studs.totalCount"), Quantity::new(QuantityKind::Dimensionless, beam.studs.total_count as f64), Quantity::new(QuantityKind::Dimensionless, n_need as f64),
             lc(format!("Provide ≥ {n_need} studs so η ≥ η_min."), format!("≥ {n_need} Bolzen vorsehen, damit η ≥ η_min."))));
     }
     report.push(eta_chk.build());
+    v_l_ed
+}
 
-    let v_pl = part_1_1::vertical_shear_resistance_n(&beam, f_y, annex);
+/// 🔩️ Checks the vertical shear and the stud resistance of a composite beam.
+#[allow(clippy::too_many_arguments, reason = "the extracted check keeps the composite beam values of its original function as explicit parameters")]
+fn check_beam_vertical_shear_and_stud_resistance(
+    report: &mut CheckReport,
+    annex: AnnexChoice,
+    f_y: f64,
+    beam: &CompositeBeam,
+    b_eff: f64,
+    uls: &part_en1990::DesignEffects,
+    uls_c: &part_en1990::DesignEffects,
+    v_ed: f64,
+    v_l_ed: f64,
+) {
+    let v_pl = part_1_1::vertical_shear_resistance_n(beam, f_y, annex);
     let sb_util = part_1_1::shear_buckling_util(&beam.steel, f_y);
     let mut vchk = CheckResult::assess(
         format!("en1994.6.2.2.vpl.{}", beam.id), "DIN EN 1994-1-1",
-        ClauseId::new("EN 1994-1-1", "§6.2.2", "6.2.2"), beam_ref(&beam, "steel.twM"),
+        ClauseId::new("EN 1994-1-1", "§6.2.2", "6.2.2"), beam_ref(beam, "steel.twM"),
         lc("Vertical shear resistance", "Querkrafttragfähigkeit"),
     )
     .utilization(Quantity::new(QuantityKind::Force, v_ed), Quantity::new(QuantityKind::Force, v_pl))
@@ -323,7 +358,7 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
                 .collect();
             if !clearing.is_empty() {
                 vchk = vchk.remedy(Remedy::one_of(
-                    beam_ref(&beam, "steel.designation"),
+                    beam_ref(beam, "steel.designation"),
                     clearing,
                     lc("Select a catalogue section whose web covers V_Ed. t_w is taken from the designation.", "Katalogquerschnitt wählen, dessen Steg V_Ed deckt. t_w kommt aus der Bezeichnung."),
                 ));
@@ -339,7 +374,7 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
                     let q_cur = beam.actions.iter().find(|a| a.q_area_pa.abs() > 1e-9).map(|a| a.q_area_pa.abs()).unwrap_or(0.0);
                     let q_req = q_cur * (v_pl / v_ed.max(1.0)) * 0.98;
                     vchk = vchk.remedy(Remedy::at_most(
-                        beam_ref(&beam, &q_leaf),
+                        beam_ref(beam, &q_leaf),
                         Quantity::new(QuantityKind::Dimensionless, q_cur),
                         Quantity::new(QuantityKind::Dimensionless, q_req),
                         lc("Reduce the area load so V_Ed ≤ V_pl,Rd.", "Flächenlast senken, damit V_Ed ≤ V_pl,Rd."),
@@ -349,23 +384,23 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
                 let hw_over_tw = beam.steel.h_w_m() / beam.steel.tw_m.max(1e-6);
                 let fy_req = 235e6 / (hw_over_tw / 72.0).powi(2) * 0.98;
                 vchk = vchk.remedy(Remedy::at_most(
-                    SubjectRef::new(beam.id.clone(), "steelFYPa", beam_label(&beam)),
+                    SubjectRef::new(beam.id.clone(), "steelFYPa", beam_label(beam)),
                     Quantity::new(QuantityKind::Dimensionless, f_y),
                     Quantity::new(QuantityKind::Dimensionless, fy_req.min(f_y)),
                     lc("Lower f_y so h_w/t_w stays inside the shear-buckling limit.", "f_y senken, damit h_w/t_w innerhalb der Schubbeulgrenze bleibt."),
                 ));
             }
         } else {
-            vchk = vchk.remedy(Remedy::at_least(beam_ref(&beam, "steel.twM"), Quantity::length_m(beam.steel.tw_m), Quantity::length_m(beam.steel.tw_m * (v_ed / v_pl.max(1.0)).max(sb_util)),
+            vchk = vchk.remedy(Remedy::at_least(beam_ref(beam, "steel.twM"), Quantity::length_m(beam.steel.tw_m), Quantity::length_m(beam.steel.tw_m * (v_ed / v_pl.max(1.0)).max(sb_util)),
                 lc("Increase web thickness t_w.", "Stegdicke t_w erhöhen.")));
         }
     }
     report.push(vchk.build());
 
-    let v_l_rd = part_1_1::longitudinal_shear_resistance_n(&beam, b_eff, annex);
+    let v_l_rd = part_1_1::longitudinal_shear_resistance_n(beam, b_eff, annex);
     let mut vl = CheckResult::assess(
         format!("en1994.6.6.6.vlrd.{}", beam.id), "DIN EN 1994-1-1",
-        ClauseId::new("EN 1994-1-1", "§6.6.6", "6.6.6"), beam_ref(&beam, "transverseAsM2PerM"),
+        ClauseId::new("EN 1994-1-1", "§6.6.6", "6.6.6"), beam_ref(beam, "transverseAsM2PerM"),
         lc("Longitudinal shear in slab", "Längsschub in der Platte"),
     )
     .utilization(Quantity::new(QuantityKind::Force, v_l_ed), Quantity::new(QuantityKind::Force, v_l_rd))
@@ -376,12 +411,12 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
         let f_yd = 500e6 / p.gamma_s;
         let as_steel = v_l_ed / (f_yd * beam.span_m / 2.0).max(1e-12);
         let as_need = as_steel.max(beam.transverse_as_m2_per_m * v_l_ed / v_l_rd.max(1.0));
-        vl = vl.remedy(Remedy::at_least(beam_ref(&beam, "transverseAsM2PerM"), Quantity::new(QuantityKind::Area, beam.transverse_as_m2_per_m), Quantity::new(QuantityKind::Area, as_need),
+        vl = vl.remedy(Remedy::at_least(beam_ref(beam, "transverseAsM2PerM"), Quantity::new(QuantityKind::Area, beam.transverse_as_m2_per_m), Quantity::new(QuantityKind::Area, as_need),
             lc(format!("Increase transverse reinforcement to ≥ {:.0} mm²/m.", as_need * 1e6), format!("Querbewehrung auf ≥ {:.0} mm²/m erhöhen.", as_need * 1e6))));
     }
     report.push(vl.build());
 
-    let m_b = part_1_1::ltb_moment_resistance_nm(&beam, f_y, annex);
+    let m_b = part_1_1::ltb_moment_resistance_nm(beam, f_y, annex);
     let construction_applies = beam.construction == "unpropped" && uls_c.m_nm > 1.0;
     let hogging_applies = uls.m_hog_nm > 1.0;
     if construction_applies || hogging_applies {
@@ -392,7 +427,7 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
         };
         let mut ltb = CheckResult::assess(
             format!("en1994.6.4.ltb.{}", beam.id), "DIN EN 1994-1-1",
-            ClauseId::new("EN 1994-1-1", "§6.4", "6.4"), beam_ref(&beam, leaf),
+            ClauseId::new("EN 1994-1-1", "§6.4", "6.4"), beam_ref(beam, leaf),
             lc("Lateral-torsional buckling", "Biegedrillknicken"),
         )
         .utilization(Quantity::new(QuantityKind::Moment, m_ltb_ed), Quantity::new(QuantityKind::Moment, m_b))
@@ -420,7 +455,7 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
                 }
                 let l_req = lo;
                 if l_req + 1e-9 < beam.ltb_length_m {
-                    ltb = ltb.remedy(Remedy::at_most(beam_ref(&beam, "ltbLengthM"), Quantity::length_m(beam.ltb_length_m), Quantity::length_m(l_req),
+                    ltb = ltb.remedy(Remedy::at_most(beam_ref(beam, "ltbLengthM"), Quantity::length_m(beam.ltb_length_m), Quantity::length_m(l_req),
                         lc("Reduce LTB length (add restraints).", "Biegedrillknicklänge verkürzen.")));
                 }
             } else {
@@ -434,7 +469,7 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
                     })
                     .collect();
                 if !clearing.is_empty() {
-                    ltb = ltb.remedy(Remedy::one_of(beam_ref(&beam, "steel.designation"), clearing,
+                    ltb = ltb.remedy(Remedy::one_of(beam_ref(beam, "steel.designation"), clearing,
                         lc("Select a heavier steel section so M_b,Rd ≥ M_Ed.", "Schwereren Stahlquerschnitt wählen, damit M_b,Rd ≥ M_Ed.")));
                 } else if let Some(a) = beam.actions.iter().find(|a| a.kind == "imposed" && a.q_area_pa.abs() > 1e-9)
                     .or_else(|| beam.actions.iter().find(|a| a.q_area_pa.abs() > 1e-9))
@@ -442,7 +477,7 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
                     let q_leaf = format!("actions[id={}].qAreaPa", a.id);
                     let q_cur = a.q_area_pa.abs();
                     let q_req = q_cur * (m_b / m_ltb_ed.max(1.0)) * 0.98;
-                    ltb = ltb.remedy(Remedy::at_most(beam_ref(&beam, &q_leaf), Quantity::new(QuantityKind::Dimensionless, q_cur), Quantity::new(QuantityKind::Dimensionless, q_req),
+                    ltb = ltb.remedy(Remedy::at_most(beam_ref(beam, &q_leaf), Quantity::new(QuantityKind::Dimensionless, q_cur), Quantity::new(QuantityKind::Dimensionless, q_req),
                         lc("Reduce governing area load so LTB M_Ed ≤ M_b,Rd.", "Maßgebende Flächenlast absenken, damit LTB M_Ed ≤ M_b,Rd.")));
                 }
             }
@@ -451,18 +486,21 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
     } else {
         report.push(CheckResult::assess(
             format!("en1994.6.4.ltb.{}", beam.id), "DIN EN 1994-1-1",
-            ClauseId::new("EN 1994-1-1", "§6.4", "6.4"), beam_ref(&beam, "construction"),
+            ClauseId::new("EN 1994-1-1", "§6.4", "6.4"), beam_ref(beam, "construction"),
             lc("Lateral-torsional buckling", "Biegedrillknicken"),
         ).not_applicable(lc("§6.4 not applicable: propped construction without hogging demand.", "§6.4 nicht anwendbar: mit Hilfsstützen ohne Stützmoment."))
         .annex(annex).build());
     }
+}
 
+/// ⚙️ Checks the elastic stresses and the deflections of a composite beam.
+fn check_beam_serviceability_stresses(report: &mut CheckReport, annex: AnnexChoice, f_y: f64, beam: &CompositeBeam, sls_char: &part_en1990::DesignEffects) {
     let w_el = (beam.steel.i_y_m4 / (beam.steel.height_m / 2.0).max(1e-6)).max(1e-9);
     let sigma_a = sls_char.m_nm.abs() / w_el;
     let sigma_lim = 0.9 * f_y;
     let mut stress = CheckResult::assess(
         format!("en1994.7.2.2.stress.{}", beam.id), "DIN EN 1994-1-1",
-        ClauseId::new("EN 1994-1-1", "§7.2.2", "7.2.2"), beam_ref(&beam, "actions"),
+        ClauseId::new("EN 1994-1-1", "§7.2.2", "7.2.2"), beam_ref(beam, "actions"),
         lc("SLS characteristic steel stress", "GZG charakteristisch Stahlspannung"),
     )
     .utilization(Quantity::new(QuantityKind::Pressure, sigma_a), Quantity::new(QuantityKind::Pressure, sigma_lim))
@@ -483,7 +521,7 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
         if q_owned.ends_with("qAreaPa") {
             let q_cur = beam.actions.iter().find(|a| a.q_area_pa.abs() > 1e-9).map(|a| a.q_area_pa.abs()).unwrap_or(0.0);
             stress = stress.remedy(Remedy::at_most(
-                beam_ref(&beam, &q_owned),
+                beam_ref(beam, &q_owned),
                 Quantity::new(QuantityKind::Dimensionless, q_cur),
                 Quantity::new(QuantityKind::Dimensionless, q_cur * scale),
                 lc("Reduce the area load so σ_a ≤ 0.9 f_y.", "Flächenlast senken, damit σ_a ≤ 0.9 f_y."),
@@ -491,7 +529,7 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
         } else {
             let span_req = beam.span_m * scale.sqrt();
             stress = stress.remedy(Remedy::at_most(
-                beam_ref(&beam, "spanM"),
+                beam_ref(beam, "spanM"),
                 Quantity::length_m(beam.span_m),
                 Quantity::length_m(span_req),
                 lc("Shorten the span so σ_a ≤ 0.9 f_y.", "Spannweite verkürzen, damit σ_a ≤ 0.9 f_y."),
@@ -499,7 +537,18 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
         }
     }
     report.push(stress.build());
+}
 
+/// 🧲️ Checks the cracking and the vibration of a composite beam.
+fn check_beam_cracking_and_vibration(
+    report: &mut CheckReport,
+    annex: AnnexChoice,
+    beam: &CompositeBeam,
+    b_eff: f64,
+    sls_char: &part_en1990::DesignEffects,
+    sls_freq: &part_en1990::DesignEffects,
+    sls_qp: &part_en1990::DesignEffects,
+) {
     let n_l = part_1_1::modular_ratio_long_term(beam.concrete_e_cm_pa, 2.0);
     let i_eff = beam.steel.i_y_m4 * (1.0 + 0.35 * n_l / 10.0);
     let delta = 5.0 * sls_freq.m_nm * beam.span_m.powi(2) / (48.0 * 210e9 * i_eff.max(1e-12));
@@ -507,7 +556,7 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
     let lim_div = part_1_1::deflection_span_divisor(annex);
     let mut sls = CheckResult::assess(
         format!("en1994.7.3.1.deflection.{}", beam.id), "DIN EN 1994-1-1",
-        ClauseId::new("EN 1994-1-1", "§7.3.1", "7.3.1"), beam_ref(&beam, "actions"),
+        ClauseId::new("EN 1994-1-1", "§7.3.1", "7.3.1"), beam_ref(beam, "actions"),
         lc("SLS frequent deflection", "Durchbiegung GZG häufig"),
     )
     .utilization(Quantity::length_m(delta), Quantity::length_m(delta_lim))
@@ -537,7 +586,7 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
     if delta > delta_lim {
         let ratio = (delta_lim / delta.max(1e-12)).clamp(0.0, 1.0);
         let span_req = beam.span_m * ratio.powf(1.0 / 3.0) * 0.98;
-        sls = sls.remedy(Remedy::at_most(beam_ref(&beam, "spanM"), Quantity::length_m(beam.span_m), Quantity::length_m(span_req),
+        sls = sls.remedy(Remedy::at_most(beam_ref(beam, "spanM"), Quantity::length_m(beam.span_m), Quantity::length_m(span_req),
             lc(
                 format!("Reduce span so frequent deflection ≤ L/{lim_div:.0}."),
                 format!("Spannweite reduzieren, damit δ häufig ≤ L/{lim_div:.0}."),
@@ -548,7 +597,7 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
             let q_leaf = format!("actions[id={}].qAreaPa", a.id);
             let q_cur = a.q_area_pa.abs();
             let q_req = q_cur * ratio * 0.5;
-            sls = sls.remedy(Remedy::at_most(beam_ref(&beam, &q_leaf), Quantity::new(QuantityKind::Dimensionless, q_cur), Quantity::new(QuantityKind::Dimensionless, q_req),
+            sls = sls.remedy(Remedy::at_most(beam_ref(beam, &q_leaf), Quantity::new(QuantityKind::Dimensionless, q_cur), Quantity::new(QuantityKind::Dimensionless, q_req),
                 lc(
                     format!("Reduce imposed load so frequent deflection ≤ L/{lim_div:.0}."),
                     format!("Nutzlast reduzieren, damit δ häufig ≤ L/{lim_div:.0}."),
@@ -557,7 +606,7 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
     }
     report.push(sls.build());
 
-    let as_min = part_1_1::as_min_hogging_m2_per_m(&beam, b_eff);
+    let as_min = part_1_1::as_min_hogging_m2_per_m(beam, b_eff);
     let s_max_bar = part_1_1::max_bar_spacing_m(beam.wk_limit_m.max(0.0003));
     let qp_hog = sls_qp.m_hog_nm.abs().max(sls_qp.m_nm.abs() * 0.05);
     let n_l_fac = 0.9 + 0.1 * (n_l / 10.0).min(2.0);
@@ -568,7 +617,7 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
     let crack_util = (as_limit / beam.as_hogging_m2_per_m.max(1e-12)).max(beam.bar_spacing_m / s_limit.max(1e-12));
     let mut crack = CheckResult::assess(
         format!("en1994.7.4.crack.{}", beam.id), "DIN EN 1994-1-1",
-        ClauseId::new("EN 1994-1-1", "§7.4 / EN 1992-1-1 §7.3", "7.4"), beam_ref(&beam, "asHoggingM2PerM"),
+        ClauseId::new("EN 1994-1-1", "§7.4 / EN 1992-1-1 §7.3", "7.4"), beam_ref(beam, "asHoggingM2PerM"),
         lc("SLS quasi-permanent crack control", "GZG quasi-ständig Rissbreitenbegrenzung"),
     )
     .utilization(Quantity::new(QuantityKind::Dimensionless, crack_util), Quantity::new(QuantityKind::Dimensionless, 1.0))
@@ -580,12 +629,12 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
     if beam.as_hogging_m2_per_m < as_min || crack_util > 1.0 {
         let as_req = as_limit.max(as_min);
         if beam.as_hogging_m2_per_m < as_req {
-            crack = crack.remedy(Remedy::at_least(beam_ref(&beam, "asHoggingM2PerM"), Quantity::new(QuantityKind::Area, beam.as_hogging_m2_per_m), Quantity::new(QuantityKind::Area, as_req),
+            crack = crack.remedy(Remedy::at_least(beam_ref(beam, "asHoggingM2PerM"), Quantity::new(QuantityKind::Area, beam.as_hogging_m2_per_m), Quantity::new(QuantityKind::Area, as_req),
                 lc(format!("Provide ≥ {:.0} mm²/m hogging reinforcement.", as_req * 1e6), format!("≥ {:.0} mm²/m Stützbewehrung vorsehen.", as_req * 1e6))));
         }
         let s_req = s_limit * 0.98;
         if beam.bar_spacing_m > s_req {
-            crack = crack.remedy(Remedy::at_most(beam_ref(&beam, "barSpacingM"), Quantity::length_m(beam.bar_spacing_m), Quantity::length_m(s_req),
+            crack = crack.remedy(Remedy::at_most(beam_ref(beam, "barSpacingM"), Quantity::length_m(beam.bar_spacing_m), Quantity::length_m(s_req),
                 lc(format!("Reduce bar spacing to ≤ {:.0} mm.", s_req * 1000.0), format!("Stababstand auf ≤ {:.0} mm verringern.", s_req * 1000.0))));
         }
     }

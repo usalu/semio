@@ -1,0 +1,37 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📦️crate-tree/🪝️test-hoisting/🟦️.ts",
+ "describeLine": 14,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of the artifact crate carve suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️rebases-include-arguments-items",
+   "doc": "/** 🔶️ The rebases include arguments items tests of the artifact crate carve suite. */",
+   "name": "registerRebasesIncludeArgumentsItemsTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the rebases include arguments items tests of the artifact crate carve suite.",
+   "from": 15,
+   "to": 180
+  },
+  {
+   "dir": "🔸️leaves-fixtures-feed-literal",
+   "doc": "/** 🔸️ The leaves fixtures feed literal tests of the artifact crate carve suite. */",
+   "name": "registerLeavesFixturesFeedLiteralTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the leaves fixtures feed literal tests of the artifact crate carve suite.",
+   "from": 190,
+   "to": 332
+  },
+  {
+   "dir": "🟠️inlines-root-file-modules",
+   "doc": "/** 🟠️ The inlines root file modules tests of the artifact crate carve suite. */",
+   "name": "registerInlinesRootFileModulesTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the inlines root file modules tests of the artifact crate carve suite.",
+   "from": 342,
+   "to": 369
+  }
+ ]
+}

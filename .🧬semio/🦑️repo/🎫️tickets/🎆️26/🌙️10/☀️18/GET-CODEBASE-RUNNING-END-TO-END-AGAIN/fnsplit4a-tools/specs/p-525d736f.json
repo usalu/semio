@@ -1,0 +1,40 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🧭️wasm-graph-surface/🟦️.tsx",
+ "function": "WasmGraphSurface",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟠️shared",
+  "doc": "/** 🟠️ The shared declarations of WasmGraphSurface. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️window-instance-id",
+   "doc": "/** 🔶️ The window instance id phase of WasmGraphSurface. */",
+   "phases": [
+    {
+     "name": "useWindowInstanceIdState",
+     "emoji": "🔷",
+     "doc": "Builds windowInstanceId, sessionRef, labelCanvasRef, containerRef of WasmGraphSurface.",
+     "from": 84,
+     "to": 222
+    }
+   ]
+  },
+  {
+   "dir": "🔸️dispatch-graph-edits",
+   "doc": "/** 🔸️ The dispatch graph edits phase of WasmGraphSurface. */",
+   "phases": [
+    {
+     "name": "useDispatchGraphEditsState",
+     "emoji": "🔹",
+     "doc": "Builds dispatchGraphEdits, pickInteraction of WasmGraphSurface.",
+     "from": 236,
+     "to": 272
+    }
+   ]
+  }
+ ]
+}

@@ -7,11 +7,12 @@ import { readBuildMode } from "../../../../../../🔨️modules/🏃️process/�
 /** 🏃️ Runs the `RepoScript` command under the caller's roots and invocation. */
 export async function runRepoScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments:string[]): Promise<void> {
   await runDeclaredRustBuildV1(context.repoRoot,"@semio-tech/repo-cli-rs",context.root,context.invocation,[],"build-cli");
-  process.exitCode=await runRepositoryPublishedCargoExecutableV1(join(context.root,"Cargo.toml"),"semio-repo"+(process.platform==="win32"?".exe":""),segments,context.repoRoot,readBuildMode(process.env.SEMIO_BUILD_MODE),context.invocation,scriptCompilerAdmissionControlV1(context.invocation,"cargo:published-execution",0));
+  process.exitCode=await runRepositoryPublishedCargoExecutableV1(join(context.root,"Cargo.toml"),"repo"+(process.platform==="win32"?".exe":""),segments,context.repoRoot,readBuildMode(process.env.SEMIO_BUILD_MODE),context.invocation,scriptCompilerAdmissionControlV1(context.invocation,"cargo:published-execution",0));
 }
 
 /** 🏃️ Runs the `McpScript` command under the caller's roots and invocation. */
 export async function runMcpScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments:string[]): Promise<void> {
+  if(segments.length)throw Error("Expected repo mcp without arguments; select SEMIO_REPO_MCP_CLIENT in the environment");
   await runDeclaredRustBuildV1(context.repoRoot,"@semio-tech/repo-cli-rs",context.root,context.invocation,[],"build-cli");
-  process.exitCode=await runRepositoryPublishedCargoExecutableV1(join(context.root,"Cargo.toml"),"semio-repo"+(process.platform==="win32"?".exe":""),["mcp",...segments],context.repoRoot,readBuildMode(process.env.SEMIO_BUILD_MODE),context.invocation,scriptCompilerAdmissionControlV1(context.invocation,"cargo:published-execution",0));
+  process.exitCode=await runRepositoryPublishedCargoExecutableV1(join(context.root,"Cargo.toml"),"repo"+(process.platform==="win32"?".exe":""),["mcp",...segments],context.repoRoot,readBuildMode(process.env.SEMIO_BUILD_MODE),context.invocation,scriptCompilerAdmissionControlV1(context.invocation,"cargo:published-execution",0));
 }

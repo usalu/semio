@@ -19,6 +19,7 @@
     "verify-fem-pcg-publication-owners": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify fem-pcg-publication-owners",
@@ -36,6 +37,7 @@
     "verify-fem-assembly-physical-owners": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify fem-assembly-physical-owners",
@@ -53,6 +55,7 @@
     "verify-fem-numerical-page-owners": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify fem-numerical-page-owners",
@@ -70,6 +73,7 @@
     "verify-fem-mesh-preparation-owners": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify fem-mesh-preparation-owners",
@@ -87,6 +91,7 @@
     "verify-fem-scalar-owners-native": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify fem-scalar-owners-native",
@@ -104,6 +109,7 @@
     "verify-fem2d-window-config-contract": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify fem2d-window-config-contract",
@@ -121,6 +127,7 @@
     "verify-fem3d-window-config-contract": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify fem3d-window-config-contract",
@@ -155,6 +162,7 @@
     "verify-fem-numerical-microcursor": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify fem-numerical-microcursor",

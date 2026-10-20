@@ -1,0 +1,37 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🐾️pets/🔨️modules/🎪️stage/🧪️tests/🦾️body-and-gear/🟦️.ts",
+ "describeLine": 218,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of the gear of $name: walls, ladders, ropes and the edges of the stage suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️climbs-wall-spot-rests",
+   "doc": "/** 🔶️ The climbs wall spot rests tests of the gear of $name: walls, ladders, ropes and the edges of the stage suite. */",
+   "name": "registerClimbsWallSpotRestsTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the climbs wall spot rests tests of the gear of $name: walls, ladders, ropes and the edges of the stage suite.",
+   "from": 219,
+   "to": 370
+  },
+  {
+   "dir": "🔸️fires-grappling-hook-edge",
+   "doc": "/** 🔸️ The fires grappling hook edge tests of the gear of $name: walls, ladders, ropes and the edges of the stage suite. */",
+   "name": "registerFiresGrapplingHookEdgeTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the fires grappling hook edge tests of the gear of $name: walls, ladders, ropes and the edges of the stage suite.",
+   "from": 385,
+   "to": 496
+  },
+  {
+   "dir": "🟠️sets-out-nothing-time",
+   "doc": "/** 🟠️ The sets out nothing time tests of the gear of $name: walls, ladders, ropes and the edges of the stage suite. */",
+   "name": "registerSetsOutNothingTimeTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the sets out nothing time tests of the gear of $name: walls, ladders, ropes and the edges of the stage suite.",
+   "from": 546,
+   "to": 546
+  }
+ ]
+}

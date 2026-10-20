@@ -1,6 +1,7 @@
 //! ✉️ Drawing editor unit laws over the live envelope: wire framing, admission, load driving, recursive clone swap, cancellation and edit identifier bounds.
 
 use super::*;
+use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 
 fn drawing_envelope_wire() -> Vec<u8> {
     use pack::snapshot::ArtifactPack;

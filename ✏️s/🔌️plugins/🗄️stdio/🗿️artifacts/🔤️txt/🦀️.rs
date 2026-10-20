@@ -11,16 +11,7 @@ extern crate semio_framework_value_derive as value_derive;
 
 pub use semio_s_artifact_stdio_contract::{apply_mutation, apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
 
-use semio_framework_dispatch_macros::dyn_enum_close;
-
-use semio_framework_plugin::plugin_app_close_prelude::*;
-
-dyn_enum_close! {
-    pub enum TxtApps: PluginApp {
-        Editor(VcsArtifactApp<EditorApp<editor::txt::TxtEditor>>),
-        Viewer(VcsArtifactApp<ViewerApp<viewer::txt::TxtViewer>>),
-    }
-}
+pub use semio_s_artifact_stdio_txt_tests::TxtApps;
 
 pub use schema::diff::TxtDiff;
 pub use schema::mutations::TxtMutation;

@@ -28,6 +28,12 @@ semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-block-5d-diff = { workspace = true }
 semio-s-artifact-block-5d-model = { workspace = true }
+semio-s-artifact-block-5d-mut-part-kind = { workspace = true }
+semio-s-artifact-block-5d-mut-representations = { workspace = true }
+semio-s-artifact-block-5d-mut-grip-kinds = { workspace = true }
+semio-s-artifact-block-5d-mut-grips = { workspace = true }
+semio-s-artifact-block-5d-mut-meta = { workspace = true }
+semio-s-artifact-block-5d-mut-cameras = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

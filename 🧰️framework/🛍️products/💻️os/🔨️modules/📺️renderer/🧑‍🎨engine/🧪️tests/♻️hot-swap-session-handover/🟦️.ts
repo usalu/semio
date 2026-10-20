@@ -105,7 +105,7 @@ describe("♻️ a hot swap hands every window over to the successor instance", 
 
   test("the node-graph surface is keyed on its surfaceId alone — which is why the ordering, not a retry, is the fix", () => {
     const source = readModuleTreeSource(join(engineRoot, "🧱️elements", "🕸️NodeGraph", "🔌️flow-session-attach", "🟦️.ts"));
-    const unmount = source.indexOf("A retained surface host unmounts exactly once");
+    const unmount = source.indexOf("cancelFlowTasks(sessionRef.current);");
     expect(unmount).toBeGreaterThan(0);
     expect(source.slice(unmount, unmount + 900)).toContain(law.sourceScan.nodeGraphSurfaceEffectKey);
   });

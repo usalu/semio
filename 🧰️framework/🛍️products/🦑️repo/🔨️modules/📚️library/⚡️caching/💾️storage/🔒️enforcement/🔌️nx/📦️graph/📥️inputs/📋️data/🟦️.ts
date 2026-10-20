@@ -1,5 +1,5 @@
 import{types}from"node:util";
-import schema from"./🧬️schema/🔣️.json";
+import schema from"./🧬️schema/🔣️.json" with { type: "json" };
 const policy=Object.freeze({...schema.definitions.Policy.const});
 export type NxSourceHashPlansV1=Readonly<Record<string,readonly string[]>>;
 export type NxSourceHashEnvironmentsV1=Readonly<Record<string,Readonly<Record<string,string|undefined>>>>;

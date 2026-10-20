@@ -74,7 +74,7 @@ func uriPathDecodingAgreesAcrossImplementations(ctx *host.Context) (host.Outcome
 
 // region 🔖️Registration
 
-// Adapter is the registration entry point the generated host calls.
+// 🌉️Adapter is the registration entry point the generated host calls.
 func Adapter() *host.Adapter {
 	return host.NewAdapter("go").
 		Subject("flattening-agrees-across-implementations", flatteningAgreesAcrossImplementations).

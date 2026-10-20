@@ -6,6 +6,7 @@ use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)] use semio_framework_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};
 #[allow(unused_imports)] use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneStep},ValueError};
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor::image_job::*;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 fn close(work:&mut Work) {
     use semio_framework_job::InteractiveJobCloseStep;
     work.begin_close();

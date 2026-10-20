@@ -3,7 +3,8 @@
   "package": "semio-framework-pack-error",
   "dependencies": [
     "semio-framework-diagnostic",
-    "semio-framework-value"
+    "semio-framework-value",
+    "semio-framework-value-persistent"
   ],
   "variant": "ValueRefusal",
   "retiredVariant": "Schema",

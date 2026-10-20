@@ -1,0 +1,37 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🌍️world3d-picking-and-previews/🟦️.ts",
+ "describeLine": 14,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of the framework renderer hosts suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️raycasts-z-0-ground",
+   "doc": "/** 🔶️ The raycasts z 0 ground tests of the framework renderer hosts suite. */",
+   "name": "registerRaycastsZ0GroundTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the raycasts z 0 ground tests of the framework renderer hosts suite.",
+   "from": 15,
+   "to": 148
+  },
+  {
+   "dir": "🔸️shares-live-world-selection",
+   "doc": "/** 🔸️ The shares live world selection tests of the framework renderer hosts suite. */",
+   "name": "registerSharesLiveWorldSelectionTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the shares live world selection tests of the framework renderer hosts suite.",
+   "from": 176,
+   "to": 326
+  },
+  {
+   "dir": "🟠️canvas-2d-surface-colors",
+   "doc": "/** 🟠️ The canvas 2d surface colors tests of the framework renderer hosts suite. */",
+   "name": "registerCanvas2dSurfaceColorsTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the canvas 2d surface colors tests of the framework renderer hosts suite.",
+   "from": 350,
+   "to": 350
+  }
+ ]
+}

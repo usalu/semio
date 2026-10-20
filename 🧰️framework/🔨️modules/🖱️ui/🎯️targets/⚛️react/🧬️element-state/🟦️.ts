@@ -1,5 +1,5 @@
 import { type UiState, type UiStatus, type UiElementState, elementStateAttributes, type ElementFillKind, resolveElementState, resolveElementFillKind } from "@semio-tech/ui-styling";
-import { isElementId } from "../../../🧱️elements/🆔️ElementId/🟦️.tsx";
+import { isElementId } from "@semio-tech/ui/elements/ElementId";
 
 export interface UiElementStateProps {
   /** @default "normal" */

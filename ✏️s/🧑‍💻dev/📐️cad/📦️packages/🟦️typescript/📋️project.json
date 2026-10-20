@@ -17,6 +17,7 @@
   "targets": {
     "test": {
       "executor": "repo:script",
+      "outputs": [],
       "dependsOn": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript",

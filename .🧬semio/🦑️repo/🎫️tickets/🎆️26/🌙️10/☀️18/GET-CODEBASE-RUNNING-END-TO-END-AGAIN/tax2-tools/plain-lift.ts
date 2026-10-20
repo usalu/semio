@@ -4,6 +4,7 @@ import {existsSync, readFileSync, writeFileSync} from "node:fs";
 import {dirname, join} from "node:path";
 import ts from "typescript";
 import {accepts, ageMinutes, aliasImportText, GEN, ledger, read, recordOwn, REPO, rel, ROUTING, syntaxOk} from "./lib.ts";
+import {bareScript, dispatchOptions, isTestProgram} from "../lift-fix-tools/shape.ts";
 
 type Plan = {ok: true; script: string; module: string; modulePath: string; commands: string[]} | {ok: false; reason: string};
 const EMOJI = ["🚪️", "🧭️", "🏭️", "🧪️", "📦️", "🔧️", "🗂️", "🧰️", "🔬️", "🛠️"];
@@ -116,7 +117,7 @@ export function planPlain(p: string, src: string): Plan {
   };
   const clsNames = list.map((c) => { const n = c.split(/[^A-Za-z0-9]+/u).filter(Boolean).map((w) => w[0]!.toUpperCase() + w.slice(1)).join("") + "Script"; return /^[0-9]/u.test(n) ? "Command" + n : n; });
   if (new Set(clsNames).size !== clsNames.length) return {ok: false, reason: "command-class-collision"};
-  const script = `${header ? header + "\n" : ""}import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from "${routingImport}";\nimport { runScriptProgram } from "./🟦️.ts";\n\n${list.map(cls).join("")}const router = new ScriptRouter(import.meta.dir)${list.map((c, i) => `.register(${JSON.stringify(c)}, ${clsNames[i]})`).join("")};\nif (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original${fallback ? ', defaultCommand: "run"' : ""} }));\n`;
+  const script = isTestProgram(p) ? bareScript(header, "./🟦️.ts") : `${header ? header + "\n" : ""}import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from "${routingImport}";\nimport { runScriptProgram } from "./🟦️.ts";\n\n${list.map(cls).join("")}const router = new ScriptRouter(import.meta.dir)${list.map((c, i) => `.register(${JSON.stringify(c)}, ${clsNames[i]})`).join("")};\nif (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, ${dispatchOptions(list[0]!)}));\n`;
   return {ok: true, script, module, modulePath, commands: list};
 }
 

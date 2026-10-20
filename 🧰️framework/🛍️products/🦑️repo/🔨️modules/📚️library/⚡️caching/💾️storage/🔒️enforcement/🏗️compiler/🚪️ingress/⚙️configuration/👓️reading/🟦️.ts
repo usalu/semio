@@ -1,13 +1,13 @@
 import {createHash} from "node:crypto";
 import {isAbsolute,join,resolve} from "node:path";
-import schemaDocument from "./🧬️schema/🔣️.json";
-import producerDocument from "../🧬️schema/🔣️.json";
+import schemaDocument from "./🧬️schema/🔣️.json" with { type: "json" };
+import producerDocument from "../🧬️schema/🔣️.json" with { type: "json" };
 import {requireRepositoryCompilerStoreV1,type RepositoryCompilerStoreV1} from "../../../🟦️.ts";
-import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
-import {readScriptProcessJsonV1} from "@semio-tech/process/routing/invocation/process/json";
+import {validateJsonSchemaSubset} from "../../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import {readScriptProcessJsonV1} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/📥️json/🟦️.ts";
 import {withRequestedIssuedResourceControlV1,withIssuedResourceOperationV1,type ScriptInvocation} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {withResourceLeases,checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/process/leases";
-import {readPhysicalCargoSourceV1} from "@semio-tech/process/artifacts/native-build/source/admission/read";
+import {withResourceLeases,checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import {readPhysicalCargoSourceV1} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
 const schema=structuredClone(schemaDocument),protocol=Object.freeze({...producerDocument.definitions.Protocol.const});
 export interface ObservedCargoConfigurationFileV1{readonly path:string;readonly sha256:string;readonly bytes:number}
 export interface ObservedCargoConfigurationPlanV1 extends ObservedCargoConfigurationFileV1{readonly resource:string}

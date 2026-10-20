@@ -22,6 +22,7 @@
       "dependencies": [
         "js-sys",
         "semio-framework-job",
+        "semio-framework-job-payload",
         "semio-framework-ui-contract",
         "semio-framework-ui-draw-contract",
         "semio-framework-ui-prepared-staging",

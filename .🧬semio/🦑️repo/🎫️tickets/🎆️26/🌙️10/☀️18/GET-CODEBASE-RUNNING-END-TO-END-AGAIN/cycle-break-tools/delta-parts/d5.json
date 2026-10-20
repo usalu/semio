@@ -1,0 +1,451 @@
+{
+ "schema": "cycle-break/delta@1",
+ "stagedAt": "2026-10-20T02:32:11.119Z",
+ "manifestOps": [],
+ "newFiles": [],
+ "edits": [
+  {
+   "file": "🧰️framework/📦️packages/🟦️typescript/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "from": "../../../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../../🔨️modules/🖱️ui/🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/📦️packages/🟦️typescript/🛂️manifest/🟦️.ts",
+   "from": "../../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../🔨️modules/🖱️ui/🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+   "from": "../../🔨️modules/🖱️ui/🎬️scene/📋️context-menu/🟦️.ts",
+   "to": "../../🔨️modules/🖱️ui/🧬️contract/📋️context-menu/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+   "from": "../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../🔨️modules/🖱️ui/🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🎓️onboarding/🏷️declaration/🟦️.ts",
+   "from": "../../🛂️manifest/🗺️window-layout/🟦️.ts",
+   "to": "../../🖱️ui/🧬️contract/🗺️window-layout/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🟦️.ts",
+   "from": "../🎥️video-render-program/🟦️.ts",
+   "to": "./🎥️video-render-program/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🟦️.ts",
+   "from": "../🛠️spawned-job/🟦️.ts",
+   "to": "./🛠️spawned-job/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🎥️video-render-program/🟦️.ts",
+   "from": "../../../🎥️video-render-program/🟦️.ts",
+   "to": "../../../⚡️effect/🎥️video-render-program/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🛠️spawned-job/🟦️.ts",
+   "from": "../../../🛠️spawned-job/🟦️.ts",
+   "to": "../../../⚡️effect/🛠️spawned-job/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🟦️.ts",
+   "from": "../../🎥️video-render-program/🟦️.ts",
+   "to": "../../⚡️effect/🎥️video-render-program/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🟦️.ts",
+   "from": "../../🛠️spawned-job/🟦️.ts",
+   "to": "../../⚡️effect/🛠️spawned-job/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🎞️video-render-program/🟦️.ts",
+   "from": "../../🎥️video-render-program/🟦️.ts",
+   "to": "../../⚡️effect/🎥️video-render-program/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧵️spawned-job-drive/🟦️.ts",
+   "from": "../../🛠️spawned-job/🟦️.ts",
+   "to": "../../⚡️effect/🛠️spawned-job/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧵️video-render-job/🟦️.ts",
+   "from": "../../🎥️video-render-program/🟦️.ts",
+   "to": "../../⚡️effect/🎥️video-render-program/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🎯️action-bus/🟦️.ts",
+   "from": "../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../🖱️ui/🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/💡️inference/🔌️service/🪟️presentation/🟦️.ts",
+   "from": "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../🖱️ui/🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖥️platform/🟦️.ts",
+   "from": "../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../🖱️ui/🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖥️platform/🟦️.ts",
+   "from": "../🛂️manifest/🗺️window-layout/🟦️.ts",
+   "to": "../🖱️ui/🧬️contract/🗺️window-layout/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📋️context-menu/🟦️.ts",
+   "from": "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧩️components/🟦️.ts",
+   "from": "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧩️components/🟦️.ts",
+   "from": "../📋️context-menu/🟦️.ts",
+   "to": "../../🧬️contract/📋️context-menu/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📋️canvas-pick/🟦️.tsx",
+   "from": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+   "from": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🎯️canvas-pick-targets/🟦️.ts",
+   "from": "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/♿️accessibility/🟦️.ts",
+   "from": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts",
+   "from": "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧩️component/🟦️.ts",
+   "from": "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🔬️accessibility-projection/🟦️.ts",
+   "from": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧪️number-controls/🟦️.ts",
+   "from": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧪️text-controls/🟦️.ts",
+   "from": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts",
+   "from": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts",
+   "from": "../../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🖼️surface/🟦️.ts",
+   "from": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🛡️validation/🔬️graph/🟦️.ts",
+   "from": "../../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🛡️validation/🟦️.ts",
+   "from": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️.ts",
+   "from": "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🔭️virtual-window/🟦️.tsx",
+   "from": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🟦️.tsx",
+   "from": "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧩️props/🟦️.ts",
+   "from": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧪️tests/🧩️component/🟦️.tsx",
+   "from": "../../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../../🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🪢️views/🟦️.tsx",
+   "from": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Slider/🟦️.tsx",
+   "from": "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪜️Stepper/🟦️.tsx",
+   "from": "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🛂️manifest/🎬️action-types-and-semantics/🟦️.ts",
+   "from": "../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../🖱️ui/🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🛂️manifest/📋️app-definition-refresh-and-context-menu/🟦️.ts",
+   "from": "../🗺️window-layout/🟦️.ts",
+   "to": "../../🖱️ui/🧬️contract/🗺️window-layout/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🛂️manifest/📋️app-definition-refresh-and-context-menu/🟦️.ts",
+   "from": "../../🖱️ui/🎬️scene/📋️context-menu/🟦️.ts",
+   "to": "../../🖱️ui/🧬️contract/📋️context-menu/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🛂️manifest/📋️app-definition-refresh-and-context-menu/🟦️.ts",
+   "from": "../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../🖱️ui/🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🛂️manifest/🟦️.ts",
+   "from": "./🗺️window-layout/🟦️.ts",
+   "to": "../🖱️ui/🧬️contract/🗺️window-layout/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+   "from": "\"{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🎥️video-render-program/🟦️.ts\",",
+   "to": "\"{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🎥️video-render-program/🟦️.ts\",",
+   "mode": "text",
+   "wave": "d5-shared-contracts",
+   "why": "project input follows the moved module"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+   "from": "\"{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🛠️spawned-job/🟦️.ts\"",
+   "to": "\"{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🛠️spawned-job/🟦️.ts\"",
+   "mode": "text",
+   "wave": "d5-shared-contracts",
+   "why": "project input follows the moved module"
+  }
+ ],
+ "fileOps": [
+  {
+   "op": "move",
+   "path": "🧰️framework/🔨️modules/🎠️kernel/🛠️spawned-job/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🛠️spawned-job/🟦️.ts",
+   "sha256": "525355e29bb10709c9f6482d1bc53b7725c3338e835129d09f9b79e1d78ca76f",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "op": "move",
+   "path": "🧰️framework/🔨️modules/🎠️kernel/🎥️video-render-program/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🎥️video-render-program/🟦️.ts",
+   "sha256": "31b2ec0b322542d67f33aecd818f833ef925b8e2e59850e193ab58da24257986",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "op": "move",
+   "path": "🧰️framework/🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "sha256": "e8ff16627aeda3a306fbdf63a081b53556b349559db7c0710db4eef4489738bd",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "op": "move",
+   "path": "🧰️framework/🔨️modules/🛂️manifest/🗺️window-layout/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🗺️window-layout/🟦️.ts",
+   "sha256": "8d6efb16c05b2b08c1640b47674a03bbef6d567668c82540ac55071071d92b23",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  },
+  {
+   "op": "move",
+   "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📋️context-menu/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📋️context-menu/🟦️.ts",
+   "sha256": "7c1db878b0a65e6dd0824e751e57e1544d52b4ff67477526c1378544f53c6b3a",
+   "wave": "d5-shared-contracts",
+   "why": "contract extraction"
+  }
+ ],
+ "flags": []
+}

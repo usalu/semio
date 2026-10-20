@@ -2,7 +2,7 @@ use super::*;
 use crate::editor_domain::editor_laws::context;
 use crate::editor_domain::editor_laws::context::{app_with_registry, render as render_body};
 use semio_framework_test_fixtures::repo_text;
-use semio_s_artifact_procedural_3d_model::dag_host_snapshot_to_workflow;
+use semio_s_artifact_procedural_3d_preview_eval::dag_host_snapshot_to_workflow;
 use semio_s_artifact_procedural_3d_model::with_host;
 use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
 use semio_framework_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};

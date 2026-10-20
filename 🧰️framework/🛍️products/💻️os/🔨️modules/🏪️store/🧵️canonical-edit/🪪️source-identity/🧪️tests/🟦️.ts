@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {createHash} from "node:crypto";
 import Ajv from "ajv";
-import {sha256Hex} from "@semio-tech/framework/hash";
+import {sha256Hex} from "@semio-tech/framework-hash";
 /** 🪪️ Ajv and independent OpenSSL SHA256 validate every ordered original-source transcript. */
 export function runCanonicalSourceIdentityChecks():number{
  const fixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json",import.meta.url),"utf8"));const schema=JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json",import.meta.url),"utf8"));const validate=new Ajv({strict:true}).compile(schema);assert.equal(validate(fixture),true,JSON.stringify(validate.errors));let checks=0;

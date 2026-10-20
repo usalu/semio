@@ -11,7 +11,7 @@ import { type ComponentSceneHostProps, type EventFeedEntry, type MutationMessage
 import { cn, ContextMenuController, Icon, interactiveHoverFillClass, useLabel, type ContextMenuItem, type IconName } from "@semio-tech/ui-react";
 import { openSurfaceContextMenu, useShellContextMenuFallback, type SurfaceContextMenuResult, useMapContextMenuSpecs } from "../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
 import { parseSceneJsonField, WindowInstanceIdContext } from "../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
-import { formatHostTemporalValueV1 } from "@semio-tech/framework/modules/ui/contract/presentation/host-temporal-format";
+import { formatHostTemporalValueV1 } from "@semio-tech/ui-contract/presentation/host-temporal-format";
 // #endregion 🔌️Adapters
 
 //#region 🔖️EventFeedHost

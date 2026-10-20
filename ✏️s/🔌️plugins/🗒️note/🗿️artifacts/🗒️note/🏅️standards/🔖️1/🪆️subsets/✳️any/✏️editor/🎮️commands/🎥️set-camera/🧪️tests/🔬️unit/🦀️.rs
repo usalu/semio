@@ -1,7 +1,7 @@
 #[allow(unused_imports)]
 use crate::op::NoteMutation;
 #[allow(unused_imports)]
-use crate::NoteSnapshot;
+use semio_s_artifact_note_note_schema::NoteSnapshot;
 #[allow(unused_imports)]
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[allow(unused_imports)]

@@ -12,7 +12,8 @@ import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️module
 import type {ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {bazelBuildCacheToolV1,bazelBuildEventsFileV1,bazelBuildMetricsV1,bazelDryRunPlanV1,bazelEmptyPlanV1,clearBazelDiskCacheV1,clearBazelServerBasesV1,measureBazelDiskCacheV1,readBazelLedgerV1,recordBazelBuildMetricsV1} from "../🟦️.ts";
 import {bazelCacheLayoutV1} from "../../💾️storage/🟦️.ts";
-import {bazelTaskBaseEnvironmentV1,planBazelTasksV1,type BazelTaskV1} from "../../📜️script.ts";
+import {bazelTaskBaseEnvironmentV1,planBazelTasksV1} from "../../📜️script.ts";
+import type {BazelTaskV1} from "../../📋️task-plan/🟦️.ts";
 import {affectedBuildProjectsV1,selectBuildTasksV1} from "../../../../🧭️selection/🟦️.ts";
 import {buildExecPlanV1} from "../../../../⚙️operations/🟦️.ts";
 import {buildExecEnvironmentV1} from "../../../../⚙️operations/🌱️exec-environment/🟦️.ts";

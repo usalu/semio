@@ -7,7 +7,7 @@ use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::sche
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse<Op: From<AppendContent>>(payload: &super::RemoveContent, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<AppendContent>>(payload: &crate::standards::v1::subsets::any::schema::mutations::remove_content::component::RemoveContent, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(artifact) = base.durable_artifacts.get(&payload.content_id) else { return Vec::new() };
     let (Some(kind), Ok(from)) = (RemodelingContentKind::parse(&artifact.kind), usize::try_from(payload.from)) else { return Vec::new() };

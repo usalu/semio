@@ -1,0 +1,194 @@
+{
+  "schemaVersion": 1,
+  "foundationPackages": [
+    "@semio-tech/framework-hash",
+    "@semio-tech/framework-trace"
+  ],
+  "packages": [
+    {
+      "name": "@semio-tech/framework",
+      "owner": "🧰️framework/📦️packages/🟦️typescript",
+      "sourceOwner": "🧰️framework",
+      "exportTargets": [
+        {
+          "subpath": ".",
+          "target": "./🟦️.ts"
+        }
+      ]
+    },
+    {
+      "name": "@semio-tech/framework-hash",
+      "owner": "🧰️framework/🔨️modules/🔏️hash",
+      "sourceOwner": "🧰️framework/🔨️modules/🔏️hash",
+      "exportTargets": [
+        {
+          "subpath": ".",
+          "target": "./🟦️.ts"
+        },
+        {
+          "subpath": "./testing/fixtures/blake3.json",
+          "target": "./🧪️tests/🧫️fixtures/🧮️blake3/🔣️.json"
+        }
+      ]
+    },
+    {
+      "name": "@semio-tech/framework-trace",
+      "owner": "🧰️framework/🔨️modules/⏱️trace",
+      "sourceOwner": "🧰️framework/🔨️modules/⏱️trace",
+      "exportTargets": [
+        {
+          "subpath": ".",
+          "target": "./🟦️.ts"
+        },
+        {
+          "subpath": "./clock/tail/testing/watchdog-tail",
+          "target": "./⏱️clock/🏁️tail/🧪️tests/🔬️watchdog-tail/🟦️.ts"
+        },
+        {
+          "subpath": "./clock/testing/tool-job-telemetry-contention",
+          "target": "./⏱️clock/🧪️tests/🔬️tool-job-telemetry-contention/🟦️.ts"
+        },
+        {
+          "subpath": "./memory",
+          "target": "./🧮️memory/🟦️.ts"
+        },
+        {
+          "subpath": "./testing/fixtures",
+          "target": "./🧪️tests/🧫️fixtures/🟦️.ts"
+        }
+      ]
+    },
+    {
+      "name": "@semio-tech/framework-kernel",
+      "owner": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript",
+      "sourceOwner": "🧰️framework/🔨️modules/🎠️kernel",
+      "exportTargets": [
+        {
+          "subpath": ".",
+          "target": "./🟦️.ts"
+        }
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "plugin-sdk-entry",
+      "rule": "plugins-framework-sdk-only",
+      "from": "✏️s/🔌️plugins/🧊️cube/📦️packages/🟦️typescript/🟦️.ts",
+      "to": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "plugin-foundation-entry",
+      "rule": "plugins-framework-sdk-only",
+      "from": "✏️s/🔌️plugins/🧊️cube/📦️packages/🟦️typescript/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔏️hash/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "plugin-foundation-fixture-subpath",
+      "rule": "plugins-framework-sdk-only",
+      "from": "✏️s/🔌️plugins/🧊️cube/📦️packages/🟦️typescript/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔏️hash/🧪️tests/🧫️fixtures/🧮️blake3/🔣️.json",
+      "forbidden": false
+    },
+    {
+      "id": "plugin-foundation-memory-subpath",
+      "rule": "plugins-framework-sdk-only",
+      "from": "✏️s/🔌️plugins/🧊️cube/📦️packages/🟦️typescript/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/⏱️trace/🧮️memory/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "plugin-foundation-linked-alias",
+      "rule": "plugins-framework-sdk-only",
+      "from": "✏️s/🔌️plugins/🧊️cube/📦️packages/🟦️typescript/🟦️.ts",
+      "to": "node_modules/@semio-tech/framework-hash/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "plugin-foundation-private-file",
+      "rule": "plugins-framework-sdk-only",
+      "from": "✏️s/🔌️plugins/🧊️cube/📦️packages/🟦️typescript/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔏️hash/🧮️internal/🟦️.ts",
+      "forbidden": true
+    },
+    {
+      "id": "plugin-foundation-private-sibling-of-subpath",
+      "rule": "plugins-framework-sdk-only",
+      "from": "✏️s/🔌️plugins/🧊️cube/📦️packages/🟦️typescript/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/⏱️trace/⏱️clock/🟦️.ts",
+      "forbidden": true
+    },
+    {
+      "id": "plugin-undeclared-package-entry",
+      "rule": "plugins-framework-sdk-only",
+      "from": "✏️s/🔌️plugins/🧊️cube/📦️packages/🟦️typescript/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🟦️.ts",
+      "forbidden": true
+    },
+    {
+      "id": "plugin-undeclared-package-linked-alias",
+      "rule": "plugins-framework-sdk-only",
+      "from": "✏️s/🔌️plugins/🧊️cube/📦️packages/🟦️typescript/🟦️.ts",
+      "to": "node_modules/@semio-tech/framework-kernel/🟦️.ts",
+      "forbidden": true
+    },
+    {
+      "id": "plugin-installed-third-party",
+      "rule": "plugins-framework-sdk-only",
+      "from": "✏️s/🔌️plugins/🧊️cube/📦️packages/🟦️typescript/🟦️.ts",
+      "to": "node_modules/react/index.js",
+      "forbidden": false
+    },
+    {
+      "id": "host-foundation-entry",
+      "rule": "renderer-hosts-only-ui",
+      "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/⏱️trace/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "host-foundation-fixture-subpath",
+      "rule": "renderer-hosts-only-ui",
+      "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔏️hash/🧪️tests/🧫️fixtures/🧮️blake3/🔣️.json",
+      "forbidden": false
+    },
+    {
+      "id": "host-foundation-linked-alias",
+      "rule": "renderer-hosts-only-ui",
+      "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+      "to": "node_modules/@semio-tech/framework-trace/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "host-foundation-private-file",
+      "rule": "renderer-hosts-only-ui",
+      "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/⏱️trace/⏱️clock/🟦️.ts",
+      "forbidden": true
+    },
+    {
+      "id": "host-undeclared-package-entry",
+      "rule": "renderer-hosts-only-ui",
+      "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🟦️.ts",
+      "forbidden": true
+    },
+    {
+      "id": "host-undeclared-package-linked-alias",
+      "rule": "renderer-hosts-only-ui",
+      "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+      "to": "node_modules/@semio-tech/framework-kernel/🟦️.ts",
+      "forbidden": true
+    },
+    {
+      "id": "host-ui-owner-unchanged",
+      "rule": "renderer-hosts-only-ui",
+      "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts",
+      "forbidden": false
+    }
+  ]
+}

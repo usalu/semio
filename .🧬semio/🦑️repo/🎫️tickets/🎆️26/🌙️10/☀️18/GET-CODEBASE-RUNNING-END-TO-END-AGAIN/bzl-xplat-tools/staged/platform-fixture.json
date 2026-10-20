@@ -1,0 +1,598 @@
+{
+  "version": 1,
+  "profiles": [
+    {
+      "name": "macOS arm64",
+      "input": {
+        "platform": "darwin",
+        "arch": "arm64",
+        "container": false,
+        "outputBase": "/Users/dev/repo/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "bun": "/Users/dev/.bun/bin/bun",
+        "longPaths": "unprobed"
+      },
+      "expect": {
+        "environment": {
+          "LANG": "en_US.UTF-8",
+          "LC_ALL": "en_US.UTF-8"
+        },
+        "startup": [],
+        "command": [
+          "--nobuild_runfile_links"
+        ],
+        "launcherExtension": "",
+        "sourceLink": "dir",
+        "emojiLabels": "verified",
+        "fits": true,
+        "refusals": 0,
+        "warnings": 0
+      }
+    },
+    {
+      "name": "macOS x64",
+      "input": {
+        "platform": "darwin",
+        "arch": "x64",
+        "container": false,
+        "outputBase": "/Users/dev/repo/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "bun": "/usr/local/bin/bun",
+        "longPaths": "unprobed"
+      },
+      "expect": {
+        "environment": {
+          "LANG": "en_US.UTF-8",
+          "LC_ALL": "en_US.UTF-8"
+        },
+        "startup": [],
+        "command": [
+          "--nobuild_runfile_links"
+        ],
+        "launcherExtension": "",
+        "sourceLink": "dir",
+        "emojiLabels": "verified",
+        "fits": true,
+        "refusals": 0,
+        "warnings": 0
+      }
+    },
+    {
+      "name": "Linux x64 native",
+      "input": {
+        "platform": "linux",
+        "arch": "x64",
+        "container": false,
+        "outputBase": "/home/dev/repo/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "bun": "/home/dev/.bun/bin/bun",
+        "longPaths": "unprobed"
+      },
+      "expect": {
+        "environment": {},
+        "startup": [],
+        "command": [
+          "--nobuild_runfile_links"
+        ],
+        "launcherExtension": "",
+        "sourceLink": "dir",
+        "emojiLabels": "verified",
+        "fits": true,
+        "refusals": 0,
+        "warnings": 0
+      }
+    },
+    {
+      "name": "Linux arm64 native",
+      "input": {
+        "platform": "linux",
+        "arch": "arm64",
+        "container": false,
+        "outputBase": "/home/dev/repo/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "bun": "/home/dev/.bun/bin/bun",
+        "longPaths": "unprobed"
+      },
+      "expect": {
+        "environment": {},
+        "startup": [],
+        "command": [
+          "--nobuild_runfile_links"
+        ],
+        "launcherExtension": "",
+        "sourceLink": "dir",
+        "emojiLabels": "verified",
+        "fits": true,
+        "refusals": 0,
+        "warnings": 0
+      }
+    },
+    {
+      "name": "Linux arm64 devcontainer volume",
+      "input": {
+        "platform": "linux",
+        "arch": "arm64",
+        "container": true,
+        "outputBase": "/workspaces/semio/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "bun": "/usr/local/bin/bun",
+        "longPaths": "unprobed"
+      },
+      "expect": {
+        "environment": {},
+        "startup": [],
+        "command": [
+          "--nobuild_runfile_links"
+        ],
+        "launcherExtension": "",
+        "sourceLink": "dir",
+        "emojiLabels": "verified",
+        "fits": true,
+        "refusals": 0,
+        "warnings": 0
+      }
+    },
+    {
+      "name": "Linux x64 devcontainer volume",
+      "input": {
+        "platform": "linux",
+        "arch": "x64",
+        "container": true,
+        "outputBase": "/workspaces/semio/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "bun": "/usr/local/bin/bun",
+        "longPaths": "unprobed"
+      },
+      "expect": {
+        "environment": {},
+        "startup": [],
+        "command": [
+          "--nobuild_runfile_links"
+        ],
+        "launcherExtension": "",
+        "sourceLink": "dir",
+        "emojiLabels": "verified",
+        "fits": true,
+        "refusals": 0,
+        "warnings": 0
+      }
+    },
+    {
+      "name": "Linux emoji checkout",
+      "input": {
+        "platform": "linux",
+        "arch": "x64",
+        "container": false,
+        "outputBase": "/home/dev/🧰️repo/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "bun": "/home/dev/.bun/bin/bun",
+        "longPaths": "unprobed"
+      },
+      "expect": {
+        "environment": {},
+        "startup": [],
+        "command": [
+          "--nobuild_runfile_links"
+        ],
+        "launcherExtension": "",
+        "sourceLink": "dir",
+        "emojiLabels": "verified",
+        "fits": true,
+        "refusals": 0,
+        "warnings": 0
+      }
+    },
+    {
+      "name": "Linux longest output base",
+      "input": {
+        "platform": "linux",
+        "arch": "x64",
+        "container": false,
+        "outputBase": "/ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd/server/0123456789abcdef",
+        "bun": "/home/dev/.bun/bin/bun",
+        "longPaths": "unprobed"
+      },
+      "expect": {
+        "environment": {},
+        "startup": [],
+        "command": [
+          "--nobuild_runfile_links"
+        ],
+        "launcherExtension": "",
+        "sourceLink": "dir",
+        "emojiLabels": "verified",
+        "fits": true,
+        "refusals": 0,
+        "warnings": 0
+      }
+    },
+    {
+      "name": "Windows x64 with long paths",
+      "input": {
+        "platform": "win32",
+        "arch": "x64",
+        "container": false,
+        "outputBase": "C:\\semio\\.cache\\b\\p\\m\\bazel\\outputs\\server\\0123456789abcdef",
+        "bun": "C:\\Users\\dev\\.bun\\bin\\bun.exe",
+        "longPaths": "enabled"
+      },
+      "expect": {
+        "fits": true,
+        "refusals": 0,
+        "warnings": 1,
+        "startup": [
+          "--nowindows_enable_symlinks"
+        ],
+        "command": [
+          "--nobuild_runfile_links",
+          "--noenable_runfiles"
+        ],
+        "environment": {},
+        "launcherExtension": ".exe",
+        "sourceLink": "junction",
+        "emojiLabels": "unverified"
+      }
+    },
+    {
+      "name": "Windows arm64 with long paths",
+      "input": {
+        "platform": "win32",
+        "arch": "arm64",
+        "container": false,
+        "outputBase": "C:\\semio\\.cache\\b\\p\\m\\bazel\\outputs\\server\\0123456789abcdef",
+        "bun": "C:\\Users\\dev\\.bun\\bin\\bun.exe",
+        "longPaths": "enabled"
+      },
+      "expect": {
+        "fits": true,
+        "refusals": 0,
+        "warnings": 1,
+        "startup": [
+          "--nowindows_enable_symlinks"
+        ],
+        "command": [
+          "--nobuild_runfile_links",
+          "--noenable_runfiles"
+        ],
+        "environment": {},
+        "launcherExtension": ".exe",
+        "sourceLink": "junction",
+        "emojiLabels": "unverified"
+      }
+    },
+    {
+      "name": "Windows x64 longest output base with long paths",
+      "input": {
+        "platform": "win32",
+        "arch": "x64",
+        "container": false,
+        "outputBase": "C:\\dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\\0123456789abcdef",
+        "bun": "C:\\Users\\dev\\.bun\\bin\\Bun.EXE",
+        "longPaths": "enabled"
+      },
+      "expect": {
+        "fits": true,
+        "refusals": 0,
+        "warnings": 1,
+        "startup": [
+          "--nowindows_enable_symlinks"
+        ],
+        "command": [
+          "--nobuild_runfile_links",
+          "--noenable_runfiles"
+        ],
+        "environment": {},
+        "launcherExtension": ".exe",
+        "sourceLink": "junction",
+        "emojiLabels": "unverified"
+      }
+    },
+    {
+      "name": "Windows x64 without long paths refuses the MAX_PATH budget",
+      "input": {
+        "platform": "win32",
+        "arch": "x64",
+        "container": false,
+        "outputBase": "C:\\semio\\.cache\\b\\p\\m\\bazel\\outputs\\server\\0123456789abcdef",
+        "bun": "C:\\Users\\dev\\.bun\\bin\\bun.exe",
+        "longPaths": "disabled"
+      },
+      "expect": {
+        "fits": false,
+        "refusals": 1,
+        "warnings": 1,
+        "startup": [
+          "--nowindows_enable_symlinks"
+        ],
+        "command": [
+          "--nobuild_runfile_links",
+          "--noenable_runfiles"
+        ],
+        "environment": {},
+        "launcherExtension": ".exe",
+        "sourceLink": "junction",
+        "emojiLabels": "unverified"
+      }
+    },
+    {
+      "name": "Windows x64 unprobed long paths refuses the MAX_PATH budget",
+      "input": {
+        "platform": "win32",
+        "arch": "x64",
+        "container": false,
+        "outputBase": "C:\\semio\\.cache\\b\\p\\m\\bazel\\outputs\\server\\0123456789abcdef",
+        "bun": "C:\\Users\\dev\\.bun\\bin\\bun.exe",
+        "longPaths": "unprobed"
+      },
+      "expect": {
+        "fits": false,
+        "refusals": 1,
+        "warnings": 2,
+        "startup": [
+          "--nowindows_enable_symlinks"
+        ],
+        "command": [
+          "--nobuild_runfile_links",
+          "--noenable_runfiles"
+        ],
+        "environment": {},
+        "launcherExtension": ".exe",
+        "sourceLink": "junction",
+        "emojiLabels": "unverified"
+      }
+    },
+    {
+      "name": "Windows bun without exe is refused",
+      "input": {
+        "platform": "win32",
+        "arch": "x64",
+        "container": false,
+        "outputBase": "C:\\semio\\.cache\\b\\p\\m\\bazel\\outputs\\server\\0123456789abcdef",
+        "bun": "C:\\Users\\dev\\.bun\\bin\\bun",
+        "longPaths": "enabled"
+      },
+      "expect": {
+        "fits": true,
+        "refusals": 1,
+        "warnings": 1,
+        "startup": [
+          "--nowindows_enable_symlinks"
+        ],
+        "command": [
+          "--nobuild_runfile_links",
+          "--noenable_runfiles"
+        ],
+        "environment": {},
+        "launcherExtension": ".exe",
+        "sourceLink": "junction",
+        "emojiLabels": "unverified"
+      }
+    },
+    {
+      "name": "Windows bun with a POSIX path is refused",
+      "input": {
+        "platform": "win32",
+        "arch": "x64",
+        "container": false,
+        "outputBase": "C:\\semio\\.cache\\b\\p\\m\\bazel\\outputs\\server\\0123456789abcdef",
+        "bun": "/usr/local/bin/bun",
+        "longPaths": "enabled"
+      },
+      "expect": {
+        "fits": true,
+        "refusals": 1,
+        "warnings": 1,
+        "startup": [
+          "--nowindows_enable_symlinks"
+        ],
+        "command": [
+          "--nobuild_runfile_links",
+          "--noenable_runfiles"
+        ],
+        "environment": {},
+        "launcherExtension": ".exe",
+        "sourceLink": "junction",
+        "emojiLabels": "unverified"
+      }
+    },
+    {
+      "name": "Windows UNC bun is accepted",
+      "input": {
+        "platform": "win32",
+        "arch": "x64",
+        "container": false,
+        "outputBase": "C:\\semio\\.cache\\b\\p\\m\\bazel\\outputs\\server\\0123456789abcdef",
+        "bun": "\\\\server\\share\\bun.exe",
+        "longPaths": "enabled"
+      },
+      "expect": {
+        "fits": true,
+        "refusals": 0,
+        "warnings": 1,
+        "startup": [
+          "--nowindows_enable_symlinks"
+        ],
+        "command": [
+          "--nobuild_runfile_links",
+          "--noenable_runfiles"
+        ],
+        "environment": {},
+        "launcherExtension": ".exe",
+        "sourceLink": "junction",
+        "emojiLabels": "unverified"
+      }
+    },
+    {
+      "name": "Linux relative bun is refused",
+      "input": {
+        "platform": "linux",
+        "arch": "x64",
+        "container": false,
+        "outputBase": "/home/dev/repo/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "bun": "bun",
+        "longPaths": "unprobed"
+      },
+      "expect": {
+        "environment": {},
+        "startup": [],
+        "command": [
+          "--nobuild_runfile_links"
+        ],
+        "launcherExtension": "",
+        "sourceLink": "dir",
+        "emojiLabels": "verified",
+        "fits": true,
+        "refusals": 1,
+        "warnings": 0
+      }
+    },
+    {
+      "name": "Linux bun with exe is refused",
+      "input": {
+        "platform": "linux",
+        "arch": "x64",
+        "container": false,
+        "outputBase": "/home/dev/repo/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "bun": "/usr/local/bin/bun.exe",
+        "longPaths": "unprobed"
+      },
+      "expect": {
+        "environment": {},
+        "startup": [],
+        "command": [
+          "--nobuild_runfile_links"
+        ],
+        "launcherExtension": "",
+        "sourceLink": "dir",
+        "emojiLabels": "verified",
+        "fits": true,
+        "refusals": 1,
+        "warnings": 0
+      }
+    },
+    {
+      "name": "macOS container is refused",
+      "input": {
+        "platform": "darwin",
+        "arch": "arm64",
+        "container": true,
+        "outputBase": "/Users/dev/repo/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "bun": "/Users/dev/.bun/bin/bun",
+        "longPaths": "unprobed"
+      },
+      "expect": {
+        "environment": {
+          "LANG": "en_US.UTF-8",
+          "LC_ALL": "en_US.UTF-8"
+        },
+        "startup": [],
+        "command": [
+          "--nobuild_runfile_links"
+        ],
+        "launcherExtension": "",
+        "sourceLink": "dir",
+        "emojiLabels": "verified",
+        "fits": true,
+        "refusals": 1,
+        "warnings": 0
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "unknown platform",
+      "input": {
+        "platform": "freebsd",
+        "arch": "x64",
+        "container": false,
+        "outputBase": "/home/dev/repo/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "bun": "/bin/bun",
+        "longPaths": "unprobed"
+      }
+    },
+    {
+      "name": "unknown arch",
+      "input": {
+        "platform": "linux",
+        "arch": "ia32",
+        "container": false,
+        "outputBase": "/home/dev/repo/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "bun": "/bin/bun",
+        "longPaths": "unprobed"
+      }
+    },
+    {
+      "name": "extra key",
+      "input": {
+        "platform": "linux",
+        "arch": "x64",
+        "container": false,
+        "outputBase": "/home/dev/repo/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "bun": "/bin/bun",
+        "longPaths": "unprobed",
+        "shell": "/bin/sh"
+      }
+    },
+    {
+      "name": "empty output base",
+      "input": {
+        "platform": "linux",
+        "arch": "x64",
+        "container": false,
+        "outputBase": "",
+        "bun": "/bin/bun",
+        "longPaths": "unprobed"
+      }
+    },
+    {
+      "name": "output base beyond the 256 unit storage ceiling",
+      "input": {
+        "platform": "linux",
+        "arch": "x64",
+        "container": false,
+        "outputBase": "/dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "bun": "/bin/bun",
+        "longPaths": "unprobed"
+      }
+    },
+    {
+      "name": "missing key",
+      "input": {
+        "platform": "linux",
+        "arch": "x64",
+        "container": false,
+        "outputBase": "/home/dev/repo/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "bun": "/bin/bun"
+      }
+    }
+  ],
+  "unsupported": [
+    "freebsd",
+    "aix",
+    "sunos",
+    "android"
+  ],
+  "forbiddenShell": [
+    "run_shell",
+    "genrule",
+    "/bin/sh",
+    "/bin/bash",
+    "bash",
+    "cmd.exe",
+    "powershell",
+    "pwsh",
+    "sh -c",
+    "shell_command"
+  ],
+  "flagOracle": {
+    "startupHelp": [
+      "help",
+      "startup_options"
+    ],
+    "commandHelp": [
+      "help",
+      "build",
+      "--long"
+    ]
+  },
+  "buildRender": {
+    "bun": {
+      "win32": "C:\\Users\\dev\\.bun\\bin\\bun.exe",
+      "darwin": "/Users/dev/.bun/bin/bun",
+      "linux": "/usr/local/bin/bun"
+    }
+  }
+}

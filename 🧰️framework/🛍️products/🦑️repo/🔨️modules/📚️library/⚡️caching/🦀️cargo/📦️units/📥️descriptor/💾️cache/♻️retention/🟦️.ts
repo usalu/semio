@@ -2,7 +2,7 @@
 import{rustUnitDescriptorNodeArtifactV2}from"../../🕸️nodes/🟦️.ts";
 import{captureRustUnitDescriptorCatalogStateV2,planRustUnitDescriptorWorkingSetAdmissionV3,rustUnitDescriptorCatalogSnapshotEntriesV2,type RustUnitDescriptorCatalogSnapshotV2,type RustUnitDescriptorCacheBoundsV1}from"../🟦️.ts";
 import{rustUnitDescriptorWorkingSetNodesV2,type RustUnitDescriptorWorkingSetV2}from"../🧺️set/🟦️.ts";
-import schema from"./🧬️schema/🔣️.json";
+import schema from"./🧬️schema/🔣️.json" with { type: "json" };
 /** ♻️ Plans a minimum oldest-unprotected prefix; it authorizes no deletion or Native cleanup. */
 export interface RustUnitDescriptorRetirementPlanV3{readonly kind:"retained"|"retired"|"too-large"|"recovery";readonly victims:readonly(readonly[string,number])[];readonly removedBytes:number;readonly bytesAfter:number;readonly nodesAfter:number}
 export const rustUnitDescriptorRetentionProtocolV3=Object.freeze({...schema.definitions.Protocol.const});

@@ -15,8 +15,14 @@ import corpus from "./🔣️.json";
 import schema from "./🧬️schema.json";
 import component from "../../🧬️schema/🔣️.json";
 import targetCache from "../../../../🏃️execution/🧬️schema/💾️cache.json";
+import type {BazelUncachedReasonV1} from "../../📜️script.ts";
 
 const api=await import("../../📜️script.ts"),graph=corpus.graph as any,plan=api.planBazelTasksV1(graph,corpus.request),emitted=api.bazelActionsV1(graph,plan,false),sha=(value:string)=>createHash("sha256").update(value).digest("hex"),python=Bun.which("python3");
+
+/** 🧷️ A fixture row whose authored `expected` is read as the type the implementation returns. */
+type Expecting<Row extends {readonly expected:unknown},Expected>=Omit<Row,"expected">&{readonly expected:Expected};
+type CacheDecision=ReturnType<typeof api.bazelCacheDecisionV1>;
+type EmittedAction=ReturnType<typeof api.bazelActionsV1> extends ReadonlyMap<string,infer Action>?Action:never;
 
 test("Bazel action fixtures are closed and name every generated label by its task identity",()=>{
  expect(new Ajv({strict:true}).validate(schema,corpus)).toBe(true);
@@ -27,10 +33,10 @@ test("Bazel action fixtures are closed and name every generated label by its tas
 
 test("Bazel cache decisions fail closed: only an explicit cache with declared outputs is cacheable and every refusal records its reason",()=>{
  const admit=new Ajv({strict:true}).addSchema(component,"component").compile({$ref:"component#/definitions/CacheDecision"}),database=new Database(":memory:");
- try{for(const row of corpus.decisions){
+ try{for(const row of corpus.decisions as readonly Expecting<(typeof corpus.decisions)[number],CacheDecision>[]){
   const{noop,...rest}=row.task as {noop?:boolean},task={id:"fixture:task",definition:{execution:{kind:noop?"noop":"command"},...rest}} as any,actual=api.bazelCacheDecisionV1(task,row.skipCache);
-  const oracle=database.query("SELECT CASE WHEN ?1=1 THEN 'continuous' WHEN ?2=1 THEN 'skipped' WHEN ?5=1 THEN NULL WHEN ?3 IS NOT NULL AND ?3=0 THEN 'declared' WHEN ?3 IS NULL THEN 'undeclared' WHEN ?4 IS NULL THEN 'unbounded' ELSE NULL END AS reason").get(row.task.continuous===undefined?null:Number(row.task.continuous),Number(row.skipCache),row.task.cache===undefined?null:Number(row.task.cache),(row.task as {outputs?:string[]}).outputs===undefined?null:JSON.stringify((row.task as {outputs?:string[]}).outputs),Number(noop===true)) as {reason:string|null};
-  expect<unknown>(actual).toEqual(row.expected);expect(admit(actual),row.name).toBe(true);expect<string|null>(actual.reason??null).toBe(oracle.reason);expect(actual.cache).toBe(oracle.reason===null);
+  const oracle=database.query("SELECT CASE WHEN ?1=1 THEN 'continuous' WHEN ?2=1 THEN 'skipped' WHEN ?5=1 THEN NULL WHEN ?3 IS NOT NULL AND ?3=0 THEN 'declared' WHEN ?3 IS NULL THEN 'undeclared' WHEN ?4 IS NULL THEN 'unbounded' ELSE NULL END AS reason").get(row.task.continuous===undefined?null:Number(row.task.continuous),Number(row.skipCache),row.task.cache===undefined?null:Number(row.task.cache),(row.task as {outputs?:string[]}).outputs===undefined?null:JSON.stringify((row.task as {outputs?:string[]}).outputs),Number(noop===true)) as {reason:BazelUncachedReasonV1|null};
+  expect(actual).toEqual(row.expected);expect(admit(actual),row.name).toBe(true);expect(actual.reason??null).toBe(oracle.reason);expect(actual.cache).toBe(oracle.reason===null);
  }
  expect(admit({cache:true,reason:"declared"})).toBe(false);expect(admit({cache:false})).toBe(false);expect(admit({cache:false,reason:"because"})).toBe(false);
  }finally{database.close();}
@@ -38,14 +44,14 @@ test("Bazel cache decisions fail closed: only an explicit cache with declared ou
 
 test("Bazel cache decisions derive from the plugin cache class: only deterministic replays, the manifest stays authoritative and a conflict fails closed",()=>{
  const admitClass=new Ajv({strict:true}).compile(targetCache),admit=new Ajv({strict:true}).addSchema(component,"component").compile({$ref:"component#/definitions/CacheDecision"}),database=new Database(":memory:");
- try{for(const row of corpus.classDecisions){
+ try{for(const row of corpus.classDecisions as readonly Expecting<(typeof corpus.classDecisions)[number],CacheDecision|{readonly error:string}>[]){
   const{noop,...rest}=row.task as {noop?:boolean;metadata?:{semio:{cache:unknown}}},task={id:"fixture:task",definition:{execution:{kind:noop?"noop":"command"},...rest}} as any,metadata=(row.task as {metadata?:{semio:{cache:unknown}}}).metadata?.semio.cache;
   expect(admitClass(metadata),row.name).toBe(row.valid);
   if("error" in row.expected){expect(()=>api.bazelCacheDecisionV1(task,row.skipCache),row.name).toThrow(row.expected.error);continue;}
   const klass=row.valid?(metadata as {class:string}).class:null,cache=(row.task as {cache?:boolean}).cache,outputs=(row.task as {outputs?:string[]}).outputs,
-   oracle=database.query("SELECT CASE WHEN ?1=1 THEN 'continuous' WHEN ?2=1 THEN 'skipped' WHEN ?3=1 THEN NULL WHEN ?4 IS NOT NULL AND ?4!='deterministic' THEN ?4 WHEN ?5=0 THEN 'declared' WHEN ?5 IS NULL AND ?4 IS NOT 'deterministic' THEN 'undeclared' WHEN ?6 IS NULL THEN 'unbounded' ELSE NULL END AS reason, COALESCE(?4 IS NOT NULL AND ?4!='deterministic' AND ?3=0 AND ?5=1,0) AS conflict").get(Number((row.task as {continuous?:boolean}).continuous===true),Number(row.skipCache),Number(noop===true),klass,cache===undefined?null:Number(cache),outputs===undefined?null:JSON.stringify(outputs)) as {reason:string|null;conflict:number},
+   oracle=database.query("SELECT CASE WHEN ?1=1 THEN 'continuous' WHEN ?2=1 THEN 'skipped' WHEN ?3=1 THEN NULL WHEN ?4 IS NOT NULL AND ?4!='deterministic' THEN ?4 WHEN ?5=0 THEN 'declared' WHEN ?5 IS NULL AND ?4 IS NOT 'deterministic' THEN 'undeclared' WHEN ?6 IS NULL THEN 'unbounded' ELSE NULL END AS reason, COALESCE(?4 IS NOT NULL AND ?4!='deterministic' AND ?3=0 AND ?5=1,0) AS conflict").get(Number((row.task as {continuous?:boolean}).continuous===true),Number(row.skipCache),Number(noop===true),klass,cache===undefined?null:Number(cache),outputs===undefined?null:JSON.stringify(outputs)) as {reason:BazelUncachedReasonV1|null;conflict:number},
    actual=api.bazelCacheDecisionV1(task,row.skipCache);
-  expect(oracle.conflict,row.name).toBe(0);expect<unknown>(actual,row.name).toEqual(row.expected);expect(admit(actual),row.name).toBe(true);expect<string|null>(actual.reason??null,row.name).toBe(oracle.reason);
+  expect(oracle.conflict,row.name).toBe(0);expect(actual,row.name).toEqual(row.expected);expect(admit(actual),row.name).toBe(true);expect(actual.reason??null,row.name).toBe(oracle.reason);
  }
  for(const row of corpus.classDecisions.filter(row=>"error" in row.expected&&row.valid)){
   const klass=(row.task as {metadata:{semio:{cache:{class:string}}}}).metadata.semio.cache.class;
@@ -57,7 +63,7 @@ test("Bazel cache decisions derive from the plugin cache class: only determinist
 });
 
 test("Bazel actions consume only dependency outputs: ordering tasks vanish, unselected ordering tasks are never emitted and transitive selectors reach every producer",()=>{
- expect<unknown>(Object.fromEntries([...emitted.keys()].sort().map(id=>[id,{kind:emitted.get(id)!.kind,restore:emitted.get(id)!.restore.map(label=>Object.keys(corpus.labels).find(key=>(corpus.labels as Record<string,string>)[key]===label)!).sort(),cache:emitted.get(id)!.cache}]))).toEqual(corpus.expectedActions);
+ expect(Object.fromEntries([...emitted.keys()].sort().map(id=>[id,{kind:emitted.get(id)!.kind,restore:emitted.get(id)!.restore.map(label=>Object.keys(corpus.labels).find(key=>(corpus.labels as Record<string,string>)[key]===label)!).sort(),cache:emitted.get(id)!.cache}]))).toEqual(corpus.expectedActions as Record<string,{kind:EmittedAction["kind"];restore:string[];cache:CacheDecision}>);
  expect(emitted.has("app:prepare")).toBe(false);
  const database=new Database(":memory:");
  try{

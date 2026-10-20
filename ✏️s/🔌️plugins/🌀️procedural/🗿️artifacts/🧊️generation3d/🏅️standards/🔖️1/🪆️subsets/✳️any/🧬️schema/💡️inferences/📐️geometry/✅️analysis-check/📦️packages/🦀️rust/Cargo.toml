@@ -25,6 +25,7 @@ semio-s-artifact-procedural-3d-geometry-compute = { workspace = true }
 semio-s-artifact-procedural-3d-geometry-inputs = { workspace = true }
 semio-s-artifact-procedural-3d-geometry-value = { workspace = true }
 semio-s-artifact-procedural-3d-model = { workspace = true }
+semio-framework-3d-mesh-quality = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🔎️quality/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 serde_json = { workspace = true }

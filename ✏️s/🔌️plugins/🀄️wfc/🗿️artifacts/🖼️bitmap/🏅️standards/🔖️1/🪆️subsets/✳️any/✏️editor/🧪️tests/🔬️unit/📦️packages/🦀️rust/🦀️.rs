@@ -100,7 +100,7 @@ pub mod editor {
                     pub mod fill {
                         pub use semio_s_artifact_wfc_bitmap_bitmap::editor::bitmap::modes::edit::tools::fill::*;
                         #[cfg(test)]
-                        #[path = "../../../../🎭️modes/✏️edit/🛠️tools/🌡fill/🧪️tests/🔬️unit/🦀️.rs"]
+                        #[path = "../../../../🎭️modes/✏️edit/🛠️tools/🌡️fill/🧪️tests/🔬️unit/🦀️.rs"]
                         pub mod tests;
                     }
                 }

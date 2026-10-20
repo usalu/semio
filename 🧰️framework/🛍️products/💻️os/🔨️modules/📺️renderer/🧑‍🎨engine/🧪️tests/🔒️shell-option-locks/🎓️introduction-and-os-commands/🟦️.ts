@@ -1,5 +1,5 @@
 /** 🎓️ The introduction replay, ephemeral brand and os command lock tests. */
-import { shouldStartIntroduction } from "@semio-tech/framework/modules/ui/introduction";
+import { shouldStartIntroduction } from "@semio-tech/ui/introduction";
 import { expect, it, vi } from "vitest";
 import { createMemoryStoragePort } from "@semio-tech/framework";
 import { initialShellState, buildOsCommands, dispatchOsCommand, shouldPersistIntroductionSeen, shouldReplayIntroductionOnLoad, isEphemeralShellBrand, clearDurableShellStorage } from "../../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";

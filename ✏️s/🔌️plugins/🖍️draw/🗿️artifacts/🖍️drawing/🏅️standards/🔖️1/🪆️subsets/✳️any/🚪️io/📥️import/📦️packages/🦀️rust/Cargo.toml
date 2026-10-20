@@ -39,3 +39,4 @@ semio-framework-os-kernel = { workspace = true, features = ["mutation-testing", 
 semio-s-artifact-draw-drawing-scene = { workspace = true }
 semio-s-artifact-draw-drawing-write = { workspace = true }
 serde_json = { workspace = true }
+semio-s-artifact-draw-drawing = { path = "../../../../../../../../📦️packages/🦀️rust" }

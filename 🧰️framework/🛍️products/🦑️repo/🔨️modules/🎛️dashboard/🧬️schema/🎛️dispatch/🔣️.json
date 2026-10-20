@@ -11,7 +11,8 @@
     "unitManifests",
     "unitWorkspace",
     "borrowedObservations",
-    "valueNativeRoutes"
+    "valueNativeRoutes",
+    "sourceDispatch"
   ],
   "properties": {
     "windows": {
@@ -369,6 +370,28 @@
               }
             }
           }
+        }
+      }
+    },
+    "sourceDispatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selector",
+        "target",
+        "test"
+      ],
+      "properties": {
+        "selector": {
+          "const": "dispatch"
+        },
+        "target": {
+          "const": "test-dispatch"
+        },
+        "test": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
         }
       }
     }

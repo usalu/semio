@@ -1,10 +1,9 @@
 use super::*;
 use semio_framework_test_fixtures::repo_text;
-use semio_s_artifact_procedural_3d_editor_config::SetSnapshot;
-use semio_s_artifact_procedural_3d_mutations::generation3d_host_snapshot_operations;
+use semio_s_artifact_draw_drawing_editor_commands_2::set_snapshot::SetSnapshot;
 use crate::SnapshotRead;
-use semio_s_artifact_procedural_3d_model::default_snapshot;
-use semio_s_artifact_procedural_3d_model::example_snapshot;
+use semio_s_artifact_procedural_3d_io_text::snapshot::default_snapshot;
+use semio_s_artifact_procedural_3d_io_text::snapshot::example_snapshot;
 use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_BOX_FILLET;
 use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_BOX_SHELL;
 use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE;

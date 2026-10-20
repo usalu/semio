@@ -6,7 +6,7 @@ import{withPrintStorageTaskV1,type PrintOperationV1,type PrintStorageTaskV1}from
 import{printArtifactLayoutV1,runPrintWorkersV1,printScratchOwnerV1}from"../../🟦️.ts";
 import{tectonicDistributionV1,printBundlePlanV1,readPrintBundleRangeV1,readPrintResponseV1,decodePrintTectonicV1}from"../🟦️.ts";
 import { withArtifactScratchV1, withArtifactDestinationTaskV1, withRepositoryArtifactDestinationV1, stageRepositoryArtifacts, withRepositoryArtifactV1, withRepositoryArtifactTaskV1, type RepositoryArtifactV1, readNativeCallerAuthorityV1 } from "@semio-tech/repo-lib/artifacts";
-import{withArtifactDescriptorV1,artifactReadFlagsV1}from"@semio-tech/framework/filesystem/observation/descriptor";
+import{withArtifactDescriptorV1,artifactReadFlagsV1}from"@semio-tech/framework-filesystem/observation/descriptor";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
 import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from"./../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import fontManifest from"../../../🔨️modules/🔤print-font-catalog/🔣️.json"with{type:"json"};

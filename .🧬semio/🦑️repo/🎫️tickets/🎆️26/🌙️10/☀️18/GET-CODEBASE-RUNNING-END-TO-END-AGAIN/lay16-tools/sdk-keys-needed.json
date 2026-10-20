@@ -1,0 +1,869 @@
+[
+ {
+  "consumer": "plugins",
+  "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🔀️surface-switch/🟦️.ts",
+  "names": [
+   "resolveBootPrimaryAppV1"
+  ],
+  "importers": [
+   "✏️s/🔌️plugins/🌀️procedural/🧪️tests/🚀️renderer-boot-selection/🟦️.ts"
+  ],
+  "specifiers": [
+   "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🔀️surface-switch/🟦️.ts"
+  ],
+  "stagedBatchKeys": [
+   {
+    "pkg": "@semio-tech/framework-os",
+    "key": "./modules/renderer/engine/elements/ShellHost/surface-switch"
+   }
+  ]
+ },
+ {
+  "consumer": "plugins",
+  "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🧪️testing/🎚️config/🟦️.ts",
+  "names": [
+   "default"
+  ],
+  "importers": [
+   "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧪️tests/🎚️config/📺️renderer/🟦️.ts",
+   "✏️s/🔌️plugins/📏️layout/🧪️tests/🎚️renderer-contract/🟦️.ts",
+   "✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🎚️renderer-contract/🟦️.ts"
+  ],
+  "specifiers": [
+   "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🧪️testing/🎚️config/🟦️.ts",
+   "@semio-tech/framework-renderer-react/testing/config"
+  ],
+  "stagedBatchKeys": []
+ },
+ {
+  "consumer": "plugins",
+  "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx",
+  "names": [
+   "Board2dHost",
+   "UiDocumentStore",
+   "beginBoardPeerGesture",
+   "boardPeerOwnsGesture",
+   "endBoardPeerGesture",
+   "unregisterBoard2dPeer"
+  ],
+  "importers": [
+   "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧪️tests/🔬️probe/🟦️.ts",
+   "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️tests/🪪️session-factory/🟦️.ts"
+  ],
+  "specifiers": [
+   "@semio-tech/framework-renderer-react"
+  ],
+  "stagedBatchKeys": []
+ },
+ {
+  "consumer": "plugins",
+  "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🪪️host-bootstrap/🟦️.tsx",
+  "names": [
+   "*"
+  ],
+  "importers": [
+   "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📜️script.ts"
+  ],
+  "specifiers": [
+   "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🪪️host-bootstrap/🟦️.tsx"
+  ],
+  "stagedBatchKeys": [
+   {
+    "pkg": "@semio-tech/framework-os",
+    "key": "./modules/renderer/engine/elements/ShellHost/host-bootstrap"
+   }
+  ]
+ },
+ {
+  "consumer": "plugins",
+  "target": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🎮️mutation/🗂️map/🧪️testing/🧪️shared-map-delta-source/🟦️.ts",
+  "names": [
+   "testSharedMapDeltaOracle"
+  ],
+  "importers": [
+   "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🕹️interaction/🧪️tests/🔬️unit/🟦️.ts"
+  ],
+  "specifiers": [
+   "@semio-tech/framework-replication/mutation/map/testing/shared-map-delta-source"
+  ],
+  "stagedBatchKeys": []
+ },
+ {
+  "consumer": "plugins",
+  "target": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🌿️variant-field/🟦️.ts",
+  "names": [
+   "testDeclaredVariantFieldOracle"
+  ],
+  "importers": [
+   "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🕹️interaction/🧪️tests/🔬️unit/🟦️.ts"
+  ],
+  "specifiers": [
+   "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🌿️variant-field/🟦️.ts"
+  ],
+  "stagedBatchKeys": [
+   {
+    "pkg": "@semio-tech/framework-dsl-record-ts",
+    "key": "./testing/variant-field"
+   }
+  ]
+ },
+ {
+  "consumer": "plugins",
+  "target": "🧰️framework/🔨️modules/🌱️value/📶️sort/🧪️tests/🟦️.ts",
+  "names": [
+   "verifyRetainedIndexSortOracle"
+  ],
+  "importers": [
+   "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🧪️tests/🔬️rust-package-commands/🟦️.ts",
+   "✏️s/🔌️plugins/🏗️fem/🧪️tests/🧪️shared-authority/🟦️.ts"
+  ],
+  "specifiers": [
+   "../../../../../../../🧰️framework/🔨️modules/🌱️value/📶️sort/🧪️tests/🟦️.ts",
+   "../../../../../🧰️framework/🔨️modules/🌱️value/📶️sort/🧪️tests/🟦️.ts"
+  ],
+  "stagedBatchKeys": [
+   {
+    "pkg": "@semio-tech/value-ts",
+    "key": "./sort/testing"
+   }
+  ]
+ },
+ {
+  "consumer": "plugins",
+  "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🧬️schema/🪪️entity-id/🟦️.ts",
+  "names": [
+   "operationEntityId"
+  ],
+  "importers": [
+   "✏️s/🔌️plugins/🏗️fem/🧪️tests/🧪️shared-authority/🟦️.ts"
+  ],
+  "specifiers": [
+   "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🧬️schema/🪪️entity-id/🟦️.ts"
+  ],
+  "stagedBatchKeys": [
+   {
+    "pkg": "@semio-tech/framework-plugin",
+    "key": "./declaration/view/schema/entity-id"
+   }
+  ]
+ },
+ {
+  "consumer": "plugins",
+  "target": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧪️color-input/🟦️.ts",
+  "names": [
+   "colorInputSelfTests"
+  ],
+  "importers": [
+   "✏️s/🔌️plugins/🏗️fem/🧪️tests/🧪️shared-authority/🟦️.ts"
+  ],
+  "specifiers": [
+   "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧪️color-input/🟦️.ts"
+  ],
+  "stagedBatchKeys": [
+   {
+    "pkg": "@semio-tech/framework",
+    "key": "./ui/contract/testing/color-input"
+   }
+  ]
+ },
+ {
+  "consumer": "plugins",
+  "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🧫️fixtures/🪪️entity-id/🔣️.json",
+  "names": [
+   "default"
+  ],
+  "importers": [
+   "✏️s/🔌️plugins/🏗️fem/🧪️tests/🧪️shared-authority/🟦️.ts"
+  ],
+  "specifiers": [
+   "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🧫️fixtures/🪪️entity-id/🔣️.json"
+  ],
+  "stagedBatchKeys": [
+   {
+    "pkg": "@semio-tech/framework-plugin",
+    "key": "./declaration/view/fixtures/entity-id.json"
+   }
+  ]
+ },
+ {
+  "consumer": "plugins",
+  "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🧬️schema/🪪️render-revision/🟦️.ts",
+  "names": [
+   "renderRevisionMatches"
+  ],
+  "importers": [
+   "✏️s/🔌️plugins/🏗️fem/🧪️tests/🧪️shared-authority/🟦️.ts"
+  ],
+  "specifiers": [
+   "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🧬️schema/🪪️render-revision/🟦️.ts"
+  ],
+  "stagedBatchKeys": [
+   {
+    "pkg": "@semio-tech/framework-plugin",
+    "key": "./declaration/view/schema/render-revision"
+   }
+  ]
+ },
+ {
+  "consumer": "plugins",
+  "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🧬️schema/🪪️render-revision/🔣️.json",
+  "names": [
+   "default"
+  ],
+  "importers": [
+   "✏️s/🔌️plugins/🏗️fem/🧪️tests/🧪️shared-authority/🟦️.ts"
+  ],
+  "specifiers": [
+   "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🧬️schema/🪪️render-revision/🔣️.json"
+  ],
+  "stagedBatchKeys": [
+   {
+    "pkg": "@semio-tech/framework-plugin",
+    "key": "./declaration/view/schema/render-revision.json"
+   }
+  ]
+ },
+ {
+  "consumer": "plugins",
+  "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🧫️fixtures/🪪️render-revision/🔣️.json",
+  "names": [
+   "default"
+  ],
+  "importers": [
+   "✏️s/🔌️plugins/🏗️fem/🧪️tests/🧪️shared-authority/🟦️.ts"
+  ],
+  "specifiers": [
+   "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🧫️fixtures/🪪️render-revision/🔣️.json"
+  ],
+  "stagedBatchKeys": [
+   {
+    "pkg": "@semio-tech/framework-plugin",
+    "key": "./declaration/view/fixtures/render-revision.json"
+   }
+  ]
+ },
+ {
+  "consumer": "plugins",
+  "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🔮️oracles/🖱️mounted-input/🟦️.tsx",
+  "names": [
+   "canvasInputSessions",
+   "mountedHost",
+   "settle"
+  ],
+  "importers": [
+   "✏️s/🔌️plugins/📏️layout/🧪️tests/🛍️canvas-catalogue/🟦️.ts"
+  ],
+  "specifiers": [
+   "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🔮️oracles/🖱️mounted-input/🟦️.tsx"
+  ],
+  "stagedBatchKeys": [
+   {
+    "pkg": "@semio-tech/framework-os",
+    "key": "./modules/renderer/engine/elements/Canvas2dHost/oracles/mounted-input"
+   }
+  ]
+ },
+ {
+  "consumer": "plugins",
+  "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🧪️tests/🧫️fixtures/🖱️input-contract/🔣️.json",
+  "names": [
+   "default"
+  ],
+  "importers": [
+   "✏️s/🔌️plugins/📏️layout/🧪️tests/🛍️canvas-catalogue/🟦️.ts"
+  ],
+  "specifiers": [
+   "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🧪️tests/🧫️fixtures/🖱️input-contract/🔣️.json"
+  ],
+  "stagedBatchKeys": [
+   {
+    "pkg": "@semio-tech/framework-os",
+    "key": "./modules/renderer/engine/elements/Canvas2dHost/testing/fixtures/input-contract.json"
+   }
+  ]
+ },
+ {
+  "consumer": "plugins",
+  "target": "🧰️framework/📦️packages/🟦️typescript/♾️infinite/🌍️world/🎨️r3f/🟦️.ts",
+  "names": [
+   "DEFAULT_LOD_GRID_FACTOR",
+   "DEFAULT_MANUAL_LOD",
+   "OrbitCameraProjection",
+   "OrbitCameraViewId",
+   "ViewRadiusLayer",
+   "WORLD_LOCKED_OPACITY_SCALE",
+   "WorldCameraInvalidator",
+   "WorldCanvas",
+   "WorldCanvasProps",
+   "WorldLayer",
+   "WorldLodBridge",
+   "WorldLodGridHelper",
+   "WorldOrbitCameraViewApplier",
+   "WorldOrbitGated",
+   "WorldOrbitViewControls",
+   "WorldOrbitViewSnapGateProvider",
+   "WorldProjectionKindSwitch",
+   "WorldProjectionSpec",
+   "WorldReferenceLayer",
+   "WorldReferenceProps",
+   "WorldReferenceRelocatePayload",
+   "createTemplatePool",
+   "orbitCameraViewGumballPlane",
+   "worldEntitySelectable",
+   "worldProjectionFamily",
+   "worldProjectionSpecIconId"
+  ],
+  "importers": [
+   "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🎛️repl/📺️view-state/🟦️.ts",
+   "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🧲️geometry-targets/🎨️pick-styling/🟦️.ts",
+   "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🧲️geometry-targets/🎯️pick-model/🟦️.ts",
+   "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🧲️geometry-targets/🟦️.tsx",
+   "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🧾️repl-model/🟦️.tsx",
+   "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🪩️canvas/🟦️.tsx"
+  ],
+  "specifiers": [
+   "../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/♾️infinite/🌍️world/🎨️r3f/🟦️.ts",
+   "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/♾️infinite/🌍️world/🎨️r3f/🟦️.ts"
+  ],
+  "stagedBatchKeys": [
+   {
+    "pkg": "@semio-tech/framework",
+    "key": "./infinite/world/r3f"
+   }
+  ]
+ },
+ {
+  "consumer": "plugins",
+  "target": "🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/🟦️.ts",
+  "names": [
+   "DenseSolveBudget",
+   "DenseSolveCursor"
+  ],
+  "importers": [
+   "✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌰️kernel/🧪️tests/🌡️thermal/🟦️.ts",
+   "✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧠️precompute/🔲️enclosure/⚡️exchange/🟦️.ts"
+  ],
+  "specifiers": [
+   "../../../../../../../../../🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/🟦️.ts"
+  ],
+  "stagedBatchKeys": [
+   {
+    "pkg": "@semio-tech/framework",
+    "key": "./math/algebra/dense"
+   }
+  ]
+ },
+ {
+  "consumer": "plugins",
+  "target": "🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/↔️inverse/🟦️.ts",
+  "names": [
+   "DenseInverseCursor"
+  ],
+  "importers": [
+   "✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧠️precompute/🔲️enclosure/⚡️exchange/🟦️.ts"
+  ],
+  "specifiers": [
+   "../../../../../../../../../🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/↔️inverse/🟦️.ts"
+  ],
+  "stagedBatchKeys": [
+   {
+    "pkg": "@semio-tech/framework",
+    "key": "./math/algebra/dense/inverse"
+   }
+  ]
+ },
+ {
+  "consumer": "plugins",
+  "target": "🧰️framework/🔨️modules/⏯️tool-run/📨️payload/🌊️stream/🟦️.ts",
+  "names": [
+   "PayloadIndexedSource",
+   "PayloadReadView",
+   "PayloadUpdate",
+   "validatePayloadContinuation",
+   "validatePayloadUpdate"
+  ],
+  "importers": [
+   "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📊️results/🧪️tests/🟦️.ts"
+  ],
+  "specifiers": [
+   "../../../../../../../../../../../../🧰️framework/🔨️modules/⏯️tool-run/📨️payload/🌊️stream/🟦️.ts"
+  ],
+  "stagedBatchKeys": [
+   {
+    "pkg": "@semio-tech/framework-tool-run-ts",
+    "key": "./payload/stream"
+   }
+  ]
+ },
+ {
+  "consumer": "plugins",
+  "target": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts",
+  "names": [
+   "KernelOriginalOperationIssuer",
+   "KernelOriginalResourcePool",
+   "OriginalOperationSource"
+  ],
+  "importers": [
+   "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️simulation-session/🧪️tests/🎟️source/🟦️.ts"
+  ],
+  "specifiers": [
+   "@semio-tech/framework-actor/retained-turn"
+  ],
+  "stagedBatchKeys": []
+ },
+ {
+  "consumer": "plugins",
+  "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🎨️paint/🟦️.ts",
+  "names": [
+   "CanvasSceneNode",
+   "drawSceneNode",
+   "paintCompositedLayers"
+  ],
+  "importers": [
+   "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧪️tests/🔬️unit/🟦️.ts"
+  ],
+  "specifiers": [
+   "../../../../../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🎨️paint/🟦️.ts"
+  ],
+  "stagedBatchKeys": [
+   {
+    "pkg": "@semio-tech/framework-os",
+    "key": "./modules/renderer/engine/elements/Canvas2dHost/paint"
+   }
+  ]
+ },
+ {
+  "consumer": "plugins",
+  "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🟦️.ts",
+  "names": [
+   "restoreSelection"
+  ],
+  "importers": [
+   "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🎯️pixel-selection/🟦️.ts"
+  ],
+  "specifiers": [
+   "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🟦️.ts"
+  ],
+  "stagedBatchKeys": [
+   {
+    "pkg": "@semio-tech/framework-os",
+    "key": "./modules/renderer/engine/elements/Paint2dHost/editing"
+   }
+  ]
+ },
+ {
+  "consumer": "plugins",
+  "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🪪️WasmSessionLoader/🔮️oracles/🪪️session-double/🟦️.ts",
+  "names": [
+   "boardTestSession"
+  ],
+  "importers": [
+   "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️tests/🪪️session-factory/🟦️.ts"
+  ],
+  "specifiers": [
+   "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🪪️WasmSessionLoader/🔮️oracles/🪪️session-double/🟦️.ts"
+  ],
+  "stagedBatchKeys": [
+   {
+    "pkg": "@semio-tech/framework-os",
+    "key": "./modules/renderer/engine/elements/WasmSessionLoader/oracles/session-double"
+   }
+  ]
+ },
+ {
+  "consumer": "plugins",
+  "target": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🪪️WasmSessionLoader/🟦️.tsx",
+  "names": [
+   "BoardPeerScope",
+   "BoardSessionFactoryContext",
+   "ScopedBoardSessionFactory",
+   "createBoardPeerScope",
+   "resolveAppSurfaceSessionFactory"
+  ],
+  "importers": [
+   "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️tests/🪪️session-factory/🟦️.ts"
+  ],
+  "specifiers": [
+   "@semio-tech/framework-os/modules/renderer/engine/elements/WasmSessionLoader"
+  ],
+  "stagedBatchKeys": []
+ },
+ {
+  "consumer": "plugins",
+  "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️presence/📷️camera/🧪️tests/🟦️.ts",
+  "names": [
+   "testCameraPresenceContract"
+  ],
+  "importers": [
+   "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📜️script.ts"
+  ],
+  "specifiers": [
+   "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️presence/📷️camera/🧪️tests/🟦️.ts"
+  ],
+  "stagedBatchKeys": [
+   {
+    "pkg": "@semio-tech/framework-plugin",
+    "key": "./presence/camera/testing"
+   }
+  ]
+ },
+ {
+  "consumer": "plugins",
+  "target": "🧰️framework/🔨️modules/🧵️job/⏱️context/🧪️testing/🎟️caller/🧪️tests/🟦️.ts",
+  "names": [
+   "*"
+  ],
+  "importers": [
+   "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🎟️caller/🧪️tests/🟦️.ts"
+  ],
+  "specifiers": [
+   "./../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/⏱️context/🧪️testing/🎟️caller/🧪️tests/🟦️.ts"
+  ],
+  "stagedBatchKeys": [
+   {
+    "pkg": "@semio-tech/framework",
+    "key": "./job/context/testing/caller/testing"
+   }
+  ]
+ },
+ {
+  "consumer": "plugins",
+  "target": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🛑️extension-io/🟦️.ts",
+  "names": [
+   "PUZZLE3D_MESH_COMMAND_RAW_BYTES",
+   "PUZZLE3D_MESH_PAGE_VALUES",
+   "PUZZLE3D_MESH_REUPLOAD_CLAIMS",
+   "PUZZLE3D_MESH_UPLOAD_MAX_PAGES",
+   "PUZZLE3D_MESH_UPLOAD_SLOTS",
+   "Puzzle3dBrushMeshRegistry",
+   "drainPuzzle3dBrushMeshQueue",
+   "puzzle3dAnnounceableBrushMeshUrls",
+   "puzzle3dBrushMeshDigest",
+   "puzzle3dBrushMeshPages",
+   "puzzle3dBrushMeshQueueStep"
+  ],
+  "importers": [
+   "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🥽️brush-mesh-upload/🟦️.ts"
+  ],
+  "specifiers": [
+   "@semio-tech/framework-os/modules/renderer/engine/elements/ShellHelpers/extension-io"
+  ],
+  "stagedBatchKeys": []
+ },
+ {
+  "consumer": "renderer-host",
+  "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/📇️directory-and-hub-contracts/🟦️.ts",
+  "names": [
+   "directoryHomeBootstrapOracle",
+   "directoryInviteCapabilityOracle",
+   "hubAuthContractOracle",
+   "scopedPresenceOracle"
+  ],
+  "importers": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts"
+  ],
+  "specifiers": [
+   "../../../../🔮️oracles/📇️directory-and-hub-contracts/🟦️.ts"
+  ],
+  "stagedBatchKeys": [
+   {
+    "pkg": "@semio-tech/framework-os",
+    "key": "./modules/renderer/engine/oracles/directory-and-hub-contracts"
+   }
+  ]
+ },
+ {
+  "consumer": "renderer-host",
+  "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/🖱️world3d-gestures-and-selection/🟦️.ts",
+  "names": [
+   "interactionSelectionSetOracle",
+   "selectionMergeVocabularyOracle",
+   "world3dPointerGestureOracle"
+  ],
+  "importers": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts"
+  ],
+  "specifiers": [
+   "../../../../🔮️oracles/🖱️world3d-gestures-and-selection/🟦️.ts"
+  ],
+  "stagedBatchKeys": [
+   {
+    "pkg": "@semio-tech/framework-os",
+    "key": "./modules/renderer/engine/oracles/world3d-gestures-and-selection"
+   }
+  ]
+ },
+ {
+  "consumer": "renderer-host",
+  "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/🪪️surface-host-retention/🟦️.ts",
+  "names": [
+   "surfaceHostRetentionOracle"
+  ],
+  "importers": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts"
+  ],
+  "specifiers": [
+   "../../../../🔮️oracles/🪪️surface-host-retention/🟦️.ts"
+  ],
+  "stagedBatchKeys": [
+   {
+    "pkg": "@semio-tech/framework-os",
+    "key": "./modules/renderer/engine/oracles/surface-host-retention"
+   }
+  ]
+ },
+ {
+  "consumer": "renderer-host",
+  "target": "🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️.tsx",
+  "names": [
+   "DEFAULT_LOD_GRID_FACTOR",
+   "DEFAULT_MANUAL_LOD",
+   "GLB_MESH_FRAME_ROTATION_X",
+   "WORLD_MESH_OUTLINE_USER_DATA_KEY",
+   "WORLD_REFERENCE_DEFAULT_WIDTH",
+   "WorldCameraState",
+   "WorldCanvas",
+   "WorldLayerStack",
+   "WorldLodBridge",
+   "WorldOrbitGated",
+   "WorldOrbitViewControls",
+   "WorldOrbitViewSnapGateProvider",
+   "WorldProjectionKindSwitch",
+   "WorldProjectionRig",
+   "WorldProjectionSpec",
+   "WorldProjectionTemplateDescriptor",
+   "WorldReferenceLayer",
+   "WorldSceneContentBounds",
+   "WorldVolumeLayer",
+   "WorldVolumeRelocatePayload",
+   "cadVec3ToThree",
+   "computeWorldProjectionPose",
+   "createWorldProjectionTemplates",
+   "decodeWorldProjectionTemplateId",
+   "encodeWorldProjectionTemplateId",
+   "frameWorldProjectionPose",
+   "lodFromCameraDistance",
+   "lodGridStepWorld",
+   "lodOrbitDistanceForCamera",
+   "worldProjectionDefaults",
+   "worldProjectionFamily",
+   "worldProjectionGumballPlane",
+   "worldProjectionModeFov",
+   "worldProjectionOrbitConstraints",
+   "worldProjectionSpecIconId",
+   "worldProjectionSpecLabel",
+   "worldProjectionTemplateApplySpec",
+   "worldProjectionTemplateSelectionId",
+   "worldSceneContentBounds",
+   "worldSceneContentBoundsKey"
+  ],
+  "importers": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🌍️scene-lanes/🟦️.ts",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🎨️mesh-render/🟦️.tsx",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🎨️mesh-render/🪟️glb-bounds-and-styling/🟦️.ts",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🎯️marquee-and-bridges/🟦️.tsx",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🔀️paint-and-projection/🟦️.ts",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🔭️scene-schema/🟦️.ts",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧩️glb-surface/🟦️.tsx",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🔀️projection-pane/🟦️.tsx",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧭️fit-and-presence/🟦️.ts",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧮️gumball-math/🟦️.ts",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧱️instance-layers/🟦️.tsx",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🪟️window-view-store/🟦️.tsx",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📐️layout-hotkeys/🟦️.ts",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📌️ChromePanels/🖥️display-panel/🟦️.tsx",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🧪️tests/🌐️instance-title/🟦️.tsx"
+  ],
+  "specifiers": [
+   "@semio-tech/infinite-world-r3f"
+  ],
+  "stagedBatchKeys": []
+ },
+ {
+  "consumer": "renderer-host",
+  "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🎬️media/🟦️.ts",
+  "names": [
+   "*",
+   "MEDIA_TRANSPORT_EXTENSION_ID",
+   "MediaTransportProps",
+   "mediaTransportLabels",
+   "parseMediaTransportProps"
+  ],
+  "importers": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎬️MediaTransportHost/🟦️.tsx",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎬️MediaTransportHost/🧪️tests/♻️lifecycle/🌐️browser/🟦️.tsx",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎬️MediaTransportHost/🧪️tests/♻️lifecycle/🟦️.tsx"
+  ],
+  "specifiers": [
+   "../../../../🔌️plugin/🪟️window-kits/🎬️media/🟦️.ts",
+   "../../../../../../../🔌️plugin/🪟️window-kits/🎬️media/🟦️.ts",
+   "../../../../../../🔌️plugin/🪟️window-kits/🎬️media/🟦️.ts"
+  ],
+  "stagedBatchKeys": []
+ },
+ {
+  "consumer": "renderer-host",
+  "target": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts",
+  "names": [
+   "actorBytePageSchema",
+   "createActorBytePage"
+  ],
+  "importers": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🧪️tests/📄️paged-payload/🟦️.tsx",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🧪️tests/🔢️scalar-source-oracles/🟦️.tsx",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🧪️tests/🪛️typedwire-helpers/🟦️.tsx"
+  ],
+  "specifiers": [
+   "../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts"
+  ],
+  "stagedBatchKeys": []
+ },
+ {
+  "consumer": "renderer-host",
+  "target": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
+  "names": [
+   "decodeAppCommand",
+   "decodeBackboneWorkerRequest",
+   "decodePackValue",
+   "encodeBackboneWorkerRequest",
+   "packUInt"
+  ],
+  "importers": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🧪️tests/🔏️retained-and-store/🟦️.tsx"
+  ],
+  "specifiers": [
+   "@semio-tech/framework-os"
+  ],
+  "stagedBatchKeys": []
+ },
+ {
+  "consumer": "renderer-host",
+  "target": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts",
+  "names": [
+   "ActorInstanceLifecycleReceipt",
+   "encodeActorInstanceLifecycle"
+  ],
+  "importers": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🧪️tests/🧠️resident-pool-and-metadata/🏊️pool-slot-and-scope/🟦️.tsx",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🧪️tests/🧾️owned-intake-and-surface/🟦️.tsx",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🧪️tests/🪛️typedwire-helpers/🟦️.tsx",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🧵️turn-dispatch/🟦️.ts"
+  ],
+  "specifiers": [
+   "../../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts",
+   "../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts",
+   "../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts"
+  ],
+  "stagedBatchKeys": []
+ },
+ {
+  "consumer": "renderer-host",
+  "target": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts",
+  "names": [
+   "decodeActorUiPatchReceipt",
+   "encodeActorUiPatchReceipt"
+  ],
+  "importers": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🧪️tests/🪛️typedwire-helpers/🟦️.tsx",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🖼️surface-refresh/🟦️.ts",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx"
+  ],
+  "specifiers": [
+   "../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts",
+   "../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts",
+   "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts"
+  ],
+  "stagedBatchKeys": []
+ },
+ {
+  "consumer": "renderer-host",
+  "target": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🟦️typescript/🎛️controlled/🟦️.ts",
+  "names": [
+   "Diagnostic"
+  ],
+  "importers": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/📥️invocation-frames/🟦️.ts",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/📬️typed-result/🟦️.ts"
+  ],
+  "specifiers": [
+   "@semio-tech/framework-diagnostic-ts/controlled"
+  ],
+  "stagedBatchKeys": []
+ },
+ {
+  "consumer": "renderer-host",
+  "target": "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/📣️delivery/🟦️.ts",
+  "names": [
+   "OperationDiagnosticObservers"
+  ],
+  "importers": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/📬️typed-result/🟦️.ts",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🔗️channel-adapter/🟦️.ts",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx"
+  ],
+  "specifiers": [
+   "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/📣️delivery/🟦️.ts",
+   "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/📣️delivery/🟦️.ts"
+  ],
+  "stagedBatchKeys": [
+   {
+    "pkg": "@semio-tech/framework-actor",
+    "key": "./wire-turn/diagnostic/delivery"
+   }
+  ]
+ },
+ {
+  "consumer": "renderer-host",
+  "target": "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🟦️.ts",
+  "names": [
+   "OperationDiagnosticInbox"
+  ],
+  "importers": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/📬️typed-result/🟦️.ts"
+  ],
+  "specifiers": [
+   "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🟦️.ts"
+  ],
+  "stagedBatchKeys": [
+   {
+    "pkg": "@semio-tech/framework-actor",
+    "key": "./wire-turn/diagnostic"
+   }
+  ]
+ },
+ {
+  "consumer": "renderer-host",
+  "target": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts",
+  "names": [
+   "Lane",
+   "TurnScheduler"
+  ],
+  "importers": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🔁️turn-settle/🟦️.ts",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🧵️turn-dispatch/🟦️.ts",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🪢️handle-scope/🟦️.ts"
+  ],
+  "specifiers": [
+   "../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts",
+   "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts"
+  ],
+  "stagedBatchKeys": []
+ },
+ {
+  "consumer": "renderer-host",
+  "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts",
+  "names": [
+   "isGeneratedPath"
+  ],
+  "importers": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧵️worker-cell/🧪️tests/🟦️.ts"
+  ],
+  "specifiers": [
+   "@semio-tech/repo-lib/process"
+  ],
+  "stagedBatchKeys": []
+ }
+]

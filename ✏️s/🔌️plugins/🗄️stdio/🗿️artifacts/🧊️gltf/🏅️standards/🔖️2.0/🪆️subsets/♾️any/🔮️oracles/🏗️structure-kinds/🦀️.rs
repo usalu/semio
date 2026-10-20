@@ -497,34 +497,14 @@ pub(super) fn base64_decode(text: &str) -> Option<Vec<u8>> {
 pub(super) fn apply_structure(doc: &mut json::JsonValue, kind: &str, params: &Json) -> Option<Result<(), String>> {
     let run = || -> Result<(), String> {
         match kind {
-            "bind-default-scene" => {
-                let scene = usize_param(params, "scene")?;
-                if scene >= top_level_len(doc, "scenes") {
-                    return Err(format!("{kind}: scene {scene} out of range"));
-                }
-                if default_scene_index(doc) == Some(scene) {
-                    return Err(format!("{kind}: scene is already default"));
-                }
-                obj_set(doc, "scene", json::JsonValue::from(scene));
-            }
+            "bind-default-scene" => structure_bind_default_scene(doc, kind, params)?,
             "unbind-default-scene" => {
                 if default_scene_index(doc).is_none() {
                     return Err(format!("{kind}: no default scene is bound"));
                 }
                 remove_key(doc, "scene");
             }
-            "bind-node-camera" | "bind-node-mesh" | "bind-node-skin" => {
-                let (field, family) = match kind {
-                    "bind-node-camera" => ("camera", "cameras"),
-                    "bind-node-mesh" => ("mesh", "meshes"),
-                    _ => ("skin", "skins"),
-                };
-                let target = usize_param(params, field)?;
-                if target >= top_level_len(doc, family) {
-                    return Err(format!("{kind}: {field} {target} out of range"));
-                }
-                obj_set(entry_mut(doc, kind, "nodes", usize_param(params, "node")?)?, field, json::JsonValue::from(target));
-            }
+            "bind-node-camera" | "bind-node-mesh" | "bind-node-skin" => structure_bind_node_camera_and_more(doc, kind, params)?,
             "unbind-node-camera" | "unbind-node-mesh" | "unbind-node-skin" => {
                 let field = kind.trim_start_matches("unbind-node-");
                 let node = entry_mut(doc, kind, "nodes", usize_param(params, "node")?)?;
@@ -560,53 +540,15 @@ pub(super) fn apply_structure(doc: &mut json::JsonValue, kind: &str, params: &Js
                 reorder_index_list(ensure_array(scene, "nodes"), kind, &order)?;
             }
             "move-node-parent" => move_node_parent(doc, usize_param(params, "parent")?, usize_param(params, "child")?, usize_param(params, "position")?)?,
-            "change-node-name" | "change-scene-name" | "change-mesh-name" => {
-                let (family, field) = match kind {
-                    "change-node-name" => ("nodes", "node"),
-                    "change-scene-name" => ("scenes", "scene"),
-                    _ => ("meshes", "mesh"),
-                };
-                let value = nullable_str_param(params, "value")?;
-                let item = entry_mut(doc, kind, family, usize_param(params, field)?)?;
-                if kind == "change-node-name" && obj_get(item, "name").and_then(json::JsonValue::as_str).map(str::to_string) == value {
-                    return Err(format!("{kind}: name already has the requested presence and value"));
-                }
-                set_or_remove(item, "name", value.map(json::JsonValue::from));
-            }
-            "change-node-extra-data" | "change-node-extension-data" | "change-scene-extra-data" | "change-scene-extension-data" | "change-mesh-extra-data" | "change-mesh-extension-data" => {
-                let (family, field) = match kind.split('-').nth(1) {
-                    Some("node") => ("nodes", "node"),
-                    Some("scene") => ("scenes", "scene"),
-                    _ => ("meshes", "mesh"),
-                };
-                let key = if kind.ends_with("extra-data") { "extras" } else { "extensions" };
-                let value = presence_param(params)?;
-                let item = entry_mut(doc, kind, family, usize_param(params, field)?)?;
-                if kind == "change-node-extra-data" && obj_get(item, key).cloned() == value {
-                    return Err(format!("{kind}: extras already has the requested presence and value"));
-                }
-                set_or_remove(item, key, value);
-            }
+            "change-node-name" | "change-scene-name" | "change-mesh-name" => structure_change_node_name_and_more(doc, kind, params)?,
+            "change-node-extra-data" | "change-node-extension-data" | "change-scene-extra-data" | "change-scene-extension-data" | "change-mesh-extra-data" | "change-mesh-extension-data" => structure_change_node_extra_data_and_more(doc, kind, params)?,
             "change-primitive-extra-data" | "change-primitive-extension-data" => {
                 let key = if kind.ends_with("extra-data") { "extras" } else { "extensions" };
                 let value = presence_param(params)?;
                 set_or_remove(primitive_mut(doc, kind, usize_param(params, "mesh")?, usize_param(params, "primitive")?)?, key, value);
             }
             "change-node-transform" => change_node_transform(doc, usize_param(params, "node")?, object_param(params, "transform")?)?,
-            "change-node-morph-weights" => {
-                let node = usize_param(params, "node")?;
-                let weights = f64_array_param(params, "weights")?;
-                if weights.iter().any(|value| !value.is_finite()) {
-                    return Err(format!("{kind}: weights must be finite"));
-                }
-                let mesh = arr(doc, "nodes").get(node).ok_or(format!("{kind}: node {node} out of range"))?.clone();
-                match obj_get(&mesh, "mesh").and_then(json::JsonValue::as_usize) {
-                    None if !weights.is_empty() => return Err(format!("{kind}: morph weights require a mesh")),
-                    Some(mesh_index) if !mesh_target_arity_is(doc, mesh_index, weights.len()) => return Err(format!("{kind}: weights must match primitive target count")),
-                    _ => {}
-                }
-                set_or_remove(entry_mut(doc, kind, "nodes", node)?, "weights", weights_value(&weights));
-            }
+            "change-node-morph-weights" => structure_change_node_morph_weights(doc, kind, params)?,
             "change-mesh-morph-weights" => {
                 let mesh = usize_param(params, "mesh")?;
                 let weights = f64_array_param(params, "weights")?;
@@ -641,17 +583,7 @@ pub(super) fn apply_structure(doc: &mut json::JsonValue, kind: &str, params: &Js
             "delete-accessor" => family_delete(doc, kind, "accessors", usize_param(params, "index")?)?,
             "move-accessor" => family_move(doc, kind, "accessors", usize_param(params, "index")?, usize_param(params, "position")?)?,
             "reorder-accessors" => family_reorder(doc, kind, "accessors", &usize_array_param(params, "order")?)?,
-            "create-buffer-view" => {
-                let buffer = usize_param(params, "buffer")?;
-                if buffer >= top_level_len(doc, "buffers") {
-                    return Err(format!("{kind}: backing buffer {buffer} missing"));
-                }
-                let mut view = json::object::Object::new();
-                view.insert("buffer", json::JsonValue::from(buffer));
-                view.insert("byteOffset", json::JsonValue::from(usize_param(params, "byteOffset")?));
-                view.insert("byteLength", json::JsonValue::from(usize_param(params, "byteLength")?));
-                family_insert(doc, kind, "bufferViews", usize_param(params, "position")?, json::JsonValue::Object(view))?;
-            }
+            "create-buffer-view" => structure_create_buffer_view(doc, kind, params)?,
             "delete-buffer-view" => family_delete(doc, kind, "bufferViews", usize_param(params, "index")?)?,
             "move-buffer-view" => family_move(doc, kind, "bufferViews", usize_param(params, "index")?, usize_param(params, "position")?)?,
             "reorder-buffer-views" => family_reorder(doc, kind, "bufferViews", &usize_array_param(params, "order")?)?,
@@ -665,26 +597,8 @@ pub(super) fn apply_structure(doc: &mut json::JsonValue, kind: &str, params: &Js
             "delete-buffer" => family_delete(doc, kind, "buffers", usize_param(params, "index")?)?,
             "move-buffer" => family_move(doc, kind, "buffers", usize_param(params, "index")?, usize_param(params, "position")?)?,
             "reorder-buffers" => family_reorder(doc, kind, "buffers", &usize_array_param(params, "order")?)?,
-            "create-primitive" => {
-                let position = usize_param(params, "position")?;
-                let mesh = entry_mut(doc, kind, "meshes", usize_param(params, "mesh")?)?;
-                let primitives = ensure_array(mesh, "primitives");
-                if position > primitives.len() {
-                    return Err(format!("{kind}: position {position} out of range"));
-                }
-                let mut primitive = json::object::Object::new();
-                primitive.insert("attributes", json::JsonValue::Object(json::object::Object::new()));
-                primitives.insert(position, json::JsonValue::Object(primitive));
-            }
-            "delete-primitive" => {
-                let primitive = usize_param(params, "primitive")?;
-                let mesh = entry_mut(doc, kind, "meshes", usize_param(params, "mesh")?)?;
-                let primitives = ensure_array(mesh, "primitives");
-                if primitive >= primitives.len() {
-                    return Err(format!("{kind}: primitive {primitive} out of range"));
-                }
-                primitives.remove(primitive);
-            }
+            "create-primitive" => structure_create_primitive(doc, kind, params)?,
+            "delete-primitive" => structure_delete_primitive(doc, kind, params)?,
             "move-primitive" => {
                 let (primitive, position) = (usize_param(params, "primitive")?, usize_param(params, "position")?);
                 move_nested(ensure_array(entry_mut(doc, kind, "meshes", usize_param(params, "mesh")?)?, "primitives"), kind, primitive, position)?;
@@ -723,54 +637,10 @@ pub(super) fn apply_structure(doc: &mut json::JsonValue, kind: &str, params: &Js
                 }
                 obj_set(primitive_mut(doc, kind, usize_param(params, "mesh")?, usize_param(params, "primitive")?)?, "indices", json::JsonValue::from(accessor));
             }
-            "bind-primitive-attribute" => {
-                let accessor = usize_param(params, "accessor")?;
-                if accessor >= top_level_len(doc, "accessors") {
-                    return Err(format!("{kind}: accessor {accessor} out of range"));
-                }
-                let semantic = str_param(params, "semantic")?;
-                let primitive = primitive_mut(doc, kind, usize_param(params, "mesh")?, usize_param(params, "primitive")?)?;
-                if obj_get(primitive, "attributes").is_none() {
-                    obj_set(primitive, "attributes", json::JsonValue::Object(json::object::Object::new()));
-                }
-                let json::JsonValue::Object(object) = primitive else { return Err(format!("{kind}: primitive is not an object")) };
-                bind_semantic(object.get_mut("attributes").expect("attributes ensured"), kind, &semantic, accessor)?;
-            }
-            "unbind-primitive-attribute" | "move-primitive-attribute" | "reorder-primitive-attributes" => {
-                let primitive = primitive_mut(doc, kind, usize_param(params, "mesh")?, usize_param(params, "primitive")?)?;
-                let json::JsonValue::Object(object) = primitive else { return Err(format!("{kind}: primitive is not an object")) };
-                let attributes = object.get_mut("attributes").ok_or(format!("{kind}: primitive has no attributes"))?;
-                match kind {
-                    "unbind-primitive-attribute" => unbind_semantic(attributes, kind, &str_param(params, "semantic")?)?,
-                    "move-primitive-attribute" => move_semantic(attributes, kind, &str_param(params, "semantic")?, usize_param(params, "position")?)?,
-                    _ => reorder_semantics(attributes, kind, &string_array_param(params, "order")?)?,
-                }
-            }
-            "create-morph-target" => {
-                let position = usize_param(params, "position")?;
-                let mesh = usize_param(params, "mesh")?;
-                let primitive_index = usize_param(params, "primitive")?;
-                if arr(doc, "meshes").get(mesh).map(|value| arr(value, "primitives").len()) != Some(1) {
-                    return Err(format!("{kind}: all primitive target counts must remain coherent"));
-                }
-                let targets = ensure_array(primitive_mut(doc, kind, mesh, primitive_index)?, "targets");
-                if position > targets.len() {
-                    return Err(format!("{kind}: position {position} out of range"));
-                }
-                targets.insert(position, json::JsonValue::Object(json::object::Object::new()));
-            }
-            "delete-morph-target" => {
-                let (mesh, primitive_index, target) = (usize_param(params, "mesh")?, usize_param(params, "primitive")?, usize_param(params, "target")?);
-                let mesh_value = arr(doc, "meshes").get(mesh).cloned().ok_or(format!("{kind}: mesh {mesh} out of range"))?;
-                if arr(&mesh_value, "primitives").len() != 1 || !arr(&mesh_value, "weights").is_empty() {
-                    return Err(format!("{kind}: target deletion would violate mesh target-count coherence"));
-                }
-                let targets = ensure_array(primitive_mut(doc, kind, mesh, primitive_index)?, "targets");
-                if target >= targets.len() {
-                    return Err(format!("{kind}: target {target} out of range"));
-                }
-                targets.remove(target);
-            }
+            "bind-primitive-attribute" => structure_bind_primitive_attribute(doc, kind, params)?,
+            "unbind-primitive-attribute" | "move-primitive-attribute" | "reorder-primitive-attributes" => structure_unbind_primitive_attribute_and_more(doc, kind, params)?,
+            "create-morph-target" => structure_create_morph_target(doc, kind, params)?,
+            "delete-morph-target" => structure_delete_morph_target(doc, kind, params)?,
             "move-morph-target" => {
                 let (target, position) = (usize_param(params, "target")?, usize_param(params, "position")?);
                 move_nested(ensure_array(primitive_mut(doc, kind, usize_param(params, "mesh")?, usize_param(params, "primitive")?)?, "targets"), kind, target, position)?;
@@ -804,6 +674,184 @@ pub(super) fn apply_structure(doc: &mut json::JsonValue, kind: &str, params: &Js
         Ok(())
     };
     STRUCTURE_KINDS.contains(&kind).then(run)
+}
+
+/// 🧱️ Runs the `bind default scene` kind of `apply_structure`.
+fn structure_bind_default_scene(doc: &mut json::JsonValue, kind: &str, params: &Json) -> Result<(), String> {
+    let scene = usize_param(params, "scene")?;
+    if scene >= top_level_len(doc, "scenes") {
+        return Err(format!("{kind}: scene {scene} out of range"));
+    }
+    if default_scene_index(doc) == Some(scene) {
+        return Err(format!("{kind}: scene is already default"));
+    }
+    obj_set(doc, "scene", json::JsonValue::from(scene));
+    Ok(())
+}
+
+/// 🪵️ Runs the `bind node camera` or `bind node mesh` kind of `apply_structure`.
+fn structure_bind_node_camera_and_more(doc: &mut json::JsonValue, kind: &str, params: &Json) -> Result<(), String> {
+    let (field, family) = match kind {
+        "bind-node-camera" => ("camera", "cameras"),
+        "bind-node-mesh" => ("mesh", "meshes"),
+        _ => ("skin", "skins"),
+    };
+    let target = usize_param(params, field)?;
+    if target >= top_level_len(doc, family) {
+        return Err(format!("{kind}: {field} {target} out of range"));
+    }
+    obj_set(entry_mut(doc, kind, "nodes", usize_param(params, "node")?)?, field, json::JsonValue::from(target));
+    Ok(())
+}
+
+/// 🔩️ Runs the `change node name` or `change scene name` kind of `apply_structure`.
+fn structure_change_node_name_and_more(doc: &mut json::JsonValue, kind: &str, params: &Json) -> Result<(), String> {
+    let (family, field) = match kind {
+        "change-node-name" => ("nodes", "node"),
+        "change-scene-name" => ("scenes", "scene"),
+        _ => ("meshes", "mesh"),
+    };
+    let value = nullable_str_param(params, "value")?;
+    let item = entry_mut(doc, kind, family, usize_param(params, field)?)?;
+    if kind == "change-node-name" && obj_get(item, "name").and_then(json::JsonValue::as_str).map(str::to_string) == value {
+        return Err(format!("{kind}: name already has the requested presence and value"));
+    }
+    set_or_remove(item, "name", value.map(json::JsonValue::from));
+    Ok(())
+}
+
+/// ⚙️ Runs the `change node extra data` or `change node extension data` kind of `apply_structure`.
+fn structure_change_node_extra_data_and_more(doc: &mut json::JsonValue, kind: &str, params: &Json) -> Result<(), String> {
+    let (family, field) = match kind.split('-').nth(1) {
+        Some("node") => ("nodes", "node"),
+        Some("scene") => ("scenes", "scene"),
+        _ => ("meshes", "mesh"),
+    };
+    let key = if kind.ends_with("extra-data") { "extras" } else { "extensions" };
+    let value = presence_param(params)?;
+    let item = entry_mut(doc, kind, family, usize_param(params, field)?)?;
+    if kind == "change-node-extra-data" && obj_get(item, key).cloned() == value {
+        return Err(format!("{kind}: extras already has the requested presence and value"));
+    }
+    set_or_remove(item, key, value);
+    Ok(())
+}
+
+/// 🧲️ Runs the `change node morph weights` kind of `apply_structure`.
+fn structure_change_node_morph_weights(doc: &mut json::JsonValue, kind: &str, params: &Json) -> Result<(), String> {
+    let node = usize_param(params, "node")?;
+    let weights = f64_array_param(params, "weights")?;
+    if weights.iter().any(|value| !value.is_finite()) {
+        return Err(format!("{kind}: weights must be finite"));
+    }
+    let mesh = arr(doc, "nodes").get(node).ok_or(format!("{kind}: node {node} out of range"))?.clone();
+    match obj_get(&mesh, "mesh").and_then(json::JsonValue::as_usize) {
+        None if !weights.is_empty() => return Err(format!("{kind}: morph weights require a mesh")),
+        Some(mesh_index) if !mesh_target_arity_is(doc, mesh_index, weights.len()) => return Err(format!("{kind}: weights must match primitive target count")),
+        _ => {}
+    }
+    set_or_remove(entry_mut(doc, kind, "nodes", node)?, "weights", weights_value(&weights));
+    Ok(())
+}
+
+/// 🪛️ Runs the `create buffer view` kind of `apply_structure`.
+fn structure_create_buffer_view(doc: &mut json::JsonValue, kind: &str, params: &Json) -> Result<(), String> {
+    let buffer = usize_param(params, "buffer")?;
+    if buffer >= top_level_len(doc, "buffers") {
+        return Err(format!("{kind}: backing buffer {buffer} missing"));
+    }
+    let mut view = json::object::Object::new();
+    view.insert("buffer", json::JsonValue::from(buffer));
+    view.insert("byteOffset", json::JsonValue::from(usize_param(params, "byteOffset")?));
+    view.insert("byteLength", json::JsonValue::from(usize_param(params, "byteLength")?));
+    family_insert(doc, kind, "bufferViews", usize_param(params, "position")?, json::JsonValue::Object(view))?;
+    Ok(())
+}
+
+/// 🔨️ Runs the `create primitive` kind of `apply_structure`.
+fn structure_create_primitive(doc: &mut json::JsonValue, kind: &str, params: &Json) -> Result<(), String> {
+    let position = usize_param(params, "position")?;
+    let mesh = entry_mut(doc, kind, "meshes", usize_param(params, "mesh")?)?;
+    let primitives = ensure_array(mesh, "primitives");
+    if position > primitives.len() {
+        return Err(format!("{kind}: position {position} out of range"));
+    }
+    let mut primitive = json::object::Object::new();
+    primitive.insert("attributes", json::JsonValue::Object(json::object::Object::new()));
+    primitives.insert(position, json::JsonValue::Object(primitive));
+    Ok(())
+}
+
+/// 🪚️ Runs the `delete primitive` kind of `apply_structure`.
+fn structure_delete_primitive(doc: &mut json::JsonValue, kind: &str, params: &Json) -> Result<(), String> {
+    let primitive = usize_param(params, "primitive")?;
+    let mesh = entry_mut(doc, kind, "meshes", usize_param(params, "mesh")?)?;
+    let primitives = ensure_array(mesh, "primitives");
+    if primitive >= primitives.len() {
+        return Err(format!("{kind}: primitive {primitive} out of range"));
+    }
+    primitives.remove(primitive);
+    Ok(())
+}
+
+/// 🧰️ Runs the `bind primitive attribute` kind of `apply_structure`.
+fn structure_bind_primitive_attribute(doc: &mut json::JsonValue, kind: &str, params: &Json) -> Result<(), String> {
+    let accessor = usize_param(params, "accessor")?;
+    if accessor >= top_level_len(doc, "accessors") {
+        return Err(format!("{kind}: accessor {accessor} out of range"));
+    }
+    let semantic = str_param(params, "semantic")?;
+    let primitive = primitive_mut(doc, kind, usize_param(params, "mesh")?, usize_param(params, "primitive")?)?;
+    if obj_get(primitive, "attributes").is_none() {
+        obj_set(primitive, "attributes", json::JsonValue::Object(json::object::Object::new()));
+    }
+    let json::JsonValue::Object(object) = primitive else { return Err(format!("{kind}: primitive is not an object")) };
+    bind_semantic(object.get_mut("attributes").expect("attributes ensured"), kind, &semantic, accessor)?;
+    Ok(())
+}
+
+/// 🧪️ Runs the `unbind primitive attribute` or `move primitive attribute` kind of `apply_structure`.
+fn structure_unbind_primitive_attribute_and_more(doc: &mut json::JsonValue, kind: &str, params: &Json) -> Result<(), String> {
+    let primitive = primitive_mut(doc, kind, usize_param(params, "mesh")?, usize_param(params, "primitive")?)?;
+    let json::JsonValue::Object(object) = primitive else { return Err(format!("{kind}: primitive is not an object")) };
+    let attributes = object.get_mut("attributes").ok_or(format!("{kind}: primitive has no attributes"))?;
+    match kind {
+        "unbind-primitive-attribute" => unbind_semantic(attributes, kind, &str_param(params, "semantic")?)?,
+        "move-primitive-attribute" => move_semantic(attributes, kind, &str_param(params, "semantic")?, usize_param(params, "position")?)?,
+        _ => reorder_semantics(attributes, kind, &string_array_param(params, "order")?)?,
+    }
+    Ok(())
+}
+
+/// 🧫️ Runs the `create morph target` kind of `apply_structure`.
+fn structure_create_morph_target(doc: &mut json::JsonValue, kind: &str, params: &Json) -> Result<(), String> {
+    let position = usize_param(params, "position")?;
+    let mesh = usize_param(params, "mesh")?;
+    let primitive_index = usize_param(params, "primitive")?;
+    if arr(doc, "meshes").get(mesh).map(|value| arr(value, "primitives").len()) != Some(1) {
+        return Err(format!("{kind}: all primitive target counts must remain coherent"));
+    }
+    let targets = ensure_array(primitive_mut(doc, kind, mesh, primitive_index)?, "targets");
+    if position > targets.len() {
+        return Err(format!("{kind}: position {position} out of range"));
+    }
+    targets.insert(position, json::JsonValue::Object(json::object::Object::new()));
+    Ok(())
+}
+
+/// 🧬️ Runs the `delete morph target` kind of `apply_structure`.
+fn structure_delete_morph_target(doc: &mut json::JsonValue, kind: &str, params: &Json) -> Result<(), String> {
+    let (mesh, primitive_index, target) = (usize_param(params, "mesh")?, usize_param(params, "primitive")?, usize_param(params, "target")?);
+    let mesh_value = arr(doc, "meshes").get(mesh).cloned().ok_or(format!("{kind}: mesh {mesh} out of range"))?;
+    if arr(&mesh_value, "primitives").len() != 1 || !arr(&mesh_value, "weights").is_empty() {
+        return Err(format!("{kind}: target deletion would violate mesh target-count coherence"));
+    }
+    let targets = ensure_array(primitive_mut(doc, kind, mesh, primitive_index)?, "targets");
+    if target >= targets.len() {
+        return Err(format!("{kind}: target {target} out of range"));
+    }
+    targets.remove(target);
+    Ok(())
 }
 
 /// 🧾️ The 76 kinds [`apply_structure`] performs.

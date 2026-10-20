@@ -2,6 +2,8 @@ import type{ScriptInvocation}from"../../../../../../../🔨️modules/🏃️pro
 import type{ResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 /** 🕸️ Declares the actual JavaScript inference API while leaving dynamic result DATA untrusted. */
 export function prepareSourceAnalysesV1():Readonly<Record<string,unknown>>;
+/** 🚦️ Separates erased runtime edges from the complete compiler and production import projections. */
+export interface ModuleSourceFactsV1{readonly imports:readonly string[];readonly runtimeImports:readonly string[];readonly productionImports:readonly string[]}
 export function createScriptInputCache(context?:ScriptInputContextV1):ScriptInputCacheV1;
 export function nativeSourceWatchPlanV1(root:string,workspaceRoot:string):Promise<unknown>;
 export function inferReadOnlyBuildProjectSourcesV1(json:unknown,root:string,workspaceRoot:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<GeneratedProjectV1&{root:string;namedInputs:Record<string,unknown[]>}>;
@@ -56,7 +58,9 @@ export interface BuildInferenceInternalsV1 extends Readonly<Record<string,unknow
  targetPolicy<T extends object>(name:string,target:T,policy?:InferencePolicyV1):T&{cache:boolean;continuous?:boolean};
  withWasmTooling<T extends Readonly<Record<string,GeneratedTargetV1>>>(targets:T,required:boolean):T;
  relativeScriptInputs(entries:readonly string[],workspaceRoot:string,cache?:ScriptInputCacheV1,requiredSources?:boolean):Promise<string[]>;
- projectInputs(json:Readonly<Record<string,unknown>>,root:string,workspaceRoot:string,facts:Map<string,unknown>,cache?:ScriptInputCacheV1,representation?:"source"|"hash",sourceGroups?:unknown):Promise<Record<string,unknown[]>>;
+ projectInputs(json:Readonly<Record<string,unknown>>,root:string,workspaceRoot:string,facts:Map<string,unknown>,cache?:ScriptInputCacheV1,representation?:"source"|"hash",sourceGroups?:unknown,inputNames?:readonly string[],commandGroups?:Readonly<Record<string,unknown[]>>):Promise<Record<string,unknown[]>>;
+ declaredSourceInputs(json:Readonly<Record<string,unknown>>,workspaceRoot:string,context?:ScriptInputContextV1,inputNames?:readonly string[]):Promise<Record<string,unknown[]>>;
+ projectWithDefaults<T extends Readonly<Record<string,unknown>>>(json:T,root:string,projectDir:string,workspaceRoot:string,contracts?:Readonly<Record<string,unknown>>,facts?:Map<string,unknown>,commandInputs?:readonly string[],cache?:ScriptInputCacheV1,sourceGroups?:Readonly<Record<string,unknown[]>>,representation?:"source"|"hash",selectedTargets?:readonly string[],inputNames?:readonly string[]):Promise<T&GeneratedProjectV1>;
  workspaceCatalogBuildContributionsV1(workspaceRoot:string):Promise<readonly import("../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts").CatalogBuildContributionV1[]>;
  playgroundPreparationTargets(configFiles:readonly string[],workspaceRoot:string,projectRoot:string,contracts:Readonly<Record<string,unknown>>,contributions:readonly import("../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts").CatalogBuildContributionV1[],context:BuildInferenceContextV1):Promise<Record<string,GeneratedTargetV1>>;
  createDependenciesImplementation(options:Readonly<{analyzeLockfile?:boolean}>,context:BuildDependencyContextV1):Promise<BuildInferenceEdgeV1[]>;
@@ -72,6 +76,9 @@ export interface BuildInferenceInternalsV1 extends Readonly<Record<string,unknow
  cargoTargets(root:string,workspaceRoot:string,commandInputs?:readonly string[],scripts?:ScriptInputCacheV1):Promise<Record<string,GeneratedTargetV1>>;
  collectPlaygroundCatalog(configFiles:readonly string[],workspaceRoot:string,catalogContributions?:readonly import("../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts").CatalogBuildContributionV1[]):readonly PlaygroundCatalogRowV1[];
  cacheDecisionV1(decisionClass:string,reason:string):Readonly<{version:1;class:string;reason:string}>;
+ targetClassV1(name:string,rows?:InferencePolicyV1["targetClasses"]):Readonly<{version:1;class:string;reason:string}>|undefined;
+ normalizedTargetName(name:string):string;
+ cachedOutputsAdmittedV1<T extends object>(target:T):T;
  nativeTargetRunsTestsV1(name:string,execution:Readonly<{kind:string;scope?:string}>|undefined,commandSources:readonly string[]):boolean;
  nativeAuthoredInputsV1(policyInputs:readonly unknown[],commandInputs:readonly unknown[]|undefined):unknown[];
  nativeTargetInputsV1(runsTests:boolean,generated:readonly unknown[],declared:readonly unknown[]):unknown[];

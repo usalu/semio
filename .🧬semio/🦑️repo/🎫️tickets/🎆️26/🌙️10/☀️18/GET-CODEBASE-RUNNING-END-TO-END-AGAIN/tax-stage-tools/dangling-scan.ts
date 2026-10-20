@@ -6,7 +6,7 @@ const REPO = "/Users/ueli/Documents/semio", mirror = resolve(process.argv[2]!);
 const ops = JSON.parse(readFileSync(`${C}/tax-stage-tools/staged/ops.json`, "utf8")).ops as {path: string; kind: string}[];
 const deleted = new Set(ops.filter((o) => o.kind === "delete").map((o) => o.path)), written = new Set(ops.filter((o) => o.kind === "write").map((o) => o.path));
 const exists = (rel: string): boolean => written.has(rel) || (!deleted.has(rel) && existsSync(join(REPO, rel)));
-const files = [...new Set([...readFileSync(`${C}/🗑️generated/tax-stage/grep-files.txt`, "utf8").split("\n").filter(Boolean), ...written])];
+const files = [...new Set([...readFileSync(`${C}/tax-stage-tools/index/grep-files.txt`, "utf8").split("\n").filter(Boolean), ...written])];
 let n = 0;
 for (const rel of files) {
   if (deleted.has(rel)) continue;

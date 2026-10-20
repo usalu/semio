@@ -170,7 +170,7 @@ impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
 
 /// ⚖️ The laws every window configuration owes: the `Replace` mutation applies through its sparse diff, its concrete inverse restores the base, the inverse sums to
 /// the negative diff, and the mutation and the state survive their text and binary codecs.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub async fn assert_window_config_laws<S, D, M>(base: &S, mutation: &M)
 where
     S: pack::snapshot::ArtifactDsl + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + std::fmt::Debug + PartialEq + 'static,

@@ -18,25 +18,25 @@ export interface Din16798VentSystemModification { id: string; patch: Din16798Ven
 export interface Din16798VentSystemDelta { removed: Din16798VentSystemRemoval[]; inserted: Din16798VentSystemInsertion[]; moved: Din16798VentSystemRelocation[]; modified: Din16798VentSystemModification[]; }
 
 export interface Din16798Diff {
-  /** @state artifact */
+  /** 📑️ @state artifact */
   annex: ("En" | "De") | null;
-  /** @state artifact */
+  /** 🔄️ @state artifact */
   thetaRmC: number | null;
-  /** @state artifact */
+  /** ✏️ @state artifact */
   outdoorCo2Ppm: number | null;
-  /** @state artifact */
+  /** ✉️ @state artifact */
   envelopeN50HInv: number | null;
-  /** @state artifact */
+  /** 📨️ @state artifact */
   envelopeVolumeM3: number | null;
-  /** @state artifact */
+  /** 📐️ @state artifact */
   cellarAreaM2: number | null;
-  /** @state artifact */
+  /** 🌬️ @state artifact */
   cellarVentilationM3H: number | null;
-  /** @state artifact */
+  /** 📝️ @state artifact */
   nightSetbackK: number | null;
-  /** @state artifact */
+  /** 🛋️ @state artifact */
   zones: Din16798ZoneDelta;
-  /** @state artifact */
+  /** 🧬️ @state artifact */
   ventSystems: Din16798VentSystemDelta;
 }
 

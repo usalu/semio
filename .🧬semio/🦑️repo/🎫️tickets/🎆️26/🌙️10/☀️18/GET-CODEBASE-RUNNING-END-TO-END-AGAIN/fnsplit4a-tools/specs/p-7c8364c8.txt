@@ -1,0 +1,4 @@
+registerTests1 3 phases, keep=-, final return=false
+40-134 registerAreaSelectionDragNeutralTests
+187-307 registerStepQuantizedPinchZoomTests
+320-320 registerGestureZoomConversionsTests

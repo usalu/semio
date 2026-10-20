@@ -133,7 +133,7 @@ async fn add_generation_lands_a_row_under_every_renderer_argument_shape() {
     let mut expected = 0usize;
     for (label, args) in shapes {
         let meta = semio_framework_plugin::artifact_app_laws::meta("local");
-        semio_framework_plugin::semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "addGeneration", args.clone(), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|error| panic!("{label}: addGeneration must be admitted: {error:?}"));
+        semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "addGeneration", args.clone(), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|error| panic!("{label}: addGeneration must be admitted: {error:?}"));
         crate::editor_domain::editor_laws::context::settle(&mut app).await;
         expected += 1;
         let landed = snapshot(&app).generation.generations.len();

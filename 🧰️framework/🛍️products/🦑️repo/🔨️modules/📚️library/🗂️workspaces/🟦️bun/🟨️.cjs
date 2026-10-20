@@ -4,7 +4,7 @@ const { ownsPayload } = require("../📦️payload/🟨️.cjs");
 const { createHash } = require("node:crypto");
 const limits = Object.freeze({ ...require("./🧬️schema/🔣️.json").$defs.PhysicalLimits.const });
 const slash = (path) => path.replaceAll("\\", "/");
-const ownershipPath = join(__dirname, "../🔣️policy.json"), ownershipSource = readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes);
+const policySourceFields = Object.freeze([...require("./🧬️schema/🔣️.json").$defs.PhysicalPolicySource.required].sort());
 const {workspaceTestingCollectionRoot: collectionRoot} = require("../🟨️.cjs");
 const opaque = new Set(["🗑️generated", "🤖️generated", "node_modules", "target", "dist", "📤️dist", "build", "storybook-static", "temp", "coverage", "__pycache__", "🔌️plugin-modules", "compose"]);
 const outputName = name => opaque.has(name) || /^target(?:-[a-z0-9]+)*$/u.test(name);
@@ -44,7 +44,7 @@ const bounded = (root, path) => {
 };
 
 const physicalBudget = () => ({ texts: new Map(), bytes: 0, lists: new Map(), entries: 0 });
-const physicalObservations = () => ({ paths: new Map(), order: [] });
+const physicalObservations = () => ({ paths: new Map(), order: [], frontier: new Map() });
 const context = root => ({ root, inventory: new Map(), documents: new Map(), texts: new Map(), selected: new Map(), observations: physicalObservations(), physical: physicalBudget() });
 function sameManifest(left, right) { return ["dev", "ino", "mode", "nlink", "size", "mtimeNs", "ctimeNs", "birthtimeNs"].every(key => left[key] === right[key]); }
 /** 📏️ Reads a bounded actual descriptor and refuses substitution, truncation or growth before returning text. */
@@ -210,17 +210,28 @@ function retainOwnershipObservationV1(observations, operation, path, value) {
 }
 /** 🧊️ Remembers one directory listing under the directory's physical stamp, so a later derivation re-lists only directories whose entries could have changed. */
 const listingCache = new Map();
-const directoryStamp = entry => entry.dev + ":" + entry.ino + ":" + entry.mode + ":" + entry.mtimeMs + ":" + entry.ctimeMs;
+const directoryStamp = entry => [entry.dev, entry.ino, entry.mode, entry.mtimeNs, entry.ctimeNs].map(String).join(":");
+const settledDirectory = (entry, now) => entry.mtimeNs < BigInt(now - limits.listingSettleMilliseconds) * 1000000n && entry.ctimeNs < BigInt(now - limits.listingSettleMilliseconds) * 1000000n;
+const ownershipStateV1 = entry => entry ? [kindOf(entry), String(entry.dev), String(entry.ino), Number(entry.mode)] : ["missing"];
+function ownershipFrontierDecisionV1(before, after, settled) { return !before || !after ? "derive" : settled && before === after ? "reuse" : "relist"; }
 const byName = (a, b) => Buffer.from(a.name).compare(Buffer.from(b.name));
 const kindOf = entry => entry.isSymbolicLink() ? "symlink" : entry.isDirectory() ? "directory" : entry.isFile() ? "file" : "other";
+/** 🔬️ Projects the only directory entries that can change ownership, so a listing digest decides whether a cached derivation still holds. */
+const projectListing = (root, path, entries) => entries.filter(entry => entry.name === "package.json" || !entry.name.startsWith(".") && !outputName(entry.name) && (entry.kind === "symlink" || entry.kind === "directory" && !collectionRoot(root, join(path, entry.name))));
+/** 📋️ Lists one directory exactly as the ownership walk does and returns its projection. */
+function readListingProjection(root, path) {
+  const entries = fs.readdirSync(path, { withFileTypes: true }).map(entry => ({ name: entry.name, kind: kindOf(entry) }));
+  entries.sort(byName);
+  return projectListing(root, path, entries);
+}
 function nativeOperations(observations, root, budget = physicalBudget()) {
   const retain = (operation, path, value) => retainOwnershipObservationV1(observations, operation, path, value);
   let recent;
   const observe = path => {
     if (typeof path !== "string" || path.length > limits.maximumPathUnits) throw Error("Bun workspace physical path capacity exceeded");
     try {
-      const entry = fs.lstatSync(path), kind = kindOf(entry);
-      retain("state", path, [kind, String(entry.dev), String(entry.ino), entry.mode]); return { kind, entry };
+      const entry = fs.lstatSync(path, { bigint: true }), kind = kindOf(entry);
+      retain("state", path, ownershipStateV1(entry)); return { kind, entry };
     } catch (error) { if (error.code === "ENOENT") { retain("state", path, ["missing"]); return { kind: "missing" }; } throw error; }
   };
   const operations = {
@@ -241,11 +252,16 @@ function nativeOperations(observations, root, budget = physicalBudget()) {
         const after = observe(path);
         if (after.kind !== "directory") throw Error("Bun workspace requires a real directory: " + path);
         record = { stamp, root, entries, projected: undefined };
-        if (directoryStamp(after.entry) === stamp && after.entry.ctimeMs < listedAt - limits.listingSettleMilliseconds) { if (listingCache.size >= limits.maximumListingCacheDirectories) listingCache.clear(); listingCache.set(path, record); }
+        if (directoryStamp(after.entry) === stamp && settledDirectory(after.entry, listedAt)) { if (listingCache.size >= limits.maximumListingCacheDirectories) listingCache.clear(); listingCache.set(path, record); }
         else listingCache.delete(path);
       } else if (record.entries.length > limits.maximumDirectoryEntries || budget.entries - prior + record.entries.length > limits.maximumAggregateDirectoryEntries) throw Error("Bun directory observation capacity exceeded: " + path);
       budget.entries = budget.entries - prior + record.entries.length; budget.lists.set(path, record.entries.length);
-      if (observations) retain("list", path, record.projected ??= record.entries.filter(entry => entry.name === "package.json" || !entry.name.startsWith(".") && !outputName(entry.name) && (entry.kind === "symlink" || entry.kind === "directory" && !collectionRoot(root, join(path, entry.name)))));
+      if (observations) {
+        retain("list", path, record.projected ??= projectListing(root, path, record.entries));
+        const after = fs.lstatSync(path, { bigint: true });
+        if (after.isDirectory() && directoryStamp(after) === stamp) observations.frontier.set(path, { stamp, settled: settledDirectory(after, listedAt) });
+        else observations.frontier.delete(path);
+      }
       return record.entries;
     },
     readText(path) {
@@ -274,16 +290,66 @@ function* publicationPlan(owner, selection, verifyPublished) {
   for (const [path, text] of owner.texts) if ((yield { operation: "readText", path: bounded(owner.root, path) }) !== text) throw Error("Bun current manifest changed during verification: " + path);
   return { version: 1, scopes, packages: membership.packages };
 }
+/** 🔭️ Exposes the exact path states, directory listing projections and manifest digests one ownership computation retained, so a later process can prove the same topology by stamps. */
+function observedOwnership(owner) {
+  const paths = [...owner.observations.paths.values()].map(record => Object.freeze({ path: record.path, state: record.state, ...(record.list ? { list: record.list } : {}) })), texts = [...owner.texts].map(([path, text]) => Object.freeze({ path, sha256: createHash("sha256").update(text).digest("hex") }));
+  return Object.freeze({ root: owner.root, paths: Object.freeze(paths), texts: Object.freeze(texts) });
+}
+/** ⚡️ Replays the complete original decision frontier and fences the final awaited continuation without rediscovering packages. */
+async function replayCurrentMembershipV1(owner, control, progress) {
+  let continuationFailed = false;
+  const observations = owner.observations, proof = new Map(), operations = nativeOperations(undefined, owner.root, owner.physical), read = path => {
+    try { return fs.lstatSync(path, { bigint: true }); } catch (error) { if (error.code === "ENOENT") return undefined; throw error; }
+  };
+  try {
+    if (!observations?.paths.size || !observations.frontier) return false;
+    for (const record of observations.paths.values()) {
+      control.signal.throwIfAborted();
+      const facts = read(record.path);
+      if (JSON.stringify(ownershipStateV1(facts)) !== JSON.stringify(record.state)) return false;
+      if (record.list) {
+        const before = observations.frontier.get(record.path), stamp = facts?.isDirectory() ? directoryStamp(facts) : null;
+        const decision = ownershipFrontierDecisionV1(before?.stamp, stamp, before?.settled && facts && settledDirectory(facts, Date.now()));
+        if (decision === "derive") return false;
+        if (decision === "relist" && (JSON.stringify(projectListing(owner.root, record.path, operations.list(record.path))) !== JSON.stringify(record.list) || directoryStamp(read(record.path)) !== stamp)) return false;
+        proof.set(record.path, { stamp, exact: decision === "relist" });
+      }
+      try { await control.advance({ operation: "frontier", path: record.path, completedOperations: ++progress.completedOperations }); } catch (error) { continuationFailed = true; throw error; }
+      control.signal.throwIfAborted();
+    }
+    if (readManifestText(owner.ownership.ownershipPath, undefined, limits.maximumPolicyBytes) !== owner.ownership.ownershipSource) return false;
+    for (const [path, text] of owner.texts) {
+      control.signal.throwIfAborted();
+      if (readManifestText(bounded(owner.root, path), owner.physical) !== text) return false;
+    }
+    for (const record of observations.paths.values()) {
+      control.signal.throwIfAborted(); const facts = read(record.path);
+      if (JSON.stringify(ownershipStateV1(facts)) !== JSON.stringify(record.state)) return false;
+      if (record.list) {
+        const before = proof.get(record.path); if (!facts?.isDirectory() || !before) return false;
+        const stamp = directoryStamp(facts);
+        if ((before.exact || before.stamp !== stamp) && (JSON.stringify(projectListing(owner.root, record.path, operations.list(record.path))) !== JSON.stringify(record.list) || directoryStamp(read(record.path)) !== stamp)) return false;
+        proof.set(record.path, { stamp, settled: settledDirectory(facts, Date.now()) });
+      }
+    }
+    if (readManifestText(owner.ownership.ownershipPath, undefined, limits.maximumPolicyBytes) !== owner.ownership.ownershipSource) return false;
+    for (const [path, observation] of proof) observations.frontier.set(path, { stamp: observation.stamp, settled: observation.settled });
+    return true;
+  } catch (error) { control.signal.throwIfAborted(); if (continuationFailed) throw error; return false; }
+}
 /** 🧮️ Rederives the selected membership and refuses only when scopes, packages or manifests drift, so unrelated concurrent Source edits stay admissible. */
 async function requireCurrentMembershipV1(owner, control, progress) {
-  const fresh = context(owner.root), report = await drainControlledPlanV1(owner.computation(fresh, owner.selection, owner.verifyPublished), nativeOperations(undefined, fresh.root, fresh.physical), control, progress);
+  if (await replayCurrentMembershipV1(owner, control, progress)) return;
+  const fresh = context(owner.root), report = await drainControlledPlanV1(owner.computation(fresh, owner.selection, owner.verifyPublished), nativeOperations(fresh.observations, fresh.root, fresh.physical), control, progress);
   const shape = value => JSON.stringify(Array.isArray(value) ? value.map(scope => scope.manifest) : { scopes: value.scopes.map(({ manifest, patterns, packages }) => ({ manifest, patterns, packages })), packages: value.packages });
   if (shape(report) !== shape(owner.report)) throw Error("Bun current workspace membership changed during verification");
   for (const [path, text] of fresh.texts) if (owner.texts.has(path) && owner.texts.get(path) !== text) throw Error("Bun current manifest changed during verification: " + path);
   if ([...owner.texts.keys()].some(path => !fresh.texts.has(path) && path !== "package.json")) throw Error("Bun current workspace manifests changed during verification");
+  if (owner.observations.paths.size === fresh.observations.paths.size && [...owner.observations.paths].every(([path, record]) => JSON.stringify(record) === JSON.stringify(fresh.observations.paths.get(path)))) owner.observations.frontier = fresh.observations.frontier;
 }
 /** 🛡️ Fences the last caller continuation before native publication or a completed report. */
 async function currentFence(owner, operations, control, progress) {
+  const {ownershipPath,ownershipSource}=owner.ownership;
   const { signal } = control;
   signal.throwIfAborted();
   if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw Error("Bun current ownership policy changed during publication");
@@ -310,11 +376,12 @@ async function drainControlledPlanV1(plan, operations, control, progress) {
   } finally { plan.return(); }
 }
 /** 🎛️ Computes complete current ownership through the original caller control. */
-async function controlledOwnership(root, selection, control, verifyPublished, computation = publicationPlan) {
+async function controlledOwnership(ownership, root, selection, control, verifyPublished, computation = publicationPlan) {
+  const {ownershipPath,ownershipSource}=ownership;
   selection = ownershipSelection(selection);
   if (!control || !(control.signal instanceof AbortSignal) || typeof control.advance !== "function") throw Error("Original Bun workspace control required");
   if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw Error("Bun current ownership policy changed during verification");
-  const owner = Object.assign(context(root), { computation, selection, verifyPublished }), operations = nativeOperations(owner.observations, owner.root, owner.physical), current = { owner, completedOperations: 0 };
+  const owner = Object.assign(context(root), { ownership, computation, selection, verifyPublished }), operations = nativeOperations(owner.observations, owner.root, owner.physical), current = { owner, completedOperations: 0 };
   current.report = await drainControlledPlanV1(computation(owner, selection, verifyPublished), operations, control, current);
   if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw Error("Bun current ownership policy changed during verification");
   owner.report = current.report;
@@ -322,10 +389,11 @@ async function controlledOwnership(root, selection, control, verifyPublished, co
   return current;
 }
 /** 🎛️ Verifies the complete exact current native projection. */
-async function inspectBunWorkspaceOwnership(root, selection, control) { return (await controlledOwnership(root, selection, control, true)).report; }
+async function inspectBunWorkspaceOwnership(ownership, root, selection, control) { return (await controlledOwnership(ownership, root, selection, control, true)).report; }
 /** 📣️ Publishes every affected scope before installation while preserving current Source guards. */
-async function publishCurrentOwnership(root, selection, control) {
-  const current = await controlledOwnership(root, selection, control, false), { report, owner } = current, operations = nativeOperations(owner.observations, owner.root, owner.physical);
+async function publishCurrentOwnership(ownership, root, selection, control) {
+  const {ownershipPath,ownershipSource}=ownership;
+  const current = await controlledOwnership(ownership, root, selection, control, false), { report, owner } = current, operations = nativeOperations(owner.observations, owner.root, owner.physical);
   const validate = async () => {
     control.signal.throwIfAborted();
     if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw Error("Bun current ownership policy changed during publication");
@@ -352,23 +420,24 @@ async function publishCurrentOwnership(root, selection, control) {
   }
   await validate();
   await currentFence(owner, operations, control, current);
-  return { report, recheck: async () => { await validate(); await currentFence(owner, operations, control, current); } };
+  return { report, owner, recheck: async () => { await validate(); await currentFence(owner, operations, control, current); } };
 }
 /** 📣️ Publishes current selected native ownership without issuing authority through the report. */
-async function publishBunWorkspaceOwnership(root, selection, control) { return (await publishCurrentOwnership(root, selection, control)).report; }
+async function publishBunWorkspaceOwnership(ownership, root, selection, control) { return (await publishCurrentOwnership(ownership, root, selection, control)).report; }
 /** 🪢️ Holds original full Source and topology observations through the complete installation callback. */
-async function withPublishedBunWorkspaceOwnershipV1(root, selection, control, body) {
+async function withPublishedBunWorkspaceOwnershipV1(ownership, root, selection, control, body) {
   if (typeof body !== "function") throw Error("Original Bun installation callback required");
-  const current = await publishCurrentOwnership(root, selection, control), scopes = Object.freeze(current.report.scopes.map(scope => Object.freeze({ manifest: scope.manifest, packages: Object.freeze([...scope.packages]) })));
+  const current = await publishCurrentOwnership(ownership, root, selection, control), scopes = Object.freeze(current.report.scopes.map(scope => Object.freeze({ manifest: scope.manifest, packages: Object.freeze([...scope.packages]) })));
   let live = true;
   const recheck = async () => { if (!live) throw Error("Original Bun installation callback released"); await current.recheck(); if (!live) throw Error("Original Bun installation callback released"); control.signal.throwIfAborted(); };
-  try { const result = await body(Object.freeze({ scopes, recheck })); await recheck(); return result; }
+  try { const result = await body(Object.freeze({ scopes, recheck, observed: () => observedOwnership(current.owner) })); await recheck(); return result; }
   finally { live = false; }
 }
 /** 👓️ Retains the original verified Source observations without publishing or writing. */
-async function withCurrentBunWorkspaceOwnershipV1(root, selection, control, body) {
+async function withCurrentBunWorkspaceOwnershipV1(ownership, root, selection, control, body) {
+  const {ownershipPath,ownershipSource}=ownership;
   if (typeof body !== "function") throw Error("Original Bun readonly callback required");
-  const current = await controlledOwnership(root, selection, control, true), owner = current.owner, operations = nativeOperations(owner.observations, owner.root, owner.physical);
+  const current = await controlledOwnership(ownership, root, selection, control, true), owner = current.owner, operations = nativeOperations(owner.observations, owner.root, owner.physical);
   const scopes = Object.freeze(current.report.scopes.map(scope => Object.freeze({ manifest: scope.manifest, packages: Object.freeze([...scope.packages]) }))), pending = new Set();
   let live = true, accepting = true, acceptedFailed = false, acceptedFailure;
   const guard = () => { if (!live) throw Error("Original Bun readonly callback released"); control.signal.throwIfAborted(); };
@@ -393,7 +462,7 @@ async function withCurrentBunWorkspaceOwnershipV1(root, selection, control, body
     return task;
   };
   let bodyFailed = false, bodyFailure, result;
-  try { result = await body(Object.freeze({ scopes, recheck })); } catch (error) { bodyFailed = true; bodyFailure = error; }
+  try { result = await body(Object.freeze({ scopes, recheck, observed: () => observedOwnership(owner) })); } catch (error) { bodyFailed = true; bodyFailure = error; }
   accepting = false;
   try {
     while (pending.size) await Promise.allSettled([...pending]);
@@ -403,13 +472,24 @@ async function withCurrentBunWorkspaceOwnershipV1(root, selection, control, body
   } finally { live = false; }
 }
 /** 🧭️ Enumerates current declared owner manifests without scanning their package trees. */
-async function discoverCurrentBunWorkspaceScopesV1(root, selection, control) {
+async function discoverCurrentBunWorkspaceScopesV1(ownership, root, selection, control) {
   const computation = function* (owner, selected) {
     const scopes = yield* scopesPlan(owner, selected);
     for (const [path, text] of owner.texts) if ((yield { operation: "readText", path: bounded(owner.root, path) }) !== text) throw Error("Bun current manifest changed during verification: " + path);
     return scopes;
   };
-  const current = await controlledOwnership(root, selection, control, false, computation);
+  const current = await controlledOwnership(ownership, root, selection, control, false, computation);
   return Object.freeze(current.report.map(scope => Object.freeze({ ...scope, declaration: Object.freeze({ ...scope.declaration, members: Object.freeze([...scope.declaration.members]), owners: Object.freeze([...scope.declaration.owners]) }) })));
 }
-module.exports = { withCurrentBunWorkspaceOwnershipV1, withPublishedBunWorkspaceOwnershipV1, discoverCurrentBunWorkspaceScopesV1, parseBunWorkspaceDeclaration, readBunRepositoryMembership, bunRepositoryMembership, bunWorkspacePackages, bunWorkspaceNativePatterns, inspectBunWorkspaceOwnership, publishBunWorkspaceOwnership, discoverBunWorkspaces: root => bunRepositoryMembership(root).scopes, bunRepositoryPackages: root => bunRepositoryMembership(root).packages };
+/** 🪢️ Binds captured policy DATA to one independent physical ownership implementation. */
+function createBunWorkspaceOwnershipV1(value) {
+  if (!value || typeof value !== "object" || Object.getPrototypeOf(value) !== Object.prototype) throw Error("Closed physical Bun policy Source required");
+  const rows = Object.getOwnPropertyDescriptors(value);
+  if (Reflect.ownKeys(value).length !== 2 || Object.keys(rows).sort().join() !== policySourceFields.join() || Object.values(rows).some(row => !("value" in row) || !row.enumerable)) throw Error("Closed physical Bun policy Source required");
+  const ownershipPath = rows.ownershipPath.value, ownershipSource = rows.ownershipSource.value;
+  if (typeof ownershipPath !== "string" || !isAbsolute(ownershipPath) || resolve(ownershipPath) !== ownershipPath || ownershipPath.length > limits.maximumPathUnits || typeof ownershipSource !== "string" || Buffer.byteLength(ownershipSource) > limits.maximumPolicyBytes) throw Error("Finite physical Bun policy Source required");
+  if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw Error("Bun captured ownership policy changed before binding");
+  const ownership = Object.freeze({ ownershipPath, ownershipSource });
+  return Object.freeze({...{ readListingProjection, withCurrentBunWorkspaceOwnershipV1, withPublishedBunWorkspaceOwnershipV1, discoverCurrentBunWorkspaceScopesV1, parseBunWorkspaceDeclaration, readBunRepositoryMembership, bunRepositoryMembership, bunWorkspacePackages, bunWorkspaceNativePatterns, inspectBunWorkspaceOwnership, publishBunWorkspaceOwnership, discoverBunWorkspaces: root => bunRepositoryMembership(root).scopes, bunRepositoryPackages: root => bunRepositoryMembership(root).packages }, withCurrentBunWorkspaceOwnershipV1:withCurrentBunWorkspaceOwnershipV1.bind(undefined,ownership),withPublishedBunWorkspaceOwnershipV1:withPublishedBunWorkspaceOwnershipV1.bind(undefined,ownership),discoverCurrentBunWorkspaceScopesV1:discoverCurrentBunWorkspaceScopesV1.bind(undefined,ownership),inspectBunWorkspaceOwnership:inspectBunWorkspaceOwnership.bind(undefined,ownership),publishBunWorkspaceOwnership:publishBunWorkspaceOwnership.bind(undefined,ownership)});
+}
+module.exports = {createBunWorkspaceOwnershipV1,readBunRepositoryMembership};

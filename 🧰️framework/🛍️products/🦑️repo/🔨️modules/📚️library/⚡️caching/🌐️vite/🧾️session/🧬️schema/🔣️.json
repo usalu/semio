@@ -5,6 +5,37 @@
   "$defs": {
     "MutationLease": { "const": { "directory": ".leases", "resource": "sessions" } },
     "ReadinessRace": { "const": ["request", "replace-session", "respond", "reject-stale-session"] },
+    "ReadinessBudget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "readyTimeoutMs", "progressIntervalMs", "evidence"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "readyTimeoutMs": { "type": "integer", "minimum": 60000, "maximum": 3600000 },
+        "progressIntervalMs": { "type": "integer", "minimum": 1000, "maximum": 60000 },
+        "evidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "coldBootMs", "warmBootMs", "marginFactor", "source"],
+          "properties": {
+            "kind": { "enum": ["estimate", "measurement"] },
+            "coldBootMs": { "$ref": "#/$defs/BootRange" },
+            "warmBootMs": { "$ref": "#/$defs/BootRange" },
+            "marginFactor": { "type": "number", "minimum": 2, "maximum": 20 },
+            "source": { "type": "string", "minLength": 1, "maxLength": 512 }
+          }
+        }
+      }
+    },
+    "BootRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minimum", "maximum"],
+      "properties": {
+        "minimum": { "type": "integer", "minimum": 1, "maximum": 3600000 },
+        "maximum": { "type": "integer", "minimum": 1, "maximum": 3600000 }
+      }
+    },
     "Session": {
       "type": "object",
       "additionalProperties": false,

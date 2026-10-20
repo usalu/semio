@@ -108,6 +108,12 @@ fn mint_capability() -> ApplyCapability {
     ApplyCapability { _sealed: () }
 }
 
+/// 🧪️ A capability for the conformance laws of retained mutation owners, which install a field or exchange a row without a diff to commit.
+#[cfg(feature = "testkit")]
+pub fn testing_apply_capability() -> ApplyCapability {
+    mint_capability()
+}
+
 /// ▶️ Hands the capability to the mandatory typed unpublished-owner step.
 fn apply_with<P, D: ColdMutationDiff<P>>(diff: &D, unpublished: &mut P, capability: ApplyCapability) -> MutationApplyResult<()> {
     diff.apply(unpublished, capability)

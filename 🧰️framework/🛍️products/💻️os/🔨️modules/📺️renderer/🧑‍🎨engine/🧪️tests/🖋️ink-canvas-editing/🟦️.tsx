@@ -8,7 +8,7 @@ import { createElement } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { InkCanvasHost } from "../../🧱️elements/🖋️InkCanvasHost/🟦️.tsx";
-import { inkCanvasEditingFixtureUrl } from "@semio-tech/framework/ui/testing/fixtures";
+import { inkCanvasEditingFixtureUrl } from "@semio-tech/ui/testing/fixtures";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");

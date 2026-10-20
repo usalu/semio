@@ -73,7 +73,7 @@ pub use retained_tool_ids_and_scene_builders::{
 //#endregion 🔖️PlaySnapshot
 
 //#region 🚪️Codecs
-use store::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteSnapshotControl};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot::SnapshotEncoding, sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteSnapshotControl};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::{semantic_cells, restore_authority};
 

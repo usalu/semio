@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "foundation": [
+    "@semio-tech/framework-hash",
+    "@semio-tech/framework-interaction",
+    "@semio-tech/framework-manifest",
+    "@semio-tech/framework-trace",
+    "@semio-tech/ui",
+    "@semio-tech/ui-contract",
+    "@semio-tech/ui-react",
+    "@semio-tech/ui-styling"
+  ],
+  "entries": [
+    {
+      "op": "edit",
+      "id": "taxonomy",
+      "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "staged": "10-taxonomy.json",
+      "edits": [
+        {
+          "old": "      \"sdkPackage\": \"@semio-tech/framework\",\n      \"toolingRoles\": []",
+          "new": "      \"sdkPackage\": \"@semio-tech/framework\",\n      \"sdkFoundationPackages\": [\n        \"@semio-tech/framework-hash\",\n        \"@semio-tech/framework-interaction\",\n        \"@semio-tech/framework-manifest\",\n        \"@semio-tech/framework-trace\",\n        \"@semio-tech/ui\",\n        \"@semio-tech/ui-contract\",\n        \"@semio-tech/ui-react\",\n        \"@semio-tech/ui-styling\"\n      ],\n      \"toolingRoles\": []"
+        }
+      ],
+      "baseSha256": "55f7014a78b91e40e78a1eabaa0050d4452b55a3dcfacad10d42e32b3419e26e",
+      "stagedSha256": "8d7b6feff0f6ceec617cc97a585cccbd676386488904fe62e1615ab4f8e311d2"
+    },
+    {
+      "op": "edit",
+      "id": "schema",
+      "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️dependency-direction/🔣️.json",
+      "staged": "20-schema.json",
+      "edits": [
+        {
+          "old": "            \"sdkPackage\",\n            \"toolingRoles\"\n          ],",
+          "new": "            \"sdkPackage\",\n            \"sdkFoundationPackages\",\n            \"toolingRoles\"\n          ],"
+        },
+        {
+          "old": "            \"sdkPackage\": {\n              \"type\": \"string\",\n              \"minLength\": 1\n            },",
+          "new": "            \"sdkPackage\": {\n              \"type\": \"string\",\n              \"minLength\": 1\n            },\n            \"sdkFoundationPackages\": {\n              \"type\": \"array\",\n              \"minItems\": 1,\n              \"uniqueItems\": true,\n              \"items\": {\n                \"type\": \"string\",\n                \"pattern\": \"^@[^/\\\\s]+/[^/\\\\s]+$\"\n              }\n            },"
+        }
+      ],
+      "baseSha256": "1aead958317f5237e3cc8d3f969529c98ea814c267b81520ae164f73a9122d57",
+      "stagedSha256": "8848716055a0890cc39c1f00bf06106233a4aaeecfbb6656803539cbabfad946"
+    },
+    {
+      "op": "edit",
+      "id": "construction",
+      "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🏗️construction/🟨️.cjs",
+      "staged": "30-construction.cjs",
+      "edits": [
+        {
+          "old": "\"rulePrefix|sdkPackage|toolingRoles|version\"",
+          "new": "\"rulePrefix|sdkFoundationPackages|sdkPackage|toolingRoles|version\""
+        },
+        {
+          "old": "throw Error(\"Dependency policy requires canonical authored public API authority\");",
+          "new": "throw Error(\"Dependency policy requires canonical authored public API authority\");\nif (!Array.isArray(api.sdkFoundationPackages) || !api.sdkFoundationPackages.length || new Set(api.sdkFoundationPackages).size !== api.sdkFoundationPackages.length || api.sdkFoundationPackages.some(name => typeof name !== \"string\" || !/^@[^/\\s]+\\/[^/\\s]+$/u.test(name) || name === api.sdkPackage)) throw Error(\"Dependency policy requires unique admitted SDK foundation package names\");"
+        },
+        {
+          "old": "const RESOLVED_NODE_BUILTIN_PATH =",
+          "new": "/** 🗝️ The authored public targets of the admitted SDK foundation packages (`publicApi.sdkFoundationPackages`): neutral modules that carry keys once published by the SDK package, shared by plugins and renderer hosts. */\nconst SDK_FOUNDATION_TARGETS = exportTargetPatterns(workspacePackages.filter(pkg => api.sdkFoundationPackages.includes(pkg.name)));\nconst RESOLVED_NODE_BUILTIN_PATH ="
+        },
+        {
+          "old": "  ...RENDERER_HOST_WINDOW_KIT_TARGETS,\n",
+          "new": "  ...RENDERER_HOST_WINDOW_KIT_TARGETS,\n  ...SDK_FOUNDATION_TARGETS,\n"
+        },
+        {
+          "old": "/** 🔌️ Every plugin source owner consumes only the admitted neutral public SDK. */",
+          "new": "/** 🔌️ Every plugin source owner consumes only the admitted neutral public SDK and its foundation packages. */"
+        },
+        {
+          "old": "use the neutral authored public SDK; private framework",
+          "new": "use the neutral authored public SDK and the admitted SDK foundation packages; private framework"
+        },
+        {
+          "old": "pathNot: exportTargetPatterns(sdk) } };",
+          "new": "pathNot: [...exportTargetPatterns(sdk), ...SDK_FOUNDATION_TARGETS] } };"
+        },
+        {
+          "old": "the react renderer host may depend only on ui/styling, framework-core",
+          "new": "the react renderer host may depend only on ui/styling, the admitted SDK foundation packages, framework-core"
+        }
+      ],
+      "baseSha256": "9af529a2b1da0c7022a761aa5f73259975110e785a3656516ca6c2f51e958c5d",
+      "stagedSha256": "4db9f020348bd3902533a45fb9ce50116c341d446ca8c4e5df374ea7520089c4"
+    },
+    {
+      "op": "edit",
+      "id": "bootstrap-type",
+      "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🟦️.ts",
+      "staged": "40-bootstrap.ts",
+      "edits": [
+        {
+          "old": "sdkPackage:string;toolingRoles:readonly string[]}>",
+          "new": "sdkPackage:string;sdkFoundationPackages:readonly string[];toolingRoles:readonly string[]}>"
+        }
+      ],
+      "baseSha256": "386b5b1fcc4a14b588d280ca6ee758fb7fa865a34d4df39292fbc8ebfe765f09",
+      "stagedSha256": "beb3f3b01a4166ebe900d678889ddee0a40398e1e5de79c9a7dc5d95e165c793"
+    },
+    {
+      "op": "create",
+      "id": "test-fixture",
+      "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🏗️construction/🧪️tests/🔑️sdk-foundation-admission/🧫️fixtures/🔣️.json",
+      "staged": "60-sdk-foundation-admission.fixture.json",
+      "stagedSha256": "e2fa2dd15bd0191e78f8c5bbf61224178d033bc88aeed98af67c032900fe0818"
+    },
+    {
+      "op": "create",
+      "id": "test",
+      "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🏗️construction/🧪️tests/🔑️sdk-foundation-admission/🟦️.ts",
+      "staged": "61-sdk-foundation-admission.test.ts",
+      "stagedSha256": "246ece3b753d446d95e3afd018f4ce10a380c0763d79adca10fbfeb6c1f5c4c7"
+    }
+  ]
+}

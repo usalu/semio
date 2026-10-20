@@ -5,14 +5,15 @@ import {readdirSync,readFileSync} from "node:fs";
 import {join} from "node:path";
 import {semioSchemaAjvV1} from "@semio-tech/framework/schema/oracles/validator";
 import schema from "../🧬️schema/🔣️.json";
+import table from "./🔣️.cases.json";
 import {parseFillSelection} from "../../🟦️.ts";
 
 const validate=semioSchemaAjvV1({allErrors:true}).compile(schema);
 const root=join(import.meta.dir, "../../../../🧪️tests/🧫️fixtures/🧬️mutations/🫗️fill-selection");
-const cases=readdirSync(root);
+const cases=table.cases;
 
 test("every committed fill-selection mutation is accepted by the schema and the twin alike",()=>{
-  expect(cases.length).toBe(7);
+  expect([...cases].sort()).toEqual(readdirSync(root).sort());
   for(const name of cases){
     const mutation=JSON.parse(readFileSync(join(root,name,"🦠️mutation/🔣️.json"),"utf8"));
     expect(validate(mutation),name).toBe(true);

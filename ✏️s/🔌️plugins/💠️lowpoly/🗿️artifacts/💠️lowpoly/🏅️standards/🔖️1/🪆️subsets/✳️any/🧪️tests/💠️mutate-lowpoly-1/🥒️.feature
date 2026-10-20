@@ -84,7 +84,7 @@ Feature: Apply every typed lowpoly mutation twice — once in Rust, once in Pyth
       | delete-object                 | 💀️delete-object/🚫️removes           |
       | reorder-objects               | 🔀️reorder-objects/🔀️moves                 |
       | rename-object                 | 🏷️rename-object/🏷️retitles                                    |
-      | change-object-smooth-shading  | 🔘️change-object-smooth/🟢️turns  |
+      | change-object-smooth-shading  | 🔘️change-object-smooth-shading/🟢️turns  |
       | move-object                   | ↗️move-object/📍️translates                      |
       | rotate-object                 | 🔄️rotate-object/🔄️yaws                       |
       | scale-object                  | 📐️scale-object/📐️halves                             |
@@ -93,9 +93,9 @@ Feature: Apply every typed lowpoly mutation twice — once in Rust, once in Pyth
       | insert-paint-layer            | ➕️insert-paint-layer/🪜️stacks      |
       | remove-paint-layer            | ➖️remove-paint-layer/➖️drops               |
       | rename-paint-layer            | 🔖️rename-paint-layer/🏷️retitles            |
-      | change-paint-layer-visible    | 👁️change-paint-layer/🙈️hides                    |
-      | change-paint-layer-opacity    | 🌫️change-paint-layer/🌫️fades            |
-      | change-paint-layer-blend-mode | 🎛️change-paint-layer/✖️switches  |
+      | change-paint-layer-visible    | 👁️change-paint-layer-visible/🙈️hides                    |
+      | change-paint-layer-opacity    | 🌫️change-paint-layer-opacity/🌫️fades            |
+      | change-paint-layer-blend-mode | 🎛️change-paint-layer-blend-mode/✖️switches  |
       | edit-paint-layer              | 🎨️edit-paint-layer/🖌️paints |
       | apply-paint-stroke            | 🖌️apply-paint-stroke/🧽️erases |
       | apply-paint-stroke            | 🖌️apply-paint-stroke/🖌️dabs |
@@ -131,7 +131,7 @@ Feature: Apply every typed lowpoly mutation twice — once in Rust, once in Pyth
       | delete-object                 | 💀️delete-object/🚫️removes           |
       | reorder-objects               | 🔀️reorder-objects/🔀️moves                 |
       | rename-object                 | 🏷️rename-object/🏷️retitles                                    |
-      | change-object-smooth-shading  | 🔘️change-object-smooth/🟢️turns  |
+      | change-object-smooth-shading  | 🔘️change-object-smooth-shading/🟢️turns  |
       | move-object                   | ↗️move-object/📍️translates                      |
       | rotate-object                 | 🔄️rotate-object/🔄️yaws                       |
       | scale-object                  | 📐️scale-object/📐️halves                             |
@@ -140,9 +140,9 @@ Feature: Apply every typed lowpoly mutation twice — once in Rust, once in Pyth
       | insert-paint-layer            | ➕️insert-paint-layer/🪜️stacks      |
       | remove-paint-layer            | ➖️remove-paint-layer/➖️drops               |
       | rename-paint-layer            | 🔖️rename-paint-layer/🏷️retitles            |
-      | change-paint-layer-visible    | 👁️change-paint-layer/🙈️hides                    |
-      | change-paint-layer-opacity    | 🌫️change-paint-layer/🌫️fades            |
-      | change-paint-layer-blend-mode | 🎛️change-paint-layer/✖️switches  |
+      | change-paint-layer-visible    | 👁️change-paint-layer-visible/🙈️hides                    |
+      | change-paint-layer-opacity    | 🌫️change-paint-layer-opacity/🌫️fades            |
+      | change-paint-layer-blend-mode | 🎛️change-paint-layer-blend-mode/✖️switches  |
       | edit-paint-layer              | 🎨️edit-paint-layer/🖌️paints |
       | apply-paint-stroke            | 🖌️apply-paint-stroke/🧽️erases |
       | apply-paint-stroke            | 🖌️apply-paint-stroke/🖌️dabs |

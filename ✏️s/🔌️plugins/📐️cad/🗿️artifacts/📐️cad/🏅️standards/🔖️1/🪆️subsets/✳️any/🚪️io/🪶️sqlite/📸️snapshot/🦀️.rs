@@ -1,6 +1,6 @@
 //! 🏗️ Complete CAD relational ownership under the actual caller ledger.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::{snapshot::CadSnapshot, snapshot::CadReference, snapshot::CadNode, snapshot::CadModelChild};
+pub use crate::{snapshot::CadSnapshot, snapshot::CadReference, snapshot::CadNode, snapshot::CadModelChild};
 use crate::CadReferenceIndex;
 use crate::{references::close, references::invalid};
 use crate::references::frontiers as semantic_frontiers;

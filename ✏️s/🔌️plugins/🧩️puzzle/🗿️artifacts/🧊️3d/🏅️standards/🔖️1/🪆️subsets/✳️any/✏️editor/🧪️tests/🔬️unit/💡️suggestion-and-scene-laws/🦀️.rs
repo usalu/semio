@@ -122,9 +122,6 @@ async fn open_vortex_suggestions_opens_the_suggestion_popup() {
 
 #[semio_framework_async_macros::async_test]
 async fn open_vortex_suggestions_records_explicit_window_id() {
-    // 🪟️ The popup is transient state of the pane the user acted in (the dispatch's own window
-    // authority), and it RECORDS the explicit target pane the args named — so the assertion renders
-    // the acting pane and reads the recorded `windowId` back out of it.
     let mut app = app().await;
     let vortex = first_vortex_full_id(&app);
     dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex.as_str(), "x": 8.0, "y": 16.0, "windowId": main::WINDOW_INSTANCE_TOP })), Some(main::WINDOW_INSTANCE_PERSPECTIVE)).await.expect("openVortexSuggestions");
@@ -141,7 +138,6 @@ async fn accept_suggestion_with_full_id_places_even_if_selection_was_cleared() {
     dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex.clone(), "x": 0.0, "y": 0.0 })), None).await.expect("openVortexSuggestions");
     pump_brush_suggestions(&mut app, "the popup's search settles", brush_suggestions_settled).await;
     let before_count = object_count(&app);
-    // 🧹️ Simulate the split-pane outside-dismiss race clearing vortex selection before accept.
     dispatch(&mut app, "clearSelection", None, None).await.expect("clearSelection");
     let result = dispatch(&mut app, "acceptSuggestion", Some(&json!({ "index": 0, "fullId": vortex.as_str() })), None).await.expect("acceptSuggestion");
     assert!(result.requested_effects.iter().all(|effect| !matches!(effect, Effect::SetActiveUtility { .. } | Effect::SetActiveTool { .. })), "accept must not switch utility/tool: {:?}", result.requested_effects);
@@ -213,9 +209,6 @@ async fn accept_suggestion_appends_an_object_and_closes_the_menu() {
 /// `suggestionMenu.open` stays true and every split pane's regular context menu is gated shut.
 #[semio_framework_async_macros::async_test]
 async fn accept_suggestion_closes_menu_even_when_placement_fails() {
-    // 🕹️ `hover_id` dispatches through the real `interactionHover` verb, which resolves the
-    // `vortex` domain against `self.registry` — the scene_snapshot `app()` is registry-backed for exactly
-    // this reason (see its own doc comment).
     let mut app = app().await;
     let vortex = first_vortex_full_id(&app);
     hover_id(&mut app, PUZZLE3D_GRANULARITY_VORTEX, Some(&vortex)).await.expect("interactionHover");

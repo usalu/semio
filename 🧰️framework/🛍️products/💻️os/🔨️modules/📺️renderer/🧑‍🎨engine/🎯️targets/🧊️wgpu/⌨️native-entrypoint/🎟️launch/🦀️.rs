@@ -110,7 +110,7 @@ pub fn native_launch_caller(startup: bool) -> Result<NativeFrameCaller, ValueErr
 pub fn native_compiler_task_caller()->Result<NativeFrameCaller,ValueError>{NATIVE_LAUNCH_POLICY.get().copied().ok_or_else(||refused("native launch admission is not installed"))?.compiler_caller()}
 
 /// 🧪️ A native fixture installs its explicit complete launch wire once before any real invocation, never replacing live process policy.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn install_native_launch_fixture(wire:&str)->Result<(),ValueError>{
     let policy=NativeLaunchPolicy::read(wire)?;
     match NATIVE_LAUNCH_POLICY.set(policy){Ok(())=>Ok(()),Err(policy)=>if NATIVE_LAUNCH_POLICY.get()==Some(&policy){Ok(())}else{Err(refused("native fixture cannot replace an installed original launch admission"))}}

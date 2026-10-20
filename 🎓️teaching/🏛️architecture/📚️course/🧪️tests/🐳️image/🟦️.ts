@@ -1,7 +1,7 @@
 import Ajv from "ajv";
 import { createRequire } from "node:module";
 import { Readable, type Writable } from "node:stream";
-import { closeSync, ftruncateSync, mkdirSync, mkdtempSync, openSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { closeSync, ftruncateSync, mkdirSync, mkdtempSync, openSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { expect, it } from "vitest";
@@ -31,7 +31,7 @@ it("rejects content whose actual streamed byte count differs from the declared e
 });
 
 function scratch(): string {
-  const parent = process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated", "image-inputs") : join(tmpdir(), "image-inputs");
+  const parent = process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated", "image-inputs") : join(realpathSync(tmpdir()), "image-inputs");
   mkdirSync(parent, { recursive: true });
   return mkdtempSync(join(parent, "run-"));
 }

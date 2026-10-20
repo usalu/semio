@@ -134,14 +134,16 @@ impl<P: RetireOwned + Send + Sync + 'static, M: RetireOwned + Send + 'static> On
         }
     }
 
-    /// 🧪️ Captures the caller's exact returned edit, post root and retirement issuers for durable fixture closure.
+    /// 🧪️ Captures the caller's exact returned edit, post root and retirement issuers for durable fixture closure; public only because the durable-group testing helpers of another crate construct it, and only under `durable-group-testing`.
     #[cfg(feature = "durable-group-testing")]
-    pub(crate) fn from_returned(edit: Edit<M>, post: Arc<P>, mutation_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<M>>, snapshot_retirement: Arc<dyn SnapshotRetirementFactory<P>>) -> Self {
+    #[doc(hidden)]
+    pub fn from_returned(edit: Edit<M>, post: Arc<P>, mutation_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<M>>, snapshot_retirement: Arc<dyn SnapshotRetirementFactory<P>>) -> Self {
         Self { base: ManuallyDrop::new(None), mutation: ManuallyDrop::new(None), inverse: ManuallyDrop::new(None), candidate: ManuallyDrop::new(None), sealed: ManuallyDrop::new(None), refused: ManuallyDrop::new(Some((edit, post))), failure: ManuallyDrop::new(None), authority: ManuallyDrop::new(None), prepared: ManuallyDrop::new(None), mutation_retirement: ManuallyDrop::new(Some(mutation_retirement)), snapshot_retirement: ManuallyDrop::new(Some(snapshot_retirement)), active: ManuallyDrop::new(None), factories: ManuallyDrop::new(Default::default()), closing: false }
     }
-    /// 📮️ Quotes returned fixture closure before handing its originals to their captured retirement authorities.
+    /// 📮️ Quotes returned fixture closure before handing its originals to their captured retirement authorities; public only for the durable-group testing helpers of another crate, and only under `durable-group-testing`.
     #[cfg(feature = "durable-group-testing")]
-    pub(crate) fn begin_returned_close(&mut self) -> Result<(), ValueError> {
+    #[doc(hidden)]
+    pub fn begin_returned_close(&mut self) -> Result<(), ValueError> {
         if let Some((edit, post)) = self.refused.take() {
             let mutations = self.mutation_retirement.take().expect("original returned mutation issuer");
             let snapshots = self.snapshot_retirement.take().expect("original returned snapshot issuer");

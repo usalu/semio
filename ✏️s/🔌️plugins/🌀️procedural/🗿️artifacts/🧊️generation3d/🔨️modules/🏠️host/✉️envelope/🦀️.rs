@@ -68,6 +68,7 @@ mod owner_accept;
 #[path = "🎬️mutation-session/🦀️.rs"]
 mod mutation_session;
 use mutation_session::*;
+pub use mutation_session::Generation3dMutationSession;
 
 #[path = "📸️snapshot-authority/🦀️.rs"]
 mod snapshot_authority;

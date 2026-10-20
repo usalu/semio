@@ -2,7 +2,7 @@ import { frameworkOsLockedPrefsEnv } from "@semio-tech/repo-lib/dev";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import policy from "./🔣️.json";
+import policy from "./🔣️.json" with { type: "json" };
 
 /** 🔏️ Hashes Vite's exposed environment and ignored production dotenv files without logging their values. */
 export async function productionBrowserInputHash(root: string, values: Readonly<Record<string, string | undefined>> = process.env): Promise<string> {

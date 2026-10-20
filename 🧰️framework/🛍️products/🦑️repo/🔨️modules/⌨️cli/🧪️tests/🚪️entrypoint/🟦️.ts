@@ -1,0 +1,11 @@
+import {test,expect} from "bun:test";
+import {readFileSync} from "node:fs";
+import {Database} from "bun:sqlite";
+import Ajv from "ajv/dist/2020";
+const schema=JSON.parse(readFileSync(new URL("../../🧬️schema/🚪️entrypoint/🔣️.json",import.meta.url),"utf8")),fixture=JSON.parse(readFileSync(new URL("../../🧫️fixtures/🚪️entrypoint/🔣️.json",import.meta.url),"utf8"));
+test("native entrypoint neutral routes agree with the independent SQLite oracle",()=>{
+ const validate=new Ajv({strict:false}).compile(schema);expect(validate(fixture),JSON.stringify(validate.errors)).toBe(true);const db=new Database(":memory:");
+ try{db.exec("CREATE TABLE verbs(name TEXT PRIMARY KEY)");for(const name of fixture.buildVerbs)db.query("INSERT INTO verbs VALUES (?)").run(name);
+ for(const row of fixture.vectors){const selected=db.query(`WITH a AS (SELECT key i,value FROM json_each(?)), head AS (SELECT i,value FROM a WHERE value NOT LIKE '--tool=%' AND value<>'--tool' AND NOT EXISTS (SELECT 1 FROM a prev WHERE prev.i=a.i-1 AND prev.value='--tool') ORDER BY i LIMIT 1) SELECT CASE WHEN json_extract(?1,'$[0]')='dev' AND json_extract(?1,'$[1]')='mcp' AND json_extract(?1,'$[2]')='stdio' AND json_extract(?1,'$[3]')='os' THEN 'workspace' WHEN json_extract(?1,'$[0]')='--tool' OR json_extract(?1,'$[0]') LIKE '--tool=%' THEN 'build' WHEN (SELECT value FROM head)='mcp' AND (SELECT i FROM head)=0 THEN 'mcp' WHEN (SELECT value FROM head)='dashboard' AND (SELECT i FROM head)=0 THEN 'build' WHEN EXISTS (SELECT 1 FROM verbs WHERE name=(SELECT value FROM head)) THEN 'build' ELSE 'domain' END kind`).get(JSON.stringify(row.argv)) as {kind:string};expect(selected.kind,row.id).toBe(row.kind);const args=row.argv[0]==="mcp"?row.argv.slice(1):row.argv[0]==="dashboard"?[...fixture.dashboardArguments,...row.argv.slice(1)]:row.argv;expect(args,row.id).toEqual(row.arguments);}
+ }finally{db.close();}
+});

@@ -13,7 +13,8 @@ import fixture from "../🧫️fixtures/⚡️incremental/🔣️.json";
 import schema from "../../🧬️schema/⚡️incremental/🔣️.json";
 import graphSchema from "../../../🧬️schema/🔣️.json";
 import policy from "../../../🔣️policy.json";
-import {receiveScriptProcessInvocation,scriptInvocationEnvironment} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {scriptInvocationEnvironment} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
 import {captureOwnedCommandV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 
@@ -51,7 +52,7 @@ test("parallel incremental inference settles concurrent edits onto serial full i
  const initial:Snapshot={...fixture.files},raced:Snapshot={...initial,[fixture.race.path]:fixture.race.content,[fixture.race.extra.path]:fixture.race.extra.content},stale:Snapshot={...raced,[fixture.stale.path]:fixture.stale.content,[fixture.stale.extra.path]:fixture.stale.extra.content},broken:Snapshot={...stale,[fixture.unparseable.source]:fixture.unparseable.content};
  const runs=[{name:"scenario",files:initial},{name:"raced",files:raced},{name:"stale",files:stale},{name:"broken",files:broken}].map(run=>{const root=mkdtempSync(join(artifacts,"g1-"+run.name+"-"));materializeV1(root,run.files);return {...run,root,dataset:{version:1,identity:createHash("sha256").update(root).digest("hex"),sourceRoot:relative(process.cwd(),root).replaceAll("\\","/")}};});
  try{
-  const outputs=await receiveScriptProcessInvocation(process.env,original=>Promise.all(runs.map(async run=>{
+  const outputs=await withBuildTestInvocationV1(original=>Promise.all(runs.map(async run=>{
    const brokenAge=run.name==="broken"?"const{utimesSync}=require('node:fs'),at=new Date(Date.now()-"+fixture.unparseable.ageMilliseconds+");utimesSync("+JSON.stringify(join(run.root,fixture.unparseable.source))+",at,at);":"";
    const output=await captureOwnedCommandV1("node",["--conditions","development","-e",nodeTypeScriptLoaderV1(compiler)+brokenAge+childSourceV1],run.root,{control:scriptCompilerAdmissionControlV1(original,"g1-incremental:"+run.name,240000),env:{...scriptInvocationEnvironment(original,process.env),NODE_PATH:join(dirname(dirname(sdk.resolve("nx/package.json")))),NX_DAEMON:"false",SEMIO_G1_MODE:run.name==="scenario"?"scenario":"oracle",SEMIO_G1_WORKSPACE:process.cwd(),SEMIO_G1_DATASET:JSON.stringify(run.dataset),SEMIO_G1_FIXTURE:input,SEMIO_G1_LIBRARY:library,SEMIO_G1_STORAGE:pathToFileURL(join(library,"🏗️build/📥️inputs/💾️storage/🟨️.mjs")).href,SEMIO_G1_ROUTING:pathToFileURL(resolve("🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts")).href,SEMIO_G1_PLUGIN:pathToFileURL(join(library,"🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href,SEMIO_G1_OBSERVER:pathToFileURL(join(library,"🏗️build/👁️observation/🟨️.mjs")).href}});
    return [run.name,JSON.parse(output.trim().split("\n").findLast(row=>row.startsWith("{"))!)] as const;
@@ -79,7 +80,7 @@ test("parallel incremental inference settles concurrent edits onto serial full i
   expect(scenario.halfWritten!.persisted!.foreignLibraryFacts).toBe(fixture.foreignLibraryFacts);
   expect(scenario.halfWritten!.persisted!.authorityRows).toBe(0);
  }finally{
-  try{await receiveScriptProcessInvocation(process.env,original=>Promise.all(runs.map(run=>withRepositoryBuildInferenceDatasetV1(process.cwd(),original,scriptCompilerAdmissionControlV1(original,"graph:dataset-retirement",0),run.dataset,async scope=>{await scope.retire();expect(existsSync(scope.root)).toBe(false);}))));}
+  try{await withBuildTestInvocationV1(original=>Promise.all(runs.map(run=>withRepositoryBuildInferenceDatasetV1(process.cwd(),original,scriptCompilerAdmissionControlV1(original,"graph:dataset-retirement",0),run.dataset,async scope=>{await scope.retire();expect(existsSync(scope.root)).toBe(false);}))));}
   finally{for(const run of runs)rmSync(run.root,{recursive:true,force:true});rmSync(dirname(input),{recursive:true,force:true});}
  }
 },300_000);

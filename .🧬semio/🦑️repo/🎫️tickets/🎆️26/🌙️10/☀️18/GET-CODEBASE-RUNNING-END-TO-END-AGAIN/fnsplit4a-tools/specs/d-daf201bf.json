@@ -1,0 +1,46 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📝️text-editor-host/🟦️.ts",
+ "describeLine": 14,
+ "shared": {
+  "dir": "🟣️shared",
+  "doc": "/** 🟣️ The shared declarations of the framework renderer hosts suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️renders-text-editor-host",
+   "doc": "/** 🔶️ The renders text editor host tests of the framework renderer hosts suite. */",
+   "name": "registerRendersTextEditorHostTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the renders text editor host tests of the framework renderer hosts suite.",
+   "from": 15,
+   "to": 114
+  },
+  {
+   "dir": "🔸️framework-renderer-hosts",
+   "doc": "/** 🔸️ The framework renderer hosts tests of the framework renderer hosts suite. */",
+   "name": "registerFrameworkRendererHostsTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the framework renderer hosts tests of the framework renderer hosts suite.",
+   "from": 160,
+   "to": 242
+  },
+  {
+   "dir": "🟠️renders-text-editor-host",
+   "doc": "/** 🟠️ The renders text editor host tests of the framework renderer hosts suite. */",
+   "name": "registerRendersTextEditorHostTestsMore",
+   "emoji": "🟡",
+   "fdoc": "Registers the renders text editor host tests of the framework renderer hosts suite.",
+   "from": 317,
+   "to": 452
+  },
+  {
+   "dir": "🟢️multispanreplace-renames-occurrence-rema",
+   "doc": "/** 🟢️ The multispanreplace renames occurrence remaps tests of the framework renderer hosts suite. */",
+   "name": "registerMultispanreplaceRenamesOccurrenceRemapsTests",
+   "emoji": "🔵",
+   "fdoc": "Registers the multispanreplace renames occurrence remaps tests of the framework renderer hosts suite.",
+   "from": 474,
+   "to": 490
+  }
+ ]
+}

@@ -8,6 +8,7 @@ use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::comman
 use crate::editor::remodeling::unit_tests::context::{app, dispatch};
 use semio_s_artifact_remodel_remodeling_editor::editor::remodeling::RemodelingCommand;
 use semio_framework_plugin::artifact_app_laws;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 /// 🧩️ `results.mesh.mesh` is a composed CHILD handle now — reads the real vertex count through
 /// `remodeling_mesh_workspace`'s working-scene cache (0 on a cold cache, matching an empty mesh).

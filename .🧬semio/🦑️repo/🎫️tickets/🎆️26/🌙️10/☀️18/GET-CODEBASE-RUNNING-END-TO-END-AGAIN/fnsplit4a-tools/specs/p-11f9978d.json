@@ -1,0 +1,55 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🏗️transaction-coordinator/🟦️.tsx",
+ "function": "registerTransactionCoordinatorTests",
+ "keep": [
+  11
+ ],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of registerTransactionCoordinatorTests. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️artifact-mutation-router",
+   "doc": "/** 🔶️ The artifact mutation router phase of registerTransactionCoordinatorTests. */",
+   "phases": [
+    {
+     "name": "buildArtifactMutationRouterState",
+     "emoji": "🔷",
+     "doc": "Builds ArtifactMutationRouter, encodePackValue, InstanceDirectory, MAX_TRANSACTION_DEPTH of registerTransactionCoordinatorTests.",
+     "from": 8,
+     "to": 10
+    }
+   ]
+  },
+  {
+   "dir": "🔸️plugin-runtime-transaction-coordinat",
+   "doc": "/** 🔸️ The plugin runtime transaction coordinator phase of registerTransactionCoordinatorTests. */",
+   "phases": [
+    {
+     "name": "registerPluginRuntimeTransactionCoordinatorTests",
+     "emoji": "🔹",
+     "doc": "Registers the plugin runtime transaction coordinator tests of registerTransactionCoordinatorTests.",
+     "from": 20,
+     "to": 20
+    }
+   ]
+  },
+  {
+   "dir": "🟠️history-snapshot-bounded-retry",
+   "doc": "/** 🟠️ The history snapshot bounded retry phase of registerTransactionCoordinatorTests. */",
+   "phases": [
+    {
+     "name": "registerHistorySnapshotBoundedRetryTests",
+     "emoji": "🟡",
+     "doc": "Registers the history snapshot bounded retry tests of registerTransactionCoordinatorTests.",
+     "from": 358,
+     "to": 358
+    }
+   ]
+  }
+ ]
+}

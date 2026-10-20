@@ -10,7 +10,7 @@
 //! `f6-final-summary.md` §4.4, minus the container type itself, which now has one shared home).
 
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
-#[cfg(test)] use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion};
+#[cfg(test)] use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3};
 use semio_s_artifact_stdio_semio_base::schema::triples::NamedModified;
 use semio_s_artifact_stdio_semio_base::schema::triples::NamedTripleDiff;
 use semio_s_artifact_stdio_semio_base::schema::triples::NamedAdded;
@@ -553,3 +553,4 @@ mod tests;
 
 #[cfg(test)]
 use protocol::{DiffBinary,DiffText};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;

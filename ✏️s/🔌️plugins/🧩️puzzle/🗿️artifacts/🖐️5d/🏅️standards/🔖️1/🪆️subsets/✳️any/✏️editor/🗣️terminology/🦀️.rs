@@ -89,7 +89,6 @@ semio_framework_ui_locale::app_labels! {
         lock: native_en "Lock", native_de "Sperren", reuse_en "Lock", reuse_de "Sperren";
         unlock: native_en "Unlock", native_de "Entsperren", reuse_en "Unlock", reuse_de "Entsperren";
         lod: native_en "LOD", native_de "LOD", reuse_en "LOD", reuse_de "LOD";
-        // 🧊️ Volume Brush / target volumes (the 3d-pane fill constraint family)
         target_volumes: native_en "Target Volumes", native_de "Zielvolumina", reuse_en "Target Volumes", reuse_de "Zielvolumina";
         target_volume: native_en "Target Volume", native_de "Zielvolumen", reuse_en "Target Volume", reuse_de "Zielvolumen";
         volume_brush: native_en "Volume Brush", native_de "Volumenpinsel", reuse_en "Volume Brush", reuse_de "Volumenpinsel";
@@ -99,7 +98,6 @@ semio_framework_ui_locale::app_labels! {
         height: native_en "Height", native_de "Höhe", reuse_en "Height", reuse_de "Höhe";
         target_volume_origin_required: native_en "Point at the ground plane to place a target volume", native_de "Zeigen Sie auf die Bodenebene, um ein Zielvolumen zu platzieren", reuse_en "Point at the ground plane to place a target volume", reuse_de "Zeigen Sie auf die Bodenebene, um ein Zielvolumen zu platzieren";
         automatic: native_en "Automatic", native_de "Automatisch", reuse_en "Automatic", reuse_de "Automatisch";
-        // window option groups (grid / lod / select / grip / transform)
         grid: native_en "Grid", native_de "Raster", reuse_en "Grid", reuse_de "Raster";
         visible: native_en "Visible", native_de "Sichtbar", reuse_en "Visible", reuse_de "Sichtbar";
         snap: native_en "Snap", native_de "Fang", reuse_en "Snap", reuse_de "Fang";
@@ -125,7 +123,6 @@ semio_framework_ui_locale::app_labels! {
         contact_tolerance: native_en "Contact tolerance (m)", native_de "Kontakttoleranz (m)", reuse_en "Contact tolerance (m)", reuse_de "Kontakttoleranz (m)";
         window_2d: native_en "Puzzle 2D", native_de "Puzzle 2D", reuse_en "Puzzle 2D", reuse_de "Puzzle 2D";
         window_3d: native_en "Puzzle 3D", native_de "Puzzle 3D", reuse_en "Puzzle 3D", reuse_de "Puzzle 3D";
-        // inspector field labels
         id: native_en "Id", native_de "Id", reuse_en "Id", reuse_de "Id";
         kind: native_en "Kind", native_de "Art", reuse_en "Kind", reuse_de "Art";
         label: native_en "Label", native_de "Bezeichnung", reuse_en "Label", reuse_de "Bezeichnung";
@@ -150,7 +147,6 @@ semio_framework_ui_locale::app_labels! {
         turn: native_en "Turn", native_de "Drehung", reuse_en "Turn", reuse_de "Drehung";
         tilt: native_en "Tilt", native_de "Neigung", reuse_en "Tilt", reuse_de "Neigung";
         mixed: native_en "Mixed", native_de "Gemischt", reuse_en "Mixed", reuse_de "Gemischt";
-        // document IO, clipboard and the add-part dialog
         export: native_en "Export", native_de "Exportieren", reuse_en "Export", reuse_de "Exportieren";
         import: native_en "Import", native_de "Importieren", reuse_en "Import", reuse_de "Importieren";
         export_too_large: native_en "This document is larger than one export may stream", native_de "Dieses Dokument ist größer als ein Export übertragen kann", reuse_en "This document is larger than one export may stream", reuse_de "Dieses Dokument ist größer als ein Export übertragen kann";
@@ -171,7 +167,6 @@ semio_framework_ui_locale::app_labels! {
         scale: native_en "Scale", native_de "Maßstab", reuse_en "Scale", reuse_de "Maßstab";
         hidden: native_en "Hidden", native_de "Ausgeblendet", reuse_en "Hidden", reuse_de "Ausgeblendet";
         locked: native_en "Locked", native_de "Gesperrt", reuse_en "Locked", reuse_de "Gesperrt";
-        // settings panel labels
         settings: native_en "Settings", native_de "Einstellungen", reuse_en "Settings", reuse_de "Einstellungen";
         grid_factor: native_en "Factor", native_de "Faktor", reuse_en "Factor", reuse_de "Faktor";
         proximity_radius: native_en "Proximity radius (m)", native_de "Näherungsradius (m)", reuse_en "Proximity radius (m)", reuse_de "Näherungsradius (m)";

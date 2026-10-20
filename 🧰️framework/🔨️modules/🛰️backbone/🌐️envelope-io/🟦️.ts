@@ -1,7 +1,8 @@
 /** 🌐️ Backbone envelope IO: bounded, jittered-retry reads and writes of document envelopes over the backbone HTTP endpoint. */
 
 import type { FetchTimeoutResponse } from "@semio-tech/framework";
-import { fetchWithTimeout, retryWithJitteredBackoff } from "@semio-tech/framework";
+import { fetchWithTimeout } from "../../🚪️io/🌐️fetch-timeout/🟦️.ts";
+import { retryWithJitteredBackoff } from "../../⏳️async/🔁️jittered-backoff/🟦️.ts";
 import { BACKBONE_ENDPOINT_PATH, BACKBONE_OCTET_STREAM, parseRemoteBackboneUri, remoteEnvelopeUrl } from "../🟦️.ts";
 
 //#region 🔖️Backbone

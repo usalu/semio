@@ -1,0 +1,4 @@
+registerTransactionCoordinatorTests 3 phases, keep=11, final return=false
+8-10 buildArtifactMutationRouterState
+20-20 registerPluginRuntimeTransactionCoordinatorTests
+358-358 registerHistorySnapshotBoundedRetryTests

@@ -23,5 +23,6 @@ semio-s-plugin-energy-engine-results = { workspace = true }
 semio-s-plugin-energy-engine-site = { workspace = true }
 
 [dev-dependencies]
+semio-s-plugin-energy-engine-sim = { workspace = true, features = ["testing"] }
 csv = { version = "1" }
 serde_json = "1.0.149"

@@ -19,7 +19,8 @@
   },
   "devDependencies": {
     "typescript": "^5.9.3",
-    "@semio-tech/framework": "workspace:*"
+    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/ui": "workspace:*"
   },
   "author": {
     "name": "Ueli Saluz",

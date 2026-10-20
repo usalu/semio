@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use crate::snapshot::DrawingSnapshot;
 
 //#region 🔖️HandcraftedArtifactDsl
 /// ✉️ P6 handcrafted `ArtifactDsl` (derive no longer emits this trait) — relocated from
@@ -48,7 +48,7 @@ pub fn print_dsl(document: &DrawingSnapshot) -> String {
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use crate::snapshot::DrawingSnapshot;
 
 
 /// 🔁️ Parses the committed `.dsl.semio` example, prints it back and parses that, answering

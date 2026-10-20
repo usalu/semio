@@ -15,8 +15,8 @@
     ]
   },
   "targets": {
-    "test-original-receiving-source":{"executor":"repo:script","options":{"cwd":"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-receiving-source"},"inputs":["default","^production","{projectRoot}/../../🏅️standards/**/*"]},
-    "test-original-receiving-native":{"executor":"repo:script","options":{"cwd":"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-receiving-native"},"inputs":["default","^production","{projectRoot}/../../🏅️standards/**/*"]},
+    "test-original-receiving-source":{"executor":"repo:script","options":{"cwd":"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-receiving-source"},"inputs":["default","^production","{projectRoot}/../../🏅️standards/**/*"], "outputs": []},
+    "test-original-receiving-native":{"executor":"repo:script","options":{"cwd":"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-receiving-native"},"inputs":["default","^production","{projectRoot}/../../🏅️standards/**/*"], "outputs": []},
     "build": {
       "executor": "repo:script",
       "cache": true,
@@ -70,7 +70,8 @@
         "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/**/*",
         "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🟦️.ts",
         "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🦀️.rs"
-      ]
+      ],
+      "outputs": []
     },
     "test-snapshot-sqlite": {
       "executor": "repo:script",
@@ -87,7 +88,8 @@
         "{projectRoot}/../../📜️artifact-definition.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
-      ]
+      ],
+      "outputs": []
     },
     "test-snapshot-sqlite-native": {
       "executor": "repo:script",
@@ -104,7 +106,8 @@
         "{projectRoot}/../../📜️artifact-definition.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
-      ]
+      ],
+      "outputs": []
     },
     "test-snapshot-sqlite-source": {
       "executor": "repo:script",
@@ -121,7 +124,8 @@
         "{projectRoot}/../../📜️artifact-definition.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
-      ]
+      ],
+      "outputs": []
     }
   }
 }

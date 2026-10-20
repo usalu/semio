@@ -8,7 +8,6 @@ use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
 use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
-use semio_s_artifact_lowpoly_lowpoly_config::LowpolyConfig;
 use crate::context::{app, dispatch};
 use semio_s_artifact_lowpoly_lowpoly_editor::LowpolyCommand;
 use semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::default_snapshot;

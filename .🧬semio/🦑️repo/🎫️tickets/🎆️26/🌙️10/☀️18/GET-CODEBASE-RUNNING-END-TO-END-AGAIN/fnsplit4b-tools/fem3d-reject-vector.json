@@ -1,0 +1,9 @@
+{
+ "function": "reject_vector_of",
+ "table": "REJECT_VECTORS",
+ "emoji": "🗃️",
+ "doc": "The committed rejection specification vector of every registered rejection identifier, read literally via `include_str!`.",
+ "copy_derive": "Vector",
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧪️tests/🕸️mutate-fem3d-1-mesh/🦀️.rs",
+ "nth": 0
+}

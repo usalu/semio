@@ -34,6 +34,7 @@ semio-s-artifact-remodel-remodeling-mutations = { workspace = true }
 semio-s-artifact-remodel-remodeling-reconstruct = { workspace = true }
 
 [dev-dependencies]
+bitvec = "1"
 base64_codec = { workspace = true }
 pack = { workspace = true }
 semio-framework-async-macros = { workspace = true }

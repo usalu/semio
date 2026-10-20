@@ -158,9 +158,6 @@ fn write_strh(h: &StreamHeader) -> Vec<u8> {
     out.extend_from_slice(&h.suggested_buffer_size.to_le_bytes());
     out.extend_from_slice(&h.quality.to_le_bytes());
     out.extend_from_slice(&h.sample_size.to_le_bytes());
-    // 📏 Modern 4×LONG rcFrame form (16 bytes) — every recipe below is hand-authored, so there is
-    // no legacy-producer quirk to preserve (contrast the repository's own reader, which must also
-    // accept a real encoder's classic 4×SHORT form; this binary only ever WRITES the complete form).
     for v in h.rc_frame {
         out.extend_from_slice(&v.to_le_bytes());
     }
@@ -223,9 +220,6 @@ fn encode_avi(doc: &AviDoc) -> Vec<u8> {
     let mut top = vec![hdrl, movi];
 
     if doc.idx1_present {
-        // 🧭 Offsets relative to the `movi` LIST payload start INCLUDING its own "movi" tag —
-        // the same OpenDML convention the repository's own reader/writer documents and this
-        // binary's sibling probe decodes against.
         let mut idx1_payload = Vec::new();
         let mut offset: u32 = 4;
         for stream in &doc.streams {
@@ -544,7 +538,6 @@ fn recipe(id: &str) -> Option<(AviDoc, Option<AviDoc>)> {
             Some((base, Some(after)))
         }
 
-        // 🧬 InsertStream{index:2, ..} — append a third stream; mainHeader.streams stays 2 (stale).
         "insert-stream-applied" => {
             let mut after = base.clone();
             after.streams.push(Stream {
@@ -554,28 +547,22 @@ fn recipe(id: &str) -> Option<(AviDoc, Option<AviDoc>)> {
             });
             Some((base, Some(after)))
         }
-        // 🧬 InsertStream{index:10, ..} — 10 > final_len(3): `mutation.apply.invalid-index`, rejected.
         "insert-stream-rejected-out-of-bounds" => Some((base, None)),
 
-        // 🧬 RemoveStream{index:1} — drops the audio stream; mainHeader.streams stays 2 (stale).
         "remove-stream-applied" => {
             let mut after = base.clone();
             after.streams.remove(1);
             Some((base, Some(after)))
         }
-        // 🧬 RemoveStream{index:5} — 5 >= base.len()(2): `mutation.apply.missing-target`, rejected.
         "remove-stream-rejected-missing" => Some((base, None)),
 
-        // 🧬 SetStreamHeader{stream_index:0, strh:<new>} — whole-value replace of stream 0's strh.
         "set-stream-header-applied" => {
             let mut after = base.clone();
             after.streams[0].strh.rate = 30;
             Some((base, Some(after)))
         }
-        // 🧬 SetStreamHeader{stream_index:5, ..} — 5 >= base.streams.len()(2): missing-target, rejected.
         "set-stream-header-rejected-missing-stream" => Some((base, None)),
 
-        // 🧬 SetStreamFormat{stream_index:1, strf:<new>} — whole-value replace of stream 1's strf.
         "set-stream-format-applied" => {
             let mut after = base.clone();
             after.streams[1].strf = StreamFormat::WaveFormat { format_tag: 1, channels: 1, samples_per_sec: 48_000, avg_bytes_per_sec: 96_000, block_align: 2, bits_per_sample: 16, extra: vec![] };
@@ -583,27 +570,20 @@ fn recipe(id: &str) -> Option<(AviDoc, Option<AviDoc>)> {
         }
         "set-stream-format-rejected-missing-stream" => Some((base, None)),
 
-        // 🧬 InsertChunk{stream_index:0, index:3, ..} — append a 4th chunk; strh.length stays 3 (stale).
         "insert-chunk-applied" => {
             let mut after = base.clone();
             after.streams[0].chunks.push(AviChunk { fourcc: "00dc".into(), data: vec![0xAA, 0x00, 0x09, 0x09], keyframe: false });
             Some((base, Some(after)))
         }
-        // 🧬 InsertChunk{stream_index:9, ..} — 9 >= base.streams.len()(2): missing-target on the
-        // STREAMS level (`chunk_diff_for` wraps a `stream_diff_for` IndexedModified at index 9).
         "insert-chunk-rejected-missing-stream" => Some((base, None)),
 
-        // 🧬 RemoveChunk{stream_index:0, index:1} — drops the middle chunk of stream 0.
         "remove-chunk-applied" => {
             let mut after = base.clone();
             after.streams[0].chunks.remove(1);
             Some((base, Some(after)))
         }
-        // 🧬 RemoveChunk{stream_index:0, index:99} — valid stream, 99 >= chunks.len()(3): missing-target
-        // on the CHUNKS level (a different validation path than the missing-stream cases above).
         "remove-chunk-rejected-missing-chunk" => Some((base, None)),
 
-        // 🧬 SetChunkKeyframe{stream_index:0, index:2, keyframe:true} — flips the last chunk's flag.
         "set-chunk-keyframe-applied" => {
             let mut after = base.clone();
             after.streams[0].chunks[2].keyframe = true;
@@ -611,22 +591,18 @@ fn recipe(id: &str) -> Option<(AviDoc, Option<AviDoc>)> {
         }
         "set-chunk-keyframe-rejected-missing-chunk" => Some((base, None)),
 
-        // 🧬 AddUnknownChunk{index:1, item:<XTRA>} — append after the existing JUNK.
         "add-unknown-chunk-applied" => {
             let mut after = base.clone();
             after.unknown_chunks.push(UnknownChunk { fourcc: "XTRA".into(), data: vec![7, 7, 7] });
             Some((base, Some(after)))
         }
-        // 🧬 AddUnknownChunk{index:99, ..} — 99 > final_len(2): invalid-index, rejected.
         "add-unknown-chunk-rejected-out-of-bounds" => Some((base, None)),
 
-        // 🧬 RemoveUnknownChunk{index:0} — drops the JUNK chunk, leaving none.
         "remove-unknown-chunk-applied" => {
             let mut after = base.clone();
             after.unknown_chunks.clear();
             Some((base, Some(after)))
         }
-        // 🧬 RemoveUnknownChunk{index:99} — 99 >= unknown_chunks.len()(1): missing-target, rejected.
         "remove-unknown-chunk-rejected-missing" => Some((base, None)),
 
         _ => None,

@@ -37,7 +37,7 @@ const updateSceneCameraProjection = (camera: THREE.Camera): void => {
 };
 
 /**
- * Gizmo holds the data fields for a Gizmo record.
+ * 🧭️ Gizmo holds the data fields for a Gizmo record.
  **/
 const Gizmo: React.FC<GizmoProps> = ({ show = true, onAxisClick }) => {
   const { size } = useThree();
@@ -85,7 +85,7 @@ const Gizmo: React.FC<GizmoProps> = ({ show = true, onAxisClick }) => {
 };
 
 /**
- * SceneInnerProps holds the data fields for a SceneInnerProps record.
+ * 🎬️ SceneInnerProps holds the data fields for a SceneInnerProps record.
  **/
 interface SceneInnerProps {
   children?: React.ReactNode;
@@ -102,7 +102,7 @@ interface SceneInnerProps {
 }
 
 /**
- * SceneInner holds the data fields for a SceneInner record.
+ * 🎞️ SceneInner holds the data fields for a SceneInner record.
  **/
 const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, showGizmo = true, projection, camera: initialCamera, onCameraChange, onProjectionChange, focusedItemId, onFocusComplete, selectionOnDrag = false, onOrbitEnd }) => {
   const [gridColors, setGridColors] = reactHostPort.useState(readSceneGridColors);
@@ -393,7 +393,7 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
 };
 
 /**
- * SceneProps holds the data fields for a SceneProps record.
+ * 🌄️ SceneProps holds the data fields for a SceneProps record.
  **/
 interface SceneProps {
   children?: React.ReactNode;
@@ -414,7 +414,7 @@ interface SceneProps {
 }
 
 /**
- * 3D scene viewer with orbit controls, grid, and geometry rendering.
+ * 🎭️ 3D scene viewer with orbit controls, grid, and geometry rendering.
  **/
 export const Scene: React.FC<SceneProps> = ({
   children,
@@ -495,7 +495,7 @@ export const Scene: React.FC<SceneProps> = ({
 };
 
 /**
- * Skeleton loading placeholder for a 3D scene.
+ * 🎥️ Skeleton loading placeholder for a 3D scene.
  *
  **/
 export const SceneSkeleton: React.FC = () => (

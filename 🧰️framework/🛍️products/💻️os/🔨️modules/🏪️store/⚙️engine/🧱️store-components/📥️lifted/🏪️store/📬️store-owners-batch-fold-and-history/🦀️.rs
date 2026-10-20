@@ -435,9 +435,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 origin: Default::default(),
                 transaction: transaction.cloned(),
             });
-            let (applied, op_messages) = replay::apply_operation_into::<P, Mutation>(&mut *snapshot, mutation, op_index as u32);
+            let (_, op_messages) = semio_framework_os_store_replay::fold_operation_into::<P, Mutation>(&mut *snapshot, mutation, op_index as u32);
             messages.extend(op_messages);
-             applied?;
         }
         if let Some(level) = semio_framework_os_spr::worst_level(&messages) {
             if store_log.merge_policy.rejects(level) {

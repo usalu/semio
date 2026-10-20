@@ -1,0 +1,5 @@
+useSpawnedSession 4 phases, keep=-, final return=true
+102-242 useDocumentServicesState
+243-330 useUpdateSpacePanelState
+357-484 useSwitchPluginAppState
+493-543 useRequestServiceOperationState

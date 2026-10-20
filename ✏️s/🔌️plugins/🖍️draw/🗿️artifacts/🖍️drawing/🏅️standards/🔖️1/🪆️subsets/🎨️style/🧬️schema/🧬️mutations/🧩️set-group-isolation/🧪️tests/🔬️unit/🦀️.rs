@@ -2,6 +2,9 @@
 
 use protocol::Mutation;
 use semio_framework_test_fixtures::fixture_text;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
+use semio_s_artifact_draw_drawing_diff::DrawingDiff;
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass/📸️snapshot/⬅️before/🔣️.json"));
 static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass/📸️snapshot/➡️after/🔣️.json"));
 static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass/🔺️diff/🔣️.json"));

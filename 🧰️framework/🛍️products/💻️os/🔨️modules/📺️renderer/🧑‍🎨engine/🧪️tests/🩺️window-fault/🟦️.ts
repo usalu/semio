@@ -13,7 +13,7 @@ import browserSchema from "@semio-tech/framework-plugin/browser-bundle/schema.js
 import faultVectors from "@semio-tech/framework-plugin/runtime-fault-vectors.json";
 import panelHostingSource from "../../🧱️elements/🏛️ShellHost/📋️panel-hosting/🟦️.tsx?raw";
 import contributionsRefreshSource from "../../🧱️elements/🏛️ShellHost/🔁️contributions-refresh/🟦️.ts?raw";
-import uiBundleSource from "../../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🟦️.ts?raw";
+import { uiI18nBundleSourceText as uiBundleSource } from "@semio-tech/ui/i18n/source-text";
 
 const shellTreeSource = Object.values(import.meta.glob<string>(["../../🧱️elements/🏛️ShellHost/🟦️.tsx", "../../🧱️elements/🏛️ShellHost/**/🟦️.ts", "../../🧱️elements/🏛️ShellHost/**/🟦️.tsx", "!../../🧱️elements/🏛️ShellHost/🧪️tests/**"], { query: "?raw", import: "default", eager: true })).join("\n");
 

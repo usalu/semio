@@ -39,7 +39,7 @@ pub mod standards {
                         #[path = "."]
                         pub mod change_parameter_binding {
                             #[cfg(test)]
-                            #[path = "../../../../../../🔧️change-parameter/🧪️tests/🏷️retitles/🦀️.rs"]
+                            #[path = "../../../../../../🔧️change-parameter-binding/🧪️tests/🏷️retitles/🦀️.rs"]
                             pub mod tests_retitles_the_caption_binding;
                         }
                         #[path = "."]
@@ -51,13 +51,13 @@ pub mod standards {
                         #[path = "."]
                         pub mod change_rule_layout_point {
                             #[cfg(test)]
-                            #[path = "../../../../../../📐️change-rule-layout/🧪️tests/📍️nudges/🦀️.rs"]
+                            #[path = "../../../../../../📐️change-rule-layout-point/🧪️tests/📍️nudges/🦀️.rs"]
                             pub mod tests_nudges_the_capsule_var_off_the_shaft;
                         }
                         #[path = "."]
                         pub mod remove_rule_layout_point {
                             #[cfg(test)]
-                            #[path = "../../../../../../🗑️remove-rule-layout/🧪️tests/📐️clears/🦀️.rs"]
+                            #[path = "../../../../../../🗑️remove-rule-layout-point/🧪️tests/📐️clears/🦀️.rs"]
                             pub mod tests_clears_the_shaft_layout_point;
                         }
                         #[path = "."]
@@ -66,14 +66,14 @@ pub mod standards {
                             pub use semio_s_artifact_trinity_rewriting_operations::standards::v1::subsets::any::schema::mutations::drag_rule_nodes::diff;
                             pub use semio_s_artifact_trinity_rewriting_operations::standards::v1::subsets::any::schema::mutations::drag_rule_nodes::inverse;
                             #[cfg(test)]
-                            #[path = "../../../../../../🫳️drag-rule/🧪️tests/🫳️moves/🦀️.rs"]
+                            #[path = "../../../../../../🫳️drag-rule-nodes/🧪️tests/🫳️moves/🦀️.rs"]
                             pub mod tests_drags_two_rule_nodes;
                         }
                         #[path = "."]
                         pub mod set_rule_layout_points {
                             pub use semio_s_artifact_trinity_rewriting_operations::standards::v1::subsets::any::schema::mutations::set_rule_layout_points::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../📍️set-rule-layout/🧪️tests/📍️places/🦀️.rs"]
+                            #[path = "../../../../../../📍️set-rule-layout-points/🧪️tests/📍️places/🦀️.rs"]
                             pub mod tests_places_one_rule_node_and_clears_one;
                         }
                     }

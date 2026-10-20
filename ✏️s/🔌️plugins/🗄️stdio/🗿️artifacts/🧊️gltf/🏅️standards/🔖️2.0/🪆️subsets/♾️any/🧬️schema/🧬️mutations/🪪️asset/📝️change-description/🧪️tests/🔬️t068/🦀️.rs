@@ -6,5 +6,5 @@ use crate::standards::v2_0::subsets::any::schema::mutations::change_asset_descri
 #[test]
 fn committed_case_holds_the_corpus_law() {
     assert_eq!(<ChangeAssetDescriptiveMetadataMutation as protocol::MutationKind<GltfSnapshot, crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation>>::SEMANTICS.kind, "change-asset-descriptive-metadata");
-    crate::standards::v2_0::subsets::any::schema::mutations::fixture_corpus_tests::assert_case("🪪️asset/📝️change/🔬️t068");
+    crate::standards::v2_0::subsets::any::schema::mutations::fixture_corpus_tests::assert_case("🪪️asset/📝️change-description/🔬️t068");
 }

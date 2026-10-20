@@ -1,0 +1,10 @@
+{
+ "compilerOptions": {
+  "baseUrl": "/",
+  "paths": {
+   "@semio-tech/framework-transient": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🫧️transient/./🟦️.ts"
+   ]
+  }
+ }
+}

@@ -1,8 +1,3 @@
-import coefficientSchema from "../../../../../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system/🌡️change-temperature/🧬️schema/🔣️.json" with { type: "json" };
-import constantSchema from "../../../../../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system/🧊️change-heat-loss/🧬️schema/🔣️.json" with { type: "json" };
-import windSchema from "../../../../../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system/💨️change-wind-loss/🧬️schema/🔣️.json" with { type: "json" };
-import mountingSchema from "../../../../../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system/🏠️change-mounting/🧬️schema/🔣️.json" with { type: "json" };
-import createSchema from "../../../../../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system/✨️create/🧬️schema/🔣️.json" with { type: "json" };
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import { dot, multiply } from "mathjs";
@@ -43,7 +38,10 @@ export function calculateSolarPvReference(row: typeof fixture.cases[number]): nu
   return [...components,cell,dc * inverter];
 }
 
-export function verifySolarPvOracle(): void {
+/** ☀️ The five PV mutation admission schemas, supplied by the artifact that owns them so the plugin core never imports its artifacts. */
+export type SolarPvMutationSchemas = Readonly<{ coefficient: object; constant: object; wind: object; mounting: object; create: object }>;
+
+export function verifySolarPvOracle(schemas: SolarPvMutationSchemas): void {
   const validate = new Ajv({strict:true}).compile(schema);
   assert(validate(fixture),JSON.stringify(validate.errors));
   for (const row of fixture.cases) calculateSolarPvReference(row).forEach((value,index) => assert(Math.abs(value-row.expected[index]!) <= fixture.tolerance,`${row.id} component ${index}: ${value}`));
@@ -51,7 +49,7 @@ export function verifySolarPvOracle(): void {
   assert(fixture.cases[8]!.expected[3]! < fixture.cases[7]!.expected[3]!);
   assert(fixture.cases[8]!.expected[4]! > fixture.cases[7]!.expected[4]!);
   const semantic = new Ajv({strict:true}).addKeyword("x-semio-ui");
-  const coefficient = semantic.compile(coefficientSchema), constant = semantic.compile(constantSchema), wind = semantic.compile(windSchema), mounting = semantic.compile(mountingSchema), create = semantic.compile(createSchema);
+  const coefficient = semantic.compile(schemas.coefficient), constant = semantic.compile(schemas.constant), wind = semantic.compile(schemas.wind), mounting = semantic.compile(schemas.mounting), create = semantic.compile(schemas.create);
   for (const row of fixture.cases) {
     assert(coefficient({mutation:"changePvSystemTemperatureCoefficient",id:900,newTemperatureCoefficient:row.thermal.coefficient}));
     assert(constant({mutation:"changePvSystemFaimanHeatLossConstant",id:900,newFaimanHeatLossConstantWM2k:row.thermal.constant}));

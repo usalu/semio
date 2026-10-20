@@ -219,7 +219,7 @@ fn sqlite_snapshot_dag_independent_sqlite_edits_reconstruct_literal_parent() {
 
 mod public_owned {
     use crate::hoisted_snapshot_0::*;
-    use semio_framework_plugin::__semio_dispatch_PluginApp;
+    use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
     use semio_framework_plugin::plugin_app_close_prelude::*;
     semio_framework_dispatch_macros::dyn_enum_close! {
         /// 🕸️ Exact two actual declared DAG surfaces close owning public persistence.

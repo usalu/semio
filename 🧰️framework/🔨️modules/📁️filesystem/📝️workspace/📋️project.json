@@ -1,0 +1,38 @@
+{
+  "name": "@semio-tech/framework-source-workspace",
+  "targets": {
+    "test-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📁️filesystem/📝️workspace",
+        "command": "bun ./📜️script.ts test"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "dashboard": {
+            "title": {
+              "en": "Verify Source Workspace",
+              "de": "Quellarbeitsbereich Prüfen"
+            },
+            "description": {
+              "en": "Verify portable source paths, optimistic saves, cancellation and retained conflict events.",
+              "de": "Portable Quellpfade, optimistisches Speichern, Abbruch und erhaltene Konfliktereignisse prüfen."
+            }
+          }
+        }
+      }
+    }
+  }
+}

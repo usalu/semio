@@ -1,0 +1,9 @@
+{
+ "tokenConflictSha256": "a9afbbcada76891cce9bc0d34a7ca116c8118f852ec38b5e1ad4332ba6a18e2c",
+ "choices": [
+  "cache:BazelCacheDecisionV1;worker?:BazelActionWorkerV1;exclusive?:true}",
+  "cache,...(worker?{worker}:{}),...(kind===\"task\"&&!hermetic&&bazelCargoClassV1(task)?{exclusive:true as const}:{})",
+  " use_default_shell_env = True, env = {\"BUN_RUNTIME_TRANSPILER_CACHE_PATH\": \"0\"}, resource_set = cargo_resources if ctx.attr.exclusive else None)",
+  "STARLARK_RULES+\"\\n\"+BAZEL_CARGO_RULE_V1+(hasHermetic?BAZEL_HERMETIC_STARLARK:\"\"))"
+ ]
+}

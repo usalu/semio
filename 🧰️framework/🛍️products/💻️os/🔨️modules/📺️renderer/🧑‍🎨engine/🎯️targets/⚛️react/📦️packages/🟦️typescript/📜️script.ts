@@ -2,19 +2,19 @@
 /** 🎨️ `@semio-tech/framework-renderer-react` task router. */
 
 import { createIssuedResourceControlV1 } from "@semio-tech/framework/process/routing";
-import { typecheckAdmittedProjectV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
+import { typecheckAdmittedProjectV1 } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🏗️build/🟦️typescript/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { runCmd } from "@semio-tech/framework/process/execution";
 import { runVitest } from "@semio-tech/framework/process/vitest";
 import { BundleScript, ScriptRouter } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { SceneShadingPixelCheckScript } from "@semio-tech/framework/os/modules/renderer/engine/oracles/world3d-scene-shading/script";
-import { directoryHomeBootstrapOracle, directoryInviteCapabilityOracle, hubAuthContractOracle, scopedPresenceOracle } from "../../../../🔮️oracles/📇️directory-and-hub-contracts/🟦️.ts";
-import { interactionSelectionSetOracle, selectionMergeVocabularyOracle, world3dPointerGestureOracle } from "../../../../🔮️oracles/🖱️world3d-gestures-and-selection/🟦️.ts";
-import { surfaceHostRetentionOracle } from "../../../../🔮️oracles/🪪️surface-host-retention/🟦️.ts";
+
+/** 🔮️ Runs one engine-owned oracle suite; the oracles live below the engine, not in this host package. */
+const runOracleSuite = (repoRoot: string, name: string, oracle?: string): void => runCmd(process.execPath, ["test", join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests", name, "🟦️.ts"), ...(oracle ? ["-t", oracle] : [])], { cwd: repoRoot });
 
 /** 👥️ Verifies canonical viewport presence on actual mounted generic Canvas2d and World3d hosts. */
 class ViewportPresenceCheckScript extends BundleScript {
@@ -29,7 +29,7 @@ class OperationDiagnosticHostCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("operation-diagnostic-host-check accepts no arguments");
     process.env.SEMIO_TEST_LEVEL = "long";
-    await runVitest(this.root, ["../../../../🧱️elements/🔌️PluginRuntime/🟦️.tsx", "--silent=false", "--reporter=verbose", "--testNamePattern=typed-operation diagnostic|routes a foreign typed-operation|bounds parked typed-operation"], "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitest(this.root, ["../../../../🧪️tests/🔌️plugin-runtime-suite/🟦️.tsx", "--silent=false", "--reporter=verbose", "--testNamePattern=typed-operation diagnostic|routes a foreign typed-operation|bounds parked typed-operation"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 class TestScript extends BundleScript {
@@ -139,10 +139,10 @@ class ArtifactCreationProgressCheckScript extends BundleScript {
 class DirectoryHomeBootstrapCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length !== 0) throw new Error("directory-home-bootstrap-check accepts no arguments");
-    console.log(`directory-home-bootstrap-oracle: checks=${directoryHomeBootstrapOracle(this.repoRoot)} clean`);
+    runOracleSuite(this.repoRoot, "🔮️directory-and-hub-oracles", "directory-home-bootstrap-oracle");
     process.env.SEMIO_TEST_LEVEL = "long";
     await runVitest(this.root, ["../../../../🧪️tests/📇️directory-home-bootstrap/🟦️.tsx"], "../../🧪️tests/🎚️config/🟦️.ts");
-    await runVitest(this.root, ["../../../../🧱️elements/🔌️PluginRuntime/🟦️.tsx", "--testNamePattern=validates fixed result page authority and preserves document and download effects|hands one completion its own effects"], "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitest(this.root, ["../../../../🧪️tests/🔌️plugin-runtime-suite/🟦️.tsx", "--testNamePattern=validates fixed result page authority and preserves document and download effects|hands one completion its own effects"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 /** 🔐️ Proves the browser-facing hub sign-in contract and the end-user spaces surface: the fixture
@@ -151,7 +151,7 @@ class DirectoryHomeBootstrapCheckScript extends BundleScript {
 class HubSignInSpacesCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length !== 0) throw new Error("hub-sign-in-spaces-check accepts no arguments");
-    console.log(`hub-auth-contract-oracle: checks=${hubAuthContractOracle(this.repoRoot)} clean`);
+    runOracleSuite(this.repoRoot, "🔮️directory-and-hub-oracles", "hub-auth-contract-oracle");
     process.env.SEMIO_TEST_LEVEL = "long";
     await runVitest(
       this.root,
@@ -163,7 +163,7 @@ class HubSignInSpacesCheckScript extends BundleScript {
 class DirectoryInviteCapabilityCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length !== 0) throw new Error("directory-invite-capability-check accepts no arguments");
-    console.log(`directory-invite-capability-oracle: checks=${directoryInviteCapabilityOracle(this.repoRoot)} clean`);
+    runOracleSuite(this.repoRoot, "🔮️directory-and-hub-oracles", "directory-invite-capability-oracle");
     process.env.SEMIO_TEST_LEVEL = "long";
     await runVitest(this.root, ["../../../../🧪️tests/🏛️space-administration/🟦️.tsx"], "../../🧪️tests/🎚️config/🟦️.ts");
     process.env.SEMIO_INCLUDE_BACKBONE_WORKER = "1";
@@ -173,7 +173,7 @@ class DirectoryInviteCapabilityCheckScript extends BundleScript {
 class ScopedPresenceCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length !== 0) throw new Error("scoped-presence-check accepts no arguments");
-    console.log(`scoped-presence-oracle: checks=${scopedPresenceOracle(this.repoRoot)} clean`);
+    runOracleSuite(this.repoRoot, "🔮️directory-and-hub-oracles", "scoped-presence-oracle");
     process.env.SEMIO_TEST_LEVEL = "long";
     await runVitest(this.root, ["../../../../🧪️tests/👥️scoped-presence/🟦️.tsx"], "../../🧪️tests/🎚️config/🟦️.ts");
     process.env.SEMIO_INCLUDE_BACKBONE_WORKER = "1";
@@ -223,9 +223,7 @@ class World3dInteractionCheckScript extends BundleScript {
     if (segments.length !== 0) throw new Error("world3d-interaction-check accepts no arguments");
     process.env.SEMIO_TEST_LEVEL = "long";
     await runVitest(this.root, ["../../../../🧪️tests/🖱️world3d-interaction/🟦️.tsx", "../../../../🧪️tests/🎯️world3d-pick-bounds/🟦️.ts", "--silent=false", "--reporter=verbose"], "../../🧪️tests/🎚️config/🟦️.ts");
-    console.log(`world3d-pointer-gesture-oracle: checks=${world3dPointerGestureOracle(this.repoRoot)} clean`);
-    console.log(`interaction-selection-set-oracle: checks=${interactionSelectionSetOracle(this.repoRoot)} clean`);
-    console.log(`selection-merge-vocabulary-oracle: checks=${selectionMergeVocabularyOracle(this.repoRoot)} clean`);
+    runOracleSuite(this.repoRoot, "🔮️world3d-gesture-oracles");
   }
 }
 
@@ -242,7 +240,7 @@ class World3dModellingCheckScript extends BundleScript {
 class SurfaceRetentionCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length !== 0) throw new Error("surface-retention-check accepts no arguments");
-    console.log(`surface-host-retention-oracle: checks=${surfaceHostRetentionOracle(this.repoRoot)} clean`);
+    runOracleSuite(this.repoRoot, "🔮️surface-retention-oracle");
     process.env.SEMIO_TEST_LEVEL = "long";
     await runVitest(this.root, ["../../../../🧱️elements/🗣️Interpreter/🟦️.tsx", "../../../../🧪️tests/🚧️hidden-tab-surfaces/🟦️.ts", "--silent=false", "--reporter=verbose", "-t", "retained surface host|sibling reconciliation keys"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
@@ -317,7 +315,6 @@ const router = new ScriptRouter(fileURLToPath(new URL(".", import.meta.url)))
   .register("scoped-presence-check", ScopedPresenceCheckScript)
   .register("world3d-interaction-check", World3dInteractionCheckScript)
   .register("world3d-modelling-check", World3dModellingCheckScript)
-  .register("scene-shading-pixel-check", SceneShadingPixelCheckScript)
   .register("surface-switch-check", SurfaceSwitchCheckScript)
   .register("input-ledger-check", InputLedgerCheckScript)
   .register("window-scope-check", WindowScopeCheckScript)

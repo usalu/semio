@@ -22,12 +22,10 @@ pub struct StandardFontMetrics {
 
 impl StandardFontMetrics {
     /// 📏 Advance width of a glyph name (AFM units).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn width(&self, glyph: &str) -> Option<f64> {
         self.widths.binary_search_by(|(name, _)| (*name).cmp(glyph)).ok().map(|index| self.widths[index].1 as f64)
     }
     /// 🏳️ `/Flags` of a font descriptor for this face (§9.8.2).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn flags(&self) -> u32 {
         let mut flags = 0u32;
         if self.fixed_pitch {

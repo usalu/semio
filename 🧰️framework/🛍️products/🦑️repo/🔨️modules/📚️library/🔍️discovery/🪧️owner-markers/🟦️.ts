@@ -1,4 +1,4 @@
-import { ephemeralMap } from "@semio-tech/framework/transient";
+import { ephemeralMap } from "@semio-tech/framework-transient";
 import { readFileSync, readdirSync } from "node:fs";
 import type { PackageMaturity } from "../📜️taxonomy-contracts/🟦️.ts";
 import type { Taxonomy } from "../📑️taxonomy-document/🟦️.ts";

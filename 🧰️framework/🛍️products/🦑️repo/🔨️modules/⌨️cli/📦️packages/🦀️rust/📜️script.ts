@@ -24,7 +24,7 @@ class TestScript extends BundleScript {
 }
 
 /**
- * 🧭️ Runs the repo command line: builds `semio-repo`, then execs it with the forwarded verb.
+ * 🧭️ Runs the repo command line: builds `repo`, then execs it with the forwarded verb.
  */
 class RepoScript extends BundleScript {
   async run(segments:string[]): Promise<void> {
@@ -33,8 +33,8 @@ class RepoScript extends BundleScript {
 }
 
 /**
- * 🔌️ Forwards `semio-repo mcp …`: builds the repo command line, then serves the repo MCP server on
- * stdio with the profile taken from the first argument.
+ * 🔌️ Forwards `repo mcp …`: builds the repo command line, then serves the repo MCP server on
+ * stdio with the profile taken from `SEMIO_REPO_MCP_CLIENT`.
  */
 class McpScript extends BundleScript {
   async run(segments:string[]): Promise<void> {

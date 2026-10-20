@@ -4,7 +4,7 @@ use crate::standards::v1::subsets::any::schema::mutations::replace_trajectory::c
 use crate::standards::v1::subsets::any::schema::mutations::replace_trajectory::component::replace_trajectory;
 
 //#region 🔖️Inverse
-pub fn inverse<Op: From<ReplaceTrajectory>>(_payload: &super::ReplaceTrajectory, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<ReplaceTrajectory>>(_payload: &crate::standards::v1::subsets::any::schema::mutations::replace_trajectory::component::ReplaceTrajectory, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     vec![super::replace_trajectory(base.results.trajectory.clone())]
 

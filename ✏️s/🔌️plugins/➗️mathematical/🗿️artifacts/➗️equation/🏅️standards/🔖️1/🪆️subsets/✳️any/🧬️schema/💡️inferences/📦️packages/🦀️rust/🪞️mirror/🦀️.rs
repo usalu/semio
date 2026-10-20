@@ -143,11 +143,11 @@ pub mod standards {
                     pub mod mutations {
                         #[path = "."]
                         pub mod change_graph_directed {
-                            #[path = "../../../../../../🕸️graph/🧬️schema/🧬️mutations/🧭️change-graph/🦀️.rs"]
+                            #[path = "../../../../../../🕸️graph/🧬️schema/🧬️mutations/🧭️change-graph-directed/🦀️.rs"]
                             mod component;
-                            #[path = "../../../../../../🕸️graph/🧬️schema/🧬️mutations/🧭️change-graph/🔺️diff/🦀️.rs"]
+                            #[path = "../../../../../../🕸️graph/🧬️schema/🧬️mutations/🧭️change-graph-directed/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "../../../../../../🕸️graph/🧬️schema/🧬️mutations/🧭️change-graph/↩️inverse/🦀️.rs"]
+                            #[path = "../../../../../../🕸️graph/🧬️schema/🧬️mutations/🧭️change-graph-directed/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }

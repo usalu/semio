@@ -55,3 +55,10 @@ Feature: Dashboard test dispatch retains the current execution context
     And every native law remains awaited under that same Original
     And immutable root clone laws split across facade and companion owners
     And original retirement demand is mounted by the current companion integration owner
+
+  Scenario: Dispatch Source laws run without native installation
+    Given the declared dispatch Source target and the received Original
+    When the owner selects dispatch
+    Then the actual owned test port runs the dispatch law file
+    And the owner awaits its completion before returning
+    And no native installation or test process is selected

@@ -1,4 +1,4 @@
-import { world3dInlineSurfaceFixture as surfaceFixture } from "@semio-tech/framework/ui/testing/fixtures";
+import { world3dInlineSurfaceFixture as surfaceFixture } from "@semio-tech/ui/testing/fixtures";
 import{test,expect}from"bun:test";
 import Ajv2020 from"ajv/dist/2020.js";
 import{Database}from"bun:sqlite";

@@ -57,7 +57,6 @@ test("queue wait names the head request and position in the selected language at
   try{for(const name of locale.systemVariables)delete process.env[name];Object.assign(process.env,row.environment);await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"queue-progress-fixture",maximumElapsedMilliseconds:0},{fixture:"queue-wait"},Date.now()),async invocation=>{const signal=invocation.control.signal;await invocation.control.publish(progress);await invocation.control.yieldContinuation();requireIssuedScriptInvocationV1(invocation);expect(invocation.control.signal).toBe(signal);expect(signal.aborted).toBe(false);});}finally{spy.mockRestore();for(const[name,value]of Object.entries(before))if(value===undefined)delete process.env[name];else process.env[name]=value;}
   expect(writes,row.name).toEqual([`[script] ${JSON.stringify(progress)}\\n`,...(row.expected===null?[]:[`[script] ${row.expected}\\n`])]);
  }}finally{database.close();}
- console.log("[DEBUG] Actual Original writer localizes the queue wait and preserves every structured event");
 });
 '''
 open(tst,'w',encoding='utf8').write(t)

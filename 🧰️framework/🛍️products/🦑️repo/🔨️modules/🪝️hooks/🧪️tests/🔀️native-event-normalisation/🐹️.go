@@ -133,7 +133,7 @@ func neutralFactsAreReadOutOfEveryPayloadShape(ctx *host.Context) (host.Outcome,
 
 // region 🔖️Registration
 
-// Adapter is the registration entry point the generated host calls.
+// 🌉️Adapter is the registration entry point the generated host calls.
 func Adapter() *host.Adapter {
 	return host.NewAdapter("go").
 		Subject("every-native-event-resolves-to-its-pinned-neutral-event", everyNativeEventResolvesToItsPinnedNeutralEvent).

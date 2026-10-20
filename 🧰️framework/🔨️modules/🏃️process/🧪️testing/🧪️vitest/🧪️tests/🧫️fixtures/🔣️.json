@@ -20,6 +20,8 @@
     "run",
     "--config",
     "/config.ts",
+    "--configLoader",
+    "native",
     "--testTimeout",
     "15000",
     "--hookTimeout",

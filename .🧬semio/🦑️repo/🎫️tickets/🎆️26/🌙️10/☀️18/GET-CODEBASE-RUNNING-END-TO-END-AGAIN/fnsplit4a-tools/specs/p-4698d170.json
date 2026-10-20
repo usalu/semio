@@ -1,0 +1,26 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🔁️live-replay/🟦️.ts",
+ "function": "toolJobLiveFixedReplayExact",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "shared": {
+  "dir": "🔸️shared",
+  "doc": "/** 🔸️ The shared declarations of toolJobLiveFixedReplayExact. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️begin-capture-start",
+   "doc": "/** 🔶️ The begin capture start phase of toolJobLiveFixedReplayExact. */",
+   "phases": [
+    {
+     "name": "buildBeginCaptureStartState",
+     "emoji": "🔷",
+     "doc": "Builds beginCaptureStart, beginCapture, captureStart, capture of toolJobLiveFixedReplayExact.",
+     "from": 94,
+     "to": 210
+    }
+   ]
+  }
+ ]
+}

@@ -1,22 +1,22 @@
 /** 🔏 Retained UI patch preparation and atomic publication, store transactions, per-node subscriptions and emitIntent. */
 import { TEST_STYLE, container, leaf, type UiNodeRecord, createTypedWireSupport, type TypedWireVitest, type TypedWireDependencies, type TypedWireSource } from "../🪛️typedwire-helpers/🟦️.tsx";
-import { loadUiRetainedPatchFixture } from "@semio-tech/framework/ui/testing/fixtures";
+import { loadUiRetainedPatchFixture } from "@semio-tech/ui/testing/fixtures";
 
 export async function registerRetainedAndStoreTests(vitest: TypedWireVitest, dependencies: TypedWireDependencies, source: TypedWireSource): Promise<void> {
   const { DEFAULT_UI_DOCUMENT_LIMITS, RetainedUiPatchCursor, RetainedUiSnapshotCursor, RetainedUiSurfaceOwner, UiDocumentStore, applyUiPatch, emitIntent, uiDocumentStateFromSnapshot } = dependencies;
   const { describe, expect, it, vi } = vitest;
   const { produce } = await createTypedWireSupport(vitest, dependencies);
-  type RetainedUiPatchCursorRef = import("@semio-tech/framework/modules/ui/contract/retained").RetainedUiPatchCursor;
+  type RetainedUiPatchCursorRef = import("@semio-tech/ui-contract/retained").RetainedUiPatchCursor;
 
-  type RetainedUiSurfaceOwnerRef = import("@semio-tech/framework/modules/ui/contract/retained").RetainedUiSurfaceOwner;
+  type RetainedUiSurfaceOwnerRef = import("@semio-tech/ui-contract/retained").RetainedUiSurfaceOwner;
 
-  type RetainedUiState = import("@semio-tech/framework/modules/ui/contract/retained").RetainedUiState;
+  type RetainedUiState = import("@semio-tech/ui-contract/retained").RetainedUiState;
 
-  type RetainedUiTransaction = import("@semio-tech/framework/modules/ui/contract/retained").RetainedUiTransaction;
+  type RetainedUiTransaction = import("@semio-tech/ui-contract/retained").RetainedUiTransaction;
 
-  type UiPatch = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").UiPatch;
+  type UiPatch = import("@semio-tech/framework-manifest/ui-contract-and-canvas-types").UiPatch;
 
-  type UiSnapshot = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").UiSnapshot;
+  type UiSnapshot = import("@semio-tech/framework-manifest/ui-contract-and-canvas-types").UiSnapshot;
 
   const retainedFixture = await loadUiRetainedPatchFixture();
 
@@ -313,7 +313,7 @@ export async function registerRetainedAndStoreTests(vitest: TypedWireVitest, dep
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
       const { BrowserActorActionMailboxV1 } = await import("@semio-tech/framework/browser-bundle/action-handoff/requests");
-      const { decodeAppCommand, decodePackValue, packUInt, encodeBackboneWorkerRequest, decodeBackboneWorkerRequest } = await import("@semio-tech/framework-os");
+      const { decodeAppCommand, decodePackValue, packUInt, encodeBackboneWorkerRequest, decodeBackboneWorkerRequest } = await import("@semio-tech/framework-os/testkit/renderer-host/backbone-codec");
       const fixture = JSON.parse(readFileSync(new URL("../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧪️tests/🧫️fixtures/🔣️.json", source.url), "utf8"));
       const authored = fixture.uiIntent;
       const store = new UiDocumentStore(authored.surface);

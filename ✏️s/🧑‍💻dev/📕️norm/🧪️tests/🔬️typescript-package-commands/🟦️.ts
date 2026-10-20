@@ -9,12 +9,12 @@ if (segments[0] === "norm-document-contract") {
     await testNormDocumentContractOracle();
     const normRoot = join(context.repoRoot, "✏️s/🔌️plugins/📕️norm");
     const files = ["⚖️en1990", "⚡️din18599"].flatMap((artifact) => ["", "📸️snapshot", "🔺️diff"].map((facet) => join(normRoot, "🗿️artifacts", artifact, "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema", facet, "🟦️.ts")));
-    runCmd("bun", [join(context.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", ...files, join(normRoot, "🧪️tests/🪪️document/🟦️.ts")], { cwd: context.repoRoot });
+    runCmd("bun", [join(context.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", ...files, join(normRoot, "🧪️tests/🪪️document-contract/🟦️.ts")], { cwd: context.repoRoot });
     return;
   }
 if (segments[0] === "norm-results-window-ownership") {
     const configRoot = join(context.repoRoot, "✏️s/🔌️plugins/📕️norm/🪟️results/🎚️config");
-    const oracle = join(configRoot, "🧪️tests/🔬️window/🟦️.ts");
+    const oracle = join(configRoot, "🧪️tests/🔬️window-ownership/🟦️.ts");
     const { testNormResultsWindowOwnershipOracle } = await import(oracle);
     testNormResultsWindowOwnershipOracle();
     runCmd("bun", [join(context.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(configRoot, "🧬️schema/🟦️.ts"), join(configRoot, "🧬️schema/🧬️mutations/🟦️.ts"), oracle], { cwd: context.repoRoot });

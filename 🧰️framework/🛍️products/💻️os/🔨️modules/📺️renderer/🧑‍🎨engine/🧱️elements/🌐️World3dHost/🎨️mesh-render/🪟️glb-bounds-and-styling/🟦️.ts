@@ -1,6 +1,6 @@
 /** 🪟️ GLB bounds and styling: the paint texture URL and tint constants, the GLB mesh frame corners, the instance local corners, the GLB edge borders and the mesh bounds corners. */
 import { Box3, BufferGeometry, Color, EdgesGeometry, LineBasicMaterial, LineSegments, Mesh, Object3D, Vector3 } from "@semio-tech/ui-react";
-import { GLB_MESH_FRAME_ROTATION_X, WORLD_MESH_OUTLINE_USER_DATA_KEY } from "@semio-tech/infinite-world-r3f";
+import { GLB_MESH_FRAME_ROTATION_X, WORLD_MESH_OUTLINE_USER_DATA_KEY } from "@semio-tech/framework/infinite/world/r3f";
 import { type WorldMeshData } from "../../🔭️scene-schema/🟦️.ts";
 
 //#region 🔖️World3dHost

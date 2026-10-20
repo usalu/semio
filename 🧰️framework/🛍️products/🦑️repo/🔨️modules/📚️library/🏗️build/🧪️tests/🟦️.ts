@@ -1,3 +1,6 @@
+import "../⚙️operations/🧪️tests/🟦️.ts";
+import "../🚀️bootstrap/⌨️cli/🧪️tests/🟦️.ts";
+import "../📥️source/🛗️zero-touch/🧪️tests/🟦️.ts";
 import "./🎟️phase/🟦️.ts";
 import "../🧭️invocation/🧪️tests/🟦️.ts";
 import "../📥️caller/🧪️tests/📥️birth/🟦️.ts";

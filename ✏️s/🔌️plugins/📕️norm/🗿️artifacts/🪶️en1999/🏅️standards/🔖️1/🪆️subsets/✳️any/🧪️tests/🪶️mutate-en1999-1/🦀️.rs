@@ -40,6 +40,7 @@ const KINDS: &[&str] = &[
 #[cfg(feature = "sut")]
 const ROWS: &[&str] = &[
     "add-member-dupe",
+    "remove-member-middle",
 ];
 
 /// 🗣️ The real committed EN 1999 document, read where the domain already keeps it.
@@ -58,6 +59,12 @@ const PACK_ASSET: &str = "asset://🏠️aluminium-roof-purlin/🎒️.pack.semi
 #[cfg(feature = "sut")]
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
+        "remove-member-middle" => (
+            include_str!("../🧫️fixtures/🧬️mutations/➖remove-member/🧭️middle/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/➖remove-member/🧭️middle/🦠️mutation/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/➖remove-member/🧭️middle/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/➖remove-member/🧭️middle/🎯️outcome/🔣️.json"),
+        ),
         "change-annex" => (
             include_str!("../🧫️fixtures/🧬️mutations/🌍️change-annex/✅apply/📸️snapshot/⬅️before/🔣️.json"),
             include_str!("../🧫️fixtures/🧬️mutations/🌍️change-annex/✅apply/🦠️mutation/🔣️.json"),

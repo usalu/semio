@@ -4,7 +4,7 @@ import {constants,closeSync,existsSync,fstatSync,lstatSync,openSync,readSync,typ
 import {dirname,join} from "node:path";
 import {compileJsonSchemaSubset} from "../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import schema from "../🧬️schema/🔣️.json";
+import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 /** 📒️ Reads the durable Nx graph publication journal and its file allocations; the storage namespace inventory and the publication transaction both import it, neither imports the other. */
 const checks=new AsyncLocalStorage<()=>void>();
 const check=()=>{const current=checks.getStore();if(!current)throw Error("Original graph transaction scope required");current();};

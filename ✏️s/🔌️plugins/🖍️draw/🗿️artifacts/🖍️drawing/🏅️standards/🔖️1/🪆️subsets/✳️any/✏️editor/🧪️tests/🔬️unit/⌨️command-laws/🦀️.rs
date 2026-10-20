@@ -1,6 +1,9 @@
 //! ⌨️ Drawing editor unit laws over commands: every command round trip, wire keyword, retained route dispositions and example resolution.
 
 use super::*;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::ArtifactEditor;
 
 //#region 🔖️WireGuards
 /// 🔖️ One `DrawingCommand` value per row, in binary-variant-ordinal order — feeds both the

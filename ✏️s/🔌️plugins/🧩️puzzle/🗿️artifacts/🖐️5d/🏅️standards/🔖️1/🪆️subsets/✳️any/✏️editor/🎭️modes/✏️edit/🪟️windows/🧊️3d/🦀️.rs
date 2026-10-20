@@ -414,10 +414,6 @@ pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, tool_run: Optio
     scene.chunking_json = Some(world3d_chunking_json(envelope.runtime.chunk_size, 8000.0));
     scene.environment_json = Some(world3d_environment_json(&envelope.runtime.sun));
     scene.target_volumes_json = Some(world_target_volumes_json(&envelope.document));
-    // 🕹️ Bound to the ONE `vortex` domain the board pane writes too, so the host emits
-    // `interactionSelect`/`interactionHover` (instances as parts, grip and fastener markers under their own
-    // record granularity) instead of the domainless `worldPick`/`worldVortexSelect`/`setHover` verbs this app
-    // declares no handler for — a pick in either pane is the same selection.
     scene.domain_id = Some(PUZZLE5D_INTERACTION_DOMAIN.into());
     scene.domain_granularity_id = Some(PUZZLE5D_GRANULARITY_PART.into());
     semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::World3d, &scene)

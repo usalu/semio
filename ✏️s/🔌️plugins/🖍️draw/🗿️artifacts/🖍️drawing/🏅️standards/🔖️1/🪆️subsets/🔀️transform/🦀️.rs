@@ -56,29 +56,29 @@ pub mod set_layer_boolean_operation {
 }
 #[path = "."]
 pub mod shape_coordinate {
-    #[path = "🧬️schema/🧬️mutations/🔷️shape-coordinate/🔺️diff/🦀️.rs"]
+    #[path = "🧬️schema/🧬️mutations/🔷️set-shape-coordinate/🔺️diff/🦀️.rs"]
     pub mod diff;
-    #[path = "🧬️schema/🧬️mutations/🔷️shape-coordinate/↩️inverse/🦀️.rs"]
+    #[path = "🧬️schema/🧬️mutations/🔷️set-shape-coordinate/↩️inverse/🦀️.rs"]
     pub mod inverse;
-    #[path = "🧬️schema/🧬️mutations/🔷️shape-coordinate/🦠️mutation/🦀️.rs"]
+    #[path = "🧬️schema/🧬️mutations/🔷️set-shape-coordinate/🦠️mutation/🦀️.rs"]
     pub mod mutation;
 }
 #[path = "."]
 pub mod update_layer_trace_params {
-    #[path = "🧬️schema/🧬️mutations/🔍️update-layer/🔺️diff/🦀️.rs"]
+    #[path = "🧬️schema/🧬️mutations/🔍️update-layer-trace-params/🔺️diff/🦀️.rs"]
     pub mod diff;
-    #[path = "🧬️schema/🧬️mutations/🔍️update-layer/↩️inverse/🦀️.rs"]
+    #[path = "🧬️schema/🧬️mutations/🔍️update-layer-trace-params/↩️inverse/🦀️.rs"]
     pub mod inverse;
-    #[path = "🧬️schema/🧬️mutations/🔍️update-layer/🦠️mutation/🦀️.rs"]
+    #[path = "🧬️schema/🧬️mutations/🔍️update-layer-trace-params/🦠️mutation/🦀️.rs"]
     pub mod mutation;
 }
 #[path = "."]
 pub mod update_layer_transform {
-    #[path = "🧬️schema/🧬️mutations/🔄️update-layer/🔺️diff/🦀️.rs"]
+    #[path = "🧬️schema/🧬️mutations/🔄️update-layer-transform/🔺️diff/🦀️.rs"]
     pub mod diff;
-    #[path = "🧬️schema/🧬️mutations/🔄️update-layer/↩️inverse/🦀️.rs"]
+    #[path = "🧬️schema/🧬️mutations/🔄️update-layer-transform/↩️inverse/🦀️.rs"]
     pub mod inverse;
-    #[path = "🧬️schema/🧬️mutations/🔄️update-layer/🦠️mutation/🦀️.rs"]
+    #[path = "🧬️schema/🧬️mutations/🔄️update-layer-transform/🦠️mutation/🦀️.rs"]
     pub mod mutation;
 }
 #[path = "."]

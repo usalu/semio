@@ -7,7 +7,7 @@ pub mod editor {
     pub mod remodeling {
         #[path = "."]
         pub mod engine {
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             #[path = "../../../🧪️tests/🔬️step-ceiling/🦀️.rs"]
             pub mod step_ceiling;
             #[path = "../../🦀️.rs"]

@@ -200,6 +200,10 @@ export function driverDisplayLabel(driver: UiDriver): string {
  * 🎛️ Os-owned built-in commands — app introduction/theme/layout/locale/appearance/driver,
  * handled locally by the shell (never routed to a program). Rebuilt via `useMemo` since the theme and
  * terminology option lists are live state.
+ *
+ * 👁️✏️ Whether the active session's dialect has at least one `AppRouter` entry for either role —
+ * gates `open-artifact-with-viewer`/`open-artifact-with-editor` (contract freeze §5) the same way
+ * `hasIntroduction`/`tutorialRecorderAvailable` gate their own optional commands above.
  */
 export function buildOsCommands(
   themeList: readonly UiTheme[],

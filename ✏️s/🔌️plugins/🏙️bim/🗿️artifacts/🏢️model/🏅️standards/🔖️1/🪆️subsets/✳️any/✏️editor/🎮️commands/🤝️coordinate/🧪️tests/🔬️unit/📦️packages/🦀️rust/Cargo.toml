@@ -111,3 +111,6 @@ semio-s-artifact-bim-model-quantities = { path = "../../../../../../../🧬️sc
 semio-s-artifact-bim-model-ramp-runs = { path = "../../../../../../../🧬️schema/💡️inferences/🛝️ramp-runs/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-bim-model-snapshot = { path = "../../../../../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-bim-model-tests = { path = "../../../../../../../🧬️schema/📸️snapshot/🕰️phases/🧪️tests/🔬️unit/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-authored = { path = "../../../../../../../🧬️schema/📏️authored/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-schema = { path = "../../../../../../../🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-tests-2 = { path = "../../../../../../../🧬️schema/📏️authored/🔗️references/🧪️tests/🔬️unit/📦️packages/🦀️rust" }

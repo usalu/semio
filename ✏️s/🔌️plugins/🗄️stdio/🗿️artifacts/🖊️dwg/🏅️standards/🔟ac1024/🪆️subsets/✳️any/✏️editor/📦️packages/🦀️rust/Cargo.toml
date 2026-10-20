@@ -30,6 +30,7 @@ semio-s-artifact-stdio-contract = { workspace = true }
 semio-s-artifact-stdio-dwg-examples = { workspace = true }
 semio-s-artifact-stdio-dwg-mutations = { workspace = true }
 semio-s-artifact-stdio-dwg-snapshot = { workspace = true }
+semio-framework-pack = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

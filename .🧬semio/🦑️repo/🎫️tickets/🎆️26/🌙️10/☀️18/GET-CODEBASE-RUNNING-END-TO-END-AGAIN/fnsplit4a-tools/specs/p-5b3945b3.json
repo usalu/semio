@@ -1,0 +1,40 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🚚️vendor-transport/🟦️.ts",
+ "function": "registerVendorTransportTests",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟠️shared",
+  "doc": "/** 🟠️ The shared declarations of registerVendorTransportTests. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️built-plugin-modules",
+   "doc": "/** 🔶️ The built plugin modules phase of registerVendorTransportTests. */",
+   "phases": [
+    {
+     "name": "buildBuiltPluginModulesState",
+     "emoji": "🔷",
+     "doc": "Builds builtPluginModulesRootIn, DISTRIBUTION_LAYOUT, MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE of registerVendorTransportTests.",
+     "from": 7,
+     "to": 13
+    }
+   ]
+  },
+  {
+   "dir": "🔸️deployed-vendor-transport",
+   "doc": "/** 🔸️ The deployed vendor transport phase of registerVendorTransportTests. */",
+   "phases": [
+    {
+     "name": "registerDeployedVendorTransportTests",
+     "emoji": "🔹",
+     "doc": "Registers the deployed vendor transport tests of registerVendorTransportTests.",
+     "from": 27,
+     "to": 27
+    }
+   ]
+  }
+ ]
+}

@@ -1,5 +1,6 @@
 //! 🎥️ ISO-BMFF capability with owned video records and encoded media bytes.
-use super::super::{codec_from_fourcc_str, remodeling_image, sps_nal_dimensions, AvcDecoderConfigurationV1, SampleInfo, VideoContainerProviderV1, VideoError, VideoProbe, VideoTimeBaseV1};
+use semio_s_artifact_remodel_remodeling_video_h264::editor::remodeling::engine::video::h264::sps_nal_dimensions;
+use super::super::{codec_from_fourcc_str, remodeling_image, AvcDecoderConfigurationV1, SampleInfo, VideoContainerProviderV1, VideoError, VideoProbe, VideoTimeBaseV1};
 use semio_s_artifact_stdio_mp4::{
     standards::isobmff::{
         subsets::any::io as mp4_engine,

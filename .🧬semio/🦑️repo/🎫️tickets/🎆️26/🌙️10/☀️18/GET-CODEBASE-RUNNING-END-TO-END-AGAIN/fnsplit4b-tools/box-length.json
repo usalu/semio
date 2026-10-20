@@ -1,0 +1,33 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/📦️box-length/🟦️.ts",
+ "function": "registerBoxLengthEntryTests",
+ "kit": {
+  "dir": "🧰️box-length-test-kit",
+  "doc": "/** 🧰️ The shared box and length entry test kit: the destructured vitest, the cad-js core API, the Brepjs kernel and the precise spatial math. */",
+  "name": "createBoxLengthTestKit",
+  "emoji": "🏭",
+  "fdoc": "Creates the shared box and length entry test kit of one registration from the injected dependencies.",
+  "typeName": "BoxLengthTestKit"
+ },
+ "groups": [
+  {
+   "dir": "📦️box-interaction",
+   "doc": "/** 📦️ The cad-js core box interaction tests. */",
+   "name": "registerBoxInteractionTests",
+   "emoji": "🧊",
+   "fdoc": "Registers the cad-js core box interaction describe block.",
+   "from": 17,
+   "to": 17
+  },
+  {
+   "dir": "📏️length-entry-and-state-engine",
+   "doc": "/** 📏️ The cad-js core length entry and stateEngine option tests. */",
+   "name": "registerLengthEntryAndStateEngineTests",
+   "emoji": "⌨",
+   "fdoc": "Registers the cad-js core length entry and stateEngine option describe blocks.",
+   "from": 266,
+   "to": 478
+  }
+ ],
+ "rootKeep": []
+}

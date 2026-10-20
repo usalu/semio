@@ -11,6 +11,7 @@ use semio_s_artifact_stdio_dwg_write_records::standards::v_ac1024::subsets::any:
 use semio_s_artifact_stdio_dwg_write_records::standards::v_ac1024::subsets::any::io::export::records::document::encode_template;
 use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
 use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::STDIO_DWG_DOCUMENT_SCHEMA;
+use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::io::binary::snapshot::DwgBitReader;
 
 /// 🏛️ The real ~145KB AC1024 drawing the architectural example ships, read directly from its asset.
 /// 📂️ Reads one committed fixture by its path relative to this crate's manifest directory.

@@ -4,7 +4,7 @@ import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,existsSync} from "node:
 import {join} from "node:path";
 import {setImmediate} from "node:timers/promises";
 import corpus from "./🔣️.json";
-import {PreparationScript,SynchronizeScript} from "../../../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/📜️script.ts";
+import {PreparationScript,SynchronizeScript} from "../../../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🧪️tests/🔬️script-commands/🟦️.ts";
 import {acquireQueuedResourceLease} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {type ScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {runOwnedCommand,type OwnedCommandOptions} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";

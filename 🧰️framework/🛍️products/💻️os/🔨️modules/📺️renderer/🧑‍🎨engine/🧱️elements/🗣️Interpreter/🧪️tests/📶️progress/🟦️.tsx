@@ -1,4 +1,4 @@
-import { loadUiProgressFixture } from "@semio-tech/framework/ui/testing/fixtures";
+import { loadUiProgressFixture } from "@semio-tech/ui/testing/fixtures";
 type TestSource = { readonly url: string };
 
 /** 📶️ The interpreted `progress` component is a real, accessible progressbar that answers the shared

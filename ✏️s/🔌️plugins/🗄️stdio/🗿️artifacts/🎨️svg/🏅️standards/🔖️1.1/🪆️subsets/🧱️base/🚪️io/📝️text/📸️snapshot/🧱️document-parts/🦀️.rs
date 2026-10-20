@@ -198,7 +198,7 @@ pub fn dec_svg_node(s: &str) -> Result<SvgNode, String> {
     }
 }
 
-pub fn enc_svg_node(node:&crate::schema::snapshot::SvgNode)->String {semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::diff::enc_xml_node(&crate::standards::v1_1::subsets::base::io::text::snapshot::native_svg_node(node))}
+pub fn enc_svg_node(node:&crate::schema::snapshot::SvgNode)->String {semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::enc_xml_node(&crate::standards::v1_1::subsets::base::io::text::snapshot::native_svg_node(node))}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn dec_attr(s: &str) -> Result<SvgAttr, String> {

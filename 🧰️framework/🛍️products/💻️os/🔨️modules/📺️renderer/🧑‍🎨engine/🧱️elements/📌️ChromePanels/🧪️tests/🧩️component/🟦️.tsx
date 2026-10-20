@@ -14,7 +14,7 @@ import userEvent from "@testing-library/user-event";
 import { Tree, isElementId, type PanelTabLeaf } from "@semio-tech/ui-react";
 import type { Rgba8 } from "@semio-tech/ui-styling";
 import type { ReactElement } from "react";
-import { inlineTreeControlsFixtureUrl } from "@semio-tech/framework/ui/testing/fixtures";
+import { inlineTreeControlsFixtureUrl } from "@semio-tech/ui/testing/fixtures";
 
 afterEach(() => {
   cleanup();

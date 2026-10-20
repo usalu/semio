@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "args": [
+        "bun",
+        "./📜️script.ts",
+        "repo",
+        "run"
+      ],
+      "managed": true
+    },
+    {
+      "args": [
+        "bun",
+        "/repo/📜️script.ts",
+        "repo"
+      ],
+      "managed": true
+    },
+    {
+      "args": [
+        "bun",
+        "📜️script.ts"
+      ],
+      "managed": true
+    },
+    {
+      "args": [
+        "bun",
+        "-e",
+        "console.log('/📜️script.ts');"
+      ],
+      "managed": false
+    },
+    {
+      "args": [
+        "dockerd"
+      ],
+      "managed": false
+    },
+    {
+      "args": [
+        "bun",
+        "/repo/🧰️framework/📜️script.ts"
+      ],
+      "managed": true
+    },
+    {
+      "args": [
+        "node",
+        "/repo/📜️script.ts.other"
+      ],
+      "managed": false
+    },
+    {
+      "args": [],
+      "managed": false
+    },
+    {
+      "args": [
+        "bun",
+        "/repo/🧫️fixture.ts"
+      ],
+      "managed": false
+    }
+  ]
+}

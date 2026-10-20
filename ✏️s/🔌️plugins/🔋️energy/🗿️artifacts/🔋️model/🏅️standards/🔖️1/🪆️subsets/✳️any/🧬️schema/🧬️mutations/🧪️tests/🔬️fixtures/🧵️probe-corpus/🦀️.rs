@@ -91,6 +91,15 @@ use crate::zone_mutations::{change_zone_conditioned, change_zone_floor_area_part
 /// 🧵️ One representative value per declared variant — the codec round-trip corpus, so wire coverage
 /// grows with the enum instead of with a hand-maintained list of tests.
 pub fn wire_probes() -> Vec<EnergyModelMutation> {
+    let mut all = wire_probes_part_1();
+    all.extend(wire_probes_part_2());
+    all.extend(wire_probes_part_3());
+    all.extend(wire_probes_part_4());
+    all
+}
+
+/// 🧱️ The wire probe slice 1 of 4: one representative value per declared variant of its group.
+fn wire_probes_part_1() -> Vec<EnergyModelMutation> {
     vec![
         rename_model("Probe".to_string()),
         change_model_version("2".to_string()),
@@ -182,6 +191,12 @@ pub fn wire_probes() -> Vec<EnergyModelMutation> {
         change_material_density(crate::model::EntityId(1), 1200.0),
         change_material_specific_heat(crate::model::EntityId(1), 1000.0),
         change_material_thermal_absorptance(crate::model::EntityId(1), 0.85),
+    ]
+}
+
+/// 🪵️ The wire probe slice 2 of 4: one representative value per declared variant of its group.
+fn wire_probes_part_2() -> Vec<EnergyModelMutation> {
+    vec![
         change_material_solar_absorptance(crate::model::EntityId(1), 0.7),
         change_material_visible_absorptance(crate::model::EntityId(1), 0.75),
         create_construction(2, crate::model::EntityId(12), "ROOF".into(), vec![crate::model::EntityId(2), crate::model::EntityId(1)]),
@@ -272,6 +287,12 @@ pub fn wire_probes() -> Vec<EnergyModelMutation> {
         change_daylight_zone_glare_limit(crate::model::EntityId(14), 20.0),
         change_daylight_zone_window_transmittance(crate::model::EntityId(14), 0.5),
         create_sizing_object(crate::model::EntityId(15), crate::model::EntityId(1), crate::model::SizingType::Heating, crate::model::DesignDayType::Heating, None),
+    ]
+}
+
+/// 🔩️ The wire probe slice 3 of 4: one representative value per declared variant of its group.
+fn wire_probes_part_3() -> Vec<EnergyModelMutation> {
+    vec![
         delete_sizing_object(crate::model::EntityId(15)),
         change_sizing_object_zone(crate::model::EntityId(15), crate::model::EntityId(2)),
         change_sizing_object_sizing_type(crate::model::EntityId(15), crate::model::SizingType::Cooling),
@@ -362,6 +383,12 @@ pub fn wire_probes() -> Vec<EnergyModelMutation> {
         add_space_list_member(crate::model::EntityId(210), 1, crate::model::EntityId(201)),
         remove_space_list_member(crate::model::EntityId(210), crate::model::EntityId(200)),
         create_thermal_enclosure(2, crate::model::EntityId(222), "ROOF BLOCK".into(), vec![crate::model::EntityId(2)]),
+    ]
+}
+
+/// ⚙️ The wire probe slice 4 of 4: one representative value per declared variant of its group.
+fn wire_probes_part_4() -> Vec<EnergyModelMutation> {
+    vec![
         delete_thermal_enclosure(crate::model::EntityId(221)),
         rename_thermal_enclosure(crate::model::EntityId(220), "NORTH ENCLOSURE".to_string()),
         add_thermal_enclosure_zone(crate::model::EntityId(220), 1, crate::model::EntityId(2)),

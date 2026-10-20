@@ -17,7 +17,7 @@ use protocol::OpText;
 //#region 🔖️OpText
 /// ✂️ Local DSL-only mirror of `En1997Mutation`.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
-pub(crate) enum En1997MutationDsl {
+pub enum En1997MutationDsl {
     ChangeAnnex { new_annex: AnnexChoice },
     ChangeGeotechnicalCategory { new_geotechnical_category: u8 },
     ChangeDesignSituation { new_design_situation: String },
@@ -74,7 +74,7 @@ impl OpText for En1997MutationDsl {
 
 //#endregion 🔖️HandcraftedOpCodecs
 
-pub(crate) fn en1997_mutation_to_dsl(mutation: &En1997Mutation) -> En1997MutationDsl {
+pub fn en1997_mutation_to_dsl(mutation: &En1997Mutation) -> En1997MutationDsl {
     match mutation {
         En1997Mutation::ChangeAnnex(payload) => En1997MutationDsl::ChangeAnnex { new_annex: payload.new_annex },
         En1997Mutation::ChangeGeotechnicalCategory(payload) => En1997MutationDsl::ChangeGeotechnicalCategory { new_geotechnical_category: payload.new_geotechnical_category },
@@ -99,7 +99,7 @@ pub(crate) fn en1997_mutation_to_dsl(mutation: &En1997Mutation) -> En1997Mutatio
     }
 }
 
-pub(crate) fn en1997_mutation_from_dsl(mutation: En1997MutationDsl) -> En1997Mutation {
+pub fn en1997_mutation_from_dsl(mutation: En1997MutationDsl) -> En1997Mutation {
     match mutation {
         En1997MutationDsl::ChangeAnnex { new_annex } => En1997Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex }),
         En1997MutationDsl::ChangeGeotechnicalCategory { new_geotechnical_category } => {

@@ -15,7 +15,7 @@ export function testRewritingWindowConfigOracle(): void {
   let windows = Object.fromEntries([fixture.leftWindowId, fixture.rightWindowId].map((id: string) => [id, structuredClone(fixture.base)]));
   const generations: Record<string, number> = Object.fromEntries(Object.keys(windows).map((id) => [id, 0]));
   for (const row of fixture.cases) {
-    const mutation: { kind: string; camera?: unknown; value?: unknown } = JSON.parse(readFileSync(new URL(`./../../🧫️fixtures/🧬️mutations/${row.witness}/🧾️wire-witness/🦠️mutation/🔣️.json`, import.meta.url), "utf8"));
+    const mutation: { kind: string; camera?: unknown; value?: unknown } = JSON.parse(readFileSync(new URL(`../🧫️fixtures/🧬️mutations/${row.witness}/🧾️wire-witness/🦠️mutation/🔣️.json`, import.meta.url), "utf8"));
     assert(validateMutation(mutation), JSON.stringify(validateMutation.errors));
     const field = mutation.kind === "set-camera" ? "camera" : "lodMode";
     const value = mutation.kind === "set-camera" ? mutation.camera : mutation.value;

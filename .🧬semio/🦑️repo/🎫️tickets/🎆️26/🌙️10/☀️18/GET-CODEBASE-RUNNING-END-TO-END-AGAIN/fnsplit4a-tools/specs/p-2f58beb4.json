@@ -1,0 +1,67 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️time-travel/🌐️universal/🟦️.ts",
+ "function": "stepU",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "arrowVar": true,
+ "shared": {
+  "dir": "🟣️shared",
+  "doc": "/** 🟣️ The shared declarations of stepU. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️copy",
+   "doc": "/** 🔶️ The copy phase of stepU. */",
+   "phases": [
+    {
+     "name": "buildCopyState",
+     "emoji": "🔷",
+     "doc": "Builds copy, started, shell, editor of stepU.",
+     "from": 226,
+     "to": 359
+    }
+   ]
+  },
+  {
+   "dir": "🔸️entries-now",
+   "doc": "/** 🔸️ The entries now phase of stepU. */",
+   "phases": [
+    {
+     "name": "buildEntriesNowState",
+     "emoji": "🔹",
+     "doc": "Builds entriesNow, route, older, inspect of stepU.",
+     "from": 360,
+     "to": 422
+    }
+   ]
+  },
+  {
+   "dir": "🟠️part3",
+   "doc": "/** 🟠️ The part3 phase of stepU. */",
+   "phases": [
+    {
+     "name": "buildPart3",
+     "emoji": "🟡",
+     "doc": "Runs the effects and registrations of stepU.",
+     "from": 423,
+     "to": 519
+    }
+   ]
+  },
+  {
+   "dir": "🟢️withdraw-offers",
+   "doc": "/** 🟢️ The withdraw offers phase of stepU. */",
+   "phases": [
+    {
+     "name": "buildWithdrawOffersState",
+     "emoji": "🔵",
+     "doc": "Builds withdrawOffers, withdrawable, pull, rowMadeForIt of stepU.",
+     "from": 556,
+     "to": 643
+    }
+   ]
+  }
+ ]
+}

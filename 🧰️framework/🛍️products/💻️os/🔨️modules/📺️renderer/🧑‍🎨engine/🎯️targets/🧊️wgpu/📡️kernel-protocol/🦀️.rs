@@ -22,6 +22,10 @@ use ui_contract::{SurfaceId, UiDocumentLease, UiFixedList, UI_DOCUMENT_LEASE_SLO
 mod kernel_core;
 pub use kernel_core::*;
 
+#[path = "../🧊️renderer/📦️kernel-runtime/🏊️kernel-pool/🎟️task-ingress/🦀️.rs"]
+mod original_task_ingress;
+pub(crate) use original_task_ingress::{OriginalKernelTaskInput, OriginalKernelTaskProducer};
+
 #[path = "📥️lifted/📬️kernel-replay-client/🦀️.rs"]
 mod replay_vocabulary;
 pub use replay_vocabulary::*;

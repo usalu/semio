@@ -1,6 +1,6 @@
 import {request} from "node:http";
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import componentSchema from "../🧬️schema/🔣️.json";
+import componentSchema from "../🧬️schema/🔣️.json" with { type: "json" };
 
 const policy=componentSchema.$defs.ReadinessPolicy.const,schemaDocument=componentSchema as object,HOSTS="(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0)";
 

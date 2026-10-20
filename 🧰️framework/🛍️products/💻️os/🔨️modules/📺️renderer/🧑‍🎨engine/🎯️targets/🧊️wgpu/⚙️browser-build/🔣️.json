@@ -5,7 +5,12 @@
   ],
   "generated": [],
   "externalDependencies": [
+    "@semio-tech/framework",
     "@semio-tech/framework-actor",
+    "@semio-tech/framework-canvas-ts",
+    "@semio-tech/framework-os",
+    "@semio-tech/plugin-registry",
+    "@semio-tech/ui-locale-rs",
     "ajv",
     "typescript"
   ]

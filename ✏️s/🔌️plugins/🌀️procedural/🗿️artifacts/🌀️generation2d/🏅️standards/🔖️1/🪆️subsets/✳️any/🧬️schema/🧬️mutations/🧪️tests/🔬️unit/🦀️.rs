@@ -9,7 +9,7 @@ use protocol::{Mutation, MutationDiff, SemanticMutation};
 use semio_framework_artifact_flow_flow::Widget;
 use semio_framework_artifact_flow_flow::{CameraJson, SynapseSpec, WidgetLayout};
 use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshotRead;
-use semio_framework_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_absorb_law_cold, assert_mutation_inverse_law, assert_mutation_inverse_law_cold};
+use semio_framework_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
 use semio_s_artifact_procedural_2d_mutations::central_apply::apply_generation2d_mutation;
 
 /// 🧊️ Every owned projection this suite materialises is CLOSED, never dropped — `fixture.layout`
@@ -151,7 +151,7 @@ async fn move_widget_inverse_law_over_prior_layout() {
     let id = widget_id(&base.host_snapshot.widgets[0]).to_string();
     base.host_snapshot.layout.insert(id.clone(), WidgetLayout { x: 1.0, y: 1.0 });
     let mutation = move_widget(id, WidgetLayout { x: 9.0, y: 9.0 });
-    assert_mutation_inverse_law_cold(&*base, &mutation, retire_snapshot, retire_diff).await;
+    assert_mutation_inverse_law(&*base, &mutation).await;
 }
 
 #[test]
@@ -168,7 +168,7 @@ async fn clear_widget_layout_inverse_law() {
     let mut base = Generation2dSnapshotRead::new(empty_generation2d_snapshot());
     base.host_snapshot.layout.insert("slider".into(), WidgetLayout { x: 4.0, y: 5.0 });
     let mutation = clear_widget_layout("slider".into());
-    assert_mutation_inverse_law_cold(&*base, &mutation, retire_snapshot, retire_diff).await;
+    assert_mutation_inverse_law(&*base, &mutation).await;
 }
 
 #[test]
@@ -196,14 +196,14 @@ async fn change_schema_inverse_law() {
 async fn create_generation_inverse_law() {
     let base = Generation2dSnapshotRead::new(empty_generation2d_snapshot());
     let generation = FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: Default::default() };
-    assert_mutation_inverse_law_cold(&*base, &create_generation(generation), retire_snapshot, retire_diff).await;
+    assert_mutation_inverse_law(&*base, &create_generation(generation)).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn rename_generation_inverse_law() {
     let mut base = Generation2dSnapshotRead::new(empty_generation2d_snapshot());
     base.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: Default::default() });
-    assert_mutation_inverse_law_cold(&*base, &rename_generation("generation-1".into(), "Renamed".into()), retire_snapshot, retire_diff).await;
+    assert_mutation_inverse_law(&*base, &rename_generation("generation-1".into(), "Renamed".into())).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -213,7 +213,7 @@ async fn change_generation_value_diff_absorb_law() {
     let d1 = change_generation_value("generation-1".into(), "q1".into(), semio_framework_value::DslValue::float(1.0)).diff(&*base).into_parts().0;
     let mid = Generation2dSnapshotRead::new(protocol::apply_diff(&d1, &*base).expect("valid mutation diff"));
     let d2 = change_generation_value("generation-1".into(), "q1".into(), semio_framework_value::DslValue::float(2.0)).diff(&*mid).into_parts().0;
-    assert_mutation_diff_absorb_law_cold(&*base, d1, d2, retire_snapshot, retire_diff).await;
+    assert_mutation_diff_absorb_law(&*base, d1, d2).await;
 }
 //#endregion 🔖️MutationInverseLawTests
 

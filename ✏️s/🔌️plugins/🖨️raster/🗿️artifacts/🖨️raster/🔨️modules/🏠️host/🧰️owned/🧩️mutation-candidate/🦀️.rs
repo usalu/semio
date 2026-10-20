@@ -135,389 +135,13 @@ impl RasterMutationCandidateAuthority {
             return Ok(false);
         }
         match self.phase {
-            RasterMutationCandidatePhase::Clone => {
-                if self.clone.is_none() {
-                    if !raster_reserve_unit(cx) {
-                        return Ok(false);
-                    }
-                    *self.clone = Some(Box::new(RasterSnapshotCloneAuthority::new()));
-                    return Ok(false);
-                }
-                let clone = self.clone.as_mut().ok_or("raster-store.mutation-clone")?;
-                if !clone.step(current, cx)? {
-                    return Ok(false);
-                }
-                if !raster_reserve_unit(cx) {
-                    return Ok(false);
-                }
-                *self.value = clone.take_value();
-                drop(self.clone.take());
-                if Self::target(operation).is_some() {
-                    self.locator = Some(RasterLayerLocator::new());
-                    self.phase = RasterMutationCandidatePhase::LocatePrimary;
-                } else {
-                    self.phase = RasterMutationCandidatePhase::Apply;
-                }
-                Ok(false)
-            }
-            RasterMutationCandidatePhase::LocatePrimary => {
-                let snapshot = self.value.as_ref().ok_or("raster-store.mutation-locate-snapshot")?;
-                let locator = self.locator.as_mut().ok_or("raster-store.mutation-locator")?;
-                if !locator.step(snapshot, Self::target(operation).ok_or("raster-store.mutation-target")?, cx)? {
-                    return Ok(false);
-                }
-                self.primary = locator.found;
-                self.locator = None;
-                if matches!(operation, RasterMutation::CreateLayer(_)) {
-                    if self.primary.is_some() {
-                        return Err("raster-store.mutation-duplicate-layer");
-                    }
-                    if Self::parent(operation).is_some() {
-                        self.locator = Some(RasterLayerLocator::new());
-                        self.phase = RasterMutationCandidatePhase::LocateSecondary;
-                    } else {
-                        self.phase = RasterMutationCandidatePhase::PrepareLayer;
-                    }
-                } else if self.primary.is_none() {
-                    return Err("raster-store.mutation-target-missing");
-                } else {
-                    self.phase = RasterMutationCandidatePhase::Apply;
-                }
-                Ok(false)
-            }
-            RasterMutationCandidatePhase::LocateSecondary | RasterMutationCandidatePhase::LocateDestination => {
-                let snapshot = self.value.as_ref().ok_or("raster-store.mutation-parent-snapshot")?;
-                let locator = self.locator.as_mut().ok_or("raster-store.mutation-parent-locator")?;
-                if !locator.step(snapshot, Self::parent(operation).ok_or("raster-store.mutation-parent")?, cx)? {
-                    return Ok(false);
-                }
-                self.secondary = locator.found;
-                self.locator = None;
-                let parent = self.secondary.ok_or("raster-store.mutation-parent-missing")?;
-                if !matches!(RasterLayerLocator::node_at(snapshot, parent), Some(RasterLayerNode::Group { .. })) {
-                    return Err("raster-store.mutation-parent-not-group");
-                }
-                if self.phase == RasterMutationCandidatePhase::LocateSecondary {
-                    self.phase = RasterMutationCandidatePhase::PrepareLayer;
-                } else {
-                    let index = match operation {
-                        RasterMutation::ReorderLayers(value) => value.index,
-                        _ => return Err("raster-store.mutation-destination-variant"),
-                    };
-                    self.prepare_insert(Some(parent), index);
-                }
-                Ok(false)
-            }
-            RasterMutationCandidatePhase::PrepareLayer => {
-                let RasterMutation::CreateLayer(value) = operation else { return Err("raster-store.mutation-prepare-variant") };
-                if self.layer_clone.is_none() {
-                    if !raster_reserve_unit(cx) {
-                        return Ok(false);
-                    }
-                    *self.layer_clone = Some(Box::new(RasterLayerCloneAuthority::new(&value.layer)));
-                    return Ok(false);
-                }
-                let clone = self.layer_clone.as_mut().expect("Raster create layer clone remains retained");
-                if !clone.step(&value.layer, cx)? {
-                    return Ok(false);
-                }
-                if !raster_reserve_unit(cx) {
-                    return Ok(false);
-                }
-                *self.pending_layer = clone.take();
-                drop(self.layer_clone.take());
-                self.phase = RasterMutationCandidatePhase::Apply;
-                Ok(false)
-            }
-            RasterMutationCandidatePhase::Apply => {
-                let snapshot = self.value.as_mut().ok_or("raster-store.mutation-apply-snapshot")?;
-                match operation {
-                    RasterMutation::CreateLayer(value) => {
-                        self.prepare_insert(self.secondary, value.index);
-                        return Ok(false);
-                    }
-                    RasterMutation::DeleteLayer(_) | RasterMutation::ReorderLayers(_) => {
-                        self.begin_remove(self.primary.ok_or("raster-store.mutation-remove-address")?);
-                        return Ok(false);
-                    }
-                    RasterMutation::RenameLayer(value) => {
-                        if !raster_reserve_unit(cx) {
-                            return Ok(false);
-                        }
-                        let (RasterLayerNode::Pixel { name, .. } | RasterLayerNode::Group { name, .. } | RasterLayerNode::Adjustment { name, .. }) =
-                            RasterLayerLocator::node_at_mut(snapshot, self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")?;
-                        self.retirement.put(Self::replace_string(name, &value.new_name)?);
-                    }
-                    RasterMutation::ChangeLayerLocked(value)=>{
-                        if !raster_reserve_unit(cx){return Ok(false);}
-                        semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_locked::validate(value,snapshot).map_err(|code| code.as_str())?;
-                        let (RasterLayerNode::Pixel {locked,..}|RasterLayerNode::Group {locked,..}|RasterLayerNode::Adjustment {locked,..})=RasterLayerLocator::node_at_mut(snapshot,self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")?;
-                        *locked=value.locked;
-                    }
-                    RasterMutation::ChangeLayerVisible(value) => {
-                        if !raster_reserve_unit(cx) {
-                            return Ok(false);
-                        }
-                        let (RasterLayerNode::Pixel { visible, .. } | RasterLayerNode::Group { visible, .. } | RasterLayerNode::Adjustment { visible, .. }) =
-                            RasterLayerLocator::node_at_mut(snapshot, self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")?;
-                        *visible = value.new_visible;
-                    }
-                    RasterMutation::ChangeLayerOpacity(value) => {
-                        if !value.new_opacity.is_finite() || !raster_reserve_unit(cx) {
-                            if !value.new_opacity.is_finite() {
-                                return Err("raster-store.mutation-opacity-invalid");
-                            }
-                            return Ok(false);
-                        }
-                        let (RasterLayerNode::Pixel { opacity, .. } | RasterLayerNode::Group { opacity, .. } | RasterLayerNode::Adjustment { opacity, .. }) =
-                            RasterLayerLocator::node_at_mut(snapshot, self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")?;
-                        *opacity = value.new_opacity;
-                    }
-                    RasterMutation::ChangeLayerBlendMode(value) => {
-                        if !raster_reserve_unit(cx) {
-                            return Ok(false);
-                        }
-                        let (RasterLayerNode::Pixel { blend_mode, .. } | RasterLayerNode::Group { blend_mode, .. } | RasterLayerNode::Adjustment { blend_mode, .. }) =
-                            RasterLayerLocator::node_at_mut(snapshot, self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")?;
-                        self.retirement.put(Self::replace_string(blend_mode, &value.new_blend_mode)?);
-                    }
-                    RasterMutation::MoveLayer(value) => {
-                        if !value.new_x.is_finite() || !value.new_y.is_finite() || !raster_reserve_unit(cx) {
-                            if !value.new_x.is_finite() || !value.new_y.is_finite() {
-                                return Err("raster-store.mutation-transform-invalid");
-                            }
-                            return Ok(false);
-                        }
-                        match RasterLayerLocator::node_at_mut(snapshot, self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? {
-                            RasterLayerNode::Pixel { transform, .. } | RasterLayerNode::Group { transform, .. } => {
-                                transform.x = value.new_x;
-                                transform.y = value.new_y;
-                            }
-                            RasterLayerNode::Adjustment { .. } => return Err("raster-store.mutation-transform-target"),
-                        }
-                    }
-                    RasterMutation::ResizeLayer(value) => {
-                        if !raster_reserve_unit(cx) {
-                            return Ok(false);
-                        }
-                        let RasterLayerNode::Pixel { width, height, .. } = RasterLayerLocator::node_at_mut(snapshot, self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? else {
-                            return Err("raster-store.mutation-resize-target");
-                        };
-                        *width = Some(value.new_width);
-                        *height = Some(value.new_height);
-                    }
-                    RasterMutation::ChangeLayerAdjustmentParameter(value) => {
-                        semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_adjustment_parameter::validate(value,snapshot).map_err(|code| code.as_str())?;
-                        let RasterLayerNode::Adjustment {params,..}=RasterLayerLocator::node_at_mut(snapshot,self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? else {return Err("raster-store.mutation-adjustment-target");};
-                        if value.value.is_some() && params.page_required_for_insert(&value.parameter) {
-                            if !raster_reserve_unit(cx) {return Ok(false);}
-                            params.admit_one_page()?;return Ok(false);
-                        }
-                        if !raster_reserve_unit(cx) {return Ok(false);}
-                        let replacement=value.value.map(|v|Ok::<_,&'static str>((raster_clone_owned_string(&value.parameter)?,v.literal()))).transpose()?;
-                        if let Some(mut entry)=params.remove_entry(&value.parameter) {
-                            let (key,old)=entry.take();
-                            self.retirement.put(RasterDisplaced::ValueEntry((key,old)));
-                        }
-                        if let Some((key,number))=replacement {params.insert_pre_admitted(key,number).map_err(|error|error.reason)?;}
-                    }
-                    RasterMutation::ChangeLayerTransform(value)=>{
-                        if !raster_reserve_unit(cx){return Ok(false);}
-                        semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_transform::validate(value,snapshot).map_err(|code| code.as_str())?;
-                        let (RasterLayerNode::Pixel {transform,..}|RasterLayerNode::Group {transform,..})=RasterLayerLocator::node_at_mut(snapshot,self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? else {return Err("raster-store.mutation-transform-target");};
-                        *transform=value.transform.clone();
-                    }
-                    RasterMutation::ChangeLayerMask(value) => {
-                        if !raster_reserve_unit(cx) { return Ok(false); }
-                        semio_s_artifact_raster_raster_mutations_pixels::change_layer_mask::validate(value, snapshot).map_err(|code| code.as_str())?;
-                        let replacement = value.mask.as_ref().map(|mask| {
-                            Ok::<_, &'static str>(semio_s_artifact_raster_raster_model::RasterLayerMask {
-                                enabled: mask.enabled, linked: mask.linked, invert: mask.invert,
-                                width: mask.width, height: mask.height, transform: mask.transform.clone(),
-                                image_key: mask.image_key.as_ref().map(raster_clone_owned_string).transpose()?,
-                            })
-                        }).transpose()?;
-                        let (RasterLayerNode::Pixel { mask, .. } | RasterLayerNode::Group { mask, .. }) = RasterLayerLocator::node_at_mut(snapshot, self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? else { return Err("raster-store.mutation-mask-target"); };
-                        if let Some(previous) = std::mem::replace(mask, replacement).and_then(|mask| mask.image_key) {
-                            self.retirement.put(RasterDisplaced::String(previous));
-                        }
-                    }
-                    RasterMutation::ChangeLayerPixels(value) => {
-                        if !raster_reserve_unit(cx) { return Ok(false); }
-                        semio_s_artifact_raster_raster_mutations_pixels::change_layer_pixels::validate(value, snapshot).map_err(|code| code.as_str())?;
-                        let replacement = value.content.image_key.as_ref().map(raster_clone_owned_string).transpose()?;
-                        let RasterLayerNode::Pixel { image_key, width, height, transform, .. } = RasterLayerLocator::node_at_mut(snapshot, self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? else { return Err("raster-store.mutation-pixels-target"); };
-                        if let Some(previous) = std::mem::replace(image_key, replacement) {
-                            self.retirement.put(RasterDisplaced::String(previous));
-                        }
-                        *width = value.content.width;
-                        *height = value.content.height;
-                        if let Some(next) = &value.transform { *transform = next.clone(); }
-                    }
-                    RasterMutation::ChangeLayerAdjustmentKind(value) => {
-                        if !raster_reserve_unit(cx) {
-                            return Ok(false);
-                        }
-                        let RasterLayerNode::Adjustment { adjustment_kind, .. } = RasterLayerLocator::node_at_mut(snapshot, self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? else {
-                            return Err("raster-store.mutation-adjustment-target");
-                        };
-                        self.retirement.put(Self::replace_string(adjustment_kind, &value.new_adjustment_kind)?);
-                    }
-                    RasterMutation::AddLayerAsset(value) => {
-                        if value.asset.schema.capacity() > RASTER_OWNED_FIELD_BYTES || value.asset.frames.iter().map(|frame| frame.rgba8.len()).sum::<usize>() > RASTER_MAXIMUM_NESTED_BYTES || value.asset.icc.as_ref().is_some_and(|icc| icc.len() > RASTER_MAXIMUM_NESTED_BYTES) || value.asset.metadata.iter().any(|entry| entry.key.capacity().max(entry.value.capacity()) > RASTER_OWNED_FIELD_BYTES) {
-                            return Err("raster-store.mutation-asset-capacity");
-                        }
-                        self.asset_field = 0;
-                        self.phase = RasterMutationCandidatePhase::PrepareAsset;
-                        return Ok(false);
-                    }
-                    RasterMutation::RemoveLayerAsset(value) => {
-                        if !raster_reserve_unit(cx) {
-                            return Ok(false);
-                        }
-                        let mut removed = snapshot.assets.remove_entry(&value.asset_id).ok_or("raster-store.mutation-asset-missing")?;
-                        let (key, child) = removed.take();
-                        self.retirement.put(RasterDisplaced::AssetEntry((key, child)));
-                    }
-                    RasterMutation::PaintStroke(_) | RasterMutation::FillRegion(_) | RasterMutation::ApplyFilter(_) | RasterMutation::TransformImage(_) | RasterMutation::FillSelection(_) | RasterMutation::WritePixelRegion(_) => {
-                        if !raster_reserve_unit(cx) {
-                            return Ok(false);
-                        }
-                        let outcome = Mutation::diff(operation, &*snapshot);
-                        let refused = outcome.messages().iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal));
-                        let (diff, _) = outcome.into_parts();
-                        let painted = if refused { Err("raster-store.mutation-paint-refused") } else { protocol::apply_diff(&diff, snapshot).map_err(|_| "raster-store.mutation-paint-apply") };
-                        protocol::MutationDiff::retire_cold(diff);
-                        let previous = std::mem::replace(snapshot, painted?);
-                        self.retirement.put(RasterDisplaced::Snapshot(previous));
-                    }
-                }
-                self.phase = RasterMutationCandidatePhase::Drain;
-                Ok(false)
-            }
-            RasterMutationCandidatePhase::PrepareAsset => {
-                let RasterMutation::AddLayerAsset(value) = operation else { return Err("raster-store.mutation-asset-variant") };
-                match self.asset_field {
-                    0 => {
-                        if !raster_reserve_unit(cx) {
-                            return Ok(false);
-                        }
-                        self.asset_mint = Some(semio_s_artifact_raster_raster_model::mint_raster_image_child(&value.asset_id, &value.asset));
-                    }
-                    1 => {
-                        if !raster_reserve_unit(cx) {
-                            return Ok(false);
-                        }
-                        let key = raster_clone_owned_string(&value.asset_id)?;
-                        let child =
-                            store::os_store::artifact_child::ArtifactChild::new(String::new(), semio_framework_artifact_reference::ArtifactRef { artifact_id: String::new(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() } });
-                        *self.pending_asset = Some((key, child));
-                    }
-                    2 => {
-                        if !raster_reserve_unit(cx) {
-                            return Ok(false);
-                        }
-                        let child_id = raster_clone_owned_string(&self.asset_mint.as_ref().ok_or("raster-store.mutation-asset-mint")?.child_id)?;
-                        self.pending_asset.as_mut().ok_or("raster-store.mutation-asset-owner")?.1.child_id = child_id;
-                    }
-                    3 => {
-                        let length = value.asset_id.len().checked_add(6).ok_or("raster-store.mutation-asset-id-overflow")?;
-                        if length > RASTER_OWNED_FIELD_BYTES || !raster_reserve_unit(cx) {
-                            if length > RASTER_OWNED_FIELD_BYTES {
-                                return Err("raster-store.mutation-asset-id-capacity");
-                            }
-                            return Ok(false);
-                        }
-                        let artifact_id = raster_exact_string_from_parts(&[value.asset_id.as_bytes(), b"-image"])?;
-                        self.pending_asset.as_mut().ok_or("raster-store.mutation-asset-owner")?.1.target.artifact_id = artifact_id;
-                    }
-                    4..=6 => {
-                        let literal = match self.asset_field {
-                            4 => "s.stdio.semio",
-                            5 => "v1",
-                            _ => "image",
-                        };
-                        if !raster_reserve_unit(cx) {
-                            return Ok(false);
-                        }
-                        let child = &mut self.pending_asset.as_mut().ok_or("raster-store.mutation-asset-owner")?.1;
-                        let target = match self.asset_field {
-                            4 => &mut child.target.dialect.artifact_kind,
-                            5 => &mut child.target.dialect.standard,
-                            _ => &mut child.target.dialect.subset,
-                        };
-                        *target = Self::exact_string(literal)?;
-                    }
-                    _ => {
-                        let snapshot = self.value.as_mut().ok_or("raster-store.mutation-asset-snapshot")?;
-                        let pending_key = &self.pending_asset.as_ref().ok_or("raster-store.mutation-asset-owner")?.0;
-                        if snapshot.assets.page_required_for_insert(pending_key) {
-                            if !raster_reserve_unit(cx) {
-                                return Ok(false);
-                            }
-                            snapshot.assets.admit_one_page()?;
-                            return Ok(false);
-                        }
-                        if !raster_reserve_unit(cx) {
-                            return Ok(false);
-                        }
-                        let (key, mut child) = self.pending_asset.take().ok_or("raster-store.mutation-asset-owner")?;
-                        semio_s_artifact_raster_raster_model::adopt_raster_asset_owner(&self.asset_mint.take().ok_or("raster-store.mutation-asset-mint")?, &mut child);
-                        if let Some(slot) = snapshot.assets.get_mut(&value.asset_id) {
-                            let previous = std::mem::replace(slot, child);
-                            self.retirement.put(RasterDisplaced::AssetEntry((key, previous)));
-                        } else {
-                            match snapshot.assets.insert_pre_admitted(key, child) {
-                                Ok(RasterOwnedMapInsert::Inserted) => {}
-                                Ok(RasterOwnedMapInsert::Replaced(mut previous)) => {
-                                    self.retirement.put(RasterDisplaced::AssetEntry(previous.take()));
-                                    return Err("raster-store.mutation-duplicate-asset");
-                                }
-                                Err(rejected) => {
-                                    self.retirement.put(RasterDisplaced::AssetEntry((rejected.key, rejected.value)));
-                                    return Err(rejected.reason);
-                                }
-                            }
-                        }
-                        self.phase = RasterMutationCandidatePhase::Drain;
-                        return Ok(false);
-                    }
-                }
-                self.asset_field += 1;
-                Ok(false)
-            }
-            RasterMutationCandidatePhase::ShiftRemove => {
-                let snapshot = self.value.as_mut().ok_or("raster-store.mutation-shift-snapshot")?;
-                let values = RasterLayerLocator::container_mut(snapshot, self.container).ok_or("raster-store.mutation-shift-parent")?;
-                if self.shift_index + 1 < values.len() {
-                    if !raster_reserve_unit(cx) {
-                        return Ok(false);
-                    }
-                    values.swap(self.shift_index, self.shift_index + 1);
-                    self.shift_index += 1;
-                    return Ok(false);
-                }
-                if !raster_reserve_unit(cx) {
-                    return Ok(false);
-                }
-                *self.pending_layer = values.pop();
-                if matches!(operation, RasterMutation::DeleteLayer(_)) {
-                    let layer = self.pending_layer.take().ok_or("raster-store.mutation-delete-owner")?;
-                    self.retirement.put(RasterDisplaced::Layer(layer));
-                    self.phase = RasterMutationCandidatePhase::Drain;
-                } else if let RasterMutation::ReorderLayers(value) = operation {
-                    self.secondary = None;
-                    if value.parent_id.is_some() {
-                        self.locator = Some(RasterLayerLocator::new());
-                        self.phase = RasterMutationCandidatePhase::LocateDestination;
-                    } else {
-                        self.prepare_insert(None, value.index);
-                    }
-                } else {
-                    return Err("raster-store.mutation-remove-variant");
-                }
-                Ok(false)
-            }
+            RasterMutationCandidatePhase::Clone => self.step_clone(current, operation, cx),
+            RasterMutationCandidatePhase::LocatePrimary => self.step_locate_primary(operation, cx),
+            RasterMutationCandidatePhase::LocateSecondary | RasterMutationCandidatePhase::LocateDestination => self.step_locate_secondary(operation, cx),
+            RasterMutationCandidatePhase::PrepareLayer => self.step_prepare_layer(operation, cx),
+            RasterMutationCandidatePhase::Apply => self.step_apply(operation, cx),
+            RasterMutationCandidatePhase::PrepareAsset => self.step_prepare_asset(operation, cx),
+            RasterMutationCandidatePhase::ShiftRemove => self.step_shift_remove(operation, cx),
             RasterMutationCandidatePhase::BeginInsert => {
                 if !raster_reserve_unit(cx) {
                     return Ok(false);
@@ -551,6 +175,403 @@ impl RasterMutationCandidateAuthority {
             }
             RasterMutationCandidatePhase::Closing => Ok(false),
         }
+    }
+
+    /// 🧱️ Clones the candidate snapshot.
+    fn step_clone(&mut self, current: &RasterSnapshot, operation: &RasterMutation, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+        if self.clone.is_none() {
+            if !raster_reserve_unit(cx) {
+                return Ok(false);
+            }
+            *self.clone = Some(Box::new(RasterSnapshotCloneAuthority::new()));
+            return Ok(false);
+        }
+        let clone = self.clone.as_mut().ok_or("raster-store.mutation-clone")?;
+        if !clone.step(current, cx)? {
+            return Ok(false);
+        }
+        if !raster_reserve_unit(cx) {
+            return Ok(false);
+        }
+        *self.value = clone.take_value();
+        drop(self.clone.take());
+        if Self::target(operation).is_some() {
+            self.locator = Some(RasterLayerLocator::new());
+            self.phase = RasterMutationCandidatePhase::LocatePrimary;
+        } else {
+            self.phase = RasterMutationCandidatePhase::Apply;
+        }
+        Ok(false)
+    }
+
+    /// 🪵️ Locates the primary layer of the mutation.
+    fn step_locate_primary(&mut self, operation: &RasterMutation, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+        let snapshot = self.value.as_ref().ok_or("raster-store.mutation-locate-snapshot")?;
+        let locator = self.locator.as_mut().ok_or("raster-store.mutation-locator")?;
+        if !locator.step(snapshot, Self::target(operation).ok_or("raster-store.mutation-target")?, cx)? {
+            return Ok(false);
+        }
+        self.primary = locator.found;
+        self.locator = None;
+        if matches!(operation, RasterMutation::CreateLayer(_)) {
+            if self.primary.is_some() {
+                return Err("raster-store.mutation-duplicate-layer");
+            }
+            if Self::parent(operation).is_some() {
+                self.locator = Some(RasterLayerLocator::new());
+                self.phase = RasterMutationCandidatePhase::LocateSecondary;
+            } else {
+                self.phase = RasterMutationCandidatePhase::PrepareLayer;
+            }
+        } else if self.primary.is_none() {
+            return Err("raster-store.mutation-target-missing");
+        } else {
+            self.phase = RasterMutationCandidatePhase::Apply;
+        }
+        Ok(false)
+    }
+
+    /// 🔩️ Locates the secondary or destination layer of the mutation.
+    fn step_locate_secondary(&mut self, operation: &RasterMutation, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+        let snapshot = self.value.as_ref().ok_or("raster-store.mutation-parent-snapshot")?;
+        let locator = self.locator.as_mut().ok_or("raster-store.mutation-parent-locator")?;
+        if !locator.step(snapshot, Self::parent(operation).ok_or("raster-store.mutation-parent")?, cx)? {
+            return Ok(false);
+        }
+        self.secondary = locator.found;
+        self.locator = None;
+        let parent = self.secondary.ok_or("raster-store.mutation-parent-missing")?;
+        if !matches!(RasterLayerLocator::node_at(snapshot, parent), Some(RasterLayerNode::Group { .. })) {
+            return Err("raster-store.mutation-parent-not-group");
+        }
+        if self.phase == RasterMutationCandidatePhase::LocateSecondary {
+            self.phase = RasterMutationCandidatePhase::PrepareLayer;
+        } else {
+            let index = match operation {
+                RasterMutation::ReorderLayers(value) => value.index,
+                _ => return Err("raster-store.mutation-destination-variant"),
+            };
+            self.prepare_insert(Some(parent), index);
+        }
+        Ok(false)
+    }
+
+    /// ⚙️ Prepares the layer the mutation carries.
+    fn step_prepare_layer(&mut self, operation: &RasterMutation, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+        let RasterMutation::CreateLayer(value) = operation else { return Err("raster-store.mutation-prepare-variant") };
+        if self.layer_clone.is_none() {
+            if !raster_reserve_unit(cx) {
+                return Ok(false);
+            }
+            *self.layer_clone = Some(Box::new(RasterLayerCloneAuthority::new(&value.layer)));
+            return Ok(false);
+        }
+        let clone = self.layer_clone.as_mut().expect("Raster create layer clone remains retained");
+        if !clone.step(&value.layer, cx)? {
+            return Ok(false);
+        }
+        if !raster_reserve_unit(cx) {
+            return Ok(false);
+        }
+        *self.pending_layer = clone.take();
+        drop(self.layer_clone.take());
+        self.phase = RasterMutationCandidatePhase::Apply;
+        Ok(false)
+    }
+
+    /// 🧲️ Applies the mutation to the candidate snapshot.
+    fn step_apply(&mut self, operation: &RasterMutation, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+        let snapshot = self.value.as_mut().ok_or("raster-store.mutation-apply-snapshot")?;
+        match operation {
+            RasterMutation::CreateLayer(value) => {
+                self.prepare_insert(self.secondary, value.index);
+                return Ok(false);
+            }
+            RasterMutation::DeleteLayer(_) | RasterMutation::ReorderLayers(_) => {
+                self.begin_remove(self.primary.ok_or("raster-store.mutation-remove-address")?);
+                return Ok(false);
+            }
+            RasterMutation::RenameLayer(value) => {
+                if !raster_reserve_unit(cx) {
+                    return Ok(false);
+                }
+                let (RasterLayerNode::Pixel { name, .. } | RasterLayerNode::Group { name, .. } | RasterLayerNode::Adjustment { name, .. }) =
+                    RasterLayerLocator::node_at_mut(snapshot, self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")?;
+                self.retirement.put(Self::replace_string(name, &value.new_name)?);
+            }
+            RasterMutation::ChangeLayerLocked(value)=>{
+                if !raster_reserve_unit(cx){return Ok(false);}
+                semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_locked::validate(value,snapshot).map_err(|code| code.as_str())?;
+                let (RasterLayerNode::Pixel {locked,..}|RasterLayerNode::Group {locked,..}|RasterLayerNode::Adjustment {locked,..})=RasterLayerLocator::node_at_mut(snapshot,self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")?;
+                *locked=value.locked;
+            }
+            RasterMutation::ChangeLayerVisible(value) => {
+                if !raster_reserve_unit(cx) {
+                    return Ok(false);
+                }
+                let (RasterLayerNode::Pixel { visible, .. } | RasterLayerNode::Group { visible, .. } | RasterLayerNode::Adjustment { visible, .. }) =
+                    RasterLayerLocator::node_at_mut(snapshot, self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")?;
+                *visible = value.new_visible;
+            }
+            RasterMutation::ChangeLayerOpacity(value) => {
+                if !value.new_opacity.is_finite() || !raster_reserve_unit(cx) {
+                    if !value.new_opacity.is_finite() {
+                        return Err("raster-store.mutation-opacity-invalid");
+                    }
+                    return Ok(false);
+                }
+                let (RasterLayerNode::Pixel { opacity, .. } | RasterLayerNode::Group { opacity, .. } | RasterLayerNode::Adjustment { opacity, .. }) =
+                    RasterLayerLocator::node_at_mut(snapshot, self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")?;
+                *opacity = value.new_opacity;
+            }
+            RasterMutation::ChangeLayerBlendMode(value) => {
+                if !raster_reserve_unit(cx) {
+                    return Ok(false);
+                }
+                let (RasterLayerNode::Pixel { blend_mode, .. } | RasterLayerNode::Group { blend_mode, .. } | RasterLayerNode::Adjustment { blend_mode, .. }) =
+                    RasterLayerLocator::node_at_mut(snapshot, self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")?;
+                self.retirement.put(Self::replace_string(blend_mode, &value.new_blend_mode)?);
+            }
+            RasterMutation::MoveLayer(value) => {
+                if !value.new_x.is_finite() || !value.new_y.is_finite() || !raster_reserve_unit(cx) {
+                    if !value.new_x.is_finite() || !value.new_y.is_finite() {
+                        return Err("raster-store.mutation-transform-invalid");
+                    }
+                    return Ok(false);
+                }
+                match RasterLayerLocator::node_at_mut(snapshot, self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? {
+                    RasterLayerNode::Pixel { transform, .. } | RasterLayerNode::Group { transform, .. } => {
+                        transform.x = value.new_x;
+                        transform.y = value.new_y;
+                    }
+                    RasterLayerNode::Adjustment { .. } => return Err("raster-store.mutation-transform-target"),
+                }
+            }
+            RasterMutation::ResizeLayer(value) => {
+                if !raster_reserve_unit(cx) {
+                    return Ok(false);
+                }
+                let RasterLayerNode::Pixel { width, height, .. } = RasterLayerLocator::node_at_mut(snapshot, self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? else {
+                    return Err("raster-store.mutation-resize-target");
+                };
+                *width = Some(value.new_width);
+                *height = Some(value.new_height);
+            }
+            RasterMutation::ChangeLayerAdjustmentParameter(value) => {
+                semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_adjustment_parameter::validate(value,snapshot).map_err(|code| code.as_str())?;
+                let RasterLayerNode::Adjustment {params,..}=RasterLayerLocator::node_at_mut(snapshot,self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? else {return Err("raster-store.mutation-adjustment-target");};
+                if value.value.is_some() && params.page_required_for_insert(&value.parameter) {
+                    if !raster_reserve_unit(cx) {return Ok(false);}
+                    params.admit_one_page()?;return Ok(false);
+                }
+                if !raster_reserve_unit(cx) {return Ok(false);}
+                let replacement=value.value.map(|v|Ok::<_,&'static str>((raster_clone_owned_string(&value.parameter)?,v.literal()))).transpose()?;
+                if let Some(mut entry)=params.remove_entry(&value.parameter) {
+                    let (key,old)=entry.take();
+                    self.retirement.put(RasterDisplaced::ValueEntry((key,old)));
+                }
+                if let Some((key,number))=replacement {params.insert_pre_admitted(key,number).map_err(|error|error.reason)?;}
+            }
+            RasterMutation::ChangeLayerTransform(value)=>{
+                if !raster_reserve_unit(cx){return Ok(false);}
+                semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_transform::validate(value,snapshot).map_err(|code| code.as_str())?;
+                let (RasterLayerNode::Pixel {transform,..}|RasterLayerNode::Group {transform,..})=RasterLayerLocator::node_at_mut(snapshot,self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? else {return Err("raster-store.mutation-transform-target");};
+                *transform=value.transform.clone();
+            }
+            RasterMutation::ChangeLayerMask(value) => {
+                if !raster_reserve_unit(cx) { return Ok(false); }
+                semio_s_artifact_raster_raster_mutations_pixels::change_layer_mask::validate(value, snapshot).map_err(|code| code.as_str())?;
+                let replacement = value.mask.as_ref().map(|mask| {
+                    Ok::<_, &'static str>(semio_s_artifact_raster_raster_model::RasterLayerMask {
+                        enabled: mask.enabled, linked: mask.linked, invert: mask.invert,
+                        width: mask.width, height: mask.height, transform: mask.transform.clone(),
+                        image_key: mask.image_key.as_ref().map(raster_clone_owned_string).transpose()?,
+                    })
+                }).transpose()?;
+                let (RasterLayerNode::Pixel { mask, .. } | RasterLayerNode::Group { mask, .. }) = RasterLayerLocator::node_at_mut(snapshot, self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? else { return Err("raster-store.mutation-mask-target"); };
+                if let Some(previous) = std::mem::replace(mask, replacement).and_then(|mask| mask.image_key) {
+                    self.retirement.put(RasterDisplaced::String(previous));
+                }
+            }
+            RasterMutation::ChangeLayerPixels(value) => {
+                if !raster_reserve_unit(cx) { return Ok(false); }
+                semio_s_artifact_raster_raster_mutations_pixels::change_layer_pixels::validate(value, snapshot).map_err(|code| code.as_str())?;
+                let replacement = value.content.image_key.as_ref().map(raster_clone_owned_string).transpose()?;
+                let RasterLayerNode::Pixel { image_key, width, height, transform, .. } = RasterLayerLocator::node_at_mut(snapshot, self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? else { return Err("raster-store.mutation-pixels-target"); };
+                if let Some(previous) = std::mem::replace(image_key, replacement) {
+                    self.retirement.put(RasterDisplaced::String(previous));
+                }
+                *width = value.content.width;
+                *height = value.content.height;
+                if let Some(next) = &value.transform { *transform = next.clone(); }
+            }
+            RasterMutation::ChangeLayerAdjustmentKind(value) => {
+                if !raster_reserve_unit(cx) {
+                    return Ok(false);
+                }
+                let RasterLayerNode::Adjustment { adjustment_kind, .. } = RasterLayerLocator::node_at_mut(snapshot, self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? else {
+                    return Err("raster-store.mutation-adjustment-target");
+                };
+                self.retirement.put(Self::replace_string(adjustment_kind, &value.new_adjustment_kind)?);
+            }
+            RasterMutation::AddLayerAsset(value) => {
+                if value.asset.schema.capacity() > RASTER_OWNED_FIELD_BYTES || value.asset.frames.iter().map(|frame| frame.rgba8.len()).sum::<usize>() > RASTER_MAXIMUM_NESTED_BYTES || value.asset.icc.as_ref().is_some_and(|icc| icc.len() > RASTER_MAXIMUM_NESTED_BYTES) || value.asset.metadata.iter().any(|entry| entry.key.capacity().max(entry.value.capacity()) > RASTER_OWNED_FIELD_BYTES) {
+                    return Err("raster-store.mutation-asset-capacity");
+                }
+                self.asset_field = 0;
+                self.phase = RasterMutationCandidatePhase::PrepareAsset;
+                return Ok(false);
+            }
+            RasterMutation::RemoveLayerAsset(value) => {
+                if !raster_reserve_unit(cx) {
+                    return Ok(false);
+                }
+                let mut removed = snapshot.assets.remove_entry(&value.asset_id).ok_or("raster-store.mutation-asset-missing")?;
+                let (key, child) = removed.take();
+                self.retirement.put(RasterDisplaced::AssetEntry((key, child)));
+            }
+            RasterMutation::PaintStroke(_) | RasterMutation::FillRegion(_) | RasterMutation::ApplyFilter(_) | RasterMutation::TransformImage(_) | RasterMutation::FillSelection(_) | RasterMutation::WritePixelRegion(_) => {
+                if !raster_reserve_unit(cx) {
+                    return Ok(false);
+                }
+                let outcome = Mutation::diff(operation, &*snapshot);
+                let refused = outcome.messages().iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal));
+                let (diff, _) = outcome.into_parts();
+                let painted = if refused { Err("raster-store.mutation-paint-refused") } else { protocol::apply_diff(&diff, snapshot).map_err(|_| "raster-store.mutation-paint-apply") };
+                protocol::MutationDiff::retire_cold(diff);
+                let previous = std::mem::replace(snapshot, painted?);
+                self.retirement.put(RasterDisplaced::Snapshot(previous));
+            }
+        }
+        self.phase = RasterMutationCandidatePhase::Drain;
+        Ok(false)
+    }
+
+    /// 🪛️ Prepares the asset the mutation carries.
+    fn step_prepare_asset(&mut self, operation: &RasterMutation, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+        let RasterMutation::AddLayerAsset(value) = operation else { return Err("raster-store.mutation-asset-variant") };
+        match self.asset_field {
+            0 => {
+                if !raster_reserve_unit(cx) {
+                    return Ok(false);
+                }
+                self.asset_mint = Some(semio_s_artifact_raster_raster_model::mint_raster_image_child(&value.asset_id, &value.asset));
+            }
+            1 => {
+                if !raster_reserve_unit(cx) {
+                    return Ok(false);
+                }
+                let key = raster_clone_owned_string(&value.asset_id)?;
+                let child =
+                    store::os_store::artifact_child::ArtifactChild::new(String::new(), semio_framework_artifact_reference::ArtifactRef { artifact_id: String::new(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() } });
+                *self.pending_asset = Some((key, child));
+            }
+            2 => {
+                if !raster_reserve_unit(cx) {
+                    return Ok(false);
+                }
+                let child_id = raster_clone_owned_string(&self.asset_mint.as_ref().ok_or("raster-store.mutation-asset-mint")?.child_id)?;
+                self.pending_asset.as_mut().ok_or("raster-store.mutation-asset-owner")?.1.child_id = child_id;
+            }
+            3 => {
+                let length = value.asset_id.len().checked_add(6).ok_or("raster-store.mutation-asset-id-overflow")?;
+                if length > RASTER_OWNED_FIELD_BYTES || !raster_reserve_unit(cx) {
+                    if length > RASTER_OWNED_FIELD_BYTES {
+                        return Err("raster-store.mutation-asset-id-capacity");
+                    }
+                    return Ok(false);
+                }
+                let artifact_id = raster_exact_string_from_parts(&[value.asset_id.as_bytes(), b"-image"])?;
+                self.pending_asset.as_mut().ok_or("raster-store.mutation-asset-owner")?.1.target.artifact_id = artifact_id;
+            }
+            4..=6 => {
+                let literal = match self.asset_field {
+                    4 => "s.stdio.semio",
+                    5 => "v1",
+                    _ => "image",
+                };
+                if !raster_reserve_unit(cx) {
+                    return Ok(false);
+                }
+                let child = &mut self.pending_asset.as_mut().ok_or("raster-store.mutation-asset-owner")?.1;
+                let target = match self.asset_field {
+                    4 => &mut child.target.dialect.artifact_kind,
+                    5 => &mut child.target.dialect.standard,
+                    _ => &mut child.target.dialect.subset,
+                };
+                *target = Self::exact_string(literal)?;
+            }
+            _ => {
+                let snapshot = self.value.as_mut().ok_or("raster-store.mutation-asset-snapshot")?;
+                let pending_key = &self.pending_asset.as_ref().ok_or("raster-store.mutation-asset-owner")?.0;
+                if snapshot.assets.page_required_for_insert(pending_key) {
+                    if !raster_reserve_unit(cx) {
+                        return Ok(false);
+                    }
+                    snapshot.assets.admit_one_page()?;
+                    return Ok(false);
+                }
+                if !raster_reserve_unit(cx) {
+                    return Ok(false);
+                }
+                let (key, mut child) = self.pending_asset.take().ok_or("raster-store.mutation-asset-owner")?;
+                semio_s_artifact_raster_raster_model::adopt_raster_asset_owner(&self.asset_mint.take().ok_or("raster-store.mutation-asset-mint")?, &mut child);
+                if let Some(slot) = snapshot.assets.get_mut(&value.asset_id) {
+                    let previous = std::mem::replace(slot, child);
+                    self.retirement.put(RasterDisplaced::AssetEntry((key, previous)));
+                } else {
+                    match snapshot.assets.insert_pre_admitted(key, child) {
+                        Ok(RasterOwnedMapInsert::Inserted) => {}
+                        Ok(RasterOwnedMapInsert::Replaced(mut previous)) => {
+                            self.retirement.put(RasterDisplaced::AssetEntry(previous.take()));
+                            return Err("raster-store.mutation-duplicate-asset");
+                        }
+                        Err(rejected) => {
+                            self.retirement.put(RasterDisplaced::AssetEntry((rejected.key, rejected.value)));
+                            return Err(rejected.reason);
+                        }
+                    }
+                }
+                self.phase = RasterMutationCandidatePhase::Drain;
+                return Ok(false);
+            }
+        }
+        self.asset_field += 1;
+        Ok(false)
+    }
+
+    /// 🔧️ Shifts the layers behind a removed one.
+    fn step_shift_remove(&mut self, operation: &RasterMutation, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+        let snapshot = self.value.as_mut().ok_or("raster-store.mutation-shift-snapshot")?;
+        let values = RasterLayerLocator::container_mut(snapshot, self.container).ok_or("raster-store.mutation-shift-parent")?;
+        if self.shift_index + 1 < values.len() {
+            if !raster_reserve_unit(cx) {
+                return Ok(false);
+            }
+            values.swap(self.shift_index, self.shift_index + 1);
+            self.shift_index += 1;
+            return Ok(false);
+        }
+        if !raster_reserve_unit(cx) {
+            return Ok(false);
+        }
+        *self.pending_layer = values.pop();
+        if matches!(operation, RasterMutation::DeleteLayer(_)) {
+            let layer = self.pending_layer.take().ok_or("raster-store.mutation-delete-owner")?;
+            self.retirement.put(RasterDisplaced::Layer(layer));
+            self.phase = RasterMutationCandidatePhase::Drain;
+        } else if let RasterMutation::ReorderLayers(value) = operation {
+            self.secondary = None;
+            if value.parent_id.is_some() {
+                self.locator = Some(RasterLayerLocator::new());
+                self.phase = RasterMutationCandidatePhase::LocateDestination;
+            } else {
+                self.prepare_insert(None, value.index);
+            }
+        } else {
+            return Err("raster-store.mutation-remove-variant");
+        }
+        Ok(false)
     }
 
     pub(super) fn take(&mut self) -> Option<RasterSnapshot> {

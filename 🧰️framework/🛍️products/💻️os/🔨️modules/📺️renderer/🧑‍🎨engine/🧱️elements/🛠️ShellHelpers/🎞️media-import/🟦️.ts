@@ -4,7 +4,7 @@
  */
 
 import { type AppDefinition } from "@semio-tech/framework";
-import { hopTrace } from "@semio-tech/framework/trace";
+import { hopTrace } from "@semio-tech/framework-trace";
 import { type ContinuationCancel, type ContinuationScheduler, hostContinuations } from "@semio-tech/framework/async/continuation";
 import { importChunkArguments, importPayloadChunks } from "@semio-tech/framework";
 import { requestFileOpen } from "../🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";

@@ -1,0 +1,28 @@
+{
+ "manifest": "[package]\nname = \"sched\"\nversion = \"0.0.0\"\n\n[[bin]]\nname = \"sched\"\npath = \"src/bin.rs\"\n",
+ "lock": "version = 3\n",
+ "source": "fn main() {}\n",
+ "steps": [
+  {"op": "build"},
+  {"op": "hold", "toolchain": "t1", "holds": true},
+  {"op": "hold", "toolchain": "t2", "holds": false},
+  {"op": "editSource", "text": "fn main() { println!(); }\n"},
+  {"op": "hold", "toolchain": "t1", "holds": false},
+  {"op": "build"},
+  {"op": "hold", "toolchain": "t1", "holds": true},
+  {"op": "rebuildBinary"},
+  {"op": "hold", "toolchain": "t1", "holds": false},
+  {"op": "build"},
+  {"op": "editLock", "text": "version = 4\n"},
+  {"op": "hold", "toolchain": "t1", "holds": false},
+  {"op": "build"},
+  {"op": "removeBinary"},
+  {"op": "hold", "toolchain": "t1", "holds": false}
+ ],
+ "environment": [
+  {"name": "unrelated variables do not change the identity", "left": {"HOME": "/a", "CARGO_TARGET_DIR": "/t"}, "right": {"HOME": "/b", "CARGO_TARGET_DIR": "/t"}, "equal": true},
+  {"name": "rustflags change the identity", "left": {"RUSTFLAGS": "-C a"}, "right": {"RUSTFLAGS": "-C b"}, "equal": false},
+  {"name": "cargo variables change the identity", "left": {"CARGO_BUILD_JOBS": "2"}, "right": {"CARGO_BUILD_JOBS": "3"}, "equal": false},
+  {"name": "order is irrelevant", "left": {"CARGO_A": "1", "RUSTC_B": "2"}, "right": {"RUSTC_B": "2", "CARGO_A": "1"}, "equal": true}
+ ]
+}

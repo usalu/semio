@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { pathToFileURL } from "node:url";
 import Ajv from "ajv";
-import { testBuiltTreeRetirementFixture } from "@semio-tech/framework/modules/ui/contract/builder/retirement/testing/built-tree-retirement";
+import { testBuiltTreeRetirementFixture } from "@semio-tech/ui-contract/builder/retirement/testing/built-tree-retirement";
 import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { fixedFilenameContractIdsForPath } from "../../🔍️discovery/⚖️fixed-contract-resolution/🟦️.ts";
 import { inspectRustModuleGraphFacts } from "../../🔍️discovery/🌐️rust-module-graph/🟦️.ts";

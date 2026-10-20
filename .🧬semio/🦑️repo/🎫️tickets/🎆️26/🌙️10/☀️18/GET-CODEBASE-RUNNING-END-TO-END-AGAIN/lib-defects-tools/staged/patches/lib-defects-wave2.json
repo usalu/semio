@@ -1,0 +1,12 @@
+[
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts",
+  "edits": [
+   {
+    "old": "+JSON.stringify(join(censusOwner,\"🟨️.cjs\"))+');'+compiled.code+",
+    "new": "+JSON.stringify(join(censusOwner,\"🟨️.cjs\"))+').createBunWorkspaceOwnershipV1({ownershipPath:'+JSON.stringify(join(censusOwner,\"../🔣️policy.json\"))+',ownershipSource:'+JSON.stringify(readFileSync(join(censusOwner,\"../🔣️policy.json\"),\"utf8\"))+'});'+compiled.code+",
+    "count": 1
+   }
+  ]
+ }
+]

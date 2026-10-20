@@ -13,6 +13,7 @@
     "verify-norm-document-contract": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/📕️norm/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify norm-document-contract",
@@ -30,6 +31,7 @@
     "verify-norm-results-window-ownership": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/📕️norm/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify norm-results-window-ownership",

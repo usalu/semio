@@ -11,6 +11,12 @@ import {readNativeCallerAuthorityV1} from "../📦️artifacts/📋️native-orc
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {nativeNxChildEnvironmentV1,issueSelectedNxCallerEnvelopeV1} from "../📦️artifacts/📋️native-orchestration/📥️caller/🟦️.ts";
 import {resolveBuildSelectionV1} from "../../🏗️build/🧭️invocation/🟦️.ts";
+import buildPolicy from "../../🏗️build/🔣️policy.json" with { type: "json" };
+import nxExecutors from "../../📦️packages/🟦️typescript/📋️executors.json" with { type: "json" };
+import {readWorkerPolicyV1,planWorkersV1,currentWorkerHostV1,readWorkerSwitchV1} from "../../🏗️build/👷️workers/🟦️.ts";
+import {nxBatchCapableV1,nxWorkerSettingsV1} from "./🛠️tools/👷️workers/🟦️.ts";
+import {resolveRemoteCacheContractV1} from "../../🏗️build/🌐️remote-cache/🟦️.ts";
+import {nxRemoteCacheV1} from "./🛠️tools/🌐️remote-cache/🟦️.ts";
 import {withRepositoryNxStorageV1,boundedNxNamespaceV1,boundedNxSocketNamespaceV1,type BoundedNxNamespaceV1} from "../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { createScriptProcessEnvelope, readScriptProcessEnvelope, scriptProcessEnvironment, SCRIPT_PROCESS_INVOCATION_ENV, withScriptProcessEnvelope } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -232,8 +238,11 @@ export function nxBuildEnvironmentV1(root:string,environment:NodeJS.ProcessEnv):
  env.NX_TUI=environment.SEMIO_BUILD_TERMINAL??environment.NX_TUI??"false";
  env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT=environment.SEMIO_BUILD_DYNAMIC_OUTPUT??environment.NX_TASKS_RUNNER_DYNAMIC_OUTPUT??"false";
  env.NX_VERBOSE_LOGGING=environment.SEMIO_BUILD_VERBOSE??environment.NX_VERBOSE_LOGGING??"false";
- env.NX_PARALLEL=environment.SEMIO_BUILD_PARALLEL??environment.NX_PARALLEL;
+ const explicit=Number(environment.SEMIO_BUILD_PARALLEL??environment.NX_PARALLEL),workers=nxWorkerSettingsV1(planWorkersV1(readWorkerPolicyV1(buildPolicy.workers),currentWorkerHostV1(),{...(Number.isSafeInteger(explicit)&&explicit>0?{jobs:explicit}:{}),...(readWorkerSwitchV1(environment.SEMIO_BUILD_WORKERS)===undefined?{}:{workers:readWorkerSwitchV1(environment.SEMIO_BUILD_WORKERS)!})}),{batchCapable:nxBatchCapableV1(nxExecutors)});
+ env.NX_PARALLEL=environment.SEMIO_BUILD_PARALLEL??environment.NX_PARALLEL??workers.environment.NX_PARALLEL;
+ if(workers.environment.NX_BATCH_MODE!==undefined)env.NX_BATCH_MODE??=workers.environment.NX_BATCH_MODE;
  if(environment.SEMIO_BUILD_GRAPH_DIGEST){env.NX_FORCE_REUSE_CACHED_GRAPH="false";delete env.SEMIO_NX_GRAPH_SEAL_REUSE;}
+ Object.assign(env,nxRemoteCacheV1(resolveRemoteCacheContractV1(environment),environment).environment);
  return env;
 }
 
@@ -322,7 +331,19 @@ export class NxOutputSpoolV1 {
   forwarded = 0;
   private forwardedBytes = 0;
   private nextHeartbeat: number;
-  constructor(private readonly fd: number, private readonly path: string, private readonly forward: (line: string) => void, private readonly now: () => number = Date.now, private readonly forwardBytes = NxOutputSpoolV1.FORWARD_BYTES, private readonly heartbeatMs = NxOutputSpoolV1.HEARTBEAT_MS) {
+  private readonly fd: number;
+  private readonly path: string;
+  private readonly forward: (line: string) => void;
+  private readonly now: () => number;
+  private readonly forwardBytes: number;
+  private readonly heartbeatMs: number;
+  constructor(fd: number, path: string, forward: (line: string) => void, now: () => number = Date.now, forwardBytes = NxOutputSpoolV1.FORWARD_BYTES, heartbeatMs = NxOutputSpoolV1.HEARTBEAT_MS) {
+    this.fd = fd;
+    this.path = path;
+    this.forward = forward;
+    this.now = now;
+    this.forwardBytes = forwardBytes;
+    this.heartbeatMs = heartbeatMs;
     this.nextHeartbeat = now() + heartbeatMs;
   }
   line(text: string): void {
@@ -616,7 +637,7 @@ if (import.meta.main) {
  const args=process.argv.slice(2),inherited=process.env[SCRIPT_PROCESS_INVOCATION_ENV],envelope=nxBootstrapEnvelopeV1(WORKSPACE_ROOT,args,process.env,Date.now());
  process.env[SCRIPT_PROCESS_INVOCATION_ENV]=scriptProcessEnvironment(envelope,process.env)[SCRIPT_PROCESS_INVOCATION_ENV];
  try{await withScriptProcessEnvelope(envelope,async original=>{
-  const native=await import("../../../🎛️dashboard/📦️installation/🟦️.ts"),selectedMode=resolveNxInvocation(args.slice(1)).env.SEMIO_BUILD_MODE,mode=readBuildMode((original.capabilities as{buildMode?:unknown}).buildMode??selectedMode??"prototype");
+  const native=await import("./🎛️dashboard/📦️installation/🟦️.ts"),selectedMode=resolveNxInvocation(args.slice(1)).env.SEMIO_BUILD_MODE,mode=readBuildMode((original.capabilities as{buildMode?:unknown}).buildMode??selectedMode??"prototype");
   if(selectedMode!==undefined&&mode!==selectedMode)throw new Error("Original dashboard build mode changed across handoff");
   const invocation=args[0]==="nx"&&native.dashboardInstalled(WORKSPACE_ROOT,mode)?native.dashboardInvocation(args.slice(1)):undefined;
   if(invocation){try{process.exitCode=await native.launchDashboard(WORKSPACE_ROOT,invocation,{invocation:original,workspace:WORKSPACE_ROOT,mode,network:readNativeCallerAuthorityV1(original.capabilities).network,control:scriptCompilerAdmissionControlV1(original,"dashboard:launch",0)});}catch(error){console.error(error instanceof Error?error.message:String(error));process.exitCode=original.control.signal.aborted?130:1;}}

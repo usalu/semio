@@ -4,7 +4,7 @@ import { runCargo } from "@semio-tech/framework/process/execution";
 import { scriptInvocationBudget, scriptInvocationEnvironment } from "@semio-tech/framework/process/routing";
 import { join, resolve } from "node:path";
 import { runOwnedCommand } from "@semio-tech/framework/process/execution";
-import { resolveTypescriptCompilerV1 } from "@semio-tech/process/execution";
+import { resolveTypescriptCompilerV1 } from "@semio-tech/framework/process/execution";
 
 /** 🏃️ Runs the `OwnedVerifyScript` command under the caller's roots and invocation. */
 export async function runOwnedVerifyScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {

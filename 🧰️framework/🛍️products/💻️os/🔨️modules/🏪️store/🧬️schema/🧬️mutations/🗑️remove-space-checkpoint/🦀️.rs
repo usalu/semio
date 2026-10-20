@@ -36,10 +36,6 @@ impl semio_framework_os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMuta
 
     })())
 }
-}
-
-impl semio_framework_os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for RemoveSpaceCheckpoint {
-    const SEMANTICS: semio_framework_os_spr::SemanticDescriptor = semio_framework_os_spr::SemanticDescriptor { verb: "remove", entity: "space-checkpoint", kind: "remove-space-checkpoint", record: "RemovedSpaceCheckpoint" };
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove space checkpoint {}", self.checkpoint_id), &format!("Space-Sicherungspunkt {} entfernen", self.checkpoint_id))
     }

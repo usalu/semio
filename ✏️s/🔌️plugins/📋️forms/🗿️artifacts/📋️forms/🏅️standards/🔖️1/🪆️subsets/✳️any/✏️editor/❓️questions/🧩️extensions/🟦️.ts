@@ -1,4 +1,4 @@
-import type { LocalizedLabel, ShellLocale, ShellTerminology } from "@semio-tech/framework/manifest";
+import type { LocalizedLabel, ShellLocale, ShellTerminology } from "@semio-tech/framework-manifest";
 import type { DslValue, FormQuestion } from "../../../🧬️schema/🧱️form-model/🟦️.ts";
 import{parseFormsValue}from"../../../🧬️schema/🌱️value/🟦️.ts";
 

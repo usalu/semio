@@ -549,7 +549,7 @@
       "🟦️.ts",
       "🧬️schema/🔣️.json",
       "🧪️tests/🟦️.ts",
-      "🧪️tests/🦀️.ts",
+      "🧪️tests/🦀️profile-precedence/🟦️.ts",
       "🧪️tests/🔣️.json"
     ]
   }

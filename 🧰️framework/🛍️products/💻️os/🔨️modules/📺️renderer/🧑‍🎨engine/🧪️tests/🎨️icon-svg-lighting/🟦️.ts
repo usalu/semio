@@ -7,7 +7,7 @@ import { chromium } from "playwright";
 import { AmbientLight, BufferGeometry, DirectionalLight, Float32BufferAttribute, Mesh, MeshStandardMaterial, PerspectiveCamera, Scene, Vector3 } from "three";
 import { SVGRenderer } from "three/examples/jsm/renderers/SVGRenderer.js";
 import { describe, expect, it } from "vitest";
-import { iconSvgLightingFixtureUrl } from "@semio-tech/framework/ui/testing/fixtures";
+import { iconSvgLightingFixtureUrl } from "@semio-tech/ui/testing/fixtures";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));

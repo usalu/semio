@@ -6,6 +6,7 @@ use std::collections::BTreeMap;
 
 use semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue;
 use semio_s_artifact_procedural_3d_geometry_phased_job_support as support;
+use semio_s_artifact_procedural_3d_geometry_compute::KernelSession;
 
 const FIXTURE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🐚️brep-topology/🔣️.json");
 const FIXTURE_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🐚️brep-topology/🔣️.json");

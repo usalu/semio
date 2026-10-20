@@ -65,3 +65,4 @@ semio-framework-test-transient-preparation-law = { path = "../../../../../../../
 semio-framework-test-typed-input-law = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/⚖️typed-input-law/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-repo-test-host = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-snapshot = { path = "../../../../../../../../../../../../🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }

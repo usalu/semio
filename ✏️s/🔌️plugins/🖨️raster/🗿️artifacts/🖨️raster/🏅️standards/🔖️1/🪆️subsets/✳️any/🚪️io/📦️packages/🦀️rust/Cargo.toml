@@ -53,6 +53,7 @@ semio-s-artifact-stdio-semio-image-export = { workspace = true }
 semio-s-artifact-stdio-semio-image-import = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }
 semio-s-artifact-stdio-tiff = { workspace = true }
+semio-framework-pack = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-s-artifact-raster-raster-io-media-bridge = { workspace = true, features = ["testkit"] }

@@ -5,7 +5,7 @@ import { EventEmitter } from "node:events";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import ts from "typescript";
-import schema from "../../../📦️installation/🧬️schema/🚀️launch/🔣️.json" with { type: "json" };
+import schema from "../../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🧬️schema/🚀️launch/🔣️.json" with { type: "json" };
 import fixture from "../../🧫️fixtures/🧊️execution/🔣️.json" with { type: "json" };
 
 test("dashboard controls install missing modes once and retain stale installed control access", async () => {

@@ -1,0 +1,91 @@
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs
+@@ -6,5 +6,6 @@
+ import { createRequire, isBuiltin } from "node:module";
++import { createHash } from "node:crypto";
+ import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+ import { fileURLToPath, pathToFileURL } from "node:url";
+-import { memoizedObservedAsyncComputationV1, observedSourceAnalysisV1, observedRequireResolve, observedTypeScriptHost, observedFs } from "../../../../🏗️build/👁️observation/🟨️.mjs";
++import { memoizedObservedAsyncComputationV1, memoizedObservedComputationV1, observedSourceAnalysisV1, observedRequireResolve, observedTypeScriptHost, observedFs } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+ import { readCargoExecutionContractV1, selectCargoExecutionOperationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
+@@ -28,3 +29,3 @@
+   if(context.invocation){requireIssuedResourceControlInvocationV1(context.phaseControl,context.invocation);checkResourceLeaseControl(context.phaseControl);}
+-  return { files: new Map(), closures: new Map(), commandDependencies: new Map(), modules:new Set(), resources:new Set(),generatedImports:new Map(),context,providerDesignation:context.scriptProviderDesignation };
++  return { files: new Map(), closures: new Map(), commandDependencies: new Map(), modules:new Set(), resources:new Set(),generatedImports:new Map(),declared:new Map(),paths:new Map(),context,providerDesignation:context.scriptProviderDesignation };
+ }
+@@ -74,5 +75,30 @@
+ 
++/** 🔑️ Names a memo entry by the digest of its ordered parts, so a long path list is hashed once and never retained as a key string. */
++function memoDigestV1(...parts) {
++  const hash = createHash("sha256");
++  for (const part of parts) {
++    if (Array.isArray(part)) { hash.update("["); for (const item of part) hash.update(typeof item === "string" ? item : "\u0001").update("\0"); hash.update("]"); }
++    else hash.update(String(part)).update("\0");
++  }
++  return hash.digest("hex");
++}
++
++/** 📛️ The workspace-relative name of one closure file, shared by every closure of one graph construction instead of re-created for each. */
++function closurePathNameV1(cache, workspaceRoot, file) {
++  let names = cache.paths.get(workspaceRoot);
++  if (!names) cache.paths.set(workspaceRoot, names = new Map());
++  let name = names.get(file);
++  if (name === undefined) names.set(file, name = `{workspaceRoot}/${buildPath(relative(workspaceRoot, file))}`);
++  return name;
++}
++
++/** 🧮️ Resolves the literal module inputs of one target list through one observed memo per distinct list: the command inputs that every generated Cargo target repeats verbatim are probed once, and every receiving project still replays the same existence facts. */
++function declaredModuleInputsV1(inputs, workspaceRoot, projectRoot, cache) {
++  if (!Array.isArray(inputs) || !inputs.length) return [];
++  return memoizedObservedComputationV1(cache.declared, memoDigestV1(workspaceRoot, projectRoot, inputs), () => inputs.flatMap(input => { const declared = declaredModuleInputV1(input, workspaceRoot, projectRoot); return declared ? [declared] : []; }));
++}
++
+ /** 🧭️ Tracks literal relative command imports through the existing TypeScript tooling boundary. */
+ export async function relativeScriptInputs(entries, workspaceRoot, cache = createScriptInputCache(), requiredSources=false) {
+-  const roots = [...new Set(entries.map(entry => resolve(entry)))].sort(), key = JSON.stringify([resolve(workspaceRoot), roots,requiredSources]);
++  const roots = [...new Set(entries.map(entry => resolve(entry)))].sort(), key = memoDigestV1(resolve(workspaceRoot), roots, requiredSources);
+   let steps=0;const checkpoint=(force=false)=>yieldInferenceV1(cache.context,"build:command-source-imports",++steps,force);
+@@ -82,3 +108,3 @@
+     await checkpoint();
+-    if (buildPath(relative(workspaceRoot, path)).startsWith("../")) throw new Error(`Command import escapes workspace: ${path}`);
++    if (closurePathNameV1(cache, workspaceRoot, path).startsWith("{workspaceRoot}/../")) throw new Error(`Command import escapes workspace: ${path}`);
+     const seen=files.has(path);
+@@ -123,3 +149,3 @@
+   for (const entry of roots) await visit(entry);
+-  const result = [...files].map((file) => `{workspaceRoot}/${buildPath(relative(workspaceRoot, file))}`).sort();
++  const result = [...files].map((file) => closurePathNameV1(cache, workspaceRoot, file)).sort();
+   return result;
+@@ -159,3 +185,3 @@
+  }
+- for(const input of target.inputs??[]){const declared=declaredModuleInputV1(input,workspaceRoot,projectRoot);if(declared)entries.add(declared);}
++ for(const declared of declaredModuleInputsV1(target.inputs,workspaceRoot,projectRoot,scripts))entries.add(declared);
+  const closure=entries.size?await relativeScriptInputs([...entries],workspaceRoot,scripts,true):undefined,modules=new Set((closure??[]).map(path=>resolve(workspaceRoot,path.slice("{workspaceRoot}/".length)))),generatedDependencies=[...new Set([...scripts.generatedImports].filter(([path])=>modules.has(path)).flatMap(([,rows])=>rows.map(row=>row.target)))].sort();return {closure,fallback,...(generatedDependencies.length?{generatedDependencies}:{})};
+@@ -190,3 +216,3 @@
+   if (!closure) return [...fallback, "{workspaceRoot}/package.json", "{workspaceRoot}/bun.lock"];
+-  const key=JSON.stringify([closure,sources.fallback?fallback:null]);
++  const key=memoDigestV1(closure,sources.fallback?fallback:null);
+   let index=0;const checkpoint=(force=false)=>yieldInferenceV1(scripts.context,"build:command-source-packages",++index,force);
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs
+@@ -71,2 +71,16 @@
+   return { env: `SEMIO_CARGO_LOCK_${key}` };
++}
++
++const INVENTORY_MEMO_V1 = new Map(), INVENTORY_MEMO_LIMIT_V1 = 512;
++
++/** 🗃️ Reuses the immutable captured inventory of an identical file roster: it is a pure function of the roster and the workspace root, and thousands of projects share the same command closure. */
++function capturedInventoryV1(files, workspaceRoot) {
++  const hash = createHash("sha256").update(workspaceRoot).update("\0");
++  for (const file of files) hash.update(file).update("\0");
++  const key = hash.digest("hex"), known = INVENTORY_MEMO_V1.get(key);
++  if (known !== undefined) return known;
++  const captured = captureSourceInputInventoryV1({ version: 1, files }, workspaceRoot);
++  if (INVENTORY_MEMO_V1.size >= INVENTORY_MEMO_LIMIT_V1) INVENTORY_MEMO_V1.delete(INVENTORY_MEMO_V1.keys().next().value);
++  INVENTORY_MEMO_V1.set(key, captured);
++  return captured;
+ }
+@@ -96,3 +110,3 @@
+   const helpers = ["./🟨️.mjs", "./🔏️revision/🟨️.mjs", "./🔏️revision/🧬️schema/🔣️.json", "./📋️data/🟨️.mjs", "./📋️data/📥️load/🟨️.mjs", "./📋️data/🧬️schema/🔣️.json", "./🧮️digest/📥️read/🟨️.mjs", "./🧮️digest/📥️read/🧬️schema/🔣️.json", "./🔒️lock/🔣️schema.json", "./💾️storage/🟨️.mjs", "./💾️storage/📒️ledger/🟨️.mjs", "./💾️storage/🧬️schema/🔣️.json", "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json", "./🧮️digest/🟨️.mjs", "./🧮️digest/🔣️schema.json", "./🔒️lock/📥️read/🟨️.mjs", "./🔒️lock/🟨️.mjs"].map(path => relative(workspaceRoot, fileURLToPath(new URL(path, physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)))).split("\\").join("/"));
+-  const files = [...new Set([...exact.map(input => input.slice("{workspaceRoot}/".length)), ...helpers])].sort(), captured = captureSourceInputInventoryV1({ version: 1, files },workspaceRoot), contract = captured.text;
++  const files = [...new Set([...exact.map(input => input.slice("{workspaceRoot}/".length)), ...helpers])].sort(), captured = capturedInventoryV1(files, workspaceRoot), contract = captured.text;
+   const key = createHash("sha256").update(contract).digest("hex"), directory = repositoryBuildGraphWriterDirectoryV1(workspaceRoot,"build-input-closures"), manifest = join(directory, `${key}.json`);

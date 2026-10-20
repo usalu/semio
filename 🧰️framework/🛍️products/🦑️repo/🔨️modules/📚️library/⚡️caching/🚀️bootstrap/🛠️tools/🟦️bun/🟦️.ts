@@ -2,7 +2,7 @@ import{withRepositoryToolingOperationV1}from"../../../💾️storage/🔒️enfo
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import type{ToolingHeadroomRefusalV1}from"../🧹️retention/📏️headroom/🟦️.ts";
 import {withManagedToolingProvisionV1,type ManagedToolingPublisherV1} from "../🧹️retention/📥️physical/🟦️.ts";
-import retentionSchema from "../🧹️retention/📥️physical/🧬️schema/🔣️.json";
+import retentionSchema from "../🧹️retention/📥️physical/🧬️schema/🔣️.json" with { type: "json" };
 import type {RepositoryToolingStoreV1} from "../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import {requireNativeStorageReservationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";

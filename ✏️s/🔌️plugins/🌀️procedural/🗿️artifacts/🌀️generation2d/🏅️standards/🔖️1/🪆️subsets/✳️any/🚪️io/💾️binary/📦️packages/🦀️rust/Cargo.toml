@@ -28,6 +28,7 @@ semio-framework-value = { path = "../../../../../../../../../../../../../🧰️
 semio-s-artifact-procedural-2d-io-text = { workspace = true }
 semio-s-artifact-procedural-2d-model = { workspace = true }
 semio-s-artifact-procedural-2d-mutations = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

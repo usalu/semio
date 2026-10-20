@@ -2,7 +2,7 @@
 
 use crate::create_link;
 use semio_s_artifact_layout_layout_diff::LayoutLinksDelta;
-use crate::standards::v1::subsets::any::schema::diff::LayoutLinkRemoval;
+use semio_s_artifact_layout_layout_diff::LayoutLinkRemoval;
 use semio_s_artifact_layout_layout_diff::LayoutDiff;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};

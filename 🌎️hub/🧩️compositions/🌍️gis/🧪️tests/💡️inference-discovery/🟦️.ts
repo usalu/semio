@@ -118,7 +118,7 @@ export class InferenceDiscoveryOracleScript extends BundleScript {
       else if (!matchesRoster(candidate)) identityRejections += 1;
       else throw new Error(`GIS discovery oracle admitted ${hostile.name}`);
     }
-    const descriptor = JSON.parse(readFileSync(join(this.repoRoot, "🌎️hub", "🧩️compositions", "🌍️gis", "🔣️.json"), "utf8"));
+    const descriptor = JSON.parse(readFileSync(join(this.repoRoot, "🌎️hub", "🧩️compositions", "🌍️gis", "🧩️component", "🔣️.json"), "utf8"));
     const contributions = descriptor.contributions;
     const declared = [...(contributions.inferenceServices ?? []), ...(contributions.artifactContributions ?? []).flatMap((row: { inferences?: unknown[] }) => row.inferences ?? [])].map((row: Record<string, unknown>) => ({
       ...row,

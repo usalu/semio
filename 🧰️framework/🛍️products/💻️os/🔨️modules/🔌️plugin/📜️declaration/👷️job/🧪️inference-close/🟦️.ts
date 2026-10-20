@@ -3,8 +3,8 @@ import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
-import schema from "./🧬️schema/🔣️.json";
-import law from "./🧪️tests/🧫️fixtures/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
+import law from "./🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 test("Original inference close retains the concrete source and pays every independent owner",()=>{
  expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);const db=new Database(":memory:");try{db.run("CREATE TABLE original_session(operation INTEGER,generation INTEGER,payload TEXT,closed INTEGER)");db.query("INSERT INTO original_session VALUES(?,?,?,0)").run(law.operation,law.generation,law.payload);expect(db.query("SELECT payload FROM original_session WHERE operation=? AND generation=?").get(71,4)).toBeNull();expect(db.query("SELECT payload FROM original_session WHERE operation=? AND generation=?").get(71,3)).toEqual({payload:law.payload});expect(Buffer.byteLength(law.payload)).toBe(18);}finally{db.close();}const source=readFileSync(resolve(import.meta.dir,"../../👁️view/🛬️lifted/👷️job/🦀️.rs"),"utf8");for(const name of ["OriginalInferenceSessionOwner","ControlledRetirement<T>","close_granted","original_inference_close_demands","original_inference_close_step"])expect(source).toContain(name);expect(source).not.toContain("sessions: BTreeMap<&'static str, Box<dyn std::any::Any + Send>>");
 });

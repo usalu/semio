@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -25,7 +26,7 @@ type Fixture = {
   canvasCommands: string[];
 };
 
-const workspace = process.cwd();
+const workspace = fileURLToPath(new URL("../../../../../../../../../../../../", import.meta.url));
 const editor = join(workspace, "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor");
 const readJson = (path: string): any => JSON.parse(readFileSync(path, "utf8"));
 const fixture = readJson(join(editor, "🧪️tests/🧫️fixtures/🪟️generation2d-window-camera-ownership/🔣️.json")) as Fixture;

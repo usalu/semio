@@ -1,4 +1,4 @@
-import schema from"./🧬️schema/🔣️.json";
+import schema from"./🧬️schema/🔣️.json" with { type: "json" };
 /** 📏️ Bounds observational data without issuing process or writer authority. */
 export const cargoTimingPolicyV1=Object.freeze({...schema.definitions.Policy.const});
 /** 🧾️ Records one OS-observed process; ancestry is diagnostic data, never retirement custody. */

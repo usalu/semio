@@ -1,6 +1,7 @@
 {
   "rootBarrel": "./🟦️.ts",
   "facadeCases": [
+    { "id": "json document default re-export", "source": "import document from \"./module.json\" with { type: \"json\" };\nexport default document;", "accept": true },
     { "id": "named value re-export", "source": "export { alpha, beta } from \"./module.ts\";", "accept": true },
     { "id": "named type re-export", "source": "export type { Alpha } from \"./module.ts\";", "accept": true },
     { "id": "aliased json default re-export", "source": "export { default as alphaSchema } from \"./module.json\";", "accept": true },
@@ -10,6 +11,7 @@
     { "id": "local declaration", "source": "export const alpha = 1;", "accept": false },
     { "id": "import statement", "source": "import { alpha } from \"./module.ts\";\nexport { alpha } from \"./module.ts\";", "accept": false },
     { "id": "export list without source", "source": "const alpha = 1;\nexport { alpha };", "accept": false },
-    { "id": "default export", "source": "export default 1;", "accept": false }
+    { "id": "default export", "source": "export default 1;", "accept": false },
+    { "id": "default export of a non-document import", "source": "import value from \"./module.ts\";\nexport default value;", "accept": false }
   ]
 }

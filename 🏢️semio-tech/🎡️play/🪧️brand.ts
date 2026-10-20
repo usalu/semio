@@ -126,4 +126,8 @@ export const PLAY_PANES: readonly PlayPaneSpec[] = PLAY_RUNTIME_PANES.map(pane =
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️playgrid/🟦️.ts");
   await registerTests1(import.meta.vitest, { PLAY_PANES, resolvePlayLocale, PLAY_TERMINOLOGY });
+  const { join } = await import("node:path");
+  const { PLAY_RUNTIME_TARGETS } = await import("./🔨️modules/🧩️runtime/🟦️.ts");
+  const { registerTests1: registerPaneDefaultTests } = await import("./🧪️tests/🧪️playpanedefaults/🟦️.ts");
+  await registerPaneDefaultTests(import.meta.vitest, { PLAY_RUNTIME_PANES, PLAY_RUNTIME_TARGETS, PLAY_PANES }, join(import.meta.dirname, "../.."));
 }

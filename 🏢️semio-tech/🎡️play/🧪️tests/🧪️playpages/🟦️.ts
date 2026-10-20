@@ -101,7 +101,7 @@ export async function registerTests1(
       await init;
       const source = shardWorkerSource();
       const importsOf = (text: string) => parse(text)[0].map(row => ({ kind: row.d === -1 ? "static" : row.d === -2 ? "import.meta" : "dynamic", specifier: row.n ?? null, expression: text.slice(row.s, row.e) }));
-      expect(importsOf(source)).toEqual(corpus.worker.generatedImports);
+      expect(importsOf(source)).toEqual(corpus.worker.generatedImports.map(({ publishedUrl: _, ...row }) => row));
       const root = resolve(import.meta.dirname, "../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🗑️generated/publication-actual-worker-test");
       const site = join(root, "site"), pages = join(root, "pages");
       mkdirSync(dirname(join(site, corpus.worker.path)), { recursive: true });
@@ -111,7 +111,7 @@ export async function registerTests1(
         publishPlayPages(site, pages, "play.semio-tech.com");
         const worker = readFileSync(join(pages, "play", corpus.worker.path), "utf8");
         const imports = importsOf(worker);
-        expect(imports.map(row => ({ kind: row.kind, specifier: row.specifier }))).toEqual(corpus.worker.generatedImports.map(row => ({ kind: row.kind, specifier: row.specifier === null ? null : corpus.worker.importUrl })));
+        expect(imports.map(row => ({ kind: row.kind, specifier: row.specifier }))).toEqual(corpus.worker.generatedImports.map(row => ({ kind: row.kind, specifier: row.publishedUrl })));
         expect(imports.find(row => row.specifier === null)?.expression).toBe("moduleUrl");
       } finally { rmSync(root, { recursive: true, force: true }); }
     });

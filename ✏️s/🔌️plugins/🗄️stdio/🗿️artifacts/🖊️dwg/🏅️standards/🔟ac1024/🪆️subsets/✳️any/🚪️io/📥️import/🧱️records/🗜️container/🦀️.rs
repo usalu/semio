@@ -55,17 +55,14 @@ struct ByteCursor<'a> {
     pos: usize,
 }
 impl<'a> ByteCursor<'a> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn new(data: &'a [u8]) -> Self {
         Self { data, pos: 0 }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn u8(&mut self) -> Result<u8, String> {
         let b = *self.data.get(self.pos).ok_or("dwg lz: source exhausted mid-opcode")?;
         self.pos += 1;
         Ok(b)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn has_more(&self) -> bool {
         self.pos < self.data.len()
     }
@@ -142,7 +139,6 @@ pub fn decompress_r2004_section(comp: &[u8], decomp_size: usize) -> Result<Vec<u
             let co = ((((opcode1 as u32) >> 2) & 3) | ((opcode2 as u32) << 2)) + 1;
             comp_bytes = cb;
             comp_offset = co;
-            // opcode1 intentionally unchanged here (matches reference semantics).
         } else if opcode1 < 0x20 {
             let cb = read_compressed_bytes(&mut src, opcode1, 7)?;
             let partial = ((opcode1 as u32) & 8) << 11;
@@ -313,9 +309,6 @@ pub fn locate_r2004_sections(bytes: &[u8]) -> Result<Vec<DwgRawSection>, String>
     let dec_hdr = decrypt_r2004_header(enc);
     let hdr = parse_r2004_file_header(&dec_hdr)?;
 
-    // Section page map: located at `section_map_address + 0x100`, header is 5 plain (non-XORed)
-    // RL fields (0x14 bytes): section_type (must be 0x41630e3b), decomp_size, comp_size,
-    // compression_type, checksum.
     let map_hdr_addr = (hdr.section_map_address + 0x100) as usize;
     if map_hdr_addr + 0x14 > bytes.len() {
         return Err(format!("r2004: section page map header at {map_hdr_addr:#x} out of bounds"));
@@ -336,8 +329,6 @@ pub fn locate_r2004_sections(bytes: &[u8]) -> Result<Vec<DwgRawSection>, String>
         return Err(format!("r2004: page directory entry count {} != numgaps({}) + numsections({})", page_dir.len(), hdr.numgaps, hdr.numsections));
     }
 
-    // Section info: the named-section directory, located via the page whose `number` equals
-    // `section_info_id` (looked up in the page directory we just built, not a fixed offset).
     let info_entry = page_dir.iter().find(|e| e.number == hdr.section_info_id).ok_or_else(|| format!("r2004: section_info_id {} not found in page directory", hdr.section_info_id))?;
     let info_addr = info_entry.address as usize;
     if info_addr + 0x14 > bytes.len() {
@@ -360,7 +351,7 @@ pub fn locate_r2004_sections(bytes: &[u8]) -> Result<Vec<DwgRawSection>, String>
     let mut out = Vec::with_capacity(descriptors.len());
     for (name, declared_size, compressed_flag, max_decomp_size, _section_id, _encrypted, pages) in descriptors {
         if name.is_empty() {
-            continue; // padding descriptor slot (section-info headers sometimes reserve one).
+            continue;
         }
         let mut raw_pages = Vec::with_capacity(pages.len());
         for (pnum, _psize, start_offset) in pages {
@@ -400,11 +391,6 @@ pub fn decode_r2004_sections(bytes: &[u8]) -> Result<Vec<DwgRawSection>, String>
             }
             let comp = &bytes[comp_start..comp_end];
             if section.compressed {
-                // Bound by the SECTION's generous `max_decomp_size` allocation (normally
-                // 0x7400), not the page header's own tighter `page_size` -- real content
-                // routinely runs well past `page_size` before hitting the LZ terminator (see
-                // `DwgRawSection::max_decomp_size` docs; this under-bound was a real bug caught
-                // via the standalone-scratch-crate technique).
                 let bound = section.max_decomp_size.max(ph.page_size).max(1) as usize;
                 match decompress_r2004_section(comp, bound) {
                     Ok(d) => page.decoded = d,

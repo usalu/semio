@@ -550,7 +550,7 @@ where S: pack::snapshot::ArtifactPack + pack::snapshot::ArtifactDsl + PartialEq 
     use semio_framework_os_kernel::io::io_mechanism::{io_identify, io_route};
     use semio_framework::io_schema::{Confidence, IoFidelity, IoPayload, SQLITE_SNAPSHOT};
     use semio_framework::ArtifactDialect;
-    let law: serde_json::Value = serde_json::from_str(semio_s_artifact_stdio_contract::testing::SHIPPED_FLEET_SQLITE_OWNERS).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🧠️owners/🔣️.json")).unwrap();
     packages();
     let native = ArtifactDialect { artifact_kind: row["kind"].as_str().unwrap().into(), standard: row["standard"].as_str().unwrap().into(), subset: row["subset"].as_str().unwrap().into() };
     let sqlite = ArtifactDialect::from(SQLITE_SNAPSHOT);
@@ -601,7 +601,7 @@ async fn sqlite_snapshot_primary_new_declaration_trees() {
         }
     }
     packages();
-    let law: serde_json::Value = serde_json::from_str(semio_s_artifact_stdio_contract::testing::SHIPPED_FLEET_SQLITE_OWNERS).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🧠️owners/🔣️.json")).unwrap();
     check(semio_s_artifact_stdio_binary::artifact(), &law["witnesses"][0]).await;
     check(semio_s_artifact_stdio_txt::artifact(), &law["witnesses"][1]).await;
 }
@@ -610,7 +610,7 @@ async fn sqlite_snapshot_primary_new_declaration_trees() {
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_primary_binary_public_payload() {
     use pack::snapshot::ArtifactDsl;
-    let law: serde_json::Value = serde_json::from_str(semio_s_artifact_stdio_contract::testing::SHIPPED_FLEET_SQLITE_OWNERS).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🧠️owners/🔣️.json")).unwrap();
     let row = &law["witnesses"][0];
     let snapshot = semio_s_artifact_stdio_binary::BinarySnapshot::parse_dsl(row["naturalText"].as_str().unwrap()).unwrap();
     assert_eq!(semio_s_artifact_stdio_binary::examples::demo::source().document(), row["naturalText"].as_str().unwrap());
@@ -621,7 +621,7 @@ async fn sqlite_snapshot_primary_binary_public_payload() {
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_primary_txt_public_payload() {
     use pack::snapshot::ArtifactDsl;
-    let law: serde_json::Value = serde_json::from_str(semio_s_artifact_stdio_contract::testing::SHIPPED_FLEET_SQLITE_OWNERS).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🧠️owners/🔣️.json")).unwrap();
     let row = &law["witnesses"][1];
     let snapshot = semio_s_artifact_stdio_txt::TxtSnapshot::parse_dsl(row["naturalText"].as_str().unwrap()).unwrap();
     assert_eq!(semio_s_artifact_stdio_txt::examples::demo::source().document(), row["naturalText"].as_str().unwrap());
@@ -633,7 +633,7 @@ async fn sqlite_snapshot_primary_txt_public_payload() {
 async fn sqlite_snapshot_primary_geojson_public_payload() {
     use semio_s_artifact_stdio_json::JsonSnapshot;
     use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text;
-    let law: serde_json::Value = serde_json::from_str(semio_s_artifact_stdio_contract::testing::SHIPPED_FLEET_SQLITE_OWNERS).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🧠️owners/🔣️.json")).unwrap();
     let row = &law["witnesses"][2];
     let snapshot = JsonSnapshot::from_value(parse_json_text(row["naturalText"].as_str().unwrap()).unwrap());
     let independent: serde_json::Value = serde_json::from_str(row["naturalText"].as_str().unwrap()).unwrap();

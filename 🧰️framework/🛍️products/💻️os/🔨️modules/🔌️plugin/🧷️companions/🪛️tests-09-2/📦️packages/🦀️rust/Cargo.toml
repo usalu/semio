@@ -38,6 +38,7 @@ semio-framework-plugin-instance-app = { path = "../../../../🧵️instance/📦
 semio-framework-plugin-instance-docs = { path = "../../../../🧵️instance/📄️docs/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-framework-plugin-instance-ladders = { path = "../../../../🪜️maintenance-ladder/📦️packages/🦀️rust" }
 semio-framework-plugin-interaction = { path = "../../../../🕹️interaction/📦️packages/🦀️rust" }
+semio-framework-plugin-job = { path = "../../../../👷️job/📦️packages/🦀️rust" }
 semio-framework-plugin-plugin-program = { path = "../../../../🏗️builder/🔌️program/📦️packages/🦀️rust" }
 semio-framework-plugin-reactor-app = { path = "../../../../⚛️reactor/🔌️app/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-framework-plugin-reactor-lifecycle = { path = "../../../../⚛️reactor/📨️pending/📦️packages/🦀️rust", features = ["artifact-app-testing", "original-actor-context-testing"] }

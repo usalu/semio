@@ -1,0 +1,43 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🐾️pets/🧪️tests/🧰️gear-depiction/🟦️.tsx",
+ "describeLine": 144,
+ "sharedRewrite": [
+  [
+   "dirname(fileURLToPath(import.meta.url))",
+   "dirname(dirname(fileURLToPath(import.meta.url)))"
+  ]
+ ],
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of the gear depiction suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️builds-tool-once-hidden",
+   "doc": "/** 🔶️ The builds tool once hidden tests of the gear depiction suite. */",
+   "name": "registerBuildsToolOnceHiddenTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the builds tool once hidden tests of the gear depiction suite.",
+   "from": 145,
+   "to": 269
+  },
+  {
+   "dir": "🔸️runs-rope-pivot-actor",
+   "doc": "/** 🔸️ The runs rope pivot actor tests of the gear depiction suite. */",
+   "name": "registerRunsRopePivotActorTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the runs rope pivot actor tests of the gear depiction suite.",
+   "from": 299,
+   "to": 421
+  },
+  {
+   "dir": "🟠️never-writes-way-policy",
+   "doc": "/** 🟠️ The never writes way policy tests of the gear depiction suite. */",
+   "name": "registerNeverWritesWayPolicyTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the never writes way policy tests of the gear depiction suite.",
+   "from": 449,
+   "to": 476
+  }
+ ]
+}

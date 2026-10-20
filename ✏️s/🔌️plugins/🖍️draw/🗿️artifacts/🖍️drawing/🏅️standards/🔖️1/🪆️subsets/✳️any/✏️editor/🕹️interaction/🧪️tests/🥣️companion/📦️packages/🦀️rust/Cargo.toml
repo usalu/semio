@@ -34,3 +34,6 @@ semio-s-artifact-draw-drawing-geometry = { workspace = true, features = ["testki
 semio-s-artifact-draw-drawing-model = { workspace = true, features = ["testkit"] }
 semio-s-artifact-draw-drawing-mutations = { workspace = true, features = ["testkit"] }
 serde_json = { workspace = true }
+semio-framework-pack = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-framework-job = { workspace = true }
+semio-s-artifact-draw-drawing-editor = { workspace = true }

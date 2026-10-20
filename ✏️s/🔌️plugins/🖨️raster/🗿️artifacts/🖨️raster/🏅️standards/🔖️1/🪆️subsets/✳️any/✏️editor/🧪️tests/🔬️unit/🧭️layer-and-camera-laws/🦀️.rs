@@ -65,7 +65,7 @@ async fn set_composite_viewport_feeds_navigator_scene() {
 async fn set_camera_mutates_runtime_and_emits_no_operations() {
     let mut app = app().await;
     let before = app.snapshot().expect("snapshot");
-    let result = dispatch(&mut app, RasterCommand::SetCamera(semio_s_artifact_raster_raster_editor::commands::set_camera::SetCamera { camera: semio_s_artifact_raster_raster_model::RasterCamera { x: 4.0, y: 5.0, zoom: 2.0 } })).await;
+    let result = dispatch(&mut app, RasterCommand::SetCamera(semio_s_artifact_raster_raster_editor::commands::camera::set_camera::SetCamera { camera: semio_s_artifact_raster_raster_model::RasterCamera { x: 4.0, y: 5.0, zoom: 2.0 } })).await;
     assert!(result.mutations.is_empty(), "camera is a view action and emits no operations");
     assert_eq!(app.snapshot().expect("snapshot"), before, "camera never mutates the document");
     let text = packed_scene_text(&render(&mut app, semio_s_artifact_raster_raster_editor::modes::edit::windows::composite::RASTER_PLAY_BODY_COMPOSITE).await);
@@ -76,8 +76,8 @@ async fn set_camera_mutates_runtime_and_emits_no_operations() {
 #[semio_framework_async_macros::async_test]
 async fn set_camera_zoom_updates_zoom_and_keeps_pan_via_runtime() {
     let mut app = app().await;
-    dispatch(&mut app, RasterCommand::SetCamera(semio_s_artifact_raster_raster_editor::commands::set_camera::SetCamera { camera: semio_s_artifact_raster_raster_model::RasterCamera { x: 4.0, y: 5.0, zoom: 1.0 } })).await;
-    let result = dispatch(&mut app, RasterCommand::SetCameraZoom(semio_s_artifact_raster_raster_editor::commands::set_camera_zoom::SetCameraZoom { zoom: 3.0 })).await;
+    dispatch(&mut app, RasterCommand::SetCamera(semio_s_artifact_raster_raster_editor::commands::camera::set_camera::SetCamera { camera: semio_s_artifact_raster_raster_model::RasterCamera { x: 4.0, y: 5.0, zoom: 1.0 } })).await;
+    let result = dispatch(&mut app, RasterCommand::SetCameraZoom(semio_s_artifact_raster_raster_editor::commands::camera::set_camera_zoom::SetCameraZoom { zoom: 3.0 })).await;
     assert!(result.mutations.is_empty(), "camera zoom is a view action and emits no operations");
     let text = packed_scene_text(&render(&mut app, semio_s_artifact_raster_raster_editor::modes::edit::windows::composite::RASTER_PLAY_BODY_COMPOSITE).await);
     assert!(text.contains(r#""zoom":3.0"#), "zoom updated: {text}");

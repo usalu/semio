@@ -295,7 +295,7 @@ export function subscribeLeftoverWorldSelectionV1(listener: () => void): () => v
   return () => leftoverWorldSelectionListeners.delete(listener);
 }
 
-/** Hover-only leftover still overlays — selectedIds empty is the interactionHover leftover shape.
+/** 🗺️ Hover-only leftover still overlays — selectedIds empty is the interactionHover leftover shape.
  *
  * 🧹️ `selectionCleared` is the one overlay whose whole content is an ABSENCE: the guest's own
  * retirement of a selection, published either by an emptying pick or by a document change
@@ -307,7 +307,7 @@ export function leftoverWorldOverlayAppliesV1(leftover: LeftoverWorldSelectionOv
   return Boolean(leftover && (leftover.ids.length > 0 || leftover.hoveredId || leftover.activeUtility || leftover.activeToolId || leftover.selectionCleared));
 }
 
-/** Vortex-domain leftover hover id (`objectId:vortexId`) for hoveredVortexFullId. */
+/** 👆️ Vortex-domain leftover hover id (`objectId:vortexId`) for hoveredVortexFullId. */
 export function leftoverHoveredVortexFullIdV1(leftover: Pick<LeftoverWorldSelectionOverlayV1, "hoveredId" | "hoveredDomain"> | null | undefined): string | undefined {
   const id = leftover?.hoveredId;
   if (!id) return undefined;

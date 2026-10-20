@@ -74,6 +74,102 @@
       "sha256": "7cd542d8ff28bdb37ab31775a7738b3ee6512375d64d6d1340cf2aede9f38795",
       "paths": 3,
       "atomicHostSnapshot": false
+    },
+    {
+      "receipt": "🗑️generated/2026-10-19-source-overlay-11.json",
+      "sha256": "3c46adb6b97cce809b5008723d2da8e3ee3ad94b02c20ca467c64012d4d3a10e",
+      "paths": 7,
+      "atomicHostSnapshot": false
+    },
+    {
+      "receipt": "🗑️generated/2026-10-19-source-overlay-12.json",
+      "sha256": "34643d4304c9d943d63765a0059dc2de94d3145ce54b8a2178d71a019b84da25",
+      "paths": 11,
+      "atomicHostSnapshot": false
+    },
+    {
+      "receipt": "🗑️generated/2026-10-19-source-overlay-13.json",
+      "sha256": "b33bc6ed8a85d4808c3444fd1a1c6b112b43cc62f2e199b27a7aa8c47c20f070",
+      "paths": 6,
+      "atomicHostSnapshot": false
+    },
+    {
+      "receipt": "🗑️generated/2026-10-19-source-overlay-14.json",
+      "sha256": "7e9e79250234d296a223298815f728786b6c450b010d45180a73d4e57b92805f",
+      "paths": 5,
+      "atomicHostSnapshot": false
+    },
+    {
+      "receipt": "🗑️generated/2026-10-19-source-overlay-15.json",
+      "sha256": "fd650d96b73f50dc8c83df1568a48b6baebeef4c9df16c96b15b0f1ce04fb23f",
+      "paths": 7,
+      "atomicHostSnapshot": false
+    },
+    {
+      "receipt": "🗑️generated/2026-10-19-source-overlay-16.json",
+      "sha256": "8b6d84f7540e22cb257a074b92bb97261908579900372c07cb62d32f50c0f155",
+      "paths": 12,
+      "atomicHostSnapshot": false
+    },
+    {
+      "receipt": "🗑️generated/2026-10-19-source-overlay-17.json",
+      "sha256": "409932ba6db9b93ca03090cb85307698f3044a3c24f7d1923b551af46ba3902c",
+      "paths": 6,
+      "atomicHostSnapshot": false
+    },
+    {
+      "receipt": "🗑️generated/2026-10-19-source-overlay-18.json",
+      "sha256": "322f37fd1df869f5d8fc39484d2fe005cf35708ab6459c5af71442d6fd879b19",
+      "paths": 9,
+      "atomicHostSnapshot": false
+    },
+    {
+      "receipt": "🗑️generated/2026-10-19-source-overlay-19.json",
+      "sha256": "c27e1465b906f07ba80a571c0d7b1494d7f7790add0d4beccba1fefe0f16dc3b",
+      "paths": 6,
+      "atomicHostSnapshot": false
+    },
+    {
+      "receipt": "🗑️generated/2026-10-19-source-overlay-20.json",
+      "sha256": "fafc5e44981e7d92bd57fff2b36f5306f35dbba44cd490c9853e4e79e3c0497e",
+      "paths": 5,
+      "atomicHostSnapshot": false
+    },
+    {
+      "receipt": "🗑️generated/2026-10-19-source-overlay-21.json",
+      "sha256": "17e9a00456165ff75f9f275581bd1de1ab6e7dee2d2ee1434be0c2b7a2bbe134",
+      "paths": 29,
+      "atomicHostSnapshot": false
+    },
+    {
+      "receipt": "🗑️generated/2026-10-19-source-overlay-22.json",
+      "sha256": "26b6509f11e8e9947457a9cd20563e02eefe6fc22b90c2f8fd2be70cf70a2f99",
+      "paths": 3,
+      "atomicHostSnapshot": false
+    },
+    {
+      "receipt": "🗑️generated/2026-10-19-source-overlay-23.json",
+      "sha256": "76406aafec66f22a83c2d776d67d7fba39599625486649d97e2039f9e8a672be",
+      "paths": 2,
+      "atomicHostSnapshot": false
+    },
+    {
+      "receipt": "🗑️generated/2026-10-19-source-overlay-24.json",
+      "sha256": "76270fb0daa668a29eb68d93672b8665b9cc79c059a96590044aa2001e61d5ba",
+      "paths": 14,
+      "atomicHostSnapshot": false
+    },
+    {
+      "receipt": "🗑️generated/2026-10-19-source-overlay-25.json",
+      "sha256": "bfbdd77949cc223437d1f5b4b4fb75ceaaed23e411564f62095ff1a5dffc6853",
+      "paths": 4,
+      "atomicHostSnapshot": false
+    },
+    {
+      "receipt": "🗑️generated/2026-10-19-source-overlay-26.json",
+      "sha256": "002e24944bec79d5799b73488e15dc1d7f05f202214b995a69bf56c0b63d6e37",
+      "paths": 4,
+      "atomicHostSnapshot": false
     }
   ],
   "deploymentImageTag": "architecture-20261019-8579fa82486d",
@@ -161,6 +257,112 @@
           "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs",
           "beforeSha256": "bf3559e486f5230a301e855e874eb58131f85be05430f2ce8012a96b7fde7949",
           "afterSha256": "05949a4f14f4c830ed15424259590e43889c7eab4f4c0d3e265824d8ee7c977f"
+        }
+      ],
+      "active": false
+    },
+    {
+      "version": 1,
+      "kind": "cycle-demand-trace",
+      "action": "cycle-remove",
+      "guardsUnchanged": true,
+      "maximumConsoleBytes": 8193,
+      "sourceBytesLogged": false,
+      "rows": [
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs",
+          "beforeSha256": "429e4f19b9ae474b6ad1f41ada230e23298cf7860a4ea6cb0fc58eecd37f5fb5",
+          "afterSha256": "096da6837b6b892871036efb66c96811af086a4a91fc16f3ec1c1e6a875ccdea"
+        }
+      ],
+      "active": false
+    },
+    {
+      "version": 1,
+      "kind": "borrower-admission-trace",
+      "action": "borrower-remove",
+      "guardsUnchanged": true,
+      "maximumConsoleBytes": 8193,
+      "sourceBytesLogged": false,
+      "rows": [
+        {
+          "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📥️borrower/🟦️.ts",
+          "beforeSha256": "1662de64d978fc9741bdc90ecffc1ae6704b0c894006e23c7398985508cd08a5",
+          "afterSha256": "7e74eb8720b6a9b6f373d191be1f7ce29c703e1bc60a79212040ef774d829359"
+        }
+      ],
+      "active": false
+    },
+    {
+      "version": 1,
+      "kind": "authorizer-failure-image",
+      "action": "authorizer-remove",
+      "guardsUnchanged": true,
+      "maximumConsoleBytes": 65537,
+      "generatedArtifactFragmentsLogged": true,
+      "checkedInSourceFilesCopied": false,
+      "rows": [
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts",
+          "beforeSha256": "1e9e56ac93833e86f40760a5e457bb3b171fe6d2f9eae6824630fe27b00c69b1",
+          "afterSha256": "2e10b345c93e426f1a27ef8e5d5c0befc8cd90eac3bc520e71dbecaa085294bd"
+        }
+      ],
+      "active": false
+    },
+    {
+      "version": 1,
+      "kind": "physical-source-refusal",
+      "action": "physical-remove",
+      "guardsUnchanged": true,
+      "maximumConsoleBytes": 8193,
+      "sourceBytesLogged": false,
+      "rows": [
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🟨️.mjs",
+          "beforeSha256": "376d266aba025b140604cca640dbf250619746d9ad42bcd3701c176497b7920d",
+          "afterSha256": "b9dd116bcab05e8d97b0977a2c0923e740128a32545497630898828256cb2be7"
+        }
+      ],
+      "active": false
+    },
+    {
+      "version": 1,
+      "kind": "sdk-reader-failure",
+      "action": "sdk-reader-failure-remove",
+      "appliedAt": "2026-10-20T07:27:58.161Z",
+      "guardsUnchanged": true,
+      "noSourceFileCopies": true,
+      "fullErrorObjectLogged": false,
+      "ownErrorStringsMayContainSourceFragments": true,
+      "maximumConsoleBytesPerModuleInstance": 16384,
+      "maximumFailureRecordBytesIncludingLF": 4096,
+      "maximumFailureRecordsPerModuleInstance": 1,
+      "rows": [
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/📥️reader/🟦️.ts",
+          "beforeSha256": "2b68f2d91aa967280af049bfe63ba0604fb0dad725e3ab7734a3cc580d96ab64",
+          "afterSha256": "2380273e42416f035a63241d73f7d6ab54c9d9ed61d7f4def07cd376e5eba8df",
+          "bytes": 12889
+        }
+      ],
+      "active": false
+    },
+    {
+      "version": 1,
+      "kind": "sdk-reader-stage",
+      "action": "sdk-reader-remove",
+      "appliedAt": "2026-10-20T07:28:03.347Z",
+      "guardsUnchanged": true,
+      "sourceBytesLogged": false,
+      "maximumConsoleBytesPerModuleInstance": 16384,
+      "maximumCallsPerModuleInstance": 8,
+      "rows": [
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/📥️reader/🟦️.ts",
+          "beforeSha256": "2380273e42416f035a63241d73f7d6ab54c9d9ed61d7f4def07cd376e5eba8df",
+          "afterSha256": "2bd3d090eefacaf699ec62cbfaf3ae56c1c892fc8afdc6dbb6792633a50b3714",
+          "bytes": 11828
         }
       ],
       "active": false

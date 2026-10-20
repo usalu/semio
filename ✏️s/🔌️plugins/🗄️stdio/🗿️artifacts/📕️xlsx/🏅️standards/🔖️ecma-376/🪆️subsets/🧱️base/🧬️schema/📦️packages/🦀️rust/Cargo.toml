@@ -27,6 +27,7 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
 semio-s-artifact-stdio-xml = { workspace = true }
 semio-s-artifact-stdio-zip = { workspace = true }
+semio-framework-pack = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }

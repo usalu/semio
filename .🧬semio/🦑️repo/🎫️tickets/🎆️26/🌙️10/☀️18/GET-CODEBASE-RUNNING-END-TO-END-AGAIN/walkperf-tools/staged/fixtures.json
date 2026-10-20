@@ -732,6 +732,22 @@
     }
    ],
    "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "unreadable home npmrc appears falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": ".ambient/home/.npmrc",
+     "text": "x=1\n"
+    },
+    {
+     "op": "chmod",
+     "path": ".ambient/home/.npmrc",
+     "text": "000"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
   }
  ],
  "implementation": {

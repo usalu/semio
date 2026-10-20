@@ -8,7 +8,7 @@ import { compilerAdmissionBudgetV1 } from "../../../../../../../../🔨️module
 import { runOwnedCommand } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
 import { checkResourceLeaseControl, type ResourceLeaseControl } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { once } from "node:events";
-import nativeLaunchDeclaration from "./🎟️launch/🔣️.json";
+import nativeLaunchDeclaration from "./🎟️launch/🔣️.json" with { type: "json" };
 import { nativeLaunchEnvironmentV1, readNativeLaunchDeclarationV1 } from "./🎟️launch/🟦️.ts";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { Server } from "node:http";

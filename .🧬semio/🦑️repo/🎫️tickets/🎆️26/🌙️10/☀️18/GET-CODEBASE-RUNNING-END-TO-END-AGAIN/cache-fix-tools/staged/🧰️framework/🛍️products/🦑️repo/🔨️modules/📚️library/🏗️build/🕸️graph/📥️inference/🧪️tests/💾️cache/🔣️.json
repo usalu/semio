@@ -1,0 +1,1042 @@
+{
+  "version": 1,
+  "decisions": [
+    {
+      "id": "deterministic-pure",
+      "value": {
+        "version": 1,
+        "class": "deterministic",
+        "reason": "pure-function-of-inputs"
+      },
+      "valid": true
+    },
+    {
+      "id": "deterministic-check",
+      "value": {
+        "version": 1,
+        "class": "deterministic",
+        "reason": "check-without-outputs"
+      },
+      "valid": true
+    },
+    {
+      "id": "driver-owned",
+      "value": {
+        "version": 1,
+        "class": "driver-owned",
+        "reason": "freshness-owned-by-driver"
+      },
+      "valid": true
+    },
+    {
+      "id": "managed-links",
+      "value": {
+        "version": 1,
+        "class": "managed-output",
+        "reason": "outputs-are-store-links"
+      },
+      "valid": true
+    },
+    {
+      "id": "managed-store",
+      "value": {
+        "version": 1,
+        "class": "managed-output",
+        "reason": "outputs-in-managed-store"
+      },
+      "valid": true
+    },
+    {
+      "id": "continuous",
+      "value": {
+        "version": 1,
+        "class": "continuous",
+        "reason": "serves-until-stopped"
+      },
+      "valid": true
+    },
+    {
+      "id": "side-effect-live",
+      "value": {
+        "version": 1,
+        "class": "side-effecting",
+        "reason": "publishes-live-state"
+      },
+      "valid": true
+    },
+    {
+      "id": "side-effect-remote",
+      "value": {
+        "version": 1,
+        "class": "side-effecting",
+        "reason": "publishes-remote"
+      },
+      "valid": true
+    },
+    {
+      "id": "side-effect-workspace",
+      "value": {
+        "version": 1,
+        "class": "side-effecting",
+        "reason": "mutates-workspace"
+      },
+      "valid": true
+    },
+    {
+      "id": "live",
+      "value": {
+        "version": 1,
+        "class": "live",
+        "reason": "drives-running-process"
+      },
+      "valid": true
+    },
+    {
+      "id": "aggregate",
+      "value": {
+        "version": 1,
+        "class": "aggregate",
+        "reason": "orders-prerequisites"
+      },
+      "valid": true
+    },
+    {
+      "id": "diagnostic-refusal",
+      "value": {
+        "version": 1,
+        "class": "diagnostic",
+        "reason": "admission-refusal"
+      },
+      "valid": true
+    },
+    {
+      "id": "diagnostic-measure",
+      "value": {
+        "version": 1,
+        "class": "diagnostic",
+        "reason": "measures-environment"
+      },
+      "valid": true
+    },
+    {
+      "id": "reason-of-another-class",
+      "value": {
+        "version": 1,
+        "class": "driver-owned",
+        "reason": "outputs-are-store-links"
+      },
+      "valid": false
+    },
+    {
+      "id": "unknown-class",
+      "value": {
+        "version": 1,
+        "class": "cacheable",
+        "reason": "pure-function-of-inputs"
+      },
+      "valid": false
+    },
+    {
+      "id": "unknown-reason",
+      "value": {
+        "version": 1,
+        "class": "continuous",
+        "reason": "because"
+      },
+      "valid": false
+    },
+    {
+      "id": "future-version",
+      "value": {
+        "version": 2,
+        "class": "continuous",
+        "reason": "serves-until-stopped"
+      },
+      "valid": false
+    },
+    {
+      "id": "extra-key",
+      "value": {
+        "version": 1,
+        "class": "continuous",
+        "reason": "serves-until-stopped",
+        "note": "x"
+      },
+      "valid": false
+    },
+    {
+      "id": "missing-reason",
+      "value": {
+        "version": 1,
+        "class": "continuous"
+      },
+      "valid": false
+    },
+    {
+      "id": "unclassified",
+      "value": {
+        "version": 1,
+        "class": "unclassified",
+        "reason": "no-cache-classification"
+      },
+      "valid": true
+    },
+    {
+      "id": "unclassified-with-a-foreign-reason",
+      "value": {
+        "version": 1,
+        "class": "unclassified",
+        "reason": "measures-environment"
+      },
+      "valid": false
+    }
+  ],
+  "policy": [
+    {
+      "name": "serve",
+      "decision": [
+        "continuous",
+        "serves-until-stopped"
+      ],
+      "cache": false,
+      "continuous": true
+    },
+    {
+      "name": "dev-web",
+      "decision": [
+        "continuous",
+        "serves-until-stopped"
+      ],
+      "cache": false,
+      "continuous": true
+    },
+    {
+      "name": "test-watch",
+      "decision": [
+        "continuous",
+        "serves-until-stopped"
+      ],
+      "cache": false,
+      "continuous": true
+    },
+    {
+      "name": "publish",
+      "decision": [
+        "side-effecting",
+        "publishes-remote"
+      ],
+      "cache": false
+    },
+    {
+      "name": "deploy-site",
+      "decision": [
+        "side-effecting",
+        "publishes-remote"
+      ],
+      "cache": false
+    },
+    {
+      "name": "clean",
+      "decision": [
+        "side-effecting",
+        "mutates-workspace"
+      ],
+      "cache": false
+    },
+    {
+      "name": "setup-tools",
+      "decision": [
+        "side-effecting",
+        "mutates-workspace"
+      ],
+      "cache": false
+    },
+    {
+      "name": "fuzz-parser",
+      "decision": [
+        "side-effecting",
+        "mutates-workspace"
+      ],
+      "cache": false
+    },
+    {
+      "name": "audit-graph",
+      "decision": [
+        "diagnostic",
+        "measures-environment"
+      ],
+      "cache": false
+    },
+    {
+      "name": "doctor",
+      "decision": [
+        "diagnostic",
+        "measures-environment"
+      ],
+      "cache": false
+    },
+    {
+      "name": "test-e2e",
+      "decision": [
+        "live",
+        "drives-running-process"
+      ],
+      "cache": false
+    },
+    {
+      "name": "check-live",
+      "decision": [
+        "live",
+        "drives-running-process"
+      ],
+      "cache": false
+    },
+    {
+      "name": "os",
+      "decision": [
+        "live",
+        "drives-running-process"
+      ],
+      "cache": false
+    },
+    {
+      "name": "test",
+      "decision": [
+        "deterministic",
+        "check-without-outputs"
+      ],
+      "cache": true
+    },
+    {
+      "name": "build",
+      "decision": [
+        "deterministic",
+        "pure-function-of-inputs"
+      ],
+      "cache": true
+    },
+    {
+      "name": "check",
+      "authored": false,
+      "decision": null,
+      "cache": false
+    },
+    {
+      "name": "🧪️test",
+      "decision": [
+        "deterministic",
+        "check-without-outputs"
+      ],
+      "cache": true
+    },
+    {
+      "name": "🏭️generator-build",
+      "decision": [
+        "side-effecting",
+        "mutates-workspace"
+      ],
+      "cache": false
+    },
+    {
+      "name": "⚙️generator-manifests",
+      "decision": [
+        "side-effecting",
+        "mutates-workspace"
+      ],
+      "cache": false
+    },
+    {
+      "name": "🚀️serve",
+      "decision": [
+        "continuous",
+        "serves-until-stopped"
+      ],
+      "cache": false,
+      "continuous": true
+    },
+    {
+      "name": "🧹️clean",
+      "decision": [
+        "side-effecting",
+        "mutates-workspace"
+      ],
+      "cache": false
+    },
+    {
+      "name": "lockfile-check",
+      "decision": [
+        "deterministic",
+        "check-without-outputs"
+      ],
+      "cache": true
+    },
+    {
+      "name": "forms-document-contract",
+      "decision": [
+        "deterministic",
+        "check-without-outputs"
+      ],
+      "cache": true
+    },
+    {
+      "name": "generator-inputs",
+      "decision": [
+        "deterministic",
+        "pure-function-of-inputs"
+      ],
+      "cache": true
+    },
+    {
+      "name": "prepare-prototype",
+      "decision": [
+        "driver-owned",
+        "freshness-owned-by-driver"
+      ],
+      "cache": false
+    },
+    {
+      "name": "acceptance-goal",
+      "decision": [
+        "live",
+        "drives-running-process"
+      ],
+      "cache": false
+    },
+    {
+      "name": "unheard-of-kind",
+      "decision": [
+        "unclassified",
+        "no-cache-classification"
+      ],
+      "cache": false
+    },
+    {
+      "name": "🦄️unheard-of-kind",
+      "decision": [
+        "unclassified",
+        "no-cache-classification"
+      ],
+      "cache": false
+    },
+    {
+      "name": "unheard-of-kind",
+      "target": {"cache":true},
+      "decision": [
+        "unclassified",
+        "no-cache-classification"
+      ],
+      "cache": false
+    },
+    {
+      "name": "catalog-smoke",
+      "target": {"options":{"command":"bun ./📜️script.ts verify catalog"}},
+      "decision": [
+        "deterministic",
+        "check-without-outputs"
+      ],
+      "cache": true
+    },
+    {
+      "name": "unheard-of-kind",
+      "target": {"metadata":{"semio":{"cache":{"version":1,"class":"deterministic","reason":"pure-function-of-inputs"}}}},
+      "decision": [
+        "deterministic",
+        "pure-function-of-inputs"
+      ],
+      "cache": true
+    },
+    {
+      "name": "test",
+      "target": {"metadata":{"semio":{"cache":{"version":1,"class":"driver-owned","reason":"freshness-owned-by-driver"}}}},
+      "decision": [
+        "driver-owned",
+        "freshness-owned-by-driver"
+      ],
+      "cache": false
+    }
+  ],
+  "outputsGate": [
+    {
+      "id": "producer-with-outputs",
+      "name": "build",
+      "target": {"outputs":["{projectRoot}/dist"]},
+      "expect": {
+        "cache": true,
+        "decision": [
+          "deterministic",
+          "pure-function-of-inputs"
+        ]
+      }
+    },
+    {
+      "id": "producer-with-empty-outputs",
+      "name": "build",
+      "target": {"outputs":[]},
+      "expect": {
+        "cache": false,
+        "decision": [
+          "side-effecting",
+          "mutates-workspace"
+        ]
+      }
+    },
+    {
+      "id": "producer-without-outputs",
+      "name": "generate",
+      "target": {},
+      "expect": {
+        "cache": false,
+        "decision": [
+          "side-effecting",
+          "mutates-workspace"
+        ]
+      }
+    },
+    {
+      "id": "producer-with-rust-build-intent",
+      "name": "build",
+      "target": {"outputs":[],"metadata":{"semio":{"rustBuildIntent":{"version":1}}}},
+      "expect": {
+        "cache": true,
+        "decision": [
+          "deterministic",
+          "pure-function-of-inputs"
+        ]
+      }
+    },
+    {
+      "id": "producer-with-host-platform-outputs",
+      "name": "build",
+      "target": {"outputs":[],"metadata":{"semio":{"hostPlatformOutputsV1":{"version":1}}}},
+      "expect": {
+        "cache": true,
+        "decision": [
+          "deterministic",
+          "pure-function-of-inputs"
+        ]
+      }
+    },
+    {
+      "id": "ordering-task",
+      "name": "build",
+      "target": {"executor":"repo:noop","outputs":[]},
+      "expect": {
+        "cache": true,
+        "decision": [
+          "deterministic",
+          "pure-function-of-inputs"
+        ]
+      }
+    },
+    {
+      "id": "check-without-outputs",
+      "name": "test",
+      "target": {"outputs":[]},
+      "expect": {
+        "cache": true,
+        "decision": [
+          "deterministic",
+          "check-without-outputs"
+        ]
+      }
+    },
+    {
+      "id": "declared-producer-without-outputs",
+      "name": "unheard-of-kind",
+      "target": {"metadata":{"semio":{"cache":{"version":1,"class":"deterministic","reason":"pure-function-of-inputs"}}}},
+      "expect": {
+        "cache": false,
+        "decision": [
+          "side-effecting",
+          "mutates-workspace"
+        ]
+      }
+    },
+    {
+      "id": "declared-producer-with-outputs",
+      "name": "unheard-of-kind",
+      "target": {"outputs":["{projectRoot}/out"],"metadata":{"semio":{"cache":{"version":1,"class":"deterministic","reason":"pure-function-of-inputs"}}}},
+      "expect": {
+        "cache": true,
+        "decision": [
+          "deterministic",
+          "pure-function-of-inputs"
+        ]
+      }
+    },
+    {
+      "id": "unclassified-stays-uncached",
+      "name": "unheard-of-kind",
+      "target": {"cache":true,"outputs":["{projectRoot}/out"]},
+      "expect": {
+        "cache": false,
+        "decision": [
+          "unclassified",
+          "no-cache-classification"
+        ]
+      }
+    }
+  ],
+  "nativeRunsTests": [
+    {
+      "id": "test-name",
+      "name": "test",
+      "execution": null,
+      "commandSources": [],
+      "expect": true
+    },
+    {
+      "id": "test-prefix",
+      "name": "test-native",
+      "execution": {
+        "kind": "source"
+      },
+      "commandSources": [],
+      "expect": true
+    },
+    {
+      "id": "verify-reaching-the-cargo-test-driver",
+      "name": "verify-laws",
+      "execution": null,
+      "commandSources": [
+        "{workspaceRoot}/lib/🏃️process/🧪️testing/🦀️cargo/🟦️.ts"
+      ],
+      "expect": true
+    },
+    {
+      "id": "verify-without-the-driver",
+      "name": "verify-laws",
+      "execution": null,
+      "commandSources": [
+        "{workspaceRoot}/lib/🏃️process/🏗️build/🟦️.ts"
+      ],
+      "expect": false
+    },
+    {
+      "id": "production-contract-wins-over-the-driver",
+      "name": "check",
+      "execution": {
+        "kind": "native",
+        "scope": "production"
+      },
+      "commandSources": [
+        "{workspaceRoot}/lib/🏃️process/🧪️testing/🦀️cargo/🟦️.ts"
+      ],
+      "expect": false
+    },
+    {
+      "id": "test-contract-wins-over-the-name",
+      "name": "lint",
+      "execution": {
+        "kind": "native",
+        "scope": "test"
+      },
+      "commandSources": [],
+      "expect": true
+    }
+  ],
+  "nativeInputs": [
+    {
+      "id": "broad-groups-are-replaced-and-authored-inputs-survive",
+      "runsTests": false,
+      "generated": [
+        "commandSources0",
+        "{workspaceRoot}/Cargo.lock"
+      ],
+      "declared": [
+        "default",
+        "^default",
+        "production",
+        "^production",
+        "nativeSources",
+        "^nativeTestSources",
+        "{workspaceRoot}/oracle/fixture.json",
+        {
+          "env": "ORACLE_MODE"
+        },
+        "!{projectRoot}/skip/**/*"
+      ],
+      "expect": [
+        "nativeSources",
+        "^nativeSources",
+        "commandSources0",
+        "{workspaceRoot}/Cargo.lock",
+        "{workspaceRoot}/oracle/fixture.json",
+        {
+          "env": "ORACLE_MODE"
+        },
+        "!{projectRoot}/skip/**/*"
+      ]
+    },
+    {
+      "id": "test-groups-are-chosen-for-tests",
+      "runsTests": true,
+      "generated": [
+        "commandSources0"
+      ],
+      "declared": [
+        "default",
+        "^default",
+        {
+          "env": "SEMIO_TEST_LEVEL"
+        },
+        {
+          "env": "SEMIO_TEST_BUDGET_MS"
+        }
+      ],
+      "expect": [
+        "nativeTestSources",
+        "^nativeTestSources",
+        "commandSources0",
+        {
+          "env": "SEMIO_TEST_LEVEL"
+        },
+        {
+          "env": "SEMIO_TEST_BUDGET_MS"
+        }
+      ]
+    },
+    {
+      "id": "duplicates-collapse-by-value",
+      "runsTests": false,
+      "generated": [
+        {
+          "env": "A"
+        },
+        "x"
+      ],
+      "declared": [
+        {
+          "env": "A"
+        },
+        "x",
+        "y",
+        "y"
+      ],
+      "expect": [
+        "nativeSources",
+        "^nativeSources",
+        {
+          "env": "A"
+        },
+        "x",
+        "y"
+      ]
+    }
+  ],
+  "playground": {
+    "owner": "development",
+    "variants": [
+      {
+        "name": "alpha"
+      },
+      {
+        "name": "beta"
+      },
+      {
+        "name": "gamma",
+        "distDir": "gamma-site"
+      }
+    ],
+    "profiles": [
+      "prototype",
+      "release"
+    ],
+    "components": [
+      {
+        "id": "a",
+        "dependencies": [
+          "b"
+        ]
+      },
+      {
+        "id": "b",
+        "dependencies": []
+      }
+    ],
+    "generator": {
+      "ownership": "owned",
+      "target": "codegen:build",
+      "nativeConsumers": [
+        "components/b"
+      ]
+    },
+    "publication": {
+      "version": 1,
+      "ownerRoot": "catalog/publication",
+      "outputRoot": "catalog/publication/output",
+      "contributions": [
+        {
+          "ownerRoot": "components",
+          "packageRoots": [
+            "components"
+          ]
+        }
+      ]
+    },
+    "perProfile": [
+      {
+        "name": "prepare-{variant}-native-{profile}",
+        "class": "driver-owned",
+        "reason": "freshness-owned-by-driver",
+        "cache": false,
+        "continuous": false
+      },
+      {
+        "name": "run-{variant}-native-{profile}",
+        "class": "live",
+        "reason": "drives-running-process",
+        "cache": false,
+        "continuous": false
+      },
+      {
+        "name": "smoke-{variant}-native-{profile}",
+        "class": "live",
+        "reason": "drives-running-process",
+        "cache": false,
+        "continuous": false
+      },
+      {
+        "name": "serve-{variant}-react-{profile}",
+        "class": "continuous",
+        "reason": "serves-until-stopped",
+        "cache": false,
+        "continuous": true
+      },
+      {
+        "name": "dev-{variant}-react-{profile}",
+        "class": "continuous",
+        "reason": "serves-until-stopped",
+        "cache": false,
+        "continuous": true
+      },
+      {
+        "name": "activate-{variant}-react-{profile}",
+        "class": "deterministic",
+        "reason": "pure-function-of-inputs",
+        "cache": true,
+        "continuous": false
+      },
+      {
+        "name": "prepare-{variant}-react-{profile}",
+        "class": "driver-owned",
+        "reason": "freshness-owned-by-driver",
+        "cache": false,
+        "continuous": false
+      },
+      {
+        "name": "serve-{variant}-wgpu-{profile}",
+        "class": "continuous",
+        "reason": "serves-until-stopped",
+        "cache": false,
+        "continuous": true
+      },
+      {
+        "name": "dev-{variant}-wgpu-{profile}",
+        "class": "continuous",
+        "reason": "serves-until-stopped",
+        "cache": false,
+        "continuous": true
+      },
+      {
+        "name": "activate-{variant}-wgpu-{profile}",
+        "class": "side-effecting",
+        "reason": "publishes-live-state",
+        "cache": false,
+        "continuous": false
+      },
+      {
+        "name": "prepare-{variant}-wgpu-{profile}",
+        "class": "driver-owned",
+        "reason": "freshness-owned-by-driver",
+        "cache": false,
+        "continuous": false
+      }
+    ],
+    "perVariant": [
+      {
+        "name": "prepare-{variant}-react",
+        "class": "driver-owned",
+        "reason": "freshness-owned-by-driver",
+        "cache": false,
+        "continuous": false
+      },
+      {
+        "name": "prepare-{variant}-wgpu",
+        "class": "driver-owned",
+        "reason": "freshness-owned-by-driver",
+        "cache": false,
+        "continuous": false
+      },
+      {
+        "name": "build-{variant}-react-release",
+        "class": "driver-owned",
+        "reason": "freshness-owned-by-driver",
+        "cache": false,
+        "continuous": false
+      },
+      {
+        "name": "build-{variant}-react",
+        "class": "driver-owned",
+        "reason": "freshness-owned-by-driver",
+        "cache": false,
+        "continuous": false
+      }
+    ],
+    "once": [
+      {
+        "name": "build-all-playground-cdn-sites",
+        "class": "side-effecting",
+        "reason": "publishes-remote",
+        "cache": false,
+        "continuous": false
+      }
+    ],
+    "sessions": {
+      "class": "deterministic",
+      "reason": "pure-function-of-inputs",
+      "cache": true
+    },
+    "sites": {
+      "class": "aggregate",
+      "reason": "orders-prerequisites",
+      "cache": false
+    }
+  },
+  "artifact": {
+    "root": "art/📦️packages/🟦️typescript",
+    "files": {
+      "art/🟦️.ts": "export const definition = { id: \"art\" };\n",
+      "art/📦️packages/🟦️typescript/📜️script.ts": "import \"../../🟦️.ts\";\n",
+      "art/📦️packages/🟦️typescript/package.json": "{\"name\":\"art\"}\n"
+    },
+    "tags": [
+      "language:typescript",
+      "role:artifact"
+    ],
+    "targets": {
+      "build": {
+        "executor": "repo:script",
+        "cache": true,
+        "options": {
+          "cwd": "{projectRoot}",
+          "command": "bun ./📜️script.ts build"
+        }
+      },
+      "check": {
+        "executor": "repo:script",
+        "options": {
+          "cwd": "{projectRoot}",
+          "command": "bun ./📜️script.ts check"
+        }
+      },
+      "test": {
+        "executor": "repo:script",
+        "options": {
+          "cwd": "{projectRoot}",
+          "command": "bun ./📜️script.ts test"
+        }
+      },
+      "test-pinned": {
+        "executor": "repo:script",
+        "cache": false,
+        "options": {
+          "cwd": "{projectRoot}",
+          "command": "bun ./📜️script.ts test"
+        }
+      }
+    },
+    "expect": {
+      "build": {
+        "cache": true,
+        "outputs": [
+          "{projectRoot}/.🧾️store/build.json"
+        ],
+        "decision": [
+          "deterministic",
+          "pure-function-of-inputs"
+        ]
+      },
+      "check": {
+        "cache": true,
+        "decision": [
+          "deterministic",
+          "check-without-outputs"
+        ]
+      },
+      "test": {
+        "cache": true,
+        "outputs": [],
+        "decision": [
+          "deterministic",
+          "check-without-outputs"
+        ]
+      },
+      "test-pinned": {
+        "cache": false,
+        "decision": null
+      }
+    }
+  },
+  "nativeAuthored": [
+    {
+      "id": "generated-command-inputs-are-not-authored",
+      "policyInputs": [
+        "nativeSources",
+        "^nativeSources",
+        "{workspaceRoot}/📜️script.ts",
+        {
+          "runtime": "bun --version"
+        }
+      ],
+      "commandInputs": [
+        "{workspaceRoot}/📜️script.ts",
+        {
+          "runtime": "bun --version"
+        }
+      ],
+      "expect": [
+        "nativeSources",
+        "^nativeSources"
+      ]
+    },
+    {
+      "id": "manifest-inputs-survive",
+      "policyInputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/oracle/fixture.json",
+        {
+          "env": "ORACLE_MODE"
+        }
+      ],
+      "commandInputs": [
+        "{workspaceRoot}/📜️script.ts"
+      ],
+      "expect": [
+        "default",
+        "^default",
+        "{workspaceRoot}/oracle/fixture.json",
+        {
+          "env": "ORACLE_MODE"
+        }
+      ]
+    },
+    {
+      "id": "no-command-inputs-keeps-everything",
+      "policyInputs": [
+        "default",
+        {
+          "env": "X"
+        }
+      ],
+      "commandInputs": null,
+      "expect": [
+        "default",
+        {
+          "env": "X"
+        }
+      ]
+    }
+  ]
+}

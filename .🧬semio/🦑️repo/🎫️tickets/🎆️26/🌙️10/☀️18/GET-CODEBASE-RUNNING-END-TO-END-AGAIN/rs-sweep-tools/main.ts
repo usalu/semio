@@ -178,7 +178,7 @@ if (has("--syntax")) {
   const worker = async () => {
     while (next < all.length) {
       const f = all[next++];
-      const pr = Bun.spawn(["rustfmt", "+nightly-2026-07-20", "--edition", "2021", "--check", "--config", "skip_children=true,disable_all_formatting=true", f], { stdout: "ignore", stderr: "pipe" });
+      const pr = Bun.spawn(["rustfmt", "+nightly-2026-07-20", "--edition", "2021", "--check", "--config", "skip_children=true", f], { stdout: "ignore", stderr: "pipe" });
       const err = await new Response(pr.stderr).text();
       await pr.exited;
       const m = /^error[^\n]*\n\s*--> [^:\n]+:(\d+)/m.exec(err);
@@ -197,7 +197,7 @@ if (has("--syntax")) {
 const parseFiles = [...new Set(out.filter((f) => f.kind === "parse-error").map((f) => f.file))];
 const realSyntax = new Set<string>();
 for (const f of parseFiles) {
-  const r = Bun.spawnSync(["rustfmt", "+nightly-2026-07-20", "--edition", "2021", "--check", "--config", "skip_children=true,disable_all_formatting=true", join(ROOT, f)], { cwd: ROOT });
+  const r = Bun.spawnSync(["rustfmt", "+nightly-2026-07-20", "--edition", "2021", "--check", "--config", "skip_children=true", join(ROOT, f)], { cwd: ROOT });
   if (/^error/m.test(r.stderr.toString())) realSyntax.add(f);
 }
 for (let k = out.length - 1; k >= 0; k--) {

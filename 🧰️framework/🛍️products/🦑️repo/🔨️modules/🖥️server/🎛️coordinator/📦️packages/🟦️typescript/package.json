@@ -2,7 +2,6 @@
   "name": "@semio-tech/repo-coordinator",
   "version": "1.0.0",
   "exports": {
-    "./ports": "./🔌️ports/🟦️.ts",
     "./builder/mode": "./🏗️builder/🎚️mode/🟦️.ts",
     "./builder/storage": "./🏗️builder/💾️storage/🟦️.ts",
     "./builder/inputs/nx": "./🏗️builder/📥️inputs/🔌️nx/🟦️.ts",
@@ -24,7 +23,8 @@
     "pg": "^8.16.0",
     "pg-boss": "^10.3.2",
     "@semio-tech/schema-validator-ts": "workspace:*",
-    "@semio-tech/framework": "workspace:*"
+    "@semio-tech/framework-transient": "workspace:*",
+    "@semio-tech/repo-server-library": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.19.6",
@@ -33,6 +33,7 @@
     "typescript": "^5.8.3",
     "vitest": "^4.0.17",
     "@semio-tech/process": "workspace:*",
-    "@semio-tech/repo-test": "workspace:*"
+    "@semio-tech/repo-test": "workspace:*",
+    "@semio-tech/framework": "workspace:*"
   }
 }

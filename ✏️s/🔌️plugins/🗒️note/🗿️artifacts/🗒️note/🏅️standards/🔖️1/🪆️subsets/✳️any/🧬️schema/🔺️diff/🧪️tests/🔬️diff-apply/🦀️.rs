@@ -1,5 +1,6 @@
 use crate::schema::flatten_blocks;
-use crate::{NoteBlockNode, NoteImageAsset, NoteSnapshot, NoteTableCell};
+use crate::{NoteBlockNode, NoteImageAsset, NoteTableCell};
+use semio_s_artifact_note_note_schema::NoteSnapshot;
 #[allow(unused_imports)]
 use crate::schema::{find_block, find_block_location};
 #[allow(unused_imports)]

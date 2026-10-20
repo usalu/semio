@@ -1,0 +1,2 @@
+/** 🧩️ Public `@semio-tech/framework-os/modules/renderer/engine/elements/canvas-presence` entry: explicit re-exports of the source module that owns each member. */
+export { artifactPresenceRosterV1, clearArtifactPresenceRosterV1, clearLocalPresenceWindowViewV1, collectLocalActiveToolV1, collectLocalPresenceWindowViewsV1, localPresenceActorV1, publishArtifactPresenceRosterV1, publishLocalActiveToolV1, publishLocalPresenceActorV1, publishLocalPresenceWindowViewV1 } from "../../../../../../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/👕️canvas-presence/🟦️.ts";

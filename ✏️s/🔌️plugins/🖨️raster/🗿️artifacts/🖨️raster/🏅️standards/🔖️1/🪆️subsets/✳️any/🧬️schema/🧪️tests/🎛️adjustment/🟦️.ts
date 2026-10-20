@@ -2,8 +2,8 @@
 import {expect,test} from "bun:test";
 import {semioSchemaAjvV1} from "@semio-tech/framework/schema/oracles/validator";
 import schema from "../../🔺️diff/🔣️.json";
-import mutationSchema from "../../🧬️mutations/🎛️change-layer/🧬️schema/🔣️.json";
-import fixture from "../../🧬️mutations/🎛️change-layer/🧪️tests/🔣️.json";
+import mutationSchema from "../../🧬️mutations/🎛️change-layer-adjustment-parameter/🧬️schema/🔣️.json";
+import fixture from "../../🧬️mutations/🎛️change-layer-adjustment-parameter/🧪️tests/🔣️.json";
 import {parseRasterLayerPatch,type RasterAdjustmentParameter} from "../../🔺️diff/🟦️.ts";
 const validate=semioSchemaAjvV1({allErrors:true}).compile<RasterAdjustmentParameter>(schema.$defs.RasterAdjustmentParameter);
 const validateMutation=semioSchemaAjvV1({allErrors:true}).compile(mutationSchema);

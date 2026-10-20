@@ -10,7 +10,6 @@ extern crate self as semio_framework_dsl_record;
 use semio_framework_dsl::format_f64;
 use semio_framework_dsl::lex;
 use semio_framework_dsl::parse_f64;
-#[path="🛬️receive/🦀️.rs"]mod native_receive;
 pub use semio_framework_diagnostic::{Limits, TextError, TextSpan};
 use semio_framework_dsl::SpannedToken;
 
@@ -35,6 +34,10 @@ pub use semio_framework_dsl_record_model::*;
 #[path = "🧭️cursor-and-expressions/🦀️.rs"]
 mod cursor_and_expressions;
 pub use cursor_and_expressions::*;
+
+#[path="🪆️binding/📖️grammar/🦀️.rs"]
+mod grammar_fields;
+pub use grammar_fields::record_fields_matcher;
 
 #[path = "🗺️shape-parsing/🦀️.rs"]
 mod shape_parsing;

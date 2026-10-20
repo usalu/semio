@@ -3,7 +3,7 @@
 extern crate semio_framework_os_kernel as dsl;
 
 pub use crate::standards::v1::subsets::any::schema;
-pub use crate::schema::snapshot::NoteSnapshot;
+pub use semio_s_artifact_note_note_schema::NoteSnapshot;
 pub mod op {
     pub use crate::standards::v1::subsets::any::schema::mutations::NoteMutation;
 }

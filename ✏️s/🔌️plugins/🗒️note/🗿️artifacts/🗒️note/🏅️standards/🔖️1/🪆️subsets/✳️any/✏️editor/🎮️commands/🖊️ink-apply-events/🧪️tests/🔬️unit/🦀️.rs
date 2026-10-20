@@ -27,7 +27,8 @@ use crate::editor::note::commands::ink_apply_events::*;
 use crate::editor::note::unit_tests::context::{dispatch, note_app, render, select_blocks};
 use crate::editor::note::command_enum::NoteCommand;
 use crate::schema::{block_id, create_block_by_kind};
-use crate::{NoteCamera, NoteSnapshot};
+use crate::{NoteCamera};
+use semio_s_artifact_note_note_schema::NoteSnapshot;
 use semio_framework_plugin::PluginApp;
 use serde_json::json;
 

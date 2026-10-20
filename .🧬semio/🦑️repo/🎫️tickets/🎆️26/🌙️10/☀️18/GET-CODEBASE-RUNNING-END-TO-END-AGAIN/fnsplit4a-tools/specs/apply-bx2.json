@@ -1,0 +1,15 @@
+{
+ "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🚀️apply/🏁️transaction-run/🟦️.ts",
+ "scopeLine": 32,
+ "files": [
+  { "id": "steps", "dir": "🔧️transaction-steps", "doc": "🔧️ The transaction steps of the plan apply: staging, installing, retargeting, editing, regenerating and the verified commit of one attempt." }
+ ],
+ "items": [
+  { "id": "a", "kind": "range", "line": 63, "to": 121, "name": "stageTransactionOperations", "emoji": "🪣", "doc": "Stages the moves, relocations and evidence removals of the attempt into the staging root.", "file": "steps" },
+  { "id": "b", "kind": "range", "line": 122, "to": 151, "name": "stageEmbeddedRootsAndInstallMoves", "emoji": "🚚", "doc": "Stages the embedded ticket roots and installs the staged moves.", "file": "steps" },
+  { "id": "c", "kind": "range", "line": 152, "to": 187, "name": "installRelocationsAndRetargetSymlinks", "emoji": "🔗", "doc": "Installs the embedded ticket root relocations and retargets the symlink targets.", "file": "steps" },
+  { "id": "d", "kind": "range", "line": 188, "to": 205, "name": "applyReferenceEditGroups", "emoji": "🖊", "doc": "Groups the reference edits by path and applies every group atomically.", "file": "steps" },
+  { "id": "e", "kind": "range", "line": 206, "to": 239, "name": "regenerateGeneratorOutputs", "emoji": "🔄", "doc": "Runs every regeneration command and verifies its outputs against the plan.", "file": "steps" },
+  { "id": "f", "kind": "range", "line": 240, "to": 272, "name": "verifyAndCommitTransaction", "emoji": "🧾", "doc": "Verifies the post-state, commits the journal, cleans up the transaction and releases the lease.", "file": "steps" }
+ ]
+}

@@ -14,7 +14,7 @@ import { UiDocumentStore } from "../../🧱️elements/📃️UiDocumentStore/�
 import { Field, Section, formatNumber, uiDataLabel } from "@semio-tech/ui-react";
 import type * as AccessibilityOracle from "dom-accessibility-api" with { "resolution-mode": "require" };
 import { UiNodeView } from "../../🧱️elements/🗣️Interpreter/🧱️node-tree/🟦️.tsx";
-import { puzzle3dSettingsDocumentFixtureUrl, stepperPointerCommitFixtureUrl, numericPressInputFixtureUrl, sectionFieldPresentationFixtureUrl, uiStepperPresentationFixtureUrl } from "@semio-tech/framework/ui/testing/fixtures";
+import { puzzle3dSettingsDocumentFixtureUrl, stepperPointerCommitFixtureUrl, numericPressInputFixtureUrl, sectionFieldPresentationFixtureUrl, uiStepperPresentationFixtureUrl } from "@semio-tech/ui/testing/fixtures";
 
 const { computeAccessibleName }: typeof AccessibilityOracle = createRequire(import.meta.url)("dom-accessibility-api");
 const suiteRoot = dirname(fileURLToPath(import.meta.url));

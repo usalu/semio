@@ -88,6 +88,94 @@
         },
         "accepted": {
           "type": "boolean"
+        },
+        "maximumBytes": {
+          "type": "integer"
+        }
+      }
+    },
+    "InventoryCohortPlanCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "runs",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "runs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "count",
+              "bytes"
+            ],
+            "properties": {
+              "count": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 65536
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 134217728
+              }
+            }
+          }
+        },
+        "expected": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "offset",
+              "records",
+              "maximumBytes"
+            ],
+            "properties": {
+              "offset": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "records": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 16384
+              },
+              "maximumBytes": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 134217728
+              }
+            }
+          }
+        }
+      }
+    },
+    "PortableInventoryCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "count",
+        "batches"
+      ],
+      "properties": {
+        "count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536
+        },
+        "batches": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536
         }
       }
     }

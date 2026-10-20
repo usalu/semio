@@ -4,6 +4,9 @@ import fixture from "../🧫️fixtures/🧮️path-budget/🔣️.json";
 import { loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { pathBudgetCodes, pathBudgetFitsWithReserve, pathLongestComponentUtf8Bytes, pathUtf16Units } from "../../🔍️discovery/📏️path-budget/🟦️.ts";
 
+/** 🧷️ A fixture row whose authored `codes` are read as the closed budget codes the implementation returns. */
+type PathBudgetCase = Omit<(typeof fixture.cases)[number], "codes"> & { readonly codes: ReturnType<typeof pathBudgetCodes> };
+
 const render = (parts: readonly Readonly<{ text: string; count: number }>[]): string => parts.map(({ text, count }) => text.repeat(count)).join("");
 const thirdPartyUnits = (value: string): number => iconv.encode(value, "utf16-le").length / 2;
 const thirdPartyComponentBytes = (value: string): number => Math.max(0, ...value.split(/[\\/]/u).map((component) => iconv.encode(component, "utf8").length));
@@ -18,7 +21,7 @@ describe("path budget (language-agnostic fixture)", () => {
     expect(fixture.policy).toEqual({ maxPathUtf16Units: 256, maxComponentUtf8Bytes: 255 });
   });
 
-  for (const row of fixture.cases) {
+  for (const row of fixture.cases as readonly PathBudgetCase[]) {
     test(`${row.id}: ${row.note}`, () => {
       const path = render(row.parts);
       expect(pathUtf16Units(path)).toBe(row.utf16Units);

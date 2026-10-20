@@ -100,8 +100,8 @@
       "vectors": [
         {
           "mutationId": "change-graph-directed",
-          "sourceMutationDirectoryName": "🧭️change-graph",
-          "mutationDirectoryName": "🧭️change-graph",
+          "sourceMutationDirectoryName": "🧭️change-graph-directed",
+          "mutationDirectoryName": "🧭️change-graph-directed",
           "scenarios": [
             {
               "id": "keeps-an-already-directed-graph-directed",
@@ -111,8 +111,8 @@
         },
         {
           "mutationId": "change-node-label",
-          "sourceMutationDirectoryName": "🏷️change-node",
-          "mutationDirectoryName": "🏷️change-node",
+          "sourceMutationDirectoryName": "🏷️change-node-label",
+          "mutationDirectoryName": "🏷️change-node-label",
           "scenarios": [
             {
               "id": "rejects-relabelling-a-node-that-is-not-in-the-graph",
@@ -188,8 +188,8 @@
         },
         {
           "mutationId": "update-graph-algorithm",
-          "sourceMutationDirectoryName": "🧮️update-graph",
-          "mutationDirectoryName": "🧮️update-graph",
+          "sourceMutationDirectoryName": "🧮️update-graph-algorithm",
+          "mutationDirectoryName": "🧮️update-graph-algorithm",
           "scenarios": [
             {
               "id": "restates-the-unset-algorithm-and-its-absent-seed",

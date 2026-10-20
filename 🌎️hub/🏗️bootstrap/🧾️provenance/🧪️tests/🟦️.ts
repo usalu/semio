@@ -5,7 +5,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync, rmSync, renameSync, symlinkSync } from "node:fs";
 import { join } from "node:path";
 import { trustedCatalogByteClaimV1, trustedCatalogProvenancePathV1, writeTrustedCatalogPublicationProvenanceV1, readTrustedCatalogPublicationProvenanceV1 } from "../🟦️.ts";
-import {observePhysicalFileV1,type FileObservationControlV1} from "@semio-tech/framework/filesystem/observation";
+import {observePhysicalFileV1,type FileObservationControlV1} from "@semio-tech/framework-filesystem/observation";
 
 export function createTrustedCatalogProvenanceTests() {
   async function testTrustedCatalogProvenanceV1(repoRoot: string) {

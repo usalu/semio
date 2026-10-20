@@ -1,0 +1,31 @@
+{
+ "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🚀️apply/🟦️.ts",
+ "scopeLine": 36,
+ "files": [
+  {
+   "id": "run",
+   "dir": "🏁️transaction-run",
+   "doc": "🏁️ The transaction run of the plan apply: stages, installs, edits, regenerates, verifies and commits one attempt and rolls it back on failure."
+  }
+ ],
+ "items": [
+  {
+   "id": "run",
+   "kind": "range",
+   "line": 627,
+   "to": 899,
+   "returns": true,
+   "terminal": true,
+   "name": "runTransactionAttempt",
+   "emoji": "🏆",
+   "doc": "Runs the prepared attempt through staging, installing, retargeting, editing, regenerating, verification and commit, and rolls it back when a phase fails.",
+   "file": "run"
+  }
+ ],
+ "typeImports": {
+  "LoadedTaxonomy": "../../🔣️taxonomy/🟦️.ts"
+ },
+ "paramWrites": [
+  "journal"
+ ]
+}

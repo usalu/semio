@@ -4,6 +4,7 @@ use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{PptxPresenta
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_zip::opc::OpcPackage;
+use crate::standards::v_ecma_376::subsets::base::schema::construction;
 
 
 //#region Artifact

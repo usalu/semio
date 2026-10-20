@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@semio-tech/framework-manifest",
+  "version": "0.1.0",
+  "description": "framework · manifest: app, plugin and action definitions with the ui contract and canvas types",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./🟦️.ts",
+    "./action-types-and-semantics": "./🎬️action-types-and-semantics/🟦️.ts",
+    "./app-definition-refresh-and-context-menu": "./📋️app-definition-refresh-and-context-menu/🟦️.ts",
+    "./context-menu": "./📋️context-menu/🟦️.ts",
+    "./contributions-and-examples": "./🗣️contributions-and-examples/🟦️.ts",
+    "./definitions-action-ids-and-shell-brand": "./🔘️definitions-action-ids-and-shell-brand/🟦️.ts",
+    "./generated/ui-axes": "./🤖️generated/🎚️ui-axes/🟦️.ts",
+    "./host-effects-choices-and-fault-notices": "./🔁️host-effects-choices-and-fault-notices/🟦️.ts",
+    "./media": "./🎞️media/🟦️.ts",
+    "./mutation-input-schema": "./📥️mutation-input-schema/🟦️.ts",
+    "./schema": "./🧬️schema/🟦️.ts",
+    "./testing/fixtures": "./🧪️tests/🧫️fixtures/🟦️.ts",
+    "./testing/fixtures/dialog-choices.json": "./🧪️tests/🧫️fixtures/🧫️dialog-choices/🔣️.json",
+    "./testing/fixtures/shell-footer.json": "./🧪️tests/🧫️fixtures/🏛️shell-footer/🔣️.json",
+    "./testing/fixtures/ui-refresh-section.json": "./🧪️tests/🧫️fixtures/🔬️ui-refresh-section/🔣️.json",
+    "./testing/window-view-context": "./🧪️tests/🔬️window-view-context/🟦️.ts",
+    "./ui-contract-and-canvas-types": "./🏷️ui-contract-and-canvas-types/🟦️.ts",
+    "./utilities/initial": "./🪛️utilities/🌅️initial/🟦️.ts",
+    "./view-context/testing/resolved-host-context": "./🪟️view-context/🧪️tests/🪟️resolved-host-context/🟦️.ts",
+    "./view-state-and-public-invocation": "./👁️view-state-and-public-invocation/🟦️.ts"
+  },
+  "dependencies": {
+    "@semio-tech/framework-effect": "workspace:*",
+    "@semio-tech/framework-onboarding": "workspace:*"
+  },
+  "license": "LGPL-3.0-or-later",
+  "bundleKind": "library",
+  "devDependencies": {
+    "@semio-tech/ui-contract": "workspace:*",
+    "ajv": "8.20.0",
+    "decimal.js": "10.6.0",
+    "fast-json-patch": "3.1.1",
+    "i18next": "25.10.10",
+    "jsonschema": "1.5.0"
+  }
+}

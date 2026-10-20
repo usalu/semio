@@ -1,0 +1,121 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🎞️visual-job/🪜️solve-step/🥦️close-ladder/🦀️.rs",
+ "function": "close_step",
+ "nth": 0,
+ "match_line": 59,
+ "types": {
+  "child": "RetainedCloneGrant",
+  "maximum_bytes": "usize",
+  "grant": "RetainedCloneGrant"
+ },
+ "ret": "Result<std::ops::ControlFlow<(bool, RetainedCloneProgress), (bool, usize, usize)>, semio_framework_job::OriginalTurnFailure>",
+ "inline": true,
+ "arms": [
+  {
+   "line": 143,
+   "name": "close_lane_7",
+   "doc": "🧱️ Closes lane 7 of the close ladder.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 161,
+   "name": "close_lane_8",
+   "doc": "🪵️ Closes lane 8 of the close ladder.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 202,
+   "name": "close_lane_11",
+   "doc": "🔩️ Closes lane 11 of the close ladder.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 230,
+   "name": "close_lane_12",
+   "doc": "⚙️ Closes lane 12 of the close ladder.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 245,
+   "name": "close_lane_13",
+   "doc": "🧲️ Closes lane 13 of the close ladder.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 277,
+   "name": "close_lane_15",
+   "doc": "🪛️ Closes lane 15 of the close ladder.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 303,
+   "name": "close_lane_19",
+   "doc": "🔧️ Closes lane 19 of the close ladder.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 318,
+   "name": "close_lane_20",
+   "doc": "🔨️ Closes lane 20 of the close ladder.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  }
+ ],
+ "method": {
+  "self_param": "&mut self",
+  "call": "self.{name}({args})"
+ },
+ "flow_option": true,
+ "flow_wrap": "std::ops::ControlFlow::Break",
+ "wrap": [
+  "Ok(std::ops::ControlFlow::Continue({",
+  "}))"
+ ],
+ "call_suffix": "?",
+ "context": [
+  "cx",
+  "grant",
+  "maximum_bytes",
+  "child"
+ ],
+ "call_wrap": "match {call} { std::ops::ControlFlow::Continue(value) => value, std::ops::ControlFlow::Break(step) => return Ok(step) }"
+}

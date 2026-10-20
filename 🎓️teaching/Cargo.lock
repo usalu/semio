@@ -761,6 +761,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-pack-json",
  "semio-framework-value",
+ "semio-framework-value-native-owned",
  "serde",
  "serde_json",
 ]
@@ -783,6 +784,7 @@ dependencies = [
  "semio-framework-dsl-syntax",
  "semio-framework-dsl-token",
  "semio-framework-value",
+ "semio-framework-value-native-owned",
 ]
 
 [[package]]
@@ -815,6 +817,7 @@ dependencies = [
  "semio-framework-io-control",
  "semio-framework-pack-json",
  "semio-framework-value",
+ "semio-framework-value-native-owned",
 ]
 
 [[package]]
@@ -837,6 +840,8 @@ dependencies = [
  "semio-framework-io-control",
  "semio-framework-pack-json",
  "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
 ]
 
 [[package]]
@@ -869,12 +874,14 @@ name = "semio-framework-io-control"
 version = "0.1.0"
 dependencies = [
  "semio-framework-value",
+ "semio-framework-value-native-owned",
 ]
 
 [[package]]
 name = "semio-framework-mutation-diff"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-value-clone-source",
  "semio-framework-value-intrinsic",
  "semio-framework-value-retirement",
 ]
@@ -892,6 +899,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-value",
+ "semio-framework-value-persistent",
 ]
 
 [[package]]
@@ -900,6 +908,9 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-pack-json-float",
  "semio-framework-value",
+ "semio-framework-value-factory",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
 ]
 
 [[package]]
@@ -944,6 +955,7 @@ dependencies = [
  "semio-framework-replication-presence",
  "semio-framework-replication-wire-core",
  "semio-framework-value",
+ "semio-framework-value-native-owned",
 ]
 
 [[package]]
@@ -969,6 +981,8 @@ dependencies = [
  "semio-framework-pack-error",
  "semio-framework-replication-error",
  "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "serde",
 ]
 
@@ -1014,6 +1028,8 @@ dependencies = [
  "semio-framework-replication-mutation",
  "semio-framework-replication-wire-core",
  "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
 ]
 
 [[package]]
@@ -1061,6 +1077,8 @@ dependencies = [
  "semio-framework-replication-ids",
  "semio-framework-replication-wire-core",
  "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
 ]
 
 [[package]]
@@ -1068,7 +1086,9 @@ name = "semio-framework-replication-history-index"
 version = "0.1.0"
 dependencies = [
  "semio-framework-pack-json",
+ "semio-framework-replication-error",
  "semio-framework-value",
+ "semio-framework-value-persistent",
  "serde",
 ]
 
@@ -1087,6 +1107,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-pack-json",
  "semio-framework-value",
+ "semio-framework-value-native-owned",
  "serde",
 ]
 
@@ -1110,6 +1131,7 @@ dependencies = [
  "semio-framework-replication-wire-core",
  "semio-framework-schema-state",
  "semio-framework-value",
+ "semio-framework-value-native-owned",
 ]
 
 [[package]]
@@ -1121,16 +1143,20 @@ dependencies = [
  "semio-framework-replication-conflict",
  "semio-framework-replication-mutation",
  "semio-framework-value",
+ "semio-framework-value-persistent",
 ]
 
 [[package]]
 name = "semio-framework-replication-mutation-retained"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-diagnostic",
  "semio-framework-mutation-diff",
  "semio-framework-replication-mutation",
  "semio-framework-replication-mutation-messages",
  "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
 ]
 
 [[package]]
@@ -1156,6 +1182,7 @@ dependencies = [
  "semio-framework-replication-crypto",
  "semio-framework-replication-error",
  "semio-framework-value",
+ "semio-framework-value-persistent",
 ]
 
 [[package]]
@@ -1167,6 +1194,7 @@ name = "semio-framework-schema-state"
 version = "0.1.0"
 dependencies = [
  "semio-framework-value",
+ "semio-framework-value-native-owned",
 ]
 
 [[package]]
@@ -1271,6 +1299,7 @@ dependencies = [
  "semio-framework-value-intrinsic",
  "semio-framework-value-native-decoding",
  "semio-framework-value-native-encoding",
+ "semio-framework-value-native-owned",
  "semio-framework-value-ordered",
  "semio-framework-value-original-aliases",
  "semio-framework-value-paged-list",
@@ -1283,6 +1312,7 @@ dependencies = [
  "semio-framework-value-retirement-queue",
  "semio-framework-value-schema",
  "semio-framework-value-shared-issuance",
+ "semio-framework-value-snapshot-projection",
  "serde",
  "serde_json",
 ]
@@ -1340,6 +1370,7 @@ dependencies = [
  "semio-framework-value-intrinsic",
  "semio-framework-value-native-decoding",
  "semio-framework-value-native-encoding",
+ "semio-framework-value-native-owned",
  "semio-framework-value-persistent",
  "semio-framework-value-retained-clone",
  "semio-framework-value-retirement",
@@ -1366,6 +1397,7 @@ dependencies = [
  "semio-framework-value-ordered",
  "semio-framework-value-paged-list",
  "semio-framework-value-retirement",
+ "semio-framework-value-shared-issuance",
  "serde",
  "serde_json",
 ]
@@ -1377,6 +1409,7 @@ dependencies = [
  "semio-framework-value-control-contract",
  "semio-framework-value-native-encoding",
  "semio-framework-value-retirement",
+ "semio-framework-value-shared-issuance",
 ]
 
 [[package]]
@@ -1385,6 +1418,19 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-value-control-contract",
  "semio-framework-value-retirement",
+]
+
+[[package]]
+name = "semio-framework-value-native-owned"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-intrinsic",
+ "semio-framework-value-native-decoding",
+ "semio-framework-value-persistent",
+ "semio-framework-value-retained-clone",
+ "semio-framework-value-retirement",
+ "semio-framework-value-shared-issuance",
 ]
 
 [[package]]
@@ -1438,12 +1484,14 @@ dependencies = [
  "semio-framework-value-retained-clone",
  "semio-framework-value-retirement",
  "semio-framework-value-shared-issuance",
+ "semio-framework-value-snapshot-projection",
 ]
 
 [[package]]
 name = "semio-framework-value-registry"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-hash",
  "semio-framework-value-control-contract",
  "semio-framework-value-retained-clone",
  "semio-framework-value-retirement",
@@ -1506,6 +1554,16 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-value-control-contract",
  "semio-framework-value-retirement",
+]
+
+[[package]]
+name = "semio-framework-value-snapshot-projection"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-retained-clone",
+ "semio-framework-value-retirement",
+ "semio-framework-value-shared-issuance",
 ]
 
 [[package]]

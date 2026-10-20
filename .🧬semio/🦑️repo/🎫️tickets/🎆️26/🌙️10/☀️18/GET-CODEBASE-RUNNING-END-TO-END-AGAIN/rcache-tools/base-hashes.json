@@ -1,0 +1,15 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json": "3fb0a5b8567296df1c0a263ca771ab95a2851e34ac358ad46ea55ddc93df7c8c",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json": "86d02c929835b38c6b8e591f33219e81cf3dfbb12bc2888ddca935cf95c7bfe9",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/💾️storage/🟦️.ts": "10dd1dae3b5bc53ee4bc048de0f97cbe4a63662f69ee2e2f0222e74488dac2c0",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts": "d21d54aae8c93fd55c56a0bc86cbd7a42406ef1eee88f86fca87922f37500765",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts": "5a32baa3edfd4492f480a820a01d7c7e7cbf8338df8265b19520076643dd3390",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts": "48f1d7df41f898018876a84683267eca0f4cf50fd2246756163b5485af854dad",
+ ".bazelrc": "09e79ad590bd7716bbf9baafd61096f24a2726144ebd1912db5a7d790ec5d919",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/💾️storage/🧪️tests/🧫️fixtures/🔣️.json": "e8e590c1081c37b2c48c96a097a83b66b5c584814b29cdef877b94ef41fc7114",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/💾️storage/🧪️tests/🟦️.ts": "15b70a43b468e0ef73d095fbc737292969c4751c4ef757bf685937d70f63f77e",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json": "8f5f69cf0086e89f1e1f4e65e08f1df4b1074436701f2833386cbe9737af5379",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🧪️tests/🧫️fixtures/📖️help/🔣️.json": "a4296f166814a7bff3f45a059e8a1b3b21fba235277078f8e991be8d641aaf64",
+ "📋️project.json": "764ee5da87a36bb6de082bb06e24c3cd1f4211f1090c94a0109d1ea20fd0f83a",
+ "🧰️framework/🛍️products/🦑️repo/README.md": "4d7590145ca3e3dc154adc54b74a622456f517ea5f20e4d8f20fbb5b85a5cd12"
+}

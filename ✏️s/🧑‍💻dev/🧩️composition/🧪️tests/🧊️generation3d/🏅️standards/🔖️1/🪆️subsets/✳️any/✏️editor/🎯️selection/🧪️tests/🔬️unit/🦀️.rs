@@ -21,7 +21,7 @@ fn mesh_component_vertices_match_evaluated_topology_fixtures() {
 #[test]
 fn mesh_component_cached_validation_rejects_stale_indices_without_evaluation() {
     let _serial = crate::test_serial::lock();
-    let snapshot = semio_s_artifact_procedural_3d_model::example_snapshot(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
+    let snapshot = semio_s_artifact_procedural_3d_io_text::snapshot::example_snapshot(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
     let mut owned_session = FlowEvalSession::new().with_geometry_port(crate::flow_operators::geometry_session().port());
     let session = &mut owned_session;
     {

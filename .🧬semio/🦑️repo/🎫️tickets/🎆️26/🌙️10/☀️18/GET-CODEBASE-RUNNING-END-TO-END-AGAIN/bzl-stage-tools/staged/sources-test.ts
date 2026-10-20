@@ -1,5 +1,6 @@
 /** 🧭️ Contract: Bazel source inputs follow the Nx transitive semantics, stay proportional to the inventory through per-directory filegroups, and refuse dangling task dependencies and unbounded caches with precise reports. */
 import {expect,test} from "bun:test";
+import {minimatch} from "minimatch";
 import {mkdirSync,mkdtempSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
 import {spawnSync} from "node:child_process";
 import {createRequire} from "node:module";
@@ -23,7 +24,7 @@ test("Bazel source fixtures are closed",()=>{
 });
 
 test("Bazel source index reuses cached pattern matches without leaking between selections and agrees with the one-shot selector",()=>{
- const rows=actionsCorpus.sources.cases,index=api.bazelSourceIndexV1(actionsCorpus.sources.files),selected=(inputs:readonly unknown[])=>{const{marks,extra}=index.select(inputs);return[...new Set([...index.files.filter((_path,position)=>marks[position]),...extra])].sort();};
+ const rows=actionsCorpus.sources.cases,index=api.bazelSourceIndexV1(actionsCorpus.sources.files),selected=(inputs:readonly unknown[])=>{const{marks,extra}=index.selectAll(inputs);return[...new Set([...index.files.filter((_path,position)=>marks[position]),...extra])].sort();};
  for(const row of [...rows,...[...rows].reverse(),...rows]){expect(selected(row.inputs),row.name).toEqual(api.bazelTaskSourcePathsV1(row.inputs,actionsCorpus.sources.files));expect(selected(row.inputs),row.name).toEqual(row.expected);}
 });
 
@@ -32,7 +33,7 @@ test("Bazel directory covers expand to exactly the selection and agree with an i
  try{
   for(const row of corpus.cover.cases){
    const chosen=new Uint8Array(universe.length);for(const path of row.selected)chosen[universe.indexOf(path)]=1;
-   const name=tree.cover(chosen,row.extra),again=tree.cover(chosen,row.extra);expect(again,row.name).toBe(name);
+   const cover=()=>tree.compose(tree.merge([tree.cover(chosen),{groups:[],files:row.extra}]),"i"),name=cover();expect(cover(),row.name).toBe(name);
    const top:Group=!name?{groups:[],files:[]}:name.startsWith("i_")?tree.groups.get(name)!:{groups:[name],files:[]};
    expect(top.groups.length,row.name).toBe(row.groups);expect([...top.files].sort(order),row.name).toEqual([...row.loose].sort(order));
    const files=name?expand(tree.groups,name).sort(order):[];expect(files,row.name).toEqual([...row.selected,...row.extra].sort(order));
@@ -46,14 +47,14 @@ test("Bazel directory covers expand to exactly the selection and agree with an i
     expect(top.groups.map(group=>expand(tree.groups,group).sort(order)).sort((left,right)=>order(left.join("\0"),right.join("\0"))),row.name).toEqual(independent.groups);expect([...top.files].sort(order),row.name).toEqual(independent.loose);
    }
   }
-  for(const[name,group]of tree.groups){names.add(name);expect(name).toMatch(/^[di]_[0-9a-f]{16}$/u);for(const child of group.groups)expect(tree.groups.has(child),child).toBe(true);expect(group.groups.length+group.files.length,name).toBeGreaterThan(0);}
+  for(const[name,group]of tree.groups){names.add(name);expect(name).toMatch(/^[dik]_[0-9a-f]{16}$/u);for(const child of group.groups)expect(tree.groups.has(child),child).toBe(true);expect(group.groups.length+group.files.length,name).toBeGreaterThan(0);}
   expect(names.size).toBe(tree.groups.size);
  }finally{database.close();}
 });
 
 test.skipIf(!python)("Bazel renders nested directory groups as labels before files and an independent Starlark parse reads back the same structure",()=>{
  const tree=api.bazelSourceCoverV1(universe),chosen=new Uint8Array(universe.length);for(const path of corpus.cover.cases[2]!.selected)chosen[universe.indexOf(path)]=1;
- const name=tree.cover(chosen,[]);expect(name).toBeDefined();
+ const name=tree.compose(tree.cover(chosen),"i");expect(name).toBeDefined();
  const text=api.renderBazelBuildV1({actions:[],groups:tree.groups,bun:"/opt/bun",sourceIdentity:"a".repeat(64),extension:""}).replace(/^load\(.*$/mu,""),
   result=run("import ast,json,sys\nrows={}\nfor node in ast.parse(json.loads(sys.stdin.read())).body:\n    call=node.value\n    rows[[k.value.value for k in call.keywords if k.arg=='name'][0]]=[e.value for k in call.keywords if k.arg=='srcs' for e in k.value.elts]\nprint(json.dumps(rows))",text);
  expect(result.exitCode,result.stderr.toString()).toBe(0);
@@ -69,11 +70,21 @@ test.skipIf(!binary||process.platform==="win32")("the real Bazel resolves nested
   for(const path of universe){mkdirSync(dirname(join(checkout,path)),{recursive:true});writeFileSync(join(checkout,path),path+"\n");}
   mkdirSync(workspace);writeFileSync(join(workspace,"MODULE.bazel"),'module(name="cover")\n');symlinkSync(checkout,join(workspace,link),"dir");
   const tree=api.bazelSourceCoverV1(universe),expected=new Map<string,string[]>();
-  for(const row of corpus.cover.cases){const chosen=new Uint8Array(universe.length);for(const path of row.selected)chosen[universe.indexOf(path)]=1;const name=tree.cover(chosen,[]);if(name)expected.set(name,row.selected.map(path=>`//:${link}/${path}`).sort(order));}
+  for(const row of corpus.cover.cases){const chosen=new Uint8Array(universe.length);for(const path of row.selected)chosen[universe.indexOf(path)]=1;const name=tree.compose(tree.cover(chosen),"i");if(name)expected.set(name,row.selected.map(path=>`//:${link}/${path}`).sort(order));}
   writeFileSync(join(workspace,"BUILD.bazel"),api.renderBazelBuildV1({actions:[],groups:tree.groups,bun:"/opt/bun",sourceIdentity:"a".repeat(64),extension:""}).replace(/^load\(.*$/mu,""));
   for(const[name,files]of expected){const query=bazel(["query","--lockfile_mode=off",`kind('source file', deps(//:${name}))`]);expect(query.status,query.stderr).toBe(0);expect(query.stdout.split("\n").filter(Boolean).sort(order)).toEqual(files);}
  }finally{spawnSync(binary!,[`--output_base=${base}`,`--install_base=${install}`,"--nosystem_rc","--nohome_rc","shutdown"],{cwd:workspace,timeout:120000});rmSync(directory,{recursive:true,force:true});}
 },600000);
+
+test("Bazel source units carry only the exclusions that can overlap their include, so projects share them, and still select exactly what minimatch selects task-wide",()=>{
+ const{files,cases,shared}=corpus.keys,index=api.bazelSourceIndexV1(files);
+ for(const row of cases){
+  const{keys,extra}=index.keys(row.inputs);expect(keys,row.name).toEqual(row.keys);expect(extra,row.name).toEqual(row.extra);
+  const{marks,extra:again}=index.selectAll(row.inputs),actual=index.files.filter((_path,position)=>marks[position]);expect(again,row.name).toEqual(row.extra);
+  if(row.oracle){const strings=row.inputs as string[],include=strings.filter(value=>!value.startsWith("!")),exclude=strings.filter(value=>value.startsWith("!")).map(value=>value.slice(1));expect(actual,row.name).toEqual(files.filter(path=>include.some(pattern=>minimatch(path,pattern))&&!exclude.some(pattern=>minimatch(path,pattern))).sort());}
+ }
+ for(const row of shared){const unit=(inputs:unknown[])=>JSON.stringify(index.keys(inputs).keys.find(key=>key.include===row.include));expect(unit(row.first),row.name).toBe(unit(row.second));expect(unit(row.first)).toBeDefined();}
+});
 
 const projectOf=(graph:{projects:Record<string,{root:string}>},pattern:string)=>Object.entries(graph.projects).find(([,project])=>pattern.startsWith(project.root+"/"))![0];
 

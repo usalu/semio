@@ -27,7 +27,7 @@ import (
 
 // #region 🏬️Mcp Resources Handlers
 
-// MCP resource handler functions for resource listing and reading.
+// 🤚️MCP resource handler functions for resource listing and reading.
 // 📩️handleRepoResource holds the data fields for a handleRepoResource record.
 func handleRepoResource(ctx context.Context, request ReadResourceRequest) ([]ResourceContents, error) {
 	query := `query Repo { repo { id name bundles { id } tickets { id } policies { id } contributors { id } } }`

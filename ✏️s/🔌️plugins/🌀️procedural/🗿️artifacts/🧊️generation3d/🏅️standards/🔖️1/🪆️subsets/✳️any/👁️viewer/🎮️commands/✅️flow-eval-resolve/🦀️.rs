@@ -9,6 +9,7 @@ use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfig;
 use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfigMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Fault, ViewEmit};
+use semio_s_artifact_procedural_3d_preview_eval::FlowEvalResolve;
 
 
 

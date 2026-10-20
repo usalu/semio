@@ -1,0 +1,92 @@
+{
+  "name": "@semio-tech/ui-styling-py",
+  "namedInputs": {
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ]
+  },
+  "$schema": "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "targets": {
+    "generate": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python",
+        "command": "bun ./📜️script.ts generate"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      },
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "@semio-tech/ui-styling-tokens:generate"
+      ]
+    },
+    "build": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python",
+        "command": "bun ../../🏗️builder/🐍️python/📜️script.ts build"
+      },
+      "cache": true,
+      "outputs": [
+        "{workspaceRoot}/.cache/b/p/m/python/ui-styling/{options.env.SEMIO_BUILD_MODE}"
+      ],
+      "dependsOn": [
+        "deps",
+        "@semio-tech/ui-styling-tokens:generate"
+      ],
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/uv.lock",
+        {
+          "dependentTasksOutputFiles": "**/*"
+        },
+        {
+          "env": "SOURCE_DATE_EPOCH"
+        },
+        {
+          "runtime": "node -p \"process.platform.concat(process.arch)\""
+        }
+      ]
+    },
+    "test": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python",
+        "command": "bun ./📜️script.ts test"
+      },
+      "outputs": [],
+      "dependsOn": [
+        "build"
+      ],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "^production",
+        { "dependentTasksOutputFiles": "**/*" }
+      ]
+    },
+    "deps": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ../../🏗️builder/🐍️python/📜️script.ts deps",
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python"
+      }
+    }
+  }
+}

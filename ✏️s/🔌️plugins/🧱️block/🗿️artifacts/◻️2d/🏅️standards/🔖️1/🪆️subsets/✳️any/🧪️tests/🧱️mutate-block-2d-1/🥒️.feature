@@ -160,7 +160,7 @@ Feature: Apply every typed block2d node-kind mutation twice — once in Rust, on
       | rename-handle-kind                   | ✒️rename-handle-kind                   | 🧪️renames         |
       | change-handle-kind-label             | 🔖️change-handle-kind-label             | 🧪️relabels     |
       | change-handle-kind-color             | 🎨️change-handle-kind-color             | 🧪️recolors     |
-      | change-handle-kind-default-wire-kind | 🔌️change-handle-kind-default-wire | 🧪️swaps  |
+      | change-handle-kind-default-wire-kind | 🔌️change-handle-kind-default-wire-kind | 🧪️swaps  |
       | create-handle                        | 🌿️create-handle                        | 🧪️appends-out-handle             |
       | delete-handle                        | ❌️delete-handle                        | 🧪️removes-in-handle              |
       | move-handle                          | 📍️move-handle                          | 🧪️swings |

@@ -61,7 +61,12 @@
         "command": "bun ./📜️script.ts build",
         "forwardAllArgs": true
       },
-      "cache": true,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      },
+      "cache": false,
       "outputs": [
         "{projectRoot}/📤️dist/{options.env.SEMIO_BUILD_MODE}"
       ],
@@ -108,7 +113,12 @@
         "command": "bun ./📜️script.ts build-vsix",
         "forwardAllArgs": true
       },
-      "cache": true,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      },
+      "cache": false,
       "outputs": [
         "{projectRoot}/📤️dist/{options.env.SEMIO_BUILD_MODE}/🧩️repo.vsix"
       ]

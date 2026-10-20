@@ -1,0 +1,106 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️typescript-package-commands/🟦️.ts",
+ "method": "run",
+ "className": "TestScript",
+ "keepFrom": 907,
+ "context": {
+  "dir": "🧭️route-context",
+  "emoji": "🧭",
+  "name": "TestRouteContext",
+  "paramName": "context",
+  "doc": "The invocation, roots and re-entry of the test script that its route group functions receive instead of the script instance.",
+  "fields": [
+   {
+    "name": "invocation",
+    "type": "ScriptInvocation"
+   },
+   {
+    "name": "repoRoot",
+    "type": "string"
+   },
+   {
+    "name": "root",
+    "type": "string"
+   },
+   {
+    "name": "run",
+    "type": "(segments: string[]) => Promise<void>"
+   }
+  ],
+  "importLines": [
+   "import type { ScriptInvocation } from \"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";"
+  ],
+  "thisFields": [
+   "invocation",
+   "repoRoot",
+   "root",
+   "run"
+  ],
+  "init": "{ invocation: this.invocation, repoRoot: this.repoRoot, root: this.root, run: (routeSegments) => this.run(routeSegments) }"
+ },
+ "groups": [
+  {
+   "dir": "🧷️fixture-and-nx-routes",
+   "emoji": "🪡",
+   "doc": "The fixture placement, original control, target execution and Nx owner routes of the test script.",
+   "name": "runFixtureAndNxRoutes",
+   "fdoc": "Runs the fixture placement, original control, target execution and Nx owner routes; true when one matched.",
+   "from": 18,
+   "to": 63
+  },
+  {
+   "dir": "🛤️runtime-and-path-routes",
+   "emoji": "🛣",
+   "doc": "The runtime actor, artifact command, Cargo search path, Nx inference and native source routes of the test script.",
+   "name": "runRuntimeAndPathRoutes",
+   "fdoc": "Runs the generator, runtime, artifact, Cargo, build discovery, Nx inference and ownership routes; true when one matched.",
+   "from": 65,
+   "to": 166
+  },
+  {
+   "dir": "🏗️build-and-direction-routes",
+   "emoji": "🧱",
+   "doc": "The build surface, dependency direction and canonical execution routes of the test script.",
+   "name": "runBuildAndDirectionRoutes",
+   "fdoc": "Runs the build surface, native dependency, canonical JSON, mutation authority, direction and corpus routes; true when one matched.",
+   "from": 171,
+   "to": 285
+  },
+  {
+   "dir": "🗺️source-topology-routes",
+   "emoji": "📍",
+   "doc": "The Go dispatch, source topology and root source law routes of the test script.",
+   "name": "runSourceTopologyRoutes",
+   "fdoc": "Runs the runtime corpus, Go dispatch, catalog, topology, platform and root source routes; true when one matched.",
+   "from": 291,
+   "to": 405
+  },
+  {
+   "dir": "⚖️ownership-law-routes",
+   "emoji": "🔏",
+   "doc": "The crate tree, family, publication and ownership law routes of the test script.",
+   "name": "runOwnershipLawRoutes",
+   "fdoc": "Runs the crate tree, mutation family, publication, configuration and source ownership routes; true when one matched.",
+   "from": 411,
+   "to": 556
+  },
+  {
+   "dir": "🔗️reference-authority-routes",
+   "emoji": "🪝",
+   "doc": "The path statute, mutation source, reference and authority routes of the test script.",
+   "name": "runReferenceAuthorityRoutes",
+   "fdoc": "Runs the path statute, mutation source, provider, reference and recovery authority routes; true when one matched.",
+   "from": 562,
+   "to": 738
+  },
+  {
+   "dir": "📖️readme-and-mutation-routes",
+   "emoji": "🧬",
+   "doc": "The README source, divergence callback, verification and mutation witness routes of the test script.",
+   "name": "runReadmeAndMutationRoutes",
+   "fdoc": "Runs the README authority, divergence callback, source service, regeneration and mutation witness routes; true when one matched.",
+   "from": 743,
+   "to": 901
+  }
+ ]
+}

@@ -15,4 +15,5 @@ class TestScript extends Script {
   }
 }
 
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir, resolve(import.meta.dir, "../../../../../../..")).register("test", TestScript), { invocation: original }));
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

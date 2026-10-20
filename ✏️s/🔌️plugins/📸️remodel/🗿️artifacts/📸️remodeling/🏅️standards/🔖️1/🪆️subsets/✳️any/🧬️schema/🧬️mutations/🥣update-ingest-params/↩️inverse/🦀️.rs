@@ -4,7 +4,7 @@ use crate::standards::v1::subsets::any::schema::mutations::update_ingest_params:
 use crate::standards::v1::subsets::any::schema::mutations::update_ingest_params::component::update_ingest_params;
 
 //#region 🔖️Inverse
-pub fn inverse<Op: From<UpdateIngestParams>>(_payload: &super::UpdateIngestParams, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<UpdateIngestParams>>(_payload: &crate::standards::v1::subsets::any::schema::mutations::update_ingest_params::component::UpdateIngestParams, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     vec![super::update_ingest_params(base.params.ingest.clone())]
 

@@ -4,11 +4,14 @@ use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx;
 use semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx;
 use semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::import::deserializers::{decode_pptx, sniff_pptx_bytes};
-use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::io::{PptxAnalyzerAnalysis,PptxBuilderConstruction,MINIMAL_SLIDE_MASTER_XML};
+use semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::derived_analysis::PptxAnalyzerAnalysis;
+use semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::derived_construction::PptxBuilderConstruction;
+use semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::MINIMAL_SLIDE_MASTER_XML;
 use semio_s_artifact_stdio_pptx_base_vocabulary::refusal::PptxError;
 use semio_s_artifact_stdio_pptx_base_vocabulary::vocabulary::{PRESENTATION_CONTENT_TYPE,PRESENTATION_PART,REL_TYPE_OFFICE_DOCUMENT_STRICT,REL_TYPE_SLIDE,REL_TYPE_SLIDE_LAYOUT,REL_TYPE_SLIDE_MASTER,SLIDE_CONTENT_TYPE,SLIDE_LAYOUT_PART,SLIDE_MASTER_CONTENT_TYPE,SLIDE_MASTER_PART,THEME_PART};
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
 use semio_s_artifact_stdio_zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
+#[cfg(test)]#[cfg(test)]#[cfg(test)] use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
 
 fn construction_fidelity_fixture() -> serde_json::Value {
     serde_json::from_str(&fixture_text!("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🏗️typed-construction-fidelity/🔣️.json").to_owned()).expect("schema-first typed-construction fixture")
@@ -464,8 +467,8 @@ async fn assert_exact_export(snapshot: &PptxSnapshot, expected: &[u8]) {
     }
 }
 
-fn first_positioned_shape(snapshot: &PptxSnapshot) -> (semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::PptxShapeAddress, PptxTransform) {
-    for slide in semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::xml_address::pptx_slides(snapshot).expect("retained slide authorities") {
+fn first_positioned_shape(snapshot: &PptxSnapshot) -> (semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::xml_address::PptxShapeAddress, PptxTransform) {
+    for slide in semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::xml_address::pptx_slides(snapshot).expect("retained slide authorities") {
         for shape in slide.shapes {
             if let Some(position) = shape.position {
                 return (shape.address, position);
@@ -576,7 +579,7 @@ async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
 
     let part = &snapshot.xml_parts[0];
     let replace = PptxMutation::ReplaceXmlNode(semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::replace_xml_node::ReplaceXmlNode {
-        address: semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::xml_address::pptx_xml_address(&snapshot, &part.path, Vec::new()).expect("root address"),
+        address: semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::xml_address::pptx_xml_address(&snapshot, &part.path, Vec::new()).expect("root address"),
         node: part.document.root.clone().expect("root"),
     });
     assert_eq!(PptxMutation::parse_op(&replace.print_op()).expect("parse replace-xml-node"), replace);
@@ -593,10 +596,12 @@ async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
 /// this artifact's OWN early-warning, plus direct coverage of the mutations/diff facets the
 /// framework's `m5` auto-discovery does not reach at all.
 mod conformance_laws {
+    #[cfg(test)] use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
     use semio_framework_test_fixtures::{fixture_bytes, fixture_text};
 
     use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::*;
-    use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::{diff, mutations, snapshot};
+    use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::{diff, snapshot};
+    use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations;
     use protocol::{DiffBinary,DiffCodec,DiffText, OpBinary, OpText};
 
     /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files

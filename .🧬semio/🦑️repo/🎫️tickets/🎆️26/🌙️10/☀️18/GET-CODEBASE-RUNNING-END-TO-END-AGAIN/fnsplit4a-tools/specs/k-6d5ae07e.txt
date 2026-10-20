@@ -1,0 +1,1 @@
+split 40 (4 parts) registerShellComponentsSuite

@@ -1,5 +1,5 @@
 /** 🧲 Owns the panel dock context, dock targets and the tree-unit drag session shared by panels and tab bars. */
-import { ephemeralBox, ephemeralSet } from "../../../🫧️transient/🟦️.ts";
+import { ephemeralBox, ephemeralSet } from "@semio-tech/framework-transient";
 import * as React from "react";
 import { reactHostPort } from "../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
 import { panelGhostSessionBridge } from "../../🧱️elements/👻️PanelGhost/🟦️.tsx";

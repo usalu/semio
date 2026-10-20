@@ -1,4 +1,4 @@
-import type { CanvasHoverFocus, CanvasPickTarget } from "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
+import type { CanvasHoverFocus, CanvasPickTarget } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
 
 /** 🎯️ Stable identity of one canvas pick target: its domain and id. */
 export function canvasPickTargetKey(target: CanvasPickTarget): string {

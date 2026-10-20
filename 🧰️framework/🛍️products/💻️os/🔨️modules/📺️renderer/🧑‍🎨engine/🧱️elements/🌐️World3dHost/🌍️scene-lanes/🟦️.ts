@@ -3,7 +3,7 @@ import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, u
 import { registerTutorialCameraDriver, useLabel, useShellScopeOptional, type TutorialCameraDriver } from "@semio-tech/ui-react";
 import { createWorld3dAnnotationStore, resolveWorld3dHighlightPaint, useStableWorld3dLane, useWorld3dScalarFieldMeshes, resolveWorld3dToneHex, world3dSelectionWithPickFilter, world3dSubElementPaint } from "../📏️modelling/🟦️.tsx";
 import { parseWorld3dAnnotationLayer, parseWorld3dModellingOptions, parseWorld3dScalarField, type ComponentSceneHostProps, type MergeMode } from "@semio-tech/framework";
-import { worldSceneContentBounds, type WorldCameraState, type WorldProjectionSpec } from "@semio-tech/infinite-world-r3f";
+import { worldSceneContentBounds, type WorldCameraState, type WorldProjectionSpec } from "@semio-tech/framework/infinite/world/r3f";
 import { SetWindowIconContext, SetWindowTitleContext } from "../../🏛️ShellHost/🎚️shell-model/🟦️.tsx";
 import { autofitCameraFromInstances, parseCameraState, parseEnvironment, parseFit, parseFrame, seedPendingWorldProjectionCamera, shouldReattachWorldViewportCamera, world3dFramingInstances, world3dViewportCameraSeedKey, type WorldAttractionRecord, type WorldInstanceRecord, type WorldMeshRecord, type WorldParsedCameraState, type WorldReferenceRecord, type WorldTargetVolumeRecord, type WorldVortexRecord } from "../🔭️scene-schema/🟦️.ts";
 import { semanticColorsFromPalette, useMeshStylePalette } from "../🎨️mesh-render/🖌️mesh-style-palette/🟦️.ts";

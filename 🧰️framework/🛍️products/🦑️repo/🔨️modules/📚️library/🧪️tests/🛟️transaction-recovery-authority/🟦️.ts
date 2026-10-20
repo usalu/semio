@@ -12,6 +12,7 @@ const library = resolve(import.meta.dir, "../.."), sourcePath = join(library, "�
 const tree = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🛟️transaction-recovery-authority/🔣️.json"), "utf8"));
 const functionNames = ["reconcileTransactionOwnedTuples", "validateForwardMoveSourceInputs", "validateForwardGeneratorInputs", "validateResumeTuples"];
+const APPLY_PHASES = ["applyTaxonomyPlan", "bindTransactionNames", "checkPlanAuthority", "discoverTransactionAttempts", "defineAttemptValidators", "selectAttempt", "defineLeaseAndPreChecks", "capturePreflight", "lockResumeSnapshot", "prepareAttemptJournal", "runTransactionAttempt", "stageTransactionOperations", "stageEmbeddedRootsAndInstallMoves", "installRelocationsAndRetargetSymlinks", "applyReferenceEditGroups", "regenerateGeneratorOutputs", "verifyAndCommitTransaction"];
 const classNames = ["TaxonomyStartedRegenerationPartialError", "TaxonomyMoveSourceInputDriftError", "TaxonomyGeneratorInputDriftError"];
 const compilers = [
   { name: "Bun", compile: (code: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(code) },
@@ -77,14 +78,14 @@ test("WAL and selected-resume snapshots use owned proof while forward execution 
   };
   expect(calls(declaration("reconcileJournalWal")).filter((name) => name === "reconcileTransactionOwnedTuples")).toHaveLength(2);
   expect(calls(declaration("reconcileJournalWal"))).not.toContain("validateResumeTuples");
-  const apply = declaration("applyTaxonomyPlan");
+  const apply = APPLY_PHASES.map(declaration);
   let selected: ts.VariableDeclaration | undefined;
   const visit = (node: ts.Node) => { if (ts.isVariableDeclaration(node) && node.name.getText(tree) === "validateSelectedResumeSnapshot") selected = node; ts.forEachChild(node, visit); };
-  visit(apply);
+  apply.forEach(visit);
   expect(selected).toBeDefined();
   expect(calls(selected!)).toContain("reconcileTransactionOwnedTuples");
   expect(calls(selected!)).not.toContain("validateResumeTuples");
-  expect(calls(apply).filter((name) => name === "validateResumeTuples")).toHaveLength(3);
+  expect(apply.flatMap(calls).filter((name) => name === "validateResumeTuples")).toHaveLength(3);
 });
 
 test("recovery authority is mounted through its exact Nx registration", () => {

@@ -1,0 +1,58 @@
+{
+ "schema": "cycle-break/delta@1",
+ "stagedAt": "2026-10-20T02:36:04.541Z",
+ "manifestOps": [],
+ "newFiles": [],
+ "edits": [
+  {
+   "file": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
+   "from": "import { OwnedKernelReturnContent } from \"@semio-tech/framework-kernel/return/content/input\";\n",
+   "to": "",
+   "mode": "text",
+   "wave": "d6-actor-below-kernel",
+   "why": "actor must not import kernel"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
+   "from": "OwnedActorTurnOutputs, OwnedKernelReturnContent, OwnedNativeUiPatchAuthority",
+   "to": "OwnedActorTurnOutputs, OwnedNativeUiPatchAuthority",
+   "mode": "text",
+   "wave": "d6-actor-below-kernel",
+   "why": "the test bag no longer forwards a kernel class"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🔓️captured-return-admission/🟦️.ts",
+   "from": "const { BUDGET, NO_RESIDENT_FAULT, OwnedKernelReturnContent, OwnedResidentLedger,",
+   "to": "const { BUDGET, NO_RESIDENT_FAULT, OwnedResidentLedger,",
+   "mode": "text",
+   "wave": "d6-actor-below-kernel",
+   "why": "the class comes from the kernel directly"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🔓️captured-return-admission/🟦️.ts",
+   "from": "import { readModuleTreeSource } from \"@semio-tech/framework-compiler-ts/syntax/module-tree\";\n",
+   "to": "import { readModuleTreeSource } from \"@semio-tech/framework-compiler-ts/syntax/module-tree\";\nimport { OwnedKernelReturnContent } from \"@semio-tech/framework-kernel/return/content/input\";\n",
+   "mode": "text",
+   "wave": "d6-actor-below-kernel",
+   "why": "the class comes from the kernel directly"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🔗️kernel-return-input-binding/🟦️.ts",
+   "from": "const { OwnedKernelReturnContent, OwnedShardReturnPage, OwnedUiInstance,",
+   "to": "const { OwnedShardReturnPage, OwnedUiInstance,",
+   "mode": "text",
+   "wave": "d6-actor-below-kernel",
+   "why": "the class comes from the kernel directly"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🔗️kernel-return-input-binding/🟦️.ts",
+   "from": "import type { ShardClientSettlementTestKit } from \"../🧰️settlement-test-kit/🟦️.ts\";\n",
+   "to": "import { OwnedKernelReturnContent } from \"@semio-tech/framework-kernel/return/content/input\";\nimport type { ShardClientSettlementTestKit } from \"../🧰️settlement-test-kit/🟦️.ts\";\n",
+   "mode": "text",
+   "wave": "d6-actor-below-kernel",
+   "why": "the class comes from the kernel directly"
+  }
+ ],
+ "fileOps": [],
+ "flags": []
+}

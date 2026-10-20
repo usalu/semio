@@ -21,7 +21,7 @@ test("neutral Pack tooling follows the same explicit boundary for computed impor
   }
   expect(database.query("SELECT COUNT(*) AS count FROM boundary WHERE owner='general' AND dependency='product' AND allowed=1").get()).toEqual({count:0});
  }finally{database.close();}
- const owner=resolve(import.meta.dir,"../.."),sources=[resolve(owner,"📜️script.ts"),resolve(owner,"📦️packages/🦀️rust/📜️script.ts")];
+ const owner=resolve(import.meta.dir,"../.."),sources=[resolve(owner,"📦️packages/🟦️typescript/📜️script.ts"),resolve(owner,"📦️packages/🦀️rust/📜️script.ts")];
  const violations:{source:string;line:number}[]=[];
  for(const file of sources){
   const source=ts.createSourceFile(file,readFileSync(file,"utf8"),ts.ScriptTarget.Latest,true,ts.ScriptKind.TS);

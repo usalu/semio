@@ -1,0 +1,37 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🖍️canvas-board-hosts/🟦️.ts",
+ "describeLine": 11,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of the framework renderer hosts suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️renders-canvas-2d-host",
+   "doc": "/** 🔶️ The renders canvas 2d host tests of the framework renderer hosts suite. */",
+   "name": "registerRendersCanvas2dHostTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the renders canvas 2d host tests of the framework renderer hosts suite.",
+   "from": 12,
+   "to": 159
+  },
+  {
+   "dir": "🔸️coalesces-puzzle-2d-board",
+   "doc": "/** 🔸️ The coalesces puzzle 2d board tests of the framework renderer hosts suite. */",
+   "name": "registerCoalescesPuzzle2dBoardTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the coalesces puzzle 2d board tests of the framework renderer hosts suite.",
+   "from": 173,
+   "to": 329
+  },
+  {
+   "dir": "🟠️collects-live-mirror-mutations",
+   "doc": "/** 🟠️ The collects live mirror mutations tests of the framework renderer hosts suite. */",
+   "name": "registerCollectsLiveMirrorMutationsTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the collects live mirror mutations tests of the framework renderer hosts suite.",
+   "from": 342,
+   "to": 421
+  }
+ ]
+}

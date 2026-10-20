@@ -1,0 +1,301 @@
+{
+ "schema": "cycle-break/delta@1",
+ "stagedAt": "2026-10-20T02:28:03.253Z",
+ "manifestOps": [
+  {
+   "op": "remove",
+   "packageJson": "🧰️framework/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/framework",
+   "field": "exports",
+   "key": "./products/repo/modules/dashboard/installation",
+   "value": "./🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+   "wave": "w2c-repo-product",
+   "why": "key moves to @semio-tech/repo-product/modules/dashboard/installation"
+  },
+  {
+   "op": "add",
+   "packageJson": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/repo-lib",
+   "field": "dependencies",
+   "key": "@semio-tech/repo-product",
+   "value": "workspace:*",
+   "wave": "carve",
+   "why": "@semio-tech/repo-lib imports @semio-tech/repo-product"
+  },
+  {
+   "op": "add",
+   "packageJson": "package.json",
+   "package": "workspace",
+   "field": "workspaces",
+   "key": "🧰️framework/🛍️products/🦑️repo",
+   "value": "",
+   "wave": "w2c-repo-product",
+   "why": "workspace member @semio-tech/repo-product"
+  },
+  {
+   "op": "add",
+   "packageJson": "♻️mit-bestand/package.json",
+   "package": "semio-mit-bestand-workspace",
+   "field": "workspaces",
+   "key": "../🧰️framework/🛍️products/🦑️repo",
+   "value": "",
+   "wave": "w2c-repo-product",
+   "why": "workspace member @semio-tech/repo-product"
+  },
+  {
+   "op": "add",
+   "packageJson": "✏️s/package.json",
+   "package": "semio-s-workspace",
+   "field": "workspaces",
+   "key": "../🧰️framework/🛍️products/🦑️repo",
+   "value": "",
+   "wave": "w2c-repo-product",
+   "why": "workspace member @semio-tech/repo-product"
+  },
+  {
+   "op": "add",
+   "packageJson": "🌎️hub/package.json",
+   "package": "semio-hub-workspace",
+   "field": "workspaces",
+   "key": "../🧰️framework/🛍️products/🦑️repo",
+   "value": "",
+   "wave": "w2c-repo-product",
+   "why": "workspace member @semio-tech/repo-product"
+  },
+  {
+   "op": "add",
+   "packageJson": "🎓️teaching/package.json",
+   "package": "semio-teaching-workspace",
+   "field": "workspaces",
+   "key": "../🧰️framework/🛍️products/🦑️repo",
+   "value": "",
+   "wave": "w2c-repo-product",
+   "why": "workspace member @semio-tech/repo-product"
+  },
+  {
+   "op": "add",
+   "packageJson": "🏢️semio-tech/package.json",
+   "package": "semio-semio-tech-workspace",
+   "field": "workspaces",
+   "key": "../🧰️framework/🛍️products/🦑️repo",
+   "value": "",
+   "wave": "w2c-repo-product",
+   "why": "workspace member @semio-tech/repo-product"
+  }
+ ],
+ "newFiles": [
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/package.json",
+   "content": "{\n  \"$schema\": \"https://json.schemastore.org/package.json\",\n  \"name\": \"@semio-tech/repo-product\",\n  \"version\": \"0.1.0\",\n  \"description\": \"repo · product modules (dashboard, client, lint) outside the library, coordinator, test and server-library packages\",\n  \"type\": \"module\",\n  \"private\": true,\n  \"exports\": {\n    \"./modules/dashboard/installation\": \"./🔨️modules/🎛️dashboard/📦️installation/🟦️.ts\",\n    \"./modules/dashboard/testing/coverage/oracle\": \"./🔨️modules/🎛️dashboard/🧪️tests/🗺️coverage/🔮️oracle/🟦️.ts\"\n  },\n  \"dependencies\": {\n    \"@semio-tech/process\": \"workspace:*\",\n    \"@semio-tech/repo-lib\": \"workspace:*\",\n    \"@semio-tech/schema-validator-ts\": \"workspace:*\",\n    \"@eslint/js\": \"^10.0.1\",\n    \"eslint-plugin-storybook\": \"10.4.0\",\n    \"typescript-eslint\": \"^8.50.1\"\n  },\n  \"license\": \"LGPL-3.0-or-later\",\n  \"bundleKind\": \"library\",\n  \"devDependencies\": {\n    \"@iarna/toml\": \"2.2.5\",\n    \"@modelcontextprotocol/sdk\": \"1.32.1\",\n    \"ajv\": \"8.20.0\",\n    \"esbuild\": \"^0.27.2\",\n    \"fast-glob\": \"3.3.3\",\n    \"find-up\": \"5.0.0\",\n    \"graphql\": \"^17.0.2\",\n    \"ignore\": \"7.0.12\",\n    \"jsdom\": \"^24.1.3\",\n    \"jsonc-parser\": \"3.3.1\",\n    \"lodash\": \"4.18.1\",\n    \"micromatch\": \"^4.0.8\",\n    \"nx\": \"23.2.0\",\n    \"smart-buffer\": \"^4.2.0\",\n    \"string-argv\": \"0.4.0\",\n    \"string-width\": \"7.2.0\",\n    \"strip-ansi\": \"^7.2.0\",\n    \"typescript\": \"^5.9.3\",\n    \"vitest\": \"^4.0.17\",\n    \"yaml\": \"2.9.0\"\n  }\n}\n",
+   "wave": "w2c-repo-product",
+   "why": "module-root package @semio-tech/repo-product"
+  }
+ ],
+ "edits": [
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎛️dashboard-control/🟦️.ts",
+   "from": "../../../🎛️dashboard/🧪️tests/🗺️coverage/🔮️oracle/🟦️.ts",
+   "to": "@semio-tech/repo-product/modules/dashboard/testing/coverage/oracle",
+   "mode": "specifier",
+   "wave": "w2c-repo-product",
+   "why": "relative import crosses into carved package @semio-tech/repo-product"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎛️dashboard-control/🟦️.ts",
+   "from": "@semio-tech/framework/products/repo/modules/dashboard/installation",
+   "to": "@semio-tech/repo-product/modules/dashboard/installation",
+   "mode": "specifier",
+   "wave": "w2c-repo-product",
+   "why": "key @semio-tech/framework/products/repo/modules/dashboard/installation moved to @semio-tech/repo-product"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🟦️.ts",
+   "from": "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "to": "@semio-tech/process/routing",
+   "mode": "specifier",
+   "wave": "w2c-repo-product",
+   "why": "@semio-tech/repo-product imports @semio-tech/process through its existing key"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🟦️.ts",
+   "from": "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts",
+   "to": "@semio-tech/process/compiler-capacity",
+   "mode": "specifier",
+   "wave": "w2c-repo-product",
+   "why": "@semio-tech/repo-product imports @semio-tech/process through its existing key"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🟦️.ts",
+   "from": "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts",
+   "to": "@semio-tech/process/test-budget",
+   "mode": "specifier",
+   "wave": "w2c-repo-product",
+   "why": "@semio-tech/repo-product imports @semio-tech/process through its existing key"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🟦️.ts",
+   "from": "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts",
+   "to": "@semio-tech/process/budget",
+   "mode": "specifier",
+   "wave": "w2c-repo-product",
+   "why": "@semio-tech/repo-product imports @semio-tech/process through its existing key"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🟦️.ts",
+   "from": "../../📚️library/📦️packages/🟦️typescript/🧪️testing/🟦️.ts",
+   "to": "@semio-tech/repo-lib/testing",
+   "mode": "specifier",
+   "wave": "w2c-repo-product",
+   "why": "@semio-tech/repo-product imports @semio-tech/repo-lib through its existing key"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🟦️.ts",
+   "from": "../../📚️library/📦️packages/🟦️typescript/🚨️policy/🟦️.ts",
+   "to": "@semio-tech/repo-lib/policy",
+   "mode": "specifier",
+   "wave": "w2c-repo-product",
+   "why": "@semio-tech/repo-product imports @semio-tech/repo-lib through its existing key"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/🟦️.ts",
+   "from": "../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+   "to": "@semio-tech/schema-validator-ts",
+   "mode": "specifier",
+   "wave": "w2c-repo-product",
+   "why": "@semio-tech/repo-product imports @semio-tech/schema-validator-ts through its existing key"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🟦️.ts",
+   "from": "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "to": "@semio-tech/process/routing",
+   "mode": "specifier",
+   "wave": "w2c-repo-product",
+   "why": "@semio-tech/repo-product imports @semio-tech/process through its existing key"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🟦️.ts",
+   "from": "../📚️library/📦️packages/🟦️typescript/🚨️policy/🟦️.ts",
+   "to": "@semio-tech/repo-lib/policy",
+   "mode": "specifier",
+   "wave": "w2c-repo-product",
+   "why": "@semio-tech/repo-product imports @semio-tech/repo-lib through its existing key"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🟦️.ts",
+   "from": "../📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts",
+   "to": "@semio-tech/repo-lib/inventory",
+   "mode": "specifier",
+   "wave": "w2c-repo-product",
+   "why": "@semio-tech/repo-product imports @semio-tech/repo-lib through its existing key"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs",
+   "from": "../../📚️library/📦️packages/🟦️typescript/📇️inventory/🟨️.cjs",
+   "to": "@semio-tech/repo-lib/inventory/commonjs",
+   "mode": "specifier",
+   "wave": "w2c-repo-product",
+   "why": "@semio-tech/repo-product imports @semio-tech/repo-lib through its existing key"
+  }
+ ],
+ "fileOps": [
+  {
+   "op": "delete",
+   "path": "🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+   "sha256": "c0c1a6c87288b12f7319d0eb6409bb8009b3dbf04a03b94514147624a1310b7a",
+   "wave": "carve",
+   "why": "glue of a moved key is dead after the carve"
+  }
+ ],
+ "flags": [
+  {
+   "wave": "w2c-repo-product",
+   "severity": "note",
+   "message": "zero-touch CLI closure file keeps its relative import: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts"
+  },
+  {
+   "wave": "w2c-repo-product",
+   "severity": "note",
+   "message": "zero-touch CLI closure file keeps its relative import: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts"
+  },
+  {
+   "wave": "w2c-repo-product",
+   "severity": "note",
+   "message": "zero-touch CLI closure file keeps its relative import: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts"
+  },
+  {
+   "wave": "w2c-repo-product",
+   "severity": "note",
+   "message": "zero-touch CLI closure file keeps its relative import: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/📤️child/🟦️.ts -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts"
+  },
+  {
+   "wave": "w2c-repo-product",
+   "severity": "note",
+   "message": "closure file keeps relative import 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts -> 🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts"
+  },
+  {
+   "wave": "w2c-repo-product",
+   "severity": "note",
+   "message": "closure file keeps relative import 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts"
+  },
+  {
+   "wave": "w2c-repo-product",
+   "severity": "note",
+   "message": "closure file keeps relative import 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts"
+  },
+  {
+   "wave": "w2c-repo-product",
+   "severity": "note",
+   "message": "closure file keeps relative import 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts -> 🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts"
+  },
+  {
+   "wave": "w2c-repo-product",
+   "severity": "note",
+   "message": "closure file keeps relative import 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts -> 🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"
+  },
+  {
+   "wave": "w2c-repo-product",
+   "severity": "note",
+   "message": "closure file keeps relative import 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/📥️dependencies/📋️contract/🟦️.ts"
+  },
+  {
+   "wave": "w2c-repo-product",
+   "severity": "note",
+   "message": "closure file keeps relative import 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts -> 🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts"
+  },
+  {
+   "wave": "w2c-repo-product",
+   "severity": "note",
+   "message": "closure file keeps relative import 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts -> 🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts"
+  },
+  {
+   "wave": "w2c-repo-product",
+   "severity": "note",
+   "message": "closure file keeps relative import 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts -> 🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts"
+  },
+  {
+   "wave": "w2c-repo-product",
+   "severity": "note",
+   "message": "closure file keeps relative import 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts -> 🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts"
+  },
+  {
+   "wave": "w2c-repo-product",
+   "severity": "note",
+   "message": "closure file keeps relative import 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/📤️orchestration/🧬️schema/🔣️.json"
+  },
+  {
+   "wave": "w2c-repo-product",
+   "severity": "note",
+   "message": "closure file keeps relative import 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧬️schema/🔣️.json"
+  },
+  {
+   "wave": "w2c-repo-product",
+   "severity": "note",
+   "message": "closure file keeps relative import 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts -> 🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts"
+  },
+  {
+   "wave": "w2c-repo-product",
+   "severity": "note",
+   "message": "closure file keeps relative import 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts -> 🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts"
+  }
+ ]
+}

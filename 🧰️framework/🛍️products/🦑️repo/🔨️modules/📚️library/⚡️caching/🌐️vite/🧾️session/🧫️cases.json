@@ -19,5 +19,38 @@
   "endpoint": "/__semio/nx-service",
   "mutationLease": { "directory": ".leases", "resource": "sessions" },
   "mutations": ["open", "publish", "close"],
-  "readinessRace": ["request", "replace-session", "respond", "reject-stale-session"]
+  "readinessRace": ["request", "replace-session", "respond", "reject-stale-session"],
+  "readiness": {
+    "products": [
+      { "budget": "🏢️semio-tech/🎡️play/🔨️modules/🧩️runtime/🧪️e2e/🔣️.json", "minimumTimeoutMs": 600000 },
+      { "budget": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/🧪️e2e/🔣️.json", "minimumTimeoutMs": 600000 }
+    ],
+    "invalid": [
+      { "reason": "timeout below cold-boot maximum times margin", "path": ["readyTimeoutMs"], "value": 100000, "schema": true },
+      { "reason": "timeout below the schema minimum", "path": ["readyTimeoutMs"], "value": 1000, "schema": false },
+      { "reason": "margin factor below two", "path": ["evidence", "marginFactor"], "value": 1, "schema": false },
+      { "reason": "unknown evidence kind", "path": ["evidence", "kind"], "value": "guess", "schema": false },
+      { "reason": "unknown member", "path": ["extra"], "value": 1, "schema": false },
+      { "reason": "cold minimum above cold maximum", "path": ["evidence", "coldBootMs", "minimum"], "value": 200000, "schema": true },
+      { "reason": "warm maximum above cold maximum", "path": ["evidence", "warmBootMs", "maximum"], "value": 190000, "schema": true },
+      { "reason": "missing evidence source", "path": ["evidence", "source"], "remove": true, "schema": false },
+      { "reason": "unknown schema version", "path": ["schemaVersion"], "value": 2, "schema": false }
+    ],
+    "progress": {
+      "timeoutMs": 450,
+      "intervalMs": 100,
+      "minimumEvents": 3,
+      "lines": [
+        { "owner": "fixture:e2e", "progress": { "elapsedMs": 45000, "timeoutMs": 600000, "phase": "awaiting-ready-record" }, "en": "[e2e] fixture:e2e: waiting for the dev server to publish its ready record (45 s of 600 s)", "de": "[e2e] fixture:e2e: warte darauf, dass der Dev-Server seinen Bereitschaftseintrag veröffentlicht (45 s von 600 s)" },
+        { "owner": "fixture:e2e", "progress": { "elapsedMs": 61999, "timeoutMs": 600000, "phase": "verifying-listener" }, "en": "[e2e] fixture:e2e: verifying the listener identity (61 s of 600 s)", "de": "[e2e] fixture:e2e: prüfe die Identität des Listeners (61 s von 600 s)" }
+      ],
+      "languages": [
+        { "environment": { "SEMIO_LANGUAGE": "de", "LANG": "en_US.UTF-8" }, "language": "de" },
+        { "environment": { "LANG": "de_DE.UTF-8" }, "language": "de" },
+        { "environment": { "SEMIO_LANGUAGE": "fr", "LC_ALL": "de_CH" }, "language": "de" },
+        { "environment": { "LANG": "C" }, "language": "en" },
+        { "environment": {}, "language": "en" }
+      ]
+    }
+  }
 }

@@ -1,0 +1,53 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏗️fem-visual/🟦️.ts",
+ "function": "toolJobFemLiveVisualPublicationExact",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of toolJobFemLiveVisualPublicationExact. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️rust-body",
+   "doc": "/** 🔶️ The rust body phase of toolJobFemLiveVisualPublicationExact. */",
+   "phases": [
+    {
+     "name": "buildRustBodyState",
+     "emoji": "🔷",
+     "doc": "Builds rustBody, region, ordered, stages of toolJobFemLiveVisualPublicationExact.",
+     "from": 27,
+     "to": 124
+    }
+   ]
+  },
+  {
+   "dir": "🔸️production-exact",
+   "doc": "/** 🔸️ The production exact phase of toolJobFemLiveVisualPublicationExact. */",
+   "phases": [
+    {
+     "name": "buildProductionExact",
+     "emoji": "🔹",
+     "doc": "Builds productionExact of toolJobFemLiveVisualPublicationExact.",
+     "from": 125,
+     "to": 125
+    }
+   ]
+  },
+  {
+   "dir": "🟠️visual-exact",
+   "doc": "/** 🟠️ The visual exact phase of toolJobFemLiveVisualPublicationExact. */",
+   "phases": [
+    {
+     "name": "buildVisualExact",
+     "emoji": "🟡",
+     "doc": "Builds visualExact of toolJobFemLiveVisualPublicationExact.",
+     "from": 339,
+     "to": 339
+    }
+   ]
+  }
+ ]
+}

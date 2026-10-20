@@ -198,7 +198,7 @@ test("StateClass has one Value-backed lower owner rather than a protocol or prod
   expect(existsSync(join(root, corpus.ownership.stateManifest)), "missing canonical state package").toBe(true);
   const manifest = TOML.parse(read(corpus.ownership.stateManifest));
   expect(manifest.package).toHaveProperty("name", corpus.providers.state);
-  expect(Object.keys(manifest.dependencies ?? {})).toEqual(["semio-framework-value"]);
+  expect(Object.keys(manifest.dependencies ?? {})).toEqual(["semio-framework-value","semio-framework-value-native-owned"]);
   expect(read(corpus.ownership.stateSource)).toContain("pub enum StateClass");
   expect(read(corpus.ownership.protocolSource)).not.toContain("pub enum StateClass");
 });

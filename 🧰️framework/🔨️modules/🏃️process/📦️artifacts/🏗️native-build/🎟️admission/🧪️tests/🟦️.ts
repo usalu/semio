@@ -1,4 +1,5 @@
-import { phaseCompilerAdmissionControlV1 } from "../../../../🏗️build/🎟️capacity/🟦️.ts";
+import { createIssuedResourceControlV1 } from "../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { withBuildTestInvocationV1 } from "../../../../🧪️testing/📥️invocation/🟦️.ts";
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import { quantile } from "d3-array";
@@ -46,15 +47,15 @@ test("admission decisions follow the language-neutral vectors (progress, freeze,
   for (const row of fixture.freeze) expect(admissionFrozenV1(row.wasFrozen, row)).toBe(row.frozen);
 });
 
-test("the store keeps the newest window per key, survives a torn trailing line and rewrites atomically under its lease", async () => {
+test("the store keeps the newest window per key, survives a torn trailing line and rewrites atomically under its lease", () => withBuildTestInvocationV1(async (original) => {
   const directory = mkdtempSync(join(artifacts, "h-")), path = join(directory, "units.jsonl");
-  await recordUnitHistoryV1(path, fixture.store.rows as UnitObservationV1[], { leaseDirectory: artifacts, control: phaseCompilerAdmissionControlV1(AbortSignal.timeout(10_000),10_000,()=>undefined,()=>new Promise(done=>setImmediate(done))) });
+  await recordUnitHistoryV1(path, fixture.store.rows as UnitObservationV1[], { leaseDirectory: artifacts, control: createIssuedResourceControlV1(original, "history:store", 10_000, AbortSignal.timeout(10_000)) });
   appendFileSync(path, "{\"v\":1,\"key\":\"torn");
   const history = await readUnitHistoryV1(path);
   expect(Object.fromEntries([...history].map(([key, rows]) => [key, rows.map((row) => row.atMs)]))).toEqual(fixture.store.kept);
-  await recordUnitHistoryV1(path, [], { leaseDirectory: artifacts, control: phaseCompilerAdmissionControlV1(AbortSignal.timeout(10_000),10_000,()=>undefined,()=>new Promise(done=>setImmediate(done))) });
+  await recordUnitHistoryV1(path, [], { leaseDirectory: artifacts, control: createIssuedResourceControlV1(original, "history:store", 10_000, AbortSignal.timeout(10_000)) });
   expect([...(await readUnitHistoryV1(path)).keys()].sort()).toEqual(Object.keys(fixture.store.kept).sort());
-});
+}));
 
 test("real Cargo through the wrapper: a tight memory budget admits one unit at a time, a roomy one runs as many as the pool holds", async () => {
   const manifest = tinyCargoWorkspaceV1(mkdtempSync(join(artifacts, "w-")), fixture.cargo.crates);

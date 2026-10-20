@@ -1,0 +1,327 @@
+{
+  "name": "@semio-tech/framework-os-mcp-rs",
+  "$schema": "../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🎚️config/🧱️binary-gate.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🧫️fixtures/🔣️first-party-codecs.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/**/🧬️schema/🔣️.json",
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🗂️catalog/🧪️tests/🧫️fixtures/*.json",
+      "sharedGlobals"
+    ],
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust/**/*"
+    ],
+    "nativeTestSources": [
+      "default",
+      "reads"
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/rustfmt.toml"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ]
+  },
+  "targets": {
+    "build": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts build"
+      },
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "outputs": [
+        "{projectRoot}/.🧾️store/build.json"
+      ]
+    },
+    "build-release": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts build-release"
+      },
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/build-release"
+      ]
+    },
+    "publish": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [
+        "build-release"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts publish"
+      },
+      "outputs": [
+        "{projectRoot}/dist/publish"
+      ]
+    },
+    "check": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts check"
+      }
+    },
+    "test": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test"
+      }
+    },
+    "probe-sqlite-source": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts probe-sqlite-source"
+      }
+    },
+    "probe-sqlite-native": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts probe-sqlite-native"
+      }
+    },
+    "canonical-pair-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts canonical-pair-check"
+      },
+      "outputs": []
+    },
+    "hub-live-catalog-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts hub-live-catalog-oracle"
+      },
+      "outputs": []
+    },
+    "hub-live-catalog-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts hub-live-catalog-check"
+      },
+      "outputs": []
+    },
+    "hub-live-catalog-native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts hub-live-catalog-native-check"
+      },
+      "outputs": []
+    },
+    "canonical-checkpoint-resource-oracle": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts canonical-checkpoint-resource-oracle"
+      },
+      "outputs": []
+    },
+    "canonical-checkpoint-resource-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts canonical-checkpoint-resource-check"
+      },
+      "outputs": []
+    },
+    "canonical-checkpoint-resource-native-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts canonical-checkpoint-resource-native-check"
+      },
+      "outputs": []
+    },
+    "capability-audit-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        { "dependentTasksOutputFiles": "**/*" },
+        "cargoToolchain"
+      ],
+      "cache": true,
+      "dependsOn": [
+        "build"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts capability-audit-check"
+      },
+      "outputs": []
+    },
+    "schema-mirror": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        { "dependentTasksOutputFiles": "**/*" },
+        "cargoToolchain"
+      ],
+      "cache": false,
+      "dependsOn": [
+        "build"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts schema-mirror"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      },
+      "outputs": []
+    },
+    "schema-mirror-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        { "dependentTasksOutputFiles": "**/*" },
+        "cargoToolchain"
+      ],
+      "cache": true,
+      "dependsOn": [
+        "build"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts schema-mirror --check"
+      },
+      "outputs": []
+    },
+    "dev": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts dev"
+      },
+      "cache": false,
+      "continuous": true,
+      "dependsOn": [
+        "build"
+      ],
+      "outputs": []
+    },
+    "installed-service-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts installed-service-check",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

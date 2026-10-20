@@ -61,7 +61,8 @@
         "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/**/*",
         "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🟦️.ts",
         "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🦀️.rs"
-      ]
+      ],
+      "outputs": []
     }
   }
 }

@@ -1,5 +1,5 @@
 import{validateJsonSchemaSubset}from"../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import exportedSchema from"./🧬️schema/🔣️.json";
+import exportedSchema from"./🧬️schema/🔣️.json" with { type: "json" };
 const schema=JSON.parse(JSON.stringify(exportedSchema))as typeof exportedSchema;
 /** 📚️ Compares application bytes, raw journals and the stable reserved service contract; current service contents remain observed DATA. */
 export function nativeImagePublicationPreservationV1(before:unknown,after:unknown):boolean{for(const value of[before,after])if(validateJsonSchemaSubset(schema.definitions.Witness,value,schema).length)throw Error("Closed complete Native publication witness required");const first=before as import("./📚️witness/🟦️.ts").NativeImagePublicationWitnessV1,last=after as typeof first;return first.applicationSha256===last.applicationSha256&&first.journalSha256===last.journalSha256&&JSON.stringify(first.service?.identity??null)===JSON.stringify(last.service?.identity??null);}

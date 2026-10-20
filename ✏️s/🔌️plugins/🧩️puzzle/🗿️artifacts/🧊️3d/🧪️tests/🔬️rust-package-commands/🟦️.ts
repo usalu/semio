@@ -1,4 +1,4 @@
-import type { ScriptInvocation } from "@semio-tech/process/routing";
+import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
 import { runArtifactRustPackagesTests } from "@semio-tech/framework/process/cargo-test";
 import { runCmd } from "@semio-tech/framework/process/execution";
 import { readdirSync } from "node:fs";

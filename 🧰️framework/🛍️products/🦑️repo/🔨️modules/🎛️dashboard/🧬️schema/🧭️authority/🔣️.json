@@ -286,7 +286,7 @@
       },
       "description": "🗂️ Only enumerated physical generated/cache roots, ticket history and dependency boundaries are skipped; directory basenames build, dist, target and nested .cache remain authored source elsewhere."
     },
-    "ProtectedInstructions": {
+    "DashboardInstruction": {
       "type": "object",
       "required": [
         "path",
@@ -298,7 +298,7 @@
           "const": "AGENTS.md"
         },
         "text": {
-          "const": "- All devs are using `launch.json` and never use the cli.\n  - You MUST register all executable commands there by following the existing order, grouping and naming."
+          "const": "All human devs are using `repo dashboard`."
         }
       }
     }

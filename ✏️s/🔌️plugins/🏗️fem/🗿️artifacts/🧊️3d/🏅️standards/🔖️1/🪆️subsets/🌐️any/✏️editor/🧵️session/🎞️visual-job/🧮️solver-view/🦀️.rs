@@ -306,7 +306,7 @@ pub enum ChildEnd {
     Cancelled,
 }
 
-pub(super) pub enum Fem3dNumericalFailure {
+pub enum Fem3dNumericalFailure {
     Diagnostic(Vec<u8>),
     Original(semio_framework_job::OriginalTurnFailure),
 }

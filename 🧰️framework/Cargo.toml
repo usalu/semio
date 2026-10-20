@@ -3,6 +3,8 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+    "🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust",
+    "🔨️modules/📁️filesystem/📝️workspace/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/📜️registration/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/📑️command-page/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
@@ -1244,3 +1246,9 @@ path = "🔨️modules/🖱️ui/🧬️contract/🪢️text-edit/📦️package
 
 [workspace.dependencies.semio-framework-ui-contract-typegen]
 path = "🔨️modules/🖱️ui/🧬️contract/🧬️schema/🟦️projection/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-filesystem-workspace]
+path = "🔨️modules/📁️filesystem/📝️workspace/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-value-snapshot-projection]
+path = "🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust"

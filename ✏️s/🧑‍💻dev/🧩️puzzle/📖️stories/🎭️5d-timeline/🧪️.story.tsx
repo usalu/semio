@@ -7,15 +7,15 @@
 // #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import type { HistoryColumn } from "@semio-tech/framework/ui/targets/react";
+import type { HistoryColumn } from "@semio-tech/ui-react";
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from "react";
 
 import { GraphTimelineHost, World3dHost } from "@semio-tech/framework-renderer-react";
 import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framework-renderer-react";
 
-import concreteForestFixtureDsl from "../../../../🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🗣️.dsl.semio?raw";
-import nakaginCapsuleTowerFixtureDsl from "../../../../🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio?raw";
-import capsuleDreamFixtureDsl from "../../../../🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌙️capsule-dream/🖼️assets/🌙️dream/🗣️.dsl.semio?raw";
+import { puzzle5dConcreteForestDsl as concreteForestFixtureDsl } from "@semio-tech/puzzle-5d-ts/examples/concrete-forest/assets/forest";
+import { puzzle5dNakaginCapsuleTowerDsl as nakaginCapsuleTowerFixtureDsl } from "@semio-tech/puzzle-5d-ts/examples/nakagin-capsule-tower/assets/tower";
+import { puzzle5dCapsuleDreamDsl as capsuleDreamFixtureDsl } from "@semio-tech/puzzle-5d-ts/examples/capsule-dream/assets/dream";
 
 //#region StoryTypes
 type Vec3 = readonly [number, number, number];

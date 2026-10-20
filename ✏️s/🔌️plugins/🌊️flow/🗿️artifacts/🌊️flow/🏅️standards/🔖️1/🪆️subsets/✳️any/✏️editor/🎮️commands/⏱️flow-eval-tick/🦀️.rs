@@ -92,7 +92,7 @@ pub fn tick_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, sessi
         let hash=pending.node_hash;
         if session.invocation_origin_cold(window_id,hash).is_none(){
             let dependency_json=dependencies.remove(&pending.neuron_id).expect("initial invocation owns its original dependency source");
-            session.retain_invocation_origin_cold(flow::host::FlowInvocationOriginLease::from_cold(flow::host::FlowInvocationOrigin{window_id:window_id.into(),window_kind_id:window_kind_id.into(),neuron_id:pending.neuron_id,extension_id:pending.extension_id,operator_id:pending.operator_id,node_hash:hash,input_json:pending.input_json,dependency_json,operator_version:format!("registry:{};geometry:1;policy:1",flow::flow_extension_registry_generation()),outer_node_hash:None}));
+            session.retain_invocation_origin_cold(semio_framework_os_flow_host_session::invocation_publication::FlowInvocationOriginLease::from_cold(semio_framework_os_flow_host_session::invocation_publication::FlowInvocationOrigin{window_id:window_id.into(),window_kind_id:window_kind_id.into(),neuron_id:pending.neuron_id,extension_id:pending.extension_id,operator_id:pending.operator_id,node_hash:hash,input_json:pending.input_json,dependency_json,operator_version:format!("registry:{};geometry:1;policy:1",flow::flow_extension_registry_generation()),outer_node_hash:None}));
         }
         let origin=session.invocation_origin_cold(window_id,hash).expect("invocation source is retained before dispatch");
         extension_invocations.push(ExtensionInvocation::new(origin.extension_id.clone(),"evaluate",origin.request_json_cold(resume),"flowEvalResolve"));

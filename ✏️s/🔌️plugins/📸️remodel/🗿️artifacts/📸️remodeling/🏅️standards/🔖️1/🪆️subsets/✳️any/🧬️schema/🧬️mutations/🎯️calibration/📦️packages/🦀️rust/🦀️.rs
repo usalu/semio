@@ -19,6 +19,7 @@ pub mod standards {
                         pub mod create_camera_calibration {
                             #[path = "../../../🔭create-camera/🦀️.rs"]
                             mod component;
+                            pub use component::*;
                             #[path = "../../../🔭create-camera/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../../../🔭create-camera/↩️inverse/🦀️.rs"]
@@ -26,17 +27,19 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod update_camera_calibration {
-                            #[path = "../../../🛠️update-camera/🦀️.rs"]
+                            #[path = "../../../🛠️update-camera-calibration/🦀️.rs"]
                             mod component;
-                            #[path = "../../../🛠️update-camera/🔺️diff/🦀️.rs"]
+                            pub use component::*;
+                            #[path = "../../../🛠️update-camera-calibration/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "../../../🛠️update-camera/↩️inverse/🦀️.rs"]
+                            #[path = "../../../🛠️update-camera-calibration/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                         }
                         #[path = "."]
                         pub mod delete_camera_calibration {
                             #[path = "../../../🚫delete-camera/🦀️.rs"]
                             mod component;
+                            pub use component::*;
                             #[path = "../../../🚫delete-camera/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../../../🚫delete-camera/↩️inverse/🦀️.rs"]

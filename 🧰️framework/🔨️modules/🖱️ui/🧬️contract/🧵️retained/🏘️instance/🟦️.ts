@@ -1,7 +1,7 @@
 //#region 🧬️InstanceContract
 import { uiPatchAuthority, type UiActivationLease, type UiInstanceLifetime, type UiPatchReceipt, type UiPatchSource } from "../🔌️host/🟦️.ts";
 import type { UiIndexGrant } from "../🔌️host/🟦️.ts";
-import type { UiDocumentLimits } from "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
+import type { UiDocumentLimits } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
 import { OwnedUiSurface, type OwnedUiSurfaceAcknowledgement, type OwnedUiSurfaceView } from "../🖼️surface/🟦️.ts";
 import { OwnedUiWirePatchCursor } from "../🩹️operations/📥️wire/🟦️.ts";
 import type { OwnedUiSceneHostProfile } from "../🎬️scene/🧾️typed/🟦️.ts";

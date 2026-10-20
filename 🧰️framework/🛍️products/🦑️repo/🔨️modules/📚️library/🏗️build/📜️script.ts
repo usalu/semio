@@ -12,7 +12,7 @@ import { runOwnedCommand } from "../../../../../🔨️modules/🏃️process/�
 import { readBuildMode } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { buildBudgetMs } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 
-import bazelTestSchema from "./🔧️tools/🏗️bazel/🧪️tests/🧬️schema/📋️dispatch.json";
+import bazelTestSchema from "./🔧️tools/🏗️bazel/🧪️tests/🧬️schema/📋️dispatch.json" with { type: "json" };
 import {compileJsonSchemaSubset} from "../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 const bazelTestContract=compileJsonSchemaSubset(bazelTestSchema);
 
@@ -85,10 +85,12 @@ export class RepoScript extends Script {
 /** 🌳️ Preserves caller cancellation and deadline while selecting configured build resources. */
 export async function runOwnedBuildInvocationV1(root:string,args:readonly string[],parent:import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<void> {
  requireIssuedResourceControlInvocationV1(phaseControl,parent);checkResourceLeaseControl(phaseControl);const{readOwnedBuildInvocationV1}=await import("./📥️caller/🟦️.ts");readOwnedBuildInvocationV1(root,parent,args);
- const{parseBuildInvocationV1,buildInvocationRequestsHelpV1}=await import("./🧭️invocation/🟦️.ts"),selected=parseBuildInvocationV1(args,{SEMIO_BUILD_TOOL:(parent.capabilities as {tool?:string}).tool});
- const dashboard=selected.args[0]==="run"&&selected.args[1]?.startsWith("@semio-tech/repo-dashboard-rs:")?(await import("../../🎛️dashboard/📦️installation/🟦️.ts")).dashboardInvocation(selected.args):undefined;
+ const{parseBuildInvocationV1,resolveBuildInvocationV1,buildInvocationRequestsHelpV1}=await import("./🧭️invocation/🟦️.ts"),selected=parseBuildInvocationV1(args,{SEMIO_BUILD_TOOL:(parent.capabilities as {tool?:string}).tool});
+ const dashboard=selected.args[0]==="run"&&selected.args[1]?.startsWith("@semio-tech/repo-dashboard-rs:")?(await import("../⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts")).dashboardInvocation(selected.args):undefined;
  if(buildInvocationRequestsHelpV1(selected.args)&&dashboard===undefined){const{buildHelpForArgumentsV1}=await import("./⚙️operations/📖️help/🟦️.ts");console.log(buildHelpForArgumentsV1(selected.args,process.env));return;}
  if(selected.args[0]==="preflight"){const{runBuildPreflightV1}=await import("./🩺️preflight/🟦️.ts");await runBuildPreflightV1(root,selected.args,parent);return;}
+ const{readNativeRepoRecoveryPlanV1}=await import("./🚀️bootstrap/⌨️cli/🟦️.ts");
+ if(readNativeRepoRecoveryPlanV1(root,resolveBuildInvocationV1(root,selected.args,{...process.env,SEMIO_BUILD_MODE:(parent.capabilities as {buildMode:string}).buildMode}).args)){await runOwnedBuildInLeasesV1(root,args,parent,phaseControl);return;}
  const {openRepositoryCachePartitionV1}=await import("../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts"),control=phaseControl,leases=await openRepositoryCachePartitionV1(root,"leases",control);let failed=false;try{const {withRepositoryCacheStoreV1}=await import("../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts");await withRepositoryCacheStoreV1(root,"diagnostics",parent,control,async(diagnostics,diagnosticPhase)=>{const previous=process.env.SEMIO_DIAGNOSTIC_DIRECTORY;process.env.SEMIO_DIAGNOSTIC_DIRECTORY=diagnostics.environment.SEMIO_DIAGNOSTIC_DIRECTORY;try{await runOwnedBuildInLeasesV1(root,args,parent,diagnosticPhase);}finally{if(previous===undefined)delete process.env.SEMIO_DIAGNOSTIC_DIRECTORY;else process.env.SEMIO_DIAGNOSTIC_DIRECTORY=previous;}});}catch(error){failed=true;throw error;}finally{try{await leases.close();}catch(error){if(!failed)throw error;}}
 }
 
@@ -98,14 +100,15 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
   checkScriptInvocation(parent);
   const{readIssuedScriptProcessEnvelopeV1}=await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),{readOwnedBuildInvocationV1}=await import("./📥️caller/🟦️.ts"),capabilities=readOwnedBuildInvocationV1(root,parent,args),environment={...process.env,SEMIO_BUILD_TOOL:capabilities.tool,SEMIO_BUILD_MODE:capabilities.buildMode},selected=parseBuildInvocationV1(args,environment),resolved=resolveBuildInvocationV1(root,selected.args,environment),original=capabilities,ancestor=readBuildGraphAncestorSelectionV1(root,original),invocation=parent;
   readIssuedScriptProcessEnvelopeV1(parent);
-  const patch:NodeJS.ProcessEnv={...resolved.env,SEMIO_BUILD_MODE:capabilities.buildMode,CARGO_NET_OFFLINE:String(capabilities.native.network.offline),SEMIO_BUILD_TOOL:selected.tool,SEMIO_WORKSPACE_ROOT:root,SEMIO_BUILD_INVOCATION_PID:process.env.SEMIO_BUILD_INVOCATION_PID??String(process.pid),SEMIO_BUILD_REUSE_GRAPH:process.env.SEMIO_BUILD_REUSE_GRAPH,SEMIO_BUILD_GRAPH_PATH:process.env.SEMIO_BUILD_GRAPH_PATH,SEMIO_BUILD_GRAPH_DIGEST:process.env.SEMIO_BUILD_GRAPH_DIGEST};
+  const patch:NodeJS.ProcessEnv={...resolved.env,SEMIO_BUILD_MODE:capabilities.buildMode,CARGO_NET_OFFLINE:String(capabilities.native.network.offline),SEMIO_BUILD_TOOL:selected.tool,SEMIO_BUILD_WORKERS:selected.workers,SEMIO_WORKSPACE_ROOT:root,SEMIO_BUILD_INVOCATION_PID:process.env.SEMIO_BUILD_INVOCATION_PID??String(process.pid),SEMIO_BUILD_REUSE_GRAPH:process.env.SEMIO_BUILD_REUSE_GRAPH,SEMIO_BUILD_GRAPH_PATH:process.env.SEMIO_BUILD_GRAPH_PATH,SEMIO_BUILD_GRAPH_DIGEST:process.env.SEMIO_BUILD_GRAPH_DIGEST};
   const encoded=scriptInvocationEnvironment(invocation,{...process.env,...patch});
   patch.SEMIO_SCRIPT_PROCESS_INVOCATION=encoded.SEMIO_SCRIPT_PROCESS_INVOCATION;
   const previous=Object.fromEntries(Object.keys(patch).map(key=>[key,process.env[key]]));
   for(const[key,value]of Object.entries(patch))if(value===undefined)delete process.env[key];else process.env[key]=value;
   try {
+    if(await(await import("./🚀️bootstrap/⌨️cli/🟦️.ts")).runNativeRepoRecoveryV1(root,resolved.args,invocation,phaseControl))return;
     if(resolved.args[0]==="run"&&resolved.args[1]?.startsWith("@semio-tech/repo-dashboard-rs:")){
-      const native=await import("../../🎛️dashboard/📦️installation/🟦️.ts"),mode=readBuildMode((capabilities as {buildMode?:unknown}).buildMode??resolved.env.SEMIO_BUILD_MODE??"prototype");
+      const native=await import("../⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts"),mode=readBuildMode((capabilities as {buildMode?:unknown}).buildMode??resolved.env.SEMIO_BUILD_MODE??"prototype");
       const nativeArguments=native.dashboardInvocation(resolved.args);
       if(nativeArguments!==undefined){
         const {readNativeCallerAuthorityV1}=await import("../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts");const code=await native.launchDashboard(root,nativeArguments,{invocation,workspace:root,mode,network:readNativeCallerAuthorityV1(invocation.capabilities).network,control:scriptCompilerAdmissionControlV1(invocation,"dashboard:launch",0)});
@@ -119,7 +122,7 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
       validateBuildTaskArgumentsV1(resolved.args);
     }
     if(command==="dependencies"){
-      const {mode,selection}=readBuildDependencyInvocationV1(resolved.args),{SyncScript,RefreshLockScript}=await import("../⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts");
+      const {mode,selection}=readBuildDependencyInvocationV1(resolved.args),{SyncScript,RefreshLockScript}=await import("../⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🔬️script-commands/🟦️.ts");
       await new (mode==="lock"?RefreshLockScript:SyncScript)(root,root,invocation).run(selection.kind==="all"?["--all"]:["--scope",selection.owner]);return;
     }
     if(command==="cargo"){
@@ -127,6 +130,13 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
       process.exitCode=await launchRepositoryCargoV1(invocation,createIssuedResourceControlV1(invocation,"cargo:build-entry",0),root,readRepositoryCargoLaunchV1(resolved.args.slice(1),process.env),process.cwd(),process.env,{maximumMilliseconds:0,output:"stream"});return;
     }
     if(!["tools","reset","cache"].includes(command)){const {ensureBuildEnvironmentV1}=await import("./🚀️bootstrap/🟦️.ts");await ensureBuildEnvironmentV1(root,invocation,phaseControl);}
+    if(command==="cache"&&["serve","remote"].includes(resolved.args[1]??"")){
+      const {runRemoteCacheCommandV1}=await import("./🌐️remote-cache/⌨️command/🟦️.ts");
+      const tool=async()=>selected.tool==="nx"?(await import("../⚡️caching/🚀️bootstrap/🛠️tools/🌐️remote-cache/🟦️.ts")).nxRemoteCacheToolV1():(await import("./🔧️tools/🏗️bazel/🌐️remote-cache/🟦️.ts")).bazelRemoteCacheToolV1();
+      const result=await runRemoteCacheCommandV1(resolved.args.slice(1),{root,environment:process.env,signal:phaseControl.signal,progress:async stage=>{checkResourceLeaseControl(phaseControl);await advanceScriptInvocation(invocation,"build:cache:"+stage,"running");},write:line=>console.log(line),tool});
+      if(result!==undefined)console.log(JSON.stringify(result,null,2));
+      return;
+    }
     const {withRepositoryCacheStoreV1}=await import("../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts");
     await withRepositoryCacheStoreV1(root,"dependencies",parent,phaseControl,async(_dependencies,phaseControl)=>{
     if(command==="tools"){
@@ -215,7 +225,7 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
       return;
     }
     const {storeReceiptTasksV1,withStoreReceiptsV1}=await import("./🧾️store-receipt/🟦️.ts");
-    await withStoreReceiptsV1({root,tasks:await storeReceiptTasksV1(root,graph,resolved.args,invocation,readBuildMode(process.env.SEMIO_BUILD_MODE)),run:()=>adapter.runBazelTasksV1(root,graph,request,invocation,artifactPhase),repair:task=>adapter.runBazelTasksV1(root,graph,{...request,tasks:[task.id],args:request.tasks.includes(task.id)?request.args:[],skipCache:true,excludeDependencies:true},invocation,artifactPhase)});
+    await withStoreReceiptsV1({root,tasks:await storeReceiptTasksV1(root,graph,resolved.args,invocation,readBuildMode(process.env.SEMIO_BUILD_MODE)),run:async()=>{await adapter.runBazelTasksV1(root,graph,request,invocation,artifactPhase);},repair:async task=>{await adapter.runBazelTasksV1(root,graph,{...request,tasks:[task.id],args:request.tasks.includes(task.id)?request.args:[],skipCache:true,excludeDependencies:true},invocation,artifactPhase);}});
     },additionalBytes=>prepareBuildToolStorageV1(root,selected.tool,invocation,rustPhase,additionalBytes));
     });
     });

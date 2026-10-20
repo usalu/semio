@@ -11,7 +11,7 @@ use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::sche
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse<Op: From<AppendContent> + From<CommitReconstruction>>(payload: &super::DeleteAsset, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<AppendContent> + From<CommitReconstruction>>(payload: &crate::standards::v1::subsets::any::schema::mutations::delete_asset::component::DeleteAsset, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     let Some(handle) = base.assets.get(&payload.key) else {
         return Ok(Vec::new());
     };

@@ -538,25 +538,6 @@ pub fn energy_snapshot_with_links(model: &Model, links: &EnergyModelLinkSlots) -
     snapshot.weather_link = links.weather_link.clone();
     snapshot
 }
-
-/// ♻️ The one sanctioned whole-document LOAD for this artifact — file open, `.energy`/epJSON import
-/// and example load all route through here, and none of them is a mutation: ticket
-/// `26/08/12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL`'s derivation rule 6 forbids a whole-document
-/// `replace` kind, which is why `♻️replace-model` is gone from this vocabulary entirely.
-///
-/// The effect carries a genesis `(pack, spr)` pair; the host loops it back as a document archive load
-/// (`AppCommand::LoadDocumentArchive`), whose commit is what actually replaces the store — a guest plugin
-/// never holds the store itself. History
-/// therefore starts empty by construction: loading a second document is no more undoable back into
-/// the first than opening a second file is. Same shape as `📐️cad`'s `reset_document_effect` and
-/// `🔱️trinity`'s; a freshly minted, edit-free envelope makes the spr encode infallible.
-pub fn energy_model_load_document_effect(document_id: &str, model: &Model, links: &EnergyModelLinkSlots) -> semio_framework_plugin::kernel::Effect {
-    let snapshot = energy_snapshot_with_links(model, links);
-    let pack = <EnergyModelSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot);
-    let envelope = store::os_store::document_materialize::create_document_envelope::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA, document_id, snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).into_owners();
-    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::print_document_spr(&envelope)).expect("energy model document spr encode is infallible for a fresh, edit-free envelope");
-    semio_framework_plugin::kernel::Effect::LoadDocument { pack, spr }
-}
 //#endregion ♻️WholeDocumentLoad
 
 #[cfg(test)]

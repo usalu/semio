@@ -137,7 +137,7 @@ func aMissingTranscriptIsAProblemNotAPass(ctx *host.Context) (host.Outcome, erro
 
 // region 🔖️Registration
 
-// Adapter is the registration entry point the generated host calls.
+// 🌉️Adapter is the registration entry point the generated host calls.
 func Adapter() *host.Adapter {
 	return host.NewAdapter("go").
 		Subject("cancelling-mid-plan-keeps-completed-outcomes", cancellingMidPlanKeepsCompletedOutcomes).

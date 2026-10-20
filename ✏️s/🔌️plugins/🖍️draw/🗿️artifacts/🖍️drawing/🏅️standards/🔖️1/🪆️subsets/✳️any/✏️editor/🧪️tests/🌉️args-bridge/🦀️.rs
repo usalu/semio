@@ -1,6 +1,8 @@
 use semio_s_artifact_draw_drawing_editor::args_bridge::command_from_action;
 use semio_s_artifact_draw_drawing_editor::DrawingCommand;
 use semio_s_artifact_draw_drawing_editor_commands::{add_layer, edit_fill, edit_path, edit_selection, export_document, patch_layer, set_active_example};
+use semio_s_artifact_draw_drawing_model::fill::FillType;
+use semio_s_artifact_draw_drawing_model::fill::FillAxis;
 
 #[test]
 fn folds_camel_case_keys_and_json_values() {

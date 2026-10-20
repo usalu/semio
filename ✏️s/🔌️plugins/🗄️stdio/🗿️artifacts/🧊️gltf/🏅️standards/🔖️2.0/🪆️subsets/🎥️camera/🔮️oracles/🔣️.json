@@ -28,6 +28,10 @@
             {
               "id": "removes-the-perspective-camera-and-renumbers-the-node",
               "directoryName": "🚫️removes"
+            },
+            {
+              "id": "middle-row",
+              "directoryName": "🔬️middle-row"
             }
           ]
         },

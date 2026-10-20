@@ -6,6 +6,7 @@ use crate::mirror::editor::puzzle2d::modes::edit::windows::overview;
 use crate::mirror::editor::puzzle2d::modes::edit::windows::detail;
 use crate::mirror::editor::puzzle2d::modes::edit::windows::selection;
 use crate::mirror::editor::puzzle2d::panels::catalogue;
+use crate::mirror::editor::puzzle2d::panels::artifact;
 use crate::mirror::editor::puzzle2d::panels::inspection;
 use semio_s_artifact_puzzle_2d_retained_panels::editor::puzzle2d::panels::settings;
 use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
@@ -40,7 +41,7 @@ impl Puzzle2dPlayApp {
         let node = match body_key {
             overview::BODY_KEY => overview::render(&document_json, &envelope)?,
             detail::BODY_KEY => detail::render(&document_json, &envelope)?,
-            crate::standards::v1::subsets::any::schema::mutations::selection::BODY_KEY => selection::render(&document_json, &envelope)?,
+            selection::BODY_KEY => selection::render(&document_json, &envelope)?,
             crate::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_LAYERS => artifact::render(&envelope, labels, &windows)?,
             catalogue::PUZZLE2D_PLAY_BODY_CATALOGUE => catalogue::render(&envelope, labels, &windows)?,
             crate::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_PROPERTIES => inspection::render(&envelope, labels, &windows)?,

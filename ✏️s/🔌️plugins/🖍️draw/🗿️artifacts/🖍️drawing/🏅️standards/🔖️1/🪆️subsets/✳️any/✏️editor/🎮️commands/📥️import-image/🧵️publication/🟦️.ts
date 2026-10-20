@@ -1,5 +1,5 @@
 /** 🪪️ Canonical image identities include the original authoring seed and exact operation wire words. */
-import {sha256Hex} from "@semio-tech/framework/hash";
+import {sha256Hex} from "@semio-tech/framework-hash";
 export interface ImagePublicationIdentity {revisionHex:string;appInstanceHex:string;operationHex:string;generationHex:string;authoringSeed:string}
 export function imagePublicationIdentities(input:ImagePublicationIdentity):{assetId:string;layerId:string}{
  const words=[input.revisionHex,input.appInstanceHex,input.operationHex,input.generationHex],lengths=[64,8,16,16];for(let at=0;at<words.length;at++)if(words[at]!.length!==lengths[at]||!/^[0-9a-f]+$/.test(words[at]!))throw RangeError("Invalid image publication identity word");

@@ -1,6 +1,6 @@
 /** 🪟️ The remodel story constants and the per-window scene projections: main and viewer world, frames canvas, report table. */
 import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framework-renderer-react";
-import type { Canvas2dScene, TableScene, World3dScene } from "@semio-tech/framework/ui/scene";
+import type { Canvas2dScene, TableScene, World3dScene } from "@semio-tech/ui/scene";
 import type { RemodelConfig, RemodelScene } from "../📐️scene-model/🟦️.ts";
 
 //#region 🔖️Constants

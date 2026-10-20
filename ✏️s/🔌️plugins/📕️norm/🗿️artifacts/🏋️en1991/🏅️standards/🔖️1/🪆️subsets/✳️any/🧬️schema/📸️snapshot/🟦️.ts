@@ -4,101 +4,101 @@
 import { normWireArray, normWireBoolean, normWireInteger, normWireLiteral, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 
 export interface En1991Snapshot {
-  /** @state artifact */
+  /** 📑️ @state artifact */
   annex: "En" | "De";
-  /** @state artifact */
+  /** ❄️ @state artifact */
   snowZone: string;
-  /** @state artifact */
+  /** 📐️ @state artifact */
   altitude: number;
-  /** @state artifact */
+  /** 📏️ @state artifact */
   enSk: number;
-  /** @state artifact */
+  /** 🌐️ @state artifact */
   northGermanLowlandSnow: boolean;
-  /** @state artifact */
+  /** 🌋️ @state artifact */
   windZone: number;
-  /** @state artifact */
+  /** 🏛️ @state artifact */
   enVb: number;
-  /** @state artifact */
+  /** 🗺️ @state artifact */
   terrainCategory: number;
-  /** @state artifact */
+  /** 🌍️ @state artifact */
   mixedTerrainUpwind: number;
-  /** @state artifact */
+  /** 🏔️ @state artifact */
   mixedTerrainDistance: number;
-  /** @state artifact */
+  /** 🔍️ @state artifact */
   orographyFactor: number;
-  /** @state artifact */
+  /** 📜️ @state artifact */
   coastOrIsland: boolean;
-  /** @state artifact */
+  /** 💨️ @state artifact */
   airDensity: number;
-  /** @state artifact */
+  /** ↕️ @state artifact */
   height: number;
-  /** @state artifact */
+  /** ↔️ @state artifact */
   width: number;
-  /** @state artifact */
+  /** 🔭️ @state artifact */
   depth: number;
-  /** @state artifact */
+  /** 🔺️ @state artifact */
   assumedDeltaT: number;
-  /** @state artifact */
+  /** 🔨️ @state artifact */
   constructionActivity: string;
-  /** @state artifact */
+  /** 🏗️ @state artifact */
   assumedConstructionQk: number;
-  /** @state artifact */
+  /** 🔩️ @state artifact */
   structureKind: "building" | "bridge";
-  /** @state artifact */
+  /** 🌉️ @state artifact */
   bridgeLane: number;
-  /** @state artifact */
+  /** 🔌️ @state artifact */
   bridgeSpan: number;
-  /** @state artifact */
+  /** 🎁️ @state artifact */
   bridgeLaneWidth: number;
-  /** @state artifact */
+  /** 🪞️ @state artifact */
   assumedBridgeTandem: number;
-  /** @state artifact */
+  /** 🧥️ @state artifact */
   assumedBridgeUdl: number;
-  /** @state artifact */
+  /** 🧬️ @state artifact */
   assumedBridgeLm2: number;
-  /** @state artifact */
+  /** 🧱️ @state artifact */
   assumedBridgeFootway: number;
-  /** @state artifact */
+  /** 🔬️ @state artifact */
   craneClaimed: boolean;
-  /** @state artifact */
+  /** 🏷️ @state artifact */
   craneClass: string;
-  /** @state artifact */
+  /** 🗂️ @state artifact */
   hoistClass: string;
-  /** @state artifact */
+  /** 🏁️ @state artifact */
   hoistingSpeed: number;
-  /** @state artifact */
+  /** 🖼️ @state artifact */
   assumedCraneWheel: number;
-  /** @state artifact */
+  /** ⬅️ @state artifact */
   assumedCraneHorizontal: number;
-  /** @state artifact */
+  /** 🗄️ @state artifact */
   siloClaimed: boolean;
-  /** @state artifact */
+  /** 🚦️ @state artifact */
   siloKind: string;
-  /** @state artifact */
+  /** 🏺️ @state artifact */
   siloBulkDensity: number;
-  /** @state artifact */
+  /** 🗼️ @state artifact */
   siloHeight: number;
-  /** @state artifact */
+  /** 💧️ @state artifact */
   siloHydraulicRadius: number;
-  /** @state artifact */
+  /** 💾️ @state artifact */
   siloMu: number;
-  /** @state artifact */
+  /** 🧠️ @state artifact */
   siloK: number;
-  /** @state artifact */
+  /** 🪢️ @state artifact */
   assumedSiloPressure: number;
-  /** @state artifact */
+  /** 🩹️ @state artifact */
   assumedSiloPatch: number;
-  /** @state artifact */
+  /** 🚧️ @state artifact */
   assumedSiloWallFriction: number;
-  /** @state artifact */
+  /** 🪜️ @state artifact */
   floors: FloorArea[];
-  /** @state artifact */
+  /** 🏋️ @state artifact */
   selfWeightElements: SelfWeightElement[];
-  /** @state artifact */
+  /** 🛖️ @state artifact */
   roofs: RoofArea[];
-  /** @state artifact */
+  /** 🌬️ @state artifact */
   windFaces: WindFace[];
-  /** @state artifact */
+  /** 🚑️ @state artifact */
   accidentalCases: AccidentalCase[];
   tMax: number;
   tMin: number;
@@ -107,7 +107,7 @@ export interface En1991Snapshot {
   thermalBridgeType: number;
   deltaTM: number;
   storeyCount: number;
-  /** @state artifact */
+  /** ⚡️ @state artifact */
   fireMode: "none" | "nominal" | "parametric";
   fireCurve: "standard" | "external" | "hydrocarbon" | "parametric";
   fireDuration: number;

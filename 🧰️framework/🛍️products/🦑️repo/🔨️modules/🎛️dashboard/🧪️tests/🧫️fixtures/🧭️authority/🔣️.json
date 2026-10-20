@@ -606,7 +606,11 @@
       "accepted": false
     },
     {
-      "text": "- All devs are using `launch.json` and never use the cli.\n  - You MUST register all executable commands there by following the existing order, grouping and naming.",
+      "text": "- All human devs are using `repo dashboard`.",
+      "accepted": true
+    },
+    {
+      "text": "- All devs are using `launch.json` and never use the cli.",
       "accepted": false
     }
   ],
@@ -1471,31 +1475,34 @@
       "inspected": false
     }
   ],
-  "protectedInstructions": [
+  "dashboardInstruction": {
+    "path": "AGENTS.md",
+    "text": "All human devs are using `repo dashboard`."
+  },
+  "dashboardInstructionCases": [
     {
       "path": "AGENTS.md",
-      "text": "- All devs are using `launch.json` and never use the cli.\n  - You MUST register all executable commands there by following the existing order, grouping and naming."
-    }
-  ],
-  "protectedInstructionCases": [
-    {
-      "path": "AGENTS.md",
-      "text": "- All devs are using `launch.json` and never use the cli.\n  - You MUST register all executable commands there by following the existing order, grouping and naming.",
+      "text": "All human devs are using `repo dashboard`.",
       "accepted": true
     },
     {
       "path": "README.md",
-      "text": "- All devs are using `launch.json` and never use the cli.\n  - You MUST register all executable commands there by following the existing order, grouping and naming.",
+      "text": "All human devs are using `repo dashboard`.",
       "accepted": false
     },
     {
       "path": "domain/AGENTS.md",
-      "text": "- All devs are using `launch.json` and never use the cli.\n  - You MUST register all executable commands there by following the existing order, grouping and naming.",
+      "text": "All human devs are using `repo dashboard`.",
       "accepted": false
     },
     {
       "path": "AGENTS.md",
-      "text": "- All devs are using `launch.json` and never use the cli.\n  - You MUST register all executable commands there by following the existing order, grouping and naming.\nRun .vscode/launch.json.",
+      "text": "All devs are using `launch.json` and never use the cli.",
+      "accepted": false
+    },
+    {
+      "path": "AGENTS.md",
+      "text": "All human devs are using `repo dashboard`.\nRun .vscode/launch.json.",
       "accepted": false
     }
   ]

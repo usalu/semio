@@ -9,10 +9,10 @@ import{isRustUnitPathV1,type RustUnitV1}from"../../🧬️definition/🟦️.ts"
 import{planRustUnitsV1}from"../../🟦️.ts";
 import{captureRustUnitPlanV1,type RustUnitPlanV1}from"../../📋️plan/🟦️.ts";
 import{canonicalRustUnitJsonV1}from"../../📋️plan/🔏️identity/🟦️.ts";
-import planSchema from"../../📋️plan/🧬️schema/🔣️.json";
-import unitSchema from"../../🧬️schema/🔣️.json";
-import contextSchema from"../../🧭️context/🧬️schema/🔣️.json";
-import schema from"./🧬️schema/🔣️.json";
+import planSchema from"../../📋️plan/🧬️schema/🔣️.json" with { type: "json" };
+import unitSchema from"../../🧬️schema/🔣️.json" with { type: "json" };
+import contextSchema from"../../🧭️context/🧬️schema/🔣️.json" with { type: "json" };
+import schema from"./🧬️schema/🔣️.json" with { type: "json" };
 function ownedPlanNodeContract(){const branch=schema.definitions.Node.properties.plan;if(Object.keys(branch).length!==1||branch.$ref!==planSchema.$id)throw Error("Exact owned Rust plan schema branch required");const envelope={...schema,definitions:{...schema.definitions,Node:{...schema.definitions.Node,properties:{...schema.definitions.Node.properties,plan:true}}}};return compileJsonSchemaSubset(envelope,envelope,[planSchema,unitSchema,contextSchema]);}
 const policy=Object.freeze({...schema.definitions.Policy.const}),contract=ownedPlanNodeContract();
 /** 🧩️ Contains one owned semantic plan and content-addressed direct predecessor DATA. */

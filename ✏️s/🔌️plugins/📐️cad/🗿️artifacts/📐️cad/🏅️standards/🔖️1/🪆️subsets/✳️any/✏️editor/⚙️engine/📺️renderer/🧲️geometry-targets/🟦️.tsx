@@ -3,7 +3,7 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | renderer}, which re-exports every public name below so import specifiers stay unchanged.
  */
 // #region 🔌️Adapters
-import { reactHostPort, type ThreeEvent, type ReactNode, type BufferGeometry as ThreeBufferGeometry } from "@semio-tech/framework/ui/targets/react";
+import { reactHostPort, type ThreeEvent, type ReactNode, type BufferGeometry as ThreeBufferGeometry } from "@semio-tech/ui-react";
 
 // #endregion 🔌️Adapters
 import { createTemplatePool, ViewRadiusLayer } from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/♾️infinite/🌍️world/🎨️r3f/🟦️.ts";

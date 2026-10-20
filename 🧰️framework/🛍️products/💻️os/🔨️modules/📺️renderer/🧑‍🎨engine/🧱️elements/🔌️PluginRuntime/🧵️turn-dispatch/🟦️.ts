@@ -8,9 +8,9 @@ import { type OwnedNativeUiPatchSubmissionReceipt, type OwnedUiPatchAcknowledgem
 import { type ShardActorActivationLease, type ShardInstanceLifecycleLease, type ShardInstanceOpenInput } from "@semio-tech/framework/actor/shard-client/activation";
 import { type ShardBudget, type ShardCommandIngressPage, type ShardEventEnvelope } from "@semio-tech/framework/actor/shard-client/wire";
 // #endregion 🔌️Adapters
-import type { ActorInstanceLifecycleReceipt } from "../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
-import { type OwnedUiInstanceRetirement } from "@semio-tech/framework/modules/ui/contract/retained/instance";
-import { TurnScheduler, type Lane } from "../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts";
+import type { ActorInstanceLifecycleReceipt } from "@semio-tech/framework/actor/lifetime";
+import { type OwnedUiInstanceRetirement } from "@semio-tech/ui-contract/retained/instance";
+import { TurnScheduler, type Lane } from "@semio-tech/framework/actor";
 import { hostContinuations } from "@semio-tech/framework/async/continuation";
 import { createCommandStallWatchV1, type CommandStallWatchV1 } from "../⏱️command-stall/🟦️.ts";
 import { TYPED_OPERATION_ACK_MAGIC } from "@semio-tech/framework/actor/wire-turn";

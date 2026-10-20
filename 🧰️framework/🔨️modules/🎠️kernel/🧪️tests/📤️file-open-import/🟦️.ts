@@ -12,7 +12,7 @@ import {
   importPayloadChunks,
   type ImportChunk
 } from "../../🗄️file-open-import/🟦️.ts";
-import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES } from "@semio-tech/framework/trace/memory";
+import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES } from "@semio-tech/framework-trace/memory";
 import { wireEffectToFriendly } from "@semio-tech/framework-actor/wire-turn";
 
 /** 📤️ TypeScript twin of `🧪️tests/📤️file-open-import/🦀️.rs`, driven from the SAME fixture

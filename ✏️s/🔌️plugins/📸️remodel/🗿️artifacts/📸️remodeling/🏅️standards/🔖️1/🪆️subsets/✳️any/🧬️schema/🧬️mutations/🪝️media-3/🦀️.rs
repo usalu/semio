@@ -19,6 +19,7 @@ pub mod standards {
                         pub mod add_stream_frame {
                             #[path = "../➕add-stream-frame/🦀️.rs"]
                             mod component;
+                            pub use component::*;
                             #[path = "../➕add-stream-frame/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../➕add-stream-frame/↩️inverse/🦀️.rs"]
@@ -28,6 +29,7 @@ pub mod standards {
                         pub mod remove_stream_frame {
                             #[path = "../➖remove-stream-frame/🦀️.rs"]
                             mod component;
+                            pub use component::*;
                             #[path = "../➖remove-stream-frame/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../➖remove-stream-frame/↩️inverse/🦀️.rs"]

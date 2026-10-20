@@ -405,7 +405,7 @@ async fn scope_aware_perturbation_of_editable_leaves() {
     use semio_s_artifact_norm_en1991_examples::example_subjects::{
         de_accidental_variants, de_bridge_compliant, de_fire_parametric_compliant, de_office_compliant,
     };
-    use crate::{FireMode, StructureKind};
+    use semio_s_artifact_norm_en1991_model::{FireMode, StructureKind};
     let office_na = [
         "enSk", "enVb", "thermalBridgeType", "mixedTerrainUpwind",
         "fireCurve", "fireDuration", "assumedGasTemperature", "assumedHNet", "fireCompartmentArea",

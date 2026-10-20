@@ -1,0 +1,2 @@
+manifest-batch2 READY 2026-10-20 12:42
+lock --all rc=0 (log 🗑️generated/manifest-batch2/lock5.log); manifests final; lock includes all 14 new packages in all 6 bun.lock files

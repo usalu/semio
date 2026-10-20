@@ -1,9 +1,9 @@
 /** 📋️ The window engagement and panel tab types, the app definition types, the program hot swap event, the UI refresh request and response and the context menu request and response. */
-import type { TutorialDefinition } from "../../🎓️onboarding/🟦️.ts";
-import type { WindowLayout } from "../🗺️window-layout/🟦️.ts";
+import type { TutorialDefinition } from "@semio-tech/framework-onboarding";
+import type { WindowLayout } from "@semio-tech/framework-onboarding/window-layout";
 import type { IconName } from "@semio-tech/assets";
-import type { ContextMenuItemSpec, UiContextMenuHit, UiContextMenuPoint, UiContextMenuRequest, UiContextMenuSelectionGroup, UiContextMenuSurfaceTarget, UiContextMenuTextContext } from "../../🖱️ui/🎬️scene/📋️context-menu/🟦️.ts";
-import type { Effect } from "@semio-tech/framework-kernel/effect";
+import type { ContextMenuItemSpec, UiContextMenuHit, UiContextMenuPoint, UiContextMenuRequest, UiContextMenuSelectionGroup, UiContextMenuSurfaceTarget, UiContextMenuTextContext } from "../📋️context-menu/🟦️.ts";
+import type { Effect } from "@semio-tech/framework-effect";
 import type { ActionDefinition as GeneratedActionDefinition, UtilityDefinition as GeneratedUtilityDefinition, ToolDefinition as GeneratedToolDefinition, CommandDefinition as GeneratedCommandDefinition, WindowMeasure as GeneratedWindowMeasure, WindowEngagementOption as GeneratedWindowEngagementOption, WindowEngagementInput as GeneratedWindowEngagementInput, WindowEngagementStatus as GeneratedWindowEngagementStatus, WindowEngagementPossible as GeneratedWindowEngagementPossible, WindowEngagementRingOption as GeneratedWindowEngagementRingOption, WindowEngagementToggleGroupOption as GeneratedWindowEngagementToggleGroupOption, WindowEngagementSelectItem as GeneratedWindowEngagementSelectItem, WindowEngagementControl as GeneratedWindowEngagementControl, WindowEngagement as GeneratedWindowEngagement, WindowEngagementSlot as GeneratedWindowEngagementSlot, WindowOptions as GeneratedWindowOptions, ActionRef as GeneratedActionRef, PanelGroup as GeneratedPanelGroup, PanelTabKind as GeneratedPanelTabKind, PanelTabDefinition as GeneratedPanelTabDefinition, ModeDefinition as GeneratedModeDefinition, WindowKindDefinition as GeneratedWindowKindDefinition, AppDefinition as GeneratedAppDefinition } from "../🤖️generated/🪪️manifest/🟦️.ts";
 import type { MenuRef, NamedLayout } from "../🏷️ui-contract-and-canvas-types/🟦️.ts";
 import type { PluginViewState } from "../👁️view-state-and-public-invocation/🟦️.ts";

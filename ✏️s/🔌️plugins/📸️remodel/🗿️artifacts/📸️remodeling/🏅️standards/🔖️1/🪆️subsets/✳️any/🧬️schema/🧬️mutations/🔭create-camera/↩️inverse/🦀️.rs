@@ -5,7 +5,7 @@ use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::sche
 use crate::standards::v1::subsets::any::schema::mutations::create_camera_calibration::component::CreateCameraCalibration;
 
 //#region 🔖️Inverse
-pub fn inverse<Op: From<DeleteCameraCalibration>>(payload: &super::CreateCameraCalibration, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<DeleteCameraCalibration>>(payload: &crate::standards::v1::subsets::any::schema::mutations::create_camera_calibration::component::CreateCameraCalibration, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     if base.calibration.cameras.iter().any(|camera| camera.id == payload.camera.id) {
         return Vec::new();

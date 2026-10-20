@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "maximumBytes",
+    "historyBytes",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximumBytes": {
+      "const": 1048576
+    },
+    "historyBytes": {
+      "const": 16777216
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "initial",
+          "cursor",
+          "commands",
+          "expected",
+          "expectedCursor"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "initial": {
+            "type": "string"
+          },
+          "cursor": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1048576
+          },
+          "commands": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "op"
+              ],
+              "properties": {
+                "op": {
+                  "enum": [
+                    "insert",
+                    "left",
+                    "right",
+                    "up",
+                    "down",
+                    "home",
+                    "end",
+                    "backspace",
+                    "delete",
+                    "enter",
+                    "undo",
+                    "redo",
+                    "selectall"
+                  ]
+                },
+                "text": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "expected": {
+            "type": "string"
+          },
+          "expectedCursor": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "readOnly": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

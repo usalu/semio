@@ -7,7 +7,7 @@ import { PLAYGROUND_BUILD_TARGETS } from "../../🤖️generated/🎮️playgrou
 import { auditPluginCatalogSources } from "@semio-tech/plugin-registry/catalog-verification/source-audit";
 import { auditNavbarExamplePickerCoverage, auditNavbarExampleArtifactPayload } from "@semio-tech/plugin-registry/catalog-verification/navbar-example-audits";
 import { findWorkspaceRoot } from "@semio-tech/process/routing";
-import { examplesForApp, normalizeManifestExamples, type PluginManifest } from "@semio-tech/framework/manifest";
+import { examplesForApp, normalizeManifestExamples, type PluginManifest } from "@semio-tech/framework-manifest";
 import { installedScope, sourceDeploymentOwnersV1 } from "../🧩️scope/🟦️.ts";
 import { resolveFrameworkOsCatalogConfigurationV1 } from "@semio-tech/framework-os/modules/renderer/engine/elements/Shell/catalog";
 import { admitPluginCatalogV1, pluginCatalogV1 } from "@semio-tech/plugin-registry/catalog";

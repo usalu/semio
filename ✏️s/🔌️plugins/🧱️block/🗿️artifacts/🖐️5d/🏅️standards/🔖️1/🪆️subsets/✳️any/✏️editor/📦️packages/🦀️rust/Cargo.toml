@@ -41,6 +41,8 @@ semio-s-artifact-block-5d-mut-grips = { workspace = true }
 semio-s-artifact-block-5d-mutations = { workspace = true }
 semio-s-artifact-block-5d-schema = { workspace = true }
 semio-s-plugin-block-catalog = { workspace = true }
+semio-framework-async = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-s-artifact-block-5d-mut-part-kind = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

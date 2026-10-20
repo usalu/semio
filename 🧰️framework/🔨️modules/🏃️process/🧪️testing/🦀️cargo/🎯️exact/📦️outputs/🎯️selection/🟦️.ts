@@ -1,6 +1,6 @@
 import{types}from"node:util";
 import{validateJsonSchemaSubset}from"../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import schema from"./🧬️schema/🔣️.json";
+import schema from"./🧬️schema/🔣️.json" with { type: "json" };
 const contract=structuredClone(schema);
 /** 🎯️ Selects one completed receipt without accepting a directory or producer claim from DATA. */
 export interface ExactCargoLawOutputSelectionV1{readonly version:1;readonly receiptIndex:number}

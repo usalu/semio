@@ -1,6 +1,9 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::snapshot::ARCHITECT_PROGRAM_SCHEMA;
 use semio_framework_test_fixtures::fixture_text;
+use semio_s_artifact_architect_program_snapshot::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
+use semio_s_artifact_architect_program_snapshot::standards::v1::subsets::any::schema::snapshot::ProgramBenchmarksChild;
+use semio_s_artifact_architect_program_snapshot::standards::v1::subsets::any::schema::snapshot::ProgramKnowledgeChild;
 
 trait ProgramChildOwnerOracle {
     fn expected() -> serde_json::Value;

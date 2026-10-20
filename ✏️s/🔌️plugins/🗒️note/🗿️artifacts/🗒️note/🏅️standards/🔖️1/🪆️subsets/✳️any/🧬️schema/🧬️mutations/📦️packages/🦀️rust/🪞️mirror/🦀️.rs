@@ -12,12 +12,6 @@ pub mod standards {
                 pub mod schema {
                     pub use semio_s_artifact_note_note_schema::standards::v1::subsets::any::schema::*;
                     #[path = "."]
-                    pub mod snapshot {
-                        #[path = "../../../../📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
                     pub mod mutations {
                         #[path = "../../../🦀️.rs"]
                         mod component;

@@ -3,7 +3,7 @@
 use crate::op::NoteMutation;
 use crate::schema::mutations::delete_block as delete_block_mutation;
 use crate::schema::find_block;
-use crate::NoteSnapshot;
+use semio_s_artifact_note_note_schema::NoteSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 

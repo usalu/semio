@@ -5,7 +5,7 @@ import * as selectedToolingNative from"@semio-tech/process/artifacts/native-buil
 import{requireIssuedResourceControlRefinementV1}from"@semio-tech/process/routing";
 import{requireIssuedResourceControlV1 as requireSelectedDependencyIssuedControlV1}from"@semio-tech/process/routing";
 import{requireResourceLeaseCustodyV1 as requireSelectedToolingLeaseCustodyV1}from"@semio-tech/process/leases";
-import{withArtifactDescriptorV1 as withSelectedToolingDescriptorV1}from"@semio-tech/framework/filesystem/observation/descriptor";
+import{withArtifactDescriptorV1 as withSelectedToolingDescriptorV1}from"@semio-tech/framework-filesystem/observation/descriptor";
 import{syncNativeCleanupDirectoryV1 as syncSelectedToolingDirectoryV1}from"@semio-tech/process/artifacts/native-build/storage/cleanup/retirement/durability";
 import type{ToolingRetirementReadContextV1}from"../../../🛠️tools/🟦️.ts";
 import{readToolingRetirementInventoryEntriesV1,type CopiedToolingRetirementInventoryV1}from"@semio-tech/nx-bootstrap-tools/retention/generation";
@@ -149,7 +149,7 @@ import dependencyNativeSchema from"@semio-tech/process/artifacts/native-build/st
 import dependencyInstallSchema from"../../../../../🚀️bootstrap/📦️dependencies/💾️storage/🧬️schema/📥️install.json"with{type:"json"};
 import{readJavascriptDependencyCurrentBindingsV1,readJavascriptDependencyBindingReceiptReadV1,readJavascriptDependencySelectedReadyOwnerV1,type JavascriptDependencyReadContextV1}from"../../../../../🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts";
 import{readJavascriptDependencySelectedRetirementCommandV1,readJavascriptDependencySelectedPayloadV1,type JavascriptDependencySelectedPayloadDataV1,type JavascriptDependencySelectedRetirementSnapshotV1}from"../../../../../🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts";
-import{withArtifactRelativeDirectoryV1,type ArtifactRelativeDirectoryV1,type ArtifactRelativePathEntryV1,type ArtifactReadFileIdentityV1}from"@semio-tech/framework/filesystem/observation/descriptor";
+import{withArtifactRelativeDirectoryV1,type ArtifactRelativeDirectoryV1,type ArtifactRelativePathEntryV1,type ArtifactReadFileIdentityV1}from"@semio-tech/framework-filesystem/observation/descriptor";
 import{withCurrentBunWorkspaceOwnershipV1}from"../../../../../../🗂️workspaces/🟦️bun/🟦️.ts";
 import{validateJsonSchemaSubset as validateDependencyMaintenanceSchemaV1}from"@semio-tech/schema-validator-ts";
 const dependencySelectedPlanProtocol=Object.freeze({...dependencyInstallSchema.$defs.SelectedPlanProtocol.const});

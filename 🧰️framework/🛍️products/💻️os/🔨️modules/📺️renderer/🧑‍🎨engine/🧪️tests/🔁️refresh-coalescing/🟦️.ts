@@ -4,7 +4,7 @@ import canvasClearance from "../../🧱️elements/🗣️Interpreter/🧪️tes
 import { createElement } from "react";
 import { uiI18n } from "@semio-tech/ui-react";
 import { type UiDirtyScope } from "@semio-tech/framework";
-import { panelViewContext } from "@semio-tech/framework/modules/manifest/view-state-and-public-invocation";
+import { panelViewContext } from "@semio-tech/framework-manifest/view-state-and-public-invocation";
 import { cleanup, render } from "@semio-tech/ui-react/test";
 import { describe, expect, it, vi } from "vitest";
 import { type UtilityNode } from "@semio-tech/framework";
@@ -162,7 +162,7 @@ describe("framework sync utilities", () => {
     };
     const helpers = await import("../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts");
     for (const name of fixture.react.helpers) expect(typeof (helpers as Record<string, unknown>)[name]).toBe("function");
-    const { default: hostIo } = await import("../../🎯️targets/🧊️wgpu/🚪️host-io/🟦️.ts?raw");
+    const { wgpuHostIoSourceText: hostIo } = await import("@semio-tech/framework-renderer-wgpu/testing/source-text/host-io");
     for (const op of fixture.wgpu.hostIoOps) expect(hostIo).toContain(op);
   });
 });

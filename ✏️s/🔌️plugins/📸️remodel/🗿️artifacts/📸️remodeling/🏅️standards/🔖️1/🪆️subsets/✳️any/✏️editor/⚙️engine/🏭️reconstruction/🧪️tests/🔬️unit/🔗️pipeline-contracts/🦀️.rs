@@ -1,6 +1,8 @@
 //! 🔗️ Pipeline contract tests of the staged reconstruction engine: the chunking invariance, the orbit registration, the preview and frame minimum, the end-to-end contract and the bounded step ceilings. See [`super`].
 
 use super::*;
+use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::images as remodeling_image;
+use semio_s_artifact_remodel_remodeling_video::editor::remodeling::engine::video as remodeling_video;
 
 // #region 🔖️ChunkingInvariance
 #[test]
@@ -122,6 +124,7 @@ fn advance_fails_with_fewer_than_two_frames() {
 
 // #region 🔖️LongContract
 mod long {
+    use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::images as remodeling_image;
     use super::*;
 
     /// 🎬️ THE end-to-end contract: synthesize an orbiting-textured-cube video (rasterize → JPEG →

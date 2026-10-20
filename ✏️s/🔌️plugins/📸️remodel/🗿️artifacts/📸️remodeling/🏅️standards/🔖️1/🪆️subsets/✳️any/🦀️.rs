@@ -9,7 +9,7 @@
 //! surface's `App`, which the old `PluginBuilder::.crate::editor::remodeling::<E>(AppDefinition)` call had no field for.
 
 use semio_s_artifact_remodel_remodeling_io::standards::v1::subsets::any::io;
-use io::{binary, text};
+use io::text;
 use semio_s_artifact_remodel_remodeling_schema::standards::v1::subsets::any::schema;
 use semio_s_artifact_remodel_remodeling_viewer::viewer::remodeling as viewer;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
@@ -28,7 +28,7 @@ fn inference_descriptors() -> &'static [::semio_framework_schema_registry::Artif
 
 /// 🧬️ Descriptor for `s.remodel.remodeling`, assembled from the four facets' own format leaves.
 pub fn remodeling_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
-    semio_framework_schema_registry::ArtifactSchemaDescriptor { id: "s.remodel.remodeling", artifact: schema::ARTIFACT_LEAVES, snapshot: schema::snapshot::SNAPSHOT_LEAVES, diff: schema::diff::DIFF_LEAVES, mutations: schema::mutations::MUTATION_LEAVES }
+    semio_framework_schema_registry::ArtifactSchemaDescriptor { id: "s.remodel.remodeling", artifact: schema::ARTIFACT_LEAVES, snapshot: semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::SNAPSHOT_LEAVES, diff: semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::DIFF_LEAVES, mutations: semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::MUTATION_LEAVES }
 }
 
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.
@@ -127,20 +127,20 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
                     id: "remodeling.document",
                     extension: Some("remodeling"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(text::snapshot::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("remodeling.document"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "remodeling.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(text::mutations::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(text::mutations::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("remodeling.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -159,8 +159,8 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("remodeling.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -169,8 +169,8 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("remodeling.spr"),
                 },
             ]

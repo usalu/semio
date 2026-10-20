@@ -1,8 +1,8 @@
 import{requireNativeImagePublicationSettledV1}from"../🌐️platform/📋️contract/🟦️.ts";
 import{withNativeStorageMappingReadV1}from"../🔒️mapping/🟦️.ts";
-import{requireArtifactDescriptorClosureV1}from"../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import{requireArtifactDescriptorClosureV1}from"../../../../../📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import{observeNativeImageMountDirectoryV1,readNativeImageMountDirectoryV1,requireNativeImageMountDirectoryV1,type NativeImageMountDirectoryV1}from"../🌐️platform/📋️contract/📂️mount/🟦️.ts";
-import mountDirectorySchema from"../🌐️platform/📋️contract/📂️mount/🧬️schema/🔣️.json";
+import mountDirectorySchema from"../🌐️platform/📋️contract/📂️mount/🧬️schema/🔣️.json" with { type: "json" };
 import{syncNativeDirectoryMetadataV1}from"../🧾️metadata/🟦️.ts";
 import{withAcceptedPhysicalCleanupV1,beginAcceptedPhysicalCleanupV1}from"../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import{acceptNativeImageCleanupOwnerV1,openPersistentNativeImageV1,captureNativeImageBodyCommandV1,stopNativeImageBodyV1,settleNativeImageCleanupV1,readNativeImageCreatorV1,withNativeImageBodyOperationV1,closeNativeImageBodyOperationsV1,type NativeImageCleanupOwnerV1}from"../🧹️cleanup/🎛️command/🟦️.ts";

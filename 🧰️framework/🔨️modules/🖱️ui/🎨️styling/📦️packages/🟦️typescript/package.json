@@ -38,13 +38,15 @@
     "./builder/vite/assets": "./🏗️builder/🌐️vite/🗃️assets/🟦️.ts",
     "./builder/vite/status-serve": "./🏗️builder/🌐️vite/🚦️status-serve/🟦️.ts",
     "./builder/python/provider": "./🏗️builder/🐍️python/🔌️provider/🟦️.ts",
-    "./builder/python/schema.json": "./🏗️builder/🐍️python/🧬️schema/🔣️json/🟦️.ts"
+    "./builder/python/schema.json": "./🏗️builder/🐍️python/🧬️schema/🔣️json/🟦️.ts",
+    "./builder/python/script": "./🏗️builder/🐍️python/📜️script.ts",
+    "./chrome/text": "./🖌️ui/🟦️.ts",
+    "./palette/text": "./🎨️palette/🟦️.ts"
   },
   "dependencies": {
     "@semio-tech/assets": "workspace:*",
-    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/framework-transient": "workspace:*",
     "@semio-tech/schema-validator-ts": "workspace:*",
-    "@semio-tech/ui-react": "workspace:*",
     "@tailwindcss/typography": "^0.5.19",
     "tailwindcss": "^4.0.0"
   },
@@ -53,7 +55,8 @@
     "@csstools/css-calc": "2.1.4",
     "ajv": "8.20.0",
     "@csstools/css-tokenizer": "3.0.4",
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/process": "workspace:*",
+    "@semio-tech/ui-react": "workspace:*"
   },
   "author": {
     "name": "Ueli Saluz",

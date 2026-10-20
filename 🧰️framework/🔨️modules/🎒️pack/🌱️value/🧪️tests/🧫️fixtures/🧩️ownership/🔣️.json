@@ -17,7 +17,8 @@
     "semio-framework-pack-record-encode",
     "semio-framework-pack-record-schema",
     "semio-framework-replication-codec",
-    "semio-framework-value"
+    "semio-framework-value",
+    "semio-framework-value-native-owned"
   ],
   "publicEntries": [
     "encode_document",

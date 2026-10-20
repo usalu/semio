@@ -1,7 +1,7 @@
 //! 🧹️ Hydration retirement, drop and completion: the remaining hydration operations, the erased snapshot retirement with its controlled closes, the drop and the completed hydration accessors. See [`super`].
 
 use super::*;
-use crate::retained_config_hydration::hydration_types_constructor_and_drive::ReferenceConfigStoreHydration;
+use crate::retained_config_hydration::hydration_types_constructor_and_drive::RetainedConfigStoreHydration;
 
 impl<P, M> RetainedConfigStoreHydration<P, M>
 where
@@ -63,7 +63,7 @@ where
     }
 }
 
-impl<P, M> ErasedSnapshotRetirement for ReferenceConfigStoreHydration<P, M>
+impl<P, M> ErasedSnapshotRetirement for RetainedConfigStoreHydration<P, M>
 where
     P: Clone + ToValue + FromValue + Send + Sync + 'static,
     M: ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
@@ -286,7 +286,7 @@ where
     }
 }
 
-impl<P, M> Drop for ReferenceConfigStoreHydration<P, M>
+impl<P, M> Drop for RetainedConfigStoreHydration<P, M>
 where
     P: Clone + ToValue + FromValue,
     M: Clone + ToValue + FromValue + Mutation<P>,
@@ -296,7 +296,7 @@ where
     }
 }
 
-impl<P, M> ReferenceConfigStoreHydration<P, M>
+impl<P, M> RetainedConfigStoreHydration<P, M>
 where
     P: Clone + ToValue + FromValue,
     M: ToValue + FromValue + Mutation<P>,

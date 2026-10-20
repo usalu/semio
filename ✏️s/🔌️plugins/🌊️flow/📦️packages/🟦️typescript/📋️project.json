@@ -4,6 +4,7 @@
   "targets": {
     "test-command-retirement": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test-command-retirement",
@@ -12,6 +13,7 @@
     },
     "test": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",

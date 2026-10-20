@@ -12,9 +12,9 @@ mod update_match_params_tests_switches_to_a_kd_d6fa4b;
 mod update_match_params_tests_warns_that_the_414aae;
 #[path = "../../../../../🪢update-match-params/🧪️tests/🚫️refuses/🦀️.rs"]
 mod update_match_params_tests_refuses_a_ratio_65dcb9;
-#[path = "../../../../../🏎️update-motion/🧪️tests/🏃️enables/🦀️.rs"]
+#[path = "../../../../../🏎️update-motion-params/🧪️tests/🏃️enables/🦀️.rs"]
 mod update_motion_tests_enables_motion_2444a3;
-#[path = "../../../../../🏎️update-motion/🧪️tests/🏃️triples/🦀️.rs"]
+#[path = "../../../../../🏎️update-motion-params/🧪️tests/🏃️triples/🦀️.rs"]
 mod update_motion_tests_triples_the_4bb69f;
-#[path = "../../../../../🏎️update-motion/🧪️tests/🔁️warns/🦀️.rs"]
+#[path = "../../../../../🏎️update-motion-params/🧪️tests/🔁️warns/🦀️.rs"]
 mod update_motion_tests_warns_that_the_83ff67;

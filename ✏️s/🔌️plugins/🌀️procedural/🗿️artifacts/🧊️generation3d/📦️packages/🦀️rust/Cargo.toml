@@ -101,6 +101,7 @@ semio-s-artifact-procedural-3d-set-contributions = { workspace = true }
 semio-s-artifact-procedural-3d-set-widget-input = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-procedural-3d-mut-generations = { workspace = true }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-test-fixtures = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 syn = { version = "=2.0.117", features = ["full", "visit"] }

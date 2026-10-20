@@ -1,8 +1,9 @@
 import type { Viewport2d } from "@semio-tech/framework-ui-viewport-ts/2d/schema";
 import type { Viewport3dOrbit } from "@semio-tech/framework-ui-viewport-ts/3d/schema";
 import type { Fem2dSnapshot, Fem3dSnapshot, FemVec2 } from "../📸️snapshot-projection/🟦️.ts";
-import { encodeScopedIdentity, type SelectionSpec } from "@semio-tech/framework/interaction";
-import type { DomainHover, DomainSelection, DomainTopology } from "../../../../../../🧰️framework/🔨️modules/🕹️interaction/🧬️schema/🟦️.ts";
+import type { SelectionSpec } from "@semio-tech/framework-interaction";
+import { encodeScopedIdentity } from "@semio-tech/framework/replication";
+import type { DomainHover, DomainSelection, DomainTopology } from "@semio-tech/framework-interaction/schema";
 
 //#region 🔖️Fem2dScene
 /** 📐️ `SCALE_2D` — model metres to screen pixels (`🪟️windows/🧱️model/🦀️.rs`). */

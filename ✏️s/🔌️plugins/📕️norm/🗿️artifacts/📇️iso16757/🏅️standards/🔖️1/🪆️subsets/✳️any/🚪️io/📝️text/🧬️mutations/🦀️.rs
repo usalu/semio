@@ -252,7 +252,8 @@ impl protocol::OpText for Iso16757Mutation {
 /// 🧪️ One representative value per variant — reused by the round-trip law test below.
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<Iso16757Mutation> {
-    use crate::{part_1, part_4, part_5, Cardinality, CatalogueValue, LocalizedText, Names};
+    use semio_s_artifact_norm_iso16757_model::{part_1, part_4, part_5, Cardinality, CatalogueValue, Names};
+    use semio_s_plugin_norm_compliance::LocalizedText;
 
     let names = |text: &str| Names { preferred: LocalizedText { locale: "en".into(), text: text.into() }, short_name: None, alternatives: Vec::new() };
 

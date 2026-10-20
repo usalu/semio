@@ -238,7 +238,7 @@ pub enum Lane {
 impl Lane {
     pub const ALL: [Lane; 4] = [Lane::Interactive, Lane::UserVisible, Lane::Background, Lane::Maintenance];
 
-    /// 0 = highest priority (Interactive) .. 3 = lowest (Maintenance).
+    /// 🥇️ 0 = highest priority (Interactive) .. 3 = lowest (Maintenance).
     pub async fn priority_rank(self) -> usize {
         match self {
             Lane::Interactive => 0,

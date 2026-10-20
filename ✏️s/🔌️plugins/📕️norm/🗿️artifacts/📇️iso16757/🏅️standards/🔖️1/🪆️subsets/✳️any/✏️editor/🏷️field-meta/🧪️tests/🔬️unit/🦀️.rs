@@ -1,5 +1,7 @@
 //! 🧪️ `tests` — moved out of `🏷️field-meta/🦀️.rs` into its canonical test implementation.
 
+use super::*;
+
 #[test]
 fn top_level_paths_are_localized_en_and_de() {
     let catalogue = iso16757_field_meta("catalogue").expect("catalogue");

@@ -51,6 +51,9 @@ const KINDS: &[&str] = &[
 const ROWS: &[&str] = &[
     "insert-anchor-dupe",
     "remove-anchor-gone",
+    "remove-member-middle",
+    "reorder-members-middle",
+    "remove-anchor-middle",
 ];
 
 /// 🗣️ The real committed EN 1992 document, read where the domain already keeps it.
@@ -69,6 +72,24 @@ const PACK_ASSET: &str = "asset://🛢️liquid-retaining-fem-anchor/🎒️.pac
 #[cfg(feature = "sut")]
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
+        "remove-member-middle" => (
+            include_str!("../🧫️fixtures/🧬️mutations/➖️remove-member/🧭️middle/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/➖️remove-member/🧭️middle/🦠️mutation/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/➖️remove-member/🧭️middle/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/➖️remove-member/🧭️middle/🎯️outcome/🔣️.json"),
+        ),
+        "reorder-members-middle" => (
+            include_str!("../🧫️fixtures/🧬️mutations/🔀️reorder-members/🧭️middle/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🔀️reorder-members/🧭️middle/🦠️mutation/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🔀️reorder-members/🧭️middle/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🔀️reorder-members/🧭️middle/🎯️outcome/🔣️.json"),
+        ),
+        "remove-anchor-middle" => (
+            include_str!("../🧫️fixtures/🧬️mutations/🗑️remove-anchor/🧭️middle/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🗑️remove-anchor/🧭️middle/🦠️mutation/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🗑️remove-anchor/🧭️middle/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🗑️remove-anchor/🧭️middle/🎯️outcome/🔣️.json"),
+        ),
         "change-annex" => (
             include_str!("../🧫️fixtures/🧬️mutations/🌍️change-annex/✅apply/📸️snapshot/⬅️before/🔣️.json"),
             include_str!("../🧫️fixtures/🧬️mutations/🌍️change-annex/✅apply/🦠️mutation/🔣️.json"),

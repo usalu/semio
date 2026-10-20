@@ -2,7 +2,8 @@
 //! lanes and the BASE binding of every asset id the payload bound. It never touches durable content:
 //! the `append-content` steps of the same edit own and undo the leaves.
 use crate::standards::v1::subsets::any::schema::mutations::commit_reconstruction::commit_reconstruction;
-use crate::standards::v1::subsets::any::schema::mutations::commit_reconstruction::{CommitReconstruction, ReconstructionAssetCommit};
+use crate::standards::v1::subsets::any::schema::mutations::commit_reconstruction::component::CommitReconstruction;
+use crate::standards::v1::subsets::any::schema::mutations::commit_reconstruction::component::ReconstructionAssetCommit;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Inverse

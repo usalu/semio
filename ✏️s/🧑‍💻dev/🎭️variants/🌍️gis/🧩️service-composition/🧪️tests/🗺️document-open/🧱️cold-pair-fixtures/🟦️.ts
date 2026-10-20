@@ -55,7 +55,7 @@ export async function prepareColdPairFixtures({ fakes, dependencies, source }: {
     { kind: { kind: "app", id: panelSurfaces[1]!.key }, label: "History", group: "details", bodyKey: panelSurfaces[1]!.bodyKey, children: [] },
   ];
   const panelVisible = (view: ResolvedPluginViewState) => panelSurfaces.map((panel) => ({ tag: "surface-visible", val: { surface: { instance: 0, surface: panel.key }, bodyKey: panel.bodyKey, viewState: encodePackValue(panelViewContext(view)) } }));
-  const { panelViewContext, sectionViewContext, windowViewContext } = await import("@semio-tech/framework/manifest");
+  const { panelViewContext, sectionViewContext, windowViewContext } = await import("@semio-tech/framework-manifest");
   const { BROWSER_ACTOR_VISIBLE_SURFACES_V1 } = await import("@semio-tech/framework-os/modules/store/worker/visible-surfaces");
   const sectionVisible = (view: ResolvedPluginViewState, mount: boolean) => BROWSER_ACTOR_VISIBLE_SURFACES_V1.sections.filter((section) => mount || !section.static).map((section) => ({ tag: "surface-visible", val: { surface: { instance: 0, surface: section.bodyKey }, bodyKey: section.bodyKey, viewState: encodePackValue(sectionViewContext(view)) } }));
   const secondWindowVisible = (view: ResolvedPluginViewState) => ({ tag: "surface-visible", val: { surface: { instance: 0, surface: secondWindow.key }, bodyKey: secondWindow.bodyKey, viewState: encodePackValue(windowViewContext(view, secondWindow.key)!) } });

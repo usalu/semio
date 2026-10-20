@@ -1,0 +1,1 @@
+{"version":1,"source":"function Ck(){const system=require(\"bun:ffi\");return system;} function Ah(){return Ck();} Ah();","cases":["normal","oversize","hardlink","symlink","swap","growth","digest"]}

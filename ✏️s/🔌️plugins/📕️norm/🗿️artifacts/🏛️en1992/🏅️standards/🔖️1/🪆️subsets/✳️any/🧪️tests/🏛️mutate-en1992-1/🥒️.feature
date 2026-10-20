@@ -74,6 +74,9 @@ Feature: Apply every typed EN 1992 mutation against an independent Python implem
       | remove-anchor-gone            | 🗑️remove-anchor                 | ❓gone   |
       | change-anchor-h-ef            | 📍change-anchor-h-ef             | ✅apply  |
       | change-anchor-as              | 🧷change-anchor-as               | ✅apply  |
+      | remove-member-middle          | ➖️remove-member                 | 🧭️middle |
+      | reorder-members-middle        | 🔀️reorder-members               | 🧭️middle |
+      | remove-anchor-middle          | 🗑️remove-anchor                 | 🧭️middle |
 
   @id-inverse
   @level-exhaustive

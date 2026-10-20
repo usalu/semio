@@ -68,7 +68,7 @@ fn export_step(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
         Ok(Pipeline::new(kind).import(&shape).finish(move |work| {
             let handle = work.handle(0)?;
             let solids = if compound { work.session.brep().explode_sync(&handle).map_err(kernel)? } else { vec![handle] };
-            let text = semio_s_artifact_stdio_step_geometry::geometry::export_step(work.session.brep(), &solids).map_err(kernel)?;
+            let text = crate::brep_interchange::export_step(work.session.brep(), &solids).map_err(kernel)?;
             Ok(outputs([("step", GeometryValue::Text(text))]))
         }))
     })
@@ -98,7 +98,7 @@ fn import_step(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
             return Err(empty("data"));
         }
         Ok(Pipeline::new(kind).once(move |work| {
-            let imported = semio_s_artifact_stdio_step_geometry::geometry::import_step(work.session.brep(), &data).map_err(kernel)?;
+            let imported = crate::brep_interchange::import_step(work.session.brep(), &data).map_err(kernel)?;
             work.groups = vec![imported.into_iter().take(1).collect()];
             if work.groups[0].is_empty() {
                 return Err(WidgetFault::new(EMPTY, "The STEP text holds no solid.", "Der STEP-Text enthält keinen Körper.").at("data"));

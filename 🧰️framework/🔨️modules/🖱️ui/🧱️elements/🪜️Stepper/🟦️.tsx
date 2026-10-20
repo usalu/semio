@@ -11,9 +11,9 @@ import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.t
 import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { PropertyValueColumnContext } from "../🌳️Tree/📏️row-alignment/🟦️.tsx";
 import { formatNumber } from "../✏️Input/🟦️.tsx";
-import { roundUiNumber } from "../../🧬️contract/🖼️presentation/🔢️number-format/🟦️.ts";
-import { uiNumberCrossedBound, uiNumberDisplayText, uiNumberFieldKey, uiNumberKeyValue, uiNumberTypedValue, type SliderKey } from "../../🧬️contract/🧩️component/🟦️.ts";
-import type { UiNumberLimits } from "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
+import { roundUiNumber } from "@semio-tech/ui-contract/presentation/number-format";
+import { uiNumberCrossedBound, uiNumberDisplayText, uiNumberFieldKey, uiNumberKeyValue, uiNumberTypedValue, type SliderKey } from "@semio-tech/ui-contract/component";
+import type { UiNumberLimits } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
 import { borderNormalClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
 import { uiFormControlBrowserDefaultProps } from "../../🔨️modules/📝️form-control-presentation/🟦️.ts";
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️.ts";

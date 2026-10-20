@@ -17,6 +17,7 @@
     "@semio-tech/infinite-world-r3f": "workspace:*"
   },
   "devDependencies": {
+    "@semio-tech/framework-manifest": "workspace:*",
     "typescript": "^5.9.3"
   },
   "author": {

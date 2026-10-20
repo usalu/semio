@@ -5,6 +5,7 @@ import { readFileSync,existsSync } from "node:fs";
 import { join, resolve, relative, dirname } from "node:path";
 import ts from "typescript";
 import { parse as parseToml } from "@iarna/toml";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import schema from "../../🧬️schema/🎛️dispatch/🔣️.json" with { type: "json" };
 import fixture from "../🧫️fixtures/🎛️dispatch/🔣️.json" with { type: "json" };
 
@@ -115,7 +116,7 @@ test("dashboard window tests select the native test owners after the crate split
   }
   const terminal = parseToml(readFileSync(join(process.cwd(), fixture.windows[0]!.manifests[0]!), "utf8"));
   expect((terminal.dependencies as Record<string, { path: string }>).dashboard_core!.path).toBe("../../../🧱️invocation-catalog/📦️packages/🦀️rust");
-  expect(readFileSync(new URL("../../🖥️terminal/🧪️tests/🔬️unit/🦀️.rs", import.meta.url), "utf8")).toContain("fn docking_tabs_reach_all_four_corners");
+  expect(readModuleTreeSource(new URL("../../🖥️terminal/🧪️tests/🔬️unit/🦀️.rs", import.meta.url))).toContain("fn docking_tabs_reach_all_four_corners");
   native.length = 0; commands.length = 0;
   await new Command().run(["unit", "quick", "--nocapture"]);
   expect(native).toEqual([[fixture.unit, process.cwd(), invocation, ["--nocapture"]]]);
@@ -156,3 +157,15 @@ test("value native controls dispatch every carved law through the exact owner an
  }}finally{database.close();}
  console.log(`[DEBUG] Both TypeScript and esbuild dispatched ${row.routes.length} actual value controls to exact TOML owners with preserved Original custody`);
 },60_000);
+
+/** 🧮️ Neutral projection-root vectors agree with independent schema and SQL observations. */
+test("snapshot projection root vectors preserve explicit neutral owner selection",()=>{
+ const root=join(process.cwd(),"🧰️framework/🔨️modules/🌱️value/✨️derive/📽️projection"),law=JSON.parse(readFileSync(join(root,"🧪️tests/🔣️.json"),"utf8")),schema=JSON.parse(readFileSync(join(root,"🧬️schema/🔣️.json"),"utf8")),oracle=new Ajv2020({strict:true}).compile(schema);expect(oracle(law),JSON.stringify(oracle.errors)).toBe(true);const db=new Database(":memory:");try{for(const row of law.cases){const observed=db.query("select case when ?1='' then 'semio_framework_value' when instr(?1,'::domain_value')>0 then 'domain_value' else 'crate' end root").get(row.attribute)as{root:string};expect(observed.root).toBe(row.root);}}finally{db.close();}
+});
+
+/** 🧪️ The declared Source route runs these laws before any installed dashboard selection. */
+test("dispatch Source route retains Original and awaits its actual owned test port",async()=>{
+ const root=process.cwd(),row=fixture.sourceDispatch,file=new URL("../../📦️packages/🦀️rust/📜️script.ts",import.meta.url),text=readFileSync(file,"utf8"),tree=ts.createSourceFile(file.pathname,text,ts.ScriptTarget.Latest,true),owner=tree.statements.find((node):node is ts.ClassDeclaration=>ts.isClassDeclaration(node)&&node.name?.text==="TestScript");expect(owner).toBeDefined();const project=JSON.parse(readFileSync(new URL("../../📦️packages/🦀️rust/📋️project.json",import.meta.url),"utf8")),target=project.targets[row.target],db=new Database(":memory:");try{expect(target.metadata.semio.execution).toEqual({version:1,kind:"source"});expect(target.options.command).toBe("bun ./📜️script.ts test "+row.selector);expect((db.query("select json_extract(?1,'$.kind') kind").get(JSON.stringify(target.metadata.semio.execution))as{kind:string}).kind).toBe("source");const original=Object.freeze({kind:"Original"}),options=Object.freeze({invocation:original}),calls:unknown[][]=[];class BundleScript{root=resolve(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust");repoRoot=root;invocation=original;}
+  const Command=new Function("BundleScript","join","dashboardOptions",ts.transpileModule(owner!.getText(tree),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText+";return TestScript;")(BundleScript,join,(received:unknown,workspace:string)=>{expect(received).toBe(original);expect(workspace).toBe(root);return options;});let release!:()=>void;const gate=new Promise<void>(resolve=>{release=resolve;}),command=new Command();command.bun=async(...args:unknown[])=>{calls.push(args);await gate;};let settled=false;const work=command.run([row.selector]);void work.then(()=>{settled=true;});await Promise.resolve();expect(calls).toEqual([[["--timeout","60000",resolve(root,row.test)],"dashboard:dispatch-source",options]]);expect(settled).toBe(false);release();await work;expect(settled).toBe(true);await expect(command.run([row.selector,"extra"])).rejects.toThrow("Expected test dispatch");expect(calls).toHaveLength(1);
+ }finally{db.close();}
+});

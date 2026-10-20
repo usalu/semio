@@ -6,6 +6,8 @@ use semio_s_artifact_draw_drawing_model::fill_rule::FillRule;
 use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::{SvgNode,SvgAttr,SvgAttributeValue};
 use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::parse_svg_xml;
 use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::attributes::bind_svg_attribute;
+use semio_s_artifact_draw_drawing_model::stroke::StrokeCap;
+use semio_s_artifact_draw_drawing_model::stroke::StrokeJoin;
 type Style=BTreeMap<String,SvgAttributeValue>;
 const INHERITED:&[&str]=&["fill","fill-rule","fill-opacity","stroke","stroke-width","stroke-opacity","stroke-linecap","stroke-linejoin","stroke-dasharray","visibility","font-size","font-family","color"];
 const UNSUPPORTED:&[&str]=&["clip-path","mask","filter","vector-effect","stroke-dashoffset","font-weight","font-style","text-anchor"];

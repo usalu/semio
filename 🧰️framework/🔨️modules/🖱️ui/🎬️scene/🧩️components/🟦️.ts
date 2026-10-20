@@ -1,6 +1,6 @@
 import type { BlockListScene } from "../🧬️schema/🧩️block-list/🟦️.ts";
-import type { ActionDescriptor } from "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
-import type { ContextMenuItemSpec, UiContextMenuRequest, UiMenuRef } from "../📋️context-menu/🟦️.ts";
+import type { ActionDescriptor } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
+import type { ContextMenuItemSpec, UiContextMenuRequest, UiMenuRef } from "@semio-tech/framework-manifest/context-menu";
 import type { Canvas2dScene } from "../🟦️.ts";
 import type { World3dScene } from "../🌐️world3d/🟦️.ts";
 import type { NodeGraphScene, TextEditorScene } from "../🕸️node-graph/🟦️.ts";

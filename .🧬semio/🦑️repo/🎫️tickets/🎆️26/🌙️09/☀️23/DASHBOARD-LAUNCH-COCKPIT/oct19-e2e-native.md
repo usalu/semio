@@ -486,3 +486,137 @@ The complete retained textual inventory above contains 102 unique source/input p
 - updated: `🧰️framework/Cargo.lock`
 
 A deduplicated absolute-path array is temporarily available at generated/e2e-native-owned-paths.json for the parent ticket attribution. Maximum current absolute length is 193 UTF-16 units; no path exceeds 256. The sole currently absent path is the old value rust-package-commands helper: this agent updated it before the controls owner later removed it during canonical-script consolidation. That later removal is not separately claimed by this agent. The two retained report paths are additional to the 102 source/input paths.
+
+## Core Terminal And Updated Native Entry Gate
+
+Core session 43621 fully settled with exit code 101 after all 36 Source units and actual rustc execution, before its docking law body. The first current error is E0433 in value-edit named/index line 3, which still imports retirement::shared::sealed; subsequent missing RetireOwned generic predicates in persistent list/set/source consumers produce 166 errors. The controls owner took that actual physical-owner repair and its nine-library native matrix. This agent starts no duplicate Core job before that coordinated source/runtime handoff. The prior Row command remains a genuine whole-command pass.
+
+The original cold dashboard session 8123 also fully settled with exit code 1, confirmed through its owned command session. Its actual first failure is ENFILE while lstat-ing the claims directory (generated/e2e-native-current-members.log line 4604). It did not install a dashboard. Old entry PIDs 76813/76816 and producer 12528 were absent at the read-only process census; no process was terminated by this agent during this check. A different dependency lock process was observed and preserved.
+
+Read the replacement AGENTS instructions from disk: future repository commands must use the repo binary, and agents must not call the human repo dashboard entrypoint. No new legacy bun repo build/test command was started after that instruction. The exact current canonical profile path .🧬semio/🦑️repo/⚡️cache/🗃️bin/prototype/repo/repo exists, and the existing resolveMcpBin policy owns it. Its actual --help command exits 1 with `repo MCP accepts no command arguments` (generated/e2e-canonical-repo-help.log). The release peer is also present; a separate client binary exists. Current Rust CLI metadata intentionally declares repo for mcp-main and semio-repo for cli-main, so those existing names alone are not an accidental missing binary rename. No valid unified all-command repo frontend was found or copied into place. The parent owns the updated bootstrap/interface and missing export failure; native validation resumes through that repaired supported entry. Actual installed viewer acceptance will use owned PTY/journey/smoke validation, preserving the agent restriction on the human entrypoint.
+
+## October 20 Native Entrypoint Restoration
+
+The previous focused Core command 43621 settled with rc101 after Source admission and before its selected body: 166 value-edit compilation diagnostics. The controls owner repaired the physical current owners and owns the next nine-library matrix; no Core retry has started. Cold command 8123 settled rc1 on ENFILE while reading `.cache/b/l/m/data/claims`; no dashboard installation was published.
+
+The current profile `repo` executable was confirmed to reject `--help` with `repo MCP accepts no command arguments` (rc1). The canonical Go program now routes ordinary arguments through the repository CLI and reserves explicit `repo mcp` for the current stdio server/profile. Go and Rust share 27 neutral route vectors, a closed fixture schema, native plan laws, a Gherkin feature, and an independent Ajv/SQLite Source oracle. Build argv enters the existing owned build script, with no caller capability grant or control parsing in the frontend. Unix Go `syscall.Exec` and Rust `CommandExt::exec` preserve PID/environment/stdio/Original custody; Windows retains the shared console and awaits tool settlement. Native process smoke remains pending.
+
+The old `semio-repo` executable projections were removed. Existing Go build controls now compile the same canonical main and publish the profile repo directory; policy/client helpers and dashboard Go actions select it. Rust declares only the repo binary. MCP client configuration passes the explicit mcp marker and environment profile. MCP discovery instructions, build skill and primary repo/CLI/MCP/dashboard documentation now use native repo spelling. The stored domain client profile remains data.
+
+The parent explicitly authorized a bounded internal owned Bun bootstrap because the existing native executable cannot enter build commands. First attempt 29662 settled rc1 before compiler admission: missing bootstrap UI-axis package import. Parent repaired those imports to semantic relative owners. Fresh attempt 14897 (wrapper65211 / build entry65212) is admitted and waits shared dependency image access behind genuine exclusive producer63444. Its log is generated/e2e-unified-repo-bootstrap-current.log. No raw compiler/backend/private store or copied binary is used. All further commands resume through the published native binary once this recovery succeeds. No native build, Source oracle or OS handoff pass is claimed at this checkpoint.
+
+Focused authored checks after publication: `repo run @semio-tech/repo-cli-go:test-entrypoint-source --skip-cache --output=stream`; Go owner TestNativeEntrypointContract and TestNativeEntrypointToolPort; Rust CLI native_entrypoint_matches_neutral_vectors. Sequence thereafter is controls nine-library matrix terminal, then Core and actual cold installation/journeys.
+
+### Native Entrypoint Exact Attribution
+
+- `/Users/ueli/Documents/semio/.agents/skills/build/SKILL.md`
+- `/Users/ueli/Documents/semio/.mcp.json`
+- `/Users/ueli/Documents/semio/.codex/config.toml`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/README.md`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/README.md`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/README.md`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/README.md`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧬️schema/🚪️entrypoint/🔣️.json`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧫️fixtures/🚪️entrypoint/🔣️.json`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧪️tests/🚪️entrypoint/🥒️.feature`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧪️tests/🚪️entrypoint/🟦️.ts`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧪️tests/🔬️unit/🐹️.go`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🐹️.go`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🚪️entrypoint_unix.go`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🚪️entrypoint_windows.go`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🚀️bin/🐹️.go`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/📜️script.ts`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/📋️project.json`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧭️repo-cli/🦀️.rs`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧭️repo-cli/🚪️entrypoint/🦀️.rs`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧭️repo-cli/🚀️run-and-projection/🦀️.rs`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📦️mcp-main.rs`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📦️cli-main.rs`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/Cargo.toml`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📋️project.json`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📜️script.ts`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧪️tests/🔬️rust-package-commands/🟦️.ts`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧬️schema/🏗️build/🔣️.json`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧫️fixtures/🏗️build/🔣️.json`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🖥️cli/🟦️.ts`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🛠️dev/🟦️.ts`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🧩️component/🐹️.go`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🗄️repository/🐹️.go`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript/📜️script.ts`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript/📋️project.json`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🦀️rust/🗄️repository/🦀️.rs`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧪️tests/🧫️fixtures/🚪️entrypoint-contract.json`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🏛️repo-domain/🦀️.rs`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️authority/🟦️.ts`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🦀️.rs`
+
+### Native Micro-Commit Handler Reachability
+
+Read-only source inspection confirms no new build-port route is needed for hook entry. Go CLI `🪝️hook/🐹️.go` already registers raw `micro-commit [subcommand] [args...]` and delegates the complete argument vector through `hooks.RunMicroCommitScript`; the hooks owner `MicroCommitArgv` produces Bun plus root `📜️script.ts`, micro-commit and the unchanged arguments. Rust command tree registers the same raw command and `system-verbs::micro_commit` uses the existing hooks `micro_commit_argv` with the unchanged arguments. Therefore both reset and prepare-commit-msg enter through native repo and reach their current root implementation. This is source reachability, not a Git operation/runtime claim. Parent owns rendered hook resolver/prepare invocation normalization.
+
+### Native OS MCP Provider Route
+
+All authored MCP client entries now launch repo. The OS provider uses the explicit four-word native route `repo dev mcp stdio os …`. Its exact prefix selects the existing root script owner through the shared NativeScriptTool port, with root `📜️script.ts` and no generic build/repo prefix. Args remain opaque; env, issued envelope, streams and terminal handling use the same native handoff. Existing root script progress writes stderr, so no protocol suppression, shim or JSON rewriting was introduced. The schema/Go/Rust/SQLite corpus now contains 33 routes, including nearby negative provider prefixes. Low independently accepted this source change; actual native OS MCP initialize/stdout smoke remains pending publication. No pass claimed.
+
+## Native Recovery And Installed Frontend Runtime Acceptance
+
+The old generic bootstrap session 14897 was settled through SIGINT to its own process group 65211 only, then confirmed whole-command rc130 with wrapper/entry gone. It had advanced from a dependency lease wait into generic dependency cleanup/staging after almost one hour. No external producer was terminated.
+
+The closed early recovery route now authenticates the existing Original and exact finite phase before effects, validates the fixed repo-mcp authored build/install owner metadata, declares install→build before Original birth, and uses the existing strict owned child projection. It runs before generic dependency/image preparation inside the existing environment patch. Unsupported options retain ordinary routing; install refuses the exclude-dependencies shortcut. No source/compiler/storage guard was relaxed. Tests/schema preceded production, with 21 neutral cases, independent Ajv/SQLite oracle, actual-issued phase/child regressions and actual Root dispatch extraction; these test bodies remain pending the parent's serial Source run.
+
+Actual internal recovery session 33711 completed the genuine declared Go build and official installation with whole-command exit code 0. Go build took approximately ten seconds. The official install published /Users/ueli/.local/bin/repo; generated/e2e-unified-repo-recovery-install.log retains the console evidence. This was the authorized internal bootstrap to restore the native command; subsequent commands use repo. A fresh login shell invoked repo --help by name with rc0 (generated/e2e-native-repo-login-help.log), and repo run --help forwarded through the native build port with rc0 in approximately 55ms (generated/e2e-native-repo-build-help.log). Parent and independent review compared installed/source MachO SHA, receipt and installation pin. Parent also completed initialize, six management tools and repo://goals through the installed repo mcp; that acceptance belongs to the parent evidence. My earlier Python client stopped on a result-key assumption and settled its own child; it is not counted as a passing protocol check.
+
+Actual installed repo dev mcp stdio os with a ticket-generated folder answered initialize as semio/warming, protocol 2025-11-25, in 0.33 seconds. Every stdout byte was JSON; ordinary script/staging progress stayed on stderr. Client stdin EOF aborted the background staging child and the whole gateway returned 0. PID10626 settled. Evidence is generated/e2e-native-os-mcp-stdout.log, e2e-native-os-mcp-stderr.log and e2e-native-os-mcp-result.json. This verifies the real quiet warm handshake and client cleanup, not the OS binary's eventual tool execution.
+
+That runtime exposed two existing OS staging ports still launching Bun directly. Schema/three platform-neutral vectors and a feature were authored first, then both async/sync ports were corrected to repo run @semio-tech/framework-os-mcp-rs:build --output=stream. Their existing cwd, environment, async signal, output observer and terminal handling are unchanged. Four Source laws extract the actual production functions behind process ports and compare arguments with Ajv/SQLite independently. The declared pure owner command is repo run @semio-tech/framework-os-mcp:test-native-staging --skip-cache --output=stream, with no Rust prerequisite; no test-body result is claimed yet. Low review requested. The parent's serial Source group and the controls owner's nine-library matrix remain the coordinated verification pipeline; no duplicate job was started here.
+
+### Additional Exact Recovery And OS Staging Attribution
+
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🧬️schema/🔣️.json`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🧫️fixtures/🔣️.json`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🟦️.ts`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🧪️tests/🟦️.ts`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🧪️tests/🥒️.feature`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📡️stdio/🏗️staging/🧬️schema/🔣️.json`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📡️stdio/🏗️staging/🧫️fixtures/🔣️.json`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📡️stdio/🏗️staging/🧪️tests/🟦️.ts`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📡️stdio/🏗️staging/🧪️tests/🥒️.feature`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/📜️script.ts`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/📋️project.json`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🟦️.ts`
+
+Deduplicated attributed source/input array now contains 154 paths; maximum absolute path length 193 UTF-16 units. The retained report paths remain additional.
+
+### Native Build Port Refusal Evidence
+
+Actual installed native invocations with the explicit tool value entrypoint-unsupported and with that value supplied through SEMIO_BUILD_TOOL both returned whole-command rc1. Standard output stayed empty and standard error retained the actual Unknown build tool diagnostic and unchanged value. These checks exercise real opaque argv/environment forwarding and failure exit propagation through the Unix native exec handoff. Evidence is generated/e2e-native-build-port-refusals.json with the corresponding unknown-native-tool and ambient-native-tool stdout/stderr logs. They do not establish the separate interruption or Windows handoff gates.
+
+## Canonical Build Help Follow-Up
+
+The installed `repo run --help` completed with whole-command exit 0 in 24 ms after the presentation changes, but actual output still advertised `bun repo`. The existing operations Example schema now requires `repo `; all authored example commands and EN/DE neutral snapshots use the installed frontend spelling. The existing suite adds independent SQLite JSON extraction and Ajv positive/native versus negative/Bun validation. Its previously unmounted module is now imported by `workspace:test-workspace-build`. No internal Bun tool port changed. Actual help readback after correction and the owner Source suite remain distinct acceptance gates.
+
+Owned paths added:
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🧬️schema/🔣️.json`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🧪️tests/🧫️fixtures/📖️help/🔣️.json`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🧪️tests/🟦️.ts`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🧪️tests/📖️help.feature`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/📖️help/🟦️.ts`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🟦️.ts`
+
+Actual installed follow-up: `repo run --help` completed whole-command exit 0 in 104 ms and printed native `repo run` usage. Separate native `repo cache clear --help --lang=de`, `repo preflight --help --lang=en`, and `repo dependencies lock --help --lang=de` each completed whole-command exit 0. Their retained logs contain the expected EN/DE usage labels and no `bun repo` spelling. These early help probes do not prove the owner Source suite or dashboard native installation.
+
+## Focused Core Retry After Test Ownership Repair
+
+After Controls confirmed matrix85051 whole-command exit1 and its owned cancellation settled, the sole next native slot starts session84066 (`generated/e2e-tui-core-pure-rows.log`): admitted `repo cargo`, shared/prototype, exact framework Cargo.toml, `-p semio-framework-ui-tui-core --locked --lib shared_docking_contract_matches_neutral_vectors_without_frame_dependency -- --nocapture --test-threads=1`. Caller selects six-hour Original and configured134217728 stack. Current result is pending; no law pass is claimed.
+
+Focused Core session84066 settled whole-command exit0. The actual selected `docking::tests::shared_docking_contract_matches_neutral_vectors_without_frame_dependency` ran and passed:1passed0failed57filtered,0.00s. Final repository phase completed; the previous duplicate Core/test-owner compiler error is resolved for this selected gate. Log lines13584–13587 retain the exact body result. This does not run the remaining57 Core laws. The next already-authorized sole native slot runs current Widgets wholelib (six remounted Tree laws plus two existing editor laws); result pending.
+
+Current Widgets session28710 settled whole-command exit101 before any body: two moved Tree-law BOLD expectations still named `crate::cell` instead of the already imported physical core `attr`. Both exact remaining references now use `attr::BOLD`; law expectations and production are unchanged. The retained red is `e2e-tui-widgets-tree-editor.log` lines14389 and14411. A fresh sole Widgets retry is required; the older two-editor-law pass does not cover this eight-law closure.
+
+## Current Widgets Whole-Library Result
+
+Retry18419 settled whole-command exit0 (`generated/e2e-tui-widgets-tree-editor-current.log`). All8 actual laws passed,0failed0filtered,0.04s; compilation6.64s. The two `editor::tests` laws retain `[DEBUG] multiline editor neutral cases=13 UTF8=true boundedHistory=true`. All six actual `tree::tests` laws passed, including semantic cells against the independent Skia color planes, hover/filter/keyboard/selection/clipping and rebuild identity. This verifies the current whole Widgets closure after the Core/Tree ownership move, replacing only the earlier limited two-law acceptance. The sole native slot was explicitly released to Controls for their focused persistent reproducer; Root terminal three source/editor laws remain pending.
+
+The seven-path canonical help patch has independent bounded Source acceptance. Current Source batch67665 owns its actual suite execution; no test-body pass is inferred from the early help readbacks.

@@ -79,7 +79,7 @@ pub struct FontContext<'a> {
 /// dedicated inter-atom spacing table, so these are the same conventional values TeX itself hardcodes.
 const THIN_SPACE_EM: f32 = 3.0 / 18.0;
 const MEDIUM_SPACE_EM: f32 = 4.0 / 18.0;
-/// Fixed matrix/cases column and row gap — likewise not a `MATH` table constant.
+/// 🔳️ Fixed matrix/cases column and row gap — likewise not a `MATH` table constant.
 const GRID_GAP_EM: f32 = 0.3;
 //#endregion 🔖️Model
 

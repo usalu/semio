@@ -1,6 +1,13 @@
 mod tests {
     use super::*;
-    use crate::standards::v1::subsets::any::schema::geometry::{CadEdge, CadEdgeCurve, CadFace, CadPlaneSurface, CadShell, CadSolid, CadVertex, CadWire};
+    use semio_s_artifact_cad_cad_model::geometry::CadEdge;
+use semio_s_artifact_cad_cad_model::geometry::CadEdgeCurve;
+use semio_s_artifact_cad_cad_model::geometry::CadFace;
+use semio_s_artifact_cad_cad_model::geometry::CadPlaneSurface;
+use semio_s_artifact_cad_cad_model::geometry::CadShell;
+use semio_s_artifact_cad_cad_model::geometry::CadSolid;
+use semio_s_artifact_cad_cad_model::geometry::CadVertex;
+use semio_s_artifact_cad_cad_model::geometry::CadWire;
 
     fn box_geometry() -> CadGeometry {
         let corners: [[f64; 3]; 8] = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 1.0], [1.0, 1.0, 1.0], [0.0, 1.0, 1.0]];

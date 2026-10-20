@@ -1,4 +1,4 @@
-import contract from "./🧬️contract/🔣️.json";
+import contract from "./🧬️contract/🔣️.json" with { type: "json" };
 
 type Quantity = { value: number; length: boolean };
 type Token = { text: string; start: number; end: number };

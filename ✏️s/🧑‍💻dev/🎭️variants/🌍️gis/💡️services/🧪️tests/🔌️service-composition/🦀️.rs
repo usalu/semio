@@ -1,7 +1,8 @@
 use super::*;
 use semio_framework_os_kernel::os_directory::schema::DocumentScope;
 use semio_framework_os_kernel::os_directory::client::InstalledServiceTurnV1;
-use semio_framework_os_kernel::os_dsl::{DslValue,json};
+use semio_framework_pack_json as json;
+use semio_framework_os_kernel::DslValue;
 
 #[test]
 fn native_composition_installs_the_real_owner_and_matches_the_portable_oracle() {

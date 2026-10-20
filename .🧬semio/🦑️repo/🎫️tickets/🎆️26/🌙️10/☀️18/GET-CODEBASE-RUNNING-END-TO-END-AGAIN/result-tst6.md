@@ -1,0 +1,9 @@
+# Result tst6 (bun suites with the real install; written by coordinator from the executor's final message)
+
+- Census: 2,140 bun suites, 1,756 green (18,647 pass / 1,456 fail). repo 337/576, framework 534/624, OS 322/345, ✏️s 542/570, hub+semio-tech+mit-bestand 21/25. Runner always `bun test ./<file>`, ≤ 2 concurrent, no hoist/override. Per-suite appendix: `tst6-tools/appendix.md`.
+- Fixed by real install: ~20 tree-sitter-wasms suites, d3-dsv csv, sdk-surface, transaction-process-ownership, 3 moved native-build storage suites.
+- Root-cause fixes (6 files): execa 9 ESM `exitCode` (inventory execution suites), process-budgets toml oracle → `@iarna/toml` (1/16 → 10/7), pack json absence copies the store closure (still red: native-build imports outside the 4 neutralRoots — owner decision), execution-target-retry oracle → cockatiel ExponentialBackoff (vitest; delays verified by a bun script, suite not run).
+- Emulation-only passes (wrong declarations): cross-spawn (owned-execution capture), lru-cache (transient), dotenv (cmake law), safe-regex (2 pattern-safety suites), semver (test adapter).
+- Dependency gaps: see `tst6-tools/gaps-unresolved.json`, `gaps-undeclared.json`. Root: color, @vscode/test-cli, @vscode/vsce, d3-{chord,contour,delaunay,force,format,hexbin,interpolate,quadtree,random,regression,sankey,shape,time,time-format}, dagre, fft.js, suncalc, @asamuzakjp/css-color, unified, remark-parse, remark-gfm, remark-rehype, rehype-stringify, @bytecodealliance/jco-transpile/component. wgpu package needs @semio-tech/plugin-registry; print inferences needs d3-regression; 🎓️teaching needs tar-stream.
+- Not manifest gaps: frozen-markdown-coordinates (missing workspace-import authority row for @semio-tech/process/build-mode), 8 self-reference suites need `<pkg>:build` dist, tsv suite (tree-sitter-wasms 0.1.13 cannot parse `async |x|`).
+- Cleanup: no [DEBUG]; `.cache/tst6` removed; two leaked native-test images detached.

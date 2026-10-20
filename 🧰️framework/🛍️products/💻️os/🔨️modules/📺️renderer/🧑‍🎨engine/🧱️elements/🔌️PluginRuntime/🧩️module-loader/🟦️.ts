@@ -33,8 +33,8 @@ import { descriptorPackageAssets, fetchDescriptorManifest } from "@semio-tech/fr
 import { type PluginWasmHandle as KernelPluginWasmHandle } from "@semio-tech/framework";
 import { settleFailedInstanceOpen } from "@semio-tech/framework/actor/shard-client/heartbeat";
 import { type ShardEventEnvelope } from "@semio-tech/framework/actor/shard-client/wire";
-import { OwnedUiInstance } from "@semio-tech/framework/modules/ui/contract/retained/instance";
-import { hopTrace } from "@semio-tech/framework/trace";
+import { OwnedUiInstance } from "@semio-tech/ui-contract/retained/instance";
+import { hopTrace } from "@semio-tech/framework-trace";
 import { driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET } from "@semio-tech/framework/actor/wire-turn";
 import { BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES } from "@semio-tech/framework/wire-contracts";
 import {

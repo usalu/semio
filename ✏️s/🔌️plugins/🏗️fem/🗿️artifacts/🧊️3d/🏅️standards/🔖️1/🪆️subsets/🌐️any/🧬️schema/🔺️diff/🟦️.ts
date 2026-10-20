@@ -3,7 +3,7 @@ export type Fem3dLoadPatch =
   | { kind: "nodal"; nodeId?: string; dof?: FemDof; value?: Binary64 }
   | { kind: "memberUdl"; elementId?: string; wx?: Binary64; wy?: Binary64; wz?: Binary64 }
   | { kind: "area"; solidId?: string; pressure?: Binary64 };
-import { parseMapDelta, type MapDelta } from "@semio-tech/framework-replication/mutation/map/schema";
+import { parseMapDelta, type MapDelta } from "@semio-tech/framework/replication/mutation/map/schema";
 export type Fem3dCombinationTermsDelta = MapDelta<Binary64>;
 /** 🩹️ Combination edits own a name or explicitly keyed term changes. */
 export interface Fem3dCombinationPatch { name?: string; terms?: Fem3dCombinationTermsDelta; }
@@ -49,7 +49,7 @@ export interface Fem3dNodePatch {
   z?: Binary64;
 }
 
-import { type Binary64, parseBinary64, binary64Value } from "@semio-tech/value-ts/ieee754";
+import { type Binary64, parseBinary64, binary64Value } from "@semio-tech/framework/value/ieee754";
 /** 🧱️ Sparse material field changes; stable identity belongs to the modification key. */
 export interface Fem3dMaterialPatch {
   name?: string;

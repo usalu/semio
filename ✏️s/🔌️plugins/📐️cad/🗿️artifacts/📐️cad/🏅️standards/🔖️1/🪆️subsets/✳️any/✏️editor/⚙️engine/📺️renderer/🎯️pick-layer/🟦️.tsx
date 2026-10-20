@@ -10,7 +10,7 @@ import {
   type ReactNode,
   type ThreeCamera,
   type Ray as ThreeRay
-} from "@semio-tech/framework/ui/targets/react";
+} from "@semio-tech/ui-react";
 import { type Vec3 } from "@semio-tech/cad-engine-ts/registry";
 import { type ModelEntityKind } from "@semio-tech/s-spatial-kernel-ts/geometry";
 import { resolveTypologyStyle } from "@semio-tech/s-spatial-kernel-ts/geometry/typology";

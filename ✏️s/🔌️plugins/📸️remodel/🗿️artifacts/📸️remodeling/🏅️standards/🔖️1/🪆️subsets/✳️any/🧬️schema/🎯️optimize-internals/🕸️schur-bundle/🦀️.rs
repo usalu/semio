@@ -143,9 +143,6 @@ fn schur_step(ad: usize, num_a: usize, haa: &[MatD], hbb: &[MatD], hab: &HashMap
     for &(ai, bi) in hab.keys() {
         touching[bi].push(ai);
     }
-    // 🎲️ The hash map's key order is random per process; the reduction below accumulates in this
-    // order, so without sorting two runs of one problem differ at rounding level — and a
-    // reconstruction that adjusts its bundle then meshes differently from one run to the next.
     for cameras in &mut touching {
         cameras.sort_unstable();
     }

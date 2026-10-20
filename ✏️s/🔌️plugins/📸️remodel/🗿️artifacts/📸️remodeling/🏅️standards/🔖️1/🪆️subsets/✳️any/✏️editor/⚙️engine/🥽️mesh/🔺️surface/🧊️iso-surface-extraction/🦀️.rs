@@ -284,8 +284,6 @@ impl TsdfExtractionPreparation {
         let stride = stride.max(1);
         let cells = (bounds_max[0] - bounds_min[0]).max(0) as usize * (bounds_max[1] - bounds_min[1]).max(0) as usize * (bounds_max[2] - bounds_min[2]).max(0) as usize;
         let origin = bounds_min.map(|coordinate| coordinate - stride);
-        // 🔢️ Points `origin + stride·i` with `i` in `0..count` end exactly one stride past the last
-        // in-box point, so the domain's first and last layer on every axis are the unobserved ring.
         let count = std::array::from_fn(|axis| ((bounds_max[axis] - bounds_min[axis]).max(-stride) + 2 * stride) as usize / stride as usize + 1);
         let points = count[0] * count[1] * count[2];
         let words = points.div_ceil(64);
@@ -384,7 +382,6 @@ impl TsdfExtractionPreparation {
     /// 🪓️ Expands the flood fill by at most `cell_budget` cells; `true` once the frontier is empty.
     fn carve(&mut self, volume: &remodeling_dense::TsdfVolume, cell_budget: usize) -> bool {
         if self.frontier.is_empty() && !Self::bit(&self.queued, 0) {
-            // 🌱️ The whole margin ring is unobserved and 6-connected, so one seed reaches all of it.
             Self::set_bit(&mut self.queued, 0);
             self.frontier.push_back(0);
         }
@@ -441,7 +438,6 @@ impl TsdfExtractionPreparation {
         let inside: [bool; 8] = std::array::from_fn(|slot| corners[slot].val < self.iso);
         let known: [bool; 8] = std::array::from_fn(|slot| !self.observed_only || self.observed(volume, corners[slot].key).is_some());
         let crossing: [bool; 12] = std::array::from_fn(|edge| inside[CUBE_EDGES[edge].0] != inside[CUBE_EDGES[edge].1] && known[CUBE_EDGES[edge].0] && known[CUBE_EDGES[edge].1]);
-        // 🧵️ Union-find over the twelve edges: consecutive crossings on a face join one cluster.
         let mut parent: [usize; 12] = std::array::from_fn(|edge| edge);
         fn find(parent: &mut [usize; 12], edge: usize) -> usize {
             let mut root = edge;
@@ -456,11 +452,6 @@ impl TsdfExtractionPreparation {
             }
             root
         }
-        // 🧵️ Faces with four crossings first: the corners alternate, and each inside corner's two
-        // edges (edge k-1 and edge k meet at corner k) pair up, keeping the inside corners apart.
-        // The two pairs of such a face are then never joined by the cube's other faces — joining
-        // them would put four quads on one net edge (both cubes sharing the face merging both
-        // pairs), the one way this net came out non-manifold.
         let mut separated: Vec<(usize, usize)> = Vec::new();
         for face in CUBE_FACES {
             let edges: [usize; 4] = std::array::from_fn(|k| cube_edge_index(face[k], face[(k + 1) % 4]));
@@ -540,8 +531,6 @@ impl TsdfExtractionPreparation {
             let p = self.domain_point(self.cursor[0] * self.count[1] * self.count[2] + self.cursor[1] * self.count[2] + self.cursor[2]);
             let here = self.field(volume, p);
             let inside = here < self.iso;
-            // (axis, first other axis, second other axis) in cyclic order, so the cube cycle
-            // below winds counter-clockwise about +axis.
             for (axis, b, c) in [(0usize, 1usize, 2usize), (1, 2, 0), (2, 0, 1)] {
                 let stride = self.stride;
                 let unit = |along: usize| -> (i32, i32, i32) { (i32::from(along == 0) * stride, i32::from(along == 1) * stride, i32::from(along == 2) * stride) };
@@ -558,7 +547,6 @@ impl TsdfExtractionPreparation {
                 }
                 let (eb, ec) = (unit(b), unit(c));
                 let minus = |q: Lattice, d: (i32, i32, i32)| (q.0 - d.0, q.1 - d.1, q.2 - d.2);
-                // Each cube with the local (0/1) offset of `p` inside it, which names the local edge.
                 let cubes = [(minus(minus(p, eb), ec), (1, 1)), (minus(p, ec), (0, 1)), (p, (0, 0)), (minus(p, eb), (1, 0))];
                 let mut quad = [0u32; 4];
                 let mut complete_quad = true;
@@ -577,16 +565,12 @@ impl TsdfExtractionPreparation {
                 if !complete_quad {
                     continue;
                 }
-                // The outward normal points from the inside sample toward the outside one:
-                // +axis when `p` is inside, so the counter-clockwise cycle keeps its order.
                 if !inside {
                     quad.reverse();
                 }
                 self.triangles.push([quad[0], quad[1], quad[2]]);
                 self.triangles.push([quad[0], quad[2], quad[3]]);
             }
-            // 👁️ An observed-only sheet still has its rim and holes to cap: a quarter of the envelope
-            // stays free for the hole fill's triangles.
             let ceiling = if self.observed_only { SURFACE_NET_ELEMENT_CEILING * 3 / 4 } else { SURFACE_NET_ELEMENT_CEILING };
             if self.positions.len() > ceiling || self.triangles.len() > ceiling {
                 self.exceeded = true;

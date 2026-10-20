@@ -28,6 +28,10 @@ use crate::context::{fem2d_app, render};
 use semio_framework_plugin::{ArtifactEditor, EditorApp};
 use pack::snapshot::ArtifactDsl;
 #[cfg(test)] use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_display;
+#[cfg(test)] use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_camera;
+#[cfg(test)] use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation;
+#[cfg(test)] use semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dRetainedCommandJobFactory;
+#[cfg(test)] use semio_framework_plugin::ArtifactOwnedToolJobFactory;
 #[cfg(test)] use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::canvas_pointer_down;
 #[cfg(test)] use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::canvas_pointer_move;
 #[cfg(test)] use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::canvas_pointer_up;
@@ -94,7 +98,6 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
     assert_eq!(ids.len(), 37, "every Fem2dCommand row must be covered by every_command()");
-    // calls.
     let definition = create_fem2d_app();
     for id in ids {
         assert!(definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).any(|action| action.id == id), "command_id {id} must be a declared action");
@@ -200,11 +203,6 @@ async fn every_route_declares_the_lane_its_handler_emits() {
         assert!(emit.artifact_mutations.is_empty() || lanes.contains(&ArtifactToolPublicationLane::Artifact), "{tool_id} emits document mutations without the Artifact lane");
         assert!(emit.config_mutations.is_empty() || lanes.contains(&ArtifactToolPublicationLane::Config), "{tool_id} emits config mutations without the Config lane");
         assert!(emit.window_config_mutations.is_empty() || lanes.contains(&ArtifactToolPublicationLane::WindowConfig), "{tool_id} emits window config mutations without the WindowConfig lane");
-        // 🛰️ `Emit::effects` is NOT a store lane: the framework gates only the store families
-        // (`🔌️plugin/🦀️.rs`'s completion check), and its own registration gate refuses `HostOnly`
-        // alongside any other lane. `HostOnly` therefore means "publishes into no store at all" —
-        // which is the direction this asserts, so a route that writes a store may still re-arm
-        // itself through a host effect (`setResultAnimation`, `resultAnimationTick`).
         assert!(
             !lanes.contains(&ArtifactToolPublicationLane::HostOnly) || (emit.artifact_mutations.is_empty() && emit.config_mutations.is_empty() && emit.window_config_mutations.is_empty()),
             "{tool_id} declares the host-only lane but publishes into a store"

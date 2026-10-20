@@ -257,7 +257,7 @@ func joinArgv(argv []string) string {
 
 // region 🔖️Registration
 
-// Adapter is the registration entry point the generated host calls.
+// 🌉️Adapter is the registration entry point the generated host calls.
 func Adapter() *host.Adapter {
 	return host.NewAdapter("go").
 		Subject("every-client-receives-the-shape-it-reads", everyClientReceivesTheShapeItReads).

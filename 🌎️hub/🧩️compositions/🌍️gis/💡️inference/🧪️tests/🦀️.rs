@@ -44,6 +44,6 @@ fn the_default_gis_map_owns_exactly_the_fixed_three_commit_members() {
     let parent = <GisMapInferenceBindingV1 as ComposedMapCommitBindingV1>::decode_parent(&pack).expect("default Map parent");
     let (drawing, value) = <GisMapInferenceBindingV1 as ComposedMapCommitBindingV1>::derived_members(&parent);
     assert_eq!(drawing, semio_s_artifact_gis_gismap::schema::gis_map_snapshot_to_drawing(&parent));
-    assert_eq!(value, semio_s_artifact_gis_gismap::gis_map_value_from_descriptor_json(&semio_s_artifact_gis_gismap::schema::gis_map_descriptor_json(&parent)));
+    assert_eq!(value, semio_s_artifact_gis_gismap::gis_map_value_from_descriptor_json(&semio_s_artifact_gis_gismap::standards::v1::subsets::any::io::text::snapshot::gis_map_descriptor_json(&parent)));
     assert_eq!(GisMapInferenceBindingV1.composed_children(&[0xff]), Err(MapBindingRefusalV1::Undecodable));
 }

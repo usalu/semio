@@ -37,29 +37,29 @@ pub mod standards {
                         pub mod change_material_alpha_mode {
                             pub use semio_s_artifact_stdio_gltf_mutations_mut_any::standards::v2_0::subsets::any::schema::mutations::change_material_alpha_mode::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../💎️material/🌫️change-alpha/🧪️tests/🎭️switches-the-79b834/🦀️.rs"]
-                            pub mod case_switches_the_79b834;
+                            #[path = "../../../../../../../💎️material/🌫️change-alpha/🧪️tests/🎭️switches/🦀️.rs"]
+                            pub mod case_switches;
                         }
                         #[path = "."]
                         pub mod change_material_double_sided {
                             pub use semio_s_artifact_stdio_gltf_mutations_mut_any::standards::v2_0::subsets::any::schema::mutations::change_material_double_sided::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../💎️material/🪞️change-sides/🧪️tests/🪞️makes-the-6261b2/🦀️.rs"]
-                            pub mod case_makes_the_6261b2;
+                            #[path = "../../../../../../../💎️material/🪞️change-sides/🧪️tests/🪞️makes/🦀️.rs"]
+                            pub mod case_makes;
                         }
                         #[path = "."]
                         pub mod change_mesh_extension_data {
                             pub use semio_s_artifact_stdio_gltf_mutations_mut_any::standards::v2_0::subsets::any::schema::mutations::change_mesh_extension_data::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🕸️mesh/🧩️change-extensions/🧪️tests/🔌️attaches-an-9e1e51/🦀️.rs"]
-                            pub mod case_attaches_an_9e1e51;
+                            #[path = "../../../../../../../🕸️mesh/🧩️change-extensions/🧪️tests/🔌️attaches/🦀️.rs"]
+                            pub mod case_attaches;
                         }
                         #[path = "."]
                         pub mod change_mesh_extra_data {
                             pub use semio_s_artifact_stdio_gltf_mutations_mut_any::standards::v2_0::subsets::any::schema::mutations::change_mesh_extra_data::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🕸️mesh/📝️change-extras/🧪️tests/✍️attaches-an-8df0ce/🦀️.rs"]
-                            pub mod case_attaches_an_8df0ce;
+                            #[path = "../../../../../../../🕸️mesh/📝️change-extras/🧪️tests/✍️attaches/🦀️.rs"]
+                            pub mod case_attaches;
                         }
                         #[path = "."]
                         pub mod change_mesh_morph_weights {
@@ -72,8 +72,8 @@ pub mod standards {
                         pub mod change_mesh_name {
                             pub use semio_s_artifact_stdio_gltf_mutations_mut_any::standards::v2_0::subsets::any::schema::mutations::change_mesh_name::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🕸️mesh/🏷️rename/🧪️tests/✏️renames-the-hull-0a49e7/🦀️.rs"]
-                            pub mod case_renames_the_hull_0a49e7;
+                            #[path = "../../../../../../../🕸️mesh/🏷️rename/🧪️tests/✏️renames/🦀️.rs"]
+                            pub mod case_renames;
                         }
                         #[path = "."]
                         pub mod change_node_extension_data {
@@ -86,29 +86,29 @@ pub mod standards {
                         pub mod change_node_extra_data {
                             pub use semio_s_artifact_stdio_gltf_mutations_mut_any::standards::v2_0::subsets::any::schema::mutations::change_node_extra_data::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🌳️node/📝️change-extras/🧪️tests/📝️attaches-a-unit-5159f9/🦀️.rs"]
-                            pub mod case_attaches_a_unit_5159f9;
+                            #[path = "../../../../../../../🌳️node/📝️change-extras/🧪️tests/📝️attaches/🦀️.rs"]
+                            pub mod case_attaches;
                         }
                         #[path = "."]
                         pub mod change_node_morph_weights {
                             pub use semio_s_artifact_stdio_gltf_mutations_mut_any::standards::v2_0::subsets::any::schema::mutations::change_node_morph_weights::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🌳️node/⚖️change-weights/🧪️tests/⚖️sets-the-node-1b9600/🦀️.rs"]
-                            pub mod case_sets_the_node_1b9600;
+                            #[path = "../../../../../../../🌳️node/⚖️change-weights/🧪️tests/⚖️sets/🦀️.rs"]
+                            pub mod case_sets;
                         }
                         #[path = "."]
                         pub mod change_node_name {
                             pub use semio_s_artifact_stdio_gltf_mutations_mut_any::standards::v2_0::subsets::any::schema::mutations::change_node_name::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🌳️node/🏷️rename/🧪️tests/✏️renames-the-root-f1e002/🦀️.rs"]
-                            pub mod case_renames_the_root_f1e002;
+                            #[path = "../../../../../../../🌳️node/🏷️rename/🧪️tests/✏️renames/🦀️.rs"]
+                            pub mod case_renames;
                         }
                         #[path = "."]
                         pub mod change_node_transform {
                             pub use semio_s_artifact_stdio_gltf_mutations_mut_any::standards::v2_0::subsets::any::schema::mutations::change_node_transform::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🌳️node/📐️transform/🧪️tests/🔀️replaces-a-f09fa4/🦀️.rs"]
-                            pub mod case_replaces_a_f09fa4;
+                            #[path = "../../../../../../../🌳️node/📐️transform/🧪️tests/🔀️replaces/🦀️.rs"]
+                            pub mod case_replaces;
                         }
                         #[path = "."]
                         pub mod change_primitive_extension_data {
@@ -121,15 +121,15 @@ pub mod standards {
                         pub mod change_primitive_extra_data {
                             pub use semio_s_artifact_stdio_gltf_mutations_mut_any::standards::v2_0::subsets::any::schema::mutations::change_primitive_extra_data::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🔺️primitive/📝️change-extras/🧪️tests/📝️attaches-a-lod-698164/🦀️.rs"]
-                            pub mod case_attaches_a_lod_698164;
+                            #[path = "../../../../../../../🔺️primitive/📝️change-extras/🧪️tests/📝️attaches/🦀️.rs"]
+                            pub mod case_attaches;
                         }
                         #[path = "."]
                         pub mod change_primitive_topology_mode {
                             pub use semio_s_artifact_stdio_gltf_mutations_mut_any::standards::v2_0::subsets::any::schema::mutations::change_primitive_topology_mode::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🔺️primitive/📐️change-topology/🧪️tests/📐️triangle-81bc44/🦀️.rs"]
-                            pub mod case_triangle_81bc44;
+                            #[path = "../../../../../../../🔺️primitive/📐️change-topology/🧪️tests/📐️triangle/🦀️.rs"]
+                            pub mod case_triangle;
                         }
                         #[path = "."]
                         pub mod change_scene_extension_data {
@@ -142,15 +142,15 @@ pub mod standards {
                         pub mod change_scene_extra_data {
                             pub use semio_s_artifact_stdio_gltf_mutations_mut_any::standards::v2_0::subsets::any::schema::mutations::change_scene_extra_data::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🎬️scene/📝️change-extras/🧪️tests/📏️attaches-a-units-e2653c/🦀️.rs"]
-                            pub mod case_attaches_a_units_e2653c;
+                            #[path = "../../../../../../../🎬️scene/📝️change-extras/🧪️tests/📏️attaches/🦀️.rs"]
+                            pub mod case_attaches;
                         }
                         #[path = "."]
                         pub mod change_scene_name {
                             pub use semio_s_artifact_stdio_gltf_mutations_mut_any::standards::v2_0::subsets::any::schema::mutations::change_scene_name::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🎬️scene/🏷️rename/🧪️tests/✏️renames-the-main-4b6c9d/🦀️.rs"]
-                            pub mod case_renames_the_main_4b6c9d;
+                            #[path = "../../../../../../../🎬️scene/🏷️rename/🧪️tests/✏️renames/🦀️.rs"]
+                            pub mod case_renames;
                         }
                         #[path = "."]
                         pub mod create_accessor {
@@ -163,15 +163,15 @@ pub mod standards {
                         pub mod create_animation {
                             pub use semio_s_artifact_stdio_gltf_mutations_mut_any::standards::v2_0::subsets::any::schema::mutations::create_animation::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🎞️animation/🌱️create/🧪️tests/🎞️inserts-an-empty-99ef88/🦀️.rs"]
-                            pub mod case_inserts_an_empty_99ef88;
+                            #[path = "../../../../../../../🎞️animation/🌱️create/🧪️tests/🎞️inserts/🦀️.rs"]
+                            pub mod case_inserts;
                         }
                         #[path = "."]
                         pub mod create_buffer {
                             pub use semio_s_artifact_stdio_gltf_mutations_mut_any::standards::v2_0::subsets::any::schema::mutations::create_buffer::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../💿️buffer/🌱️create/🧪️tests/💿️inserts-a-two-ab4132/🦀️.rs"]
-                            pub mod case_inserts_a_two_ab4132;
+                            #[path = "../../../../../../../💿️buffer/🌱️create/🧪️tests/💿️inserts/🦀️.rs"]
+                            pub mod case_inserts;
                         }
                         #[path = "."]
                         pub mod create_buffer_view {
@@ -191,22 +191,22 @@ pub mod standards {
                         pub mod create_image {
                             pub use semio_s_artifact_stdio_gltf_mutations_mut_any_2::standards::v2_0::subsets::any::schema::mutations::create_image::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🖼️image/🌱️create/🧪️tests/🖼️inserts-an-empty-e3b07a/🦀️.rs"]
-                            pub mod case_inserts_an_empty_e3b07a;
+                            #[path = "../../../../../../../🖼️image/🌱️create/🧪️tests/🖼️inserts/🦀️.rs"]
+                            pub mod case_inserts;
                         }
                         #[path = "."]
                         pub mod create_material {
                             pub use semio_s_artifact_stdio_gltf_mutations_mutations::standards::v2_0::subsets::any::schema::mutations::create_material::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../💎️material/🌱️create/🧪️tests/💎️inserts-a-5ae67c/🦀️.rs"]
-                            pub mod case_inserts_a_5ae67c;
+                            #[path = "../../../../../../../💎️material/🌱️create/🧪️tests/💎️inserts/🦀️.rs"]
+                            pub mod case_inserts;
                         }
                         #[path = "."]
                         pub mod create_mesh {
                             pub use semio_s_artifact_stdio_gltf_mutations_mutations::standards::v2_0::subsets::any::schema::mutations::create_mesh::*;
                             #[cfg(test)]
-                            #[path = "../../../../../../../🕸️mesh/🌱️create/🧪️tests/🕸️inserts-an-empty-49e11c/🦀️.rs"]
-                            pub mod case_inserts_an_empty_49e11c;
+                            #[path = "../../../../../../../🕸️mesh/🌱️create/🧪️tests/🕸️inserts/🦀️.rs"]
+                            pub mod case_inserts;
                         }
                     }
                 }

@@ -14,14 +14,14 @@ export async function runOwnedVerifyScript(context: Readonly<{ root: string; rep
 
   if (segments.length === 1 && segments[0] === "snapshot-sqlite-source") {
     const snapshot = resolve(context.root, "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot");
-    await runRepositoryCommand(context.invocation,process.execPath,[resolve(context.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--skipLibCheck", resolve(snapshot, "🟦️.ts"), resolve(snapshot, "🧪️tests/🪶️sqlite/🟦️.ts")],context.repoRoot,"architect-snapshot-sqlite-public-types",{version:1,maximumElapsedMilliseconds:0,output:null});
+    await runRepositoryCommand(context.invocation,process.execPath,[resolve(context.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--skipLibCheck", resolve(snapshot, "🟦️.ts"), resolve(snapshot, "../../🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts"), resolve(snapshot, "../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts")],context.repoRoot,"architect-snapshot-sqlite-public-types",{version:1,maximumElapsedMilliseconds:0,output:null});
     return;
   }
 
 if (segments[0] === "architect-window-ownership") {
     const windowsRoot = join(context.repoRoot, "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows");
     const configRoots = ["📋️register", "↔️adjacency", "🕸️graph", "📓️report"].map((window) => join(windowsRoot, window, "🎚️config"));
-    const oracle = join(configRoots[0]!, "🧪️tests/🔬️window/🟦️.ts");
+    const oracle = join(configRoots[0]!, "🧪️tests/🔬️window-ownership/🟦️.ts");
     const { testArchitectWindowOwnershipOracle } = await import(oracle);
     testArchitectWindowOwnershipOracle();
     runCmd(

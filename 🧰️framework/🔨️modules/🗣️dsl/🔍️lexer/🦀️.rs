@@ -10,15 +10,15 @@ use crate::trust::Sanitized;
 /// `\uXXXX`, csv's `""`, and step's `''`-doubling uniformly instead of four bespoke fixes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum StringEscape {
-    /// `\` + any char is copied verbatim into the token text (both chars kept, undecoded) — the
+    /// 💾️ `\` + any char is copied verbatim into the token text (both chars kept, undecoded) — the
     /// lexer's only behavior before P2-M1, kept as the default so every grammar that doesn't
     /// declare a `string` header directive lexes byte-identically to before this type existed.
     Raw,
-    /// Standard backslash decode: `\" \\ \/ \b \f \n \r \t` plus `\uXXXX` (4 hex digits, with
+    /// 📜️ Standard backslash decode: `\" \\ \/ \b \f \n \r \t` plus `\uXXXX` (4 hex digits, with
     /// UTF-16 surrogate-pair combination for astral codepoints) — JSON's escape grammar
     /// (RFC 8259 §7). An unrecognized escape is a strict-mode error / kept literal when forgiving.
     Backslash,
-    /// The delimiter doubled (`""` / `''`) decodes to one literal delimiter char inside the
+    /// ➕️ The delimiter doubled (`""` / `''`) decodes to one literal delimiter char inside the
     /// string; `\` has no special meaning. CSV's RFC 4180 quoted-field escape / STEP Part 21's
     /// `''`-doubled strings.
     Doubled,

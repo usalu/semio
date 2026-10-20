@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@semio-tech/framework-hash",
+  "version": "0.1.0",
+  "description": "framework · content hashing (leaf)",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./🟦️.ts",
+    "./testing/fixtures/blake3.json": "./🧪️tests/🧫️fixtures/🧮️blake3/🔣️.json"
+  },
+  "license": "LGPL-3.0-or-later",
+  "bundleKind": "library"
+}

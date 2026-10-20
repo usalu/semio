@@ -1,0 +1,125 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🎞️visual-job/🧱️model-step/🦀️.rs",
+ "function": "step_model",
+ "nth": 0,
+ "match_line": 265,
+ "types": {},
+ "ret": "Result<bool, Vec<u8>>",
+ "inline": true,
+ "arms": [
+  {
+   "line": 305,
+   "name": "model_element_material",
+   "doc": "🪵️ Runs the `element material` stage of `step_model`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 336,
+   "name": "model_element_start_or_element_end",
+   "doc": "🔩️ Runs the `element start` or `element end` stage of `step_model`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 351,
+   "name": "model_element_commit",
+   "doc": "⚙️ Runs the `element commit` stage of `step_model`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 396,
+   "name": "model_solid_domain_outer_reserve",
+   "doc": "🧲️ Runs the `solid domain outer reserve` stage of `step_model`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 428,
+   "name": "model_solid_domain_hole_reserve",
+   "doc": "🪛️ Runs the `solid domain hole reserve` stage of `step_model`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 469,
+   "name": "model_solid_owners_reserve",
+   "doc": "🔧️ Runs the `solid owners reserve` stage of `step_model`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 495,
+   "name": "model_solid_node_lookup",
+   "doc": "🔨️ Runs the `solid node lookup` stage of `step_model`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 533,
+   "name": "model_solid_node_id",
+   "doc": "🪚️ Runs the `solid node id` stage of `step_model`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 556,
+   "name": "model_solid_tet",
+   "doc": "🧰️ Runs the `solid tet` stage of `step_model`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 617,
+   "name": "model_solid_commit",
+   "doc": "🧪️ Runs the `solid commit` stage of `step_model`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  }
+ ],
+ "method": {
+  "self_param": "&mut self",
+  "call": "self.{name}({args})"
+ }
+}

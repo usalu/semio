@@ -1,7 +1,7 @@
-import type { UiLabel } from "../../../🧱️elements/🎗️UiLabel/🟦️.tsx";
+import type { UiLabel } from "@semio-tech/ui/elements/UiLabel";
 import * as React from "react";
-import { InfoIcon, LightbulbIcon, TriangleAlertIcon, AlertCircleIcon, ChevronLeftIcon } from "../../../🧱️elements/🔣️Icons/🟦️.tsx";
-import { useLabel } from "../../../🧱️elements/🏷️Label/🟦️.tsx";
+import { InfoIcon, LightbulbIcon, TriangleAlertIcon, AlertCircleIcon, ChevronLeftIcon } from "@semio-tech/ui/elements/Icons";
+import { useLabel } from "@semio-tech/ui/elements/Label";
 
 // Read-only display wrappers for tooltips and callouts.
 // Consumers MUST pass valid config objects.

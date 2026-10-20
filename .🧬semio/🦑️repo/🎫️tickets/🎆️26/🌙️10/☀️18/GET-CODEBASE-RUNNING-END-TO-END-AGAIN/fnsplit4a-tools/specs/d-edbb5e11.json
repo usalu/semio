@@ -1,0 +1,37 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/💬️Dialog/🧪️tests/🧩️component/🟦️.tsx",
+ "describeLine": 10,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of the Dialog suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️owns-uncontrolled-state-exact",
+   "doc": "/** 🔶️ The owns uncontrolled state exact tests of the Dialog suite. */",
+   "name": "registerOwnsUncontrolledStateExactTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the owns uncontrolled state exact tests of the Dialog suite.",
+   "from": 11,
+   "to": 123
+  },
+  {
+   "dir": "🔸️dismisses-nested-sibling-dialogs",
+   "doc": "/** 🔸️ The dismisses nested sibling dialogs tests of the Dialog suite. */",
+   "name": "registerDismissesNestedSiblingDialogsTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the dismisses nested sibling dialogs tests of the Dialog suite.",
+   "from": 161,
+   "to": 266
+  },
+  {
+   "dir": "🟠️inherits-one-scoped-isolation",
+   "doc": "/** 🟠️ The inherits one scoped isolation tests of the Dialog suite. */",
+   "name": "registerInheritsOneScopedIsolationTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the inherits one scoped isolation tests of the Dialog suite.",
+   "from": 296,
+   "to": 360
+  }
+ ]
+}

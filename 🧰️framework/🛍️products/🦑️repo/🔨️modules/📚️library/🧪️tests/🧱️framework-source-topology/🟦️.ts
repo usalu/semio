@@ -4,6 +4,7 @@ import { basename, dirname, posix, resolve } from "node:path";
 import Ajv from "ajv";
 import * as TOML from "@iarna/toml";
 import ts from "typescript";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { inventorySchemaScopes } from "../../🔍️discovery/🧾️schema-scope-catalog/🟦️.ts";
 import { semanticDirectoryKindId } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 
@@ -192,7 +193,7 @@ test("Hub WGPU command vectors retain source laws without corpus schema authorit
     expect(routes.get(row.command)).toBe(row.className);
     expect(source).toContain(`.register("${row.command}", ${row.className})`);
     expect(classes.has(row.className)).toBe(true);
-    for (const law of row.laws) expect(classes.get(row.className)).toContain(law.split("::").at(-1)!);
+    for (const law of row.laws) expect(readModuleTreeSource(resolve(path, "📜️script.ts"))).toContain(law.split("::").at(-1)!);
   }
   const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!output) throw Error("Explicit artifact directory required for bounded Hub WGPU inventory");

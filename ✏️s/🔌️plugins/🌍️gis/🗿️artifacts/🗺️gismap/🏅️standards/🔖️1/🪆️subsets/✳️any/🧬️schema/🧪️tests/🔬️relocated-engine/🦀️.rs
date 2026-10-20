@@ -12,6 +12,7 @@ use crate::standards::v1::subsets::any::io::text::snapshot::value_to_dsl;
 use crate::standards::v1::subsets::any::io::text::snapshot::default_document;
 use crate::standards::v1::subsets::any::schema::*;
 use serde_json::Value;
+use semio_s_artifact_stdio_semio_drawing_snapshot::schema::snapshot::DrawNode;
 
 /// 🌉️ Once-guarded stdio registration so `render_drawing_to_svg`'s `io_dispatch` call can
 /// resolve the `s.stdio.semio/v1/drawing` → `s.stdio.svg` bridge in a bare `cargo test`

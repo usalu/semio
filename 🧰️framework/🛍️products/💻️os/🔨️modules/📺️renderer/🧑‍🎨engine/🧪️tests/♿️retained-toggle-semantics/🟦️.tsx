@@ -16,8 +16,8 @@ import { UiDocumentStore } from "../../🧱️elements/📃️UiDocumentStore/�
 import { interpretUiNode } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
 import { type UiInterpreterContext } from "../../🧱️elements/🗣️Interpreter/🧷️interpreter-context/🟦️.ts";
 import { createAccessibilityMirror } from "@semio-tech/framework-renderer-wgpu/accessibility-mirror";
-import { uiAccessibilityProjectionNodeV1 } from "@semio-tech/framework/modules/ui/contract/presentation/accessibility";
-import { retainedToggleSemanticsFixtureUrl } from "@semio-tech/framework/ui/testing/fixtures";
+import { uiAccessibilityProjectionNodeV1 } from "@semio-tech/ui-contract/presentation/accessibility";
+import { retainedToggleSemanticsFixtureUrl } from "@semio-tech/ui/testing/fixtures";
 
 type ToggleCase = {
   readonly id: string;

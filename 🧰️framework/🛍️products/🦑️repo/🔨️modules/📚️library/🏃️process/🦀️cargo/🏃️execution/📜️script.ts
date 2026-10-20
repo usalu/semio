@@ -1,10 +1,12 @@
 #!/usr/bin/env bun
-import {resolve} from "node:path";
-import {fileURLToPath} from "node:url";
-import {receiveScriptProcessInvocation,createIssuedResourceControlV1} from "@semio-tech/process/routing";
-import {readRepositoryCargoExecutionInputV1,runRepositoryCargoExecutionV1} from "./🟦️.ts";
-
-if(import.meta.main){
- if(process.argv.length!==3||process.argv[2]!=="execute"||resolve(process.argv[1]!)!==fileURLToPath(import.meta.url))throw new Error("Private Cargo execution endpoint requires its exact original command");
- await receiveScriptProcessInvocation(process.env,async invocation=>{const control=createIssuedResourceControlV1(invocation,"cargo:execution",0),stop=()=>process.stdin.destroy(invocation.control.signal.reason);invocation.control.signal.addEventListener("abort",stop,{once:true});try{const request=await readRepositoryCargoExecutionInputV1(process.cwd(),invocation,process.stdin);await runRepositoryCargoExecutionV1(process.cwd(),request,invocation,control,process.env);}finally{invocation.control.signal.removeEventListener("abort",stop);}});
+import { receiveScriptProcessInvocation } from "@semio-tech/process/routing";
+import { BundleScript, ScriptRouter, runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptProgram } from "./🧪️tests/🔬️script-commands/🟦️.ts";
+/** 🚪️ `execute` — runs the program of this script. */
+class ExecuteScript extends BundleScript {
+  async run(): Promise<void> {
+    await runScriptProgram();
+  }
 }
+const router = new ScriptRouter(import.meta.dir).register("execute", ExecuteScript);
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, argv: ["execute"] }));

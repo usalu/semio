@@ -40,7 +40,7 @@ use semio_framework_os_store_one_item_batch::lifted_one_item_publication::Artifa
 use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPublicationPhase;
 use semio_framework_os_store_operation_wire::{ArtifactPreparedOperationCursor, ArtifactPreparedOperationProgress, ArtifactPreparedOperationError};
 use semio_framework_os_store_replay::{DRAFT_SUPERSESSION_ID, EditReplay, EditReplayResult, EffectiveSupersessions, ReplayEdits, ReplayMode, ReplayProgress, ReplayStep, admit_replacement, draft_supersessions, effective_operation, fold_operation};
-use semio_framework_os_store_replay::{FoldProjection, IndexedAppliedReplayEdits, PREFIX_SNAPSHOT_RING_CAPACITY, PREFIX_SNAPSHOT_RING_FLOOR, PrefixSnapshot, ReplayConvergence, effective_operation_with_supersession, fold_effective_edit, fold_recorded, forward_prefix_digests, forward_prefix_genesis, forward_prefix_step, retire_shared_projection, same_effective_inputs, shared_prefix_len, superseded_positions};
+use semio_framework_os_store_replay::{ColdFoldProjection, IndexedAppliedReplayEdits, PREFIX_SNAPSHOT_RING_CAPACITY, PREFIX_SNAPSHOT_RING_FLOOR, PrefixSnapshot, ReplayConvergence, effective_operation_with_supersession, fold_effective_edit, fold_recorded, forward_prefix_digests, forward_prefix_genesis, forward_prefix_step, retire_shared_projection, same_effective_inputs, shared_prefix_len, superseded_positions};
 //#region 🔖️Backbone
 //#region 🔖️Backbone
 use semio_framework_os_store_backbone as backbone;

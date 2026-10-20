@@ -1,0 +1,89 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/📦️objects/🗃️tables/🦀️.rs",
+ "function": "encode_r2010_table_record_frame",
+ "nth": 0,
+ "match_line": 123,
+ "types": {
+  "data": "&mut DwgBitWriter",
+  "strings": "&mut DwgBitWriter"
+ },
+ "ret": "()",
+ "inline": true,
+ "arms": [
+  {
+   "line": 136,
+   "name": "write_layer_record",
+   "doc": "🧱️ Writes the main stream fields of a layer table record.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "value": "&semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgLayerTableRecord"
+   }
+  },
+  {
+   "line": 153,
+   "name": "write_linetype_record",
+   "doc": "🪵️ Writes the main stream fields of a linetype table record.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "value": "&semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgLinetypeTableRecord"
+   }
+  },
+  {
+   "line": 174,
+   "name": "write_block_header_record",
+   "doc": "🔩️ Writes the main stream fields of a block header table record.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "value": "&semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgBlockHeaderTableRecord"
+   }
+  },
+  {
+   "line": 201,
+   "name": "write_viewport_record",
+   "doc": "⚙️ Writes the main stream fields of a viewport table record.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "value": "&semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgViewportTableRecord"
+   }
+  },
+  {
+   "line": 253,
+   "name": "write_dimension_style_record",
+   "doc": "🧲️ Writes the main stream fields of a dimension style table record.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "value": "&semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgDimensionStyleTableRecord"
+   }
+  }
+ ],
+ "context": [
+  "object",
+  "body",
+  "data",
+  "strings"
+ ],
+ "argexpr": {
+  "data": "&mut data",
+  "strings": "&mut strings"
+ }
+}

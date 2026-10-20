@@ -1,0 +1,36 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/📐️part2/🦀️.rs",
+ "function": "check_ports_primitives_and_spaces",
+ "nth": 0,
+ "types": {
+  "doc": "&Iso16757Snapshot",
+  "report": "&mut CheckReport",
+  "id": "&String",
+  "obj": "&semio_s_artifact_norm_iso16757_model::part_2::GeometryObject",
+  "EXPECTED": "&[(&str, &[&str])]"
+ },
+ "modes": {},
+ "keep": [],
+ "phases": [
+  {
+   "name": "check_object_id_and_spaces",
+   "doc": "⚙️ Checks the id of one geometry object and the ids and envelopes of its spaces.",
+   "from": 533,
+   "to": 572
+  },
+  {
+   "name": "check_object_ports",
+   "doc": "🧲️ Checks the media, types and primitive parameters of the ports of one geometry object.",
+   "from": 634,
+   "to": 634
+  }
+ ],
+ "block_line": 532,
+ "context": {
+  "doc": "&Iso16757Snapshot",
+  "report": "&mut CheckReport",
+  "id": "&String",
+  "obj": "&semio_s_artifact_norm_iso16757_model::part_2::GeometryObject",
+  "EXPECTED": "&[(&str, &[&str])]"
+ }
+}

@@ -1,7 +1,7 @@
 //! 🔗️ `proximity-connect` command, and the proximity search the node drop and `translateSelection` share.
 
 use crate::editor::puzzle2d::recorder::Puzzle2dRecorder;
-use {crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::puzzle2d_entity_hidden, crate::editor::puzzle2d::snapshot::puzzle2d_handle_world_position, crate::editor::puzzle2d::snapshot::puzzle2d_kinds_compatible, crate::editor::puzzle2d::snapshot::puzzle2d_node_reach, crate::editor::puzzle2d::snapshot::puzzle2d_occupied_handles, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx, crate::editor::puzzle2d::snapshot::PUZZLE2D_PROXIMITY_CONNECT_MAX, crate::editor::puzzle2d::snapshot::PUZZLE2D_PROXIMITY_GESTURE_MAX};
+use {crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::puzzle2d_entity_hidden, crate::editor::puzzle2d::snapshot::puzzle2d_handle_world_position, crate::editor::puzzle2d::snapshot::puzzle2d_kinds_compatible, crate::editor::puzzle2d::snapshot::puzzle2d_node_reach, crate::editor::puzzle2d::snapshot::puzzle2d_occupied_handles, crate::editor::puzzle2d::snapshot::PUZZLE2D_PROXIMITY_CONNECT_MAX, crate::editor::puzzle2d::snapshot::PUZZLE2D_PROXIMITY_GESTURE_MAX};
 use {crate::standards::v1::subsets::any::schema::mutations::connect_handles_in_proximity, crate::standards::v1::subsets::any::schema::puzzle2d_handle_distance};
 use semio_framework_pack_json::Value;
 use std::collections::HashSet;
@@ -122,22 +122,6 @@ pub fn puzzle2d_proximity_connect(recorder: &mut Puzzle2dRecorder, node_ids: &[S
         }
     }
     created
-}
-
-/// 📡️ The programmatic twin of the drop-time auto-connect: connects one node's (or the live
-/// selection's) open handles to whatever compatible open handle is inside `radius`.
-pub fn proximity_connect(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
-    let explicit: Vec<String> = args
-        .and_then(|value| value.get("nodeId").or_else(|| value.get("id")))
-        .and_then(Value::as_str)
-        .map(|id| vec![id.to_string()])
-        .unwrap_or_else(|| args.and_then(|value| value.get("ids")).and_then(Value::as_array).map(|ids| ids.iter().filter_map(Value::as_str).map(str::to_string).collect()).unwrap_or_default());
-    let node_ids = if explicit.is_empty() { ctx.selected_ids() } else { explicit };
-    if node_ids.is_empty() {
-        return;
-    }
-    let radius = args.and_then(|value| value.get("radius")).and_then(Value::as_f64).filter(|radius| radius.is_finite()).unwrap_or(ctx.scene.runtime.proximity_radius);
-    puzzle2d_proximity_connect(ctx.recorder, &node_ids, radius);
 }
 
 //#region 🧪️Tests

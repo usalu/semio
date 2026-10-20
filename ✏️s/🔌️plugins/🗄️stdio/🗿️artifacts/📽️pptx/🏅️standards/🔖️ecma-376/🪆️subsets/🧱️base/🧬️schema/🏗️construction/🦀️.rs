@@ -1,6 +1,7 @@
 //! 🏗️ Canonical PresentationML construction over retained OPC/XML authority.
 
-use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::xml_address;
+use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::xml_address as xml_address_plans;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::xml_address;
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxParagraph;
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxPresentation;
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSlide;
@@ -19,6 +20,7 @@ use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::{fresh_relationship_id, OpcRelationship, OpcTargetMode};
 use std::collections::HashSet;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::construction::minimal;
 
 struct Namespaces {
     presentation_prefix: String,
@@ -384,7 +386,7 @@ pub(crate) fn append_slide(snapshot: &mut PptxSnapshot) -> Result<(), String> {
         attrs: vec![attr("id", &slide_id.to_string()), attr(&qname(&entry_names.relationship_prefix, "id"), &relationship_id)],
         children: Vec::new(),
     };
-    let plan = xml_address::insert_slide_plan(snapshot, &vacancy, &entry)?;
+    let plan = xml_address_plans::insert_slide_plan(snapshot, &vacancy, &entry)?;
     *snapshot = protocol::apply_diff(&plan.diff, &*snapshot).map_err(|error| format!("PPTX slide insertion refused: {error:?}"))?;
     snapshot.xml_parts.push(PptxXmlPart { path: path.clone(), content_type: SLIDE_CONTENT_TYPE.into(), document: blank_slide(&slide_names) });
     snapshot.opc.content_types.set_override(&path, SLIDE_CONTENT_TYPE);

@@ -7,7 +7,7 @@ use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any:
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::UpdateSfmParams, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
+pub fn diff(payload: &crate::standards::v1::subsets::any::schema::mutations::update_sfm_params::component::UpdateSfmParams, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
     if !payload.params.ransac_threshold_px.is_finite() || !payload.params.huber_delta_px.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "SfM params have non-finite thresholds.".to_string(), [base.id.clone()]);
     }

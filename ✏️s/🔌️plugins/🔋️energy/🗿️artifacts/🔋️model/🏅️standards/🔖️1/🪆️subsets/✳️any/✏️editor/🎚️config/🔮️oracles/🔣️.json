@@ -119,35 +119,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/⏱️change-simulation/✅️change/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/⏱️change-simulation-settings/✅️change/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:d31926ceb8b039d7b78465c4a130eb04fda74778cc0e7b98929ff3cc41d59e5c",
           "bytes": 117
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/⏱️change-simulation/✅️change/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/⏱️change-simulation-settings/✅️change/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:f6644e51b8acb9862761714df80b8f510c64c893099e78f60998df2cc3a109fb",
           "bytes": 148
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/⏱️change-simulation/✅️change/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/⏱️change-simulation-settings/✅️change/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:ba1a11fb3bf1b9d616ff00bab25829f95122ae8b2344b443502c593a44b4a02b",
           "bytes": 116
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/⏱️change-simulation/✅️change/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/⏱️change-simulation-settings/✅️change/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:fd959b85a1376516ab200bc5c8e07574c9acf097d744006d6dea50a63dccbf5e",
           "bytes": 81
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/⏱️change-simulation/✅️change/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/⏱️change-simulation-settings/✅️change/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44
@@ -183,35 +183,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🎨️change-result/✅️change/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/🎨️change-result-field/✅️change/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:ba1a11fb3bf1b9d616ff00bab25829f95122ae8b2344b443502c593a44b4a02b",
           "bytes": 116
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/🎨️change-result/✅️change/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/🎨️change-result-field/✅️change/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:13cdd4d52cf90815214a4ee3cc2199f8c786669bdbfd57e3c485e06232459430",
           "bytes": 90
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🎨️change-result/✅️change/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/🎨️change-result-field/✅️change/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:5b4da6b8df3ace131e1d077e4d4d7b4af259930ee3c33e31e024387e4265e471",
           "bytes": 118
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/🎨️change-result/✅️change/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/🎨️change-result-field/✅️change/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:5e183747ab9db534935f90546d4cee1dcbd05a49df155a96f5883bf34a3512cc",
           "bytes": 40
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/🎨️change-result/✅️change/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/🎨️change-result-field/✅️change/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44

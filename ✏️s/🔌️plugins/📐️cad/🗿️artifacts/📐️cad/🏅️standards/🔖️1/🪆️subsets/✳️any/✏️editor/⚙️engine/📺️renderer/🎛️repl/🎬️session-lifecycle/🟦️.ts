@@ -1,5 +1,5 @@
 /** 🎬️ CAD renderer REPL: the chrome dismissal, the interaction cancellation, the escape key, the runtime start and restart and the selection accept resolution of an interaction session. */
-import { reactHostPort } from "@semio-tech/framework/ui/targets/react";
+import { reactHostPort } from "@semio-tech/ui-react";
 import { type ModelEntityKind } from "@semio-tech/s-spatial-kernel-ts/geometry";
 import { getActiveSelectionSpec, interactionCanConfirmSelection, isFinalInteractionState } from "@semio-tech/s-spatial-kernel-ts/geometry/interaction-spec";
 import { isShapeModelDefinition, defaultModelDefinitionId } from "@semio-tech/s-spatial-kernel-ts/geometry/definition-catalog";

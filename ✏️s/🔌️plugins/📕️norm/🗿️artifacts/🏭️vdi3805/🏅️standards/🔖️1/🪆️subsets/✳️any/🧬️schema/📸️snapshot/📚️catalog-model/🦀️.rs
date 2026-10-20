@@ -1,8 +1,9 @@
 //! 📚️ Catalog model of the VDI 3805 snapshot: the configuration, the catalogue product, the manufacturer catalog, the geometry and characteristic curve records and the catalog index. See [`super`].
 
-use super::localized_text_and_units::VdiUnit;
+use super::localized_text_and_units::{text_in, VdiUnit};
 use super::product_identity_and_links::{AccessoryLink, CompositionLink, ExtensionBag, ManufacturerFile, ProductIdentity};
 use super::sheet_attributes::{NativeRecord, SheetAttributes};
+use super::record_families::RecordFamilyId;
 use super::sheet_registry::SheetId;
 use semio_s_plugin_norm_compliance::LocalizedText;
 use std::collections::BTreeMap;
@@ -225,5 +226,132 @@ impl CatalogIndex {
     pub fn filter_by_tag(&self, tag: &str) -> Vec<&CatalogIndexEntry> {
         let lower = tag.to_lowercase();
         self.entries.iter().filter(|e| e.tags.iter().any(|t| t.to_lowercase().contains(&lower))).collect()
+    }
+}
+
+/// 🔁 Writes identity + sheet into the mandatory 100 record fields.
+pub fn sync_titles_into_records(product: &mut CatalogueProduct) {
+    let de = text_in(&product.title, "de");
+    let en = text_in(&product.title, "en");
+    let fields = vec!["700".into(), "de".into(), de, "en".into(), en];
+    if let Some(r700) = product.records.iter_mut().find(|r| r.family.0 == "700" || r.fields.first().is_some_and(|f| f == "700")) {
+        r700.family = RecordFamilyId("700".into());
+        r700.fields = fields;
+    } else {
+        product.records.push(NativeRecord {
+            family: RecordFamilyId("700".into()),
+            fields,
+            extensions: ExtensionBag::default(),
+        });
+    }
+}
+
+pub fn sync_identity_into_records(product: &mut CatalogueProduct) {
+    let sheet = product.sheet.0.to_string();
+    let fields = vec![
+        "100".into(),
+        product.identity.manufacturer_code.clone(),
+        product.identity.product_group.clone(),
+        product.identity.article_number.clone(),
+        sheet,
+    ];
+    if let Some(r100) = product.records.iter_mut().find(|r| r.family.0 == "100" || r.fields.first().is_some_and(|f| f == "100")) {
+        r100.family = RecordFamilyId("100".into());
+        r100.fields = fields;
+    } else {
+        product.records.insert(0, NativeRecord {
+            family: RecordFamilyId("100".into()),
+            fields,
+            extensions: ExtensionBag::default(),
+        });
+    }
+}
+
+/// 🔄 Writes typed configuration.attributes into a native 210 record (Part 1 authoritative mirror).
+pub fn sync_typed_attributes_into_records(product: &mut CatalogueProduct) {
+    let fields = match &product.configuration.attributes {
+        SheetAttributes::ValveHeating(a) => vec![
+            "210".into(),
+            "dn".into(),
+            a.dn.to_string(),
+            "kvs".into(),
+            format!("{}", a.kvs_m3_h()),
+            "pressure_class".into(),
+            a.pressure_class.clone(),
+            "connection_type".into(),
+            a.connection_type.clone(),
+            "authority_min".into(),
+            a.authority_min.to_string(),
+            "authority_max".into(),
+            a.authority_max.to_string(),
+        ],
+        SheetAttributes::Radiator(a) => vec![
+            "210".into(),
+            "standard_output_w".into(),
+            a.standard_output_w.to_string(),
+            "n".into(),
+            a.heat_exponent_n.to_string(),
+            "length_m".into(),
+            a.length_m.to_string(),
+            "height_m".into(),
+            a.height_m.to_string(),
+            "depth_m".into(),
+            a.depth_m.to_string(),
+            "connection_type".into(),
+            a.connection_type.clone(),
+        ],
+        SheetAttributes::PumpHeating(a) => {
+            let mut fields = vec![
+                "210".into(),
+                "dn_suction".into(),
+                a.dn_suction.to_string(),
+                "dn_discharge".into(),
+                a.dn_discharge.to_string(),
+                "nominal_flow_m3_s".into(),
+                a.nominal_flow_m3_s.to_string(),
+                "nominal_head_m".into(),
+                a.nominal_head_m.to_string(),
+                "motor_power_w".into(),
+                a.motor_power_w.to_string(),
+                "hydraulic_efficiency".into(),
+                a.hydraulic_efficiency.to_string(),
+            ];
+            if let Some(curve) = &a.qh_curve_ref {
+                fields.push("qh_curve_ref".into());
+                fields.push(curve.clone());
+            }
+            fields
+        },
+        SheetAttributes::HeatGenerator(a) => vec![
+            "210".into(),
+            "nominal_heat_output_w".into(),
+            a.nominal_heat_output_w.to_string(),
+            "fuel_type".into(),
+            a.fuel_type.clone(),
+            "flow_temp_max_c".into(),
+            a.flow_temp_max_c.to_string(),
+            "return_temp_min_c".into(),
+            a.return_temp_min_c.to_string(),
+        ],
+        SheetAttributes::Generic(g) => {
+            let mut fields = vec!["210".into()];
+            for e in &g.entries {
+                fields.push(e.key.clone());
+                fields.push(e.value.clone());
+            }
+            fields
+        },
+    };
+    if let Some(r) = product.records.iter_mut().find(|r| r.family.0 == RecordFamilyId::R210) {
+        r.fields = fields;
+    } else {
+        product.records.push(NativeRecord {
+            family: RecordFamilyId(RecordFamilyId::R210.to_string()),
+            fields,
+            extensions: ExtensionBag::default(),
+        });
+    }
+    if product.id.is_empty() {
+        product.id = product.identity.article_number.clone();
     }
 }

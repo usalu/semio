@@ -288,7 +288,7 @@ pub fn math_top_accent_attachment(font: &Font<'_>, glyph_id: u16) -> Option<i16>
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct StretchVariant {
     pub glyph_id: u16,
-    /// Advance along the stretch axis (width for horizontal, height for vertical) — font design units.
+    /// 📶️ Advance along the stretch axis (width for horizontal, height for vertical) — font design units.
     pub advance: u16,
 }
 

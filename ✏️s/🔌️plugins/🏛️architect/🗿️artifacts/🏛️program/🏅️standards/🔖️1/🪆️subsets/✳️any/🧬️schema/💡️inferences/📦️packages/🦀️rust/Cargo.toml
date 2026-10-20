@@ -57,6 +57,7 @@ semio-s-artifact-stdio-txt = { workspace = true }
 semio-s-artifact-stdio-xlsx-base = { workspace = true }
 semio-s-artifact-stdio-xlsx-base-model = { workspace = true }
 semio-s-artifact-stdio-zip = { workspace = true }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 serde.workspace = true

@@ -2,6 +2,12 @@ use protocol::{OpText, OpBinary};
 use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::*;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
+#[cfg(test)] use semio_framework_replication_mutation::Mutation;
+#[cfg(test)] use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
+#[cfg(test)] use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSheet;
+#[cfg(test)] use semio_s_artifact_stdio_xml_snapshot::standards::v1_0::subsets::base::schema::snapshot::XmlNode;
+#[cfg(test)] use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
+#[cfg(test)] use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::diff::XlsxDiff;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn workbook(snapshot: &XlsxSnapshot) -> XlsxWorkbook {

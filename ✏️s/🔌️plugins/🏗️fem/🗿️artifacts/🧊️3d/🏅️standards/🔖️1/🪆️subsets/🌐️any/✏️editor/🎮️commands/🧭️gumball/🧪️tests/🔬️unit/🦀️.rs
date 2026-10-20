@@ -83,7 +83,7 @@ fn an_id_less_payload_moves_the_live_selection() {
     let history = HistoryView::empty();
     let view = ArtifactView::new(&doc, &history);
     let cfg = ConfigView { snapshot: &NoConfig::default(), window: None };
-    let live = crate::editor::fem3d::fem3d_route(&Fem3dCommand::TranslateSelection(translate_selection::TranslateSelection { ids: Vec::new(), dx: 0.0, dy: 0.0, dz: 1.0, phase: None, reason: None }), &view, &cfg, || vec![semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target("node", "n20_l1").unwrap()], None).expect("route");
+    let live = semio_s_artifact_fem_3d_editor::editor::fem3d::fem3d_route(&Fem3dCommand::TranslateSelection(translate_selection::TranslateSelection { ids: Vec::new(), dx: 0.0, dy: 0.0, dz: 1.0, phase: None, reason: None }), &view, &cfg, || vec![semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target("node", "n20_l1").unwrap()], None).expect("route");
     let [Fem3dMutation::MoveSelection(leaf)] = live.artifact_mutations.as_slice() else { panic!("the live selection moved") };
     assert_eq!(leaf.node_ids, vec!["n20_l1".to_string()]);
 }

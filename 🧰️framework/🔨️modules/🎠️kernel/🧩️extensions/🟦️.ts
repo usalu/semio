@@ -1,5 +1,5 @@
-import { parseResolvedPluginViewState, type BuiltNode, type PluginUiRefreshRequest, type PluginUiRefreshResponse, type PluginViewState } from "@semio-tech/framework/manifest";
-import type { Effect } from "../⚡️effect/🟦️.ts";
+import { parseResolvedPluginViewState, type BuiltNode, type PluginUiRefreshRequest, type PluginUiRefreshResponse, type PluginViewState } from "@semio-tech/framework-manifest";
+import type { Effect } from "@semio-tech/framework-effect";
 
 /** 🧩️ The actor operations an embedded surface owns. */
 export type ExternalSlotContributor = {

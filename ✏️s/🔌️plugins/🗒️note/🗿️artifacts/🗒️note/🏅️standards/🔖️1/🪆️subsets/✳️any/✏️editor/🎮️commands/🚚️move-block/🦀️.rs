@@ -3,7 +3,8 @@
 use crate::op::NoteMutation;
 use crate::schema::mutations::move_block_to_container;
 use crate::schema::{block_id_from_tree_row_id, find_block};
-use crate::{NoteBlockNode, NoteSnapshot};
+use crate::{NoteBlockNode};
+use semio_s_artifact_note_note_schema::NoteSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 

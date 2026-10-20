@@ -1,0 +1,152 @@
+{
+  "name": "semio-framework-os-infinite",
+  "projectType": "library",
+  "tags": [
+    "language:cargo"
+  ],
+  "targets": {
+    "build": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/.🧾️store/build.json"
+      ],
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts build",
+        "forwardAllArgs": true
+      }
+    },
+    "check": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts check",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "fonts": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "sharedGlobals",
+        "{projectRoot}/📜️script.ts",
+        "{projectRoot}/../../../../../../🔨️modules/🖼️canvas/🔤️fonts/🟦️.ts",
+        {
+          "dependentTasksOutputFiles": "**/*"
+        },
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️publication/🟦️.ts"
+      ],
+      "dependsOn": [
+        "semio-framework-canvas-font-assets:build"
+      ],
+      "outputs": [
+        "{projectRoot}/.🧾️store/fonts.json"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts fonts"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": { "version": 1, "class": "deterministic", "reason": "pure-function-of-inputs" }
+        }
+      }
+    },
+    "test-wgpu-world-terrain": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts test-wgpu-world-terrain",
+        "forwardAllArgs": true
+      }
+    },
+    "test-original-board-fill-source": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-board-fill-source",
+        "forwardAllArgs": true
+      }
+    }
+  },
+  "namedInputs": {
+    "nativeAssets": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🔣️icons/**/*.svg",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/**/*.svg",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/**/*.svg",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🤖️generated/**/*.svg",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🔣️icons/🔣️shortcodes.json"
+    ],
+    "default": [
+      "nativeAssets",
+      "sharedGlobals"
+    ],
+    "nativeSources": [
+      "nativeAssets"
+    ],
+    "nativeTestSources": [
+      "nativeAssets"
+    ],
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/**/*"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/rustfmt.toml"
+    ]
+  }
+}

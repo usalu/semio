@@ -1,14 +1,14 @@
 import {lstat,realpath} from "node:fs/promises";
 import {isAbsolute,join,relative,resolve,sep,win32} from "node:path";
-import requestSchema from "./🧬️schema/🔣️.json";
-import {validateJsonSchemaSubset} from "../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import requestSchema from "./🧬️schema/🔣️.json" with { type: "json" };
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 
 /** 🧬️ Schema-owned requests keep debugger options fixed and program arguments literal. */
-export type DeveloperRequest = Readonly<{command:"open-source";file:string;line?:number;editor:"system"|"vscode"|"codium"|"sublime"}> | Readonly<{command:"git-status";path?:string;untracked?:"normal"|"all"|"no"}> | Readonly<{command:"git-diff";path?:string;revision?:string;area?:"worktree"|"staged"}> | Readonly<{command:"git-history";path?:string;revision?:string;count?:number}> | Readonly<{command:"git-show";path?:string;revision?:string;view?:"summary"|"patch"}> | Readonly<{command:"git-blame";file:string;revision?:string;line?:number;count?:number}> | Readonly<{command:"terminal";directory?:string;shell:"system"|"powershell"|"bash"|"zsh"|"cmd"}> | Readonly<{command:"debug";profile:"node-inspect"|"python-pdb"|"gdb"|"lldb";program:string;directory?:string;arguments?:readonly string[]}> | Readonly<{command:"setup-debugger";profile:"lldb"}>;
+export type DeveloperRequest = Readonly<{command:"git-status";path?:string;untracked?:"normal"|"all"|"no"}> | Readonly<{command:"git-diff";path?:string;revision?:string;area?:"worktree"|"staged"}> | Readonly<{command:"git-history";path?:string;revision?:string;count?:number}> | Readonly<{command:"git-show";path?:string;revision?:string;view?:"summary"|"patch"}> | Readonly<{command:"git-blame";file:string;revision?:string;line?:number;count?:number}> | Readonly<{command:"terminal";directory?:string;shell:"system"|"powershell"|"bash"|"zsh"|"cmd"}> | Readonly<{command:"debug";profile:"node-inspect"|"python-pdb"|"gdb"|"lldb";program:string;directory?:string;arguments?:readonly string[]}> | Readonly<{command:"setup-debugger";profile:"lldb"}>;
 /** 📝️ One process request contains an exact argument vector and workspace custody. */
 export interface DeveloperPlan {readonly command:string;readonly args:string[];readonly cwd:string;readonly detached:boolean;readonly environment?:Readonly<Record<string,string|undefined>>;}
 /** 🎛️ Adapts only the repository-owned process interface, with the original cancellation signal. */
-export interface DeveloperProcess {run(plan:DeveloperPlan,signal:AbortSignal):Promise<void>;open(plan:DeveloperPlan,signal:AbortSignal):Promise<void>;}
+export interface DeveloperProcess {run(plan:DeveloperPlan,signal:AbortSignal):Promise<void>;}
 
 /** 🪲️ Describes installed system debuggers without granting an arbitrary command path. */
 export interface DeveloperDebugger {readonly profile:string;readonly program:string;readonly title:Readonly<{en:string;de:string}>;readonly installed:boolean;readonly path?:string;readonly constraint?:"windows-ascii-paths";}
@@ -53,7 +53,7 @@ async function physicalWorkspacePath(root:string,value:string,kind:"file"|"direc
  const stat=await lstat(absolute);if(kind==="file"?!stat.isFile():!stat.isDirectory())throw Error(`developer.path.${kind}-required`);return absolute;
 }
 
-/** 🧭️ Selects passive navigation, supervised debugging, a terminal or read-only Git through fixed portable argv. */
+/** 🧭️ Selects supervised debugging, a terminal or read-only Git through fixed portable argv. */
 export async function planDeveloperRequest(root:string,value:unknown,platform:string,environment:Readonly<Record<string,string|undefined>>):Promise<DeveloperPlan> {
  const request=readDeveloperRequest(value),cwd=resolve(root);
  if(request.command==="setup-debugger")throw Error("developer.setup.workflow-required");
@@ -64,18 +64,6 @@ export async function planDeveloperRequest(root:string,value:unknown,platform:st
   const directory=await physicalWorkspacePath(cwd,request.directory??".","directory"),shell=request.shell==="system"?(platform==="win32"?"powershell":platform==="darwin"?"zsh":"sh"):request.shell;
   const commands:Record<string,[string,string[]]>={powershell:[platform==="win32"?"powershell.exe":"pwsh",["-NoLogo","-NoProfile","-NoExit"]],bash:["bash",["--noprofile","--norc","-i"]],zsh:["zsh",["-f","-i"]],cmd:["cmd.exe",["/D","/Q","/K"]],sh:["/bin/sh",["-i"]]};
   const [command,args]=commands[shell]!;return{command,args,cwd:directory,detached:false};
- }
- if(request.command==="open-source"){
-  const file=await physicalWorkspacePath(cwd,request.file,"file"),position=request.line===undefined?file:`${file}:${request.line}`;
-  if(environment.SEMIO_SOURCE_OPENER){const words:unknown=JSON.parse(environment.SEMIO_SOURCE_OPENER);if(!Array.isArray(words)||words.length===0||words.some(word=>typeof word!=="string"||!word||word.includes("\0")))throw Error("developer.editor.opener-invalid");return{command:words[0],args:[...words.slice(1),position],cwd,detached:false};}
-  if(request.editor==="system"&&request.line!==undefined)throw Error("developer.editor.line-requires-capability");
-  if(request.editor==="system")return{command:platform==="win32"?"explorer.exe":platform==="darwin"?"open":"xdg-open",args:[file],cwd,detached:false};
-  let command=request.editor==="vscode"?"code":request.editor==="codium"?"codium":"subl";
-  if(platform==="win32"){
-   const candidates=request.editor==="vscode"?[join(environment.LOCALAPPDATA??"","Programs/Microsoft VS Code/Code.exe"),join(environment.ProgramFiles??"","Microsoft VS Code/Code.exe")]:request.editor==="codium"?[join(environment.LOCALAPPDATA??"","Programs/VSCodium/VSCodium.exe"),join(environment.ProgramFiles??"","VSCodium/VSCodium.exe")]:[join(environment.ProgramFiles??"","Sublime Text/sublime_text.exe")];
-   for(const candidate of candidates)if(isAbsolute(candidate)&&(await lstat(candidate).catch(()=>undefined))?.isFile()){command=candidate;break;}
-  }
-  return{command,args:request.editor==="sublime"?[position]:["--reuse-window",...(request.line===undefined?[]:["--goto"]),position],cwd,detached:true};
  }
  const path=request.command==="git-blame"?request.file:request.path??".";workspacePath(cwd,path);
  const revision="revision"in request?request.revision:undefined;if(revision!==undefined&&(!revision||! /^[A-Za-z0-9_][A-Za-z0-9_./~^:@{}+-]*$/u.test(revision)))throw Error("developer.git.revision-invalid");
@@ -90,11 +78,11 @@ export async function planDeveloperRequest(root:string,value:unknown,platform:st
 
 /** ▶️ Executes only a fully admitted plan using the supplied process and cancellation ports. */
 export async function executeDeveloperRequest(root:string,value:unknown,process:DeveloperProcess,signal:AbortSignal,platform:string,environment:Readonly<Record<string,string|undefined>>):Promise<void> {
- signal.throwIfAborted();const request=readDeveloperRequest(value),plan=await planDeveloperRequest(root,request,platform,environment);signal.throwIfAborted();await(request.command==="open-source"?process.open(plan,signal):process.run(plan,signal));
+ signal.throwIfAborted();const request=readDeveloperRequest(value),plan=await planDeveloperRequest(root,request,platform,environment);signal.throwIfAborted();await process.run(plan,signal);
 }
 
 /** ⌨️ Parses a closed typed flag vocabulary and refuses duplicate or unowned argv. */
 export function parseDeveloperArguments(words:readonly string[]):DeveloperRequest {
- const command=words[0],request:Record<string,unknown>={command};for(let index=1;index<words.length;index+=2){const flag=words[index]!,value=words[index+1];if(!/^--(?:file|line|editor|path|untracked|revision|area|view|count|directory|shell|profile|program|arguments)$/u.test(flag)||value===undefined||Object.hasOwn(request,flag.slice(2)))throw Error("developer.arguments.invalid");const key=flag.slice(2);request[key]=key==="arguments"?JSON.parse(value):key==="line"||key==="count"?(/^\d+$/u.test(value)?Number(value):NaN):value;}
- if(command==="setup-debugger"&&request.profile===undefined)request.profile="lldb";if(command==="open-source"&&request.editor===undefined)request.editor="system";if(command==="terminal"&&request.shell===undefined)request.shell="system";return readDeveloperRequest(request);
+ const command=words[0],request:Record<string,unknown>={command};for(let index=1;index<words.length;index+=2){const flag=words[index]!,value=words[index+1];if(!/^--(?:file|line|path|untracked|revision|area|view|count|directory|shell|profile|program|arguments)$/u.test(flag)||value===undefined||Object.hasOwn(request,flag.slice(2)))throw Error("developer.arguments.invalid");const key=flag.slice(2);request[key]=key==="arguments"?JSON.parse(value):key==="line"||key==="count"?(/^\d+$/u.test(value)?Number(value):NaN):value;}
+ if(command==="setup-debugger"&&request.profile===undefined)request.profile="lldb";if(command==="terminal"&&request.shell===undefined)request.shell="system";return readDeveloperRequest(request);
 }

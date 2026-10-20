@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync, writeFileSync, mkdtempSync, unlinkSync, symlinkSync } from "node:fs";
 import { join, relative } from "node:path";
 import { createRequire } from "node:module";
-import { receiveScriptProcessInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
 import { captureOwnedCommandV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 
@@ -44,7 +44,7 @@ export async function testTypeScriptSourceInputs(generated: string): Promise<voi
   const bunOutput = bun.outputs[0];
   assert.ok(bunOutput, "The successful Bun build must expose its authored output");
   for (const source of [esbuild.outputFiles[0].text, await bunOutput.text()]) {
-    await receiveScriptProcessInvocation(process.env, async original => {
+    await withBuildTestInvocationV1(async original => {
       const output = await captureOwnedCommandV1("node", ["-e", `${source}\nconsole.log(JSON.stringify(module.exports.result))`], root, { control: scriptCompilerAdmissionControlV1(original, "build:declared-source:oracle", 10000) });
       assert.equal(Number(output.trim().split("\n").at(-1)), fixture.result);
     });

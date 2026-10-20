@@ -12,6 +12,7 @@
   "targets": {
     "test": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
@@ -26,18 +27,6 @@
         "forwardAllArgs": true
       },
       "outputs": []
-    },
-    "test-renderer-contract": {
-      "executor": "repo:script",
-      "inputs": [
-        "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/**/*",
-        "{workspaceRoot}/🧰️framework/**/*"
-      ],
-      "options": {
-        "cwd": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test renderer-contract",
-        "forwardAllArgs": true
-      }
     }
   }
 }

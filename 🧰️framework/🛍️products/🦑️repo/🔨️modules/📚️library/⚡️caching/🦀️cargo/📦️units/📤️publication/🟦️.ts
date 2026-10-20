@@ -1,5 +1,5 @@
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 /** 🎟️ Binds one actual admitted allocation to the output slot whose prior bytes must retire first. */
 export interface RustUnitChargeV1 {readonly version:1;readonly unit:string;readonly semanticDigest:string;readonly allocation:string;readonly owner:string;readonly bytes:number;readonly output:string}
 /** 🛂️ Refuses foreign allocation claims before original storage recovery is attempted. */

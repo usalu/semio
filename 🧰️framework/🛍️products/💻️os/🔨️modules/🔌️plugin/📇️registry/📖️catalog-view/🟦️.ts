@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { createRequire } from "node:module";
+import { runtimeComponentClosure } from "@semio-tech/repo-lib/inventory/tooling";
 import type { ComponentSourceOwnerV1, DeployedRegistryEntryV1 } from "../🔎️discovery/🟦️.ts";
 import {parsePluginBuildTargetV1, parseDeployedRegistryEntryV1 } from "../🔎️discovery/🧬️schema/🟦️.ts";
 import type { PlaygroundEntry } from "../🎮️playground/🔎️discovery/🟦️.ts";
@@ -54,14 +54,19 @@ export function projectedHostPluginFilter(projection: CatalogSelection<Component
 export function filterProjectedPluginRegistry<T extends ComponentSourceOwnerV1>(projection: CatalogSelection<T>, filterPlaygroundPlugin?: string): T[] {
   const entries = [...projection.entries].sort((a, b) => a.pluginId.localeCompare(b.pluginId));
   if (!filterPlaygroundPlugin || projectedHostPluginFilter(projection, filterPlaygroundPlugin)) return entries;
-  const { resolveRegistryPluginIdsForFilter } = loadDiscovery();
-  const ids = new Set(resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin, projection.entries, projection.playgrounds));
+  const ids = new Set(resolveProjectedPluginIdsV1(filterPlaygroundPlugin, projection.entries, projection.playgrounds));
   return entries.filter((entry) => ids.has(entry.pluginId));
 }
 
-const requireDiscovery = createRequire(import.meta.url);
-function loadDiscovery(): { resolveRegistryPluginIdsForFilter: (filter: string, entries: readonly ComponentSourceOwnerV1[], playgrounds: GeneratedCatalogProjection["playgrounds"]) => readonly string[] } {
-  return requireDiscovery('../🔎️discovery/🟦️.ts');
+/** 🎯️ Resolves one filter within the supplied rows alone; the playground row decides the target and whether it is app scoped. */
+export function resolveProjectedPluginIdsV1(filter: string, entries: readonly ComponentSourceOwnerV1[], playgrounds: readonly { readonly variant: string; readonly aliases: readonly string[]; readonly pluginId: string; readonly app?: string }[]): readonly string[] {
+  return closeProjectedPluginV1(filter, entries, playgrounds.find((p) => p.variant === filter || p.aliases.includes(filter)));
+}
+
+/** 🧮️ The runtime closure of one target plugin: empty when the rows do not declare it. */
+export function closeProjectedPluginV1(filter: string, entries: readonly ComponentSourceOwnerV1[], row: { readonly pluginId: string; readonly app?: string } | undefined): readonly string[] {
+  const target = row?.pluginId ?? filter;
+  return entries.some((entry) => entry.pluginId === target) ? runtimeComponentClosure(entries, [{ id: target, appScoped: row?.app !== undefined }]) : [];
 }
 
 

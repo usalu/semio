@@ -6,6 +6,17 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
+
+use semio_framework_dispatch_macros::dyn_enum_close;
+
+use semio_framework_plugin::plugin_app_close_prelude::*;
+
+dyn_enum_close! {
+    pub enum TxtApps: PluginApp {
+        Editor(VcsArtifactApp<EditorApp<editor::txt::TxtEditor>>),
+        Viewer(VcsArtifactApp<ViewerApp<viewer::txt::TxtViewer>>),
+    }
+}
 extern crate semio_framework_value_derive as value_derive;
 
 pub use schema::mutations::TxtMutation;

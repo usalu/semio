@@ -81,12 +81,7 @@ function main(argv: readonly string[]): number {
     console.error(`[probe] unknown probe ${JSON.stringify(probe)} — expected ${PROBES.join(" | ")}`);
     return 2;
   }
-  // 📎️cargo must run in the CRATE directory, so every caller-supplied path is resolved against the
-  // caller's cwd FIRST. Passing them through unresolved made every relative `--input` resolve inside
-  // the crate instead and the probe reported "No such file or directory" for files that were there.
   const resolved = argv.map((argument, index) => (index > 0 && argv[index - 1] === "--input" && !isAbsolute(argument) ? resolve(process.cwd(), argument) : argument));
-  // 🏭️`--offline`: probes run inside a test sweep alongside peer sessions; the shared build-dir
-  // (`.cargo/config.toml`, `-Zfine-grain-locking`) resolves without any per-probe override here.
   const run = spawnSync("cargo", ["run", "--quiet", "--offline", "--bin", "semio-cad-oracle-probe", "--", ...resolved], {
     cwd: CRATE_DIR,
     encoding: "utf8",

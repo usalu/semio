@@ -4,11 +4,11 @@
 import { normWireArray, normWireBoolean, normWireInteger, normWireLiteral, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 
 export interface En1995Snapshot {
-  /** @state artifact */
+  /** 📜️ @state artifact */
   annex: "En" | "De";
-  /** @state artifact */
+  /** 👤️ @state artifact */
   members: TimberMember[];
-  /** @state artifact */
+  /** ⛓️ @state artifact */
   connections: TimberConnection[];
 }
 

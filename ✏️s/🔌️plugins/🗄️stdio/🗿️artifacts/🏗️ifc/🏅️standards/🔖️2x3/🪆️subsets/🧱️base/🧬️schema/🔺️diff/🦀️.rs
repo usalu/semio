@@ -197,9 +197,9 @@ impl DiffAlgebra<Ifc2x3Snapshot> for Ifc2x3Diff {
 /// 🧪️ Representative `Ifc2x3Diff` cases built declaratively — `diff_grammar_conformance_law` and `protocol_walk_law` fodder: the empty
 /// diff, every top-level field (schema/header/removed/upserted incl. a COMPLEX instance and every `Part21Value` tag) and an
 /// upsert-only diff with the instance order.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<Ifc2x3Diff> {
+pub fn demo_diff_cases() -> Vec<Ifc2x3Diff> {
     let base = crate::standards::v2x3::subsets::base::schema::demo_ifc2x3_snapshot();
     let mut header = base.document.header.clone();
     header.file_name = vec![Part21Value::Str("changed.ifc".into())];

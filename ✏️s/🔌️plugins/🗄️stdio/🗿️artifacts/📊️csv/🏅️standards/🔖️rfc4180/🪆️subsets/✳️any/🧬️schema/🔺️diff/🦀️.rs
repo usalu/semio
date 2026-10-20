@@ -27,22 +27,18 @@ pub struct CsvFieldDiff {
 
 impl CsvFieldDiff {
     /// 🕳️ Whether this patch changes nothing.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.value.is_none() && self.quoted.is_none()
     }
     /// ▶️ Applies this patch to a field.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply_patch(&self, base: &CsvField) -> CsvField {
         CsvField { value: self.value.clone().unwrap_or_else(|| base.value.clone()), quoted: self.quoted.unwrap_or(base.quoted) }
     }
     /// ↩️ The patch restoring exactly the sub-fields this patch sets back to their `base` values.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn inverse(&self, base: &CsvField) -> Self {
         Self { value: self.value.as_ref().map(|_| base.value.clone()), quoted: self.quoted.map(|_| base.quoted) }
     }
     /// ➕️ LWW field-level absorb: `other`'s populated sub-fields win.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn absorb(&mut self, other: Self) {
         if other.value.is_some() {
             self.value = other.value;
@@ -79,7 +75,6 @@ pub struct CsvRecordDiff {
 
 impl CsvRecordDiff {
     /// 🕳️ Whether this patch changes nothing.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         match &self.fields {
             None => true,
@@ -87,7 +82,6 @@ impl CsvRecordDiff {
         }
     }
     /// ▶️ Applies this patch to a record.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply_patch(&self, base: &CsvRecord) -> CsvRecord {
         match &self.fields {
             None => base.clone(),
@@ -105,13 +99,11 @@ impl CsvRecordDiff {
         }
     }
     /// ↩️ The positional patch restoring exactly the fields this patch sets back to their `base` values.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn inverse(&self, base: &CsvRecord) -> Self {
         Self { fields: self.fields.as_ref().map(|patches| patches.iter().enumerate().map(|(index, patch)| patch.as_ref().and_then(|patch| base.fields.get(index).map(|field| patch.inverse(field)))).collect()) }
     }
     /// ➕️ Structural per-position absorb: `other`'s populated positions win; the patch
     /// vector grows to cover whichever side patches further out.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn absorb(&mut self, other: Self) {
         match (&mut self.fields, other.fields) {
             (_, None) => {}
@@ -165,7 +157,6 @@ pub struct CsvRecordsDiff {
 }
 
 impl CsvRecordsDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
@@ -307,21 +298,17 @@ fn apply_csv_diff_unchecked(diff: &CsvDiff, base: &CsvSnapshot) -> CsvSnapshot {
         next.has_header = has_header;
     }
     if let Some(rdiff) = &diff.records {
-        // 🥇 modified refers to BASE indices — apply before any removal shifts them.
         for m in &rdiff.modified {
             if let Some(rec) = next.records.get_mut(m.index) {
                 *rec = m.diff.apply_patch(rec);
             }
         }
-        // 🥈 removed refers to BASE indices — process descending so earlier removals
-        // never shift the position of a later (larger) one still to be removed.
         let removed_desc = semio_s_artifact_stdio_contract::ordered_unique_descending(&rdiff.removed);
         for idx in removed_desc {
             if idx < next.records.len() {
                 next.records.remove(idx);
             }
         }
-        // 🥉 added refers to FINAL indices — process ascending, clamped.
         let mut added_asc = rdiff.added.clone();
         added_asc.sort_by_key(|a| a.index);
         for a in added_asc {
@@ -338,10 +325,6 @@ fn apply_csv_diff_unchecked(diff: &CsvDiff, base: &CsvSnapshot) -> CsvSnapshot {
 fn absorb_records(d1: CsvRecordsDiff, d2: CsvRecordsDiff) -> CsvRecordsDiff {
     //#region 🔖️PhiBaseToMid
     let d1_added_indices: Vec<usize> = d1.added.iter().map(|a| a.index).collect();
-    // 📏 The tight bound from d1's OWN references isn't always enough: d2's removed/modified
-    // may query a mid position d1 never itself touched (e.g. d1 = a single `InsertRecord`
-    // with no removed/modified at all, d2 = `RemoveRecord` at a position past it) — widen
-    // `base_len` so the simulated mid array is long enough to answer those queries too.
     let removed_count = {
         let r = semio_s_artifact_stdio_contract::ordered_unique(&d1.removed);
         r.len()
@@ -354,8 +337,6 @@ fn absorb_records(d1: CsvRecordsDiff, d2: CsvRecordsDiff) -> CsvRecordsDiff {
     //#region 🔖️Seed
     let mut final_removed: Vec<usize> = d1.removed.clone();
     let mut modified_map: BTreeMap<usize, CsvRecordDiff> = d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
-    // Parallel to `d1.added`, indexed by the SAME `i` used in `Slot::Added(i)`; `None` once
-    // annihilated by a `d2` removal of that mid slot.
     let mut added_alive: Vec<Option<CsvRecordAdded>> = d1.added.into_iter().map(Some).collect();
     //#endregion 🔖️Seed
 
@@ -369,7 +350,7 @@ fn absorb_records(d1: CsvRecordsDiff, d2: CsvRecordsDiff) -> CsvRecordsDiff {
             Some(Slot::Added(ai)) => {
                 added_alive[*ai] = None;
             }
-            None => {} // 🕳️ out-of-range: graceful no-op
+            None => {}
         }
     }
     for m2 in &d2.modified {
@@ -382,7 +363,7 @@ fn absorb_records(d1: CsvRecordsDiff, d2: CsvRecordsDiff) -> CsvRecordsDiff {
                     added.record = m2.diff.apply_patch(&added.record);
                 }
             }
-            None => {} // 🕳️ out-of-range: graceful no-op
+            None => {}
         }
     }
     //#endregion 🔖️ApplyD2
@@ -398,8 +379,6 @@ fn absorb_records(d1: CsvRecordsDiff, d2: CsvRecordsDiff) -> CsvRecordsDiff {
     //#endregion 🔖️FinalizeRemovedModified
 
     //#region 🔖️PsiMidToAfter
-    // 🧭️ Surviving d1-added items must be remapped mid→after through d2's own removed/added
-    // (ψ); d2's own added entries are already after-coordinates and pass through verbatim.
     let alive_mid_positions: Vec<usize> = mid_slots
         .iter()
         .enumerate()
@@ -427,8 +406,6 @@ fn absorb_records(d1: CsvRecordsDiff, d2: CsvRecordsDiff) -> CsvRecordsDiff {
             if let Some(after_pos) = mid_to_after.get(&mid_pos) {
                 final_added.push(CsvRecordAdded { index: *after_pos, record: added.record });
             }
-            // 🕳️ else: this mid slot was itself removed by d2 — but that always routes
-            // through `added_alive[ai] = None` above, so this branch is unreachable.
         }
     }
     for a2 in d2.added {

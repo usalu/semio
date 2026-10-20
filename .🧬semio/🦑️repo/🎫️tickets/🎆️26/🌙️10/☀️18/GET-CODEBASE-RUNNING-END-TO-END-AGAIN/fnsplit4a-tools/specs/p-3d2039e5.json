@@ -1,0 +1,79 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️owned-locale-detector-retirement/🎬️uiintroduction-appearance-2-and-more/🟦️.tsx",
+ "function": "registerUiintroductionAppearance2AndMoreTests",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "⭐️shared",
+  "doc": "/** ⭐️ The shared declarations of registerUiintroductionAppearance2AndMoreTests. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️celebrate-stamp-duration",
+   "doc": "/** 🔶️ The celebrate stamp duration phase of registerUiintroductionAppearance2AndMoreTests. */",
+   "phases": [
+    {
+     "name": "buildCelebrateStampDurationState",
+     "emoji": "🔷",
+     "doc": "Builds CELEBRATE_STAMP_DURATION_MS, INTRODUCTION_INFO_BOX_GAP_PX, UIIntroduction, clampIntroductionInfoBoxPosition of registerUiintroductionAppearance2AndMoreTests.",
+     "from": 6,
+     "to": 10
+    }
+   ]
+  },
+  {
+   "dir": "🔸️uiintroduction-appearance",
+   "doc": "/** 🔸️ The uiintroduction appearance phase of registerUiintroductionAppearance2AndMoreTests. */",
+   "phases": [
+    {
+     "name": "registerUiintroductionAppearanceTests",
+     "emoji": "🔹",
+     "doc": "Registers the uiintroduction appearance tests of registerUiintroductionAppearance2AndMoreTests.",
+     "from": 12,
+     "to": 12
+    }
+   ]
+  },
+  {
+   "dir": "🟠️introduction-rect-relative-host",
+   "doc": "/** 🟠️ The introduction rect relative host phase of registerUiintroductionAppearance2AndMoreTests. */",
+   "phases": [
+    {
+     "name": "registerIntroductionRectRelativeHostTests",
+     "emoji": "🟡",
+     "doc": "Registers the introduction rect relative host tests of registerUiintroductionAppearance2AndMoreTests.",
+     "from": 310,
+     "to": 342
+    }
+   ]
+  },
+  {
+   "dir": "🟢️resolve-introduction-point",
+   "doc": "/** 🟢️ The resolve introduction point phase of registerUiintroductionAppearance2AndMoreTests. */",
+   "phases": [
+    {
+     "name": "registerResolveIntroductionPointTests",
+     "emoji": "🔵",
+     "doc": "Registers the resolve introduction point tests of registerUiintroductionAppearance2AndMoreTests.",
+     "from": 377,
+     "to": 481
+    }
+   ]
+  },
+  {
+   "dir": "🟣️sample-bezier-segments",
+   "doc": "/** 🟣️ The sample bezier segments phase of registerUiintroductionAppearance2AndMoreTests. */",
+   "phases": [
+    {
+     "name": "registerSampleBezierSegmentsTests",
+     "emoji": "🟤",
+     "doc": "Registers the sample bezier segments tests of registerUiintroductionAppearance2AndMoreTests.",
+     "from": 515,
+     "to": 554
+    }
+   ]
+  }
+ ]
+}

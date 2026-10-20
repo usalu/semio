@@ -73,6 +73,8 @@ VECTORS = {
     "add-curve": ("📈️add-curve", "✅apply"),
     "remove-curve": ("📉️remove-curve", "✅apply"),
     "change-curve-points": ("📍️change-curve-points", "✅apply"),
+    "remove-geometry-connection-middle": ("remove-geometry-connection", "✂️remove-geometry-connection", "🧭️middle"),
+    "remove-product-middle": ("remove-product", "🗑️remove-product", "🧭️middle"),
 }
 
 #: 🗣️ The real committed VDI 3805 document, read where the domain already keeps it.

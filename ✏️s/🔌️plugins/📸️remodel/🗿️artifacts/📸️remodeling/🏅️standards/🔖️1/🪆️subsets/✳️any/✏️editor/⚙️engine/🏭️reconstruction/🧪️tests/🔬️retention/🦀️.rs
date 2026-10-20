@@ -11,6 +11,9 @@
 //! `cargo test -p semio-s-artifact-remodel-remodeling --lib -- --ignored --nocapture engine::reconstruction::retention`
 
 use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::*;
+use semio_s_artifact_remodel_remodeling_feature::editor::remodeling::engine::feature as remodeling_feature;
+use semio_s_artifact_remodel_remodeling_dense::editor::remodeling::engine::dense as remodeling_dense;
+use semio_s_artifact_remodel_remodeling_sfm::editor::remodeling::engine::sfm as remodeling_sfm;
 
 /// 🛑️ Retained-TSDF ceiling this probe refuses to cross: past it the native host would start swapping
 /// for numbers that are already conclusive, so the probe reports the growth and stops.

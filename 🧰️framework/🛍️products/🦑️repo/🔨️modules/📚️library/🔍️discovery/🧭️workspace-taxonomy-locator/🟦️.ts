@@ -1,14 +1,9 @@
-import { ephemeralBox } from "@semio-tech/framework/transient";
 import { lstatSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Taxonomy } from "../📑️taxonomy-document/🟦️.ts";
 
 const __dirname = dirname(dirname(fileURLToPath(import.meta.url)));
-
-export const cachedTaxonomy = ephemeralBox<Taxonomy | undefined>("framework.products.repo.modules.lib.discovery.component.ts.cachedTaxonomy", undefined);
-
-export const cachedCatalogTaxonomy = ephemeralBox<Taxonomy | undefined>("framework.products.repo.modules.lib.discovery.component.ts.cachedCatalogTaxonomy", undefined);
 
 /** 🧭️ No-follow workspace authority for the taxonomy named by root project metadata. */
 export interface WorkspaceTaxonomyAuthority {
@@ -95,9 +90,12 @@ export function resolveWorkspaceTaxonomyAuthority(workspaceRoot: string): Worksp
   return { workspaceRoot: root, manifestPath, relativePath, taxonomyPath: current };
 }
 
+/** 📖️ Reads the taxonomy document and normalises the optional `implementationAdmission` of every package boundary rule: a rule that declares none answers `null`. */
 export function readTaxonomyUnchecked(): Taxonomy {
   const authority = resolveWorkspaceTaxonomyAuthorityFromDirectory(__dirname);
-  return JSON.parse(readFileSync(authority.taxonomyPath, "utf8")) as Taxonomy;
+  const document = JSON.parse(readFileSync(authority.taxonomyPath, "utf8")) as Taxonomy;
+  const packageBoundaryRules = Object.fromEntries(Object.entries(document.packageBoundaryRules ?? {}).map(([id, rule]) => [id, { ...rule, implementationAdmission: rule.implementationAdmission ?? null }]));
+  return { ...document, packageBoundaryRules } as Taxonomy;
 }
 
 export function taxonomyWorkspaceRoot(): string | null {

@@ -21,9 +21,15 @@
       "reads"
     ],
     "testEnv": [
-      { "env": "SEMIO_TEST_LEVEL" },
-      { "env": "SEMIO_TEST_BUDGET_MS" },
-      { "env": "SEMIO_BUILD_BUDGET_MS" }
+      {
+        "env": "SEMIO_TEST_LEVEL"
+      },
+      {
+        "env": "SEMIO_TEST_BUDGET_MS"
+      },
+      {
+        "env": "SEMIO_BUILD_BUDGET_MS"
+      }
     ],
     "cargoToolchain": [
       "{workspaceRoot}/Cargo.toml",
@@ -380,6 +386,11 @@
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts generate",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "sourceInputObservation": "freshness"
+        }
       }
     },
     "preview-generated": {

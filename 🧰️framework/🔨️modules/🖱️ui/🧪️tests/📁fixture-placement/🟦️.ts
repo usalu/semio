@@ -3,9 +3,9 @@ import { existsSync, readdirSync, readFileSync, realpathSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import glob from "fast-glob";
 import { fixtureFacadeTargets } from "@semio-tech/framework/test/source-text";
-import { testBuiltTreeRetirementFixture } from "../../🧬️contract/🏗️builder/♻️retirement/🧪️tests/🔬️built-tree-retirement/🟦️.ts";
+import { testBuiltTreeRetirementFixture } from "@semio-tech/ui-contract/builder/retirement/testing/built-tree-retirement";
 
-import { fixedListStorageSelfTests } from "../../🧬️contract/🧪️tests/🔬️fixed-list-storage/🟦️.ts";
+import { fixedListStorageSelfTests } from "@semio-tech/ui-contract/testing/fixed-list-storage";
 import { surfaceOwnershipSelfTests } from "../../🧠️runtime/🧪️tests/🔬️surface-ownership/🟦️.ts";
 
 const ui = resolve(import.meta.dir, "../..");

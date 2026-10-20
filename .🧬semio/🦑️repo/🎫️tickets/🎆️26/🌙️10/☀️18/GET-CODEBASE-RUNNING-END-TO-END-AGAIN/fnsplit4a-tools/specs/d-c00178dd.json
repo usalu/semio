@@ -1,0 +1,37 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧪️tests/🪪️document-backbone-worker-wire/🟦️.ts",
+ "describeLine": 12,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of the document backbone worker wire suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️admits-inference-opening-only",
+   "doc": "/** 🔶️ The admits inference opening only tests of the document backbone worker wire suite. */",
+   "name": "registerAdmitsInferenceOpeningOnlyTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the admits inference opening only tests of the document backbone worker wire suite.",
+   "from": 13,
+   "to": 50
+  },
+  {
+   "dir": "🔸️settles-only-exact-live",
+   "doc": "/** 🔸️ The settles only exact live tests of the document backbone worker wire suite. */",
+   "name": "registerSettlesOnlyExactLiveTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the settles only exact live tests of the document backbone worker wire suite.",
+   "from": 169,
+   "to": 169
+  },
+  {
+   "dir": "🟠️preserves-complete-browser-ui",
+   "doc": "/** 🟠️ The preserves complete browser ui tests of the document backbone worker wire suite. */",
+   "name": "registerPreservesCompleteBrowserUiTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the preserves complete browser ui tests of the document backbone worker wire suite.",
+   "from": 313,
+   "to": 415
+  }
+ ]
+}

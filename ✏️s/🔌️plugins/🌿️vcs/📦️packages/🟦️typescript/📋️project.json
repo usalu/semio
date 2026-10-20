@@ -4,6 +4,7 @@
   "targets": {
     "test": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌿️vcs/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",

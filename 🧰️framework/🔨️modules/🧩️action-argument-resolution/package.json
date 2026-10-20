@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@semio-tech/framework-action-argument-resolution",
+  "version": "0.1.0",
+  "description": "framework · action argument resolution",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./🟦️.ts",
+    "./testing/fixtures": "./🧪️tests/🧫️fixtures/🟦️.ts"
+  },
+  "dependencies": {
+    "@semio-tech/framework-manifest": "workspace:*"
+  },
+  "license": "LGPL-3.0-or-later",
+  "bundleKind": "library"
+}

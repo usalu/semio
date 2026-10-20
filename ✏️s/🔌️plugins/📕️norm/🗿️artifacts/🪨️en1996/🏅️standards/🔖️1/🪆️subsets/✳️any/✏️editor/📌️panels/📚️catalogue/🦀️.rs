@@ -1,7 +1,7 @@
 //! 📚️ EN 1996 play app panel — examples plus DE/EN masonry reference tables.
 
 use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
-use semio_s_artifact_norm_en1996_schema::{fire_min_thickness_m, fk_factors, psi0_imposed, F_VLT_OVER_FB_DE};
+use semio_s_artifact_norm_en1996_schema::checks::masonry::{fire_min_thickness_m, fk_factors, psi0_imposed, F_VLT_OVER_FB_DE};
 use semio_s_plugin_norm_compliance::{AnnexChoice, ClauseId};
 use semio_s_artifact_norm_en1996_model::{MasonryClass, MortarType, UnitGroup, UnitMaterial};
 use semio_framework_ui_locale::LocalizedLabel;

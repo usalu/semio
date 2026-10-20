@@ -247,7 +247,7 @@
       }
     },
     "app:test": {
-      "kind": "task",
+      "kind": "test",
       "restore": [
         "app:build",
         "lib:generate"
@@ -457,7 +457,7 @@
     ]
   },
   "build": [
-    "load(\":tasks.bzl\", \"repo_launch\", \"repo_noop\", \"repo_task\")",
+    "load(\":tasks.bzl\", \"repo_launch\", \"repo_noop\", \"repo_task\", \"repo_test\")",
     "",
     "filegroup(",
     "    name = \"i_0123456789abcdef\",",
@@ -491,6 +491,8 @@
     "    source_identity = \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",",
     "    bun = \"/opt/bun\",",
     "    identity = \"app:build\",",
+    "    mnemonic = \"RepoBuild\",",
+    "    multiplex = False,",
     "    cache = True,",
     "    host_state = \"The task process runs in the real checkout: its working directory, the declared source-tree and shared-store writes, the loopback control socket and the out-of-tree runtime channel are host state that a Bazel sandbox hides or blocks.\",",
     ")",
@@ -511,7 +513,7 @@
     "    host_state = \"Action birth binds exact execroot output paths and obtains authority from the owning invocation over its loopback control socket and out-of-tree runtime channel, which a sandbox execroot would change.\",",
     ")",
     "",
-    "repo_task(",
+    "repo_test(",
     "    name = \"t_71eb00441669d8d8\",",
     "    manifest = \"t_71eb00441669d8d8.json\",",
     "    fingerprint = \"t_71eb00441669d8d8.input\",",
@@ -527,6 +529,17 @@
     "    source_identity = \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",",
     "    bun = \"/opt/bun\",",
     "    identity = \"app:test\",",
+    "    extension = \"\",",
+    "    args = [",
+    "        \"📜️script.ts\",",
+    "        \"implementation.json\",",
+    "        \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",",
+    "        \"birth-test\",",
+    "        \"t_71eb00441669d8d8.json\",",
+    "        \"t_22b308f061d695be.snapshot\",",
+    "        \"t_b9f6bc1659d098ec.snapshot\",",
+    "    ],",
+    "    timeout = \"eternal\",",
     "    cache = True,",
     "    host_state = \"The task process runs in the real checkout: its working directory, the declared source-tree and shared-store writes, the loopback control socket and the out-of-tree runtime channel are host state that a Bazel sandbox hides or blocks.\",",
     ")",
@@ -550,6 +563,8 @@
     "    source_identity = \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",",
     "    bun = \"/opt/bun\",",
     "    identity = \"app:publish\",",
+    "    mnemonic = \"RepoBuild\",",
+    "    multiplex = False,",
     "    cache = False,",
     "    uncached_reason = \"declared\",",
     "    host_state = \"The task process runs in the real checkout: its working directory, the declared source-tree and shared-store writes, the loopback control socket and the out-of-tree runtime channel are host state that a Bazel sandbox hides or blocks.\",",
@@ -568,6 +583,8 @@
     "    source_identity = \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",",
     "    bun = \"/opt/bun\",",
     "    identity = \"lib:generate\",",
+    "    mnemonic = \"RepoGenerate\",",
+    "    multiplex = False,",
     "    cache = True,",
     "    host_state = \"The task process runs in the real checkout: its working directory, the declared source-tree and shared-store writes, the loopback control socket and the out-of-tree runtime channel are host state that a Bazel sandbox hides or blocks.\",",
     ")",
@@ -1026,6 +1043,26 @@
       "expected": {
         "cache": false,
         "reason": "diagnostic"
+      }
+    },
+    {
+      "name": "unclassified-uncached",
+      "task": {
+        "metadata": {
+          "semio": {
+            "cache": {
+              "version": 1,
+              "class": "unclassified",
+              "reason": "no-cache-classification"
+            }
+          }
+        }
+      },
+      "skipCache": false,
+      "valid": true,
+      "expected": {
+        "cache": false,
+        "reason": "unclassified"
       }
     },
     {

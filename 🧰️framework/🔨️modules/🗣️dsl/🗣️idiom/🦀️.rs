@@ -5,12 +5,12 @@ use crate::{TextError,TextSpan,TokenClass};
 use crate::grammar::{GrammarFile,ProtocolFile,SemioDialect,parse_grammar,parse_protocol,verify_protocol_source};
 
 pub trait DslIdiom {
-    /// Stable registry id — the `lang` string a `#[dsl(lang = "...")]` field names.
+    /// 🧊️ Stable registry id — the `lang` string a `#[dsl(lang = "...")]` field names.
     const LANG: &'static str;
     type Ast: Clone + PartialEq + Send + Sync;
 
     fn parse(text: &str) -> Result<Self::Ast, TextError>;
-    /// LAW: `Self::parse(&Self::print(ast)) == Ok(ast)` for every `ast` the idiom can produce —
+    /// 🖨️ LAW: `Self::parse(&Self::print(ast)) == Ok(ast)` for every `ast` the idiom can produce —
     /// the idiom's own round-trip law, the direct analogue of this engine's `parse ∘ print = id`
     /// for `RecordSpec` grammars.
     fn print(ast: &Self::Ast) -> String;
@@ -33,7 +33,7 @@ pub struct CompletionItem {
 #[derive(Clone, Copy)]
 pub struct IdiomHooks {
     pub lang: &'static str,
-    /// `print ∘ parse` — `Err` propagates the idiom's own parse diagnostic unchanged.
+    /// 📏️ `print ∘ parse` — `Err` propagates the idiom's own parse diagnostic unchanged.
     pub canonicalize: fn(&str) -> Result<String, TextError>,
     pub classify: fn(&str) -> Vec<(TokenClass, TextSpan)>,
     pub complete: fn(&str, usize) -> Vec<CompletionItem>,

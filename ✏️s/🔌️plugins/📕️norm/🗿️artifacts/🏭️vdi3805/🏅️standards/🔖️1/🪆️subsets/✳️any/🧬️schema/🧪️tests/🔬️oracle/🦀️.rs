@@ -5,9 +5,9 @@ mod tests {
     use semio_framework_test_fixtures::fixture_path;
 
     use semio_s_artifact_norm_vdi3805_inferences::evaluate;
-    use semio_s_artifact_norm_vdi3805_checks::sync_typed_attributes_into_records;
+    use semio_s_artifact_norm_vdi3805_model::sync_typed_attributes_into_records;
     use semio_s_artifact_norm_vdi3805_model::attributes_from_records;
-    use crate::{all_conforming_blatt_examples, conforming_blatt_dataset, nonconforming_blatt_dataset, nonconforming_valve_dataset, ASSESSED_BLATT_SHEETS};
+    use semio_s_artifact_norm_vdi3805_model::{all_conforming_blatt_examples, conforming_blatt_dataset, nonconforming_blatt_dataset, nonconforming_valve_dataset, ASSESSED_BLATT_SHEETS};
     use semio_s_artifact_norm_vdi3805_model::{conforming_valve_dataset, SheetAttributes, Vdi3805Snapshot};
     use std::path::PathBuf;
     use std::process::Command;

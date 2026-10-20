@@ -1,0 +1,37 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/📖️taxonomy-loading/🟦️.ts",
+ "describeLine": 24,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of the loadTaxonomy suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️parses-taxonomy-json-expected",
+   "doc": "/** 🔶️ The parses taxonomy json expected tests of the loadTaxonomy suite. */",
+   "name": "registerParsesTaxonomyJsonExpectedTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the parses taxonomy json expected tests of the loadTaxonomy suite.",
+   "from": 25,
+   "to": 138
+  },
+  {
+   "dir": "🔸️requires-owned-generator-expose",
+   "doc": "/** 🔸️ The requires owned generator expose tests of the loadTaxonomy suite. */",
+   "name": "registerRequiresOwnedGeneratorExposeTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the requires owned generator expose tests of the loadTaxonomy suite.",
+   "from": 159,
+   "to": 306
+  },
+  {
+   "dir": "🟠️rejects-unsettled-broad-foreign",
+   "doc": "/** 🟠️ The rejects unsettled broad foreign tests of the loadTaxonomy suite. */",
+   "name": "registerRejectsUnsettledBroadForeignTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the rejects unsettled broad foreign tests of the loadTaxonomy suite.",
+   "from": 328,
+   "to": 446
+  }
+ ]
+}

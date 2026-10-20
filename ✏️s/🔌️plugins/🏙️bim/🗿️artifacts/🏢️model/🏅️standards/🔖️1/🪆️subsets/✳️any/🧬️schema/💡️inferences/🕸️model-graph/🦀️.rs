@@ -576,7 +576,7 @@ pub fn try_infer_selected<const WANT: u64>(snapshot: &ModelSnapshot) -> Result<M
 }
 
 /// 🕸️ [`try_infer_selected`] for the test helpers that read one projection of a model.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn infer_selected<const WANT: u64>(snapshot: &ModelSnapshot) -> ModelInference {
     try_infer_selected::<WANT>(snapshot).unwrap_or_else(|error| panic!("{error}"))
 }

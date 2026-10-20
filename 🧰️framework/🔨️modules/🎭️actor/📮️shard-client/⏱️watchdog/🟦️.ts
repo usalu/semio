@@ -44,10 +44,17 @@ export class ShardWatchdog {
     return entries.sort((left, right) => left.startedAtMs - right.startedAtMs);
   }
 
-  /** 🔭️ SAB path: polls every shard's `Atomics.load` slot and folds any advance into the SAME state
+  /**
+   * 🔭️ SAB path: polls every shard's `Atomics.load` slot and folds any advance into the SAME state
    * machine `postMessage` heartbeats update — call alongside `checkHeartbeats` on a scheduler tick.
    * A no-op when this client was built without a `heartbeatSab` (postMessage is the only source then;
-   * see this class's header doc — correctness never depends on this method being called at all). */
+   * see this class's header doc — correctness never depends on this method being called at all).
+   *
+   * 🫀️ Only a MONOTONIC ADVANCE is proof of life. `!==` used to accept a REGRESSION too, which a
+   * worker that never processed `attachHeartbeatSab` produces on every tick (its slot stays `0`
+   * while `postMessage` beats advance `lastHeartbeatTurnSeq`) — under the liveness rule that would
+   * refresh a dead shard's clock forever and disarm the watchdog entirely.
+   */
   pollHeartbeatSab(nowMs: number = this.state.now()): void {
     if (!this.state.heartbeatSabView) return;
     for (const slot of this.state.shards) {

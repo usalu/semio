@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "platform": "darwin",
+      "command": "repo",
+      "arguments": [
+        "run",
+        "@semio-tech/framework-os-mcp-rs:build",
+        "--output=stream"
+      ]
+    },
+    {
+      "platform": "linux",
+      "command": "repo",
+      "arguments": [
+        "run",
+        "@semio-tech/framework-os-mcp-rs:build",
+        "--output=stream"
+      ]
+    },
+    {
+      "platform": "win32",
+      "command": "repo",
+      "arguments": [
+        "run",
+        "@semio-tech/framework-os-mcp-rs:build",
+        "--output=stream"
+      ]
+    }
+  ]
+}

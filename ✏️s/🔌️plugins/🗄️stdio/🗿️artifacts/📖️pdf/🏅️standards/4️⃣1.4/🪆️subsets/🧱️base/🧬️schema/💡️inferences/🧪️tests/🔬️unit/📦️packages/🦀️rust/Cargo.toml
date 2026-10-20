@@ -45,6 +45,7 @@ semio-s-artifact-stdio-pdf-model = { path = "../../../../../../../../../7️⃣1
 semio-s-artifact-stdio-pdf-schema = { path = "../../../../../📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-snapshot = { path = "../../../../../📸️snapshot/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
+semio-framework-number = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust" }
 
 [features]
 testkit = ["semio-s-artifact-stdio-pdf-snapshot/testkit", "semio-s-artifact-stdio-pdf-model/testkit", "semio-s-artifact-stdio-pdf-diff/testkit", "semio-s-artifact-stdio-pdf-schema/testkit"]

@@ -1,0 +1,92 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🔨️modules/🏠️host/🧰️owned/🧩️mutation-candidate/🦀️.rs",
+ "function": "step",
+ "nth": 0,
+ "match_line": 137,
+ "types": {},
+ "ret": "Result<bool, &'static str>",
+ "inline": true,
+ "arms": [
+  {
+   "line": 138,
+   "name": "step_clone",
+   "doc": "🧱️ Clones the candidate snapshot.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 163,
+   "name": "step_locate_primary",
+   "doc": "🪵️ Locates the primary layer of the mutation.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 188,
+   "name": "step_locate_secondary",
+   "doc": "🔩️ Locates the secondary or destination layer of the mutation.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 211,
+   "name": "step_prepare_layer",
+   "doc": "⚙️ Prepares the layer the mutation carries.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 232,
+   "name": "step_apply",
+   "doc": "🧲️ Applies the mutation to the candidate snapshot.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 398,
+   "name": "step_prepare_asset",
+   "doc": "🪛️ Prepares the asset the mutation carries.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 489,
+   "name": "step_shift_remove",
+   "doc": "🔧️ Shifts the layers behind a removed one.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  }
+ ],
+ "method": {
+  "self_param": "&mut self",
+  "call": "self.{name}({args})"
+ }
+}

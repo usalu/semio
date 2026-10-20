@@ -5,7 +5,7 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import Ajv from "ajv";
-import { parseCatalogBuildContributionV1 } from "@semio-tech/plugin-registry/publication/build";
+import { parseCatalogBuildContributionV1 } from "@semio-tech/plugin-registry-publication/build";
 import { createIssuedResourceControlV1, createScriptProcessEnvelope, withScriptProcessEnvelope } from "@semio-tech/process/routing";
 import { frameworkOsEngineSourceOwnersV1 } from "../../../../../../../../💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts";
 import cacheSchema from "../../../../🏃️execution/🧬️schema/💾️cache.json" with { type: "json" };
@@ -17,8 +17,8 @@ const plugin = await import("../../🟨️.mjs");
 await plugin.libraryBootstrap;
 const api = plugin.cacheInternals;
 const ajv = new Ajv({ strict: true, allErrors: true });
-const validateDecision = ajv.compile(cacheSchema);
-const decisionOf = (target: any): [string, string] | null => { const value = target?.metadata?.semio?.cache; return value ? [value.class, value.reason] : null; };
+const validateDecision = ajv.compile<ReturnType<typeof api.cacheDecisionV1>>(cacheSchema);
+const decisionOf = (target: any): string[] | null => { const value = target?.metadata?.semio?.cache; return value ? [value.class, value.reason] : null; };
 const expand = (template: string, variant: string, profile = "") => template.replaceAll("{variant}", variant).replaceAll("{profile}", profile);
 const artifacts = () => process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir();
 
@@ -30,10 +30,11 @@ test("the corpus and the cache decision schema satisfy the strict independent va
 
 test("the repository contract admits exactly the decisions the independent schema admits", () => {
   for (const row of corpus.decisions) {
-    expect(validateDecision(row.value), row.id).toBe(row.valid);
+    const decision: unknown = row.value, admitted = validateDecision(decision);
+    expect(admitted, row.id).toBe(row.valid);
     const value = row.value as Record<string, unknown>;
     if (value.version !== 1 || Object.keys(value).sort().join() !== "class,reason,version") continue;
-    if (row.valid) expect(api.cacheDecisionV1(value.class as string, value.reason as string), row.id).toEqual(row.value);
+    if (admitted) expect(api.cacheDecisionV1(value.class as string, value.reason as string), row.id).toEqual(decision);
     else expect(() => api.cacheDecisionV1(value.class as string, value.reason as string), row.id).toThrow("Repository target cache decision refused");
   }
   expect(api.cacheDecisionV1("continuous", "serves-until-stopped")).toBe(api.cacheDecisionV1("continuous", "serves-until-stopped"));
@@ -41,12 +42,30 @@ test("the repository contract admits exactly the decisions the independent schem
 
 test("workspace policy refusals carry the physical reason and replayable names carry none", () => {
   for (const row of corpus.policy) {
-    const target: any = api.targetPolicy(row.name, { cache: row.authored === false ? false : undefined, options: { command: "bun ./📜️script.ts " + row.name } });
+    const target: any = api.targetPolicy(row.name, { cache: row.authored === false ? false : undefined, ...structuredClone(row.target ?? {}), options: { command: "bun ./📜️script.ts " + row.name, ...(row.target as any)?.options } });
     expect(target.cache, row.name).toBe(row.cache);
     expect(target.continuous === true, row.name).toBe(row.continuous === true);
     expect(decisionOf(target), row.name).toEqual(row.decision);
     if (row.decision) expect(validateDecision(target.metadata.semio.cache), row.name).toBe(true);
   }
+});
+
+test("a replayed producer declares its outputs and a target nothing classifies never replays", () => {
+  for (const row of corpus.outputsGate) {
+    const target: any = api.cachedOutputsAdmittedV1(api.targetPolicy(row.name, structuredClone(row.target)));
+    expect(target.cache, row.id).toBe(row.expect.cache);
+    expect(decisionOf(target), row.id).toEqual(row.expect.decision);
+    if (row.expect.decision) expect(validateDecision(target.metadata.semio.cache), row.id).toBe(true);
+  }
+  expect(() => api.targetPolicy("unheard-of-kind", { metadata: { semio: { cache: { version: 1, class: "cacheable", reason: "pure-function-of-inputs" } } } }), "an open declared class").toThrow("Repository target cache decision refused");
+  expect(() => api.targetPolicy("unheard-of-kind", { metadata: { semio: { cache: { version: 1, class: "deterministic", reason: "pure-function-of-inputs", note: "x" } } } }), "a declared decision with an extra key").toThrow("Repository target cache decision refused");
+});
+
+test("the emoji prefix of a target name never hides it from its class", () => {
+  for (const [name, bare] of [["🏭️generator-build", "generator-build"], ["⚙️generator", "generator"], ["🧪️test", "test"], ["plain", "plain"]]) expect(api.normalizedTargetName(name), name).toBe(bare);
+  for (const name of ["generator-build", "🏭️generator-build", "⚙️generator-manifests"]) expect(decisionOf({ metadata: { semio: { cache: api.targetClassV1(name) } } }), name).toEqual(["side-effecting", "mutates-workspace"]);
+  expect(api.targetClassV1("totally-unheard-of")).toBeUndefined();
+  expect(api.targetClassV1("a-contract-b")?.reason).toBe("check-without-outputs");
 });
 
 test("native targets run tests by contract, by name or through the Cargo test driver", () => {

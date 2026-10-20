@@ -1,0 +1,13 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛂️manifest/🦀️.rs",
+ "function": "create_drawing_app",
+ "nth": 0,
+ "max_lines": 110,
+ "builder_type": "semio_framework_plugin::app::EditorBuilder",
+ "keep_tail": 1,
+ "types": {
+  "engagement": "WindowEngagement"
+ },
+ "noun": "manifest",
+ "what": "its builder calls"
+}

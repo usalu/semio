@@ -17,7 +17,7 @@ const assets: Asset[] = [
   { name: "generic clients use the cross-platform repo bootstrap", path: ".mcp.json", required: ['"command": "bun"', '"args": ["./📜️script.ts", "dev", "mcp", "stdio", "client"]'], forbidden: ["repo/client/client"] },
   { name: "devcontainer provisions through the cross-platform workspace setup", path: ".devcontainer/devcontainer.json", required: ['"postCreateCommand": ["bun", "repo", "run", "workspace:setup"]'], forbidden: ["repo/client/client", "./repo/client/mcp/go", "post-create.sh"] },
   { name: "native shell bootstrap builds the repo client from its canonical source", path: `${modules}/🔩️native/🥾️bootstrap/🐚️.sh`, required: ["bun repo run workspace:setup", "bun repo run @semio-tech/repo-client:build"], forbidden: ["repo/client/client", "./repo/client/mcp/go", "💻️client"] },
-  { name: "native windows bootstrap builds the repo client from its canonical source", path: `${modules}/🔩️native/🥾️bootstrap/🔵️.ps1`, required: ['@("repo", "run", "workspace:setup")', '@("repo", "run", "@semio-tech/repo-client:build")'], forbidden: ["repo/client/client.exe", "./repo/client/mcp/go", "💻️client"] },
+  { name: "native windows bootstrap builds the repo client from its canonical source", path: `${modules}/🔩️native/🥾️bootstrap/🔵️.ps1`, required: ['@("repo", "run", "workspace:setup")', '@("repo", "run", "@semio-tech/repo-client:build")', "💻️client\\🛠️developer-tools\\🧬️schema"], forbidden: ["repo/client/client.exe", "./repo/client/mcp/go"] },
 ];
 
 for (const asset of assets) {

@@ -838,3 +838,87 @@ fn the_launcher_uses_all_available_window_space() {
     let leaves = term.rows().iter().filter(|row| row.contains("tool:journey-fixture/") && !row.contains("┃/")).count();
     assert_eq!(leaves, 13, "hidden form reserved launcher space:\n{}", term.text());
 }
+
+fn wait_document_bytes(path: &std::path::Path, expected: &str) {
+    let deadline = std::time::Instant::now() + SLOW;
+    loop {
+        if std::fs::read(path).ok().as_deref() == Some(expected.as_bytes()) { return; }
+        assert!(std::time::Instant::now() < deadline, "document did not become exact expected bytes: {}", path.display());
+        std::thread::sleep(Duration::from_millis(20));
+    }
+}
+
+fn browse_document(term: &mut terminal::Terminal, directory: &str, file: &str, files_key: &str, initial: &str) {
+    term.leader(files_key);
+    term.wait_for(&format!("{directory}/"), SLOW).unwrap();
+    term.type_text(directory); term.send(terminal::ENTER);
+    term.wait_for(file, SLOW).unwrap();
+    term.type_text(file); term.send(terminal::ENTER);
+    term.wait_for(initial, SLOW).unwrap();
+}
+
+#[test]
+fn native_files_browse_edit_unicode_save_reopen_conflict_and_discard_without_an_external_editor() {
+    let fixture = workspace::journey_fixture(); let vector = &fixture["nativeEditor"];
+    let ws = Workspace::new("native-source-editor");
+    let directory = vector["directory"].as_str().unwrap(); let file = vector["file"].as_str().unwrap();
+    let path = ws.root.join(directory).join(file);
+    std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+    std::fs::write(&path, vector["initial"].as_str().unwrap()).unwrap();
+    let mut term = open(&ws);
+    browse_document(&mut term, directory, file, "F", "base");
+    term.send(b"\x1b[1;5F");
+    term.type_text(vector["input"].as_str().unwrap());
+    term.send(b"\x1b[D\x7f"); term.type_text("中"); term.send(terminal::ENTER);
+    let screen = term.wait_for(vector["labels"]["en"]["dirty"].as_str().unwrap(), SLOW).unwrap();
+    assert!(screen.contains("中") && screen.contains("👩‍💻"));
+    assert!(term.cursor().0, "native document caret must be visible");
+    term.checkpoint("native-editor-unicode-dirty");
+    term.leader("S"); wait_document_bytes(&path, vector["saved"].as_str().unwrap());
+    term.wait_until("native save settlement", SLOW, |text| text.contains("saved") && !text.contains("unsaved")).unwrap();
+    term.leader("R"); term.wait_for("File loaded", SLOW).unwrap();
+    std::fs::write(&path, vector["foreign"].as_str().unwrap()).unwrap();
+    term.send(b"\x01");
+    term.send(format!("\x1b[200~{}\x1b[201~", vector["local"].as_str().unwrap()).as_bytes());
+    term.leader("S");
+    term.wait_for(vector["labels"]["en"]["conflict"].as_str().unwrap(), SLOW).unwrap();
+    assert_eq!(std::fs::read_to_string(&path).unwrap(), vector["foreign"].as_str().unwrap());
+    assert!(term.text().contains("local alternative"));
+    term.leader("x");
+    term.wait_for(vector["labels"]["en"]["discard"].as_str().unwrap(), SLOW).unwrap();
+    assert!(term.text().contains("local alternative"));
+    term.checkpoint("native-editor-conflict-retained");
+    term.leader("D"); term.wait_for(file, SLOW).unwrap();
+    term.type_text(file); term.send(terminal::ENTER);
+    term.wait_for("foreign writer", SLOW).unwrap();
+    assert_eq!(std::fs::read_to_string(&path).unwrap(), vector["foreign"].as_str().unwrap());
+    term.checkpoint("native-editor-foreign-reopened");
+    term.leader("d"); assert_eq!(term.exit_code(SLOW), Some(0));
+    ws.assert_paths();
+    println!("[DEBUG] native editor browsed Unicode file, saved exact bytes, retained conflict and reopened foreign document");
+}
+
+#[test]
+fn german_native_files_use_customized_controls_and_retain_unsaved_changes_on_close() {
+    let fixture = workspace::journey_fixture(); let vector = &fixture["nativeEditor"];
+    let ws = Workspace::new("German-native-editor");
+    let directory = vector["directory"].as_str().unwrap(); let file = vector["file"].as_str().unwrap();
+    let path = ws.root.join(directory).join(file);
+    std::fs::create_dir_all(path.parent().unwrap()).unwrap(); std::fs::write(&path, vector["initial"].as_str().unwrap()).unwrap();
+    let bindings = serde_json::json!({"prefix.show-files":["b"],"prefix.save-document":["w"]}).to_string();
+    let mut term = terminal::Terminal::spawn(&workspace::binary(), &["--language", "de", "--bindings", &bindings], &ws.root, &ws.env(), steps::ROWS, steps::COLS);
+    term.wait_for("Neue Aufgabe", SLOW).unwrap();
+    browse_document(&mut term, directory, file, "b", "base");
+    term.send(b"\x1b[1;5F"); term.type_text("Deutsch");
+    term.wait_for(vector["labels"]["de"]["dirty"].as_str().unwrap(), SLOW).unwrap();
+    assert!(!term.text().contains("unsaved"));
+    term.leader("w"); wait_document_bytes(&path, "base\nDeutsch");
+    term.type_text("x"); term.leader("x");
+    term.wait_for(vector["labels"]["de"]["discard"].as_str().unwrap(), SLOW).unwrap();
+    assert_eq!(std::fs::read_to_string(&path).unwrap(), "base\nDeutsch");
+    term.checkpoint("native-editor-German-custom-controls");
+    term.leader("D"); term.wait_for(file, SLOW).unwrap();
+    term.leader("d"); assert_eq!(term.exit_code(SLOW), Some(0));
+    ws.assert_paths();
+    println!("[DEBUG] German native editor retained localized dirty-close decision and customized browse/save keys");
+}

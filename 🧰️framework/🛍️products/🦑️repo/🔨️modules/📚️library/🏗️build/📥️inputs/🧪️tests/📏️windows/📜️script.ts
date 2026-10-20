@@ -1,7 +1,7 @@
 /** 📏️ Windows: child-process script that receives the issued script-process invocation and runs the case its arguments select. */
 import{receiveScriptProcessInvocation,createIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{withExactSourceReadBatchV1,readExactSourceFileV1,readExactSourceJsonV1,exactSourceReadBatchFactsV1,type ExactSourceFileV1}from"../../🧮️digest/📥️read/🟨️.mjs";
-import{withArtifactDescriptorV1,artifactDescriptorCustodyV1}from"@semio-tech/framework/filesystem/observation/descriptor";
+import{withArtifactDescriptorV1,artifactDescriptorCustodyV1}from"@semio-tech/framework-filesystem/observation/descriptor";
 import{mkdtempSync,mkdirSync,writeFileSync,renameSync,rmSync,appendFileSync,truncateSync}from"node:fs";
 import{open}from"node:fs/promises";
 import{join,relative,parse,sep}from"node:path";
@@ -25,3 +25,4 @@ try{try{await receiveScriptProcessInvocation(process.env,async original=>{const 
  if(id==="error"||id==="undefined"){mutated=true;void work;throw bodyPrimary;}
  await work;if(failed)throw failure;if(!outcome.value)throw new Error("Actual original descriptor digest required");digest=outcome.value.sha256;bytesRead=exactSourceReadBatchFactsV1(batch).bytesRead;readOperations=exactSourceReadBatchFactsV1(batch).readOperations;if(digest!==oracle)throw new Error("Substituted inode digest delivered");});accepted=true;}catch(error){primary=error;same=Object.is(error,bodyPrimary);message=error instanceof Error?error.message:String(error);} });}catch(error){if(!message){primary=error;message=error instanceof Error?error.message:String(error);}}
 }finally{rmSync(root,{recursive:true,force:true});}
+process.stdout.write(JSON.stringify({accepted,same,completed,observed,restored,mutated,bytesRead,metadataBytes,cacheUnchanged,digest,closed,readOperations,parentCount})+"\n");

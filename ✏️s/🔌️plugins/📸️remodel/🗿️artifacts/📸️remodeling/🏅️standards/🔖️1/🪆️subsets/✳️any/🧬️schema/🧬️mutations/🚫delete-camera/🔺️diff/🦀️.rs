@@ -9,7 +9,7 @@ use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::sche
 use crate::standards::v1::subsets::any::schema::mutations::delete_camera_calibration::component::DeleteCameraCalibration;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::DeleteCameraCalibration, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
+pub fn diff(payload: &crate::standards::v1::subsets::any::schema::mutations::delete_camera_calibration::component::DeleteCameraCalibration, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
     if !base.calibration.cameras.iter().any(|camera| camera.id == payload.camera_id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Camera calibration \"{}\" does not exist.", payload.camera_id), [payload.camera_id.clone()]);
     }

@@ -71,10 +71,14 @@
     {
       "name": "windowConfig",
       "tag": 14
+    },
+    {
+      "name": "diagnostic",
+      "tag": 15
     }
   ],
   "invalidTags": [
-    15,
+    16,
     255
   ],
   "terminalTag": 10,

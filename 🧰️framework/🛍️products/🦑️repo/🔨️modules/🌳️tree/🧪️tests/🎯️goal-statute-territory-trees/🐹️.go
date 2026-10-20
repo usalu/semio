@@ -317,7 +317,7 @@ func countsOpenSubgoalsAndTickets(ctx *host.Context) (host.Outcome, error) {
 
 // region 🔖️Registration
 
-// Adapter is the registration entry point the generated host calls.
+// 🌉️Adapter is the registration entry point the generated host calls.
 func Adapter() *host.Adapter {
 	return host.NewAdapter("go").
 		Subject("builds-the-goal-tree", buildsTheGoalTree).

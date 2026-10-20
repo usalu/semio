@@ -64,14 +64,22 @@
     "importUrl": "https://modules.assets.semio-tech.com/%F0%9F%94%8C%EF%B8%8Fplugin-modules/%F0%9F%AA%9E%EF%B8%8Fvendor/%F0%9F%A4%9D%EF%B8%8Fbytecode-alliance/%F0%9F%AA%9F%EF%B8%8Fpreview2-shim/cli.js",
     "generatedImports": [
       {
+        "kind": "static",
+        "specifier": "../🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/clocks.js",
+        "expression": "../🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/clocks.js",
+        "publishedUrl": "https://modules.assets.semio-tech.com/%F0%9F%94%8C%EF%B8%8Fplugin-modules/%F0%9F%AA%9E%EF%B8%8Fvendor/%F0%9F%A4%9D%EF%B8%8Fbytecode-alliance/%F0%9F%AA%9F%EF%B8%8Fpreview2-shim/clocks.js"
+      },
+      {
         "kind": "dynamic",
         "specifier": "../🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/cli.js",
-        "expression": "\"../🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/cli.js\""
+        "expression": "\"../🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/cli.js\"",
+        "publishedUrl": "https://modules.assets.semio-tech.com/%F0%9F%94%8C%EF%B8%8Fplugin-modules/%F0%9F%AA%9E%EF%B8%8Fvendor/%F0%9F%A4%9D%EF%B8%8Fbytecode-alliance/%F0%9F%AA%9F%EF%B8%8Fpreview2-shim/cli.js"
       },
       {
         "kind": "dynamic",
         "specifier": null,
-        "expression": "moduleUrl"
+        "expression": "moduleUrl",
+        "publishedUrl": null
       }
     ]
   },

@@ -1,0 +1,85 @@
+{
+  "name": "@semio-tech/fixture-generator-stdio-jpg-jfif-1-01-document",
+  "targets": {
+    "\ud83c\udfed\ufe0fgenerator": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts generate",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      },
+      "outputs": []
+    },
+    "\ud83c\udfed\ufe0fgenerator-manifests": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts manifests",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      },
+      "outputs": []
+    },
+    "\ud83c\udfed\ufe0fgenerator-markers": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts markers",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      },
+      "outputs": []
+    },
+    "\ud83c\udfed\ufe0fgenerator-markers-manifests": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts markers-manifests",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      },
+      "outputs": []
+    },
+    "\ud83e\uddea\ufe0ftest": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "\ud83e\uddea\ufe0fwitness": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts witness",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    }
+  }
+}

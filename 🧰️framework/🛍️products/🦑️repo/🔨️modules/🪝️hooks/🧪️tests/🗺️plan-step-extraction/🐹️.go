@@ -100,7 +100,7 @@ func foldingTheSamePlanTwiceChangesNothing(ctx *host.Context) (host.Outcome, err
 
 // region 🔖️Registration
 
-// Adapter is the registration entry point the generated host calls.
+// 🌉️Adapter is the registration entry point the generated host calls.
 func Adapter() *host.Adapter {
 	return host.NewAdapter("go").
 		Subject("every-payload-shape-yields-the-same-steps", everyPayloadShapeYieldsTheSameSteps).

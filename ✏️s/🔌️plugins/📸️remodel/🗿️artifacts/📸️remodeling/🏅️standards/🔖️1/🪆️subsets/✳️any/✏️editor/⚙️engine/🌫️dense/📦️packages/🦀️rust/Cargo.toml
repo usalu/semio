@@ -22,3 +22,6 @@ semio-s-artifact-remodel-remodeling-camera = { workspace = true }
 semio-s-artifact-remodel-remodeling-images = { workspace = true }
 semio-s-artifact-remodel-remodeling-lie = { workspace = true }
 semio-s-artifact-remodel-remodeling-spatial = { workspace = true }
+
+[dev-dependencies]
+semio-s-artifact-remodel-remodeling-images = { workspace = true, features = ["testkit"] }

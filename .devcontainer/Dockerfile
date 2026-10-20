@@ -100,13 +100,10 @@ RUN set -eu; \
     cd /; \
     rm -rf /tmp/semio-runtime
 
-RUN printf '%s\n' '#!/bin/sh' 'exec bun run --cwd /workspaces/semio dashboard "$@"' > /usr/local/bin/semio \
-    && chmod 755 /usr/local/bin/semio
-
 USER vscode
 
 ENV BUN_INSTALL=/home/vscode/.bun
-ENV PATH=/home/vscode/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV PATH=/home/vscode/.local/bin:/home/vscode/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ENV SEMIO_WORKSPACE_ROOT=/workspaces/semio
 
 RUN mkdir -p /home/vscode/.local/bin \

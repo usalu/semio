@@ -78,7 +78,7 @@ console.log(JSON.stringify({files: changed.length, importsChecked: checked, prob
 
 if (process.argv.includes("--global")) {
   const REPO = "/Users/ueli/Documents/semio";
-  const files = readFileSync(`${C}/🗑️generated/tax-stage/grep-files.txt`, "utf8").split("\n").filter((f) => /\.(ts|tsx|mts|mjs)$/u.test(f));
+  const files = readFileSync(`${C}/tax-stage-tools/index/grep-files.txt`, "utf8").split("\n").filter((f) => /\.(ts|tsx|mts|mjs)$/u.test(f));
   let scanned = 0, bad = 0;
   const deleted = new Set(ops.filter((o) => o.kind === "delete").map((o) => o.path));
   for (const rel of files) {

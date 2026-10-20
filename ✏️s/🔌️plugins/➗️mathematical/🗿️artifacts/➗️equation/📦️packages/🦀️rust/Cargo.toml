@@ -20,7 +20,7 @@ semio-s-artifact-mathematical-equation-examples = { path = "../../🏅️standar
 semio-s-artifact-mathematical-equation-snapshot = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
 semio-s-artifact-mathematical-equation-schema = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
 semio-s-artifact-mathematical-equation-inferences = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust" }
-semio-s-artifact-mathematical-equation-update-graph-algorithm = { path = "../../🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧮️update-graph/📦️packages/🦀️rust" }
+semio-s-artifact-mathematical-equation-update-graph-algorithm = { path = "../../🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧮️update-graph-algorithm/📦️packages/🦀️rust" }
 semio-s-artifact-mathematical-equation-mut-family = { path = "../../🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/➕️create-node/📦️packages/🦀️rust" }
 semio-s-artifact-mathematical-equation-mutations = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
 semio-s-artifact-mathematical-equation-leaf-tests = { path = "../../🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/📦️packages/🦀️rust" }

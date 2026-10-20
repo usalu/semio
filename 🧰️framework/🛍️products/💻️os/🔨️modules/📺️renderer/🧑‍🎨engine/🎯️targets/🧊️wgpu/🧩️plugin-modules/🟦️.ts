@@ -4,7 +4,7 @@ import { type PluginCatalog, type PluginCatalogTarget } from "@semio-tech/framew
 import { type PluginDependency } from "@semio-tech/framework-kernel/plugin-registry";
 import { type PlaygroundBoot } from "@semio-tech/framework-kernel/playground-boot";
 import { type PackageReceiptSource } from "@semio-tech/framework-kernel/descriptor/package";
-import schema from "../../../🧬️schema/🧩️plugin-modules/🔣️.json";
+import schema from "../../../🧬️schema/🧩️plugin-modules/🔣️.json" with { type: "json" };
 
 export { admitWgpuPluginModules, type WgpuPluginModule } from "./🛂️admission/🟦️.ts";
 import type { WgpuPluginModule } from "./🛂️admission/🟦️.ts";

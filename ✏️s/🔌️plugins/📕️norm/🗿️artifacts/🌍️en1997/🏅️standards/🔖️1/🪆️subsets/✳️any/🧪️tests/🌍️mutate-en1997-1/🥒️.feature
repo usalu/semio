@@ -67,6 +67,9 @@ Feature: Apply every typed EN 1997 mutation against an independent Python implem
       | insert-pile                     | 📥insert-pile                      | ✅apply  |
       | insert-pile-dupe                | 📥insert-pile                      | ⛔dupe   |
       | remove-pile                     | 📤remove-pile                      | ✅apply  |
+      | remove-footing-middle           | ➖remove-footing                   | 🧭️middle |
+      | remove-layer-middle             | ➖️remove-layer                    | 🧭️middle |
+      | remove-pile-middle              | 📤remove-pile                      | 🧭️middle |
 
   @id-inverse
   @level-exhaustive

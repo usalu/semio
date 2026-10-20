@@ -97,3 +97,7 @@ semio-s-artifact-bim-model-snapshot = { path = "../../../../../../📸️snapsho
 semio-s-artifact-bim-model-spaces = { path = "../../../../../🏠️spaces/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-bim-model-storey-levels = { path = "../../../../../🏢️storey-levels/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-bim-model-wall-layout = { path = "../../../../../🧱️wall-layout/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-formula = { path = "../../../../../../📏️authored/📝️formula/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-schema = { path = "../../../../../../📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-authored = { path = "../../../../../../📏️authored/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-tests-2 = { path = "../../../../../../📏️authored/🔗️references/🧪️tests/🔬️unit/📦️packages/🦀️rust" }

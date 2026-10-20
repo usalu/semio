@@ -2,7 +2,8 @@
   "version": 1,
   "owner": "semio-framework-io-control",
   "dependencies": [
-    "semio-framework-value"
+    "semio-framework-value",
+    "semio-framework-value-native-owned"
   ],
   "sqliteReceivingOwner": "semio-framework-io-sqlite-snapshot"
 }

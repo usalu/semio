@@ -7,7 +7,7 @@
 //! @see ../👥️population/🟦️.ts — the TypeScript twin
 
 use semio_framework_pets_staging_draft::draft::{actor_key, blink_at, clip_at, crowd_on, hover_of, index_of, release, remove, settle, shift, shoulders, stage_key, surface_of, Draft};
-use semio_framework_pets_staging_draft::locomotion::{crowd_out, drop, leave, vanish};
+use semio_framework_pets_staging_draft::locomotion::{drop, leave, vanish};
 use semio_framework_pets_staging_draft::spacing::{quarters, rooms_for, COMFORT_GAP};
 use semio_framework_pets_character::behavior::{dwell_of, needs_of, MODE_LIMITS};
 use semio_framework_pets_character::feeling::at_rest;
@@ -18,6 +18,7 @@ use semio_framework_pets_kinematics::terrain::{landing_of, larger, perches_of, s
 use semio_framework_pets_kinematics::trigonometry::clamp;
 use semio_framework_pets_character::feeling::Occasion;
 use semio_framework_pets_contract::schema::Wall;
+use semio_framework_pets_clearance::Body as Solid;
 
 //#region 🔖️Constants
 pub(crate) const CENTRED: Gaze = Gaze { x: 0.0, y: 0.0, vx: 0.0, vy: 0.0 };

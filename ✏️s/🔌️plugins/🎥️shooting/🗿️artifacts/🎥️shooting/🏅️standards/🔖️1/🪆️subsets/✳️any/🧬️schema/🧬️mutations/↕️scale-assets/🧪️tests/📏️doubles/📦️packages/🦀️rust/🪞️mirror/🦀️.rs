@@ -96,7 +96,7 @@ pub mod standards {
                         #[path = "."]
                         pub mod replace_saved_camera_view {
                             #[cfg(test)]
-                            #[path = "../../../../../../🎞️replace-saved/🧪️tests/📍️repositions/🦀️.rs"]
+                            #[path = "../../../../../../🎞️replace-saved-camera-view/🧪️tests/📍️repositions/🦀️.rs"]
                             pub mod tests_repositions_cam_close_view;
                         }
                         #[path = "."]
@@ -120,19 +120,19 @@ pub mod standards {
                         #[path = "."]
                         pub mod change_scene_sun_enabled {
                             #[cfg(test)]
-                            #[path = "../../../../../../☀️change-scene-sun/🧪️tests/☀️switches/🦀️.rs"]
+                            #[path = "../../../../../../☀️change-scene-sun-enabled/🧪️tests/☀️switches/🦀️.rs"]
                             pub mod tests_switches_scene_sun_off;
                         }
                         #[path = "."]
                         pub mod change_scene_sun_azimuth {
                             #[cfg(test)]
-                            #[path = "../../../../../../🧭️change-scene-sun/🧪️tests/🧭️turns/🦀️.rs"]
+                            #[path = "../../../../../../🧭️change-scene-sun-azimuth/🧪️tests/🧭️turns/🦀️.rs"]
                             pub mod tests_turns_scene_sun_to_315_degrees;
                         }
                         #[path = "."]
                         pub mod change_scene_sun_elevation {
                             #[cfg(test)]
-                            #[path = "../../../../../../🌅️change-scene-sun/🧪️tests/🌅️raises/🦀️.rs"]
+                            #[path = "../../../../../../🌅️change-scene-sun-elevation/🧪️tests/🌅️raises/🦀️.rs"]
                             pub mod tests_raises_scene_sun_to_60_degrees;
                         }
                     }

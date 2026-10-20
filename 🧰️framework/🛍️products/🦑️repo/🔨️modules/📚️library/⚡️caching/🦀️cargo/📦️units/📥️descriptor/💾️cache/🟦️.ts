@@ -2,7 +2,7 @@
 import{rustUnitDescriptorWorkingSetNodesV2,type RustUnitDescriptorWorkingSetV2}from"./🧺️set/🟦️.ts";
 import{types}from"node:util";
 import{rustUnitDescriptorNodesV2,rustUnitDescriptorNodeArtifactV2,type RustUnitDescriptorGraphV2}from"../🕸️nodes/🟦️.ts";
-import schema from"./🧬️schema/🔣️.json";
+import schema from"./🧬️schema/🔣️.json" with { type: "json" };
 export const rustUnitDescriptorCacheLimitsV1=Object.freeze({...schema.definitions.Policy.const});
 /** 📚️ Contains bounded immutable catalog DATA, never a Native allocation or publication grant. */
 export interface RustUnitDescriptorCatalogSnapshotV2{readonly version:2;readonly entries:readonly(readonly[string,number])[]}

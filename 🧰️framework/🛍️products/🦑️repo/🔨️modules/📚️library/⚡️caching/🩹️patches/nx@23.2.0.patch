@@ -1967,7 +1967,7 @@ diff --git a/dist/bin/init-local.js b/dist/bin/init-local.js
 diff --git a/dist/src/utils/handle-import.js b/dist/src/utils/handle-import.js
 --- a/dist/src/utils/handle-import.js
 +++ b/dist/src/utils/handle-import.js
-@@ -1,3 +1,52 @@
+@@ -1,3 +1,54 @@
  "use strict";
  Object.defineProperty(exports, "__esModule", { value: true });
  exports.handleImport = handleImport;
@@ -1998,9 +1998,11 @@ diff --git a/dist/src/utils/handle-import.js b/dist/src/utils/handle-import.js
 +                if (patch?.version !== 1 || !patch.files || !Object.keys(patch.files).length) throw Error('Actual loaded Nx patch receipt required');
 +                for (const [relative, expected] of Object.entries(patch.files)) if (!/^[a-f0-9]{64}$/u.test(expected) || digest(read(sdk, relative).bytes) !== expected) throw Error('Actual loaded Nx patch bytes changed');
 +                const source = read(directory, '.semio-authorizer-source.json'), manifest = JSON.parse(source.bytes);
-+                if (digest(source.bytes) !== authorizers.sourceSha256 || Object.keys(manifest).sort().join(',') !== 'entry,mode,sources,version' || manifest.version !== 1 || manifest.mode !== 'release' || !Array.isArray(manifest.sources) || !manifest.sources.length) throw Error('Immutable source authority receipt required');
-+                let previous;
-+                for (const row of manifest.sources) { if (!row || Object.keys(row).sort().join(',') !== 'path,sha256' || typeof row.path !== 'string' || !row.path || row.path.length > 256 || path.isAbsolute(row.path) || /[:\\\0]/u.test(row.path) || row.path.split('/').some(part => !part || part === '.' || part === '..') || !/^[a-f0-9]{64}$/u.test(row.sha256) || previous && Buffer.compare(Buffer.from(previous), Buffer.from(row.path)) >= 0) throw Error('Closed original source authority required'); previous = row.path; }
++                if (digest(source.bytes) !== authorizers.sourceSha256 || Object.keys(manifest).sort().join(',') !== 'entry,mode,resolutions,sources,version' || manifest.version !== 1 || manifest.mode !== 'release' || typeof manifest.entry !== 'string' || !manifest.entry || !Array.isArray(manifest.sources) || !manifest.sources.length || manifest.sources.length > 1024 || !Array.isArray(manifest.resolutions) || manifest.resolutions.length > 256) throw Error('Immutable source authority receipt required');
++                let previous; const sourcePaths = new Set();
++                for (const row of manifest.sources) { if (!row || Object.keys(row).sort().join(',') !== 'path,sha256' || typeof row.path !== 'string' || !row.path || row.path.length > 256 || path.isAbsolute(row.path) || /[:\\\0]/u.test(row.path) || row.path.split('/').some(part => !part || part === '.' || part === '..') || !/^[a-f0-9]{64}$/u.test(row.sha256) || previous && Buffer.compare(Buffer.from(previous), Buffer.from(row.path)) >= 0) throw Error('Closed original source authority required'); previous = row.path; sourcePaths.add(row.path); }
++                if (!sourcePaths.has(manifest.entry)) throw Error('Original authorizer entry census required');
++                let previousResolution; for (const row of manifest.resolutions) { if (!row || Object.keys(row).sort().join(',') !== 'path,specifier' || typeof row.specifier !== 'string' || !row.specifier || row.specifier.length > 256 || /[\\\0%?#]/u.test(row.specifier) || row.specifier.split('/').some(part => !part || part === '.' || part === '..' || part === 'node_modules') || typeof row.path !== 'string' || !sourcePaths.has(row.path) || previousResolution && Buffer.compare(Buffer.from(previousResolution), Buffer.from(row.specifier)) >= 0) throw Error('Closed original source resolution required'); previousResolution = row.specifier; }
 +                const output = authorizers.outputs[0];
 +                if (Object.keys(output).sort().join(',') !== 'path,sha256' || output.path !== authorizers.entry || !/^[a-f0-9]{64}$/u.test(output.sha256)) throw Error('Immutable authorizer output required');
 +                const bundle = read(directory, output.path); if (digest(bundle.bytes) !== output.sha256) throw Error('Immutable authorizer body changed');

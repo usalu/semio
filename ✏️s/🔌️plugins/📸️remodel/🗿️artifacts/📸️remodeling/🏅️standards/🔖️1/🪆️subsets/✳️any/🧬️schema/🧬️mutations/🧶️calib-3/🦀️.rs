@@ -19,6 +19,7 @@ pub mod standards {
                         pub mod create_gcp {
                             #[path = "../🧿create-gcp/🦀️.rs"]
                             mod component;
+                            pub use component::*;
                             #[path = "../🧿create-gcp/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../🧿create-gcp/↩️inverse/🦀️.rs"]
@@ -28,6 +29,7 @@ pub mod standards {
                         pub mod delete_gcp {
                             #[path = "../🚮delete-gcp/🦀️.rs"]
                             mod component;
+                            pub use component::*;
                             #[path = "../🚮delete-gcp/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../🚮delete-gcp/↩️inverse/🦀️.rs"]

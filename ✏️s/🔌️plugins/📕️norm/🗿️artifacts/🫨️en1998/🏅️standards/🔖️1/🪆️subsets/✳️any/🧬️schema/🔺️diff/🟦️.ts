@@ -72,25 +72,25 @@ export interface En1998TowerModification { id: string; patch: En1998TowerPatch; 
 export interface En1998TowerDelta { removed: En1998TowerRemoval[]; inserted: En1998TowerInsertion[]; moved: En1998TowerRelocation[]; modified: En1998TowerModification[]; }
 
 export interface En1998Diff {
-  /** @state artifact */
+  /** 📑️ @state artifact */
   annex: string | null;
-  /** @state artifact */
+  /** 🏞️ @state artifact */
   site: En1998Site | null;
-  /** @state artifact */
+  /** 🏢️ @state artifact */
   buildings: En1998BuildingDelta;
-  /** @state artifact */
+  /** 🌉️ @state artifact */
   bridges: En1998BridgeDelta;
-  /** @state artifact */
+  /** 🔄️ @state artifact */
   assessments: En1998AssessmentDelta;
-  /** @state artifact */
+  /** ✏️ @state artifact */
   silos: En1998SiloDelta;
-  /** @state artifact */
+  /** 📝️ @state artifact */
   tanks: En1998TankDelta;
-  /** @state artifact */
+  /** 🏛️ @state artifact */
   foundations: En1998FoundationDelta;
-  /** @state artifact */
+  /** 🗄️ @state artifact */
   retainingWalls: En1998RetainingWallDelta;
-  /** @state artifact */
+  /** 🧬️ @state artifact */
   towers: En1998TowerDelta;
 }
 

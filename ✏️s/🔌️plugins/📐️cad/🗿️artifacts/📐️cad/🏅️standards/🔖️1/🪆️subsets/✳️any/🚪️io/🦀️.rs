@@ -148,9 +148,6 @@ pub mod io_registry {
             return builder.build().map_err(|diagnostics| ComposeError { message: "CadComposer export: build() failed".into(), diagnostics });
         }
         if let Some(source) = sources.iter().find(|s| s.dialect == CAD_JSON_BRIDGE_DIALECT) {
-            // 🌉 The OS dispatch layer (export_os_app_instance_media_kind) deals in already-
-            // deserialized `serde_json::Value`, not this artifact's own wire text/binary -- json
-            // is the universal bridge dialect every domain artifact already imports from.
             let text = match &source.payload {
                 IoPayload::Text(t) => t.clone(),
                 IoPayload::Binary(b) => String::from_utf8_lossy(b).into_owned(),

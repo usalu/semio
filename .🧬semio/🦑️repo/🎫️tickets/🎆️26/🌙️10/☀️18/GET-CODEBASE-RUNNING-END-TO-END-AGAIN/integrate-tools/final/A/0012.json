@@ -1,0 +1,20 @@
+{
+  "name": "@semio-tech/fixture-generator-stdio-bcf-2-1-any",
+  "targets": {
+    "🏭️generator": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator",
+        "command": "bun ./📜️script.ts generate",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      },
+      "outputs": []
+    }
+  }
+}

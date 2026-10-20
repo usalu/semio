@@ -4,7 +4,7 @@ export type ComputeFamilyName="EngineKey"|"EngineHandle"|"EngineFault"|"Engine"|
 export interface ComputeConsumerDescriptor{version:1;id:string;source:string;manifest:string;bindings:readonly ComputeFamilyName[];}
 /** 📖️ Reads only the caller-declared source coordinates. */
 export interface ComputeConsumerAccess{read(path:string):string;dependencies(manifest:string):readonly string[];}
-import schema from "../../🧬️schema/📍️consumer/🔣️.json";
+import schema from "../../🧬️schema/📍️consumer/🔣️.json" with { type: "json" };
 import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 /** ✅️ Verifies direct canonical bindings without discovering any product owner. */
 export function verifyComputeConsumer(descriptor:ComputeConsumerDescriptor,access:ComputeConsumerAccess):{directDependency:true;bindings:readonly ComputeFamilyName[]}{

@@ -1,2 +1,0 @@
-/** 🧩️ Public `@semio-tech/framework/modules/ui/contract/retained/scene/typed/json/value` entry: explicit re-exports of the source module that owns each member. */
-export { OwnedUiSceneJsonDocument, OwnedUiSceneJsonDocumentCursor, OwnedUiSceneJsonDocumentReader, OwnedUiSceneJsonDocumentRetirement } from "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/🧩️json/🧾️value/🟦️.ts";

@@ -13,7 +13,7 @@ mod rename_layer_tests_renames_the_sketch_layer_to_final_linework;
 mod change_layer_opacity_tests_fades_the_highlight_layer_to_a_quarter;
 #[path = "../../🌱create-layer/🧪️tests/🖋️creates-an-ink-8a1bf9/🦀️.rs"]
 mod create_layer_tests_creates_an_ink_layer_inside_the_artwork_group;
-#[path = "../../🎚️change-layer-adjustment/🧪️tests/📈️switches/🦀️.rs"]
+#[path = "../../🎚️change-layer-adjustment-kind/🧪️tests/📈️switches/🦀️.rs"]
 mod change_layer_adjustment_kind_tests_switches_the_tone_layer_from_levels_to_curves;
 #[path = "../../🎨change-layer-blend-mode/🧪️tests/💡️switches/🦀️.rs"]
 mod change_layer_blend_mode_tests_switches_the_glow_layer_to_screen;
@@ -31,7 +31,7 @@ mod change_layer_pixels_tests;
 mod add_layer_asset_tests_declines_to_reattach_an_asset_already_on_the_document;
 #[path = "../../🗂️remove-layer-asset/🧪️tests/🖼️rejects/🦀️.rs"]
 mod remove_layer_asset_tests_rejects_removing_an_asset_the_document_never_attached;
-#[path = "../../🎛️change-layer/🧪️tests/🦀️.rs"]
+#[path = "../../🎛️change-layer-adjustment-parameter/🧪️tests/🦀️.rs"]
 mod change_layer_adjustment_parameter_tests;
 #[path = "../../📐️change-layer-transform/🧪️tests/🦀️.rs"]
 mod change_layer_transform_tests;

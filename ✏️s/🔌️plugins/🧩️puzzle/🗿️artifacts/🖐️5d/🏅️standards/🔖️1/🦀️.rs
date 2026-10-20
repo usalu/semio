@@ -58,10 +58,6 @@ use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, Artifac
         ("s.puzzle.puzzle5d.grammar.3", "grammar", "puzzle.puzzle5d.diff", &[("grammar", "puzzle.puzzle5d.diff")], None),
         ("s.puzzle.puzzle5d.grammar.4", "grammar", "5d.pack", &[("grammar", "5d.pack")], None),
         ("s.puzzle.puzzle5d.grammar.5", "grammar", "5d.spr", &[("grammar", "5d.spr")], None),
-        // 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<Puzzle5dPlayApp>>()` derives
-        // its extension claim from `<Puzzle5dPlaySnapshot as pack::snapshot::ArtifactDsl>::EXTENSION`
-        // (`…/🧬️mutations/🦀️.rs`, the editor's real `Snapshot` type), which is
-        // `"puzzle5d-play"`, not the base `Puzzle5dSnapshot`'s `"puzzle5d"`.
         ("s.puzzle.puzzle5d.codec.document-1", "codec", "puzzle.5d:puzzle5d-play", &[("codec", "puzzle.5d"), ("codec-extension", "9:puzzle.5d:puzzle5d-play")], None),
         ("s.puzzle.puzzle5d.localization.en", "localization", "5D Puzzle", &[], Some(("en", "5D Puzzle"))),
         ("s.puzzle.puzzle5d.localization.de", "localization", "5D-Puzzle", &[], Some(("de", "5D-Puzzle"))),

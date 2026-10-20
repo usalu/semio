@@ -3,7 +3,7 @@
 use crate::delete_character_style;
 #[cfg(test)] use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 use semio_s_artifact_layout_layout_diff::LayoutCharacterStylesDelta;
-use crate::standards::v1::subsets::any::schema::diff::LayoutCharacterStyleInsertion;
+use semio_s_artifact_layout_layout_diff::LayoutCharacterStyleInsertion;
 use semio_s_artifact_layout_layout_model::CharacterStyle;
 use semio_s_artifact_layout_layout_diff::LayoutDiff;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;

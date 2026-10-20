@@ -13,7 +13,7 @@ import { BoundedDiagnosticsV1, buildCargoArtifacts, readCargoArtifactBuildPolicy
 import {publishedCargoArtifactDirectoryV1} from "../📤️published/🟦️.ts";
 import {withIssuedLawStorageV1,lawBuildOptionsV1,lawSourceBoundaryV1,type LawStorageV1} from "./🦀️cargo/🟦️.ts";
 import type {ScriptInvocation} from "../../../🧭️routing/🟦️.ts";
-import {CurrentPhysicalOwnerV1} from "@semio-tech/framework/filesystem/observation/current";
+import {CurrentPhysicalOwnerV1} from "@semio-tech/framework-filesystem/observation/current";
 import {decodeCargoProvenanceV1} from "../🧾️receipt/🟦️.ts";
 import {createScriptProcessEnvelope,withScriptProcessEnvelope} from "../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 

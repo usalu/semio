@@ -39,6 +39,8 @@ const KINDS: &[&str] = &[
 /// Registered for `mutate-` only: a refused mutation leaves nothing to undo.
 #[cfg(feature = "sut")]
 const ROWS: &[&str] = &[
+    "remove-geometry-connection-middle",
+    "remove-product-middle",
 ];
 
 /// 🗣️ The real committed VDI 3805 document, read where the domain already keeps it.
@@ -54,6 +56,18 @@ const DSL_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 #[cfg(feature = "sut")]
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
+        "remove-geometry-connection-middle" => (
+            include_str!("../🧫️fixtures/🧬️mutations/✂️remove-geometry-connection/🧭️middle/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/✂️remove-geometry-connection/🧭️middle/🦠️mutation/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/✂️remove-geometry-connection/🧭️middle/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/✂️remove-geometry-connection/🧭️middle/🎯️outcome/🔣️.json"),
+        ),
+        "remove-product-middle" => (
+            include_str!("../🧫️fixtures/🧬️mutations/🗑️remove-product/🧭️middle/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🗑️remove-product/🧭️middle/🦠️mutation/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🗑️remove-product/🧭️middle/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🗑️remove-product/🧭️middle/🎯️outcome/🔣️.json"),
+        ),
         "change-manufacturer-file" => (
             include_str!("../🧫️fixtures/🧬️mutations/🏭️change-manufacturer-file/✅apply/📸️snapshot/⬅️before/🔣️.json"),
             include_str!("../🧫️fixtures/🧬️mutations/🏭️change-manufacturer-file/✅apply/🦠️mutation/🔣️.json"),

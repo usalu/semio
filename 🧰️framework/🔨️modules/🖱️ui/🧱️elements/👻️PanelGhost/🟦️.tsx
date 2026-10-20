@@ -1,6 +1,6 @@
 /** 👻 Owns the panel ghost and interaction command contexts that drag surfaces, trees and layouts share. */
 import * as React from "react";
-import { type MergeMode } from "../../../🕹️interaction/🟦️.ts";
+import { type MergeMode } from "@semio-tech/framework-interaction";
 import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { createDOMEventBinding } from "../../🔨️modules/👂️dom-event-binding/🟦️.ts";
 import { useLevel } from "../🌈️Surface/🟦️.tsx";

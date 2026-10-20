@@ -6,7 +6,7 @@ use crate::standards::v1::subsets::any::schema::mutations::remove_stream_frame::
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse<Op: From<RemoveStreamFrame>>(payload: &super::AddStreamFrame, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<RemoveStreamFrame>>(payload: &crate::standards::v1::subsets::any::schema::mutations::add_stream_frame::component::AddStreamFrame, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(stream) = base.streams.iter().find(|stream| stream.id == payload.id) else {
         return Vec::new();

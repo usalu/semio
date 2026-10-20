@@ -12,7 +12,7 @@ use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 #[allow(unused_imports)]
 use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::snapshot::PageDoc;
 #[allow(unused_imports)]
-use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::STDIO_PDF_DOCUMENT_SCHEMA;
+use semio_s_artifact_stdio_pdf_snapshot::standards::v1_4::subsets::base::schema::snapshot::STDIO_PDF_DOCUMENT_SCHEMA;
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::pdf::v1_4::base::*;
 #[semio_framework_async_macros::async_test]
 async fn writer_into_pdf_preserves_text_and_page_size() {

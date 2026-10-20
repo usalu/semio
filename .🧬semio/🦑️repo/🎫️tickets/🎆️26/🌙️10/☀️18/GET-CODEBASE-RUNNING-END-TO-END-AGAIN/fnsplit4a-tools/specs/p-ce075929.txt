@@ -1,0 +1,4 @@
+useArtifactOpening 3 phases, keep=-, final return=true
+92-271 useCatalogState
+293-435 useOpenArtifactAppState
+437-541 useOpenEntriesState

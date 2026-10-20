@@ -256,6 +256,26 @@ use crate::editor::remodeling::unit_tests::context::{app, app_with_registry, rem
 use protocol::{OpBinary, OpText};
 use semio_framework_plugin::artifact_app_laws;
 use semio_framework_plugin::{EditorApp, HistoryView};
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
+use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::capture;
+use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::analyze;
+use semio_s_artifact_remodel_remodeling_panels::editor::remodeling::panels::media;
+use semio_s_artifact_remodel_remodeling_panels::editor::remodeling::panels::document;
+use semio_s_artifact_remodel_remodeling_panels::editor::remodeling::panels::parameters;
+use semio_s_artifact_remodel_remodeling_panels::editor::remodeling::panels::calibration as calibration_panel;
+use semio_s_artifact_remodel_remodeling_panels::editor::remodeling::panels::results;
+use semio_s_artifact_remodel_remodeling_panels::editor::remodeling::panels::tracks;
+use semio_s_artifact_remodel_remodeling_panels::editor::remodeling::panels::quality;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_report_table;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_feature_params;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::add_gcp;
+use semio_framework_plugin::ArtifactView;
+use semio_framework::MediaClass;
+use semio_framework::MediaForm;
+use semio_framework::MediaPayload;
+use semio_framework::InteractiveJobClassification;
+use semio_framework_plugin::ArtifactEditor;
 
 //#region 🧪️RetainedCatalogOracle
 #[derive(Debug, PartialEq, Eq)]

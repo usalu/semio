@@ -1,0 +1,3 @@
+registerControlChrome1Tests 2 phases, keep=-, final return=false
+7-8 buildBorderNormalBottomState
+10-10 registerControlChromeTests

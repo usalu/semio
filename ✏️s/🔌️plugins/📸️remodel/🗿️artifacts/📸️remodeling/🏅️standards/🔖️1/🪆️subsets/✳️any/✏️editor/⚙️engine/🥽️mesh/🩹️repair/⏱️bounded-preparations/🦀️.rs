@@ -200,8 +200,6 @@ impl BoundedCleanPreparation {
                     if principal.is_some_and(|principal| principal != root) {
                         continue;
                     }
-                    // 🧩️ Same rule as the batch `remove_small_components`: a component only drops
-                    // when it is BOTH under the face floor and tighter than the bbox fraction.
                     if faces < self.minimum_component_faces && norm3(sub3(hi, lo)) / diagonal < self.minimum_component_bbox_fraction {
                         continue;
                     }
@@ -365,8 +363,6 @@ impl BoundedRepairPreparation {
                         self.added_positions.push(mesh.positions[a as usize]);
                         let new_b = (mesh.positions.len() + self.added_positions.len()) as u32;
                         self.added_positions.push(mesh.positions[b as usize]);
-                        // Every face of that fan group touching `a` or `b` moves onto the copies,
-                        // not only the faces on the offending edge (the same rule as the batch pass).
                         for face in 0..self.triangles.len() {
                             if components.find(face as u32) != root {
                                 continue;
@@ -560,8 +556,6 @@ impl BoundedHoleFillPreparation {
                             self.phase = BoundedHoleFillPhase::Fill;
                         }
                     } else if let Some(position) = self.current_loop.iter().position(|&vertex| vertex == next) {
-                        // 📌️ A pinch: the walk came back to a vertex it already passed, closing the
-                        // loop `next … current`; it is filled on its own and the walk continues.
                         let closed = self.current_loop.split_off(position + 1);
                         let mut closed_loop = vec![next];
                         closed_loop.extend(closed);
@@ -578,10 +572,6 @@ impl BoundedHoleFillPreparation {
                     }
                 }
                 BoundedHoleFillPhase::Fill => {
-                    // ✂️ One ear per unit: the ear whose closing diagonal is shortest among those
-                    // that add no edge the mesh (or an earlier fill triangle) already has — a fan
-                    // from one vertex re-used existing edges and left non-manifold caps. Faces run
-                    // against the loop's direction, which is the boundary faces' own winding.
                     let Some(polygon) = self.pending.last_mut() else {
                         self.phase = if self.current.is_none() && self.remaining.is_empty() { BoundedHoleFillPhase::Done } else { BoundedHoleFillPhase::Walk };
                         continue;
@@ -610,8 +600,6 @@ impl BoundedHoleFillPreparation {
                         }
                     }
                     let Some((_, ear)) = best else {
-                        // No ear closes without duplicating an edge: leave this hole open rather
-                        // than make the mesh non-manifold; validation reports it.
                         self.pending.pop();
                         continue;
                     };

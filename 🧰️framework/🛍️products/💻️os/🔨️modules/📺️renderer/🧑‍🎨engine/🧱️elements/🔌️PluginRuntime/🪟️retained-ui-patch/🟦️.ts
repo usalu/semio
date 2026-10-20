@@ -7,7 +7,7 @@ import { type Effect } from "@semio-tech/framework";
 import { decodePackWire } from "@semio-tech/framework/packs";
 import { type BuiltNode, type Component, type UiPatchOp, type UiSnapshot } from "@semio-tech/framework";
 import { applyUiPatch, emptyUiDocumentState, type UiDocumentState } from "../../📃️UiDocumentStore/🟦️.tsx";
-import type { RetainedUiNodeRecord } from "@semio-tech/framework/modules/ui/contract/retained/wire/typed";
+import type { RetainedUiNodeRecord } from "@semio-tech/ui-contract/retained/wire/typed";
 import { wireDownloadMediaExport, wireIconRenderExport, wireExtensionInvocation, wireOptionValue, wireRespondAnswer, wireVideoRenderExport } from "@semio-tech/framework/actor/wire-turn";
 import { isRoutedWireSendMessage, WIRE_SEND_MESSAGE_ROUTED_TARGETS, wireSendMessageTargetTag } from "@semio-tech/framework/actor/wire-turn";
 import {

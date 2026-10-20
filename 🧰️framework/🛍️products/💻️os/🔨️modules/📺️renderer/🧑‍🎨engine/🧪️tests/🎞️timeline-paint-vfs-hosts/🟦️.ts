@@ -3,7 +3,7 @@ import { act as reactAct, createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { buildVirtualFileSystemSceneRows, detectShellLocale, uiI18n } from "@semio-tech/ui-react";
 import { VirtualFileSystemHost, virtualFileSystemNavigation } from "../../🧱️elements/🗣️Interpreter/🗄️virtual-file-system/🟦️.tsx";
-import { graphTimelineAuthorsFixture, presenceOverlayFixture, virtualFileSystemInteractionFixture } from "@semio-tech/framework/ui/testing/fixtures";
+import { graphTimelineAuthorsFixture, presenceOverlayFixture, virtualFileSystemInteractionFixture } from "@semio-tech/ui/testing/fixtures";
 import * as flowSessionLoader from "../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
 import { cleanup, fireEvent, render, waitFor } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";

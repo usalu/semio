@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "source": "export async function yieldInferenceV1(context,phase,index){await context.advance(phase,index);}",
+  "cases": [
+    {
+      "id": "normal",
+      "accepts": true
+    },
+    {
+      "id": "over-cap",
+      "accepts": false
+    },
+    {
+      "id": "hardlink",
+      "accepts": false
+    },
+    {
+      "id": "symlink",
+      "accepts": false
+    },
+    {
+      "id": "descriptor-change",
+      "accepts": false
+    },
+    {
+      "id": "growth",
+      "accepts": false
+    },
+    {
+      "id": "ancestor-change",
+      "accepts": false
+    },
+    {
+      "id": "digest",
+      "accepts": false
+    }
+  ]
+}

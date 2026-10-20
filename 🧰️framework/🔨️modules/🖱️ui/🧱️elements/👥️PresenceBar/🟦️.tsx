@@ -29,7 +29,7 @@ export const PRESENCE_BAR_DEFAULT_MAX = 5;
 export type PresenceRole = "author" | "spectator";
 
 /**
- * One peer currently attached to the same `(space, document, surface)` presence scope.
+ * 🛰️ One peer currently attached to the same `(space, document, surface)` presence scope.
  **/
 export interface PresencePeer {
   readonly actor: string;
@@ -51,7 +51,7 @@ export interface PresencePeer {
 }
 
 /**
- * Props interface for the PresenceBar component.
+ * 🤝️ Props interface for the PresenceBar component.
  **/
 export interface PresenceBarProps {
   readonly peers: readonly PresencePeer[];
@@ -65,7 +65,7 @@ export { presenceColor, presenceCssVar, type PresenceAppearance, type PresenceHs
 //#endregion 🔖️Palette
 
 /**
- * PresenceBar renders a compact horizontal roster of peers sharing a presence scope: an avatar per
+ * 👀️ PresenceBar renders a compact horizontal roster of peers sharing a presence scope: an avatar per
  * peer (reusing {@link TableAvatar}), the peer's name on hover/focus, a deterministic per-actor color,
  * an overflow "+N" chip past `max`, and an empty state.
  **/

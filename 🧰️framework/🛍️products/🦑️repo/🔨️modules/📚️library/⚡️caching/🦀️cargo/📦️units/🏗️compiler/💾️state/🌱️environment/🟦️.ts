@@ -1,4 +1,4 @@
-import cargo from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📦️package/🌱️environment/🧬️schema/🔣️.json";
+import cargo from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📦️package/🌱️environment/🧬️schema/🔣️.json" with { type: "json" };
 import{compilerStateEnvironmentPolicyV1 as policy,compilerStateErrorsV1}from"../⚙️policy/🟦️.ts";
 const qualified=new Set([...policy.machine,...Object.keys(structuredClone(cargo).properties)]),owned=new Set(policy.owned.map(name=>name.toUpperCase())),semantic=new RegExp(policy.semanticName,"u");
 /** 🌱️ Admits exact qualified machine/package facts and safe first-party semantic names, never arbitrary loader/output controls. */

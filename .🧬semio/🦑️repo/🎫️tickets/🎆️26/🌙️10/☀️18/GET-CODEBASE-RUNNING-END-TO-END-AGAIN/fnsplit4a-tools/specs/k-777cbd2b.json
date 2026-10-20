@@ -1,0 +1,60 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️owned-locale-detector-retirement/🧩️shell-components-6/🟦️.tsx",
+ "function": "registerShellComponents6Tests",
+ "kit": {
+  "dir": "⭐️test-kit",
+  "doc": "/** ⭐️ The shared test kit of registerShellComponents6Tests: the destructured dependencies and the shared fixtures. */",
+  "name": "createShellComponents6Kit",
+  "emoji": "🌟",
+  "fdoc": "Creates the shared test kit of registerShellComponents6Tests from the injected dependencies.",
+  "typeName": "ShellComponents6Kit"
+ },
+ "groups": [
+  {
+   "dir": "🔶️shell-components",
+   "doc": "/** 🔶️ The shell components describe block of registerShellComponents6Tests: its wrapper and parts. */",
+   "name": "registerShellComponentsSuite",
+   "emoji": "🔷",
+   "fdoc": "Registers the shell components describe block from its parts.",
+   "describeLine": 11,
+   "parts": [
+    {
+     "dir": "🟠️compute-mode-drop-zone",
+     "doc": "/** 🟠️ The compute mode drop zone tests of registerShellComponents6Tests. */",
+     "name": "registerComputeModeDropZoneTests",
+     "emoji": "🟡",
+     "fdoc": "Registers the compute mode drop zone tests of registerShellComponents6Tests.",
+     "from": 13,
+     "to": 162
+    },
+    {
+     "dir": "🟢️compute-mode-drop-zone",
+     "doc": "/** 🟢️ The compute mode drop zone tests of registerShellComponents6Tests. */",
+     "name": "registerComputeModeDropZoneTests2",
+     "emoji": "🔵",
+     "fdoc": "Registers the compute mode drop zone tests of registerShellComponents6Tests.",
+     "from": 173,
+     "to": 283
+    },
+    {
+     "dir": "🟣️mode-maximize-shows-only",
+     "doc": "/** 🟣️ The mode maximize shows only tests of registerShellComponents6Tests. */",
+     "name": "registerModeMaximizeShowsOnlyTests",
+     "emoji": "🟤",
+     "fdoc": "Registers the mode maximize shows only tests of registerShellComponents6Tests.",
+     "from": 315,
+     "to": 451
+    }
+   ],
+   "helpers": {
+    "dir": "🔸️helpers",
+    "doc": "/** 🔸️ The callback-local helpers shared by the parts of the shell components describe block. */",
+    "name": "createShellComponentsHelpers",
+    "emoji": "🔹",
+    "fdoc": "Creates the callback-local helpers shared by the parts of the shell components describe block.",
+    "typeName": "ShellComponentsHelpers"
+   }
+  }
+ ],
+ "rootKeep": []
+}

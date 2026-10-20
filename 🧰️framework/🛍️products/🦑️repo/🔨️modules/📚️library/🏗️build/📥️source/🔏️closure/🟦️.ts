@@ -3,7 +3,7 @@ import{constants}from"node:fs";
 import{open,lstat,opendir}from"node:fs/promises";
 import{isBuiltin}from"node:module";
 import{dirname,extname,isAbsolute,join,relative,resolve}from"node:path";
-import schema from"./🧬️schema/🔣️.json";
+import schema from"./🧬️schema/🔣️.json" with { type: "json" };
 import{advanceScriptInvocation,checkScriptInvocation,type ScriptInvocation}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 

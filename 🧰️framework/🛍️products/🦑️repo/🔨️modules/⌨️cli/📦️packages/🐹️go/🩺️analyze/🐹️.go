@@ -27,7 +27,7 @@ import (
 
 // #region 🪅️Analyze Command
 
-// Analyze command implementation for policy breach detection.
+// 🎮️Analyze command implementation for policy breach detection.
 // 🔬️analyzeCmd holds the data fields for a analyzeCmd record.
 var analyzeCmd = &Command{
 	Use:   "analyze [scope]",

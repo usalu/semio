@@ -11,8 +11,8 @@ import {
   type DescriptorProgress
 } from "../📇️descriptor/📥️text/🟦️.ts";
 import { readPackageReceiptIdentity, type PackageReceiptIdentity, type PackageReceiptSource } from "../📇️descriptor/📦️package/🟦️.ts";
-import type { PluginManifest } from "@semio-tech/framework/manifest";
-import { normalizeManifestExamples } from "@semio-tech/framework/manifest";
+import type { PluginManifest } from "@semio-tech/framework-manifest";
+import { normalizeManifestExamples } from "@semio-tech/framework-manifest";
 import { readPackageAssetDeclarations, type PackageAssetDeclaration } from "../📦️package-assets/🟦️.ts";
 import { SemioFaultError } from "../🚨️fault/🟦️.ts";
 

@@ -5,7 +5,7 @@ import{compileJsonSchemaSubset}from"../../../../../../../../../../🔨️modules
 import{rustRlibCommandRecipeV1,type RustRlibRecipeArgumentV1}from"./🧩️recipe/🟦️.ts";
 import{ requireRustUnitPlanV1, type RustUnitPlanV1 }from"../../../📋️plan/🟦️.ts";
 import{canonicalRustUnitJsonV1}from"../../../📋️plan/🔏️identity/🟦️.ts";
-import schema from"./🧬️schema/🔣️.json";
+import schema from"./🧬️schema/🔣️.json" with { type: "json" };
 const policy=Object.freeze({...schema.definitions.Policy.const}),bindingsContract=compileJsonSchemaSubset(schema.definitions.Bindings,schema),commandContract=compileJsonSchemaSubset(schema,schema);
 /** 🧾️ Contains immutable compiler command DATA without process, storage or lease authority. */
 export interface RustRlibCommandDataV1{readonly version:1;readonly program:string;readonly cwd:string;readonly arguments:readonly string[];readonly cfgArguments:readonly string[];readonly environment:Readonly<Record<string,string>>}

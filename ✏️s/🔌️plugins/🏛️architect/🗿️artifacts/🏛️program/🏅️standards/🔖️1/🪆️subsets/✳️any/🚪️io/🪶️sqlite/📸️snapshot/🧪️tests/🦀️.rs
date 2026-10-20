@@ -6,7 +6,8 @@ use semio_framework_test_original_snapshot_owners as original_owners;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 use crate::standards::v1::subsets::any::schema::kernel::EntityId;
-use semio_framework_plugin::{PluginApp,VcsArtifactApp,EditorApp,__semio_dispatch_PluginApp,plugin_app_close_prelude::*};
+use semio_framework_plugin::{PluginApp,VcsArtifactApp,EditorApp,plugin_app_close_prelude::*};
+use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
 semio_framework_dispatch_macros::dyn_enum_close!{
  /// 🏛️ The actual Architect declared editor app.
  enum SqliteApps:PluginApp{Editor(VcsArtifactApp<EditorApp<crate::editor::architect::ArchitectPlayApp>,semio_s_artifact_stdio_semio::SemioMembers>)}

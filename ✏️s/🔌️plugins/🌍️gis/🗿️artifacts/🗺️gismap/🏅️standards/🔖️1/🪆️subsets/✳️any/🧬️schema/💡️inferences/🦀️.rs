@@ -131,7 +131,7 @@ use semio_framework_value::ToValue;
         let drawing = SemioDrawingMutation::CreateNode(create_node::CreateNode { parent: NodePath { layer: 0, path: Vec::new() }, index: before_children.len(), node: after_children[before_children.len()].clone() });
         let drawing_inverse = inverse_semio_drawing_mutation(&drawing, &before_drawing).map_err(GisMapProposalError::InverseRefused)?;
 
-        let before_value = crate::standards::v1::subsets::any::map_composition::gis_map_value_from_descriptor(&crate::schema::gis_map_descriptor_value(snapshot));
+        let before_value = crate::standards::v1::subsets::any::map_composition::gis_map_value_from_descriptor(&crate::standards::v1::subsets::any::map_composition::gis_map_descriptor_value(snapshot));
         let value_payload = crate::standards::v1::subsets::any::map_composition::semio_value_from_intrinsic(&created.item.data);
         let value = SemioValueMutation::from_value(semio_framework_value::DslValue::object([
             ("mutation".into(), semio_framework_value::DslValue::String("insertListItem".into())),

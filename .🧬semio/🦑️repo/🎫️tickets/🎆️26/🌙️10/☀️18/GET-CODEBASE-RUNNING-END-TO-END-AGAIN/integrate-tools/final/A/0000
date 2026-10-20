@@ -1,0 +1,8 @@
+common --enable_bzlmod
+common --enable_workspace=false
+common --color=no
+common --curses=no
+build --experimental_convenience_symlinks=ignore
+build --experimental_disk_cache_gc_idle_delay=10s
+build --experimental_disk_cache_gc_max_age=30d
+build --repo_contents_cache_gc_max_age=3d

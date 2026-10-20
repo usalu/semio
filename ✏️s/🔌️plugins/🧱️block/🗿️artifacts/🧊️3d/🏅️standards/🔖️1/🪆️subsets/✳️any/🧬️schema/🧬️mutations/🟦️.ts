@@ -5,7 +5,7 @@
 export type { RenameObjectKind } from "./✏️rename-object-kind/🟦️";
 export type { ChangeObjectKindLabel } from "./🏷️change-object-kind-label/🟦️";
 export type { ChangeObjectKindVariant } from "./🔀️change-object-kind-variant/🟦️";
-export type { ChangeObjectKindDescription } from "./📃️change-object-kind/🟦️";
+export type { ChangeObjectKindDescription } from "./📃️change-object-kind-description/🟦️";
 export type { ChangeObjectKindIcon } from "./🖼️change-object-kind-icon/🟦️";
 export type { ChangeObjectKindUnit } from "./📐change-object-kind-unit/🟦️";
 export type { CreateRepresentation } from "./🧱create-representation/🟦️";
@@ -44,7 +44,7 @@ export type Block3dMutation =
   | { mutation: "renameObjectKind" } & import("./✏️rename-object-kind/🟦️").RenameObjectKind
   | { mutation: "changeObjectKindLabel" } & import("./🏷️change-object-kind-label/🟦️").ChangeObjectKindLabel
   | { mutation: "changeObjectKindVariant" } & import("./🔀️change-object-kind-variant/🟦️").ChangeObjectKindVariant
-  | { mutation: "changeObjectKindDescription" } & import("./📃️change-object-kind/🟦️").ChangeObjectKindDescription
+  | { mutation: "changeObjectKindDescription" } & import("./📃️change-object-kind-description/🟦️").ChangeObjectKindDescription
   | { mutation: "changeObjectKindIcon" } & import("./🖼️change-object-kind-icon/🟦️").ChangeObjectKindIcon
   | { mutation: "changeObjectKindUnit" } & import("./📐change-object-kind-unit/🟦️").ChangeObjectKindUnit
   | { mutation: "createRepresentation" } & import("./🧱create-representation/🟦️").CreateRepresentation

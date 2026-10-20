@@ -1,0 +1,5 @@
+createFreshComponentTests 4 phases, keep=21, final return=true
+19-20 buildSource
+26-54 buildTestFreshComponent
+152-152 buildTestFreshComponent2
+363-363 buildTestFreshComponent3

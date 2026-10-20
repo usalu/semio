@@ -3,6 +3,7 @@
   "packageName": "semio-framework-io-schema",
   "normalDependencies": [
     "semio-framework-value",
+    "semio-framework-value-native-owned",
     "semio-framework-value-derive",
     "semio-framework-diagnostic",
     "semio-framework-schema-registry",

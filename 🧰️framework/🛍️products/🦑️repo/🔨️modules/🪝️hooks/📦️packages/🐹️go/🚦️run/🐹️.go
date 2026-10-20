@@ -31,7 +31,7 @@ import (
 
 // #region 🦀️Hooks
 
-// runHookExecution runs the hook pipeline (shared by CLI `hook` and per-IDE `RunHookFor`).
+// 🏃️runHookExecution runs the hook pipeline (shared by CLI `hook` and per-IDE `RunHookFor`).
 func runHookExecution(client, eventStr, toolName, toolArgs, filePath, parentInfo, repoRoot string, input json.RawMessage, jsonMode bool, stdout, stderr io.Writer) error {
 	return RunHookExecutionCtx(context.Background(), client, eventStr, toolName, toolArgs, filePath, parentInfo, repoRoot, input, jsonMode, stdout, stderr)
 }

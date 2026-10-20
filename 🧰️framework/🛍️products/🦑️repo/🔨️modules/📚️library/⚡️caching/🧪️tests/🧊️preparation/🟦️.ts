@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {readFileSync,mkdirSync,writeFileSync,existsSync} from "node:fs";
 import {join,dirname} from "node:path";
 import Ajv from "ajv";
-import {parseCatalogBuildContributionV1} from "@semio-tech/plugin-registry/publication/build";
+import {parseCatalogBuildContributionV1} from "@semio-tech/plugin-registry-publication/build";
 import {frameworkOsEngineSourceOwnersV1,frameworkOsEnginePackageNameV1} from "@semio-tech/framework-os-dev/builder/vite/artifacts/engines";
 import {requireIssuedResourceControlInvocationV1,checkScriptInvocation,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/process/leases";

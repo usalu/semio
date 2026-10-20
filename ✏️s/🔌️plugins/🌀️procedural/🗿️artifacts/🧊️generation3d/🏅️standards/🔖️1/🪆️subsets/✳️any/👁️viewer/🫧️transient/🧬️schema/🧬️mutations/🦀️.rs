@@ -2,7 +2,7 @@
 
 use super::{Generation3dViewTransient, Generation3dViewTransientPatch, Generation3dPreviewEvalChange};
 
-#[path = "👁️set-preview/🦀️.rs"]
+#[path = "👁️set-preview-eval/🦀️.rs"]
 mod set_preview_eval;
 
 pub use set_preview_eval::SetPreviewEval;

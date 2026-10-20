@@ -634,7 +634,7 @@ fn mutation_apply_inverse_cancellation_uses_original_factory() {
         let mut owner = paged::MutationApplyEdit::<Document, DocumentMutation>::default();
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: WIDE, maximum_capacity_bytes: WIDE, maximum_release_bytes: WIDE, maximum_depth: 4096 };
         ORIGINAL_ISSUER_RETIRES.set(0); APPLY_CALLS.set(0); INVERSE_CALLS.set(0);
-                let boundary=match case["boundary"].as_str().unwrap(){"decision"=>paged::Stage::Source,"inverse"=>paged::Stage::Commit,_=>unreachable!()};
+                let boundary=match case["boundary"].as_str().unwrap(){"decision"=>paged::test_support::Stage::Source,"inverse"=>paged::test_support::Stage::Commit,_=>unreachable!()};
         for turn in 0..10000 {
             if owner.stage==boundary{break;}
             assert!(turn<9999,"retained semantic boundary was not reached");
@@ -672,7 +672,7 @@ fn mutation_apply_cancellation_after_decision_preserves_base() {
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: WIDE, maximum_capacity_bytes: WIDE, maximum_release_bytes: WIDE, maximum_depth: 4096 };
     APPLY_CALLS.set(0); INVERSE_CALLS.set(0); DIFF_CALLS.set(0);
     for turn in 0..10000 {
-        if owner.stage == paged::Stage::Source { break; }
+        if owner.stage == paged::test_support::Stage::Source { break; }
         assert!(turn < 9999, "original typed decision boundary was not reached");
         assert!(matches!(owner.advance(before_source.borrow(),mutation_source.borrow(),&mut post,grant).unwrap(), PagedOneItemEditStep::Progress(_)));
     }
@@ -695,7 +695,7 @@ fn mutation_apply_rejects_same_data_different_method_table_inverse_issuer(){
  let manifest=std::path::Path::new(env!("CARGO_MANIFEST_DIR"));let root=manifest.ancestors().find(|p|p.join(".🧬semio").is_dir()).expect("native fixture repository root");let law:Value=serde_json::from_str(&std::fs::read_to_string(root.join("🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📋️vector/🧫️fixtures/🔣️.json")).unwrap()).unwrap();let law=&law["issuerAlias"];let index=law["pendingId"].as_u64().unwrap()as usize;
  let slot=EditIssuerSlot{original:ZstEditOriginal};let original_issuer=unsafe{&slot.original};let foreign=unsafe{&slot.other};assert_eq!(std::ptr::from_ref(original_issuer).cast::<()>(),std::ptr::from_ref(foreign).cast::<()>());OTHER_EDIT_ISSUER_CALLS.set(0);
  let original=plain_document_json(&fixture()["base"]);let mut before=OriginalSource::new(document_from_plain(original.clone()));let mut input=OriginalSource::new(DocumentMutation::SetText{index,text:"changed".into()});let mut post=document_from_plain(original.clone());let mut owner=paged::MutationApplyEdit::<Document,DocumentMutation>::default();let wide=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:WIDE,maximum_capacity_bytes:WIDE,maximum_release_bytes:WIDE,maximum_depth:4096};
- for turn in 0..10000{if owner.stage==paged::Stage::Commit{break;}assert!(matches!(owner.advance(before.borrow(),input.borrow(),&mut post,wide).unwrap(),PagedOneItemEditStep::Progress(_)));assert!(turn<9999);}
+ for turn in 0..10000{if owner.stage==paged::test_support::Stage::Commit{break;}assert!(matches!(owner.advance(before.borrow(),input.borrow(),&mut post,wide).unwrap(),PagedOneItemEditStep::Progress(_)));assert!(turn<9999);}
  let inverse=owner.inverse.as_ref().unwrap();let backing=inverse.as_ptr();let text=match &inverse[0]{DocumentMutation::SetText{index:actual,text}=>{assert_eq!(*actual,index);text.as_ptr()},_=>panic!("original inverse shape")};owner.begin_close();let d=owner.close_demands(original_issuer,WIDE).unwrap();let q=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};owner.close_step(original_issuer,q).unwrap();
  let(result,heap)=observe(||owner.close_step(foreign,q));assert!(result.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(OTHER_EDIT_ISSUER_CALLS.get(),law["providerCalls"].as_u64().unwrap()as usize);let inverse=owner.inverse.as_ref().unwrap();assert_eq!(inverse.as_ptr(),backing);match &inverse[0]{DocumentMutation::SetText{text:actual,..}=>assert_eq!(actual.as_ptr(),text),_=>panic!("original inverse row changed")};assert_eq!(plain_document(&post),original);
  for turn in 0..100000{if owner.terminal_is_empty(){break;}let d=owner.close_demands(original_issuer,WIDE).unwrap();let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};let s=owner.close_step(original_issuer,g).unwrap();assert!(s.progress().fits(g));assert!(turn<99999);}

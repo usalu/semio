@@ -2,7 +2,7 @@ import { runArtifactRustTests } from "@semio-tech/framework/process/cargo-test";
 import { resolve } from "node:path";
 import { BundleScript, scriptInvocationBudget } from "@semio-tech/framework/process/routing";
 import { runBudgetedTestCommand } from "@semio-tech/framework/process/test-execution";
-import { resolveTypescriptCompilerV1 } from "@semio-tech/process/execution";
+import { resolveTypescriptCompilerV1 } from "@semio-tech/framework/process/execution";
 
 
 /** 🧾️ Genuine recursive original input and independent relational laws. */

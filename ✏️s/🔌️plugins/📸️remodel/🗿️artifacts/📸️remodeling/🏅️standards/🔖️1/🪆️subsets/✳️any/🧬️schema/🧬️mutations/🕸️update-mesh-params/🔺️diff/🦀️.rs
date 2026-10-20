@@ -7,7 +7,7 @@ use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any:
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::UpdateMeshParams, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
+pub fn diff(payload: &crate::standards::v1::subsets::any::schema::mutations::update_mesh_params::component::UpdateMeshParams, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
     if !payload.params.tsdf_voxel_size_mm.is_finite() || !payload.params.tsdf_truncation_mm.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Mesh params have a non-finite TSDF voxel size or truncation.".to_string(), [base.id.clone()]);
     }

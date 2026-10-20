@@ -98,7 +98,8 @@
             "enum": [
               "task",
               "noop",
-              "launch"
+              "launch",
+              "test"
             ]
           },
           "restore": {

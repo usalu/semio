@@ -1,0 +1,27 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🐚️shell/🟦️.ts",
+ "function": "applyCommand",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🔸️shared",
+  "doc": "/** 🔸️ The shared declarations of applyCommand. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️part1",
+   "doc": "/** 🔶️ The part1 phase of applyCommand. */",
+   "phases": [
+    {
+     "name": "buildPart1",
+     "emoji": "🔷",
+     "doc": "Runs the effects and registrations of applyCommand.",
+     "from": 195,
+     "to": 195
+    }
+   ]
+  }
+ ]
+}

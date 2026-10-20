@@ -1,0 +1,35 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-value-snapshot-projection"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Original immutable root projections and independently funded owned-field projection cursors."
+
+[package.metadata.semio]
+role = "framework"
+id = "value-snapshot-projection"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_value_snapshot_projection"
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-value-control-contract = { path = "../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-retained-clone = { path = "../../../🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-retirement = { path = "../../../♻️retirement/📦️packages/🦀️rust" }
+semio-framework-value-shared-issuance = { path = "../../../♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-value-derive = { path = "../../../✨️derive/📦️packages/🦀️rust" }
+semio-framework-test-fixtures = { path = "../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

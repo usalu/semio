@@ -32,7 +32,7 @@ import {
 } from "@semio-tech/ui-react";
 // #endregion 🔌️Adapters
 import { windowElementId, world3dComputeStatusV1, type ContextMenuItemSpec, type MergeMode } from "@semio-tech/framework";
-import { cadVec3ToThree } from "@semio-tech/infinite-world-r3f";
+import { cadVec3ToThree } from "@semio-tech/framework/infinite/world/r3f";
 import {
   type WorldAttractionRecord,
   type WorldEngagementPreviewItem,

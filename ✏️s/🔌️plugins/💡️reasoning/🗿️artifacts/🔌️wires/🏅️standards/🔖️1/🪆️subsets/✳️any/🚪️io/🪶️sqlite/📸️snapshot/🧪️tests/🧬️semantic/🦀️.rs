@@ -59,7 +59,7 @@ fn sqlite_snapshot_wires_authored_text_grammar_and_protocol_cover_actual_flat_re
 
 mod declaration {
  use super::*;
- use semio_framework_plugin::__semio_dispatch_PluginApp;
+ use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
  use semio_framework_plugin::plugin_app_close_prelude::*;
  semio_framework_dispatch_macros::dyn_enum_close! {
   /// 🔌️ Closes the two actual Wires surfaces for owning declaration admission.

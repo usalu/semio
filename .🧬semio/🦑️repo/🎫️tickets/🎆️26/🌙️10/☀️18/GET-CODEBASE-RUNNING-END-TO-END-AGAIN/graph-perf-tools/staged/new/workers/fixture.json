@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "files": {
+    "a.txt": { "text": "alpha\n", "sha256": "b6a98d9ce9a2d9149288fa3df42d377c3e42737afdcdaf714e33c0a100b51060" },
+    "b.txt": { "text": "beta beta\n", "sha256": "77e4ae400f6bd4ea22d74a712cb25af0e1ef2d15fc06561817af047677afa7fc" },
+    "c.bin": { "text": "\u0000\u0001\u0002 emoji 🧵️\n", "sha256": "5ca879c203d62ad5bb67967979ea8acec9a376a3872f78bf6b59efa4610a32d7" }
+  },
+  "square": { "inputs": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "expected": [0, 1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121] },
+  "count": { "total": 7 },
+  "bounded": { "workers": 2, "tasks": 12, "maximumDistinctThreads": 2 },
+  "cancel": { "spinMilliseconds": 20000, "workers": 2, "tasks": 4, "deadlineMilliseconds": 5000 },
+  "failure": { "message": "fixture failure" }
+}

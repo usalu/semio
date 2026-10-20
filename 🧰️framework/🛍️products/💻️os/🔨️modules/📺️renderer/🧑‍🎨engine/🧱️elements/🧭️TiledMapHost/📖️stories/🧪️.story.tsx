@@ -14,7 +14,7 @@ import { useCallback, useState, type ReactElement } from "react";
 
 import { TiledMapHost } from "@semio-tech/framework-renderer-react";
 import type { ActionDescriptor, TiledMapScene, UiComponentSceneNode } from "@semio-tech/framework";
-import overlayFixture from "../🧪️tests/🧫️fixtures/🗺️overlay-descriptor/🔣️.json";
+import overlayFixture from "../🧪️tests/🧫️fixtures/🗺️overlay-descriptor/🔣️.json" with { type: "json" };
 
 //#region SceneFixtures
 /** 🗺️ The shared neutral descriptor: the neutral bands plus a small test policy declaring pickable `paths` and `pins` overlays, which the wgpu surface tests sync too. */

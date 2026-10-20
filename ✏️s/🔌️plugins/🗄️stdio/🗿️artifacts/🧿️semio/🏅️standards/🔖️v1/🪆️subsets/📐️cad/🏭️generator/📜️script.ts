@@ -95,8 +95,6 @@ function main(argv: readonly string[]): number {
   const args = ["run", "--quiet", "--offline", "--bin", "semio-cad-oracle-probe", "--", "generate", "--out", out, ...only.flatMap((recipe) => ["--only", recipe])];
   const run = spawnSync("cargo", args, { cwd: CRATE_DIR, encoding: "utf8", stdio: ["ignore", "inherit", "pipe"] });
   if (run.status !== 0) {
-    // 🚫️A generator that cannot run must SAY SO and exit non-zero. Leaving the previous bytes in
-    // place and reporting success would make `fixture reproduce` compare a stale corpus with itself.
     console.error(`[generator] cargo exited ${run.status}: ${(run.stderr ?? "").trim().split("\n").slice(-8).join("\n")}`);
     return 1;
   }

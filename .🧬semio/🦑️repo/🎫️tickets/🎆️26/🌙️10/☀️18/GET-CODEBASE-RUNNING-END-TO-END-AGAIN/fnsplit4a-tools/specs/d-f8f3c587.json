@@ -1,0 +1,37 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/✂️text-splice/🟦️.ts",
+ "describeLine": 13,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of the text splice suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️schema-admits-fixture-pins",
+   "doc": "/** 🔶️ The schema admits fixture pins tests of the text splice suite. */",
+   "name": "registerSchemaAdmitsFixturePinsTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the schema admits fixture pins tests of the text splice suite.",
+   "from": 14,
+   "to": 160
+  },
+  {
+   "dir": "🔸️no-concurrent-insert-only",
+   "doc": "/** 🔸️ The no concurrent insert only tests of the text splice suite. */",
+   "name": "registerNoConcurrentInsertOnlyTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the no concurrent insert only tests of the text splice suite.",
+   "from": 167,
+   "to": 222
+  },
+  {
+   "dir": "🟠️window-reincarnates-document-reopened",
+   "doc": "/** 🟠️ The window reincarnates document reopened tests of the text splice suite. */",
+   "name": "registerWindowReincarnatesDocumentReopenedTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the window reincarnates document reopened tests of the text splice suite.",
+   "from": 290,
+   "to": 290
+  }
+ ]
+}

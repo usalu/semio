@@ -1,0 +1,12 @@
+{
+  "cases": [
+    "↩️rotates-left",
+    "↪️rotates-right",
+    "✂️crops",
+    "📍️outside",
+    "📏️resizes",
+    "🔒️locked",
+    "🚫️rejects",
+    "🫧️smooths"
+  ]
+}

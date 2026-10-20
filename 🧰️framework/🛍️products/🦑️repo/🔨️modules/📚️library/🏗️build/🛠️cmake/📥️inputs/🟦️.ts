@@ -2,7 +2,7 @@
 import{withArtifactSourceSetV1,artifactSourceEntriesV1,readArtifactSourceChunkV1,recheckArtifactSourceSetV1,type ArtifactSourceSetV1}from"@semio-tech/process/artifacts/publication/sources";
 import{requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1,withRequestedIssuedResourceControlV1,withIssuedResourceOperationV1}from"@semio-tech/process/routing";
 import type{ResourceLeaseControl}from"@semio-tech/process/leases";
-import schema from"../🧬️schema/🔣️.json";
+import schema from"../🧬️schema/🔣️.json" with { type: "json" };
 declare const inputBrand:unique symbol;
 /** 📚️ Identifies live pinned CMake inputs without lending descriptor or Native authority. */
 export type CmakeInputsV1=Readonly<{readonly[inputBrand]:true}>;

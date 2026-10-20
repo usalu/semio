@@ -17,6 +17,3 @@ impl Engine {
 
 /// 🎟️ The bounded five-currency authority the batch adapter supplies to every admitted step.
 pub const ENERGY_BATCH_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 };
-
-/// 🚪️ Runs the job's own close ladder to completion with grants it quotes itself.
-

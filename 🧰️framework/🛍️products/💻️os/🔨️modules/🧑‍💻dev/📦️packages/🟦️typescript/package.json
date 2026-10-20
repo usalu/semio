@@ -18,6 +18,8 @@
     "@semio-tech/framework": "workspace:*",
     "@semio-tech/framework-actor": "workspace:*",
     "@semio-tech/framework-canvas-ts": "workspace:*",
+    "@semio-tech/framework-filesystem": "workspace:*",
+    "@semio-tech/framework-hash": "workspace:*",
     "@semio-tech/framework-os": "workspace:*",
     "@semio-tech/framework-renderer-react": "workspace:*",
     "@semio-tech/framework-renderer-wgpu": "workspace:*",
@@ -58,8 +60,6 @@
     "./engine/publication": "./⚙️engine/📤️publication/🟦️.ts",
     "./engine/selection": "./⚙️engine/🧭️selection/🟦️.ts",
     "./local-hub/execution": "./🚀️local-hub/🏃️execution/🟦️.ts",
-    "./local-hub/session/data": "./🚀️local-hub/🎫️session/📋️data/🟦️.ts",
-    "./local-hub/session/io": "./🚀️local-hub/🎫️session/📥️io/🟦️.ts",
     "./parity/execution": "./⚖️parity/🏃️execution/🟦️.ts",
     "./playground-session/execution": "./🎮️playground-session/🏃️execution/🟦️.ts",
     "./playground-session/schema": "./🎮️playground-session/🧬️schema/🟦️.ts",
@@ -74,6 +74,8 @@
     "./vite-plugins/agent-bridge-rendezvous": "./🔌️vite-plugins/🛰️agent-bridge-rendezvous/🟦️.ts",
     "./vite-plugins/backbone-vite-plugin": "./🔌️vite-plugins/🧱️backbone-vite-plugin/🟦️.ts",
     "./vite-plugins/source-freshness": "./🔌️vite-plugins/🔖️source-freshness/🟦️.ts",
-    "./vite-plugins/stream-mux-server": "./🔌️vite-plugins/🔀️stream-mux-server/🟦️.ts"
+    "./vite-plugins/stream-mux-server": "./🔌️vite-plugins/🔀️stream-mux-server/🟦️.ts",
+    "./builder/vite/artifacts/engines/catalog.json": "./🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🔣️json/catalog/🟦️.ts",
+    "./host-ports/wasm-bindings": "./🪝️host-ports/🕸️wasm-bindings/🟦️.ts"
   }
 }

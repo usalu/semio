@@ -23,7 +23,7 @@ import {
   type SearchSpec,
   type CSSProperties,
   type ReactNode
-} from "@semio-tech/framework/ui/targets/react";
+} from "@semio-tech/ui-react";
 // #endregion 🔌️Adapters
 import {
   WorldProjectionKindSwitch,

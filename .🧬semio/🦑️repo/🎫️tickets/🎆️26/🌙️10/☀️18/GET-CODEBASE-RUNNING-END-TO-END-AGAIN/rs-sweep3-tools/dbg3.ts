@@ -1,0 +1,12 @@
+import { initParser, findWasm } from "./parse.ts";
+import { buildTree } from "./tree.ts";
+import { loadPackage } from "./cargo.ts";
+import { setTreeBuilder } from "./resolve.ts";
+import { ROOT } from "./checks.ts";
+await initParser(findWasm(ROOT)!);
+const trees = new Map<string, any>();
+const tf = (p: any) => { const t = p.targets.find((x: any) => x.kind === "lib"); if (!trees.has(p.dir)) trees.set(p.dir, buildTree(p, t, p.name)); return trees.get(p.dir); };
+setTreeBuilder((p) => tf(p));
+const pkg = loadPackage(process.argv[2])!;
+const tree = tf(pkg);
+for (const m of tree.mods) for (const e of m.entries) if (e.name === process.argv[3]) console.log(m.path(), e.kind, e.vis.k, JSON.stringify(e.cfg), JSON.stringify(m.cfgChain), e.leaf?.segs.join("::"));

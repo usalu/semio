@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "old": "import { present } from \"@neutral/umbrella\";\nexport const untouched = 1;\nexport const value = present;\n",
+  "host": "import { present } from \"../leaf/🟦️.ts\";\nexport const untouched = 2;\nexport const value = present;\n",
+  "expected": "import { present } from \"../leaf/🟦️.ts\";\nexport const untouched = 1;\nexport const value = present;\n",
+  "patch": {
+    "strategy": "replace-canonical-value-import",
+    "from": "import { present } from \"@neutral/umbrella\";",
+    "to": "import { present } from \"../leaf/🟦️.ts\";"
+  }
+}

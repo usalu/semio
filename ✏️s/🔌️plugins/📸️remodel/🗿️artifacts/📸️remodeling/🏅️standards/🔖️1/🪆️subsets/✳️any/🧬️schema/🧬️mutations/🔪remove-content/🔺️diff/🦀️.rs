@@ -5,7 +5,7 @@ use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any:
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::RemoveContent, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
+pub fn diff(payload: &crate::standards::v1::subsets::any::schema::mutations::remove_content::component::RemoveContent, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
     let target = [payload.content_id.clone()];
     let Some(artifact) = base.durable_artifacts.get(&payload.content_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Content \"{}\" does not exist.", payload.content_id), target);

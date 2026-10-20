@@ -16,6 +16,7 @@ test("original history native caller grant retains five independently authored a
  expect(Object.keys(callerGrant)).toEqual(["maximumItems","maximumCopyBytes","maximumCapacityBytes","maximumReleaseBytes","maximumDepth"]);
 });
 authoredSnapshotSqliteContract({sql:join(snapshot,"🗄️.sql"),fixtures:join(snapshot,"🧪️tests/🧫️fixtures")});
+const grammarErrors = (node: Parser.SyntaxNode): number => (node.type === "ERROR" && node.text !== "async") || node.isMissing() ? 1 : node.children.reduce((sum, child) => sum + grammarErrors(child), 0);
 const rustTokens = (node: Parser.SyntaxNode): string[] => {
   if (["line_comment", "block_comment"].includes(node.type)) return [];
   if (["string_literal", "raw_string_literal", "char_literal"].includes(node.type) || node.childCount === 0) return [node.text];
@@ -28,7 +29,7 @@ async function sourceTokens(path: string, functionName?: string): Promise<string
   await Parser.init(); const parser = new Parser(); let tree: Parser.Tree | undefined;
   try {
     parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json", root)), "out/tree-sitter-rust.wasm")));
-    tree = parser.parse(readFileSync(path, "utf8")); if(tree.rootNode.hasError())throw Error("Rust parser refused source: "+path);
+    tree = parser.parse(readFileSync(path, "utf8")); if(grammarErrors(tree.rootNode))throw Error("Rust parser refused source: "+path);
     const visit=(node:Parser.SyntaxNode):Parser.SyntaxNode[]=>[node,...node.namedChildren.flatMap(visit)];
     const parts=functionName?.split("::");
     const functions=parts?.length===2?visit(tree.rootNode).filter(node=>node.type==="impl_item"&&node.childForFieldName("type")?.text.startsWith(parts[0]!+"<")).flatMap(node=>node.childForFieldName("body")?.namedChildren??[]).filter(node=>node.type==="function_item"&&node.childForFieldName("name")?.text===parts[1]):tree.rootNode.namedChildren.filter(node=>node.type==="function_item"&&node.childForFieldName("name")?.text===functionName);
@@ -57,10 +58,10 @@ test("actual native isolated law admits explicit owner registration and generic 
   const collect = (node: Parser.SyntaxNode, predicate: (node: Parser.SyntaxNode) => boolean): Parser.SyntaxNode[] => [ ...(predicate(node) ? [node] : []), ...node.namedChildren.flatMap(child => collect(child, predicate)) ];
   const calls = (node: Parser.SyntaxNode) => collect(node, node => node.type === "call_expression").map(node => ({ name: node.childForFieldName("function")?.text ?? "", start: node.startIndex }));
   const corpus = JSON.parse(readFileSync(join(snapshot, "🧪️tests/🧫️fixtures/📣️registration/🔣️.json"), "utf8")), lawTree = parse(join(snapshot, "🧪️tests/🦀️.rs"));
-  expect(lawTree.rootNode.hasError()).toBe(false);
+  expect(grammarErrors(lawTree.rootNode)).toBe(0);
   const law = lawTree.rootNode.namedChildren.find(node => node.type === "function_item" && node.childForFieldName("name")?.text === corpus.nativeLaw);
   expect(law).toBeDefined();
-  const names = calls(law!), registration = names.filter(node => node.name === "store::space_history_registration::register_sqlite_snapshot");
+  const names = calls(law!), registration = names.filter(node => node.name === "semio_framework_os_store_space::space_history_registration::register_sqlite_snapshot");
   expect(registration.length).toBe(1);
   const before = names.filter(node => node.start < registration[0].start), after = names.filter(node => node.start > registration[0].start);
   for (const operation of ["io_export_sqlite_snapshot", "io_import_sqlite_snapshot"]) {
@@ -76,13 +77,13 @@ test("actual native isolated law admits explicit owner registration and generic 
   expect(containsRust(law!, ["sample", "[", '"encoding"', "]"])).toBe(true);
   expect(containsRust(law!, ["assert_eq", "!", "(", "imported", ".", "value", ",", "source", ")"])).toBe(true);
   expect(containsRust(law!, ["assert_eq", "!", "(", "relational", ",", "independent", ")"])).toBe(true);
-  const storeTree = parse(join(store, "🦀️.rs"));
+  const storeTree = parse(join(store, "⚙️engine/📥️lifted/🏪️store/🌱️runtime-seed-construction-and-owned-close/🦀️.rs"));
   const constructors = collect(storeTree.rootNode, node => node.type === "function_item" && ["new", "construct", "from_initialized_runtime_with_owners"].includes(node.childForFieldName("name")?.text ?? "") && node.parent?.parent?.type === "impl_item" && node.parent?.parent?.childForFieldName("type")?.text.startsWith("ArtifactStore<") === true);
   expect(constructors.map(node => node.childForFieldName("name")?.text).sort()).toEqual(["construct", "from_initialized_runtime_with_owners", "new"]);
   const hydration = parse(join(store, "🧾️document/📜️history/💧️hydration/🦀️.rs"));
   for (const node of [...constructors, hydration.rootNode]) expect(calls(node).filter(node => /(?:register_sqlite_snapshot|register_native_snapshot_codec|register_native_document_codec)(?:<|$)/.test(node.name))).toEqual([]);
   const binding = parse(join(store,"📜️space-history/🏠️space/📣️registration/🦀️.rs")), ownerRegistration = binding.rootNode.namedChildren.find(node => node.type === "function_item" && node.childForFieldName("name")?.text === "register_sqlite_snapshot");
-  expect(calls(ownerRegistration!).some(node => node.name === "crate::io::register_native_snapshot_codec")).toBe(true);
+  expect(calls(ownerRegistration!).some(node => node.name === "semio_framework_os_io::register_native_snapshot_codec")).toBe(true);
   expect(ownerRegistration!.text.includes("SQLITE_SNAPSHOT_DIALECT")).toBe(true); expect(containsRust(ownerRegistration!, ["SpaceHistorySnapshot", ",", "SpaceHistoryMutation"])).toBe(true);
   } finally { for (const tree of trees) tree.delete(); parser.delete(); }
 });
@@ -97,7 +98,7 @@ test("actual owner literals and existing GUI source/native routes identify the s
   const project = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json"), "utf8"));
   for (const command of ["test-space-history-sqlite-source", "test-space-history-sqlite-native"]) {
     expect(project.targets[command].options.command).toBe(`bun ./📜️script.ts ${command}`);
-    expect(project.targets[command].cache).toBe(false);
+    expect(project.targets[command].cache).toBe(true);expect(project.targets[command].inputs).toContain("cargoToolchain");
   }
 });
 
@@ -229,7 +230,7 @@ test("normal decoder release keeps the original independent job wallet on failur
  const defining=join(store,"🚪️io/🚫️refusal/⏱️step");const law=JSON.parse(readFileSync(join(defining,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));const schema=JSON.parse(readFileSync(join(defining,"🧬️schema/🔣️.json"),"utf8"));const valid=new Ajv({strict:true,allErrors:true}).compile(schema);expect(valid(law)).toBe(true);
  for(const axis of law.deniedAxes){const bad={...law,grant:{...law.grant}};delete bad.grant[axis];expect(valid(bad)).toBe(false);}expect(valid({...law,grant:{...law.grant,inferred:64}})).toBe(false);
  const db=new HistoryOutputDatabase(":memory:");try{db.run("CREATE TABLE receipt(items INTEGER,copy INTEGER,born INTEGER,freed INTEGER,CHECK(items<=65536 AND copy<=65536 AND born<=65536 AND freed<=65536))");db.run("INSERT INTO receipt VALUES(?,?,?,?)",[1,new TextEncoder().encode(law.source).length,law.birthBytes,law.beforeBytes]);expect(db.query("SELECT items AS copiedItems,copy AS copiedBytes,born AS retainedCapacityBytes,freed AS releasedBytes FROM receipt").get()).toEqual(law.receipt);expect(db.query("SELECT born-freed AS delta FROM receipt").get()).toEqual({delta:32});}finally{db.close();}
- const tokens=await sourceTokens(join(store,"🦀️.rs"),"ArtifactEnvelopeDecodeAuthority::release_step");expect(containsTokens(tokens,["cx",".","retained_grant","(",")"])).toBe(true);expect(containsTokens(tokens,["cx",".","consume_retained","(","progress",")"])).toBe(true);expect(tokens.includes("artifact_retirement_self_grant")).toBe(false);expect(tokens.includes("record_close_grant")).toBe(false);
+ const authority=join(store,"📦️codec/🧬️owned-schema/📄️decode-page-state-and-authority/🦀️.rs"),release=await sourceTokens(authority,"ArtifactEnvelopeDecodeAuthority::release_step"),tokens=await sourceTokens(authority,"ArtifactEnvelopeDecodeAuthority::close_step");expect(containsTokens(release,["InteractiveJob","::","close_step","(","self",",","cx",")"])).toBe(true);expect(containsTokens(tokens,["cx",".","retained_grant","(",")"])).toBe(true);expect(containsTokens(tokens,["cx",".","consume_retained","(","step",".","progress","(",")",")"])).toBe(true);expect(tokens.includes("artifact_retirement_self_grant")).toBe(false);expect(tokens.includes("record_close_grant")).toBe(false);
  await Parser.init();const parser=new Parser();parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json",root)),"out/tree-sitter-rust.wasm")));const tree=parser.parse(readModuleTreeSource(join(store,"🧪️tests/🌴️bin-06/🔬️unit/🦀️.rs")));
  try{const visit=(node:Parser.SyntaxNode):Parser.SyntaxNode[]=>[node,...node.namedChildren.flatMap(visit)];const functions=tree.rootNode.namedChildren.filter(node=>node.type==="function_item"&&node.childForFieldName("name")?.text===law.nativeLaw);expect(functions.length).toBe(1);const original=functions[0]!;expect(original.hasError()).toBe(false);const errors=visit(tree.rootNode).filter(node=>node.type==="ERROR"||node.isMissing());for(const error of errors){expect(error.text).toBe("async");expect(error.endIndex<=original.startIndex||error.startIndex>=original.endIndex).toBe(true);}const native=rustTokens(original);expect(containsTokens(native,["job",".","step","(","&","mut","cx",")"])).toBe(true);expect(containsTokens(native,["cx",".","retained_progress","(",")"])).toBe(true);}finally{tree.delete();parser.delete();}
 });

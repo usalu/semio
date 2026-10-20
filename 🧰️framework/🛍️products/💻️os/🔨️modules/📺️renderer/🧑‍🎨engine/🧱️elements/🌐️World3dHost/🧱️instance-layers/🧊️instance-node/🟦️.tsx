@@ -90,7 +90,7 @@ export const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
   /** 🖱️➡️ When true, pointer-down on an already-selected face starts a push/pull drag instead of falling through to selection/orbit. */
   readonly faceDragActive?: boolean;
   readonly onFaceDragStart?: (args: { objectId: string; faceId: number; normal: readonly [number, number, number]; point: readonly [number, number, number]; faceExtent?: readonly [number, number] }) => void;
-  /** Live marquee-drag merged selection state for this instance; undefined when no drag is in progress. */
+  /** 👻️ Live marquee-drag merged selection state for this instance; undefined when no drag is in progress. */
   readonly previewInstanceSelected?: boolean;
   readonly environmentMaterial?: WorldEnvironmentMaterialRecord;
   readonly environmentShadowEnabled?: boolean;

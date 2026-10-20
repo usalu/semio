@@ -7,7 +7,8 @@
         "command": "bun ./📜️script.ts verify native"
       },
       "executor": "repo:script",
-      "cache": true
+      "cache": true,
+      "outputs": []
     },
     "verify-source": {
       "options": {
@@ -15,7 +16,8 @@
         "command": "bun ./📜️script.ts verify source"
       },
       "executor": "repo:script",
-      "cache": true
+      "cache": true,
+      "outputs": []
     }
   },
   "tags": [

@@ -11,7 +11,7 @@ fn preview_eval_run_fixture_json() -> &'static str { repo_text!("✏️s/🔌️
 fn the_release_hop_emits_the_declared_kernel_release_through_the_command_row() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let fixture: serde_json::Value = serde_json::from_str(preview_eval_run_fixture_json()).expect("fixture");
-    let snapshot = semio_s_artifact_procedural_3d_model::default_snapshot();
+    let snapshot = semio_s_artifact_procedural_3d_io_text::snapshot::default_snapshot();
     let config = Generation3dConfig::default();
     let history = empty_history_view();
     let doc = ArtifactView::new(&snapshot, &history);

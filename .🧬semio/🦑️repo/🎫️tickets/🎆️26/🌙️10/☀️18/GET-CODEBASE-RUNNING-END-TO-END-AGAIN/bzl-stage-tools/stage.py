@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import hashlib, json, os, subprocess, sys, tempfile
+import difflib, hashlib, json, os, shutil, subprocess, sys, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 STAGED = os.path.join(HERE, "staged")
@@ -78,32 +78,130 @@ def cmd_bases():
     print(json.dumps(data, indent=1))
 
 
-def rebased(name):
-    with tempfile.TemporaryDirectory() as scratch:
-        diff = subprocess.run(["diff", "-u", os.path.join(BASE, name), os.path.join(STAGED, name)], capture_output=True)
-        if diff.returncode == 0:
-            return read(absolute(TARGET[name]))
-        patch_file = os.path.join(scratch, "change.diff")
-        with open(patch_file, "wb") as handle:
-            handle.write(diff.stdout)
-        out = os.path.join(scratch, "out")
-        result = subprocess.run(["patch", "-s", "--no-backup-if-mismatch", "-o", out, absolute(TARGET[name]), patch_file], capture_output=True, text=True)
-        if result.returncode != 0:
-            raise SystemExit("cannot rebase %s onto the current file: %s" % (name, (result.stdout + result.stderr)[:300]))
-        return read(out)
+def hunks(base_text, edit_text):
+    base_lines = base_text.splitlines(keepends=True)
+    edit_lines = edit_text.splitlines(keepends=True)
+    offsets = [0]
+    for line in base_lines:
+        offsets.append(offsets[-1] + len(line))
+    found = []
+    for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, base_lines, edit_lines, autojunk=False).get_opcodes():
+        if tag == "equal":
+            continue
+        start, stop = offsets[i1], offsets[i2]
+        old, new = base_text[start:stop], "".join(edit_lines[j1:j2])
+        prefix, limit = 0, min(len(old), len(new))
+        while prefix < limit and old[prefix] == new[prefix]:
+            prefix += 1
+        suffix = 0
+        while suffix < limit - prefix and old[len(old) - 1 - suffix] == new[len(new) - 1 - suffix]:
+            suffix += 1
+        found.append((start + prefix, stop - suffix, new[prefix:len(new) - suffix]))
+    return found
+
+
+def apply_ops(text, ops, name):
+    for index, (anchor, replacement) in enumerate(ops):
+        found, done = text.count(anchor), text.count(replacement)
+        if done == 1 and (found == 0 or anchor in replacement):
+            continue
+        if found == 1 and done == 0:
+            text = text.replace(anchor, replacement)
+            continue
+        raise SystemExit("anchor %s[%d] occurs %d times and its replacement %d times (expected one of them exactly once): %s" % (name, index, found, done, anchor[:90].replace("\n", "\\n")))
+    return text
+
+
+def anchored_ops(base_text, edit_text):
+    for pad in (0, 24, 48, 96, 192, 400):
+        ops = []
+        for start, stop, new in hunks(base_text, edit_text):
+            left = right = pad
+            while True:
+                anchor = base_text[max(0, start - left):min(len(base_text), stop + right)]
+                if anchor and base_text.count(anchor) == 1:
+                    break
+                left += 12
+                right += 12
+            ops.append((anchor, base_text[max(0, start - left):start] + new + base_text[stop:min(len(base_text), stop + right)]))
+        try:
+            if apply_ops(base_text, ops, "derived") == edit_text:
+                return ops
+        except SystemExit:
+            continue
+    raise SystemExit("no anchored ops reproduce the staged text")
+
+
+def ops_of(name):
+    return anchored_ops(read(os.path.join(BASE, name)).decode("utf-8"), staged(name).decode("utf-8"))
+
+
+def merge3(mine, original, yours):
+    folder = tempfile.mkdtemp(prefix="bzl-merge-")
+    try:
+        names = []
+        for label, text in (("mine", mine), ("original", original), ("yours", yours)):
+            names.append(os.path.join(folder, label))
+            with open(names[-1], "w", encoding="utf-8") as handle:
+                handle.write(text)
+        run = subprocess.run(["diff3", "-m"] + names, capture_output=True)
+        return run.stdout.decode("utf-8") if run.returncode == 0 else None
+    finally:
+        shutil.rmtree(folder, ignore_errors=True)
+
+
+def exact_replay(mine, original, yours):
+    try:
+        return apply_ops(mine, anchored_ops(original, yours), "replay")
+    except SystemExit:
+        return None
+
+
+def cmd_restage(tree):
+    tree = os.path.abspath(tree)
+    results, unresolved = {}, []
+    for name, path in TARGET.items():
+        mirrored = os.path.join(tree, path)
+        marker = os.path.join(tree, ".materialized.json")
+        gone = set(json.load(open(marker, encoding="utf-8"))["deleted"]) if os.path.isfile(marker) else set()
+        mine = read(mirrored) if os.path.isfile(mirrored) else (None if path in gone else (read(absolute(path)) if os.path.isfile(absolute(path)) else None))
+        if mine is None:
+            raise SystemExit("restage %s: target %s exists neither in the tree nor live" % (name, path))
+        original, yours = read(os.path.join(BASE, name)).decode("utf-8"), staged(name).decode("utf-8")
+        merged = yours if mine.decode("utf-8") == original else exact_replay(mine.decode("utf-8"), original, yours) or merge3(mine.decode("utf-8"), original, yours)
+        resolved = os.path.join(HERE, "resolved", name + ".txt")
+        if merged is None and os.path.isfile(resolved):
+            merged = read(resolved).decode("utf-8")
+            print("hand-resolved:", name)
+        if merged is None:
+            unresolved.append(name)
+            continue
+        results[name] = (mine, merged)
+    if unresolved:
+        for name in unresolved:
+            print("unresolved (the predecessor changed the same lines; write the intended final text to resolved/%s.txt): %s" % (name, name))
+        raise SystemExit(3)
+    bases = {}
+    for name, (mine, merged) in results.items():
+        anchored_ops(mine.decode("utf-8"), merged)
+        for folder, text in ((BASE, mine), (STAGED, merged.encode("utf-8"))):
+            with open(os.path.join(folder, name), "wb") as handle:
+                handle.write(text)
+        bases[name] = sha(mine)
+    json.dump(bases, open(bases_path(), "w"), indent=1)
+    print("restaged", len(bases), "targets on", tree)
 
 
 def result_texts(strict):
     bases = json.load(open(bases_path()))
     out = {}
     for name, path in TARGET.items():
+        if not os.path.isfile(absolute(path)):
+            raise SystemExit("target missing: %s (restage on top of the predecessor first)" % path)
         current = read(absolute(path))
-        if sha(current) == bases[name]:
-            out[name] = staged(name)
-        elif strict:
-            raise SystemExit("target changed since staging: %s (rerun with --rebase to apply the staged diff onto the current file)" % path)
-        else:
-            out[name] = rebased(name)
+        if sha(current) != bases[name] and strict:
+            raise SystemExit("target changed since staging: %s (restage against the planner's materialized predecessor tree, or pass --rebase for an explicit anchored rebase)" % path)
+        out[name] = apply_ops(current.decode("utf-8"), ops_of(name), name).encode("utf-8")
     return out
 
 
@@ -116,9 +214,9 @@ def sync_running():
         if not words or str(os.getpid()) == pid:
             continue
         executable = os.path.basename(words[0])
-        if executable == "bun" and "dependencies sync" in command:
+        if executable == "bun" and ("dependencies sync" in command or "dependencies lock" in command):
             found.append(line)
-        elif executable in ("sh", "bash", "zsh") and any(name in command for name in ("deps4-run.sh", "deps4-loop.sh")) and "-c" not in words[1:2]:
+        elif executable in ("sh", "bash", "zsh") and any(name in command for name in ("deps4-run.sh", "deps4-loop.sh", "deps4-loop2.sh")) and "-c" not in words[1:2]:
             found.append(line)
     return found
 
@@ -222,10 +320,18 @@ def cmd_mirror(args):
     print("mirror", mirror)
 
 
+FLAGS = {"--dry-run", "--ignore-sync", "--rebase", "--overwrite-new", "--base"}
+
+
 if __name__ == "__main__":
     command = sys.argv[1] if len(sys.argv) > 1 else ""
+    unknown = [word for index, word in enumerate(sys.argv[2:], 2) if word.startswith("-") and word not in FLAGS and sys.argv[index - 1] not in ("--copy", "--copy-list")]
+    if unknown:
+        raise SystemExit("refusing unknown flag(s) " + " ".join(unknown))
     if command == "bases":
         cmd_bases()
+    elif command == "restage":
+        cmd_restage(sys.argv[2])
     elif command == "check":
         cmd_check("--rebase" not in sys.argv)
     elif command == "apply":
@@ -233,4 +339,4 @@ if __name__ == "__main__":
     elif command == "mirror":
         cmd_mirror(sys.argv[2:])
     else:
-        raise SystemExit("usage: stage.py bases|check [--rebase]|apply [--dry-run] [--rebase] [--ignore-sync] [--overwrite-new]|mirror DIR [--base] [--rebase] [--copy RELATIVE_DIR]...")
+        raise SystemExit("usage: stage.py bases|restage TREE|check [--rebase]|apply [--dry-run] [--rebase] [--ignore-sync] [--overwrite-new]|mirror DIR [--base] [--rebase] [--copy RELATIVE_DIR]...")

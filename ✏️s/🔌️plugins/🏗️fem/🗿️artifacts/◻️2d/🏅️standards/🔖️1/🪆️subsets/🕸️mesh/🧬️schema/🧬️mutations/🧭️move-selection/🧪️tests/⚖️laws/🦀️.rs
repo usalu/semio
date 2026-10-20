@@ -2,9 +2,7 @@
 //! ⚖️ The laws every committed `move-selection` scenario holds, written once beside the leaf's scenarios and called
 
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
-use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::inverse_fem2d_mutation;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use semio_s_artifact_fem_2d_mutations::central_apply::apply_fem2d_mutation;
 
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
@@ -22,7 +20,7 @@ fn value(text: &str) -> semio_framework_value::DslValue {
 
 fn applied(base: &Fem2dSnapshot, operation: &Fem2dMutation) -> Fem2dSnapshot {
     let mut snapshot = base.clone();
-    apply_fem2d_mutation(&mut snapshot, operation).expect("the leaf applies");
+    snapshot = protocol::apply_mutation(&snapshot, operation).expect("the leaf applies").0;
     snapshot
 }
 
@@ -49,7 +47,7 @@ pub fn decoded_mutation(text: &str) -> Fem2dMutation {
 /// ↩️ The inverse restores `before` exactly, one whole-record replacement per moved node and region.
 pub fn inverse_restores(before: &str, operation: &str) {
     let (base, operation) = (snapshot(before), mutation(operation));
-    let inverse = inverse_fem2d_mutation(&base, &operation).expect("valid retained mutation inverse fixture");
+    let inverse = protocol::Mutation::inverse(&operation, &base).expect("valid retained mutation inverse fixture");
     let moved = applied(&base, &operation);
     let changed = moved.nodes.iter().filter(|node| !base.nodes.contains(node)).count() + moved.regions.iter().filter(|region| !base.regions.contains(region)).count();
     assert_eq!(inverse.len(), changed, "one inverse step per moved record: {inverse:?}");
@@ -92,7 +90,7 @@ pub fn refusal(before: &str, operation: &str, after: &str, outcome: &str) {
         }
         other => panic!("a refusal vector declares rejected or no-op, not {other:?}"),
     }
-    assert!(inverse_fem2d_mutation(&base, &operation).expect("valid retained mutation inverse fixture").is_empty(), "nothing moved, nothing to restore");
+    assert!(protocol::Mutation::inverse(&operation, &base).expect("valid retained mutation inverse fixture").is_empty(), "nothing moved, nothing to restore");
 }
 
 /// 🔣️ Every committed JSON file is canonical: decode→encode is a fixed point.

@@ -1,0 +1,37 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🎤️presentation/🧪️tests/🔍️figure-scroll-and-zoom-rendering/🟦️.tsx",
+ "describeLine": 9,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of the PresentationDeck suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️resolvepresentationasseturl-maps-deck-re",
+   "doc": "/** 🔶️ The resolvepresentationasseturl maps deck relative tests of the PresentationDeck suite. */",
+   "name": "registerResolvepresentationasseturlMapsDeckRelativeTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the resolvepresentationasseturl maps deck relative tests of the PresentationDeck suite.",
+   "from": 10,
+   "to": 122
+  },
+  {
+   "dir": "🔸️renders-clipped-crop-figures",
+   "doc": "/** 🔸️ The renders clipped crop figures tests of the PresentationDeck suite. */",
+   "name": "registerRendersClippedCropFiguresTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the renders clipped crop figures tests of the PresentationDeck suite.",
+   "from": 142,
+   "to": 279
+  },
+  {
+   "dir": "🟠️sets-revealmorphfrommorphtoframe-previou",
+   "doc": "/** 🟠️ The sets revealmorphfrommorphtoframe previous slide tests of the PresentationDeck suite. */",
+   "name": "registerSetsRevealmorphfrommorphtoframePreviousSlideTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the sets revealmorphfrommorphtoframe previous slide tests of the PresentationDeck suite.",
+   "from": 288,
+   "to": 336
+  }
+ ]
+}

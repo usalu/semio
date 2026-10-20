@@ -17,7 +17,6 @@ use semio_s_artifact_layout_layout_engine_json::TypedJsonCursor;
 use semio_s_artifact_layout_layout_engine_json::TypedJsonNode;
 use semio_s_artifact_layout_layout_engine_json::finite_json_number;
 use semio_s_artifact_layout_layout_engine_json::frame_bounds;
-use semio_s_artifact_layout_layout_engine_json::integer_json_scalar;
 use semio_s_artifact_layout_layout_engine_json::typed_json_node_owned_bytes;
 use semio_s_artifact_layout_layout_model::{Frame, GridSettings, LayoutBounds, Page, PageOverride};
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;

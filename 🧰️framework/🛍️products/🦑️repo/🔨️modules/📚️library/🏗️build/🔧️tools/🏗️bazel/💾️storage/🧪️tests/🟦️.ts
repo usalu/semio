@@ -38,31 +38,32 @@ test("the disk cache bound is the authored share of the products budget against 
 });
 
 test("generated Bazel cache flags agree with the fixture, the closed schema and an independent hash oracle",()=>{
- const layout=layoutOf(),validate=new Ajv({strict:true}).compile({definitions:{CacheFlags:componentSchema.definitions.CacheFlags},$ref:"#/definitions/CacheFlags"}),environment=new Ajv({strict:true}).compile(componentSchema.definitions.CacheEnvironment),workspace=cache.workspaces[0]!.workspace;
+ const layout=layoutOf(),validate=new Ajv({strict:true}).compile({definitions:{CacheFlags:componentSchema.definitions.CacheFlags},$ref:"#/definitions/CacheFlags"}),workspace=cache.workspaces[0]!.workspace,helperPath=join(layout.temporary,"remote-cache-credentials."+(process.platform==="win32"?"cmd":"sh"));
  for(const row of cache.workspaces)expect(bazelServerBaseV1(layout,row.workspace)).toBe(join(layout.server,createHash("sha256").update(row.workspace).digest("hex").slice(0,16))),expect(bazelServerBaseV1(layout,row.workspace)).toBe(join(layout.server,row.sha256Prefix));
  expect(bazelServerBaseV1(layout,cache.workspaces[0]!.workspace)).not.toBe(bazelServerBaseV1(layout,cache.workspaces[1]!.workspace));
  expect(()=>bazelServerBaseV1(layout,"relative")).toThrow("Absolute");
  for(const row of cache.accepted){
   const options={environment:row.environment,skipCache:(row as {skipCache?:boolean}).skipCache,skipRemoteCache:(row as {skipRemoteCache?:boolean}).skipRemoteCache},flags=bazelCacheFlagsV1(layout,workspace,options);
-  expect(validate(flags),row.name+JSON.stringify(validate.errors)).toBe(true);expect(environment(Object.fromEntries(Object.entries(row.environment).filter(([,value])=>value!==""))),row.name).toBe(true);
-  expect(flags.command,row.name).toEqual(row.command.map(flag=>flag.replace("{actions}",layout.actions)));expect(flags.remote,row.name).toBe(row.remote);expect(flags.startup).toEqual(["--output_base="+bazelServerBaseV1(layout,workspace)]);
+  expect(validate(flags),row.name+JSON.stringify(validate.errors)).toBe(true);
+  expect(flags.command,row.name).toEqual(row.command.map(flag=>flag.replace("{actions}",layout.actions).replace("{helper}",helperPath)));expect(flags.remote,row.name).toBe(row.remote);expect(flags.startup).toEqual(["--output_base="+bazelServerBaseV1(layout,workspace)]);
+  expect(flags.environment,row.name).toEqual(row.tokenEnvironment);expect(flags.helper?.path,row.name).toBe(row.helper?helperPath:undefined);
   expect(flags.command.some(flag=>flag.startsWith("--remote_cache=")),row.name).toBe(row.remote);
+  expect(JSON.stringify(flags.command)+JSON.stringify(flags.helper??{}),row.name+" keeps the token out of flags and helper").not.toContain("tok-123");
  }
- for(const row of cache.refused)expect(()=>bazelCacheFlagsV1(layout,workspace,{environment:row.environment}),row.name).toThrow("Closed Bazel remote cache environment");
+ for(const row of cache.refused)expect(()=>bazelCacheFlagsV1(layout,workspace,{environment:row.environment}),row.name).toThrow(row.message);
  expect(bazelCacheFlagsV1(layout,workspace,{environment:{PATH:"/usr/bin",HOME:"/home/x"}}).remote).toBe(false);
 });
 
 test("the repository .bazelrc carries exactly the authored static cache policy and no host paths",()=>{
  const text=readFileSync(join(process.cwd(),".bazelrc"),"utf8"),lines=text.split(/\r?\n/u).filter(Boolean),database=new Database(":memory:");
  try{
-  const idle=cachePolicy.diskCache.garbageCollectionIdleDelaySeconds,age=cachePolicy.diskCache.garbageCollectionMaximumAgeDays,repositoryAge=cachePolicy.repositoryContents.garbageCollectionMaximumAgeDays,remote=cachePolicy.remote,
-   rows=database.query("SELECT printf('build --experimental_disk_cache_gc_idle_delay=%ds',?1) AS line UNION ALL SELECT printf('build --experimental_disk_cache_gc_max_age=%dd',?2) UNION ALL SELECT printf('build --repo_contents_cache_gc_max_age=%dd',?3) UNION ALL SELECT 'build --remote_cache_compression' WHERE ?4 UNION ALL SELECT printf('build --remote_timeout=%ds',?5) UNION ALL SELECT printf('build --remote_retries=%d',?6)").all(idle,age,repositoryAge,remote.compression?1:0,remote.timeoutSeconds,remote.retries) as {line:string}[];
-  expect(rows.map(row=>row.line)).toEqual(cache.bazelrc);for(const line of cache.bazelrc)expect(lines).toContain(line);
+  const idle=cachePolicy.diskCache.garbageCollectionIdleDelaySeconds,age=cachePolicy.diskCache.garbageCollectionMaximumAgeDays,repositoryAge=cachePolicy.repositoryContents.garbageCollectionMaximumAgeDays,
+   rows=database.query("SELECT printf('build --experimental_disk_cache_gc_idle_delay=%ds',?1) AS line UNION ALL SELECT printf('build --experimental_disk_cache_gc_max_age=%dd',?2) UNION ALL SELECT printf('build --repo_contents_cache_gc_max_age=%dd',?3)").all(idle,age,repositoryAge) as {line:string}[];
+  expect(rows.map(row=>row.line)).toEqual(cache.bazelrc);for(const line of cache.bazelrc)expect(lines).toContain(line);expect(text,"remote cache flags come only from the neutral contract").not.toMatch(/remote_/u);
  }finally{database.close();}
  for(const line of lines){expect(line).toMatch(/^(common|build) --[a-z_]+(=\S+)?$/u);expect(line).not.toMatch(/--(disk_cache|output_base|output_user_root|repository_cache|remote_cache)=/u);expect(line).not.toMatch(/=(\/|[A-Za-z]:[\\/]|~)/u);expect(line).not.toContain("symlink_prefix");expect(line).not.toContain("/Users/");}
  expect(cachePolicy.diskCache.garbageCollectionIdleDelaySeconds+cachePolicy.diskCache.garbageCollectionWindowSeconds).toBeLessThanOrEqual(componentSchema.definitions.Policy.const.serverIdleSeconds);
  expect(cache.serverIdleSeconds).toBe(componentSchema.definitions.Policy.const.serverIdleSeconds);
- for(const name of [cachePolicy.remote.endpointEnvironment,cachePolicy.remote.uploadEnvironment,cachePolicy.remote.credentialHelperEnvironment])expect(Object.keys(componentSchema.definitions.CacheEnvironment.properties)).toContain(name);
 });
 
 test.skipIf(!process.env.SEMIO_TEST_BAZEL_BINARY)("the provisioned Bazel binary accepts every generated and static cache flag",()=>{
@@ -70,26 +71,26 @@ test.skipIf(!process.env.SEMIO_TEST_BAZEL_BINARY)("the provisioned Bazel binary 
  try{
   mkdirSync(workspace);writeFileSync(join(workspace,"MODULE.bazel"),'module(name="flags")\n');writeFileSync(join(workspace,"BUILD.bazel"),'genrule(name="x",outs=["x.txt"],cmd="echo x > $@")\n');
   for(const row of cache.accepted){
-   const helper=join(directory,"helper.sh"),environment={...row.environment,...(row.environment.SEMIO_BAZEL_REMOTE_CACHE_CREDENTIAL_HELPER?{SEMIO_BAZEL_REMOTE_CACHE_CREDENTIAL_HELPER:helper}:{})};if(environment.SEMIO_BAZEL_REMOTE_CACHE_CREDENTIAL_HELPER){if(process.platform==="win32")continue;writeFileSync(helper,"#!/bin/sh\necho '{}'\n",{mode:0o755});}
-   const flags=bazelCacheFlagsV1(layout,workspace,{environment,skipCache:(row as {skipCache?:boolean}).skipCache}),result=spawnSync(binary,["--batch",`--output_user_root=${join(directory,"root")}`,`--install_base=${join(directory,"install")}`,...flags.startup,"--nosystem_rc","--nohome_rc","--noworkspace_rc",`--bazelrc=${join(process.cwd(),".bazelrc")}`,"build","--nobuild","--lockfile_mode=off","--incompatible_autoload_externally=",...flags.command,"//:x"],{cwd:workspace,encoding:"utf8",timeout:240000});
+   const flags=bazelCacheFlagsV1(layout,workspace,{environment:row.environment,skipCache:(row as {skipCache?:boolean}).skipCache});if(flags.helper){if(process.platform==="win32")continue;mkdirSync(layout.temporary,{recursive:true});writeFileSync(flags.helper.path,flags.helper.content,{mode:flags.helper.mode});}
+   const result=spawnSync(binary,["--batch",`--output_user_root=${join(directory,"root")}`,`--install_base=${join(directory,"install")}`,...flags.startup,"--nosystem_rc","--nohome_rc","--noworkspace_rc",`--bazelrc=${join(process.cwd(),".bazelrc")}`,"build","--nobuild","--lockfile_mode=off","--incompatible_autoload_externally=",...flags.command,"//:x"],{cwd:workspace,encoding:"utf8",timeout:240000});
    expect(result.status,row.name+"\n"+result.stderr).toBe(0);
   }
  }finally{rmSync(directory,{recursive:true,force:true});}
 },600000);
 
-test("Bazel host paths must be ASCII on macOS only, against an independent Python regex",()=>{
+test("Bazel host paths must be ASCII on macOS (install, outputs, server) and on Linux (install), against an independent Python regex",()=>{
  const policy=componentSchema.definitions.HostPaths.const,python=Bun.which("python3");
- expect(new Ajv({strict:true}).compile(componentSchema.definitions.HostPathPolicy)(policy)).toBe(true);expect(Object.keys(policy.platforms)).toEqual(["darwin"]);
+ expect(new Ajv({strict:true}).compile(componentSchema.definitions.HostPathPolicy)(policy)).toBe(true);expect(Object.keys(policy.platforms)).toEqual(["darwin","linux"]);
  for(const row of fixture.hostPaths){
   const check=()=>requireBazelHostPathsV1(row.platform,{...row.layout,modules:"/m"});
   if(row.accepted)expect(check,row.name).not.toThrow();else expect(check,row.name).toThrow(`ASCII Bazel host path required on ${row.platform}`);
  }
  if(python){
-  const darwin=fixture.hostPaths.filter(row=>row.platform==="darwin"),result=Bun.spawnSync([python,"-I","-c","import json,re,sys\npattern,rows=json.loads(sys.stdin.read())\nprint(json.dumps([all(re.fullmatch(pattern,path) is not None for path in paths) for paths in rows]))"],{stdin:new TextEncoder().encode(JSON.stringify([policy.platforms.darwin.pattern,darwin.map(row=>policy.guarded.map(key=>(row.layout as Record<string,string>)[key]))])),stdout:"pipe",stderr:"pipe"});
-  expect(result.exitCode,result.stderr.toString()).toBe(0);expect(JSON.parse(result.stdout.toString())).toEqual(darwin.map(row=>row.accepted));
+  const rules=policy.platforms as Record<string,{pattern:string;guarded?:string[]}>,rows=fixture.hostPaths.filter(row=>row.platform in rules),result=Bun.spawnSync([python,"-I","-c","import json,re,sys\nrules,rows=json.loads(sys.stdin.read())\nprint(json.dumps([all(re.fullmatch(rules[name],path) is not None for path in paths) for name,paths in rows]))"],{stdin:new TextEncoder().encode(JSON.stringify([Object.fromEntries(Object.entries(rules).map(([name,rule])=>[name,rule.pattern])),rows.map(row=>[row.platform,(rules[row.platform]!.guarded??policy.guarded).map(key=>(row.layout as Record<string,string>)[key])])])),stdout:"pipe",stderr:"pipe"});
+  expect(result.exitCode,result.stderr.toString()).toBe(0);expect(JSON.parse(result.stdout.toString())).toEqual(rows.map(row=>row.accepted));
  }
  const roots={tools:resolve(fixture.roots.tools),dependencies:resolve(fixture.roots.dependencies),products:resolve(fixture.roots.products)},emoji={...roots,tools:join(roots.tools,"\u{1F9F0}\uFE0F")};
- if(process.platform==="darwin")expect(()=>bazelCacheLayoutV1(emoji)).toThrow("ASCII Bazel host path required");else expect(bazelCacheLayoutV1(emoji).install).toContain("\u{1F9F0}");
+ if(process.platform==="darwin"||process.platform==="linux")expect(()=>bazelCacheLayoutV1(emoji)).toThrow("ASCII Bazel host path required");else expect(bazelCacheLayoutV1(emoji).install).toContain("\u{1F9F0}");
  const emojiProducts={...roots,products:join(roots.products,"\u{1F9F0}\uFE0F")};
  expect(policy.guarded).toEqual(["install","outputs","server"]);
  if(process.platform==="darwin")expect(()=>bazelCacheLayoutV1(emojiProducts)).toThrow("ASCII Bazel host path required on darwin: outputs");else expect(bazelServerBaseV1(bazelCacheLayoutV1(emojiProducts),"/w")).toContain("\u{1F9F0}");

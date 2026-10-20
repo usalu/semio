@@ -22,6 +22,7 @@ semio-s-artifact-remodel-remodeling-orbit-q1 = { workspace = true }
 semio-s-artifact-remodel-remodeling-orbit-q2 = { workspace = true }
 semio-s-artifact-remodel-remodeling-orbit-q3 = { workspace = true }
 semio-s-artifact-remodel-remodeling-orbit-q4 = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
 
 [dev-dependencies]
 pack = { workspace = true }

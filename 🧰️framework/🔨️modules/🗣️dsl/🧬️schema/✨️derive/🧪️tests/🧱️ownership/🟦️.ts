@@ -26,7 +26,7 @@ test("generic derivation native commands survive product removal", async () => {
   } }] });
   expect(Object.keys(bundled.metafile!.inputs).length).toBeGreaterThan(1);
   expect(Object.keys(bundled.metafile!.inputs).every(path => ["🧰️framework/🔨️modules/","🧰️framework/📦️packages/"].some(root => path.startsWith(root)))).toBe(true);
-  const source = read(absence.entry);
+  const source = read(absence.commands);
   for (const name of [...absence.packages, ...absence.laws]) expect(source).toContain(name);
 });
 

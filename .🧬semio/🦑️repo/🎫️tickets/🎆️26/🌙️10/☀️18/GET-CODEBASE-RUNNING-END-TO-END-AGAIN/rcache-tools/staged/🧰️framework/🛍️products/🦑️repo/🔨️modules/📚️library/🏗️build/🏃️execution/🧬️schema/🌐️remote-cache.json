@@ -1,0 +1,188 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Repository Remote Cache Contract",
+  "description": "🌐️ The one tool-neutral description of a shared remote task cache. Every build implementation renders the same resolved contract into its own switches: Bazel into --remote_cache and friends, Nx into its self-hosted remote cache environment. The contract holds no secret: the access token is read at run time from the environment variable the contract names and is never written to disk by the repository.",
+  "oneOf": [
+    { "$ref": "#/definitions/Contract" },
+    { "$ref": "#/definitions/Policy" },
+    { "$ref": "#/definitions/Status" }
+  ],
+  "definitions": {
+    "Endpoint": {
+      "description": "Origin of the cache server: http or https, host, optional port; no credentials, path, query or fragment. HTTP is the one protocol Bazel and Nx both speak.",
+      "type": "string",
+      "pattern": "^https?://(\\[[0-9A-Fa-f:]+\\]|[A-Za-z0-9]([A-Za-z0-9.-]{0,251}[A-Za-z0-9])?)(:[0-9]{1,5})?$",
+      "maxLength": 270
+    },
+    "Instance": {
+      "description": "Namespace inside one server. It travels as the first URL path segment, so two repositories or two trust levels never share entries. The words the protocols use as routes are reserved.",
+      "type": "string",
+      "pattern": "^(?!(?:ac|cas|v1|healthz|status)$)[a-z0-9][a-z0-9._-]{0,63}$"
+    },
+    "Access": {
+      "description": "What the credentials of this client may do. read-only never pushes, whatever the upload switch says.",
+      "enum": ["read-only", "read-write"]
+    },
+    "Download": {
+      "description": "Which outputs a build fetches from the cache: minimal only what a later action needs, toplevel the outputs of the requested targets, all every output. Nx always fetches everything; Bazel's task adapter restores the snapshots of the requested targets and therefore refuses minimal.",
+      "enum": ["minimal", "toplevel", "all"]
+    },
+    "EnvironmentName": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]{0,63}$"
+    },
+    "Token": {
+      "description": "A bearer token value: URL-safe characters only, so no shell, JSON or header quoting is ever needed.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._~+/=-]{1,4096}$"
+    },
+    "Contract": {
+      "description": "The resolved contract of one enabled remote cache.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "endpoint", "instance", "access", "upload", "compression", "download", "timeoutSeconds", "retries", "auth"],
+      "properties": {
+        "version": { "const": 1 },
+        "endpoint": { "$ref": "#/definitions/Endpoint" },
+        "instance": { "$ref": "#/definitions/Instance" },
+        "access": { "$ref": "#/definitions/Access" },
+        "upload": { "description": "Whether this machine pushes the results it computed locally; they only leave the machine when access is read-write too.", "type": "boolean" },
+        "compression": { "description": "Whether blobs travel compressed where the tool supports it.", "type": "boolean" },
+        "download": { "$ref": "#/definitions/Download" },
+        "timeoutSeconds": { "type": "integer", "minimum": 1, "maximum": 600 },
+        "retries": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "auth": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["tokenEnvironment"],
+          "properties": {
+            "tokenEnvironment": { "$ref": "#/definitions/EnvironmentName" }
+          }
+        }
+      }
+    },
+    "Defaults": {
+      "description": "The committed defaults: no endpoint (the remote cache is off), read-only, and a conservative transport.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["endpoint", "instance", "access", "upload", "compression", "download", "timeoutSeconds", "retries", "tokenEnvironment"],
+      "properties": {
+        "endpoint": { "oneOf": [{ "$ref": "#/definitions/Endpoint" }, { "const": null }] },
+        "instance": { "$ref": "#/definitions/Instance" },
+        "access": { "$ref": "#/definitions/Access" },
+        "upload": { "type": "boolean" },
+        "compression": { "type": "boolean" },
+        "download": { "$ref": "#/definitions/Download" },
+        "timeoutSeconds": { "type": "integer", "minimum": 1, "maximum": 600 },
+        "retries": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "tokenEnvironment": { "$ref": "#/definitions/EnvironmentName" }
+      }
+    },
+    "Names": {
+      "description": "The environment variables that override one default each; the access token variable is named by tokenEnvironment.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["endpoint", "instance", "access", "upload", "compression", "download", "timeoutSeconds", "retries", "tokenEnvironment"],
+      "properties": {
+        "endpoint": { "$ref": "#/definitions/EnvironmentName" },
+        "instance": { "$ref": "#/definitions/EnvironmentName" },
+        "access": { "$ref": "#/definitions/EnvironmentName" },
+        "upload": { "$ref": "#/definitions/EnvironmentName" },
+        "compression": { "$ref": "#/definitions/EnvironmentName" },
+        "download": { "$ref": "#/definitions/EnvironmentName" },
+        "timeoutSeconds": { "$ref": "#/definitions/EnvironmentName" },
+        "retries": { "$ref": "#/definitions/EnvironmentName" },
+        "tokenEnvironment": { "$ref": "#/definitions/EnvironmentName" }
+      }
+    },
+    "ServerPolicy": {
+      "description": "The bounds and tokens of the repository's own cache server (bun repo cache serve). The store is finite: it evicts least recently used entries beyond maximumBytes and entries idle for more than maximumAgeDays.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["host", "port", "directory", "maximumBytes", "maximumEntryBytes", "maximumAgeDays", "tokenEnvironment"],
+      "properties": {
+        "host": { "type": "string", "minLength": 1, "maxLength": 253 },
+        "port": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "directory": { "description": "Relative to the workspace root.", "type": "string", "pattern": "^[^\\u0000/\\\\][^\\u0000]*$" },
+        "maximumBytes": { "type": "integer", "minimum": 1048576 },
+        "maximumEntryBytes": { "type": "integer", "minimum": 1024 },
+        "maximumAgeDays": { "type": "integer", "minimum": 0, "maximum": 3650 },
+        "tokenEnvironment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["read", "write"],
+          "properties": {
+            "read": { "$ref": "#/definitions/EnvironmentName" },
+            "write": { "$ref": "#/definitions/EnvironmentName" }
+          }
+        }
+      }
+    },
+    "Policy": {
+      "description": "The authored data in the build policy: which variables override the defaults, the defaults and the server bounds.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "environment", "defaults", "server"],
+      "properties": {
+        "version": { "const": 1 },
+        "environment": { "$ref": "#/definitions/Names" },
+        "defaults": { "$ref": "#/definitions/Defaults" },
+        "server": { "$ref": "#/definitions/ServerPolicy" }
+      }
+    },
+    "Rendering": {
+      "description": "What one build implementation does with the contract. Values that could carry a secret are redacted; unsupported names the contract fields the tool cannot honour.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mechanism", "applied", "unsupported", "uploadEnforcedBy"],
+      "properties": {
+        "mechanism": { "enum": ["bazel-flags", "nx-environment"] },
+        "applied": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "unsupported": { "type": "array", "uniqueItems": true, "items": { "enum": ["compression", "download", "timeoutSeconds", "retries"] } },
+        "uploadEnforcedBy": { "description": "client: the tool itself withholds uploads. server: the tool cannot, so uploads are only prevented by a read-only token on the server. none: uploads are wanted.", "enum": ["client", "server", "none"] }
+      }
+    },
+    "Probe": {
+      "description": "One bounded read-only request against the path the selected tool uses; it stores nothing.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol", "reachable", "authorized", "status", "milliseconds"],
+      "properties": {
+        "protocol": { "enum": ["bazel-http", "nx-self-hosted"] },
+        "reachable": { "type": "boolean" },
+        "authorized": { "type": "boolean" },
+        "status": { "type": ["integer", "null"] },
+        "milliseconds": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "Status": {
+      "description": "What bun repo cache remote status prints.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "tool", "configured", "contract", "effectiveUpload", "token", "rendering", "probe"],
+      "properties": {
+        "version": { "const": 1 },
+        "tool": { "enum": ["nx", "bazel"] },
+        "configured": { "type": "boolean" },
+        "contract": { "oneOf": [{ "$ref": "#/definitions/Contract" }, { "const": null }] },
+        "effectiveUpload": { "type": "boolean" },
+        "token": {
+          "oneOf": [
+            { "const": null },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["environment", "present"],
+              "properties": {
+                "environment": { "$ref": "#/definitions/EnvironmentName" },
+                "present": { "type": "boolean" }
+              }
+            }
+          ]
+        },
+        "rendering": { "oneOf": [{ "$ref": "#/definitions/Rendering" }, { "const": null }] },
+        "probe": { "oneOf": [{ "$ref": "#/definitions/Probe" }, { "const": null }] }
+      }
+    }
+  }
+}

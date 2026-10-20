@@ -5,23 +5,23 @@ import { normWireArray, normWireDefault, normWireInteger, normWireNullable, norm
 import { type AnnexChoice, type CompositeBeam, type CompositeColumn, type CompositeSlab, parseAnnexChoice, parseCompositeBeam, parseCompositeColumn, parseCompositeSlab } from "../📸️snapshot/🟦️.ts";
 
 export interface En1994Diff {
-  /** @state artifact */
+  /** 📑️ @state artifact */
   annex: AnnexChoice | null;
-  /** @state artifact */
+  /** 🏗️ @state artifact */
   structureKind: string | null;
-  /** @state artifact */
+  /** 🧱️ @state artifact */
   steelFYPa: number | null;
-  /** @state artifact */
+  /** 🪵️ @state artifact */
   beams: En1994BeamsRows | null;
-  /** @state artifact */
+  /** 📐️ @state artifact */
   columns: En1994ColumnsRows | null;
-  /** @state artifact */
+  /** 🟫️ @state artifact */
   slabs: En1994SlabsRows | null;
-  /** @state artifact */
+  /** ⚡️ @state artifact */
   fireRating: string | null;
-  /** @state artifact */
+  /** 📏️ @state artifact */
   insulationThicknessM: number | null;
-  /** @state artifact */
+  /** 🔄️ @state artifact */
   fatigueDetail: string | null;
 }
 

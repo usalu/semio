@@ -1,0 +1,43 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⚙️settings-general-layout/🟦️.ts",
+ "describeLine": 57,
+ "sharedRewrite": [
+  [
+   "dirname(fileURLToPath(import.meta.url))",
+   "dirname(dirname(fileURLToPath(import.meta.url)))"
+  ]
+ ],
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of the ⚙️ General Settings Tree and bottom-panel flow suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️actual-react-stepper-matches",
+   "doc": "/** 🔶️ The actual react stepper matches tests of the ⚙️ General Settings Tree and bottom-panel flow suite. */",
+   "name": "registerActualReactStepperMatchesTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the actual react stepper matches tests of the ⚙️ General Settings Tree and bottom-panel flow suite.",
+   "from": 60,
+   "to": 221
+  },
+  {
+   "dir": "🔸️react-neutral-geometry-keep",
+   "doc": "/** 🔸️ The react neutral geometry keep tests of the ⚙️ General Settings Tree and bottom-panel flow suite. */",
+   "name": "registerReactNeutralGeometryKeepTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the react neutral geometry keep tests of the ⚙️ General Settings Tree and bottom-panel flow suite.",
+   "from": 228,
+   "to": 375
+  },
+  {
+   "dir": "🟠️wgpu-publishes-general-directly",
+   "doc": "/** 🟠️ The wgpu publishes general directly tests of the ⚙️ General Settings Tree and bottom-panel flow suite. */",
+   "name": "registerWgpuPublishesGeneralDirectlyTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the wgpu publishes general directly tests of the ⚙️ General Settings Tree and bottom-panel flow suite.",
+   "from": 395,
+   "to": 395
+  }
+ ]
+}

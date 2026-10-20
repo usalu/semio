@@ -137,7 +137,7 @@ fn fem3d_interaction_selection_ids(interaction: &protocol::InteractionState) -> 
 
 /// 🕹️ Routes the window-scoped and selection-scoped rows, and every other row to its own handler —
 /// the ONE dispatch table `handle` and the retained reducer share, so the two paths cannot drift.
-pub(crate) fn fem3d_route(command: &Fem3dCommand, doc: &ArtifactView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, NoConfig>, selection: impl FnOnce() -> Vec<String>, view: Option<&ViewModel>) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
+pub fn fem3d_route(command: &Fem3dCommand, doc: &ArtifactView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, NoConfig>, selection: impl FnOnce() -> Vec<String>, view: Option<&ViewModel>) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
     let window = |fault: &str| view.ok_or_else(|| Fault::from(format!("fem3d.{fault}.window-context-required")));
     match command {
         Fem3dCommand::SetCamera(payload) => set_camera::handle_window(payload, cfg, window("camera")?),

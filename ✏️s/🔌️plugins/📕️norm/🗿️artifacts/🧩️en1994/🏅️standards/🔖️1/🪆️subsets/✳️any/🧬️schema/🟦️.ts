@@ -4,23 +4,23 @@
 import { normWireArray, normWireBoolean, normWireInteger, normWireLiteral, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 
 export interface En1994Artifact {
-  /** @state artifact */
+  /** 📑️ @state artifact */
   annex: AnnexChoice;
-  /** @state artifact */
+  /** 🏗️ @state artifact */
   structureKind: string;
-  /** @state artifact */
+  /** 🧱️ @state artifact */
   steelFYPa: number;
-  /** @state artifact */
+  /** 🪵️ @state artifact */
   beams: CompositeBeam[];
-  /** @state artifact */
+  /** 📐️ @state artifact */
   columns: CompositeColumn[];
-  /** @state artifact */
+  /** 🟫️ @state artifact */
   slabs: CompositeSlab[];
-  /** @state artifact */
+  /** ⚡️ @state artifact */
   fireRating: string;
-  /** @state artifact */
+  /** 📏️ @state artifact */
   insulationThicknessM: number;
-  /** @state artifact */
+  /** 📜️ @state artifact */
   fatigueDetail: string;
 }
 

@@ -3,7 +3,7 @@ import {type ResourceLeaseControl} from "@semio-tech/process/leases";
 import {mkdirSync,writeFileSync} from "node:fs";
 import {dirname,join} from "node:path";
 import {advanceScriptInvocation,checkScriptInvocation,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {parseCatalogBuildContributionV1} from "../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts";
+import {parseCatalogBuildContributionV1} from "@semio-tech/plugin-registry-publication/build";
 import fixture from "./🧫️fixtures/🔣️.json";
 
 /** 🎮️ Receives the shared authored sources and prepares their real targets under the original test invocation. */

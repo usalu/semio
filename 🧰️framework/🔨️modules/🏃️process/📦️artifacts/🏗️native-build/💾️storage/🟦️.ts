@@ -13,11 +13,11 @@ import { readNativeImageRetirementFileV1 } from "./📄️retirement-file/🟦�
 import{nativeSuccessfulChildRetirementDecisionV1,withNativeImageTerminalCloseV1}from"./🧹️cleanup/📋️state/🟦️.ts";
 import{nativeRetirementBackendV1}from"./🔌️retirement-backend/🟦️.ts"
 import{nativeStorageEnteredCleanupDecisionV1,nativeStorageUnbornCleanupDecisionV1}from"./🌱️birth/🟦️.ts";
-import{withArtifactDescriptorV1,requireArtifactDescriptorClosureV1}from"../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import{withArtifactDescriptorV1,requireArtifactDescriptorClosureV1}from"../../../../📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import{types}from"node:util";
 import {randomBytes,createHash} from "node:crypto";
 import{lstat as statCleanupFile,open as openCleanupFile}from"node:fs/promises";
-import{readPhysicalFileV1}from"../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/🟦️.ts";
+import{readPhysicalFileV1}from"../../../../📁️filesystem/🧾️observation/🟦️.ts";
 import{acceptResourceLeaseCleanupV1,withAcceptedResourceLeaseCleanupWriterV1,withAcceptedResourceLeaseCleanupRetirementWriterV1,requireAcceptedResourceLeaseCleanupWriterV1,type AcceptedResourceLeaseCleanupV1,type AcceptedResourceLeaseCleanupWriterV1}from"../../../🔒️leases/🟦️.ts";
 import{requireAcceptedPhysicalCleanupControlV1,readAcceptedPhysicalCleanupV1,checkAcceptedPhysicalCleanupV1,withAcceptedPhysicalCleanupOperationV1,withIssuedResourceOperationV1,requireIssuedResourceControlInvocationV1}from"../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import type{AcceptedPhysicalCleanupV1}from"../../../🧭️routing/📥️invocation/🏃️process/🧹️cleanup/🟦️.ts";

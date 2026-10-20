@@ -96,7 +96,7 @@ async fn retained_hydration_preserves_the_original_opened_actor_across_stored_au
         assert_eq!(history.edits.last().unwrap().actor.as_deref(), Some(author));
         let mut hydrated = None;
         if config {
-            let mut hydration = ReferenceConfigStoreHydration::<DemoSnapshot, DemoMutation>::from_snapshots(source.envelope().vcs.genesis.clone(), initial.clone(), initial, history, source.envelope().id.clone(), "demo/v1".into(), fixture_demo_owners(), 0, 65536, ActorId(opened.into()));
+            let mut hydration = RetainedConfigStoreHydration::<DemoSnapshot, DemoMutation>::from_snapshots(source.envelope().vcs.genesis.clone(), initial.clone(), initial, history, source.envelope().id.clone(), "demo/v1".into(), fixture_demo_owners(), 0, 65536, ActorId(opened.into()));
             for _ in 0..fixture["maximumTurns"].as_u64().unwrap() {
                 match hydration.advance(fixture_hydration_grant()) {
                     ConfigStoreHydrationStep::Pending(_) => {}

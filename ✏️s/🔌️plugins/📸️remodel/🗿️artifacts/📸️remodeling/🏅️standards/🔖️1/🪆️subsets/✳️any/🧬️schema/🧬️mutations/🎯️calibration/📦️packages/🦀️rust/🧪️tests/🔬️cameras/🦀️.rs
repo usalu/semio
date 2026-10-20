@@ -10,13 +10,13 @@ mod create_camera_tests_adds_a_fourth_97e912;
 mod create_camera_tests_adds_the_cam_c_82c8fb;
 #[path = "../../../../../🔭create-camera/🧪️tests/🚫️refuses/🦀️.rs"]
 mod create_camera_tests_refuses_a_camera_e92a02;
-#[path = "../../../../../🛠️update-camera/🧪️tests/🔁️warns/🦀️.rs"]
+#[path = "../../../../../🛠️update-camera-calibration/🧪️tests/🔁️warns/🦀️.rs"]
 mod update_camera_tests_warns_that_the_697b4f;
-#[path = "../../../../../🛠️update-camera/🧪️tests/🔍️refines/🦀️.rs"]
+#[path = "../../../../../🛠️update-camera-calibration/🧪️tests/🔍️refines/🦀️.rs"]
 mod update_camera_tests_refines_the_9fd25a;
-#[path = "../../../../../🛠️update-camera/🧪️tests/🔍️refines2/🦀️.rs"]
+#[path = "../../../../../🛠️update-camera-calibration/🧪️tests/🔍️refines2/🦀️.rs"]
 mod update_camera_tests_refines_the_cam_0eaef0;
-#[path = "../../../../../🛠️update-camera/🧪️tests/🚫️refuses/🦀️.rs"]
+#[path = "../../../../../🛠️update-camera-calibration/🧪️tests/🚫️refuses/🦀️.rs"]
 mod update_camera_tests_refuses_to_b60a39;
 #[path = "../../../../../🚫delete-camera/🧪️tests/⛓️refuses/🦀️.rs"]
 mod delete_camera_tests_refuses_to_remove_3c8f32;

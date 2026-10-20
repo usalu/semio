@@ -1,4 +1,4 @@
-import { type InteractionDefinition, validateState, type DomainTopology, type DomainSelection, nextSelection } from "../../../../🕹️interaction/🟦️.ts";
+import { type InteractionDefinition, validateState, type DomainTopology, type DomainSelection, nextSelection } from "@semio-tech/framework-interaction";
 import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import { type TreeDataItem, TreeItemCollapsibleState, type TreeSelectionMode } from "../📋️data/🟦️.ts";
 

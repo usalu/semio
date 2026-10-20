@@ -4,19 +4,19 @@
 import { normWireArray, normWireBoolean, normWireDefault, normWireInteger, normWireLiteral, normWireMap, normWireNullable, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString, normWireTagged } from "@semio-tech/norm-js/registry/contract";
 
 export interface Vdi3805Artifact {
-  /** @state artifact */
+  /** 📇️ @state artifact */
   catalog: ManufacturerCatalog;
-  /** @state artifact */
+  /** ⌨️ @state artifact */
   editionProfile: { [key: string]: "legacy" | "current" };
-  /** @state artifact */
+  /** 🩹️ @state artifact */
   correctionAsOf: EditionId;
-  /** @state artifact */
+  /** 🚦️ @state artifact */
   strictMode: boolean;
-  /** @state artifact */
+  /** 🗃️ @state artifact */
   index: CatalogIndex;
-  /** @state artifact */
+  /** 🧊️ @state artifact */
   geometry: { [key: string]: ParametricGeometry };
-  /** @state artifact */
+  /** 〰️ @state artifact */
   curves: { [key: string]: CharacteristicCurve };
   limits: SecurityLimits;
 }

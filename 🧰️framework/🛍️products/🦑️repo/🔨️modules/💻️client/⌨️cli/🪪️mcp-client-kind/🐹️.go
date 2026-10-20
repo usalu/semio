@@ -24,7 +24,7 @@ const (
 	McpClientCodex   McpClientKind = "codex"
 )
 
-// ParseMcpClientKind maps a CLI/MCP profile slug to an MCP server kind.
+// 📥️ParseMcpClientKind maps a CLI/MCP profile slug to an MCP server kind.
 func ParseMcpClientKind(raw string) (McpClientKind, error) {
 	switch strings.ToLower(strings.TrimSpace(raw)) {
 	case "", "generic", "client":
@@ -44,7 +44,7 @@ func ParseMcpClientKind(raw string) (McpClientKind, error) {
 	}
 }
 
-// HookClientForMcpKind maps an MCP entry binary to the hook client id used by ResolveHookEvent.
+// 🪝️HookClientForMcpKind maps an MCP entry binary to the hook client id used by ResolveHookEvent.
 func HookClientForMcpKind(kind McpClientKind) string {
 	switch kind {
 	case McpClientCursor:
@@ -70,7 +70,7 @@ func resolveMcpTicketClient(kind McpClientKind, client string) string {
 	return HookClientForMcpKind(kind)
 }
 
-// McpKindFromResolvedClient maps a validated ticket client slug to an MCP surface kind for plan/spec attachment.
+// 🔌️McpKindFromResolvedClient maps a validated ticket client slug to an MCP surface kind for plan/spec attachment.
 func McpKindFromResolvedClient(client string) McpClientKind {
 	switch strings.TrimSpace(client) {
 	case "cursor-chat", "cursor":
@@ -88,7 +88,7 @@ func McpKindFromResolvedClient(client string) McpClientKind {
 	}
 }
 
-// McpServerName returns the MCP server identifier string for the given kind.
+// 📡️McpServerName returns the MCP server identifier string for the given kind.
 func McpServerName(kind McpClientKind) string {
 	switch kind {
 	case McpClientCursor, McpClientKiro, McpClientCopilot, McpClientClaude, McpClientCodex, McpClientGeneric, "":

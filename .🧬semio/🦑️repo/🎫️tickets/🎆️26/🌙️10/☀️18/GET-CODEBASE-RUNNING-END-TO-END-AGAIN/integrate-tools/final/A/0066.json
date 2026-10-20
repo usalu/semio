@@ -1,0 +1,609 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "version": 1,
+  "uncached": [
+    "audit",
+    "bench",
+    "cache-report",
+    "cache-verify",
+    "ci-baseline",
+    "clean",
+    "deploy",
+    "deps",
+    "disk-report",
+    "doctor",
+    "format-fix",
+    "fuzz",
+    "install",
+    "migrate",
+    "new",
+    "perf-baseline",
+    "postinstall",
+    "publish",
+    "purge",
+    "seed",
+    "setup",
+    "test-doctor",
+    "test-e2e",
+    "test-fixture-generate",
+    "test-fixture-reproduce",
+    "test-inventory",
+    "update"
+  ],
+  "uncachedExact": [
+    "commit",
+    "format",
+    "micro-commit",
+    "os",
+    "parity",
+    "scale-fixture",
+    "semio"
+  ],
+  "serialTargets": [
+    "deps-cargo",
+    "deps-wasm",
+    "deps-trunk",
+    "deps-tools",
+    "deps-tectonic",
+    "deps-tex"
+  ],
+  "cachedExact": [
+    "hub-live-catalog-check",
+    "hub-live-catalog-native-check",
+    "hub-live-catalog-oracle"
+  ],
+  "targetClasses": [
+    {
+      "decision": { "class": "live", "reason": "drives-running-process" },
+      "exact": ["acceptance-goal", "acceptance-plan"]
+    },
+    {
+      "decision": { "class": "side-effecting", "reason": "mutates-workspace" },
+      "exact": ["channel-version-generate", "logo", "schema-mirror"],
+      "heads": ["generator"]
+    },
+    {
+      "decision": { "class": "driver-owned", "reason": "freshness-owned-by-driver" },
+      "exact": ["activate-lanes-prototype", "activate-prototype", "prepare-prototype", "prepare-release"]
+    },
+    {
+      "decision": { "class": "deterministic", "reason": "pure-function-of-inputs" },
+      "exact": [
+        "compile-extension",
+        "cpp-build",
+        "cpp-configure",
+        "extension-package",
+        "generator-inputs",
+        "graph-generate",
+        "mcp-build",
+        "mutation-leaf-taxonomy-generate",
+        "native-build",
+        "native-codec-projection",
+        "package",
+        "schema-docs",
+        "schema-generate",
+        "typegen",
+        "ui-storybook-build",
+        "wasm"
+      ]
+    },
+    {
+      "decision": { "class": "deterministic", "reason": "check-without-outputs" },
+      "exact": [
+        "akteursnetz-validate",
+        "boundaries",
+        "canonical-architecture",
+        "carrier-reproduce",
+        "catalog-complete",
+        "conformance",
+        "conformance-command",
+        "conformance-process",
+        "cpp-custody",
+        "cpp-test",
+        "cpp-test-toolchain",
+        "declarations",
+        "examples",
+        "generate-taxonomy-census",
+        "generate-taxonomy-duplicates",
+        "generation-root-policy",
+        "graph-check",
+        "info",
+        "io-descriptor-parity",
+        "mutation-inventory",
+        "ownership",
+        "package-graph",
+        "policy-check",
+        "preview-distribution",
+        "preview-generated",
+        "preview-playground-session",
+        "preview-schema-index",
+        "publication-authority-audit",
+        "router-effect-source-custody",
+        "shared-schema",
+        "toolchain",
+        "twin",
+        "typescript",
+        "utility-action-policy"
+      ],
+      "heads": [
+        "test",
+        "check",
+        "lint",
+        "typecheck",
+        "format-check",
+        "verify",
+        "schema",
+        "stdio"
+      ],
+      "tails": ["check", "test", "oracle", "lint", "source", "native"],
+      "tokens": ["contract"]
+    },
+    {
+      "decision": { "class": "deterministic", "reason": "pure-function-of-inputs" },
+      "heads": ["build", "generate"]
+    }
+  ],
+  "continuous": [
+    "dev",
+    "serve",
+    "watch",
+    "start",
+    "test-watch",
+    "daemon"
+  ],
+  "ephemeralOwnerGlobs": [
+    ".🛂️descriptor-staging-*"
+  ],
+  "generatedDirectories": [
+    "node_modules",
+    ".git",
+    ".nx",
+    ".cache",
+    "target",
+    "dist",
+    "📤️dist",
+    "build",
+    "out",
+    "coverage",
+    "test-results",
+    "playwright-report",
+    "storybook-static",
+    ".venv",
+    "__pycache__",
+    "bin",
+    "obj",
+    "⚡️cache",
+    "🗑️generated",
+    ".lake",
+    "pkg"
+  ],
+  "toolchains": {
+    "javascript": {
+      "files": [
+        "bunfig.toml",
+        "tsconfig.json"
+      ],
+      "environment": [
+        "NODE_ENV",
+        "BUN_ENV",
+        "CI",
+        "SEMIO_BUILD_MODE",
+        "SEMIO_RENDERER",
+        "SEMIO_PLUGIN",
+        "SEMIO_TEST_LEVEL",
+        "SEMIO_TEST_BUDGET_MS",
+        "SEMIO_BUILD_BUDGET_MS"
+      ],
+      "commands": [
+        "bun --version",
+        "node --version"
+      ]
+    },
+    "cargo": {
+      "files": [
+        "Cargo.toml",
+        ".cargo/config.toml",
+        "rust-toolchain.toml",
+        "rustfmt.toml",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️execution/📜️script.ts"
+      ],
+      "environment": [
+        "RUSTUP_TOOLCHAIN",
+        "RUSTFLAGS",
+        "CARGO_ENCODED_RUSTFLAGS",
+        "CARGO_BUILD_TARGET",
+        "CARGO_PROFILE_DEV_OPT_LEVEL",
+        "CARGO_PROFILE_RELEASE_OPT_LEVEL",
+        "CARGO_PROFILE_DEV_DEBUG",
+        "CARGO_PROFILE_RELEASE_DEBUG",
+        "CARGO_PROFILE_WASM_PROTOTYPE_DEBUG",
+        "CARGO_PROFILE_WASM_RELEASE_DEBUG",
+        "CC",
+        "CXX",
+        "CFLAGS",
+        "CXXFLAGS",
+        "LDFLAGS",
+        "SDKROOT",
+        "MACOSX_DEPLOYMENT_TARGET",
+        "SEMIO_BUILD_MODE",
+        "SEMIO_PLUGIN_PROFILE",
+        "SEMIO_DISABLE_WASM_OPT",
+        "SEMIO_WASM_OPT",
+        "SEMIO_WASM_BINDGEN_BIN",
+        "RUSTC_BOOTSTRAP",
+        "CARGO_UNSTABLE_EMBED_METADATA",
+        "SEMIO_WASM_OPT_BIN",
+        "DEVELOPER_DIR",
+        "FORCE_XCODE",
+        "CARGO_PROFILE_PROTOTYPE_OPT_LEVEL",
+        "CARGO_PROFILE_PROTOTYPE_DEBUG",
+        "CARGO_PROFILE_WASM_PROTOTYPE_OPT_LEVEL",
+        "CARGO_PROFILE_WASM_RELEASE_OPT_LEVEL"
+      ],
+      "commands": [
+        "rustc -vV",
+        "cargo --version"
+      ]
+    },
+    "go": {
+      "files": [
+        "go.work",
+        "go.work.sum"
+      ],
+      "environment": [
+        "GOOS",
+        "GOARCH",
+        "CGO_ENABLED",
+        "CGO_CFLAGS",
+        "CGO_LDFLAGS",
+        "GOFLAGS",
+        "GOTOOLCHAIN"
+      ],
+      "commands": [
+        "go version"
+      ]
+    },
+    "python": {
+      "files": [
+        "pyproject.toml",
+        "uv.lock",
+        "conftest.py",
+        ".python-version"
+      ],
+      "environment": [
+        "PYTHONPATH",
+        "PYTHONHASHSEED",
+        "UV_PYTHON"
+      ],
+      "commands": [
+        "uv --version",
+        "python --version"
+      ]
+    },
+    "dotnet": {
+      "files": [
+        "global.json",
+        "Directory.Build.props",
+        "Directory.Build.targets",
+        "Directory.Packages.props",
+        "NuGet.Config"
+      ],
+      "environment": [
+        "DOTNET_ROLL_FORWARD",
+        "Configuration",
+        "RuntimeIdentifier"
+      ],
+      "commands": [
+        "dotnet --version"
+      ]
+    },
+    "cmake": {
+      "files": [
+        "CMakeLists.txt",
+        "CMakePresets.json"
+      ],
+      "environment": [
+        "CC",
+        "CXX",
+        "CFLAGS",
+        "CXXFLAGS",
+        "LDFLAGS",
+        "CMAKE_TOOLCHAIN_FILE",
+        "CMAKE_GENERATOR"
+      ],
+      "commands": [
+        "cmake --version"
+      ]
+    },
+    "wasm": {
+      "files": [
+        ".cargo/config.toml",
+        "rust-toolchain.toml"
+      ],
+      "environment": [
+        "WASM_PACK_PROFILE",
+        "WASM_BINDGEN_VERSION",
+        "WASM_OPT",
+        "TRUNK_BUILD_RELEASE",
+        "TRUNK_BUILD_PUBLIC_URL"
+      ],
+      "commands": [
+        "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts\" fingerprint"
+      ]
+    }
+  },
+  "targetDefaults": {
+    "setup": {
+      "cache": false
+    },
+    "lint": {
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true
+    },
+    "build": {
+      "dependsOn": [],
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "cache": true
+    },
+    "dev": {
+      "cache": false,
+      "continuous": true
+    },
+    "test": {
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        {
+          "env": "SEMIO_TEST_LEVEL"
+        },
+        {
+          "env": "SEMIO_TEST_BUDGET_MS"
+        },
+        {
+          "env": "SEMIO_BUILD_BUDGET_MS"
+        }
+      ],
+      "cache": true
+    },
+    "publish": {
+      "cache": false
+    },
+    "update": {
+      "cache": false
+    },
+    "wasm": {
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "cache": true,
+      "dependsOn": []
+    },
+    "native-build": {
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "cache": true,
+      "dependsOn": []
+    },
+    "package": {
+      "dependsOn": [],
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "cache": true
+    },
+    "extension-package": {
+      "dependsOn": [],
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "cache": true
+    },
+    "deps": {
+      "cache": false
+    },
+    "install": {
+      "cache": false
+    },
+    "format": {
+      "cache": false
+    },
+    "format-fix": {
+      "cache": false
+    },
+    "clean": {
+      "cache": false
+    },
+    "purge": {
+      "cache": false
+    },
+    "deploy": {
+      "cache": false
+    },
+    "migrate": {
+      "cache": false
+    },
+    "seed": {
+      "cache": false
+    },
+    "bench": {
+      "cache": false
+    },
+    "fuzz": {
+      "cache": false
+    },
+    "serve": {
+      "cache": false,
+      "continuous": true
+    },
+    "watch": {
+      "cache": false,
+      "continuous": true
+    },
+    "start": {
+      "cache": false,
+      "continuous": true
+    },
+    "test-watch": {
+      "cache": false,
+      "continuous": true
+    },
+    "typecheck": {
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true
+    },
+    "check": {
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true
+    },
+    "format-check": {
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true
+    },
+    "test-contract": {
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true
+    },
+    "generate": {
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true
+    },
+    "verify": {
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true
+    },
+    "stdio-quick": {
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true
+    },
+    "cpp-build": {
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true
+    },
+    "cpp-test": {
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true
+    },
+    "cpp-configure": {
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true
+    },
+    "schema-generate": {
+      "inputs": [
+        "schemaSources"
+      ],
+      "cache": true
+    },
+    "canonical-architecture": {
+      "cache": false
+    }
+  },
+  "generatorInputs": {
+    "registry-catalog": {
+      "target": "repo:generator-inputs",
+      "output": ".🧬semio/🦑️repo/⚡️cache/🔏️generator-inputs/📇️registry/🔣️.json"
+    }
+  },
+  "storage": {
+    "pressure": {
+      "version": 1,
+      "minimumAvailableBytes": 8589934592,
+      "targetAvailableBytes": 17179869184,
+      "guardAgeMs": 86400000,
+      "maximumDeletionBytes": 34359738368
+    },
+    "guardAgeMs": 172800000,
+    "cargo": {
+      "budgetBytes": 85899345920,
+      "unusedAgeMs": 604800000,
+      "incremental": {
+        "budgetBytes": 25769803776,
+        "unusedAgeMs": 86400000,
+        "guardAgeMs": 3600000
+      }
+    },
+    "vite": {
+      "unusedAgeMs": 1209600000
+    },
+    "agents": {
+      "unusedAgeMs": 604800000
+    },
+    "tests": {
+      "unusedAgeMs": 604800000
+    },
+    "strictStorage": {
+      "version": 1,
+      "directory": "rust/fixed",
+      "capacityBytes": 17179869184,
+      "filesystemBytes": 17178820608,
+      "maximumWorkspaceBytes": 4294967296,
+      "maximumArtifactBytes": 1073741824
+    },
+    "sourceBoundary": {
+      "version": 1,
+      "maxSourceBytes": 262144,
+      "maxSourceFiles": 32,
+      "maxActiveLines": 4000
+    }
+  },
+  "manifestBasenames": [
+    "📋️project.json",
+    "project.json",
+    "package.json",
+    "Cargo.toml",
+    "bun.lock",
+    "*.patch"
+  ]
+}

@@ -16,9 +16,9 @@ use super::*;
 use semio_s_artifact_procedural_3d_scale_selection::*;
 use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
 use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
-use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
-use semio_s_artifact_procedural_3d_model::gumball_widget_json;
+use semio_s_artifact_procedural_3d_transforms::gumball_widget_json;
 use semio_s_artifact_procedural_3d_model::with_host;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📏️scale-selection/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
@@ -31,7 +31,7 @@ use semio_s_artifact_procedural_3d_editor_commands::cycle_lod_mode::*;
 use semio_s_artifact_procedural_3d_editor_config::next_lod_mode;
 use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
 use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
-use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔁️cycle-lod-mode/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
@@ -43,8 +43,7 @@ use super::*;
 use semio_s_artifact_procedural_3d_delete_selection::*;
 use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
 use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
-use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_3d_model::commit_host_snapshot;
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::with_host;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/❌️delete-selection/🧪️tests/🔬️unit/🦀️.rs"]
@@ -57,9 +56,9 @@ use super::*;
 use semio_s_artifact_procedural_3d_rotate_selection::*;
 use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
 use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
-use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
-use semio_s_artifact_procedural_3d_model::gumball_widget_json;
+use semio_s_artifact_procedural_3d_transforms::gumball_widget_json;
 use semio_s_artifact_procedural_3d_model::with_host;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔄️rotate-selection/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
@@ -71,7 +70,7 @@ use super::*;
 use semio_s_artifact_procedural_3d_editor_commands::set_lod_mode::*;
 use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
 use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
-use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔬️set-lod-mode/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
@@ -85,9 +84,8 @@ use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
 use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_editor_selection::component_group;
 use semio_s_artifact_procedural_3d_editor_selection::DOMAIN;
-use semio_s_artifact_procedural_3d_model::commit_host_snapshot;
 use semio_s_artifact_procedural_3d_model::with_host;
-use semio_s_artifact_procedural_3d_mutations::text::Generation3dMutation;
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔪️knife-mesh-selection/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
@@ -99,7 +97,7 @@ use super::*;
 use semio_s_artifact_procedural_3d_editor_commands::toggle_sun::*;
 use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
 use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
-use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌞️toggle-sun/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
@@ -112,7 +110,7 @@ use semio_s_artifact_procedural_3d_editor_commands::cycle_show_mode::*;
 use semio_s_artifact_procedural_3d_editor_config::next_show_mode;
 use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
 use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
-use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔁️cycle-show-mode/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
@@ -124,9 +122,9 @@ use super::*;
 use semio_s_artifact_procedural_3d_editor_commands::translate_selection::*;
 use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
 use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
-use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
-use semio_s_artifact_procedural_3d_model::gumball_widget_json;
+use semio_s_artifact_procedural_3d_transforms::gumball_widget_json;
 use semio_s_artifact_procedural_3d_model::with_host;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/↔️translate-selection/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;

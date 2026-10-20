@@ -4512,6 +4512,111 @@
               "directoryName": "⛔️refuses"
             }
           ]
+        },
+        {
+          "mutationId": "change-humidistat-humidifying-setpoint-schedule",
+          "sourceMutationDirectoryName": "☔️change-humidifying-setpoint-schedule",
+          "mutationDirectoryName": "☔️change-humidifying-setpoint-schedule",
+          "scenarios": [
+            {
+              "id": "refuses",
+              "directoryName": "⛔️refuses"
+            },
+            {
+              "id": "repoints",
+              "directoryName": "✅️repoints"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-infiltration-temperature-term-coefficient",
+          "sourceMutationDirectoryName": "🅱️change-temperature-term-coefficient",
+          "mutationDirectoryName": "🅱️change-temperature-term-coefficient",
+          "scenarios": [
+            {
+              "id": "refuses",
+              "directoryName": "⛔️refuses"
+            },
+            {
+              "id": "applies",
+              "directoryName": "✅️applies"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-infiltration-velocity-squared-term-coefficient",
+          "sourceMutationDirectoryName": "🆑️change-velocity-squared-term-coefficient",
+          "mutationDirectoryName": "🆑️change-velocity-squared-term-coefficient",
+          "scenarios": [
+            {
+              "id": "refuses",
+              "directoryName": "⛔️refuses"
+            },
+            {
+              "id": "applies",
+              "directoryName": "✅️applies"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-mechanical-ventilation-fan-delta-pressure",
+          "sourceMutationDirectoryName": "🎈️change-fan-delta-pressure",
+          "mutationDirectoryName": "🎈️change-fan-delta-pressure",
+          "scenarios": [
+            {
+              "id": "refuses",
+              "directoryName": "⛔️refuses"
+            },
+            {
+              "id": "applies",
+              "directoryName": "✅️applies"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-mechanical-ventilation-fan-total-efficiency",
+          "sourceMutationDirectoryName": "💠️change-fan-total-efficiency",
+          "mutationDirectoryName": "💠️change-fan-total-efficiency",
+          "scenarios": [
+            {
+              "id": "refuses",
+              "directoryName": "⛔️refuses"
+            },
+            {
+              "id": "applies",
+              "directoryName": "✅️applies"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-ideal-loads-system-outdoor-air-per-area",
+          "sourceMutationDirectoryName": "🔳️change-outdoor-air-per-area",
+          "mutationDirectoryName": "🔳️change-outdoor-air-per-area",
+          "scenarios": [
+            {
+              "id": "refuses",
+              "directoryName": "⛔️refuses"
+            },
+            {
+              "id": "ventilates",
+              "directoryName": "✅️ventilates"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-ideal-loads-system-outdoor-air-per-person",
+          "sourceMutationDirectoryName": "🧍️change-outdoor-air-per-person",
+          "mutationDirectoryName": "🧍️change-outdoor-air-per-person",
+          "scenarios": [
+            {
+              "id": "refuses",
+              "directoryName": "⛔️refuses"
+            },
+            {
+              "id": "ventilates",
+              "directoryName": "✅️ventilates"
+            }
+          ]
         }
       ],
       "kinds": [

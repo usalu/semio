@@ -19,8 +19,8 @@ import {provisionRustupBootstrapV1,downloadRustupBytesV1,hashRustupFileV1,synchr
 import {captureRustupToolchainGenerationV1,withRustupGenerationCustodyV1,type RustupGenerationCustodyV1} from "../📥️capture/🟦️.ts";
 import {rustupToolchainSealV1,type RustupToolchainSealEntryV1} from "../🟦️.ts";
 import {withManagedToolingProvisionV1,type ManagedToolingPublisherV1} from "../../🧹️retention/📥️physical/🟦️.ts";
-import retentionSchema from "../../🧹️retention/📥️physical/🧬️schema/🔣️.json";
-import schema from "../🧬️schema/🔣️.json";
+import retentionSchema from "../../🧹️retention/📥️physical/🧬️schema/🔣️.json" with { type: "json" };
+import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 const protocol=schema.definitions.Protocol.const;
 type ToolchainRequestV1=Readonly<{version:1;channel:string;profile:"minimal";components:readonly string[];targets:readonly string[];bootstrapVersion:string;store:"tools";selfUpdate:false;automaticInstall:false}>;
 type DistributionPackageV1=Readonly<{url:string;digest:string}>;

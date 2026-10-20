@@ -68,7 +68,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         let FlowCommand::SetContributions(payload) = input.command else {
             return Err(Fault::from("flow-contributions-route-rejected"));
         };
-        let maintenance=semio_framework_artifact_flow_flow::retire_flow_extension_registries_step(cx.retained_grant());
+        let maintenance=flow::retire_flow_extension_registries_step(cx.retained_grant());
         if !flow_contributions_registry_receipt(cx,maintenance)?{
             return Ok(ArtifactCommandWorkStep::Progress{stage:"flow-contributions-retirement",preview:br#"{"en":"Preparing operators","de":"Operatoren werden vorbereitet"}"#});
         }

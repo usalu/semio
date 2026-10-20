@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "scope": "Synthetic namespace matching observed aggregate counts, never private Source or active process",
+  "maximumMilliseconds": 60000,
+  "entries": 11705,
+  "directories": 1479,
+  "files": 10192,
+  "links": 34,
+  "depthHistogram": {
+    "1": 1,
+    "2": 239,
+    "3": 2320,
+    "4": 2389,
+    "5": 2535,
+    "6": 1662,
+    "7": 1489,
+    "8": 767,
+    "9": 246,
+    "10": 45,
+    "11": 9,
+    "12": 3
+  },
+  "directoryDepthHistogram": {
+    "1": 1,
+    "2": 239,
+    "3": 318,
+    "4": 318,
+    "5": 172,
+    "6": 232,
+    "7": 120,
+    "8": 45,
+    "9": 25,
+    "10": 7,
+    "11": 2
+  },
+  "expectedCheckpoints": 365,
+  "negativeCases": [
+    "unexpected-child",
+    "symlink-target",
+    "nx-hardlink",
+    "cancelled"
+  ]
+}

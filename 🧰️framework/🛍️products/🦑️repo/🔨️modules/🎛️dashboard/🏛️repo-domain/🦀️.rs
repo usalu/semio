@@ -1,6 +1,6 @@
 //! 🏛️ The repo domain behind the dashboard's repo commands: tickets, goals, analysis, trees and
 //! statutes, answered in process by the Rust domain crates or, with `SEMIO_REPO_IMPLEMENTATION=go`,
-//! by the `semio-repo` binary in a pseudo-terminal window. The command registry owns which of these
+//! by the `repo` binary in a pseudo-terminal window. The command registry owns which of these
 //! operations are commands; this module owns what each one does.
 //!
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🎮️registry/🦀️.rs
@@ -13,7 +13,7 @@ use std::path::{Path, PathBuf};
 pub enum RepoImplementation {
     /// 🦀️ The Rust domain crates, called in process (the default).
     Rust,
-    /// 🐹️ The Go `semio-repo` binary, spawned into a pseudo-terminal window.
+    /// 🐹️ The Go `repo` binary, spawned into a pseudo-terminal window.
     Go,
 }
 
@@ -28,10 +28,11 @@ pub fn repo_implementation() -> RepoImplementation {
 /// 🗃️ Build output never lives in the taxonomy tree, so the Go binaries land in the marked cache.
 pub const REPO_BIN_CACHE_DIR: &str = ".🧬semio/🦑️repo/⚡️cache/🗃️bin";
 
-/// 📍️ Where the Go `semio-repo` binary lives once its build target has run.
+/// 📍️ Where the Go `repo` binary lives once its build target has run.
 pub fn go_binary_path(root: &Path) -> PathBuf {
-    let name = if cfg!(windows) { "semio-repo.exe" } else { "semio-repo" };
-    root.join(REPO_BIN_CACHE_DIR).join(name)
+    let name = if cfg!(windows) { "repo.exe" } else { "repo" };
+    let mode = if std::env::var("SEMIO_BUILD_MODE").as_deref() == Ok("release") { "release" } else { "prototype" };
+    root.join(REPO_BIN_CACHE_DIR).join(mode).join("repo").join(name)
 }
 // #endregion 🔖️RepoImplementation
 
@@ -40,7 +41,7 @@ pub fn go_binary_path(root: &Path) -> PathBuf {
 ///
 /// The Rust implementation answers every variant in process through the domain crates — the same
 /// functions the `semio` verbs call — and the Go implementation answers the same variant by
-/// spawning `semio-repo` with [`RepoAction::go_argv`] into a pseudo-terminal window.
+/// spawning `repo` with [`RepoAction::go_argv`] into a pseudo-terminal window.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 pub enum RepoAction {
@@ -105,7 +106,7 @@ impl RepoAction {
         Ok(())
     }
 
-    /// 🧷️ The `semio-repo` argv that performs the same operation in the Go implementation.
+    /// 🧷️ The `repo` argv that performs the same operation in the Go implementation.
     pub fn go_argv(&self) -> Vec<String> {
         let owned = |parts: &[&str]| parts.iter().map(|part| (*part).to_string()).collect::<Vec<String>>();
         match self {
@@ -159,7 +160,7 @@ fn explicit_policy<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<
 pub const DASHBOARD_CLIENT: &str = "claude-code";
 
 /// 📪️ The summary a dashboard-driven close records. The in-process leaf closes in bulk, which the
-/// ticket lifecycle answers with its own default summary; the `semio-repo` argv states it, because
+/// ticket lifecycle answers with its own default summary; the `repo` argv states it, because
 /// `ticket close` has no spelling for a single-ticket bulk close — `TicketCloseInput.all` means
 /// "every open ticket" — so the Go leaf still needs the file list the CLI asks for.
 pub const DASHBOARD_CLOSE_SUMMARY: &str = "Closed from the semio dashboard";

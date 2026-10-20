@@ -1,5 +1,5 @@
 use crate::schema::block_tree_row_id;
-use crate::NoteSnapshot;
+use semio_s_artifact_note_note_schema::NoteSnapshot;
 use semio_framework_plugin::UiText;
 use crate::editor::note::unit_tests::context::{note_app, render as render_body};
 use crate::editor::note::NOTE_PLAY_BODY_ARTIFACT as BODY_ARTIFACT;
@@ -19,7 +19,7 @@ async fn renders_document_tree() {
     let mut app = note_app().await;
     let document = crate::standards::v1::subsets::any::io::text::snapshot::semio_example_snapshot();
     let files = {
-        let seed = crate::host::owned::new_note_store(store::os_store::document_materialize::create_document_envelope::<crate::NoteSnapshot, crate::NoteMutation>(&document.schema.clone(), &document.id.clone(), document, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
+        let seed = crate::host::owned::new_note_store(store::os_store::document_materialize::create_document_envelope::<semio_s_artifact_note_note_schema::NoteSnapshot, crate::NoteMutation>(&document.schema.clone(), &document.id.clone(), document, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
             .await
             .expect("seed store for the semio example");
         store::os_store::text_format::print_document_pack(seed.envelope()).await.expect("print semio example document pack")
@@ -64,9 +64,9 @@ fn note_group(id: String, children: Vec<NoteBlockNode>) -> NoteBlockNode {
 
 /// 🗒️ 200 top-level groups, each nesting 200 more — every level independently outgrows one node's
 /// fixed child capacity, which is exactly the shape that used to fail the whole render.
-fn oversized_note_document(count: usize) -> crate::NoteSnapshot {
+fn oversized_note_document(count: usize) -> semio_s_artifact_note_note_schema::NoteSnapshot {
     let blocks = (0..count).map(|index| note_group(format!("block-{index:03}"), (0..count).map(|child| note_group(format!("block-{index:03}-{child:03}"), Vec::new())).collect())).collect();
-    crate::NoteSnapshot { blocks, ..crate::NoteSnapshot::default() }
+    semio_s_artifact_note_note_schema::NoteSnapshot { blocks, ..semio_s_artifact_note_note_schema::NoteSnapshot::default() }
 }
 
 fn window_law_request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWindowRequest {

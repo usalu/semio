@@ -133,212 +133,11 @@ pub fn encode_r2010_table_record_frame(object: &semio_s_artifact_stdio_dwg_snaps
             strings.write_tu(&value.font_file);
             strings.write_tu(&value.big_font_file);
         }
-        DwgTableRecordBody::Layer(value) => {
-            if value.lineweight > 31 {
-                return Err(format!("layer {:#x} lineweight {} exceeds five bits", object.handle, value.lineweight));
-            }
-            let flag0 = u16::from(value.frozen) | (u16::from(value.off) << 1) | (u16::from(value.frozen_in_new_viewports) << 2) | (u16::from(value.locked) << 3) | (u16::from(value.plottable) << 4) | (u16::from(value.lineweight) << 5);
-            data.write_bs(flag0);
-            data.write_bs(value.color.index);
-            data.write_bl(encode_complex_color_value(&value.color.value));
-            let color_flags = u8::from(value.color.name.is_some()) | (u8::from(value.color.book_name.is_some()) << 1);
-            data.write_rc(color_flags);
-            if let Some(name) = &value.color.name {
-                strings.write_tu(name);
-            }
-            if let Some(book_name) = &value.color.book_name {
-                strings.write_tu(book_name);
-            }
-        }
-        DwgTableRecordBody::Linetype(value) => {
-            if value.dashes.len() > usize::from(u8::MAX) {
-                return Err(format!("linetype {:#x} has too many dashes", object.handle));
-            }
-            if value.dashes.iter().any(|dash| dash.text.is_some()) {
-                return Err(format!("linetype {:#x} textual dash area is not yet supported", object.handle));
-            }
-            strings.write_tu(&value.description);
-            data.write_bd(value.pattern_length);
-            data.write_rc(value.alignment);
-            data.write_rc(value.dashes.len() as u8);
-            for dash in &value.dashes {
-                data.write_bd(dash.length);
-                data.write_bs(dash.complex_shape_code);
-                data.write_rd(dash.x_offset);
-                data.write_rd(dash.y_offset);
-                data.write_bd(dash.scale);
-                data.write_bd(dash.rotation);
-                data.write_bs(dash.shape_flags);
-            }
-        }
-        DwgTableRecordBody::BlockHeader(value) => {
-            if (value.is_xref || value.xref_overlaid) && !value.owned_entity_handles.is_empty() {
-                return Err(format!("block header {:#x} xref cannot own entities", object.handle));
-            }
-            if value.insert_backreference_handles.len() > 0xefffff {
-                return Err(format!("block header {:#x} has too many insert backreferences", object.handle));
-            }
-            data.write_b(value.anonymous);
-            data.write_b(value.has_attributes);
-            data.write_b(value.is_xref);
-            data.write_b(value.xref_overlaid);
-            data.write_b(value.xref_loaded);
-            if !value.is_xref && !value.xref_overlaid {
-                data.write_bl(value.owned_entity_handles.len() as u32);
-            }
-            data.write_3bd(value.base_point);
-            strings.write_tu(&value.xref_path);
-            for _ in &value.insert_backreference_handles {
-                data.write_rc(1);
-            }
-            data.write_rc(0);
-            strings.write_tu(&value.description);
-            data.write_bl(0);
-            data.write_bs(value.insert_units);
-            data.write_b(value.explodable);
-            data.write_rc(value.block_scaling);
-        }
-        DwgTableRecordBody::Viewport(value) => {
-            data.write_bd(value.view_height);
-            data.write_bd(value.view_width);
-            data.write_2rd(value.center);
-            data.write_3bd(value.target);
-            data.write_3bd(value.direction);
-            data.write_bd(value.twist);
-            data.write_bd(value.lens_length);
-            data.write_bd(value.front_clipping);
-            data.write_bd(value.back_clipping);
-            for flag in value.view_mode {
-                data.write_b(flag);
-            }
-            data.write_rc(value.render_mode);
-            data.write_b(value.use_default_lights);
-            data.write_rc(value.default_lighting_type);
-            data.write_bd(value.brightness);
-            data.write_bd(value.contrast);
-            data.write_bs(value.ambient_color.index);
-            data.write_bl(encode_complex_color_value(&value.ambient_color.value));
-            let color_flags = u8::from(value.ambient_color.name.is_some()) | (u8::from(value.ambient_color.book_name.is_some()) << 1);
-            data.write_rc(color_flags);
-            if let Some(name) = &value.ambient_color.name {
-                strings.write_tu(name);
-            }
-            if let Some(book_name) = &value.ambient_color.book_name {
-                strings.write_tu(book_name);
-            }
-            data.write_2rd(value.lower_left);
-            data.write_2rd(value.upper_right);
-            data.write_b(value.ucs_follow);
-            data.write_bs(value.circle_zoom);
-            data.write_b(value.fast_zoom);
-            data.write_bb(value.ucs_icon);
-            data.write_b(value.grid_mode);
-            data.write_2rd(value.grid_unit);
-            data.write_b(value.snap_mode);
-            data.write_b(value.snap_style);
-            data.write_bs(value.snap_isopair);
-            data.write_bd(value.snap_angle);
-            data.write_2rd(value.snap_base);
-            data.write_2rd(value.snap_unit);
-            data.write_b(value.ucs_at_origin);
-            data.write_b(value.ucs_viewport);
-            data.write_3bd(value.ucs_origin);
-            data.write_3bd(value.ucs_x_axis);
-            data.write_3bd(value.ucs_y_axis);
-            data.write_bd(value.ucs_elevation);
-            data.write_bs(value.ucs_orthographic_view);
-            data.write_bs(value.grid_flags);
-            data.write_bs(value.grid_major);
-        }
-        DwgTableRecordBody::DimensionStyle(value) => {
-            let write_color = |data: &mut DwgBitWriter, strings: &mut DwgBitWriter, color: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgComplexColor| {
-                data.write_bs(color.index);
-                data.write_bl(encode_complex_color_value(&color.value));
-                data.write_rc(u8::from(color.name.is_some()) | (u8::from(color.book_name.is_some()) << 1));
-                if let Some(name) = &color.name {
-                    strings.write_tu(name);
-                }
-                if let Some(book) = &color.book_name {
-                    strings.write_tu(book);
-                }
-            };
-            strings.write_tu(&value.dimension_postfix);
-            strings.write_tu(&value.alternate_postfix);
-            let g = &value.geometry;
-            data.write_bd(g.scale);
-            data.write_bd(g.arrow_size);
-            data.write_bd(g.extension_origin_offset);
-            data.write_bd(g.dimension_line_increment);
-            data.write_bd(g.extension_line_extension);
-            data.write_bd(g.rounding);
-            data.write_bd(g.dimension_line_extension);
-            data.write_bd(g.plus_tolerance);
-            data.write_bd(g.minus_tolerance);
-            data.write_bd(g.fixed_extension_length);
-            data.write_bd(g.jog_angle);
-            data.write_bs(value.fill_mode);
-            write_color(&mut data, &mut strings, &value.fill_color);
-            let b = &value.behavior;
-            data.write_b(b.tolerance);
-            data.write_b(b.limits);
-            data.write_b(b.text_inside_horizontal);
-            data.write_b(b.text_outside_horizontal);
-            data.write_b(b.suppress_extension_1);
-            data.write_b(b.suppress_extension_2);
-            data.write_bs(b.text_vertical_alignment);
-            data.write_bs(b.zero_suppression);
-            data.write_bs(b.angular_zero_suppression);
-            data.write_bs(b.arc_symbol);
-            let t = &value.text;
-            data.write_bd(t.height);
-            data.write_bd(t.center_mark_size);
-            data.write_bd(t.tick_size);
-            data.write_bd(t.alternate_scale);
-            data.write_bd(t.linear_scale);
-            data.write_bd(t.vertical_position);
-            data.write_bd(t.tolerance_scale);
-            data.write_bd(t.gap);
-            data.write_bd(t.alternate_rounding);
-            data.write_b(t.alternate_enabled);
-            data.write_bs(t.alternate_decimals);
-            data.write_b(t.text_outside_extensions);
-            data.write_b(t.separate_arrowheads);
-            data.write_b(t.force_text_inside);
-            data.write_b(t.suppress_outside_extensions);
-            write_color(&mut data, &mut strings, &t.dimension_line_color);
-            write_color(&mut data, &mut strings, &t.extension_line_color);
-            write_color(&mut data, &mut strings, &t.text_color);
-            let u = &value.units;
-            data.write_bs(u.alternate_decimal_places);
-            data.write_bs(u.decimal_places);
-            data.write_bs(u.tolerance_decimal_places);
-            data.write_bs(u.alternate_units);
-            data.write_bs(u.alternate_tolerance_decimal_places);
-            data.write_bs(u.angular_units);
-            data.write_bs(u.fraction_format);
-            data.write_bs(u.linear_units);
-            data.write_bs(u.decimal_separator);
-            data.write_bs(u.text_movement);
-            data.write_bs(u.text_horizontal_alignment);
-            data.write_b(u.suppress_dimension_line_1);
-            data.write_b(u.suppress_dimension_line_2);
-            data.write_bs(u.tolerance_vertical_alignment);
-            data.write_bs(u.tolerance_zero_suppression);
-            data.write_bs(u.alternate_zero_suppression);
-            data.write_bs(u.alternate_tolerance_zero_suppression);
-            data.write_b(u.user_positioned_text);
-            data.write_bs(u.arrow_text_fit);
-            let r = &value.r2010;
-            data.write_b(r.fixed_extension_enabled);
-            data.write_b(r.text_direction);
-            data.write_bd(r.alternate_measurement_factor);
-            strings.write_tu(&r.alternate_measurement_suffix);
-            data.write_bd(r.measurement_factor);
-            strings.write_tu(&r.measurement_suffix);
-            data.write_bs(r.dimension_lineweight);
-            data.write_bs(r.extension_lineweight);
-            data.write_b(r.flag);
-        }
+        DwgTableRecordBody::Layer(value) => write_layer_record(value, object, &mut data, &mut strings),
+        DwgTableRecordBody::Linetype(value) => write_linetype_record(value, object, &mut data, &mut strings),
+        DwgTableRecordBody::BlockHeader(value) => write_block_header_record(value, object, &mut data, &mut strings),
+        DwgTableRecordBody::Viewport(value) => write_viewport_record(value, &mut data, &mut strings),
+        DwgTableRecordBody::DimensionStyle(value) => write_dimension_style_record(value, &mut data, &mut strings),
     }
     let string_bits = strings.bit_len();
     if string_bits > 0x7fff {
@@ -396,6 +195,245 @@ pub fn encode_r2010_table_record_frame(object: &semio_s_artifact_stdio_dwg_snaps
         handles.write_handle(5, value.extension_2_linetype_handle.unwrap_or_default());
     }
     finish_r2010_object_frame(&data, handles)
+}
+
+/// 🧱️ Writes the main stream fields of a layer table record.
+fn write_layer_record(
+    value: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgLayerTableRecord,
+    object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject,
+    data: &mut DwgBitWriter,
+    strings: &mut DwgBitWriter,
+) -> () {
+    if value.lineweight > 31 {
+        return Err(format!("layer {:#x} lineweight {} exceeds five bits", object.handle, value.lineweight));
+    }
+    let flag0 = u16::from(value.frozen) | (u16::from(value.off) << 1) | (u16::from(value.frozen_in_new_viewports) << 2) | (u16::from(value.locked) << 3) | (u16::from(value.plottable) << 4) | (u16::from(value.lineweight) << 5);
+    data.write_bs(flag0);
+    data.write_bs(value.color.index);
+    data.write_bl(encode_complex_color_value(&value.color.value));
+    let color_flags = u8::from(value.color.name.is_some()) | (u8::from(value.color.book_name.is_some()) << 1);
+    data.write_rc(color_flags);
+    if let Some(name) = &value.color.name {
+        strings.write_tu(name);
+    }
+    if let Some(book_name) = &value.color.book_name {
+        strings.write_tu(book_name);
+    }
+}
+
+/// 🪵️ Writes the main stream fields of a linetype table record.
+fn write_linetype_record(
+    value: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgLinetypeTableRecord,
+    object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject,
+    data: &mut DwgBitWriter,
+    strings: &mut DwgBitWriter,
+) -> () {
+    if value.dashes.len() > usize::from(u8::MAX) {
+        return Err(format!("linetype {:#x} has too many dashes", object.handle));
+    }
+    if value.dashes.iter().any(|dash| dash.text.is_some()) {
+        return Err(format!("linetype {:#x} textual dash area is not yet supported", object.handle));
+    }
+    strings.write_tu(&value.description);
+    data.write_bd(value.pattern_length);
+    data.write_rc(value.alignment);
+    data.write_rc(value.dashes.len() as u8);
+    for dash in &value.dashes {
+        data.write_bd(dash.length);
+        data.write_bs(dash.complex_shape_code);
+        data.write_rd(dash.x_offset);
+        data.write_rd(dash.y_offset);
+        data.write_bd(dash.scale);
+        data.write_bd(dash.rotation);
+        data.write_bs(dash.shape_flags);
+    }
+}
+
+/// 🔩️ Writes the main stream fields of a block header table record.
+fn write_block_header_record(
+    value: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgBlockHeaderTableRecord,
+    object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject,
+    data: &mut DwgBitWriter,
+    strings: &mut DwgBitWriter,
+) -> () {
+    if (value.is_xref || value.xref_overlaid) && !value.owned_entity_handles.is_empty() {
+        return Err(format!("block header {:#x} xref cannot own entities", object.handle));
+    }
+    if value.insert_backreference_handles.len() > 0xefffff {
+        return Err(format!("block header {:#x} has too many insert backreferences", object.handle));
+    }
+    data.write_b(value.anonymous);
+    data.write_b(value.has_attributes);
+    data.write_b(value.is_xref);
+    data.write_b(value.xref_overlaid);
+    data.write_b(value.xref_loaded);
+    if !value.is_xref && !value.xref_overlaid {
+        data.write_bl(value.owned_entity_handles.len() as u32);
+    }
+    data.write_3bd(value.base_point);
+    strings.write_tu(&value.xref_path);
+    for _ in &value.insert_backreference_handles {
+        data.write_rc(1);
+    }
+    data.write_rc(0);
+    strings.write_tu(&value.description);
+    data.write_bl(0);
+    data.write_bs(value.insert_units);
+    data.write_b(value.explodable);
+    data.write_rc(value.block_scaling);
+}
+
+/// ⚙️ Writes the main stream fields of a viewport table record.
+fn write_viewport_record(
+    value: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgViewportTableRecord,
+    data: &mut DwgBitWriter,
+    strings: &mut DwgBitWriter,
+) -> () {
+    data.write_bd(value.view_height);
+    data.write_bd(value.view_width);
+    data.write_2rd(value.center);
+    data.write_3bd(value.target);
+    data.write_3bd(value.direction);
+    data.write_bd(value.twist);
+    data.write_bd(value.lens_length);
+    data.write_bd(value.front_clipping);
+    data.write_bd(value.back_clipping);
+    for flag in value.view_mode {
+        data.write_b(flag);
+    }
+    data.write_rc(value.render_mode);
+    data.write_b(value.use_default_lights);
+    data.write_rc(value.default_lighting_type);
+    data.write_bd(value.brightness);
+    data.write_bd(value.contrast);
+    data.write_bs(value.ambient_color.index);
+    data.write_bl(encode_complex_color_value(&value.ambient_color.value));
+    let color_flags = u8::from(value.ambient_color.name.is_some()) | (u8::from(value.ambient_color.book_name.is_some()) << 1);
+    data.write_rc(color_flags);
+    if let Some(name) = &value.ambient_color.name {
+        strings.write_tu(name);
+    }
+    if let Some(book_name) = &value.ambient_color.book_name {
+        strings.write_tu(book_name);
+    }
+    data.write_2rd(value.lower_left);
+    data.write_2rd(value.upper_right);
+    data.write_b(value.ucs_follow);
+    data.write_bs(value.circle_zoom);
+    data.write_b(value.fast_zoom);
+    data.write_bb(value.ucs_icon);
+    data.write_b(value.grid_mode);
+    data.write_2rd(value.grid_unit);
+    data.write_b(value.snap_mode);
+    data.write_b(value.snap_style);
+    data.write_bs(value.snap_isopair);
+    data.write_bd(value.snap_angle);
+    data.write_2rd(value.snap_base);
+    data.write_2rd(value.snap_unit);
+    data.write_b(value.ucs_at_origin);
+    data.write_b(value.ucs_viewport);
+    data.write_3bd(value.ucs_origin);
+    data.write_3bd(value.ucs_x_axis);
+    data.write_3bd(value.ucs_y_axis);
+    data.write_bd(value.ucs_elevation);
+    data.write_bs(value.ucs_orthographic_view);
+    data.write_bs(value.grid_flags);
+    data.write_bs(value.grid_major);
+}
+
+/// 🧲️ Writes the main stream fields of a dimension style table record.
+fn write_dimension_style_record(
+    value: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgDimensionStyleTableRecord,
+    data: &mut DwgBitWriter,
+    strings: &mut DwgBitWriter,
+) -> () {
+    let write_color = |data: &mut DwgBitWriter, strings: &mut DwgBitWriter, color: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgComplexColor| {
+        data.write_bs(color.index);
+        data.write_bl(encode_complex_color_value(&color.value));
+        data.write_rc(u8::from(color.name.is_some()) | (u8::from(color.book_name.is_some()) << 1));
+        if let Some(name) = &color.name {
+            strings.write_tu(name);
+        }
+        if let Some(book) = &color.book_name {
+            strings.write_tu(book);
+        }
+    };
+    strings.write_tu(&value.dimension_postfix);
+    strings.write_tu(&value.alternate_postfix);
+    let g = &value.geometry;
+    data.write_bd(g.scale);
+    data.write_bd(g.arrow_size);
+    data.write_bd(g.extension_origin_offset);
+    data.write_bd(g.dimension_line_increment);
+    data.write_bd(g.extension_line_extension);
+    data.write_bd(g.rounding);
+    data.write_bd(g.dimension_line_extension);
+    data.write_bd(g.plus_tolerance);
+    data.write_bd(g.minus_tolerance);
+    data.write_bd(g.fixed_extension_length);
+    data.write_bd(g.jog_angle);
+    data.write_bs(value.fill_mode);
+    write_color(&mut data, &mut strings, &value.fill_color);
+    let b = &value.behavior;
+    data.write_b(b.tolerance);
+    data.write_b(b.limits);
+    data.write_b(b.text_inside_horizontal);
+    data.write_b(b.text_outside_horizontal);
+    data.write_b(b.suppress_extension_1);
+    data.write_b(b.suppress_extension_2);
+    data.write_bs(b.text_vertical_alignment);
+    data.write_bs(b.zero_suppression);
+    data.write_bs(b.angular_zero_suppression);
+    data.write_bs(b.arc_symbol);
+    let t = &value.text;
+    data.write_bd(t.height);
+    data.write_bd(t.center_mark_size);
+    data.write_bd(t.tick_size);
+    data.write_bd(t.alternate_scale);
+    data.write_bd(t.linear_scale);
+    data.write_bd(t.vertical_position);
+    data.write_bd(t.tolerance_scale);
+    data.write_bd(t.gap);
+    data.write_bd(t.alternate_rounding);
+    data.write_b(t.alternate_enabled);
+    data.write_bs(t.alternate_decimals);
+    data.write_b(t.text_outside_extensions);
+    data.write_b(t.separate_arrowheads);
+    data.write_b(t.force_text_inside);
+    data.write_b(t.suppress_outside_extensions);
+    write_color(&mut data, &mut strings, &t.dimension_line_color);
+    write_color(&mut data, &mut strings, &t.extension_line_color);
+    write_color(&mut data, &mut strings, &t.text_color);
+    let u = &value.units;
+    data.write_bs(u.alternate_decimal_places);
+    data.write_bs(u.decimal_places);
+    data.write_bs(u.tolerance_decimal_places);
+    data.write_bs(u.alternate_units);
+    data.write_bs(u.alternate_tolerance_decimal_places);
+    data.write_bs(u.angular_units);
+    data.write_bs(u.fraction_format);
+    data.write_bs(u.linear_units);
+    data.write_bs(u.decimal_separator);
+    data.write_bs(u.text_movement);
+    data.write_bs(u.text_horizontal_alignment);
+    data.write_b(u.suppress_dimension_line_1);
+    data.write_b(u.suppress_dimension_line_2);
+    data.write_bs(u.tolerance_vertical_alignment);
+    data.write_bs(u.tolerance_zero_suppression);
+    data.write_bs(u.alternate_zero_suppression);
+    data.write_bs(u.alternate_tolerance_zero_suppression);
+    data.write_b(u.user_positioned_text);
+    data.write_bs(u.arrow_text_fit);
+    let r = &value.r2010;
+    data.write_b(r.fixed_extension_enabled);
+    data.write_b(r.text_direction);
+    data.write_bd(r.alternate_measurement_factor);
+    strings.write_tu(&r.alternate_measurement_suffix);
+    data.write_bd(r.measurement_factor);
+    strings.write_tu(&r.measurement_suffix);
+    data.write_bs(r.dimension_lineweight);
+    data.write_bs(r.extension_lineweight);
+    data.write_b(r.flag);
 }
 //#endregion DwgRead
 //#endregion 🔖️DwgStructuralCodec

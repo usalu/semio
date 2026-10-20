@@ -21,6 +21,7 @@
     "test-snapshot-sqlite": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite",
@@ -38,6 +39,7 @@
     "test-snapshot-sqlite-native": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite native",
@@ -55,6 +57,7 @@
     "test-snapshot-sqlite-source": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite source",
@@ -72,6 +75,7 @@
     "verify-snapshot-sqlite-source": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify snapshot-sqlite-source",
@@ -112,6 +116,7 @@
     },
     "test": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -121,6 +126,7 @@
     "verify-architect-window-ownership": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify architect-window-ownership",
@@ -138,6 +144,7 @@
     "verify-program-document-contract": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify program-document-contract",
@@ -155,6 +162,7 @@
     "test-snapshot-sqlite-source-profile": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite-source-profile",
@@ -172,6 +180,7 @@
     "check-register-catalog": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts generate-register-catalog --check"
@@ -180,6 +189,7 @@
     "verify-physical-codecs": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify physical-codecs"

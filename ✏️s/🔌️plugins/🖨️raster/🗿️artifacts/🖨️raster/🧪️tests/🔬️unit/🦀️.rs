@@ -1,5 +1,6 @@
 use semio_s_artifact_raster_raster_model::{RASTER_DOCUMENT_SCHEMA, RasterAssetChild, image_content_child_handle};
 use semio_s_artifact_raster_raster_io::artifact_kind;
+use semio_s_artifact_raster_raster_model::SemioImageSnapshot;
 
 trait RasterChildOwnerOracle {
     fn expected() -> semio_framework_pack_json::Value;

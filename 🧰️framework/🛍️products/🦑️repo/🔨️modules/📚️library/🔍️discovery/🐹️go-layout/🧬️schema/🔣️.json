@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "Protocol": {
+      "const": {
+        "languageDirectory": "🐹️go",
+        "sourceDirectoryKind": "members-of-members-of-members-of-modules"
+      }
+    },
+    "Input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "testsDirectory",
+        "fixturesDirectory",
+        "oraclesDirectory",
+        "packagesDirectory",
+        "fileKind",
+        "sourceDirectoryNames"
+      ],
+      "properties": {
+        "testsDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^/\\\\\\u0000]+$"
+        },
+        "fixturesDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^/\\\\\\u0000]+$"
+        },
+        "oraclesDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^/\\\\\\u0000]+$"
+        },
+        "packagesDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^/\\\\\\u0000]+$"
+        },
+        "fileKind": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "emoji",
+            "extensionChains"
+          ],
+          "properties": {
+            "emoji": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[^/\\\\\\u0000]+$"
+            },
+            "extensionChains": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1,
+              "items": {
+                "const": ".go"
+              }
+            }
+          }
+        },
+        "sourceDirectoryNames": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[^/\\\\\\u0000]+$"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "Layout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "testsDirectory",
+        "implementationFilename",
+        "packagesDirectory",
+        "languageDirectory",
+        "opaqueDirectoryNames",
+        "sourceDirectoryNames"
+      ],
+      "properties": {
+        "testsDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^/\\\\\\u0000]+$"
+        },
+        "packagesDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^/\\\\\\u0000]+$"
+        },
+        "languageDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^/\\\\\\u0000]+$"
+        },
+        "implementationFilename": {
+          "type": "string",
+          "pattern": "^[^/\\\\\\u0000]+\\.go$"
+        },
+        "opaqueDirectoryNames": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[^/\\\\\\u0000]+$"
+          }
+        },
+        "sourceDirectoryNames": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[^/\\\\\\u0000]+$"
+          }
+        }
+      }
+    }
+  }
+}

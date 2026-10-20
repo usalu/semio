@@ -4,19 +4,19 @@
 import { normWireArray, normWireBoolean, normWireInteger, normWireLiteral, normWireNumber, normWireObject, normWireOptional, type NormWireReader, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 
 export interface En1999Artifact {
-  /** @state artifact */
+  /** 📑️ @state artifact */
   annex: "En" | "De";
-  /** @state artifact */
+  /** 🧱️ @state artifact */
   materials: { id: string; designation: string; }[];
-  /** @state artifact */
+  /** ✂️ @state artifact */
   sections: { id: string; kind: string; height: number; width: number; flangeThickness: number; webThickness: number; outerDiameter: number; elements: { id: string; width: number; thickness: number; outstand: boolean; welded: boolean; weldPosition: number; }[]; }[];
-  /** @state artifact */
+  /** 👤️ @state artifact */
   members: ({ id: string; sectionId: string; materialId: string; length: number; bucklingLengthY: number; bucklingLengthZ: number; bucklingLengthT: number; ltbLength: number; c1: number; restrainedLtb: boolean; actions: { loadCaseId?: string; id: string; kind: string; category: string; source: string; gKLine: number; qKLine: number; nK: number; vYK: number; vZK: number; mYK: number; mZK: number; }[]; support: "simplySupported" | "continuous" | "cantilever"; })[];
-  /** @state artifact */
+  /** 🔗️ @state artifact */
   connections: { id: string; memberId: string; materialId: string; kind: string; bolts: { material: string; diameter: number; rows: number; boltsPerRow: number; edgeDistance: number; pitch: number; gauge: number; plateThickness: number; }; welds: { fillerAlloy: string; throat: number; length: number; betaW: number; hazExtent: number; }; actions: { loadCaseId?: string; id: string; kind: string; category: string; source: string; gKLine: number; qKLine: number; nK: number; vYK: number; vZK: number; mYK: number; mZK: number; }[]; }[];
-  /** @state artifact */
+  /** ⚡️ @state artifact */
   fireScenarios: { id: string; memberId: string; thetaA: number; durationS: number; }[];
-  /** @state artifact */
+  /** 📐️ @state artifact */
   fatigueDetails: { id: string; memberId: string; deltaSigmaC: number; deltaSigmaEd: number; nCycles: number; detailCategory: string; m1: number; m2: number; }[];
 }
 

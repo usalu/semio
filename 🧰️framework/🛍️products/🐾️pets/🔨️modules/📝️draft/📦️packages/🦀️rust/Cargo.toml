@@ -22,6 +22,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-pets-clearance = { path = "../../../🚧️clearance/📦️packages/🦀️rust" }
 semio-framework-pets-character = { path = "../../../🎭️character/📦️packages/🦀️rust" }
 semio-framework-pets-contract = { path = "../../../📜️contract/📦️packages/🦀️rust" }
 semio-framework-pets-kinematics = { path = "../../../⚙️kinematics/📦️packages/🦀️rust" }

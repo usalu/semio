@@ -57,7 +57,7 @@ async fn inspector_mask_dimensions_resolve_the_attached_image() {
     let mut document=semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot();
     document.assets.insert("mask".into(),semio_s_artifact_raster_raster_io::mint_raster_asset_child("mask",&semio_s_artifact_raster_raster_model::RasterImageAsset {mime:"image/png".into(),data:bytes})).unwrap();
     let mut layer=semio_s_artifact_raster_raster_model::create_layer_of_kind("pixel");
-    if let RasterLayerNode::Pixel {mask,..}=&mut layer {*mask=Some(semio_s_artifact_raster_raster_model::RasterLayerMask {enabled:true,linked:true,invert:false,width:None,height:None,image_key:Some("mask".into()),transform:crate::RasterTransform::default()});}
+    if let RasterLayerNode::Pixel {mask,..}=&mut layer {*mask=Some(semio_s_artifact_raster_raster_model::RasterLayerMask {enabled:true,linked:true,invert:false,width:None,height:None,image_key:Some("mask".into()),transform:semio_s_artifact_raster_raster_model::RasterTransform::default()});}
     document.layers.push(layer);
     let resolved=[value(&document.layers[0],"maskWidth",&document),value(&document.layers[0],"maskHeight",&document)];
     semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(document);
@@ -66,7 +66,7 @@ async fn inspector_mask_dimensions_resolve_the_attached_image() {
 
 #[test]
 fn inspector_adjustment_parameters_are_localized_bounded_commit_controls() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧬️schema/🧬️mutations/🎛️change-layer/🧪️tests/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧬️schema/🧬️mutations/🎛️change-layer-adjustment-parameter/🧪️tests/🔣️.json")).unwrap();
     let mut document=semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot();
     let layer=semio_s_artifact_raster_raster_model::create_layer_of_kind("adjustment");
     let id=layer_node_id(&layer).to_owned();document.layers.push(layer);

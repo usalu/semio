@@ -1,6 +1,5 @@
-import { createServer, type Server } from "node:http";
+import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { isDeepStrictEqual } from "node:util";
-import type { OwnedBuildMiddleware, OwnedBuildPlugin } from "@semio-tech/ui-react/build-tooling";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 /** 📨️ Carries one open owner declaration; its provider admits all provider-specific fields. */
@@ -19,11 +18,22 @@ export interface AssetDeliveryContextV1 {
   readonly mode: AssetDeliveryModeV1;
 }
 
+/** ⏭️ Hands control to the next middleware of the delivery chain. */
+export type AssetBuildNextV1 = (error?: unknown) => void;
+
+/** 🌉️ A delivery middleware exactly as the dispatcher chains it. */
+export type AssetBuildMiddlewareV1 = (request: IncomingMessage, response: ServerResponse, next: AssetBuildNextV1) => void | Promise<void>;
+
+/** 🏷️ The only property of a build plugin the dispatcher reads: the builder that supplies providers owns the rest of the plugin shape. */
+export interface AssetBuildPluginV1 {
+  readonly name: string;
+}
+
 /** 🔌️ Contributes an admitted asset kind without extending the general dispatcher. */
-export interface AssetDeliveryProviderV1 {
+export interface AssetDeliveryProviderV1<Plugin extends AssetBuildPluginV1 = AssetBuildPluginV1> {
   readonly kind: string;
-  readonly middleware: (context: AssetDeliveryContextV1, declaration: AssetDeliveryDeclarationV1) => OwnedBuildMiddleware;
-  readonly plugins: (context: AssetDeliveryContextV1, declaration: AssetDeliveryDeclarationV1) => readonly OwnedBuildPlugin[];
+  readonly middleware: (context: AssetDeliveryContextV1, declaration: AssetDeliveryDeclarationV1) => AssetBuildMiddlewareV1;
+  readonly plugins: (context: AssetDeliveryContextV1, declaration: AssetDeliveryDeclarationV1) => readonly Plugin[];
 }
 
 /** 🛂️ Admits the open wire envelope using the language-neutral schema's exact bounds. */
@@ -44,8 +54,8 @@ export function resolveAssetDeliveryModeV1(value?: string): AssetDeliveryModeV1 
   throw Error("Asset delivery mode must be fetch or bundle");
 }
 
-function selectDeliveries(declarations: readonly AssetDeliveryDeclarationV1[], providers: readonly AssetDeliveryProviderV1[]): readonly (readonly [AssetDeliveryProviderV1, AssetDeliveryDeclarationV1])[] {
-  const registry = new Map<string, AssetDeliveryProviderV1>();
+function selectDeliveries<Plugin extends AssetBuildPluginV1>(declarations: readonly AssetDeliveryDeclarationV1[], providers: readonly AssetDeliveryProviderV1<Plugin>[]): readonly (readonly [AssetDeliveryProviderV1<Plugin>, AssetDeliveryDeclarationV1])[] {
+  const registry = new Map<string, AssetDeliveryProviderV1<Plugin>>();
   for (const provider of providers) {
     parseAssetDeliveryDeclarationV1({ kind: provider.kind, route: "/" });
     if (registry.has(provider.kind)) throw Error("Duplicate asset provider " + provider.kind);
@@ -53,7 +63,7 @@ function selectDeliveries(declarations: readonly AssetDeliveryDeclarationV1[], p
     registry.set(provider.kind, provider);
   }
   const seen = new Map<string, AssetDeliveryDeclarationV1>();
-  const deliveries: (readonly [AssetDeliveryProviderV1, AssetDeliveryDeclarationV1])[] = [];
+  const deliveries: (readonly [AssetDeliveryProviderV1<Plugin>, AssetDeliveryDeclarationV1])[] = [];
   for (const value of declarations) {
     const declaration = parseAssetDeliveryDeclarationV1(value);
     const provider = registry.get(declaration.kind);
@@ -71,7 +81,7 @@ function selectDeliveries(declarations: readonly AssetDeliveryDeclarationV1[], p
 }
 
 /** 🏗️ Composes only explicitly supplied build providers in declaration order. */
-export function createAssetBuildPluginsV1(root: string, declarations: readonly AssetDeliveryDeclarationV1[], providers: readonly AssetDeliveryProviderV1[], mode: AssetDeliveryModeV1 = "fetch"): OwnedBuildPlugin[] {
+export function createAssetBuildPluginsV1<Plugin extends AssetBuildPluginV1>(root: string, declarations: readonly AssetDeliveryDeclarationV1[], providers: readonly AssetDeliveryProviderV1<Plugin>[], mode: AssetDeliveryModeV1 = "fetch"): Plugin[] {
   const context = { root, mode: resolveAssetDeliveryModeV1(mode) };
   return selectDeliveries(declarations, providers).flatMap(([provider, declaration]) => [...provider.plugins(context, declaration)]);
 }

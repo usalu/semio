@@ -4,7 +4,7 @@ import { SHARD_RUNTIME_DIAGNOSTICS_KEY, SHARD_WORKER_DIAGNOSTICS_PARAM, SHARD_WO
 import { kernelDescriptorLoadFixture as descriptorLoadFixture } from "@semio-tech/framework-kernel/testing/fixtures";
 import pluginAvailabilityRouteFixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🔁️plugin-availability-route/🔣️.json";
 import { stubFetch } from "../../../../../🧪️tests/🌐️fetch-stub/🟦️.ts";
-import { tutorialDocumentTrackFixture as tutorialDocumentFixture } from "@semio-tech/framework/onboarding/testing/fixtures";
+import { tutorialDocumentTrackFixture as tutorialDocumentFixture } from "@semio-tech/framework-onboarding/testing/fixtures";
 import { tutorialSlice, validateTutorial } from "@semio-tech/ui-react";
 import type { TutorialDefinition } from "@semio-tech/framework";
 import { afterEach, describe, expect, it, vi } from "vitest";

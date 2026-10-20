@@ -18,7 +18,6 @@ use semio_framework_3d::mesh::VertexId;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use crate::context::{act, app, committed_edits, dispatch};
 use semio_s_artifact_lowpoly_lowpoly_editor::LowpolyCommand;
-use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
 use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LOWPOLY_DOCUMENT_SCHEMA;
 use semio_framework_plugin::PluginApp;
 

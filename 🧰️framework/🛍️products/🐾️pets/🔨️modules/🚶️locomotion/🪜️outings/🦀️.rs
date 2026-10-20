@@ -23,13 +23,13 @@ pub(crate) struct Outing { pub(super) trip: Trip, pub(super) raise: Option<Ladde
 
 /// 🧿️ A destination on a perch or a chosen height along a wall.
 #[derive(Clone)]
-pub(crate) enum Venture { Perch(Perch), Wall { pitch: Pitch, y: Option<f64> } }
+pub enum Venture { Perch(Perch), Wall { pitch: Pitch, y: Option<f64> } }
 
 /// 🧩️ The stance where a gear leg begins.
 pub(super) struct Stand { pub(super) perch: Perch, pub(super) x: f64, pub(super) y: f64, pub(super) facing: Facing, pub(super) grip: f64 }
 
 /// 🎒️ Gear moves non-floating species along walls, ladders and grappling ropes.
-pub(crate) fn geared(kind: &Species) -> bool {
+pub fn geared(kind: &Species) -> bool {
     kind.locomotion.gait != Gait::Float && kind.gear.iter().any(|gear| matches!(gear, Gear::Climb | Gear::Ladder | Gear::Grapple))
 }
 
@@ -377,7 +377,7 @@ pub(super) fn outings_to(draft: &Draft<'_>, index: usize, venture: &Venture, uni
 }
 
 /// 🌉️ Gear reaches a destination directly or through one intermediate perch.
-pub(crate) fn reaches(draft: &Draft<'_>, kind: &Species, x: f64, from: &Perch, to: &Perch, now: Ticks) -> bool {
+pub fn reaches(draft: &Draft<'_>, kind: &Species, x: f64, from: &Perch, to: &Perch, now: Ticks) -> bool {
     let ladders: Vec<_> = draft.stage.ladders.iter().filter(|ladder| ladder.rider.is_none() && ladder.since <= now && ladder.until > now).map(|ladder| LadderStand { wall: ladder.wall.clone(), surface: ladder.surface.clone(), side: ladder.side, foot: ladder.foot, top: ladder.top }).collect();
     let route = |x, from, to| route_of(x, from, to, &kind.gear, kind.size, GRIP_BUDGET, &draft.stage.pitches, &ladders, &draft.stage.keepouts).is_some();
     if route(x, from, to) { return true; }
@@ -490,7 +490,7 @@ pub(super) fn embark(draft: &mut Draft<'_>, index: usize, outing: Outing, now: T
 }
 
 /// 🚩️ Try every venture from a drawn first choice, taking its first legal outing.
-pub(crate) fn set_out(draft: &mut Draft<'_>, index: usize, ventures: &[Venture], pick: f64, rest: &[f64], now: Ticks) -> bool {
+pub fn set_out(draft: &mut Draft<'_>, index: usize, ventures: &[Venture], pick: f64, rest: &[f64], now: Ticks) -> bool {
     if ventures.is_empty() { return false; }
     let first = std::cmp::min((pick * ventures.len() as f64).floor() as usize, ventures.len() - 1);
     for turn in 0..ventures.len() { for outing in outings_to(draft, index, &ventures[(first + turn) % ventures.len()], rest, now) { if embark(draft, index, outing, now) { return true; } } }

@@ -25,8 +25,8 @@ test("original SQLite receiving preserves plain declaration and extent oracles w
   expect(extent).toEqual({rows:1,bytes:8+Buffer.byteLength(fixture.extentRow[1] as string)});
   for(const row of fixture.extentCases)expect(extent.rows<=row.maximumRows&&fixture.extentRow.length<=row.maximumColumns&&extent.bytes<=row.maximumValueBytes,row.id).toBe(row.accepted);
  }finally{reference.close();}
- const owner=readFileSync(resolve(import.meta.dir,"../../../📦️packages/🦀️rust/📜️script.ts"),"utf8");
- const receiving=owner.slice(owner.indexOf("class ReceivingSchemaScript"),owner.indexOf("class OperationScript"));
+ const owner=readFileSync(resolve(import.meta.dir,"../../../🧪️tests/🔬️rust-package-commands/🟦️.ts"),"utf8");
+ const receiving=owner.match(/export async function runReceivingSchemaScript[\s\S]*?\n\}/u)![0];
  expect(receiving.includes("compile(schema)")).toBe(false);
  expect(receiving.includes("🧬️schema/🔣️.json")).toBe(false);
  expect(receiving.includes("sqlite_snapshot_receiving_borrowed_schema_uses_original_work_without_owned_tokens")).toBe(true);

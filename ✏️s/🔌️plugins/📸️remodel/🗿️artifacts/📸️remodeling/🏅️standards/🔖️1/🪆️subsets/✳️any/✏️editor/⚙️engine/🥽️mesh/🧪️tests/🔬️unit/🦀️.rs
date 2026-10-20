@@ -1,5 +1,7 @@
 use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::step_ceiling;
 use super::*;
+use semio_s_artifact_remodel_remodeling_mesh_surface::editor::remodeling::engine::mesh::surface::HalfedgeTopology;
+use semio_s_artifact_remodel_remodeling_mesh_surface::editor::remodeling::engine::mesh::surface::DenseField;
 
 fn lcg_next(state: &mut u64) -> f64 {
     *state = state.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1_442_695_040_888_963_407);

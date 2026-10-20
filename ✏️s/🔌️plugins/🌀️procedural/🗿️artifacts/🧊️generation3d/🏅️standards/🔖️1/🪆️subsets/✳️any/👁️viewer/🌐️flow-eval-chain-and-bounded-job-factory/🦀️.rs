@@ -127,8 +127,6 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewFlow
         }
         let retained_eval = window.get::<preview::transient::Generation3dViewPreviewWindowTransientOwner>().map(|state| state.preview_eval_text.as_deref()).ok_or_else(|| Fault::from("generation3d-view-flow-eval-window-owner-required"))?;
         let tolerance = input.config.tolerance();
-        // 📚️ The tick evaluates what this surface is LOOKING at, which is the picked example once the
-        // navbar named one — the read-only counterpart of the editor switch replacing its host_snapshot.
         let viewed = Generation3dViewedDocument::resolve(input.snapshot, input.config);
         let retained_grant=cx.retained_grant();
         let outcome = self.instance_owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| {

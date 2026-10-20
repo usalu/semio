@@ -48,10 +48,51 @@ function wasmOnly(text: string): boolean {
   return !!e && evalCfg(e, WASM) === true && evalCfg(e, HOST) === false;
 }
 
-/** 🕸️ A crate is built for wasm only when some source cfg or target-specific dependency is wasm-only. */
+let wasmSet: Set<Package> | null = null;
+
+function isWasmRoot(p: Package): boolean {
+  if ((p.toml?.lib?.["crate-type"] ?? []).includes("cdylib")) return true;
+  return p.deps.some((d) => {
+    if (d.section === "dev-dependencies" || !d.target) return false;
+    const m = /^cfg\((.*)\)$/s.exec(d.target.trim());
+    return m ? wasmOnly(m[1]) : /^wasm32/.test(d.target);
+  });
+}
+
+/** 🕸️ The packages that really build for wasm: those with wasm-only dependencies or a cdylib plus everything they depend on under the wasm environment. */
+export function wasmClosure(): Set<Package> {
+  if (wasmSet) return wasmSet;
+  const all = new Set<Package>();
+  for (const ps of libIndex.values()) for (const p of ps) all.add(p);
+  const out = new Set<Package>();
+  const stack = [...all].filter(isWasmRoot);
+  while (stack.length) {
+    const p = stack.pop()!;
+    if (out.has(p)) continue;
+    out.add(p);
+    for (const d of p.deps) {
+      if (d.section !== "dependencies") continue;
+      if (d.target) {
+        const m = /^cfg\((.*)\)$/s.exec(d.target.trim());
+        const e = m ? cfgOf(m[1]) : null;
+        if (e ? evalCfg(e, WASM) === false : !/^wasm32/.test(d.target)) continue;
+      }
+      const t = depTarget(d).pkg;
+      if (t && !out.has(t)) stack.push(t);
+    }
+  }
+  wasmSet = out;
+  return out;
+}
+
+/** 🕸️ A crate is built for wasm only when it is in the wasm closure and some source cfg or target-specific dependency is wasm-only. */
 export function wasmRelevant(tree: CrateTree): boolean {
   const c = (tree as any)._wr as boolean | undefined;
   if (c !== undefined) return c;
+  if (!wasmClosure().has(tree.pkg)) {
+    (tree as any)._wr = false;
+    return false;
+  }
   let r = false;
   for (const d of tree.pkg.deps) {
     const m = d.target ? /^cfg\((.*)\)$/s.exec(d.target.trim()) : null;

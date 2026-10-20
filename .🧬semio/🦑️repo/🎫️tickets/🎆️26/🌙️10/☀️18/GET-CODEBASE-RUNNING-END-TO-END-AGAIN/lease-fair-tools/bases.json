@@ -1,0 +1,14 @@
+{
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts": "26415d2697d125b9c8447648d8cbdf159a540f7bfc060cdf4195ccba705ccf4b",
+  "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts": "39caa4a921e4bda8657de378432326a9f3913cd01f2e2d53337ef852aab821c7",
+  "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/📈️progress.json": "ab9d5f3202ca31a66953fa87303d318bf96bdaf8decdd64bde280efb1f152f5d",
+  "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️progress/🟦️.ts": "7ff93d11ea6851c688e0504eaeb4796fd28efdbde28c656c65178194ba816045",
+  "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️progress/🔣️.json": "e2c9c5c3725db81d534740f767ab56c7f8be801f625e012b240201957b5e4ed4",
+  "🧰️framework/🔨️modules/🏃️process/📜️script.ts": "9b9bdb621ccd7f7081390d0130d933d2e7b577742c3fd87be0151380882e8500",
+  "🧰️framework/🔨️modules/🏃️process/📋️project.json": "4db2d32e6292eeace288ad0a2b2bf979a2f6abf0b67eb36b26cf9d547d7f3c6a",
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/⏳️wait/🧬️schema/📜️policy.json": null,
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/⚖️fairness/🧪️tests/🟦️.ts": null,
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/⚖️fairness/🧪️tests/🧫️fixtures/🔣️.json": null,
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/⚖️fairness/🧬️schema/🔣️.json": null,
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/⚖️fairness/🧪️tests/📥️worker/🟦️.ts": null
+}

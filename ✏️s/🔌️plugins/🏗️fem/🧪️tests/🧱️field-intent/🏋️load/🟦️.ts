@@ -6,21 +6,20 @@ import Ajv from "ajv";
 import { applyPatch } from "fast-json-patch";
 import { Root } from "protobufjs";
 import { buildSchema } from "graphql";
-import { binary64, binary64Value, type Binary64 } from "@semio-tech/value-ts/ieee754";
-import { parseFem2dLoadPatch, parseFem2dCombinationPatch } from "../../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts";
-import { parseFem3dLoadPatch, parseFem3dCombinationPatch } from "../../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts";
+import { binary64, binary64Value, type Binary64 } from "@semio-tech/framework/value/ieee754";
 
 const owner = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const read = (path: string) => JSON.parse(readFileSync(path, "utf8"));
 const capture = (value: unknown): unknown => typeof value === "number" ? binary64(value) : Array.isArray(value) ? value.map(capture) : value && typeof value === "object" ? Object.fromEntries(Object.entries(value).map(([key, item]) => [key, capture(item)])) : value;
 const query = (value: unknown): unknown => Array.isArray(value) ? value.map(query) : value && typeof value === "object" ? "bits" in value ? binary64Value(value as Binary64) : Object.fromEntries(Object.entries(value).map(([key, item]) => [key, query(item)])) : value;
 
-describe("load and combination field intent", () => {
-  for (const dimension of ["2d", "3d"] as const) {
+/** 🏋️ Registers the load and combination field-intent laws of one dimension against that artifact's own diff parsers. */
+export function registerLoadFieldIntent(dimension: "2d" | "3d", parsers: { parseLoad(patch: any): unknown; parseCombination(patch: any): unknown }): void {
+describe(`${dimension} load and combination field intent`, () => {
+  {
     const subsets = resolve(owner, `🗿️artifacts/${dimension === "2d" ? "◻️2d" : "🧊️3d"}/🏅️standards/🔖️1/🪆️subsets`);
     const fixtures = resolve(subsets, "🏋️load/🧪️tests/🧫️fixtures/🧬️mutations");
-    const parseLoad = dimension === "2d" ? parseFem2dLoadPatch : parseFem3dLoadPatch;
-    const parseCombination = dimension === "2d" ? parseFem2dCombinationPatch : parseFem3dCombinationPatch;
+    const { parseLoad, parseCombination } = parsers;
     const ajv = new Ajv({ strict: false, strictNumbers: true, validateFormats: false });
     const validators = Object.fromEntries(["load", "combination-name", "combination-term"].map(kind => [kind, ajv.compile(read(resolve(subsets, `🏋️load/🧬️schema/🧬️mutations/🩹️change-${kind}/🧬️schema/🔣️.json`)))]));
 
@@ -80,3 +79,4 @@ describe("load and combination field intent", () => {
     });
   }
 });
+}

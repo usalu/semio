@@ -17,6 +17,7 @@ const prefixes = (flag("--prefix") ?? "✏️s,🌎️hub,🎓️teaching,🏢�
 const recentMin = Number(flag("--recent-min", "15"));
 const sampleN = Number(flag("--sample", "50"));
 const withScripts = args.includes("--scripts");
+const genOk = args.includes("--gen-ok");
 const tag = flag("--tag", mode)!;
 
 const listFile = `${OUT}/files.nul`;
@@ -65,7 +66,7 @@ for (const rel of listed.sort()) {
     continue;
   }
   if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
-  if (GEN_HEAD.test(text.slice(0, 600))) {
+  if (!genOk && GEN_HEAD.test(text.slice(0, 600))) {
     skipped.generated.push(rel);
     continue;
   }

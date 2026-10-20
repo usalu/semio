@@ -81,305 +81,13 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[semio_s_artifact_stdio_d
         let mut object = semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject { handle, type_code, class_name, category, extended_data, ..Default::default() };
         if category == semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgObjectCategory::Entity {
             if type_code == DWG_TYPE_BLOCK || type_code == DWG_TYPE_ENDBLK {
-                let (mut strings, class_main_end) = r2010_string_stream(payload, data_end_bit).map_err(|error| format!("{} {handle:#x} string stream: {error}", if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" }))?;
-                let mut common = decode_r2010_entity_common_main(&mut data).map_err(|error| format!("{} {handle:#x} common data: {error}", if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" }))?;
-                if data.bit_position() != class_main_end {
-                    return Err(format!("{} {handle:#x} main stream is not exactly consumed: {} != {class_main_end}", if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" }, data.bit_position()));
-                }
-                if type_code == DWG_TYPE_BLOCK {
-                    let name = strings.read_tu().map_err(|error| format!("BLOCK {handle:#x} name: {error}"))?;
-                    let string_end = r2010_string_content_end_bit(payload, data_end_bit)?;
-                    if strings.bit_position() != string_end {
-                        return Err(format!("BLOCK {handle:#x} string stream is not exactly consumed: {} != {string_end}", strings.bit_position()));
-                    }
-                    block_names.push((handle, name));
-                } else if class_main_end != data_end_bit.saturating_sub(1) {
-                    return Err(format!("ENDBLK {handle:#x} unexpectedly declares a string stream"));
-                }
-                let (owner, reactors, extension_dictionary) =
-                    decode_r2010_entity_common_handles(&mut common, &mut handle_reader, handle).map_err(|error| format!("{} {handle:#x} common handles: {error}", if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" }))?;
-                validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" })?;
-                object.owner_handle = owner;
-                object.reactor_handles = reactors;
-                object.extension_dictionary_handle = extension_dictionary;
-                object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::Entity(if type_code == DWG_TYPE_BLOCK {
-                    semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody::BlockBegin(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgBlockBeginEntity { common: common.logical })
-                } else {
-                    semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody::BlockEnd(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgBlockEndEntity { common: common.logical })
-                }));
+                read_block_object_frame(handle, payload_size, payload, data_end_bit, &mut data, &mut handle_reader, type_code, &mut object, &mut block_names)?;
             } else if type_code == DWG_TYPE_INSERT {
-                let mut common = decode_r2010_entity_common_main(&mut data).map_err(|error| format!("INSERT {handle:#x} common data: {error}"))?;
-                let insertion = data.read_3bd().map_err(|error| format!("INSERT {handle:#x} insertion: {error}"))?;
-                let scale = match data.read_bb().map_err(|error| format!("INSERT {handle:#x} scale mode: {error}"))? {
-                    0 => {
-                        let x = data.read_rd()?;
-                        [x, data.read_dd(x)?, data.read_dd(x)?]
-                    }
-                    1 => [1.0, data.read_dd(1.0)?, data.read_dd(1.0)?],
-                    2 => {
-                        let value = data.read_rd()?;
-                        [value; 3]
-                    }
-                    3 => [1.0; 3],
-                    _ => unreachable!(),
-                };
-                let rotation = data.read_bd().map_err(|error| format!("INSERT {handle:#x} rotation: {error}"))?;
-                let extrusion = data.read_3bd().map_err(|error| format!("INSERT {handle:#x} extrusion: {error}"))?;
-                let has_attributes = data.read_b().map_err(|error| format!("INSERT {handle:#x} attributes flag: {error}"))?;
-                let attribute_count = if has_attributes { data.read_bl().map_err(|error| format!("INSERT {handle:#x} attribute count: {error}"))? as usize } else { 0 };
-                if data.read_b().map_err(|error| format!("INSERT {handle:#x} string marker: {error}"))? || data.bit_position() != data_end_bit {
-                    return Err(format!("INSERT {handle:#x} main/string stream is not exactly consumed"));
-                }
-                let (owner, reactors, extension_dictionary) = decode_r2010_entity_common_handles(&mut common, &mut handle_reader, handle)?;
-                let block_header_handle = read_object_handle(&mut handle_reader, handle).map_err(|error| format!("INSERT {handle:#x} block header: {error}"))?.ok_or_else(|| format!("INSERT {handle:#x} block-header handle is null"))?;
-                let mut attribute_handles = Vec::with_capacity(attribute_count);
-                for index in 0..attribute_count {
-                    attribute_handles.push(read_object_handle(&mut handle_reader, handle).map_err(|error| format!("INSERT {handle:#x} attribute {index}: {error}"))?.ok_or_else(|| format!("INSERT {handle:#x} attribute {index} is null"))?);
-                }
-                let sequence_end_handle = if has_attributes { read_object_handle(&mut handle_reader, handle).map_err(|error| format!("INSERT {handle:#x} SEQEND: {error}"))? } else { None };
-                if has_attributes && sequence_end_handle.is_none() {
-                    return Err(format!("INSERT {handle:#x} attributes have no SEQEND"));
-                }
-                validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "INSERT")?;
-                object.owner_handle = owner;
-                object.reactor_handles = reactors;
-                object.extension_dictionary_handle = extension_dictionary;
-                object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::Entity(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody::Insert(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgInsertEntity {
-                    common: common.logical,
-                    insertion: insertion.to_vec(),
-                    scale: scale.to_vec(),
-                    rotation,
-                    extrusion: extrusion.to_vec(),
-                    block_header_handle,
-                    attribute_handles,
-                    sequence_end_handle,
-                })));
+                read_insert_object_frame(handle, payload_size, data_end_bit, &mut data, &mut handle_reader, &mut object)?;
             } else if type_code == DWG_TYPE_DIMENSION_LINEAR {
-                let (mut strings, class_main_end) = r2010_string_stream(payload, data_end_bit).map_err(|error| format!("DIMENSION_LINEAR {handle:#x} string stream: {error}"))?;
-                let mut common = decode_r2010_entity_common_main(&mut data).map_err(|error| format!("DIMENSION_LINEAR {handle:#x} common data: {error}"))?;
-                let class_version = data.read_rc()?;
-                if class_version != 0 {
-                    return Err(format!("DIMENSION_LINEAR {handle:#x} class version {class_version} is unsupported"));
-                }
-                let extrusion = data.read_3bd()?;
-                let text_midpoint = data.read_2rd()?;
-                let elevation = data.read_bd()?;
-                let flag = data.read_rc()?;
-                let block_reference_is_exclusive = flag & 0x20 != 0;
-                let user_positioned_text = flag & 0x80 != 0;
-                let expected_flag = 0x08 | (if block_reference_is_exclusive { 0x22 } else { 0 }) | (if user_positioned_text { 0x80 } else { 0x01 });
-                if flag != expected_flag {
-                    return Err(format!("DIMENSION_LINEAR {handle:#x} flag {flag:#x} disagrees with its semantic mirror bits; expected {expected_flag:#x}"));
-                }
-                let text_rotation = data.read_bd()?;
-                let horizontal_direction = data.read_bd()?;
-                let insertion_scale = data.read_3bd()?;
-                let insertion_rotation = data.read_bd()?;
-                let attachment = dimension_attachment_logical(data.read_bs()?)?;
-                let line_spacing_style = dimension_spacing_logical(data.read_bs()?)?;
-                let line_spacing_factor = data.read_bd()?;
-                let actual_measurement = data.read_bd()?;
-                if data.read_b()? {
-                    return Err(format!("DIMENSION_LINEAR {handle:#x} reserved flag is set"));
-                }
-                let flip_arrow_1 = data.read_b()?;
-                let flip_arrow_2 = data.read_b()?;
-                let clone_insertion_point = data.read_2rd()?;
-                let extension_line_1 = data.read_3bd()?;
-                let extension_line_2 = data.read_3bd()?;
-                let definition_point = data.read_3bd()?;
-                let oblique_angle = data.read_bd()?;
-                let dimension_rotation = data.read_bd()?;
-                if data.bit_position() != class_main_end {
-                    return Err(format!("DIMENSION_LINEAR {handle:#x} main stream is not exactly consumed: {} != {class_main_end}", data.bit_position()));
-                }
-                let user_text = strings.read_tu()?;
-                let string_end = r2010_string_content_end_bit(payload, data_end_bit)?;
-                if strings.bit_position() != string_end {
-                    return Err(format!("DIMENSION_LINEAR {handle:#x} string stream is not exactly consumed: {} != {string_end}", strings.bit_position()));
-                }
-                let (owner, reactors, extension_dictionary) = decode_r2010_entity_common_handles(&mut common, &mut handle_reader, handle)?;
-                let dimension_style_handle = read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("DIMENSION_LINEAR {handle:#x} dimension style is null"))?;
-                let dimension_block_handle = read_object_handle(&mut handle_reader, handle)?;
-                validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "DIMENSION_LINEAR")?;
-                object.owner_handle = owner;
-                object.reactor_handles = reactors;
-                object.extension_dictionary_handle = extension_dictionary;
-                object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::Entity(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody::DimensionLinear(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgLinearDimensionEntity {
-                    dimension: semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDimensionEntityCommon {
-                        common: common.logical,
-                        extrusion: extrusion.to_vec(),
-                        text_midpoint: text_midpoint.to_vec(),
-                        elevation,
-                        status: semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDimensionStatus { block_reference_is_exclusive, user_positioned_text },
-                        user_text,
-                        text_rotation,
-                        horizontal_direction,
-                        insertion_scale: insertion_scale.to_vec(),
-                        insertion_rotation,
-                        attachment,
-                        line_spacing_style,
-                        line_spacing_factor,
-                        actual_measurement,
-                        flip_arrow_1,
-                        flip_arrow_2,
-                        clone_insertion_point: clone_insertion_point.to_vec(),
-                        dimension_style_handle,
-                        dimension_block_handle,
-                    },
-                    extension_line_1: extension_line_1.to_vec(),
-                    extension_line_2: extension_line_2.to_vec(),
-                    definition_point: definition_point.to_vec(),
-                    oblique_angle,
-                    dimension_rotation,
-                })));
+                read_dimension_object_frame(handle, payload_size, payload, data_end_bit, &mut data, &mut handle_reader, &mut object)?;
             } else if type_code == DWG_TYPE_VIEWPORT {
-                use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgComplexColor;
-                use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDefaultLightingType;
-                use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody;
-                use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
-                use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgOrthographicView;
-                use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgShadePlotMode;
-                use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgViewportEntity;
-                use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgViewportRenderMode;
-                let (mut strings, class_main_end) = r2010_string_stream(payload, data_end_bit).map_err(|error| format!("VIEWPORT {handle:#x} string stream: {error}"))?;
-                let mut common = decode_r2010_entity_common_main(&mut data).map_err(|error| format!("VIEWPORT {handle:#x} common data: {error}"))?;
-                let center = data.read_3bd()?;
-                let width = data.read_bd()?;
-                let height = data.read_bd()?;
-                let view_target = data.read_3bd()?;
-                let view_direction = data.read_3bd()?;
-                let twist_angle = data.read_bd()?;
-                let view_height = data.read_bd()?;
-                let lens_length = data.read_bd()?;
-                let front_clip = data.read_bd()?;
-                let back_clip = data.read_bd()?;
-                let snap_angle = data.read_bd()?;
-                let view_center = data.read_2rd()?;
-                let snap_base = data.read_2rd()?;
-                let snap_unit = data.read_2rd()?;
-                let grid_unit = data.read_2rd()?;
-                let circle_zoom_percent = data.read_bs()?;
-                let grid_major = data.read_bs()?;
-                let frozen_count = data.read_bl()? as usize;
-                let status = viewport_status_flags(data.read_bl()?)?;
-                let render_mode = match data.read_rc()? {
-                    0 => DwgViewportRenderMode::Optimized2d,
-                    1 => DwgViewportRenderMode::Wireframe,
-                    2 => DwgViewportRenderMode::HiddenLine,
-                    3 => DwgViewportRenderMode::FlatShaded,
-                    4 => DwgViewportRenderMode::GouraudShaded,
-                    5 => DwgViewportRenderMode::FlatShadedWithWireframe,
-                    6 => DwgViewportRenderMode::GouraudShadedWithWireframe,
-                    value => return Err(format!("VIEWPORT {handle:#x} render mode {value} is unsupported")),
-                };
-                let ucs_at_origin = data.read_b()?;
-                let ucs_per_viewport = data.read_b()?;
-                let ucs_origin = data.read_3bd()?;
-                let ucs_x_axis = data.read_3bd()?;
-                let ucs_y_axis = data.read_3bd()?;
-                let ucs_elevation = data.read_bd()?;
-                let orthographic_view = match data.read_bs()? {
-                    0 => DwgOrthographicView::None,
-                    1 => DwgOrthographicView::Top,
-                    2 => DwgOrthographicView::Bottom,
-                    3 => DwgOrthographicView::Front,
-                    4 => DwgOrthographicView::Back,
-                    5 => DwgOrthographicView::Left,
-                    6 => DwgOrthographicView::Right,
-                    value => return Err(format!("VIEWPORT {handle:#x} orthographic view {value} is unsupported")),
-                };
-                let shade_plot_mode = match data.read_bs()? {
-                    0 => DwgShadePlotMode::AsDisplayed,
-                    1 => DwgShadePlotMode::Wireframe,
-                    2 => DwgShadePlotMode::Hidden,
-                    3 => DwgShadePlotMode::Rendered,
-                    value => return Err(format!("VIEWPORT {handle:#x} shade-plot mode {value} is unsupported")),
-                };
-                let use_default_lights = data.read_b()?;
-                let default_lighting_type = match data.read_rc()? {
-                    0 => DwgDefaultLightingType::OneDistantLight,
-                    1 => DwgDefaultLightingType::TwoDistantLights,
-                    value => return Err(format!("VIEWPORT {handle:#x} lighting type {value} is unsupported")),
-                };
-                let brightness = data.read_bd()?;
-                let contrast = data.read_bd()?;
-                let ambient_index = data.read_bs()?;
-                let ambient_value = decode_complex_color_value(data.read_bl()?)?;
-                let ambient_flags = data.read_rc()?;
-                if ambient_flags & !3 != 0 {
-                    return Err(format!("VIEWPORT {handle:#x} ambient color flags {ambient_flags:#x} are unsupported"));
-                }
-                if data.bit_position() != class_main_end {
-                    return Err(format!("VIEWPORT {handle:#x} main stream is not exactly consumed: {} != {class_main_end}", data.bit_position()));
-                }
-                let style_sheet = strings.read_tu()?;
-                let ambient_name = if ambient_flags & 1 != 0 { Some(strings.read_tu()?) } else { None };
-                let ambient_book_name = if ambient_flags & 2 != 0 { Some(strings.read_tu()?) } else { None };
-                let string_end = r2010_string_content_end_bit(payload, data_end_bit)?;
-                if strings.bit_position() != string_end {
-                    return Err(format!("VIEWPORT {handle:#x} string stream is not exactly consumed: {} != {string_end}", strings.bit_position()));
-                }
-                let (owner, reactors, extension_dictionary) = decode_r2010_entity_common_handles(&mut common, &mut handle_reader, handle)?;
-                let mut frozen_layer_handles = Vec::with_capacity(frozen_count);
-                for index in 0..frozen_count {
-                    frozen_layer_handles.push(read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("VIEWPORT {handle:#x} frozen layer {index} is null"))?);
-                }
-                let clip_boundary_handle = read_object_handle(&mut handle_reader, handle)?;
-                let named_ucs_handle = read_object_handle(&mut handle_reader, handle)?;
-                let base_ucs_handle = read_object_handle(&mut handle_reader, handle)?;
-                let background_handle = read_object_handle(&mut handle_reader, handle)?;
-                let visual_style_handle = read_object_handle(&mut handle_reader, handle)?;
-                let shade_plot_handle = read_object_handle(&mut handle_reader, handle)?;
-                let sun_handle = read_object_handle(&mut handle_reader, handle)?;
-                validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "VIEWPORT")?;
-                object.owner_handle = owner;
-                object.reactor_handles = reactors;
-                object.extension_dictionary_handle = extension_dictionary;
-                object.body = Some(DwgLogicalObjectBody::Entity(DwgEntityBody::Viewport(DwgViewportEntity {
-                    common: common.logical,
-                    center: center.to_vec(),
-                    width,
-                    height,
-                    view_target: view_target.to_vec(),
-                    view_direction: view_direction.to_vec(),
-                    twist_angle,
-                    view_height,
-                    lens_length,
-                    front_clip,
-                    back_clip,
-                    snap_angle,
-                    view_center: view_center.to_vec(),
-                    snap_base: snap_base.to_vec(),
-                    snap_unit: snap_unit.to_vec(),
-                    grid_unit: grid_unit.to_vec(),
-                    circle_zoom_percent,
-                    grid_major,
-                    frozen_layer_handles,
-                    status,
-                    style_sheet,
-                    render_mode,
-                    ucs_at_origin,
-                    ucs_per_viewport,
-                    ucs_origin: ucs_origin.to_vec(),
-                    ucs_x_axis: ucs_x_axis.to_vec(),
-                    ucs_y_axis: ucs_y_axis.to_vec(),
-                    ucs_elevation,
-                    orthographic_view,
-                    shade_plot_mode,
-                    use_default_lights,
-                    default_lighting_type,
-                    brightness,
-                    contrast,
-                    ambient_color: DwgComplexColor { index: ambient_index, value: ambient_value, name: ambient_name, book_name: ambient_book_name },
-                    clip_boundary_handle,
-                    named_ucs_handle,
-                    base_ucs_handle,
-                    background_handle,
-                    visual_style_handle,
-                    shade_plot_handle,
-                    sun_handle,
-                })));
+                read_viewport_object_frame(handle, payload_size, payload, data_end_bit, &mut data, &mut handle_reader, &mut object)?;
             } else {
                 let mut frame = DwgObjectRecordFrame::open(DwgObjectLayout::R2010, &object_data, handle, address)?;
                 frame.data = data;
@@ -581,6 +289,355 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[semio_s_artifact_stdio_d
         }
     }
     Ok((objects, xrecord_terminal_fills))
+}
+
+/// 🧱️ Reads the string stream, common data and handles of a BLOCK or ENDBLK object frame.
+fn read_block_object_frame(
+    handle: u64,
+    payload_size: usize,
+    payload: &[u8],
+    data_end_bit: usize,
+    data: &mut DwgBitReader<'_>,
+    handle_reader: &mut DwgBitReader<'_>,
+    type_code: u16,
+    object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject,
+    block_names: &mut Vec<(u64, String)>,
+) -> Result<(), String> {
+    let (mut strings, class_main_end) = r2010_string_stream(payload, data_end_bit).map_err(|error| format!("{} {handle:#x} string stream: {error}", if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" }))?;
+    let mut common = decode_r2010_entity_common_main(&mut data).map_err(|error| format!("{} {handle:#x} common data: {error}", if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" }))?;
+    if data.bit_position() != class_main_end {
+        return Err(format!("{} {handle:#x} main stream is not exactly consumed: {} != {class_main_end}", if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" }, data.bit_position()));
+    }
+    if type_code == DWG_TYPE_BLOCK {
+        let name = strings.read_tu().map_err(|error| format!("BLOCK {handle:#x} name: {error}"))?;
+        let string_end = r2010_string_content_end_bit(payload, data_end_bit)?;
+        if strings.bit_position() != string_end {
+            return Err(format!("BLOCK {handle:#x} string stream is not exactly consumed: {} != {string_end}", strings.bit_position()));
+        }
+        block_names.push((handle, name));
+    } else if class_main_end != data_end_bit.saturating_sub(1) {
+        return Err(format!("ENDBLK {handle:#x} unexpectedly declares a string stream"));
+    }
+    let (owner, reactors, extension_dictionary) =
+        decode_r2010_entity_common_handles(&mut common, &mut handle_reader, handle).map_err(|error| format!("{} {handle:#x} common handles: {error}", if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" }))?;
+    validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" })?;
+    object.owner_handle = owner;
+    object.reactor_handles = reactors;
+    object.extension_dictionary_handle = extension_dictionary;
+    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::Entity(if type_code == DWG_TYPE_BLOCK {
+        semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody::BlockBegin(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgBlockBeginEntity { common: common.logical })
+    } else {
+        semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody::BlockEnd(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgBlockEndEntity { common: common.logical })
+    }));
+    Ok(())
+}
+
+/// 🪵️ Reads the string stream, common data and handles of an INSERT object frame.
+fn read_insert_object_frame(
+    handle: u64,
+    payload_size: usize,
+    data_end_bit: usize,
+    data: &mut DwgBitReader<'_>,
+    handle_reader: &mut DwgBitReader<'_>,
+    object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject,
+) -> Result<(), String> {
+    let mut common = decode_r2010_entity_common_main(&mut data).map_err(|error| format!("INSERT {handle:#x} common data: {error}"))?;
+    let insertion = data.read_3bd().map_err(|error| format!("INSERT {handle:#x} insertion: {error}"))?;
+    let scale = match data.read_bb().map_err(|error| format!("INSERT {handle:#x} scale mode: {error}"))? {
+        0 => {
+            let x = data.read_rd()?;
+            [x, data.read_dd(x)?, data.read_dd(x)?]
+        }
+        1 => [1.0, data.read_dd(1.0)?, data.read_dd(1.0)?],
+        2 => {
+            let value = data.read_rd()?;
+            [value; 3]
+        }
+        3 => [1.0; 3],
+        _ => unreachable!(),
+    };
+    let rotation = data.read_bd().map_err(|error| format!("INSERT {handle:#x} rotation: {error}"))?;
+    let extrusion = data.read_3bd().map_err(|error| format!("INSERT {handle:#x} extrusion: {error}"))?;
+    let has_attributes = data.read_b().map_err(|error| format!("INSERT {handle:#x} attributes flag: {error}"))?;
+    let attribute_count = if has_attributes { data.read_bl().map_err(|error| format!("INSERT {handle:#x} attribute count: {error}"))? as usize } else { 0 };
+    if data.read_b().map_err(|error| format!("INSERT {handle:#x} string marker: {error}"))? || data.bit_position() != data_end_bit {
+        return Err(format!("INSERT {handle:#x} main/string stream is not exactly consumed"));
+    }
+    let (owner, reactors, extension_dictionary) = decode_r2010_entity_common_handles(&mut common, &mut handle_reader, handle)?;
+    let block_header_handle = read_object_handle(&mut handle_reader, handle).map_err(|error| format!("INSERT {handle:#x} block header: {error}"))?.ok_or_else(|| format!("INSERT {handle:#x} block-header handle is null"))?;
+    let mut attribute_handles = Vec::with_capacity(attribute_count);
+    for index in 0..attribute_count {
+        attribute_handles.push(read_object_handle(&mut handle_reader, handle).map_err(|error| format!("INSERT {handle:#x} attribute {index}: {error}"))?.ok_or_else(|| format!("INSERT {handle:#x} attribute {index} is null"))?);
+    }
+    let sequence_end_handle = if has_attributes { read_object_handle(&mut handle_reader, handle).map_err(|error| format!("INSERT {handle:#x} SEQEND: {error}"))? } else { None };
+    if has_attributes && sequence_end_handle.is_none() {
+        return Err(format!("INSERT {handle:#x} attributes have no SEQEND"));
+    }
+    validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "INSERT")?;
+    object.owner_handle = owner;
+    object.reactor_handles = reactors;
+    object.extension_dictionary_handle = extension_dictionary;
+    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::Entity(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody::Insert(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgInsertEntity {
+        common: common.logical,
+        insertion: insertion.to_vec(),
+        scale: scale.to_vec(),
+        rotation,
+        extrusion: extrusion.to_vec(),
+        block_header_handle,
+        attribute_handles,
+        sequence_end_handle,
+    })));
+    Ok(())
+}
+
+/// 🔩️ Reads the string stream, common data and handles of a linear DIMENSION object frame.
+fn read_dimension_object_frame(
+    handle: u64,
+    payload_size: usize,
+    payload: &[u8],
+    data_end_bit: usize,
+    data: &mut DwgBitReader<'_>,
+    handle_reader: &mut DwgBitReader<'_>,
+    object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject,
+) -> Result<(), String> {
+    let (mut strings, class_main_end) = r2010_string_stream(payload, data_end_bit).map_err(|error| format!("DIMENSION_LINEAR {handle:#x} string stream: {error}"))?;
+    let mut common = decode_r2010_entity_common_main(&mut data).map_err(|error| format!("DIMENSION_LINEAR {handle:#x} common data: {error}"))?;
+    let class_version = data.read_rc()?;
+    if class_version != 0 {
+        return Err(format!("DIMENSION_LINEAR {handle:#x} class version {class_version} is unsupported"));
+    }
+    let extrusion = data.read_3bd()?;
+    let text_midpoint = data.read_2rd()?;
+    let elevation = data.read_bd()?;
+    let flag = data.read_rc()?;
+    let block_reference_is_exclusive = flag & 0x20 != 0;
+    let user_positioned_text = flag & 0x80 != 0;
+    let expected_flag = 0x08 | (if block_reference_is_exclusive { 0x22 } else { 0 }) | (if user_positioned_text { 0x80 } else { 0x01 });
+    if flag != expected_flag {
+        return Err(format!("DIMENSION_LINEAR {handle:#x} flag {flag:#x} disagrees with its semantic mirror bits; expected {expected_flag:#x}"));
+    }
+    let text_rotation = data.read_bd()?;
+    let horizontal_direction = data.read_bd()?;
+    let insertion_scale = data.read_3bd()?;
+    let insertion_rotation = data.read_bd()?;
+    let attachment = dimension_attachment_logical(data.read_bs()?)?;
+    let line_spacing_style = dimension_spacing_logical(data.read_bs()?)?;
+    let line_spacing_factor = data.read_bd()?;
+    let actual_measurement = data.read_bd()?;
+    if data.read_b()? {
+        return Err(format!("DIMENSION_LINEAR {handle:#x} reserved flag is set"));
+    }
+    let flip_arrow_1 = data.read_b()?;
+    let flip_arrow_2 = data.read_b()?;
+    let clone_insertion_point = data.read_2rd()?;
+    let extension_line_1 = data.read_3bd()?;
+    let extension_line_2 = data.read_3bd()?;
+    let definition_point = data.read_3bd()?;
+    let oblique_angle = data.read_bd()?;
+    let dimension_rotation = data.read_bd()?;
+    if data.bit_position() != class_main_end {
+        return Err(format!("DIMENSION_LINEAR {handle:#x} main stream is not exactly consumed: {} != {class_main_end}", data.bit_position()));
+    }
+    let user_text = strings.read_tu()?;
+    let string_end = r2010_string_content_end_bit(payload, data_end_bit)?;
+    if strings.bit_position() != string_end {
+        return Err(format!("DIMENSION_LINEAR {handle:#x} string stream is not exactly consumed: {} != {string_end}", strings.bit_position()));
+    }
+    let (owner, reactors, extension_dictionary) = decode_r2010_entity_common_handles(&mut common, &mut handle_reader, handle)?;
+    let dimension_style_handle = read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("DIMENSION_LINEAR {handle:#x} dimension style is null"))?;
+    let dimension_block_handle = read_object_handle(&mut handle_reader, handle)?;
+    validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "DIMENSION_LINEAR")?;
+    object.owner_handle = owner;
+    object.reactor_handles = reactors;
+    object.extension_dictionary_handle = extension_dictionary;
+    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::Entity(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody::DimensionLinear(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgLinearDimensionEntity {
+        dimension: semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDimensionEntityCommon {
+            common: common.logical,
+            extrusion: extrusion.to_vec(),
+            text_midpoint: text_midpoint.to_vec(),
+            elevation,
+            status: semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDimensionStatus { block_reference_is_exclusive, user_positioned_text },
+            user_text,
+            text_rotation,
+            horizontal_direction,
+            insertion_scale: insertion_scale.to_vec(),
+            insertion_rotation,
+            attachment,
+            line_spacing_style,
+            line_spacing_factor,
+            actual_measurement,
+            flip_arrow_1,
+            flip_arrow_2,
+            clone_insertion_point: clone_insertion_point.to_vec(),
+            dimension_style_handle,
+            dimension_block_handle,
+        },
+        extension_line_1: extension_line_1.to_vec(),
+        extension_line_2: extension_line_2.to_vec(),
+        definition_point: definition_point.to_vec(),
+        oblique_angle,
+        dimension_rotation,
+    })));
+    Ok(())
+}
+
+/// ⚙️ Reads the string stream, common data and handles of a VIEWPORT object frame.
+fn read_viewport_object_frame(
+    handle: u64,
+    payload_size: usize,
+    payload: &[u8],
+    data_end_bit: usize,
+    data: &mut DwgBitReader<'_>,
+    handle_reader: &mut DwgBitReader<'_>,
+    object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject,
+) -> Result<(), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgComplexColor;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDefaultLightingType;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgOrthographicView;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgShadePlotMode;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgViewportEntity;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgViewportRenderMode;
+    let (mut strings, class_main_end) = r2010_string_stream(payload, data_end_bit).map_err(|error| format!("VIEWPORT {handle:#x} string stream: {error}"))?;
+    let mut common = decode_r2010_entity_common_main(&mut data).map_err(|error| format!("VIEWPORT {handle:#x} common data: {error}"))?;
+    let center = data.read_3bd()?;
+    let width = data.read_bd()?;
+    let height = data.read_bd()?;
+    let view_target = data.read_3bd()?;
+    let view_direction = data.read_3bd()?;
+    let twist_angle = data.read_bd()?;
+    let view_height = data.read_bd()?;
+    let lens_length = data.read_bd()?;
+    let front_clip = data.read_bd()?;
+    let back_clip = data.read_bd()?;
+    let snap_angle = data.read_bd()?;
+    let view_center = data.read_2rd()?;
+    let snap_base = data.read_2rd()?;
+    let snap_unit = data.read_2rd()?;
+    let grid_unit = data.read_2rd()?;
+    let circle_zoom_percent = data.read_bs()?;
+    let grid_major = data.read_bs()?;
+    let frozen_count = data.read_bl()? as usize;
+    let status = viewport_status_flags(data.read_bl()?)?;
+    let render_mode = match data.read_rc()? {
+        0 => DwgViewportRenderMode::Optimized2d,
+        1 => DwgViewportRenderMode::Wireframe,
+        2 => DwgViewportRenderMode::HiddenLine,
+        3 => DwgViewportRenderMode::FlatShaded,
+        4 => DwgViewportRenderMode::GouraudShaded,
+        5 => DwgViewportRenderMode::FlatShadedWithWireframe,
+        6 => DwgViewportRenderMode::GouraudShadedWithWireframe,
+        value => return Err(format!("VIEWPORT {handle:#x} render mode {value} is unsupported")),
+    };
+    let ucs_at_origin = data.read_b()?;
+    let ucs_per_viewport = data.read_b()?;
+    let ucs_origin = data.read_3bd()?;
+    let ucs_x_axis = data.read_3bd()?;
+    let ucs_y_axis = data.read_3bd()?;
+    let ucs_elevation = data.read_bd()?;
+    let orthographic_view = match data.read_bs()? {
+        0 => DwgOrthographicView::None,
+        1 => DwgOrthographicView::Top,
+        2 => DwgOrthographicView::Bottom,
+        3 => DwgOrthographicView::Front,
+        4 => DwgOrthographicView::Back,
+        5 => DwgOrthographicView::Left,
+        6 => DwgOrthographicView::Right,
+        value => return Err(format!("VIEWPORT {handle:#x} orthographic view {value} is unsupported")),
+    };
+    let shade_plot_mode = match data.read_bs()? {
+        0 => DwgShadePlotMode::AsDisplayed,
+        1 => DwgShadePlotMode::Wireframe,
+        2 => DwgShadePlotMode::Hidden,
+        3 => DwgShadePlotMode::Rendered,
+        value => return Err(format!("VIEWPORT {handle:#x} shade-plot mode {value} is unsupported")),
+    };
+    let use_default_lights = data.read_b()?;
+    let default_lighting_type = match data.read_rc()? {
+        0 => DwgDefaultLightingType::OneDistantLight,
+        1 => DwgDefaultLightingType::TwoDistantLights,
+        value => return Err(format!("VIEWPORT {handle:#x} lighting type {value} is unsupported")),
+    };
+    let brightness = data.read_bd()?;
+    let contrast = data.read_bd()?;
+    let ambient_index = data.read_bs()?;
+    let ambient_value = decode_complex_color_value(data.read_bl()?)?;
+    let ambient_flags = data.read_rc()?;
+    if ambient_flags & !3 != 0 {
+        return Err(format!("VIEWPORT {handle:#x} ambient color flags {ambient_flags:#x} are unsupported"));
+    }
+    if data.bit_position() != class_main_end {
+        return Err(format!("VIEWPORT {handle:#x} main stream is not exactly consumed: {} != {class_main_end}", data.bit_position()));
+    }
+    let style_sheet = strings.read_tu()?;
+    let ambient_name = if ambient_flags & 1 != 0 { Some(strings.read_tu()?) } else { None };
+    let ambient_book_name = if ambient_flags & 2 != 0 { Some(strings.read_tu()?) } else { None };
+    let string_end = r2010_string_content_end_bit(payload, data_end_bit)?;
+    if strings.bit_position() != string_end {
+        return Err(format!("VIEWPORT {handle:#x} string stream is not exactly consumed: {} != {string_end}", strings.bit_position()));
+    }
+    let (owner, reactors, extension_dictionary) = decode_r2010_entity_common_handles(&mut common, &mut handle_reader, handle)?;
+    let mut frozen_layer_handles = Vec::with_capacity(frozen_count);
+    for index in 0..frozen_count {
+        frozen_layer_handles.push(read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("VIEWPORT {handle:#x} frozen layer {index} is null"))?);
+    }
+    let clip_boundary_handle = read_object_handle(&mut handle_reader, handle)?;
+    let named_ucs_handle = read_object_handle(&mut handle_reader, handle)?;
+    let base_ucs_handle = read_object_handle(&mut handle_reader, handle)?;
+    let background_handle = read_object_handle(&mut handle_reader, handle)?;
+    let visual_style_handle = read_object_handle(&mut handle_reader, handle)?;
+    let shade_plot_handle = read_object_handle(&mut handle_reader, handle)?;
+    let sun_handle = read_object_handle(&mut handle_reader, handle)?;
+    validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "VIEWPORT")?;
+    object.owner_handle = owner;
+    object.reactor_handles = reactors;
+    object.extension_dictionary_handle = extension_dictionary;
+    object.body = Some(DwgLogicalObjectBody::Entity(DwgEntityBody::Viewport(DwgViewportEntity {
+        common: common.logical,
+        center: center.to_vec(),
+        width,
+        height,
+        view_target: view_target.to_vec(),
+        view_direction: view_direction.to_vec(),
+        twist_angle,
+        view_height,
+        lens_length,
+        front_clip,
+        back_clip,
+        snap_angle,
+        view_center: view_center.to_vec(),
+        snap_base: snap_base.to_vec(),
+        snap_unit: snap_unit.to_vec(),
+        grid_unit: grid_unit.to_vec(),
+        circle_zoom_percent,
+        grid_major,
+        frozen_layer_handles,
+        status,
+        style_sheet,
+        render_mode,
+        ucs_at_origin,
+        ucs_per_viewport,
+        ucs_origin: ucs_origin.to_vec(),
+        ucs_x_axis: ucs_x_axis.to_vec(),
+        ucs_y_axis: ucs_y_axis.to_vec(),
+        ucs_elevation,
+        orthographic_view,
+        shade_plot_mode,
+        use_default_lights,
+        default_lighting_type,
+        brightness,
+        contrast,
+        ambient_color: DwgComplexColor { index: ambient_index, value: ambient_value, name: ambient_name, book_name: ambient_book_name },
+        clip_boundary_handle,
+        named_ucs_handle,
+        base_ucs_handle,
+        background_handle,
+        visual_style_handle,
+        shade_plot_handle,
+        sun_handle,
+    })));
+    Ok(())
 }
 /// 🧩️ Decodes one layout object body from its main, string and handle streams.
 fn decode_layout_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {

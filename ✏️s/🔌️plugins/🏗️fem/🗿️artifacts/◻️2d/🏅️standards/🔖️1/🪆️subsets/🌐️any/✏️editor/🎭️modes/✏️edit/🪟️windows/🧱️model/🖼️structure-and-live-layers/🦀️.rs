@@ -92,7 +92,7 @@ pub fn fem2d_model_extent(doc: &Fem2dSnapshot) -> f64 {
 
 /// 🖼️ Nodes/members/supports as Canvas2d layers — shared by this window (bright colors) and the results
 /// window's faint undeformed backdrop (a single muted color for every layer kind).
-pub(crate) fn fem2d_structure_layers(doc: &Fem2dSnapshot, node_color: &str, line_color: &str, support_color: &str) -> Vec<semio_framework_pack_json::Value> {
+pub fn fem2d_structure_layers(doc: &Fem2dSnapshot, node_color: &str, line_color: &str, support_color: &str) -> Vec<semio_framework_pack_json::Value> {
     let mut layers = Vec::new();
     for node in &doc.nodes {
         let (sx, sy) = screen_2d(node.x, node.y);

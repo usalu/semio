@@ -26,30 +26,30 @@ use semio_framework_dsl::TokenKind as CoreKind;
 /// itself treats macro names as opaque until a matcher is registered.
 #[derive(Clone, Debug, PartialEq)]
 pub enum MathNode {
-    /// An integer or float literal, canonical text as lexed (e.g. `"42"`, `"3.14"`).
+    /// 🔢️ An integer or float literal, canonical text as lexed (e.g. `"42"`, `"3.14"`).
     Number(String),
-    /// A bare identifier: a variable (`x`), a named symbol (`alpha`, `pi`, `sum`), or direct
+    /// 🔣️ A bare identifier: a variable (`x`), a named symbol (`alpha`, `pi`, `sum`), or direct
     /// Unicode (`α`, `∞`) — `dsl_core`'s ident rule already accepts alphabetic Unicode.
     Symbol(String),
-    /// `:name:` — an emoji shortcode atom.
+    /// 🏗️ `:name:` — an emoji shortcode atom.
     Emoji(String),
-    /// A quoted text-in-math atom (`"if"`), unescaped.
+    /// ➗️ A quoted text-in-math atom (`"if"`), unescaped.
     Text(String),
-    /// `{ ... }` — invisible grouping, the only way to script a multi-token expression.
+    /// 👥️ `{ ... }` — invisible grouping, the only way to script a multi-token expression.
     Group(Box<MathNode>),
-    /// A stretchy auto-sized delimiter pair: `(` paired with `)`, or `[` paired with `]`. The
+    /// ➕️ A stretchy auto-sized delimiter pair: `(` paired with `)`, or `[` paired with `]`. The
     /// stored `char` is the opening delimiter.
     Paren(char, Box<MathNode>),
-    /// `base^exponent`.
+    /// 🔨️ `base^exponent`.
     Sup(Box<MathNode>, Box<MathNode>),
-    /// `base_subscript`.
+    /// ⚒️ `base_subscript`.
     Sub(Box<MathNode>, Box<MathNode>),
-    /// `name(row1cell1, row1cell2; row2cell1, ...)` — rows separated by `;`, cells by `,`. A plain
+    /// 📨️ `name(row1cell1, row1cell2; row2cell1, ...)` — rows separated by `;`, cells by `,`. A plain
     /// call like `frac(a, b)` is one row of two cells; `mat(1, 2; 3, 4)` is two rows.
     Call(String, Vec<Vec<MathNode>>),
-    /// A binary relation/arithmetic operator.
+    /// 💾️ A binary relation/arithmetic operator.
     BinOp(BinOp, Box<MathNode>, Box<MathNode>),
-    /// A horizontal run of two or more terms with no single operator joining them all — bare
+    /// 📚️ A horizontal run of two or more terms with no single operator joining them all — bare
     /// juxtaposition (`2x`) and explicit-`*` products (`2 * x`) both land here; [`SeqItem::dot`]
     /// distinguishes which, since only the explicit form renders a centered dot.
     Sequence(Vec<SeqItem>),

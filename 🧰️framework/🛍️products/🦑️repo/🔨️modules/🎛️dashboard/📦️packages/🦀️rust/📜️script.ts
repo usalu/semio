@@ -9,7 +9,7 @@ import { runOwnedBuildChildInvocationV1 } from "../../../📚️library/📦️p
 /** ⚙️ Builds, installs and tests the `semio-framework-repo-dashboard` crate and execs its `semio` binary (owned build route for `repo/dashboard/rs`). */
 import {join,relative} from "node:path";
 import { mkdir } from "node:fs/promises";
-import { captureDashboardSources, installedDashboard, installDashboard, staleDashboard, launchDashboard, withInstalledDashboardV1, type DashboardExecutionOptions } from "../../📦️installation/🟦️.ts";
+import { captureDashboardSources, installedDashboard, installDashboard, staleDashboard, launchDashboard, withInstalledDashboardV1, type DashboardExecutionOptions } from "../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts";
 import { devToolingEnv, repoTestArtifactEnvironment } from "../../../📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts";
 import { BundleScript, ScriptRouter, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -57,6 +57,10 @@ class TestScript extends BundleScript {
       await runRepositoryCargoTests(crates, this.repoRoot, this.invocation, rest); return;
     }
     const options=dashboardOptions(this.invocation,this.repoRoot);
+    if(segments[0]==="dispatch"){
+      if(segments.length!==1)throw Error("Expected test dispatch");
+      await this.bun(["--timeout","60000",join(this.root,"../../🧪️tests/🎛️dispatch/🟦️.ts")],"dashboard:dispatch-source",options);return;
+    }
     if(segments[0]==="source-freshness"){
       if(segments.length!==1)throw Error("Expected test source-freshness");
       const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR??join(this.repoRoot,".🧬semio/🦑️repo/⚡️cache/tests/dashboard-sources");await mkdir(artifacts,{recursive:true});

@@ -1,4 +1,4 @@
-use crate::retained_clone::FixtureSourceBirth;
+use crate::{ErasedSnapshotRetirement,retained_clone::{FixtureSourceBirth,RetainedCloneGrant}};
 use semio_framework_value_retirement::retirement::*;
 use std::{sync::Arc,mem::{ManuallyDrop,size_of},marker::PhantomData};
 
@@ -622,7 +622,7 @@ fn owned_retirement_matches_neutral_exact_byte_grants() {
             "strings"=>admit_fixture(serde_json::from_value::<Vec<String>>(row["value"].clone()).unwrap()),
             "optionalString"=>admit_fixture(serde_json::from_value::<Option<String>>(row["value"].clone()).unwrap()),
             "pair"=>admit_fixture(serde_json::from_value::<(String,String)>(row["value"].clone()).unwrap()),
-            "stringMap"=>admit_fixture(serde_json::from_value::<crate::ordered::OrderedMap<String>>(row["value"].clone()).unwrap()),
+            "stringMap"=>admit_fixture(serde_json::from_value::<std::collections::BTreeMap<String,String>>(row["value"].clone()).unwrap().into_iter().collect::<crate::ordered::OrderedMap<String>>()),
             "value"=>admit_fixture(crate::DslValue::from(&row["value"])),
             "bytes"=>admit_fixture(serde_json::from_value::<Vec<u8>>(row["value"].clone()).unwrap()),
             "words"=>admit_fixture(serde_json::from_value::<Vec<u32>>(row["value"].clone()).unwrap()),

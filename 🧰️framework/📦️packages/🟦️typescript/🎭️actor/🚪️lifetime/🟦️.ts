@@ -1,0 +1,3 @@
+/** 🧩️ Public `@semio-tech/framework/actor/lifetime` entry: explicit re-exports of the source module that owns each member. */
+export { ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES, actorInstanceCapturedReceiptMatches, actorInstanceCloseReceiptMatches, actorInstanceLifecycleReceiptEquals, actorInstanceLifecycleSchema, actorInstanceLifetimeEquals, decodeActorInstanceLifecycle, encodeActorInstanceLifecycle } from "@semio-tech/framework-actor/lifetime";
+export type { ActorInstanceCloseRequest, ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt, ActorInstanceLifecycleWire, ActorInstanceLifetime, ActorInstanceOpenRequest } from "@semio-tech/framework-actor/lifetime";

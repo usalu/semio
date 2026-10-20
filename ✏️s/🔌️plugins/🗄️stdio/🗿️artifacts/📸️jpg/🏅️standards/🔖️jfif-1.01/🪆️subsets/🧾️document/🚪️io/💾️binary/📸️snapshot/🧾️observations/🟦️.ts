@@ -21,7 +21,7 @@ export interface JpgQuantTable {
   id: number;
   /** 🔬️ DQT `Pq` nibble: `0` = 8-bit values, `1` = 16-bit values. */
   precision: number;
-  values: number[]; // exactly 64 entries
+  values: number[];
 }
 
 /** 🌳️ `DHT` table class. */
@@ -31,7 +31,7 @@ export type JpgHuffmanClass = 'dc' | 'ac';
 export interface JpgHuffmanTable {
   id: number;
   class: JpgHuffmanClass;
-  bits: number[]; // exactly 16 entries
+  bits: number[];
   values: number[];
 }
 

@@ -92,19 +92,9 @@ async fn mounted_boot_replays_the_demo_example_through_the_retained_route() {
     let mut app = mounted::mounted_app();
     assert!(app.snapshot().expect("snapshot").layers.is_empty(), "the store boots on the empty shell");
     mounted::dispatch(&mut app, RasterCommand::SetActiveExample(semio_s_artifact_raster_raster_editor::commands::set_active_example::SetActiveExample { example_id: semio_s_artifact_raster_raster_examples::art_raster_demo::ID.into() })).await;
-    // 🔁️ The boot replay over an already-demo document is a no-op (no second history patch). Emblem
-    // pixels and layer structure are covered by `example_media_operations` and `boot_document` tests.
     let second = mounted::dispatch(&mut app, RasterCommand::SetActiveExample(semio_s_artifact_raster_raster_editor::commands::set_active_example::SetActiveExample { example_id: semio_s_artifact_raster_raster_examples::art_raster_demo::ID.into() })).await;
     assert!(second.requested_effects.is_empty(), "re-selecting the boot example must not rewrite the document");
-    // 🖼️ The shell's first publication after the boot replay renders the composite window over the
-    // demo document, whose asset pool now holds the planted emblem: the scene projection must read
-    // the populated owned map through its entries (play-grid boot trap, 2026-09-19).
     let composite = packed_scene_text(&render(&mut app, semio_s_artifact_raster_raster_editor::modes::edit::windows::composite::RASTER_PLAY_BODY_COMPOSITE).await);
-    // 🖼️ The pixels themselves, not just the lane: `Paint2dHost` uploads one texture per `assetsJson`
-    // entry, so a boot whose asset pool holds handles WITHOUT their materialization renders an empty
-    // canvas even though every lane, layer row and viewport looks right (play pane measured blank on
-    // :6033, 2026-09-21 — `assetsJson` parsed as `{}`, zero textures uploaded). The scene's own
-    // projection is read here because the published surface carries both JSON lanes out of band.
     let booted = app.snapshot().expect("snapshot");
     let scene = raster_scene(&booted, &semio_s_artifact_raster_raster_editor::config::RasterConfig::default(), "brush", "composite", &[], None);
     let assets_json = scene.assets_json.clone();
@@ -145,10 +135,6 @@ async fn mounted_boot_publishes_the_emblem_pixels_on_the_composite_assets_lane()
     let entry = assets.get("semio-emblem").unwrap_or_else(|| panic!("the published assets lane names the emblem: {}", scene.assets_json));
     assert_eq!(entry.get("mime").and_then(Value::as_str), Some("image/png"));
     let data = entry.get("data").and_then(Value::as_str).expect("the emblem's base64 payload");
-    // 🖼️ A NON-TRIVIAL image, read off the PNG's own IHDR (bytes 16..24, big-endian) after decoding the
-    // exact base64 the host would hand `atob`. The curated demo used to publish a 75-byte 2×2 swatch,
-    // which travelled the whole lane correctly and still drew four pixels — indistinguishable in the
-    // browser from the blank pane the missing `paint-2d` lane route caused.
     let bytes = base64_codec::base64_standard_decode(data.as_bytes()).expect("the emblem payload is valid base64");
     assert!(bytes.len() > 8 * 1_024, "the emblem's payload is a real image, got {} bytes", bytes.len());
     let width = u32::from_be_bytes([bytes[16], bytes[17], bytes[18], bytes[19]]);
@@ -199,7 +185,7 @@ async fn mounted_paint_undo_redo_undo_never_reaches_an_owned_map_drop() {
 async fn mounted_config_lane_publishes_viewport_and_camera() {
     let mut app = mounted::mounted_app();
     mounted::dispatch(&mut app, RasterCommand::SetCompositeViewport(semio_s_artifact_raster_raster_editor::commands::set_composite_viewport::SetCompositeViewport { width: 1024.0, height: 807.0 })).await;
-    mounted::dispatch(&mut app, RasterCommand::SetCamera(semio_s_artifact_raster_raster_editor::commands::set_camera::SetCamera { camera: semio_s_artifact_raster_raster_model::RasterCamera { x: 12.0, y: -4.0, zoom: 2.0 } })).await;
+    mounted::dispatch(&mut app, RasterCommand::SetCamera(semio_s_artifact_raster_raster_editor::commands::camera::set_camera::SetCamera { camera: semio_s_artifact_raster_raster_model::RasterCamera { x: 12.0, y: -4.0, zoom: 2.0 } })).await;
     let text = packed_scene_text(&render(&mut app, semio_s_artifact_raster_raster_editor::modes::edit::windows::composite::RASTER_PLAY_BODY_COMPOSITE).await);
     assert!(text.contains("\"zoom\":2") || text.contains("zoom=2"), "the wheel camera must land in the config store and reach the composite scene: {text}");
     assert!(text.contains("1024"), "the boot viewport must land in the config store: {text}");

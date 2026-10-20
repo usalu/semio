@@ -1,0 +1,42 @@
+{
+ "schema": "cycle-break/delta@1",
+ "stagedAt": "2026-10-20T02:32:28.810Z",
+ "manifestOps": [],
+ "newFiles": [],
+ "edits": [
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📱️ui-mobile-context/🟦️.tsx",
+   "from": "@semio-tech/ui-react/appearance",
+   "to": "../../🌓️appearance/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d1b-ui-self-imports",
+   "why": "the module lives in ui now"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🛟️chrome-safe-area/🟦️.tsx",
+   "from": "@semio-tech/ui-react/appearance",
+   "to": "../../🌓️appearance/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d1b-ui-self-imports",
+   "why": "the module lives in ui now"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🐚️ShellScope/🟦️.tsx",
+   "from": "@semio-tech/ui-react/i18n",
+   "to": "../../🌐️i18n/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d1b-ui-self-imports",
+   "why": "the module lives in ui now"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📨️UIDialog/🟦️.tsx",
+   "from": "@semio-tech/ui-react/i18n",
+   "to": "../../🌐️i18n/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d1b-ui-self-imports",
+   "why": "the module lives in ui now"
+  }
+ ],
+ "fileOps": [],
+ "flags": []
+}

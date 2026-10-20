@@ -194,7 +194,7 @@ pub fn band_of(snapshot: &ModelSnapshot, wall: &Wall) -> Option<Band> {
 }
 
 /// 🧱️ The plan bands of the walls of one storey, keyed by wall id: the whole-storey reference the neighbourhood-based layouts are tested against.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn storey_bands(snapshot: &ModelSnapshot, storey: &str) -> BTreeMap<String, Band> {
     snapshot.walls.iter().filter(|(_, wall)| wall.storey == storey).filter_map(|(id, wall)| band_of(snapshot, wall).map(|band| (id.clone(), band))).collect()
 }

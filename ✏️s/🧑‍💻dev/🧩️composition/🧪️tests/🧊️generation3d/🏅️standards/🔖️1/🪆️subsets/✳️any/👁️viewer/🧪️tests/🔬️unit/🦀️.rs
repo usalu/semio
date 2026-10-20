@@ -248,7 +248,7 @@ fn the_preview_window_is_bound_to_the_graph_interaction_domain() {
 #[test]
 fn the_interaction_topology_declares_node_handle_and_edge_targets() {
     let _serial = context::lock();
-    let snapshot = semio_s_artifact_procedural_3d_model::default_snapshot();
+    let snapshot = semio_s_artifact_procedural_3d_io_text::snapshot::default_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let config = Generation3dViewConfig::default();

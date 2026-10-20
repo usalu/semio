@@ -38,11 +38,11 @@ use semio_framework_tool_machine::ToolMachineRunner;
 use semio_framework_tool_machine::ToolStep;
 use crate::standards::v1::subsets::any::schema::mutations::PUZZLE5D_FLAT_TO_WORLD;
 use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dGrip;
-use crate::Puzzle5dGrip3d;
-use crate::Puzzle5dPart;
-use crate::Puzzle5dPart2d;
-use crate::Puzzle5dPart3d;
-use crate::Puzzle5dTargetVolume;
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dGrip3d;
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart;
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart2d;
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart3d;
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dTargetVolume;
 
 /// 🧱️ Two parts facing each other along x — `a` with grip `a:g` at +x, `b` with grip `b:g` at -x — a part `pin`
 /// whose board pin is locked, and one target volume.

@@ -3,6 +3,7 @@ use semio_s_artifact_draw_drawing_editor_tool::DrawingSession;
 use semio_framework_plugin::{ArtifactView,ConfigView,Emit,Fault,NoConfig,NoConfigMutation,Effect,RequestId};
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
+use semio_s_artifact_draw_drawing_model::DrawingImageAsset;
 
 #[derive(Clone,Debug,PartialEq,semio_framework_value::ToValue,semio_framework_value::FromValue,semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword="import-image")]

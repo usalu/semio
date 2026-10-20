@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "semio_framework_value-empty",
+      "attribute": "",
+      "root": "semio_framework_value",
+      "shape": "empty"
+    },
+    {
+      "id": "semio_framework_value-record",
+      "attribute": "",
+      "root": "semio_framework_value",
+      "shape": "record"
+    },
+    {
+      "id": "crate-empty",
+      "attribute": "#[value(crate=\"crate\")]",
+      "root": "crate",
+      "shape": "empty"
+    },
+    {
+      "id": "crate-record",
+      "attribute": "#[value(crate=\"crate\")]",
+      "root": "crate",
+      "shape": "record"
+    },
+    {
+      "id": "domain_value-empty",
+      "attribute": "#[value(crate=\"::domain_value\")]",
+      "root": "domain_value",
+      "shape": "empty"
+    },
+    {
+      "id": "domain_value-record",
+      "attribute": "#[value(crate=\"::domain_value\")]",
+      "root": "domain_value",
+      "shape": "record"
+    }
+  ]
+}

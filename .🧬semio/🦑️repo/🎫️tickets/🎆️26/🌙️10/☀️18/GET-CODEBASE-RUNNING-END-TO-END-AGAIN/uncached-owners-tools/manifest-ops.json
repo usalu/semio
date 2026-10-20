@@ -1,0 +1,4606 @@
+[
+ {
+  "manifest": "👴️leutwiler/💤️realparts-of-powers-z-n/📋️project.json",
+  "target": "deps",
+  "id": "@leutwiler/realparts-of-powers-z-n:deps",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust/📋️project.json",
+  "target": "generate-register-catalog",
+  "id": "@semio-tech/architect-program-rs:generate-register-catalog",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📋️project.json",
+  "target": "logo-dev",
+  "id": "@semio-tech/assets:logo-dev",
+  "cache": false,
+  "continuous": true,
+  "decision": {
+   "version": 1,
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust/📋️project.json",
+  "target": "sqlite-oracle",
+  "id": "@semio-tech/bim-model-rs:sqlite-oracle",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/cad-cad-rs:canonical-architecture",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "default",
+   "^default",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/📋️project.json",
+  "target": "fixture",
+  "id": "@semio-tech/cad-js:fixture",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/📋️project.json",
+  "target": "generate",
+  "id": "@semio-tech/cad-js:generate",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📋️project.json",
+  "target": "members-write",
+  "id": "@semio-tech/cargo-workspaces:members-write",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test",
+  "id": "@semio-tech/dag-dag:test",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "default",
+   "^default",
+   "{projectRoot}/../../🏅️standards/**/*",
+   "{projectRoot}/../../🟦️.ts",
+   "{projectRoot}/📜️script.ts",
+   "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+   "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test",
+  "id": "@semio-tech/demonstrator-playground:test",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "default",
+   "^default",
+   "{projectRoot}/../../🏅️standards/**/*",
+   "{projectRoot}/../../🟦️.ts",
+   "{projectRoot}/📜️script.ts",
+   "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/energy-model-rs:canonical-architecture",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "default",
+   "^default",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust/📋️project.json",
+  "target": "lock",
+  "id": "@semio-tech/energy-model-rs:lock",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/📋️project.json",
+  "target": "deps",
+  "id": "@semio-tech/energy-oracle-py:deps",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/📋️project.json",
+  "target": "oracle-emit",
+  "id": "@semio-tech/energy-oracle-py:oracle-emit",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/📋️project.json",
+  "target": "oracle-epjson",
+  "id": "@semio-tech/energy-oracle-py:oracle-epjson",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/📋️project.json",
+  "target": "oracle-native",
+  "id": "@semio-tech/energy-oracle-py:oracle-native",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/📋️project.json",
+  "target": "oracle-run",
+  "id": "@semio-tech/energy-oracle-py:oracle-run",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/📋️project.json",
+  "target": "oracle-setup",
+  "id": "@semio-tech/energy-oracle-py:oracle-setup",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/📋️project.json",
+  "target": "oracle-status",
+  "id": "@semio-tech/energy-oracle-py:oracle-status",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📋️project.json",
+  "target": "🧪️witness",
+  "id": "@semio-tech/fixture-generator-stdio-jpg-jfif-1-01-document:🧪️witness",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/flow-extension-brep-rust:canonical-architecture",
+  "cache": true,
+  "inputs": [
+   "default",
+   "^default",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/framework-actor:canonical-architecture",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "default",
+   "^default",
+   "testEnv",
+   "reads"
+  ]
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/📋️project.json",
+  "target": "twin",
+  "id": "@semio-tech/framework-async:twin",
+  "cache": true,
+  "inputs": [
+   "default",
+   "^default",
+   "testEnv",
+   "reads"
+  ]
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/framework-job-rs:canonical-architecture",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "default",
+   "^default",
+   "testEnv",
+   "reads",
+   "cargoToolchain"
+  ]
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "bench",
+  "id": "@semio-tech/framework-os-dev:bench",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "bench-plugins-native",
+  "id": "@semio-tech/framework-os-dev:bench-plugins-native",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "bench-plugins-react",
+  "id": "@semio-tech/framework-os-dev:bench-plugins-react",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "bench-plugins-wgpu",
+  "id": "@semio-tech/framework-os-dev:bench-plugins-wgpu",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "boot-budget",
+  "id": "@semio-tech/framework-os-dev:boot-budget",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/framework-os-dev:canonical-architecture",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "default",
+   "^default",
+   "testEnv",
+   "stagingRootSources"
+  ]
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "cold-boot-check-s",
+  "id": "@semio-tech/framework-os-dev:cold-boot-check-s",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "connection-budget",
+  "id": "@semio-tech/framework-os-dev:connection-budget",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "idle-budget",
+  "id": "@semio-tech/framework-os-dev:idle-budget",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "interaction-latency",
+  "id": "@semio-tech/framework-os-dev:interaction-latency",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "memory-soak",
+  "id": "@semio-tech/framework-os-dev:memory-soak",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "parity-journey",
+  "id": "@semio-tech/framework-os-dev:parity-journey",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "plugin-size",
+  "id": "@semio-tech/framework-os-dev:plugin-size",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "program-matrix",
+  "id": "@semio-tech/framework-os-dev:program-matrix",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "s-host-foreign-kind-s",
+  "id": "@semio-tech/framework-os-dev:s-host-foreign-kind-s",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "s-host-pinch-diagram-contrast-s",
+  "id": "@semio-tech/framework-os-dev:s-host-pinch-diagram-contrast-s",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "time-travel",
+  "id": "@semio-tech/framework-os-dev:time-travel",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "tool-run-matrix",
+  "id": "@semio-tech/framework-os-dev:tool-run-matrix",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "two-human",
+  "id": "@semio-tech/framework-os-dev:two-human",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "two-human-cross-undo",
+  "id": "@semio-tech/framework-os-dev:two-human-cross-undo",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "two-human-viewer",
+  "id": "@semio-tech/framework-os-dev:two-human-viewer",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/framework-os-kernel:canonical-architecture",
+  "cache": true,
+  "inputs": [
+   "default",
+   "^default",
+   "testEnv",
+   "reads",
+   "cargoToolchain"
+  ]
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json",
+  "target": "test-directory-lease-fixture",
+  "id": "@semio-tech/framework-os-kernel:test-directory-lease-fixture",
+  "cache": true,
+  "inputs": [
+   "default",
+   "^default",
+   "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🔏️document-execution-target-lease-v1/🟦️.ts",
+   "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json",
+  "target": "wal-writer-fence-live",
+  "id": "@semio-tech/framework-os-kernel:wal-writer-fence-live",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/📋️project.json",
+  "target": "publish",
+  "id": "@semio-tech/framework-os-mcp-rs:publish",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "publishes-remote"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test-native-staging",
+  "id": "@semio-tech/framework-os-mcp:test-native-staging",
+  "cache": true
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust/📋️project.json",
+  "target": "wasm",
+  "id": "@semio-tech/framework-os-node-graph-rs:wasm",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "managed-output",
+   "reason": "outputs-in-managed-store"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/framework-os:canonical-architecture",
+  "cache": true,
+  "inputs": [
+   "default",
+   "^default",
+   "testEnv",
+   "reads"
+  ]
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/framework-plugin:canonical-architecture",
+  "cache": true,
+  "inputs": [
+   "default",
+   "^default",
+   "testEnv",
+   "reads",
+   "cargoToolchain",
+   "{workspaceRoot}/🧰️framework/🔨️modules/🧵️job/♻️retirement/🎟️context/**"
+  ]
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-budget",
+  "id": "@semio-tech/framework-process:test-budget",
+  "cache": true,
+  "inputs": [
+   "{projectRoot}/**/*",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-cargo-build-lease",
+  "id": "@semio-tech/framework-process:test-cargo-build-lease",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-cargo-source-admission",
+  "id": "@semio-tech/framework-process:test-cargo-source-admission",
+  "cache": true,
+  "inputs": [
+   "{projectRoot}/📦️artifacts/🏗️native-build/📥️source/**/*",
+   "{projectRoot}/📦️artifacts/🏗️native-build/🕸️units/**/*",
+   "{projectRoot}/🔒️leases/**/*",
+   "{projectRoot}/📜️script.ts",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-cargo-test-leases",
+  "id": "@semio-tech/framework-process:test-cargo-test-leases",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-compiler-capacity",
+  "id": "@semio-tech/framework-process:test-compiler-capacity",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-compiler-capacity-custodian",
+  "id": "@semio-tech/framework-process:test-compiler-capacity-custodian",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-compiler-capacity-inheritance",
+  "id": "@semio-tech/framework-process:test-compiler-capacity-inheritance",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-descriptor-lifetime",
+  "id": "@semio-tech/framework-process:test-descriptor-lifetime",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-exact-cargo-storage",
+  "id": "@semio-tech/framework-process:test-exact-cargo-storage",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-execution-budget",
+  "id": "@semio-tech/framework-process:test-execution-budget",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-native-artifact-publication",
+  "id": "@semio-tech/framework-process:test-native-artifact-publication",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-native-cache-descriptors",
+  "id": "@semio-tech/framework-process:test-native-cache-descriptors",
+  "cache": true,
+  "inputs": [
+   "{projectRoot}/📦️artifacts/💾️cache/**/*",
+   "{projectRoot}/📜️script.ts",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-native-image-observation",
+  "id": "@semio-tech/framework-process:test-native-image-observation",
+  "cache": true,
+  "inputs": [
+   "{projectRoot}/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🤫️silence/**/*",
+   "{projectRoot}/📜️script.ts",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-native-storage-platform",
+  "id": "@semio-tech/framework-process:test-native-storage-platform",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-process-progress",
+  "id": "@semio-tech/framework-process:test-process-progress",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-process-tree-termination",
+  "id": "@semio-tech/framework-process:test-process-tree-termination",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-resource-lease-fairness",
+  "id": "@semio-tech/framework-process:test-resource-lease-fairness",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-resource-lease-waits",
+  "id": "@semio-tech/framework-process:test-resource-lease-waits",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-resource-leases",
+  "id": "@semio-tech/framework-process:test-resource-leases",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-runtime-environment",
+  "id": "@semio-tech/framework-process:test-runtime-environment",
+  "cache": true,
+  "inputs": [
+   "{projectRoot}/🏗️build/🎛️environment/**/*",
+   "{projectRoot}/🏗️build/🟦️typescript/**/*",
+   "{projectRoot}/📜️script.ts",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+  "target": "browser-dock-acceptance",
+  "id": "@semio-tech/framework-renderer-wgpu:browser-dock-acceptance",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+  "target": "browser-embedded-acceptance",
+  "id": "@semio-tech/framework-renderer-wgpu:browser-embedded-acceptance",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+  "target": "browser-media-acceptance",
+  "id": "@semio-tech/framework-renderer-wgpu:browser-media-acceptance",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/framework-renderer-wgpu:canonical-architecture",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "default",
+   "^default",
+   "testEnv",
+   "reads",
+   "cargoToolchain",
+   "production",
+   "^production",
+   "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+   "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+   "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
+  ]
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+  "target": "native-scale",
+  "id": "@semio-tech/framework-renderer-wgpu:native-scale",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/📁️filesystem/📝️workspace/📋️project.json",
+  "target": "test-source",
+  "id": "@semio-tech/framework-source-workspace:test-source",
+  "cache": true,
+  "inputs": [
+   "default",
+   "^default",
+   "{projectRoot}/**/*",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📋️project.json",
+  "target": "tiles-prefetch",
+  "id": "@semio-tech/gis-gismap-js:tiles-prefetch",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust/📋️project.json",
+  "target": "hub-edit-durability-check",
+  "id": "@semio-tech/gis-plugin:hub-edit-durability-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🌎️hub/🧩️compositions/🧩️puzzle/🧵️retained/📋️project.json",
+  "target": "test-native",
+  "id": "@semio-tech/hub-puzzle-retained-test:test-native",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "aggregate",
+   "reason": "reenters-build-tool"
+  }
+ },
+ {
+  "manifest": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+  "target": "collaboration-acceptance",
+  "id": "@semio-tech/hub-renderer-wgpu:collaboration-acceptance",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+  "target": "collaboration-check",
+  "id": "@semio-tech/hub-renderer-wgpu:collaboration-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+  "target": "creation-check",
+  "id": "@semio-tech/hub-renderer-wgpu:creation-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+  "target": "journey-check",
+  "id": "@semio-tech/hub-renderer-wgpu:journey-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+  "target": "native-guest-journey-check",
+  "id": "@semio-tech/hub-renderer-wgpu:native-guest-journey-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🌎️hub/🧩️compositions/🪐️space/🧪️testing/📋️project.json",
+  "target": "test-native",
+  "id": "@semio-tech/hub-space-document-sources-test:test-native",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "aggregate",
+   "reason": "reenters-build-tool"
+  }
+ },
+ {
+  "manifest": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📋️project.json",
+  "target": "publish",
+  "id": "@semio-tech/hub-stdio-publication:publish",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "♻️mit-bestand/🧺️demonstrator/📋️project.json",
+  "target": "build",
+  "id": "@semio-tech/mit-bestand-demonstrator:build",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "managed-output",
+   "reason": "outputs-in-managed-store"
+  }
+ },
+ {
+  "manifest": "♻️mit-bestand/🧺️demonstrator/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/mit-bestand-demonstrator:canonical-architecture",
+  "cache": true,
+  "inputs": [
+   "default",
+   "^default",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "♻️mit-bestand/🧺️demonstrator/📋️project.json",
+  "target": "prepare-e2e",
+  "id": "@semio-tech/mit-bestand-demonstrator:prepare-e2e",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "♻️mit-bestand/🧺️demonstrator/📋️project.json",
+  "target": "test",
+  "id": "@semio-tech/mit-bestand-demonstrator:test",
+  "cache": true
+ },
+ {
+  "manifest": "♻️mit-bestand/🧺️demonstrator/📋️project.json",
+  "target": "test-e2e",
+  "id": "@semio-tech/mit-bestand-demonstrator:test-e2e",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "♻️mit-bestand/🧺️demonstrator/📋️project.json",
+  "target": "test-runtime-catalog",
+  "id": "@semio-tech/mit-bestand-demonstrator:test-runtime-catalog",
+  "cache": true
+ },
+ {
+  "manifest": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/mit-bestand-praesentation-projektetage:canonical-architecture",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "default",
+   "^default",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/📦️packages/🦀️rust/📋️project.json",
+  "target": "regenerate-example-assets",
+  "id": "@semio-tech/norm-en1996-rs:regenerate-example-assets",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🟦️typescript/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/note-note-js:canonical-architecture",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "default",
+   "{workspaceRoot}/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/**/*",
+   "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document/**/*.ts",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📋️project.json",
+  "target": "describe",
+  "id": "@semio-tech/os-plugin-describe-rs:describe",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/playbook-extension-procedural-rust:canonical-architecture",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "default",
+   "^default",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📋️project.json",
+  "target": "new",
+  "id": "@semio-tech/plugin-registry:new",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📋️project.json",
+  "target": "rebuild-all",
+  "id": "@semio-tech/plugin-registry:rebuild-all",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📋️project.json",
+  "target": "surface-schema",
+  "id": "@semio-tech/plugin-registry:surface-schema",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust/📋️project.json",
+  "target": "produce-logical-owner",
+  "id": "@semio-tech/print-rs:produce-logical-owner",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📋️project.json",
+  "target": "deps-tectonic",
+  "id": "@semio-tech/print:deps-tectonic",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📋️project.json",
+  "target": "deps-tex",
+  "id": "@semio-tech/print:deps-tex",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/procedural-generation3d-rs:canonical-architecture",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "default",
+   "^default",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/procedural-js:canonical-architecture",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/**/*",
+   "{workspaceRoot}/🧰️framework/**/*",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/puzzle-plugin:canonical-architecture",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "default",
+   "^default",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/raster-js:canonical-architecture",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "{workspaceRoot}/✏️s/🔌️plugins/🖨️raster/**/*",
+   "{workspaceRoot}/🧰️framework/**/*",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "🌎️hub/🧩️compositions/📸️remodel/📦️packages/🦀️rust/📋️project.json",
+  "target": "regenerate-example",
+  "id": "@semio-tech/remodel-plugin:regenerate-example",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust/📋️project.json",
+  "target": "composition-prepare",
+  "id": "@semio-tech/remodel-remodeling-rs:composition-prepare",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/📋️project.json",
+  "target": "test-entrypoint-source",
+  "id": "@semio-tech/repo-cli-go:test-entrypoint-source",
+  "cache": true,
+  "inputs": [
+   "default",
+   "^default",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📋️project.json",
+  "target": "mcp",
+  "id": "@semio-tech/repo-cli-rs:mcp",
+  "cache": false,
+  "continuous": true,
+  "decision": {
+   "version": 1,
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📋️project.json",
+  "target": "repo",
+  "id": "@semio-tech/repo-cli-rs:repo",
+  "cache": false,
+  "continuous": true,
+  "decision": {
+   "version": 1,
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🦀️rust/📋️project.json",
+  "target": "run",
+  "id": "@semio-tech/repo-coordinator-rs:run",
+  "cache": false,
+  "continuous": true,
+  "decision": {
+   "version": 1,
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "build",
+  "id": "@semio-tech/repo-dashboard-rs:build",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "driver-owned",
+   "reason": "freshness-owned-by-driver"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "install",
+  "id": "@semio-tech/repo-dashboard-rs:install",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "preferences",
+  "id": "@semio-tech/repo-dashboard-rs:preferences",
+  "cache": false,
+  "continuous": true,
+  "decision": {
+   "version": 1,
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "run",
+  "id": "@semio-tech/repo-dashboard-rs:run",
+  "cache": false,
+  "continuous": true,
+  "decision": {
+   "version": 1,
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "test",
+  "id": "@semio-tech/repo-dashboard-rs:test",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "test-authority",
+  "id": "@semio-tech/repo-dashboard-rs:test-authority",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "test-coverage",
+  "id": "@semio-tech/repo-dashboard-rs:test-coverage",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "test-dispatch",
+  "id": "@semio-tech/repo-dashboard-rs:test-dispatch",
+  "cache": true
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "test-execution",
+  "id": "@semio-tech/repo-dashboard-rs:test-execution",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "test-exhaustive",
+  "id": "@semio-tech/repo-dashboard-rs:test-exhaustive",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "test-journeys",
+  "id": "@semio-tech/repo-dashboard-rs:test-journeys",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "test-load",
+  "id": "@semio-tech/repo-dashboard-rs:test-load",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "test-long",
+  "id": "@semio-tech/repo-dashboard-rs:test-long",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "test-process-deadline",
+  "id": "@semio-tech/repo-dashboard-rs:test-process-deadline",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "test-quick",
+  "id": "@semio-tech/repo-dashboard-rs:test-quick",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "test-smoke",
+  "id": "@semio-tech/repo-dashboard-rs:test-smoke",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "test-source-freshness",
+  "id": "@semio-tech/repo-dashboard-rs:test-source-freshness",
+  "cache": true
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/📋️project.json",
+  "target": "debug",
+  "id": "@semio-tech/repo-developer-tools:debug",
+  "cache": false,
+  "continuous": true,
+  "decision": {
+   "version": 1,
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/📋️project.json",
+  "target": "debuggers",
+  "id": "@semio-tech/repo-developer-tools:debuggers",
+  "cache": false,
+  "continuous": true,
+  "decision": {
+   "version": 1,
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/📋️project.json",
+  "target": "git-blame",
+  "id": "@semio-tech/repo-developer-tools:git-blame",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/📋️project.json",
+  "target": "git-diff",
+  "id": "@semio-tech/repo-developer-tools:git-diff",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/📋️project.json",
+  "target": "git-history",
+  "id": "@semio-tech/repo-developer-tools:git-history",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/📋️project.json",
+  "target": "git-show",
+  "id": "@semio-tech/repo-developer-tools:git-show",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/📋️project.json",
+  "target": "git-status",
+  "id": "@semio-tech/repo-developer-tools:git-status",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/📋️project.json",
+  "target": "setup-debugger",
+  "id": "@semio-tech/repo-developer-tools:setup-debugger",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/📋️project.json",
+  "target": "terminal",
+  "id": "@semio-tech/repo-developer-tools:terminal",
+  "cache": false,
+  "continuous": true,
+  "decision": {
+   "version": 1,
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/repo-lib:canonical-architecture",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "sharedGlobals",
+   "{workspaceRoot}/package.json",
+   "{workspaceRoot}/**/package.json",
+   "{workspaceRoot}/🧰️framework/**/*",
+   "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+   "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+   "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🧪️tests,🧫️fixtures,🧬️schema}/🧱️dependency-direction/**/*",
+   "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "go-test",
+  "id": "@semio-tech/repo-lib:go-test",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "libraryGoCommandSources",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "owner-command",
+  "id": "@semio-tech/repo-lib:owner-command",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "probe-nx-owner-arguments",
+  "id": "@semio-tech/repo-lib:probe-nx-owner-arguments",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "schema-read-inventory",
+  "id": "@semio-tech/repo-lib:schema-read-inventory",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test-build-caller-birth",
+  "id": "@semio-tech/repo-lib:test-build-caller-birth",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test-cargo-workspace-ownership",
+  "id": "@semio-tech/repo-lib:test-cargo-workspace-ownership",
+  "cache": true,
+  "inputs": [
+   "{projectRoot}/../../🗂️workspaces/🦀️cargo/**/*",
+   "{projectRoot}/📜️script.ts",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test-cross-platform-bootstrap",
+  "id": "@semio-tech/repo-lib:test-cross-platform-bootstrap",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test-dependency-policy-bootstrap",
+  "id": "@semio-tech/repo-lib:test-dependency-policy-bootstrap",
+  "cache": true,
+  "inputs": [
+   "sharedGlobals",
+   "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/**/*",
+   "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/**/*",
+   "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+   "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+   "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs",
+   "{workspaceRoot}/📋️project.json",
+   "{workspaceRoot}/nx.json",
+   "{workspaceRoot}/package.json",
+   "{workspaceRoot}/{🧰️framework,✏️s,🌎️hub,♻️mit-bestand}/**/package.json",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test-fixture-ownership",
+  "id": "@semio-tech/repo-lib:test-fixture-ownership",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "default",
+   "^default",
+   "testEnv",
+   "reads"
+  ]
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test-go-executable-acceptance",
+  "id": "@semio-tech/repo-lib:test-go-executable-acceptance",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test-original-default-preparation-control",
+  "id": "@semio-tech/repo-lib:test-original-default-preparation-control",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test-preflight-reference-basis",
+  "id": "@semio-tech/repo-lib:test-preflight-reference-basis",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test-registry-catalog-gitlink-boundary",
+  "id": "@semio-tech/repo-lib:test-registry-catalog-gitlink-boundary",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "ui-storybook-dev",
+  "id": "@semio-tech/repo-lib:ui-storybook-dev",
+  "cache": false,
+  "continuous": true,
+  "decision": {
+   "version": 1,
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "workspaces-write",
+  "id": "@semio-tech/repo-lib:workspaces-write",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🦀️rust/📋️project.json",
+  "target": "run",
+  "id": "@semio-tech/repo-mcp-rs:run",
+  "cache": false,
+  "continuous": true,
+  "decision": {
+   "version": 1,
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+  "target": "test-clean",
+  "id": "@semio-tech/repo-test-domain:test-clean",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+  "target": "test-doctor",
+  "id": "@semio-tech/repo-test-domain:test-doctor",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+  "target": "test-fixture-generate",
+  "id": "@semio-tech/repo-test-domain:test-fixture-generate",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+  "target": "test-fixture-reproduce",
+  "id": "@semio-tech/repo-test-domain:test-fixture-reproduce",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+  "target": "test-gc",
+  "id": "@semio-tech/repo-test-domain:test-gc",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+  "target": "test-inventory",
+  "id": "@semio-tech/repo-test-domain:test-inventory",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+  "target": "test-probe",
+  "id": "@semio-tech/repo-test-domain:test-probe",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🔷️dotnet/📋️project.json",
+  "target": "deps",
+  "id": "@semio-tech/repo-test-dotnet:deps",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust/📋️project.json",
+  "target": "browser-test",
+  "id": "@semio-tech/s-cad-composition-rs:browser-test",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust/📋️project.json",
+  "target": "wasm",
+  "id": "@semio-tech/s-cad-composition-rs:wasm",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "managed-output",
+   "reason": "outputs-in-managed-store"
+  }
+ },
+ {
+  "manifest": "✏️s/🧑‍💻dev/🧩️composition/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/s-composition-laws-rs:canonical-architecture",
+  "cache": true,
+  "inputs": [
+   "default",
+   "^default",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "✏️s/🧑‍💻dev/📋️project.json",
+  "target": "mcp-client-e2e",
+  "id": "@semio-tech/s-dev-composition:mcp-client-e2e",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "✏️s/🧑‍💻dev/📋️project.json",
+  "target": "preview-generated",
+  "id": "@semio-tech/s-dev-composition:preview-generated",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  }
+ },
+ {
+  "manifest": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript/📋️project.json",
+  "target": "verify-fem-live-visual-publication",
+  "id": "@semio-tech/s-fem-composition-tests:verify-fem-live-visual-publication",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "✏️s/🧑‍💻dev/🧹️fixture-sweep/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/s-fixture-sweep-rs:canonical-architecture",
+  "cache": true,
+  "inputs": [
+   "default",
+   "^default",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "✏️s/🧑‍💻dev/🌊️flow/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/s-flow-composition-rs:canonical-architecture",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "default",
+   "^default",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📋️project.json",
+  "target": "agent-reply-check",
+  "id": "@semio-tech/s-gis-services-native:agent-reply-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-pair-composition-check",
+  "id": "@semio-tech/s-gis-services-native:canonical-pair-composition-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "aggregate",
+   "reason": "reenters-build-tool"
+  }
+ },
+ {
+  "manifest": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📋️project.json",
+  "target": "fixture-ownership-check",
+  "id": "@semio-tech/s-gis-services-native:fixture-ownership-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "aggregate",
+   "reason": "reenters-build-tool"
+  }
+ },
+ {
+  "manifest": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📋️project.json",
+  "target": "hub-agent-participant-check",
+  "id": "@semio-tech/s-gis-services-native:hub-agent-participant-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📋️project.json",
+  "target": "inference-quartet-check",
+  "id": "@semio-tech/s-gis-services-native:inference-quartet-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📋️project.json",
+  "target": "live-agent-loop-check",
+  "id": "@semio-tech/s-gis-services-native:live-agent-loop-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📋️project.json",
+  "target": "plugin-coverage-check",
+  "id": "@semio-tech/s-gis-services-native:plugin-coverage-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📋️project.json",
+  "target": "security-check",
+  "id": "@semio-tech/s-gis-services-native:security-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📋️project.json",
+  "target": "user-path-check",
+  "id": "@semio-tech/s-gis-services-native:user-path-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "✏️s/🧑‍💻dev/🔁️rebuild/📋️project.json",
+  "target": "guest-framework-check",
+  "id": "@semio-tech/s-rebuild:guest-framework-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "✏️s/🧑‍💻dev/🔁️rebuild/📋️project.json",
+  "target": "rebuild-all",
+  "id": "@semio-tech/s-rebuild:rebuild-all",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "aggregate",
+   "reason": "reenters-build-tool"
+  }
+ },
+ {
+  "manifest": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust/📋️project.json",
+  "target": "browser-test",
+  "id": "@semio-tech/s-spatial-kernel-semio-session-rs:browser-test",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/s-spatial-kernel-semio-session-rs:canonical-architecture",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "default",
+   "^default",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust/📋️project.json",
+  "target": "wasm",
+  "id": "@semio-tech/s-spatial-kernel-semio-session-rs:wasm",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "managed-output",
+   "reason": "outputs-in-managed-store"
+  }
+ },
+ {
+  "manifest": "🏢️semio-tech/🎡️play/📋️project.json",
+  "target": "build",
+  "id": "@semio-tech/semio-tech-play:build",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "managed-output",
+   "reason": "outputs-in-managed-store"
+  }
+ },
+ {
+  "manifest": "🏢️semio-tech/🎡️play/📋️project.json",
+  "target": "prepare-e2e",
+  "id": "@semio-tech/semio-tech-play:prepare-e2e",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🏢️semio-tech/🎡️play/📋️project.json",
+  "target": "release-verify",
+  "id": "@semio-tech/semio-tech-play:release-verify",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "🏢️semio-tech/🎡️play/📋️project.json",
+  "target": "test",
+  "id": "@semio-tech/semio-tech-play:test",
+  "cache": true
+ },
+ {
+  "manifest": "🏢️semio-tech/🎡️play/📋️project.json",
+  "target": "test-e2e",
+  "id": "@semio-tech/semio-tech-play:test-e2e",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🏢️semio-tech/🎡️play/📋️project.json",
+  "target": "test-e2e-enduser",
+  "id": "@semio-tech/semio-tech-play:test-e2e-enduser",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🏢️semio-tech/🎡️play/📋️project.json",
+  "target": "test-release",
+  "id": "@semio-tech/semio-tech-play:test-release",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🏢️semio-tech/🎡️play/📋️project.json",
+  "target": "test-release-routing",
+  "id": "@semio-tech/semio-tech-play:test-release-routing",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/sequence-sequence-rs:canonical-architecture",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "default",
+   "^default",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/stdio-artifact-contract-rs:canonical-architecture",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "default",
+   "^default",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/stdio-assembly-rs:canonical-architecture",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "default",
+   "^default",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📋️project.json",
+  "target": "deletion-proof",
+  "id": "@semio-tech/stdio-assembly-rs:deletion-proof",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/stdio-bmp-rs:canonical-architecture",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "default",
+   "^default",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/stdio-gltf-rs:canonical-architecture",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "production",
+   "^production",
+   "{projectRoot}/../../🏅️standards/**/*",
+   "{projectRoot}/../../🧪️tests/📜️definition/**/*",
+   "{projectRoot}/../../🧬️schema/**/*",
+   "{projectRoot}/../../🧫️fixtures/**/*",
+   "{projectRoot}/../../📜️artifact-definition.json",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📋️project.json",
+  "target": "artifact-directory-wiring-generate",
+  "id": "@semio-tech/stdio-plugin:artifact-directory-wiring-generate",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📋️project.json",
+  "target": "catalog-root",
+  "id": "@semio-tech/stdio-plugin:catalog-root",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📋️project.json",
+  "target": "composition-prepare",
+  "id": "@semio-tech/stdio-plugin:composition-prepare",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📋️project.json",
+  "target": "editor-component-check",
+  "id": "@semio-tech/stdio-plugin:editor-component-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📋️project.json",
+  "target": "home-io-surface-check",
+  "id": "@semio-tech/stdio-plugin:home-io-surface-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📋️project.json",
+  "target": "native-codec-projection",
+  "id": "@semio-tech/stdio-plugin:native-codec-projection",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📋️project.json",
+  "target": "parent-removal-check",
+  "id": "@semio-tech/stdio-plugin:parent-removal-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📋️project.json",
+  "target": "parent-removal-test-check",
+  "id": "@semio-tech/stdio-plugin:parent-removal-test-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📋️project.json",
+  "target": "subset-directory-wiring-generate",
+  "id": "@semio-tech/stdio-plugin:subset-directory-wiring-generate",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/stdio-semio-rs:canonical-architecture",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "production",
+   "^production",
+   "{projectRoot}/../../🏅️standards/**/*",
+   "{projectRoot}/../../🟦️.ts",
+   "{projectRoot}/../../🦀️.rs",
+   "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+   "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📋️project.json",
+  "target": "composition-prepare",
+  "id": "@semio-tech/stdio-semio-rs:composition-prepare",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/stdio-wav-rs:canonical-architecture",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "default",
+   "^default",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🐚️shell/📦️packages/🦀️rust/📋️project.json",
+  "target": "run",
+  "id": "@semio-tech/trinity-jack-shell:run",
+  "cache": false,
+  "continuous": true,
+  "decision": {
+   "version": 1,
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  }
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test",
+  "id": "@semio-tech/trinity-jack:test",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "default",
+   "^default",
+   "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript/../../**/*",
+   "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+   "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🏷️type/**/*",
+   "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test",
+  "id": "@semio-tech/trinity-rewriting:test",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "default",
+   "^default",
+   "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🟦️typescript/../../**/*",
+   "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+   "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🏷️type/**/*",
+   "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🌱️value/**/*",
+   "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/**/*",
+   "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "@semio-tech/ui-react:canonical-architecture",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "default",
+   "^default",
+   "testEnv",
+   "reads"
+  ]
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json",
+  "target": "test-text-editor-source",
+  "id": "@semio-tech/ui-rs:test-text-editor-source",
+  "cache": true,
+  "inputs": [
+   "default",
+   "^default",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🔷️dotnet/📋️project.json",
+  "target": "deps",
+  "id": "@semio-tech/ui-styling-dotnet:deps",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python/📋️project.json",
+  "target": "deps",
+  "id": "@semio-tech/ui-styling-py:deps",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📋️project.json",
+  "target": "fonts",
+  "id": "@semio-tech/ui-styling-tokens:fonts",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "build",
+  "id": "@teaching/architecture-course:build",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "managed-output",
+   "reason": "outputs-in-managed-store"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "check",
+  "id": "@teaching/architecture-course:check",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "default",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   },
+   "{workspaceRoot}/🎓️teaching/🛂️proctor/**/*",
+   "{workspaceRoot}/Cargo.toml",
+   "{workspaceRoot}/Cargo.lock",
+   "{workspaceRoot}/.cargo/config.toml",
+   "{workspaceRoot}/rust-toolchain.toml",
+   {
+    "env": "PROCTOR_COURSE"
+   }
+  ]
+ },
+ {
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "ci-browser-prepare",
+  "id": "@teaching/architecture-course:ci-browser-prepare",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "deploy-check",
+  "id": "@teaching/architecture-course:deploy-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "docker-image-build",
+  "id": "@teaching/architecture-course:docker-image-build",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "docker-image-check",
+  "id": "@teaching/architecture-course:docker-image-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "docker-image-publish",
+  "id": "@teaching/architecture-course:docker-image-publish",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "publishes-remote"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "docker-stack-bundle",
+  "id": "@teaching/architecture-course:docker-stack-bundle",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "docker-stack-check",
+  "id": "@teaching/architecture-course:docker-stack-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "preflight",
+  "id": "@teaching/architecture-course:preflight",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "publish",
+  "id": "@teaching/architecture-course:publish",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "publishes-remote"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test-e2e",
+  "id": "@teaching/architecture-course:test-e2e",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+  "target": "backup",
+  "id": "@teaching/proctor:backup",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+  "target": "capacity",
+  "id": "@teaching/proctor:capacity",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+  "target": "check",
+  "id": "@teaching/proctor:check",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "cargoTests",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   },
+   "{workspaceRoot}/🎓️teaching/🏛️architecture/📚️course/**/*",
+   {
+    "env": "PROCTOR_COURSE"
+   }
+  ]
+ },
+ {
+  "manifest": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+  "target": "erase",
+  "id": "@teaching/proctor:erase",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+  "target": "health",
+  "id": "@teaching/proctor:health",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+  "target": "prune",
+  "id": "@teaching/proctor:prune",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+  "target": "rebuild",
+  "id": "@teaching/proctor:rebuild",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+  "target": "restore",
+  "id": "@teaching/proctor:restore",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+  "target": "agent-ceiling-check",
+  "id": "os-hub-ts:agent-ceiling-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+  "target": "backend-down",
+  "id": "os-hub-ts:backend-down",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+  "target": "backend-run",
+  "id": "os-hub-ts:backend-run",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+  "target": "backend-status",
+  "id": "os-hub-ts:backend-status",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+  "target": "backend-up",
+  "id": "os-hub-ts:backend-up",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+  "target": "backup-restore-drill",
+  "id": "os-hub-ts:backup-restore-drill",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+  "target": "boot-watch",
+  "id": "os-hub-ts:boot-watch",
+  "cache": false,
+  "continuous": true,
+  "decision": {
+   "version": 1,
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+  "target": "docker-image-build",
+  "id": "os-hub-ts:docker-image-build",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+  "target": "docker-image-check",
+  "id": "os-hub-ts:docker-image-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+  "target": "document-growth-e2e",
+  "id": "os-hub-ts:document-growth-e2e",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+  "target": "hub-freshness",
+  "id": "os-hub-ts:hub-freshness",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+  "target": "residency-watch",
+  "id": "os-hub-ts:residency-watch",
+  "cache": false,
+  "continuous": true,
+  "decision": {
+   "version": 1,
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+  "target": "shutdown-drill",
+  "id": "os-hub-ts:shutdown-drill",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+  "target": "two-client-e2e",
+  "id": "os-hub-ts:two-client-e2e",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "admin-live-journey-check",
+  "id": "os-hub:admin-live-journey-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "browser-actor-child-worker-containment-check",
+  "id": "os-hub:browser-actor-child-worker-containment-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "browser-actor-gis-describe-check",
+  "id": "os-hub:browser-actor-gis-describe-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "os-hub:canonical-architecture",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "default",
+   "^default",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "directory-live-lanes",
+  "id": "os-hub:directory-live-lanes",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "hostile-input-check",
+  "id": "os-hub:hostile-input-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "hub-document-sweep",
+  "id": "os-hub:hub-document-sweep",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "io-matrix",
+  "id": "os-hub:io-matrix",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "live-sign-in-check",
+  "id": "os-hub:live-sign-in-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "local-hub-owner",
+  "id": "os-hub:local-hub-owner",
+  "cache": false,
+  "continuous": true,
+  "decision": {
+   "version": 1,
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "publish",
+  "id": "os-hub:publish",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "publishes-remote"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "runtime-fixture-graph",
+  "id": "os-hub:runtime-fixture-graph",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "aggregate",
+   "reason": "reenters-build-tool"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "scoped-presence-browser-serve",
+  "id": "os-hub:scoped-presence-browser-serve",
+  "cache": false,
+  "continuous": true,
+  "decision": {
+   "version": 1,
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "secure-local-smoke",
+  "id": "os-hub:secure-local-smoke",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "setup",
+  "id": "os-hub:setup",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "trusted-catalog-bootstrap",
+  "id": "os-hub:trusted-catalog-bootstrap",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "trusted-catalog-preflight",
+  "id": "os-hub:trusted-catalog-preflight",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "aggregate",
+   "reason": "reenters-build-tool"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📋️project.json",
+  "target": "install",
+  "id": "repo-mcp:install",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📋️project.json",
+  "target": "test-install",
+  "id": "repo-mcp:test-install",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/💾️storage/📋️project.json",
+  "target": "test-nx-cache",
+  "id": "repo-next-storage:test-nx-cache",
+  "cache": true,
+  "inputs": [
+   "default",
+   "^default",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   }
+  ]
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "audit",
+  "id": "repo:audit",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "cache-prune",
+  "id": "repo:cache-prune",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "cache-prune-stale-incremental",
+  "id": "repo:cache-prune-stale-incremental",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "cache-report",
+  "id": "repo:cache-report",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "cache-verify",
+  "id": "repo:cache-verify",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "cargo-prepare",
+  "id": "repo:cargo-prepare",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "cargo-provenance-repair",
+  "id": "repo:cargo-provenance-repair",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "cargo-synchronize",
+  "id": "repo:cargo-synchronize",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "ci-baseline",
+  "id": "repo:ci-baseline",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "debug-bun-bundle",
+  "id": "repo:debug-bun-bundle",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "digest-cargo-lock",
+  "id": "repo:digest-cargo-lock",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "digest-source-closure",
+  "id": "repo:digest-source-closure",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "digest-source-inventory",
+  "id": "repo:digest-source-inventory",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "disk-report",
+  "id": "repo:disk-report",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "doctor",
+  "id": "repo:doctor",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "emit-typescript-declarations",
+  "id": "repo:emit-typescript-declarations",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-bazel-storage",
+  "id": "repo:test-bazel-storage",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-bazel-storage-runtime",
+  "id": "repo:test-bazel-storage-runtime",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-bootstrap-original-invocation-source",
+  "id": "repo:test-bootstrap-original-invocation-source",
+  "cache": true,
+  "inputs": [
+   "default",
+   "^default",
+   "testEnv",
+   "reads"
+  ]
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-cargo-build-lease",
+  "id": "repo:test-cargo-build-lease",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-daemon-journal",
+  "id": "repo:test-daemon-journal",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-daemon-journal-workspace",
+  "id": "repo:test-daemon-journal-workspace",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-graph-cache-waiter",
+  "id": "repo:test-graph-cache-waiter",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-javascript-endpoint-fence",
+  "id": "repo:test-javascript-endpoint-fence",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-javascript-installed-paths",
+  "id": "repo:test-javascript-installed-paths",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-javascript-provider-walk",
+  "id": "repo:test-javascript-provider-walk",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-javascript-storage",
+  "id": "repo:test-javascript-storage",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-lease-bootstrap",
+  "id": "repo:test-lease-bootstrap",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-lease-queue",
+  "id": "repo:test-lease-queue",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-leases-partition",
+  "id": "repo:test-leases-partition",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-next-dev-runtime",
+  "id": "repo:test-next-dev-runtime",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-next-runtime",
+  "id": "repo:test-next-runtime",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-runtime-bootstrap",
+  "id": "repo:test-runtime-bootstrap",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-runtime-verification-storage",
+  "id": "repo:test-runtime-verification-storage",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-runtime-verification-storage-runtime",
+  "id": "repo:test-runtime-verification-storage-runtime",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-rustup-toolchain",
+  "id": "repo:test-rustup-toolchain",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-storage-budget",
+  "id": "repo:test-storage-budget",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-tools-partition",
+  "id": "repo:test-tools-partition",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/📋️project.json",
+  "target": "bench",
+  "id": "semio-framework-3d:bench",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "id": "semio-framework-3d:canonical-architecture",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "default",
+   "^default",
+   "testEnv",
+   "cargoToolchain"
+  ]
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "agents-write",
+  "id": "workspace:agents-write",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "bench-plugins",
+  "id": "workspace:bench-plugins",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "build",
+  "id": "workspace:build",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "aggregate",
+   "reason": "orders-prerequisites"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "build-canvas-font-assets",
+  "id": "workspace:build-canvas-font-assets",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "build-storybook",
+  "id": "workspace:build-storybook",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "managed-output",
+   "reason": "outputs-in-managed-store"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "cargo-prepare",
+  "id": "workspace:cargo-prepare",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "clean-coverage",
+  "id": "workspace:clean-coverage",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "clean-marker-only-folders",
+  "id": "workspace:clean-marker-only-folders",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "clean-taxonomy-apply",
+  "id": "workspace:clean-taxonomy-apply",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "clean-taxonomy-inventory",
+  "id": "workspace:clean-taxonomy-inventory",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "clean-taxonomy-plan",
+  "id": "workspace:clean-taxonomy-plan",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "clean-taxonomy-verify",
+  "id": "workspace:clean-taxonomy-verify",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "clean-test",
+  "id": "workspace:clean-test",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "components",
+  "id": "workspace:components",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "cpp",
+  "id": "workspace:cpp",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "aggregate",
+   "reason": "orders-prerequisites"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "cpp-build",
+  "id": "workspace:cpp-build",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "managed-output",
+   "reason": "outputs-in-managed-store"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "cpp-configure",
+  "id": "workspace:cpp-configure",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "managed-output",
+   "reason": "outputs-in-managed-store"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "cpp-setup",
+  "id": "workspace:cpp-setup",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "cpp-test",
+  "id": "workspace:cpp-test",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "deps-browsers",
+  "id": "workspace:deps-browsers",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "deps-build-tools",
+  "id": "workspace:deps-build-tools",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "deps-cargo",
+  "id": "workspace:deps-cargo",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "deps-cargo-lock",
+  "id": "workspace:deps-cargo-lock",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "deps-cpp",
+  "id": "workspace:deps-cpp",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "deps-dotnet",
+  "id": "workspace:deps-dotnet",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "deps-go",
+  "id": "workspace:deps-go",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "deps-javascript",
+  "id": "workspace:deps-javascript",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "deps-js-all",
+  "id": "workspace:deps-js-all",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "deps-js-contract",
+  "id": "workspace:deps-js-contract",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "deps-js-lock",
+  "id": "workspace:deps-js-lock",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "deps-python",
+  "id": "workspace:deps-python",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "deps-tools",
+  "id": "workspace:deps-tools",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "deps-trunk",
+  "id": "workspace:deps-trunk",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "deps-wasm",
+  "id": "workspace:deps-wasm",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "deps-wasm-opt",
+  "id": "workspace:deps-wasm-opt",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "format",
+  "id": "workspace:format",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "generate-config",
+  "id": "workspace:generate-config",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "new-taxonomy-mutation",
+  "id": "workspace:new-taxonomy-mutation",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "os",
+  "id": "workspace:os",
+  "cache": false,
+  "continuous": true,
+  "decision": {
+   "version": 1,
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "publish",
+  "id": "workspace:publish",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "publishes-remote"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "release",
+  "id": "workspace:release",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "publishes-remote"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "runtime-fixture-graph",
+  "id": "workspace:runtime-fixture-graph",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "schema-parsers-apply",
+  "id": "workspace:schema-parsers-apply",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "schema-parsers-restate",
+  "id": "workspace:schema-parsers-restate",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "semio",
+  "id": "workspace:semio",
+  "cache": false,
+  "continuous": true,
+  "decision": {
+   "version": 1,
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "setup",
+  "id": "workspace:setup",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "setup-devcontainer-attach",
+  "id": "workspace:setup-devcontainer-attach",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "setup-devcontainer-start",
+  "id": "workspace:setup-devcontainer-start",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "setup-git",
+  "id": "workspace:setup-git",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "setup-native",
+  "id": "workspace:setup-native",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "setup-storybook",
+  "id": "workspace:setup-storybook",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "stdio-fuzz",
+  "id": "workspace:stdio-fuzz",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "test-build-tool-bazel",
+  "id": "workspace:test-build-tool-bazel",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "test-build-tool-bazel-bootstrap",
+  "id": "workspace:test-build-tool-bazel-bootstrap",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "exercises-host-resources"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "test-doctor",
+  "id": "workspace:test-doctor",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "test-report",
+  "id": "workspace:test-report",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "verify-build-owners-sync",
+  "id": "workspace:verify-build-owners-sync",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "aggregate",
+   "reason": "reenters-build-tool"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "verify-canonical-architecture",
+  "id": "workspace:verify-canonical-architecture",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "aggregate",
+   "reason": "reenters-build-tool"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "verify-gate",
+  "id": "workspace:verify-gate",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "aggregate",
+   "reason": "reenters-build-tool"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "verify-layering",
+  "id": "workspace:verify-layering",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "aggregate",
+   "reason": "reenters-build-tool"
+  }
+ },
+ {
+  "manifest": "📋️project.json",
+  "target": "verify-typescript-project",
+  "id": "workspace:verify-typescript-project",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  }
+ }
+]

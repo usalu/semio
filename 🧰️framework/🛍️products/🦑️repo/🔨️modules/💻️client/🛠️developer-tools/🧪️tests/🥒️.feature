@@ -18,3 +18,10 @@ Feature: Supervised Developer Debugging
     And matching Windows LLVM and Python runtimes have explicit installation paths
     And only LLDB child work uses that matching Python environment
     And the same Original cancellation and deadline govern provisioning and verification
+
+  Scenario: Native workspace editing owns source navigation
+    Given the retired external editor request vectors for every host
+    When a typed developer request asks an installed IDE to open source
+    Then both the production validator and independent schema reject it
+    And no filesystem or external process port is called
+    And no external source-editor target or dashboard parameter remains

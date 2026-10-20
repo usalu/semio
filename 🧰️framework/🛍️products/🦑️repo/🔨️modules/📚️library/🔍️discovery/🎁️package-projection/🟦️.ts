@@ -66,7 +66,7 @@ export function semanticPackageProjectionCatalog(repoRoot: string, taxonomy: Tax
     if (!exactOwnerPath(row.sourceRoot) || !exactOwnerPath(row.destinationRoot) || !exactOwnerPath(row.semanticOwnerRoot) || row.destinationRoot !== `${row.semanticOwnerRoot}/📦️packages/🦀️rust` || row.mappings.length !== contract.sourceLeafCounts[index]) throw new Error("Nested Cargo catalog boundary drift");
     for (const mapping of row.mappings) {
       const key = mapping.destinationPath.normalize("NFC").toLocaleLowerCase("und").replaceAll("\ufe0f", "");
-      if (!exactOwnerPath(mapping.sourcePath) || !exactOwnerPath(mapping.destinationPath) || !mapping.sourcePath.startsWith(row.sourceRoot + "/") || !mapping.destinationPath.startsWith(row.semanticOwnerRoot + "/") || !/^[0-9a-f]{64}$/u.test(mapping.sourceHash) || !Number.isSafeInteger(mapping.sourceSize) || mapping.sourceSize < 0 || sources.has(mapping.sourcePath) || destinations.has(key) || Buffer.byteLength(mapping.destinationPath) > taxonomy.collisionPolicy.maxPathBytes) throw new Error("Nested Cargo catalog leaf authority drift");
+      if (!exactOwnerPath(mapping.sourcePath) || !exactOwnerPath(mapping.destinationPath) || !mapping.sourcePath.startsWith(row.sourceRoot + "/") || !mapping.destinationPath.startsWith(row.semanticOwnerRoot + "/") || !/^[0-9a-f]{64}$/u.test(mapping.sourceHash) || !Number.isSafeInteger(mapping.sourceSize) || mapping.sourceSize < 0 || sources.has(mapping.sourcePath) || destinations.has(key) || pathBudgetCodes(mapping.destinationPath, taxonomy.collisionPolicy).length > 0) throw new Error("Nested Cargo catalog leaf authority drift");
       sources.add(mapping.sourcePath);
       destinations.add(key);
     }
@@ -82,7 +82,7 @@ export function semanticPackageProjectionCatalog(repoRoot: string, taxonomy: Tax
     for (const leaf of row.derivedLeaves) {
       const mapping = row.mappings.find((mapping) => mapping.sourcePath === leaf.originSourcePath);
       const key = leaf.path.normalize("NFC").toLocaleLowerCase("und").replaceAll("\ufe0f", "");
-      if (leaf.id !== "wgpu-renderer-registration" || leaf.path !== row.semanticOwnerRoot + "/🧊️renderer/📇️registry/🦀️.rs" || !exactOwnerPath(leaf.path) || !mapping || leaf.originSourceHash !== mapping.sourceHash || Buffer.byteLength(leaf.path) > taxonomy.collisionPolicy.maxPathBytes || destinations.has(key) || !taxonomy.semanticDirectoryKinds.registry || classifyPackageSource(leaf.content, requiredPackageGlueGrammar(taxonomy, "rust")).role !== leaf.expectedRole) throw new Error("Nested Cargo derived registration authority drift");
+      if (leaf.id !== "wgpu-renderer-registration" || leaf.path !== row.semanticOwnerRoot + "/🧊️renderer/📇️registry/🦀️.rs" || !exactOwnerPath(leaf.path) || !mapping || leaf.originSourceHash !== mapping.sourceHash || pathBudgetCodes(leaf.path, taxonomy.collisionPolicy).length > 0 || destinations.has(key) || !taxonomy.semanticDirectoryKinds.registry || classifyPackageSource(leaf.content, requiredPackageGlueGrammar(taxonomy, "rust")).role !== leaf.expectedRole) throw new Error("Nested Cargo derived registration authority drift");
       destinations.add(key);
     }
     for (const adapter of row.adapters) {

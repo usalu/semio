@@ -7,5 +7,8 @@
     "./node-graph/scene/testing/fixtures/body": "./🕸️node-graph/📡️scene/🧪️testing/🧫️fixtures/📦️body/🟦️.ts",
     "./paint/testing/fixtures/protection": "./🎨️paint/🧪️testing/🧫️fixtures/🔒️protection/🟦️.ts",
     "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts"
+  },
+  "devDependencies": {
+    "@semio-tech/ui": "workspace:*"
   }
 }

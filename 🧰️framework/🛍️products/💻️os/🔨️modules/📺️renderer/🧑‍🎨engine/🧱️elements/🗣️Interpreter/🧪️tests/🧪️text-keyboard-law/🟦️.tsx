@@ -7,17 +7,17 @@
  * `@testing-library/user-event`, whose own model of a browser types the line break a multi-line Enter means and none into a
  * single-line field. A segmented select renders as a radio group that dispatches the picked value. */
 import userEvent from "@testing-library/user-event";
-import { uiTextControlsFixture as textControls } from "@semio-tech/framework/ui/testing/fixtures";
-import { uiTextInputKey, type TextInputKey, type TextInputKeyAction } from "@semio-tech/framework/modules/ui/contract/component";
+import { uiTextControlsFixture as textControls } from "@semio-tech/ui/testing/fixtures";
+import { uiTextInputKey, type TextInputKey, type TextInputKeyAction } from "@semio-tech/ui-contract/component";
 
 type TestSource = { readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../📃️UiDocumentStore/🟦️.tsx"), "UiDocumentStore"> & Pick<typeof import("../../🧱️node-tree/🟦️.tsx"), "UiNodeView">, _source: TestSource): Promise<void> {
   const { UiDocumentStore, UiNodeView } = dependencies;
-  type Component = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").Component;
-  type InputKind = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").InputKind;
-  type UiIntent = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").UiIntent;
-  type UiNodeRecord = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").UiNodeRecord;
+  type Component = import("@semio-tech/framework-manifest/ui-contract-and-canvas-types").Component;
+  type InputKind = import("@semio-tech/framework-manifest/ui-contract-and-canvas-types").InputKind;
+  type UiIntent = import("@semio-tech/framework-manifest/ui-contract-and-canvas-types").UiIntent;
+  type UiNodeRecord = import("@semio-tech/framework-manifest/ui-contract-and-canvas-types").UiNodeRecord;
   type KeyRow = { readonly case: string; readonly kind: InputKind; readonly key: TextInputKey; readonly primary: boolean; readonly shift: boolean; readonly alt: boolean; readonly action: TextInputKeyAction | null };
 
   const { describe, expect, it } = vitest;

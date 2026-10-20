@@ -70,6 +70,7 @@ semio-s-artifact-stdio-semio-document = { workspace = true }
 semio-s-artifact-stdio-semio-presentation = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }
 semio-s-artifact-stdio-xml = { workspace = true }
+semio-s-artifact-stdio-html-snapshot = { path = "../../../../../../../../../../../🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 serde.workspace = true

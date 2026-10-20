@@ -34,11 +34,12 @@ export async function testNormDocumentContractOracle(): Promise<void> {
       validDocuments: [{ input: owner.document, output: owner.document }],
       invalidDocuments: [...Object.entries(owner.invalidFields).map(([field, value]) => ({ ...owner.document, [field]: value })), ...vectors.invalidChildren.map((child) => ({ ...owner.document, [owner.childField]: child }))],
       invalidDiffs: [{ artifact: owner.document }, ...vectors.invalidChildren.filter((child) => child !== null).map((child) => ({ [owner.childField]: child }))],
-      mutationRoots: [join(root, "../🧫️fixtures/🧬️mutations")],
+      mutationRoots: [join(root, "../🧪️tests/🧫️fixtures/🧬️mutations")],
       committed: owner.committed,
     });
-    for (const facet of facets) assert.equal(childKind(facet.schema, owner.childField), "s.stdio.semio");
-    const files = snapshotFiles(join(root, "../🧫️fixtures/🧬️mutations"));
+    for (const facet of facets.slice(0, 2)) assert.equal(childKind(facet.schema, owner.childField), "s.stdio.semio");
+    assert.equal(Object.hasOwn(facets[2].schema.properties, owner.childField), false);
+    const files = snapshotFiles(join(root, "../🧪️tests/🧫️fixtures/🧬️mutations"));
     assert.equal(files.length, owner.committed.snapshots);
     for (const path of files) {
       const value = facets[1].module[`parse${owner.name}Snapshot`](JSON.parse(readFileSync(path, "utf8")));

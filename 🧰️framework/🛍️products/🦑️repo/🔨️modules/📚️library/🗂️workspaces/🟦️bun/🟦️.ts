@@ -1,18 +1,22 @@
-import { createRequire } from "node:module";
+import {createBunWorkspaceOwnershipV1} from "./🟨️.cjs";
+import {fileURLToPath} from "node:url";
+import {capturePhysicalSourceTextV1,physicalSourceOriginV1,type PhysicalSourceModuleMetaV1} from "../../🏗️build/📥️inputs/🔏️revision/🟨️.mjs";
 export type BunWorkspaceDeclarationV1 = Readonly<{ schemaVersion: 1; members: readonly string[]; owners: readonly string[] }>;
 export type BunWorkspaceScope = Readonly<{ directory: string; manifest: string; lock: string; declaration: BunWorkspaceDeclarationV1 }>;
 export type BunRepositoryMembership = Readonly<{ scopes: readonly BunWorkspaceScope[]; packages: readonly string[] }>;
 /** 🎯️ Selects all authored installation scopes or exactly one declared owner. */
 export type BunWorkspaceSelection = Readonly<{kind:"all"}> | Readonly<{kind:"scope";owner:string}>;
 /** 📣️ Reports actual physical and ownership visits of one fresh verification. */
-export type BunWorkspaceProgress = Readonly<{ operation: "state" | "list" | "readText" | "membership" | "selection" | "publication"; path: string; completedOperations: number }>;
+export type BunWorkspaceProgress = Readonly<{ operation: "state" | "list" | "readText" | "membership" | "frontier" | "selection" | "publication"; path: string; completedOperations: number }>;
 /** 🎛️ Receives the original operation signal and continuation without constructing authority. */
 export interface BunWorkspaceControl { readonly signal: AbortSignal; advance(progress: BunWorkspaceProgress): Promise<void> }
 /** 🧾️ Publishes current native patterns and independently owned source packages after manifest revalidation. */
 export type BunWorkspaceOwnershipReport = Readonly<{ version: 1; scopes: readonly Readonly<{ manifest: string; beforeSha256: string; patterns: readonly string[]; packages: readonly string[] }>[]; packages: readonly string[] }>;
 /** 🪢️ Retains original fresh Source observations throughout one controlled callback. */
-export type BunWorkspaceInstallationCustodyV1 = Readonly<{scopes:readonly Readonly<{manifest:string;packages:readonly string[]}>[];recheck:()=>Promise<void>}>;
-const physical: {
+/** 🔭️ Reports the exact directory listings, path states and manifest digests one ownership computation retained. */
+export type BunWorkspaceObservedOwnershipV1 = Readonly<{ root: string; paths: readonly Readonly<{ path: string; state: readonly (string | number)[]; list?: readonly Readonly<{ name: string; kind: string }>[] }>[]; texts: readonly Readonly<{ path: string; sha256: string }>[] }>;
+export type BunWorkspaceInstallationCustodyV1 = Readonly<{scopes:readonly Readonly<{manifest:string;packages:readonly string[]}>[];recheck:()=>Promise<void>;observed:()=>BunWorkspaceObservedOwnershipV1}>;
+export interface BunWorkspacePhysicalV1 {
   readonly withCurrentBunWorkspaceOwnershipV1:<T>(root:string,selection:BunWorkspaceSelection,control:BunWorkspaceControl,body:(custody:BunWorkspaceInstallationCustodyV1)=>Promise<T>)=>Promise<T>;
   readonly withPublishedBunWorkspaceOwnershipV1:<T>(root:string,selection:BunWorkspaceSelection,control:BunWorkspaceControl,body:(custody:BunWorkspaceInstallationCustodyV1)=>Promise<T>)=>Promise<T>;
   readonly discoverCurrentBunWorkspaceScopesV1:(root:string,selection:BunWorkspaceSelection,control:BunWorkspaceControl)=>Promise<readonly BunWorkspaceScope[]>;
@@ -24,7 +28,12 @@ const physical: {
   readonly bunRepositoryMembership: (root: string) => BunRepositoryMembership;
   readonly discoverBunWorkspaces: (root: string) => readonly BunWorkspaceScope[];
   readonly bunRepositoryPackages: (root: string) => readonly string[];
-} = createRequire(import.meta.url)("./🟨️.cjs");
+  readonly readListingProjection: (root: string, path: string) => readonly Readonly<{ name: string; kind: string }>[];
+}
+/** 📜️ Captured physical policy DATA is bound privately by the owned facade. */
+export interface BunWorkspacePhysicalPolicyV1 {readonly ownershipPath:string;readonly ownershipSource:string;}
+const ownershipURL=new URL("../🔣️policy.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL));
+const physical=createBunWorkspaceOwnershipV1({ownershipPath:fileURLToPath(ownershipURL),ownershipSource:capturePhysicalSourceTextV1(ownershipURL,65536)});
 
 /** 🧬️ Admits the canonical first-party native workspace declaration. */
 export const parseBunWorkspaceDeclaration: (value: unknown) => BunWorkspaceDeclarationV1 = physical.parseBunWorkspaceDeclaration;
@@ -53,3 +62,6 @@ export const withPublishedBunWorkspaceOwnershipV1:<T>(root:string,selection:BunW
 
 /** 👓️ Retains original current membership through a read-only callback without publishing Source. */
 export const withCurrentBunWorkspaceOwnershipV1:<T>(root:string,selection:BunWorkspaceSelection,control:BunWorkspaceControl,body:(custody:BunWorkspaceInstallationCustodyV1)=>Promise<T>)=>Promise<T>=physical.withCurrentBunWorkspaceOwnershipV1;
+
+/** 🔬️ Lists one directory exactly as the ownership walk does and returns the entries that can change ownership. */
+export const readBunWorkspaceListingProjectionV1: (root: string, path: string) => readonly Readonly<{ name: string; kind: string }>[] = physical.readListingProjection;

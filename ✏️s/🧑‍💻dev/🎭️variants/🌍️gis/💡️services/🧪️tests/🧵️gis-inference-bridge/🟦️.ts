@@ -26,7 +26,7 @@ import { requireMcpBinary, spawnRawMcp, type RawMcpProcess } from "@semio-tech/f
 import { findWorkspaceRoot } from "@semio-tech/process/routing";
 
 const repoRoot = findWorkspaceRoot();
-const hostManifest="🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust/Cargo.toml";
+const hostManifest="🌎️hub/🧩️compositions/🌍️gis/🧩️component/📦️packages/🦀️rust/Cargo.toml";
 const host=parsePlaygroundsForCrate(resolve(repoRoot,hostManifest),"gis",hostManifest.slice(0,-"/Cargo.toml".length),repoRoot).find(row=>row.variant==="gis2d")?.mcpHost;
 const selected=playgroundNativeHostArtifactV1(repoRoot,host,"prototype");
 if(!selected)throw Error("GIS owner MCP executable must be declared by its real playground composition");

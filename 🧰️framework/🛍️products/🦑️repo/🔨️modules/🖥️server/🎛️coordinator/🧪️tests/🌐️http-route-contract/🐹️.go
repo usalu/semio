@@ -40,7 +40,7 @@ func loadRouteFixture(ctx *host.Context) (routeFixture, error) {
 	return fixture, json.Unmarshal(data, &fixture)
 }
 
-// startCoordinator brings up one coordinator with an empty log in a directory of this scenario's own.
+// 🌳️startCoordinator brings up one coordinator with an empty log in a directory of this scenario's own.
 func startCoordinator(ctx *host.Context, name string) (*coordinator.Service, error) {
 	dir := filepath.Join(ctx.WorkDir, name)
 	if err := os.RemoveAll(dir); err != nil {
@@ -177,7 +177,7 @@ func aMethodMismatchAndAMissingFieldAreRefused(ctx *host.Context) (host.Outcome,
 
 // region 🔖️Registration
 
-// Adapter is the registration entry point the generated host calls.
+// 🌉️Adapter is the registration entry point the generated host calls.
 func Adapter() *host.Adapter {
 	return host.NewAdapter("go").
 		Subject("every-route-answers-the-same-status-and-body", everyRouteAnswersTheSameStatusAndBody).

@@ -2,7 +2,7 @@
 
 use super::{Generation3dTransient, Generation3dTransientPatch, Generation3dPreviewTextChange};
 
-#[path = "👁️set-generation/🦀️.rs"]
+#[path = "👁️set-generation-preview/🦀️.rs"]
 mod set_generation_preview;
 pub use set_generation_preview::SetGenerationPreview;
 

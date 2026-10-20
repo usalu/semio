@@ -1,9 +1,9 @@
 import { GUEST_HOST_ANSWER_CEILING_BYTES } from "@semio-tech/framework";
-import { type TypedOperationToken, typedOperationDiagnosticFragment } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts";
-import { OperationDiagnosticObservers } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/📣️delivery/🟦️.ts";
-import { OperationDiagnosticInbox } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🟦️.ts";
+import { type TypedOperationToken, typedOperationDiagnosticFragment } from "@semio-tech/framework/actor/wire-turn";
+import { OperationDiagnosticObservers } from "@semio-tech/framework/actor/wire-turn/diagnostic/delivery";
+import { OperationDiagnosticInbox } from "@semio-tech/framework/actor/wire-turn/diagnostic";
 import { NativeDecodeControl } from "@semio-tech/framework/value/decode";
-import type { Diagnostic as OwnedOperationDiagnostic } from "@semio-tech/framework-diagnostic-ts/controlled";
+import type { Diagnostic as OwnedOperationDiagnostic } from "@semio-tech/framework/diagnostic/controlled";
 import { yieldPluginUiContinuation } from "../⏩️continuation-yield/🟦️.ts";
 /** 📬️ Typed-operation result pages: terminal and pending output carriers, the per-instance owner ledger routing fault pages to the host call that owns them, and the effect consumer.
  *
@@ -11,7 +11,7 @@ import { yieldPluginUiContinuation } from "../⏩️continuation-yield/🟦️.t
  */
 
 import { type ShardEventEnvelope } from "@semio-tech/framework/actor/shard-client/wire";
-import { TYPED_OPERATION_LANE_FAULT, TYPED_OPERATION_LANE_TERMINAL, typedOperationAcknowledgements as wireTypedOperationAcknowledgements, typedOperationResult as wireTypedOperationResult } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts";
+import { TYPED_OPERATION_LANE_FAULT, TYPED_OPERATION_LANE_TERMINAL, typedOperationAcknowledgements as wireTypedOperationAcknowledgements, typedOperationResult as wireTypedOperationResult } from "@semio-tech/framework/actor/wire-turn";
 import { SEGMENTED_DOWNLOAD_MARKER_PREFIX } from "../../📤️SegmentedDownload/🟦️.ts";
 import { decodeWirePack, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, type WireTurnResult, type WireVariant } from "../🪝️wire-codec/🟦️.ts";
 

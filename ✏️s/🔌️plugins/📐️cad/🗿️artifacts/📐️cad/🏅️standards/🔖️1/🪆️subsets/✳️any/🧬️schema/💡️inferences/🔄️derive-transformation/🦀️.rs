@@ -1,11 +1,11 @@
 //! 🔄️ Derive transformation of the cad inference: the classification rules, face analytics, solid construction and derive engine. See [`super`].
 
 use semio_s_artifact_cad_cad_model::geometry::CadObject;
-#[cfg(test)]
+#[cfg(any(test, feature = "derive-testing"))]
 use semio_s_artifact_cad_cad_model::geometry::CadPrimitiveSlot;
 
 use {semio_framework_3d_brep_engine::{Brep, BrepKernel, GeometryHandle}, semio_framework_3d_brep_representation::contract::Vec3};
-#[cfg(test)]
+#[cfg(any(test, feature = "derive-testing"))]
 use std::collections::HashMap;
 
 //#region 🔖️ClassifyRules
@@ -34,7 +34,7 @@ pub struct ClassifyRule {
     pub fallback: bool,
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "derive-testing"))]
 const FROM_GEOMETRY_CLASSIFY_RULES: &[ClassifyRule] = &[
     ClassifyRule { role: "roof", typology: "energy.energy.roof", dominant_axis: Some(DominantAxis::Z), min_dominant_normal: Some(0.75), min_axis_normal: None, z_band: Some(ZBand::Max), fallback: false },
     ClassifyRule { role: "baseplate", typology: "energy.energy.baseplate", dominant_axis: Some(DominantAxis::Z), min_dominant_normal: Some(0.75), min_axis_normal: None, z_band: Some(ZBand::Min), fallback: false },
@@ -107,7 +107,7 @@ pub fn face_plane_group_key(normal: Vec3, centroid: Vec3) -> String {
     format!("{dominant}:{sign}:{}:{}:{}", q(centroid[0]), q(centroid[1]), q(centroid[2]))
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "derive-testing"))]
 fn dominant_axis_of(normal: Vec3) -> DominantAxis {
     let [nx, ny, nz] = normal;
     let abs = [nx.abs(), ny.abs(), nz.abs()];
@@ -120,7 +120,7 @@ fn dominant_axis_of(normal: Vec3) -> DominantAxis {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "derive-testing"))]
 fn axis_normal_component(normal: Vec3, axis: DominantAxis) -> f64 {
     match axis {
         DominantAxis::X => normal[0].abs(),
@@ -129,7 +129,7 @@ fn axis_normal_component(normal: Vec3, axis: DominantAxis) -> f64 {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "derive-testing"))]
 fn classify_rule_matches(rule: &ClassifyRule, normal: Vec3, centroid_z: f64, z_min: f64, z_max: f64, z_tol: f64) -> bool {
     if rule.fallback {
         return true;
@@ -195,7 +195,7 @@ pub fn build_solid_for_typology(kernel: &mut Brep, typology: &str, extent: [f64;
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "derive-testing"))]
 fn fuse_solids(kernel: &mut Brep, solids: &[GeometryHandle]) -> Option<GeometryHandle> {
     if solids.is_empty() {
         return None;
@@ -209,21 +209,21 @@ fn fuse_solids(kernel: &mut Brep, solids: &[GeometryHandle]) -> Option<GeometryH
 //#endregion 🔖️SolidConstruction
 
 //#region 🔖️DeriveEngine
-#[cfg(test)]
+#[cfg(any(test, feature = "derive-testing"))]
 struct FaceMeta {
     handle: GeometryHandle,
     normal: Vec3,
     centroid: Vec3,
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "derive-testing"))]
 fn next_object_id(prefix: &str, index: usize) -> String {
     format!("{prefix}-{index}")
 }
 
 /// 🔄️ Derives energy objects from shape-pane solids via fuse + face classification.
-#[cfg(test)]
-pub(crate) fn run_derive_from_geometry(kernel: &mut Brep, source_objects: &[CadObject], id_seed: &str) -> Vec<CadObject> {
+#[cfg(any(test, feature = "derive-testing"))]
+pub fn run_derive_from_geometry(kernel: &mut Brep, source_objects: &[CadObject], id_seed: &str) -> Vec<CadObject> {
     let solids: Vec<GeometryHandle> = source_objects.iter().filter_map(|object| solid_for_object(kernel, object)).collect();
     if solids.is_empty() {
         return Vec::new();

@@ -1,5 +1,5 @@
 import { TYPED_OPERATION_DIAGNOSTIC } from "../📬️typed-result/🟦️.ts";
-import type { Diagnostic as OwnedOperationDiagnostic } from "@semio-tech/framework-diagnostic-ts/controlled";
+import type { Diagnostic as OwnedOperationDiagnostic } from "@semio-tech/framework/diagnostic/controlled";
 /** 📥️ Invocation reassembly: command inspection, `performInvocation`, `invocationFromFrames`, context-menu calls and the guest-ingress generation counter.
  *
  * 🧱️ Child module of {@link ../🟦️.tsx | PluginRuntime}, which re-exports every public name below so import specifiers stay unchanged.
@@ -34,7 +34,7 @@ import {
   viewContextWireValue
 } from "@semio-tech/framework/packs";
 import { type PluginDispatchHintV1 } from "@semio-tech/framework";
-import { hopTrace } from "@semio-tech/framework/trace";
+import { hopTrace } from "@semio-tech/framework-trace";
 import type { ViewModel } from "../🧷️handle-contract/🟦️.ts";
 import { leftoverShellInvocationFrames, type WireVariant } from "../🪝️wire-codec/🟦️.ts";
 import { wireEffectToFriendly } from "../🪟️retained-ui-patch/🟦️.ts";

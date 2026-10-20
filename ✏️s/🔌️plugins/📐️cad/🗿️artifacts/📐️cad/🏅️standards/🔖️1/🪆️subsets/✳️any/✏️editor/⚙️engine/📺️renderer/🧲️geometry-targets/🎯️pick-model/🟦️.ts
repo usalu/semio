@@ -1,5 +1,5 @@
 /** 🎯️ CAD renderer geometry targets: the spatial pick kinds, targets and requests, the visibility and typology toggles and the scene visibility resolution. */
-import { sortCanvasPickTargetsGeneralFirst, type CanvasPickRequest, type CanvasPickTarget, type CheckboxState } from "@semio-tech/framework/ui/targets/react";
+import { sortCanvasPickTargetsGeneralFirst, type CanvasPickRequest, type CanvasPickTarget, type CheckboxState } from "@semio-tech/ui-react";
 import { worldEntitySelectable } from "../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/♾️infinite/🌍️world/🎨️r3f/🟦️.ts";
 import { type Vec3 } from "@semio-tech/cad-engine-ts/registry";
 import { type ModelEntityKind, type ModelJson } from "@semio-tech/s-spatial-kernel-ts/geometry";

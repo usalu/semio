@@ -1,0 +1,65 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🖥️mounted/🟦️.ts",
+ "function": "interactivityLiveReconcileFailures",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "shared": {
+  "dir": "🟣️shared",
+  "doc": "/** 🟣️ The shared declarations of interactivityLiveReconcileFailures. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️reconcile",
+   "doc": "/** 🔶️ The reconcile phase of interactivityLiveReconcileFailures. */",
+   "phases": [
+    {
+     "name": "buildReconcileState",
+     "emoji": "🔷",
+     "doc": "Builds reconcile, patches, reactor, value of interactivityLiveReconcileFailures.",
+     "from": 4,
+     "to": 126
+    }
+   ]
+  },
+  {
+   "dir": "🔸️part2",
+   "doc": "/** 🔸️ The part2 phase of interactivityLiveReconcileFailures. */",
+   "phases": [
+    {
+     "name": "buildPart2",
+     "emoji": "🔹",
+     "doc": "Runs the effects and registrations of interactivityLiveReconcileFailures.",
+     "from": 137,
+     "to": 234
+    }
+   ]
+  },
+  {
+   "dir": "🟠️reserve",
+   "doc": "/** 🟠️ The reserve phase of interactivityLiveReconcileFailures. */",
+   "phases": [
+    {
+     "name": "buildReserveState",
+     "emoji": "🟡",
+     "doc": "Builds reserveAt, cursorAt, reconcileJobImpl, reconcileTakeReady of interactivityLiveReconcileFailures.",
+     "from": 284,
+     "to": 426
+    }
+   ]
+  },
+  {
+   "dir": "🟢️part4",
+   "doc": "/** 🟢️ The part4 phase of interactivityLiveReconcileFailures. */",
+   "phases": [
+    {
+     "name": "buildPart4",
+     "emoji": "🔵",
+     "doc": "Runs the effects and registrations of interactivityLiveReconcileFailures.",
+     "from": 433,
+     "to": 547
+    }
+   ]
+  }
+ ]
+}

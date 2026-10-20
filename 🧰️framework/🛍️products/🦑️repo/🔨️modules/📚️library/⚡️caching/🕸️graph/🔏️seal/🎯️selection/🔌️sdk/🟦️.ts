@@ -1,4 +1,4 @@
-import {readFilesystemJournalScopeV1,type FilesystemJournalScopeV1} from "../../../../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📥️journal/🟦️.ts";
+import {readFilesystemJournalScopeV1,type FilesystemJournalScopeV1} from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📥️journal/🟦️.ts";
 import {openNxSdkV1} from "../../../../🚀️bootstrap/🛠️tools/🔌️sdk/🟦️.ts";
 import {receiveScriptProcessInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";

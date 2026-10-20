@@ -41,6 +41,7 @@
     },
     "test": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -50,6 +51,7 @@
     "verify-flow-window-ownership": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify flow-window-ownership",
@@ -66,6 +68,7 @@
     },
     "test-source": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-source",
@@ -87,6 +90,7 @@
         "^default",
         "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/Cargo.lock"
       ],
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts child-identity-check",
@@ -108,6 +112,7 @@
         "^default",
         "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/Cargo.lock"
       ],
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts child-edit-check",
@@ -129,6 +134,7 @@
         "^default",
         "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/Cargo.lock"
       ],
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts add-widget-retained-check",
@@ -153,6 +159,7 @@
         "{projectRoot}/../../🦀️.rs",
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*"
       ],
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite",
@@ -169,6 +176,7 @@
         "{projectRoot}/../../🦀️.rs",
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*"
       ],
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite native",
@@ -185,6 +193,7 @@
         "{projectRoot}/../../🦀️.rs",
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*"
       ],
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite source",
@@ -194,6 +203,7 @@
     "test-contributions-receiver": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify contributions-receiver",
@@ -211,6 +221,7 @@
     "test-contributions-syntax": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify contributions-syntax",

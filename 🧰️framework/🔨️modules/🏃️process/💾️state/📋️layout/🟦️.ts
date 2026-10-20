@@ -1,7 +1,7 @@
-import storageSchema from"../../📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️.json";
+import storageSchema from"../../📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️.json" with { type: "json" };
 import{join,resolve,relative,sep,isAbsolute}from"node:path";
 import{requireMaterializedPathV1}from"../../🔒️leases/🟦️.ts";
-import schema from"../🧬️schema/🔣️.json";
+import schema from"../🧬️schema/🔣️.json" with { type: "json" };
 const mountDirectory=storageSchema.definitions.ImageProtocol.const.mountDirectory;
 const policy=Object.freeze({...schema.definitions.Policy.const});
 /** 📏️ Captures the finite non-recomputable development envelope independently of public schema DATA. */

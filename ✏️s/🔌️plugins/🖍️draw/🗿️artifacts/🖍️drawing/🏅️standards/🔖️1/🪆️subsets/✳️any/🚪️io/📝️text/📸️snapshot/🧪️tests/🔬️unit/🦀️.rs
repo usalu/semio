@@ -81,7 +81,7 @@ async fn dsl_round_trips_document_without_assets_or_artboard() {
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_round_trips_semio_example_fixture() {
-    let doc = parse_dsl(SEMIO_DRAW_EXAMPLE_TEXT).expect("semio example fixture parses");
+    let doc = parse_dsl(semio_s_artifact_draw_drawing_examples::demo::PRIMARY_TEXT).expect("semio example fixture parses");
     assert_eq!(doc.id, "semio");
     assert!(doc.title.as_ref().is_some_and(|title| title.eq_str("Semio Emblem")));
     assert_eq!(doc.layers.len(), 1);
@@ -91,11 +91,11 @@ async fn dsl_round_trips_semio_example_fixture() {
 #[semio_framework_async_macros::async_test]
 async fn dsl_rejects_invalid_stroke_caps_and_joins() {
     for cap in ["butt", "round", "square"] {
-        let source = SEMIO_DRAW_EXAMPLE_TEXT.replace("cap=butt", &format!("cap={cap}"));
+        let source = semio_s_artifact_draw_drawing_examples::demo::PRIMARY_TEXT.replace("cap=butt", &format!("cap={cap}"));
         assert!(parse_dsl(&source).is_ok(), "{cap}");
     }
     for (from, to) in [("cap=butt", "cap=miter"), ("cap=butt", "cap=Round"), ("join=miter", "join=butt")] {
-        assert!(parse_dsl(&SEMIO_DRAW_EXAMPLE_TEXT.replace(from, to)).is_err(), "{to}");
+        assert!(parse_dsl(&semio_s_artifact_draw_drawing_examples::demo::PRIMARY_TEXT.replace(from, to)).is_err(), "{to}");
     }
 }
 

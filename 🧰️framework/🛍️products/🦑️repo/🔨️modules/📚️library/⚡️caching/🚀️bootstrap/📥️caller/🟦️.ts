@@ -1,6 +1,6 @@
-import callerSchema from"../🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json";
+import callerSchema from"../🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json" with { type: "json" };
 import{validateJsonSchemaSubset}from"../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import {resolveNxBuildMode} from "../🎚️mode/🟦️.ts";
 import {resolveBuildSelectionV1} from "../../../🏗️build/🧭️invocation/🟦️.ts";
 import {createNativeNxCallerCapabilitiesV1} from "../../📦️artifacts/📋️native-orchestration/📥️caller/🟦️.ts";

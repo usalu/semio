@@ -45,9 +45,6 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreview
                 let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
                 let cfg = ConfigView { snapshot: input.config, window: None };
                 let mut emit = set_active_example::emit(payload, &doc, &cfg)?;
-                // 🔁️ Only a switch that actually MOVED the graph owes the previews an evaluation. An id
-                // the dialect never published, and a re-pick of the example already open, both emit
-                // zero artifact mutations (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
                 if !emit.artifact_mutations.is_empty() {
                     self.owe_attached_previews(input.context.and_then(|context| context.view_state.as_ref()), servable, &mut emit, input.operation.retained)?;
                 }

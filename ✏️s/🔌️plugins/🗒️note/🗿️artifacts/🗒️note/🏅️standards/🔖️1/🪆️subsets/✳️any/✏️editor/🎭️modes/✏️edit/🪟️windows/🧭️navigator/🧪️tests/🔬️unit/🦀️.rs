@@ -3,7 +3,8 @@ use semio_framework_plugin::SurfaceKind;
 #[allow(unused_imports)]
 use crate::editor::note::terminology::NotePlayLabels;
 #[allow(unused_imports)]
-use crate::{NoteCamera, NoteSnapshot};
+use crate::{NoteCamera};
+use semio_s_artifact_note_note_schema::NoteSnapshot;
 #[allow(unused_imports)]
 use semio_framework_plugin::BuiltNode;
 #[allow(unused_imports)]

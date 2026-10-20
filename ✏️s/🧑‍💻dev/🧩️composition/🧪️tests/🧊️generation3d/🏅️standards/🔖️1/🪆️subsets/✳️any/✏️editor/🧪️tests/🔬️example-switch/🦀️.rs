@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::{self, app_with_registry};
 use semio_framework_test_fixtures::repo_text;
-use semio_s_artifact_procedural_3d_model::example_snapshot;
+use semio_s_artifact_procedural_3d_io_text::snapshot::example_snapshot;
 use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_BOX_FILLET;
 use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_BOX_SHELL;
 use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE;

@@ -1,7 +1,7 @@
 /** 📥️ No-follow discovery and parsing for graph manifest inputs. */
 import { lstatSync, readdirSync, readFileSync } from "node:fs";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
-import policy from "./🔣️.json";
+import policy from "./🔣️.json" with { type: "json" };
 
 const excludedDirectories = new Set(policy.excludedDirectoryNames);
 

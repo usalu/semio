@@ -137,8 +137,18 @@ fn puzzle3d_object_kind_arg() -> ActionArgDef {
 /// known gap for the coordinator, not silently lost.
 pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
     let envelope = Puzzle3dScene { scene_snapshot: default_scene_snapshot(), runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() };
-    Editor::builder(semio_s_artifact_puzzle_3d_model::PUZZLE3D_DIALECT)
-            .document(["semio", "puzzle", "3d"])
+    let builder = Editor::builder(semio_s_artifact_puzzle_3d_model::PUZZLE3D_DIALECT);
+    let builder = create_puzzle3d_app_part_1(builder, envelope);
+    let builder = create_puzzle3d_app_part_2(builder);
+    let builder = create_puzzle3d_app_part_3(builder);
+    let builder = create_puzzle3d_app_part_4(builder);
+    let builder = create_puzzle3d_app_part_5(builder);
+    builder.build_definition()
+}
+
+/// 🧱️ The manifest slice 1 of 5 of `create_puzzle3d_app`: its builder calls.
+fn create_puzzle3d_app_part_1(builder: semio_framework_plugin::app::EditorBuilder, envelope: Puzzle3dScene) -> semio_framework_plugin::app::EditorBuilder {
+    builder.document(["semio", "puzzle", "3d"])
             .artifact_kind(semio_s_artifact_puzzle_3d_model::artifact_kind())
             .icon_id("puzzle")
             .terminology("reuse")
@@ -193,7 +203,12 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .mutation("acceptSuggestion", LocalizedLabel::native("Accept Suggestion", "Vorschlag annehmen"))
             .action_with(ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera"))
             .action_with(ActionDefinition::new("setProjection", LocalizedLabel::native("Set Projection", "Projektion festlegen"), ActionKind::View, "scan"))
-            .action_with(ActionDefinition::new("setProjectionParam", LocalizedLabel::native("Set Projection Parameter", "Projektionsparameter festlegen"), ActionKind::View, "scan"))
+            
+}
+
+/// 🪵️ The manifest slice 2 of 5 of `create_puzzle3d_app`: its builder calls.
+fn create_puzzle3d_app_part_2(builder: semio_framework_plugin::app::EditorBuilder) -> semio_framework_plugin::app::EditorBuilder {
+    builder.action_with(ActionDefinition::new("setProjectionParam", LocalizedLabel::native("Set Projection Parameter", "Projektionsparameter festlegen"), ActionKind::View, "scan"))
             .view_action("focusSelection", LocalizedLabel::native("Focus Selection", "Auswahl fokussieren"))
             .action_with(ActionDefinition::bounded_catalog("selectSameKindSelection", LocalizedLabel::native("Select Same Kind", "Gleiche Art auswählen"), ActionKind::View).category("selection"))
             .view_action("setVortexShow", puzzle3d_localized_phrase(|l| l.vortex_show, |w| format!("Set {w}"), |w| format!("{w} festlegen")))
@@ -246,7 +261,12 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             ])
             .tool(fill_tool::definition(puzzle3d_localized(|l| l.fill)))
             .mode_tools(edit::PUZZLE3D_PLAY_MODE_EDIT, vec![::semio_framework_async::poll::resolve_ready(ToolRef::new(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID))])
-            .introduction(IntroductionDefinition {
+            
+}
+
+/// 🔩️ The manifest slice 3 of 5 of `create_puzzle3d_app`: its builder calls.
+fn create_puzzle3d_app_part_3(builder: semio_framework_plugin::app::EditorBuilder) -> semio_framework_plugin::app::EditorBuilder {
+    builder.introduction(IntroductionDefinition {
                 title: puzzle3d_localized_phrase(|l| l.window_main, |w| format!("Welcome to {w}"), |w| format!("Willkommen bei {w}")),
                 steps: vec![
                     IntroductionStepDefinition::new(
@@ -336,7 +356,12 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("importSnapshot", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("openImportSnapshot", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementAbort", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementControlSelect", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            
+}
+
+/// ⚙️ The manifest slice 4 of 5 of `create_puzzle3d_app`: its builder calls.
+fn create_puzzle3d_app_part_4(builder: semio_framework_plugin::app::EditorBuilder) -> semio_framework_plugin::app::EditorBuilder {
+    builder.action_interactive_job("engagementControlSelect", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementRepeatLast", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementSubmit", semio_framework_plugin::InteractiveJobClassification::Migrated)
@@ -391,7 +416,12 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("rotateSelection", LocalizedLabel::native("Rotates the selected objects by the given angle.", "Dreht die ausgewählten Objekte um den angegebenen Winkel."))
             .action_describe("scaleSelection", LocalizedLabel::native("Scales the selected objects by the given factor.", "Skaliert die ausgewählten Objekte um den angegebenen Faktor."))
             .action_describe("exportSnapshot", LocalizedLabel::native("Writes the whole 3D puzzle as JSON to a downloaded file named after the active example on the user's machine.", "Schreibt das gesamte 3D-Puzzle als JSON in eine heruntergeladene, nach dem aktiven Beispiel benannte Datei auf dem Rechner des Nutzers."))
-            .action_describe("openImportSnapshot", LocalizedLabel::native("Opens the host's file picker for a 3D puzzle JSON file; the chosen file then replaces the whole puzzle.", "Öffnet die Dateiauswahl des Hosts für eine 3D-Puzzle-JSON-Datei; die gewählte Datei ersetzt dann das gesamte Puzzle."))
+            
+}
+
+/// 🧲️ The manifest slice 5 of 5 of `create_puzzle3d_app`: its builder calls.
+fn create_puzzle3d_app_part_5(builder: semio_framework_plugin::app::EditorBuilder) -> semio_framework_plugin::app::EditorBuilder {
+    builder.action_describe("openImportSnapshot", LocalizedLabel::native("Opens the host's file picker for a 3D puzzle JSON file; the chosen file then replaces the whole puzzle.", "Öffnet die Dateiauswahl des Hosts für eine 3D-Puzzle-JSON-Datei; die gewählte Datei ersetzt dann das gesamte Puzzle."))
             .action_describe("importSnapshot", LocalizedLabel::native("Replaces the whole 3D puzzle with one read from an imported JSON file; the previous puzzle is discarded.", "Ersetzt das gesamte 3D-Puzzle durch eines aus einer importierten JSON-Datei; das bisherige Puzzle wird verworfen."))
             .action_describe("setSelectionFlag", LocalizedLabel::native("Sets one flag (such as hidden or locked) on the given or selected objects.", "Setzt eine Markierung (etwa verborgen oder gesperrt) auf den angegebenen oder ausgewählten Objekte."))
             .action_describe("setSelectionHidden", LocalizedLabel::native("Sets the given or selected objects hidden or shown, to exactly the value passed; repeating it changes nothing.", "Verbirgt die angegebenen oder ausgewählten Objekte oder zeigt sie, genau auf den übergebenen Wert; eine Wiederholung ändert nichts."))
@@ -443,6 +473,6 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .action_audience("registerBrushMesh", semio_framework_plugin::CapabilityAudience::Input)
             .action_audience("setTransformGumballFlag", semio_framework_plugin::CapabilityAudience::Chrome)
             .action_destructive("importSnapshot")
-            .build_definition()
+            
 }
 //#endregion 🔖️Manifest

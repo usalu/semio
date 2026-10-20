@@ -145,7 +145,18 @@ pub mod manifest {
         definition
     }
     pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
-        Editor::builder(semio_s_artifact_procedural_3d_model::GENERATION3D_DIALECT).document(["semio", "procedural", "3d"])
+        let builder = Editor::builder(semio_s_artifact_procedural_3d_model::GENERATION3D_DIALECT);
+    let builder = create_generation3d_app_part_1(builder);
+    let builder = create_generation3d_app_part_2(builder);
+    let builder = create_generation3d_app_part_3(builder);
+    let builder = create_generation3d_app_part_4(builder);
+    let builder = create_generation3d_app_part_5(builder);
+        builder.build_definition()
+    }
+
+/// 🧱️ The manifest slice 1 of 5 of `create_generation3d_app`: its builder calls.
+fn create_generation3d_app_part_1(builder: semio_framework_plugin::app::EditorBuilder) -> semio_framework_plugin::app::EditorBuilder {
+    builder.document(["semio", "procedural", "3d"])
                 .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View) }))
                 .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalResolve", LocalizedLabel::native("Resolve Flow Evaluation", "Flow-Auswertung aufnehmen"), "runtime", ActionKind::View) }))
                 .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowTessellateResolve", LocalizedLabel::native("Resolve Preview Tessellation", "Vorschau-Tessellierung aufnehmen"), "runtime", ActionKind::View) }))
@@ -203,7 +214,12 @@ pub mod manifest {
                 .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importDocument", LocalizedLabel::native("Import Artifact File", "Artefaktdatei importieren"), ActionKind::Mutation) })
                 .action_with(ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Set Viewport", "Ansicht festlegen"), ActionKind::View, "camera"))
                 .action_with(ActionDefinition::new("setLodMode", LocalizedLabel::native("Set Lod Mode", "LOD-Modus festlegen"), ActionKind::View, "layers"))
-                .view_action("setShowMode", LocalizedLabel::native("Set Show Mode", "Anzeigemodus festlegen"))
+                
+}
+
+/// 🪵️ The manifest slice 2 of 5 of `create_generation3d_app`: its builder calls.
+fn create_generation3d_app_part_2(builder: semio_framework_plugin::app::EditorBuilder) -> semio_framework_plugin::app::EditorBuilder {
+    builder.view_action("setShowMode", LocalizedLabel::native("Set Show Mode", "Anzeigemodus festlegen"))
                 .action_with(ActionDefinition::new("cycleShowMode", LocalizedLabel::native("Cycle Show Mode", "Anzeigemodus wechseln"), ActionKind::View, "eye"))
                 .action_with(ActionDefinition::new("cycleLodMode", LocalizedLabel::native("Cycle Lod Mode", "LOD-Modus wechseln"), ActionKind::View, "layers"))
                 .action_with(ActionDefinition::new("selectNextNode", LocalizedLabel::native("Select Next Node", "Nächsten Knoten auswählen"), ActionKind::View, "arrow-down"))
@@ -258,7 +274,12 @@ pub mod manifest {
                 .action_interactive_job("setContributions", InteractiveJobClassification::Migrated)
                 .action_interactive_job("importDocumentRequest", InteractiveJobClassification::Migrated)
                 .action_interactive_job("importDocument", InteractiveJobClassification::Migrated)
-                .action_interactive_job("exportDocument", InteractiveJobClassification::Migrated)
+                
+}
+
+/// 🔩️ The manifest slice 3 of 5 of `create_generation3d_app`: its builder calls.
+fn create_generation3d_app_part_3(builder: semio_framework_plugin::app::EditorBuilder) -> semio_framework_plugin::app::EditorBuilder {
+    builder.action_interactive_job("exportDocument", InteractiveJobClassification::Migrated)
                 .action_destructive("exportDocument")
                 .action_args("editMeshSelection", vec![
                     ActionArgDef::select("operation", LocalizedLabel::native("Operation", "Operation"), vec![
@@ -349,7 +370,12 @@ pub mod manifest {
                 .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("scale", LocalizedLabel::native("Scale", "Skalieren"), "maximize-2") })
                 .window_kind_utilities(edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW, vec!["move".into(), "rotate".into(), "scale".into()])
                 .window_kind_utilities(generate_preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW, vec!["move".into(), "rotate".into(), "scale".into()])
-                .window_kind_action_refs(
+                
+}
+
+/// ⚙️ The manifest slice 4 of 5 of `create_generation3d_app`: its builder calls.
+fn create_generation3d_app_part_4(builder: semio_framework_plugin::app::EditorBuilder) -> semio_framework_plugin::app::EditorBuilder {
+    builder.window_kind_action_refs(
                     flow_window::GENERATION_3D_PLAY_WINDOW_MAIN,
                     vec![
                         "nodeGraphEdit".into(),
@@ -435,7 +461,12 @@ pub mod manifest {
                 .keybinding("mod+alt+k", "cycleLodMode")
                 .keybinding("arrowdown", "selectNextNode")
                 .keybinding("arrowup", "selectPreviousNode")
-                .keybinding("arrowleft", "selectUpstreamNode")
+                
+}
+
+/// 🧲️ The manifest slice 5 of 5 of `create_generation3d_app`: its builder calls.
+fn create_generation3d_app_part_5(builder: semio_framework_plugin::app::EditorBuilder) -> semio_framework_plugin::app::EditorBuilder {
+    builder.keybinding("arrowleft", "selectUpstreamNode")
                 .keybinding("arrowright", "selectDownstreamNode")
                 .config(Generation3dPlayApp::config_spec())
                 .io(::semio_framework_async::poll::resolve_ready(generation3d_io()))
@@ -476,8 +507,8 @@ pub mod manifest {
                 .action_audience("setCamera", semio_framework_plugin::CapabilityAudience::Chrome)
                 .action_destructive("reorganize")
                 .action_destructive("importDocument")
-                .build_definition()
-    }
+                
+}
 
 
 }

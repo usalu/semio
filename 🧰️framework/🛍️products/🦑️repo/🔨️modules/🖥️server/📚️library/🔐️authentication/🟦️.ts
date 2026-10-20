@@ -5,7 +5,7 @@
 
 
 import { createHash } from "node:crypto";
-import { createOwnedJsonResponse, isOwnedServerResponse, type OwnedServerRequest, type OwnedServerResponse } from "@semio-tech/repo-coordinator/ports";
+import { createOwnedJsonResponse, isOwnedServerResponse, type OwnedServerRequest, type OwnedServerResponse } from "../🔌️ports/🟦️.ts";
 import { getDeveloperByApiKeyHash, type Developer } from "../🗄️persistence/🟦️.ts";
 
 // #region 🔖️auth

@@ -5,7 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 import { BrowserFrameTransport } from "@semio-tech/framework-renderer-wgpu/browser-frame-transport";
-import { uiRenderDeadlineFixtureUrl } from "@semio-tech/framework/ui/testing/fixtures";
+import { uiRenderDeadlineFixtureUrl } from "@semio-tech/ui/testing/fixtures";
 import { FakeWorker, TEST_HOST_APPEARANCE, TEST_HOST_PLATFORM, TEST_HOST_STORAGE, testBootDescriptor } from "../🧰️transport-test-support/🟦️.ts";
 
 describe("retained browser clock deadlines", () => {

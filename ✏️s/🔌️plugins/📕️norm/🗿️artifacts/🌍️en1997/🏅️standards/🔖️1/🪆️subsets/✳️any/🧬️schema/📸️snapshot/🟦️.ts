@@ -4,31 +4,31 @@
 import { normWireArray, normWireInteger, normWireLiteral, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 
 export interface En1997Snapshot {
-  /** @state artifact */
+  /** 🏛️ @state artifact */
   structureId: string;
-  /** @state artifact */
+  /** 🚦️ @state artifact */
   geotechnicalCategory: number;
-  /** @state artifact */
+  /** 🎨️ @state artifact */
   designSituation: string;
-  /** @state artifact */
+  /** 📐️ @state artifact */
   designApproach: string;
-  /** @state artifact */
+  /** 📑️ @state artifact */
   annex: AnnexChoice;
-  /** @state artifact */
+  /** 📶️ @state artifact */
   groundwaterLevel: number;
-  /** @state artifact */
+  /** 📏️ @state artifact */
   investigationDepth: number;
-  /** @state artifact */
+  /** 🥞️ @state artifact */
   layers: SoilLayer[];
-  /** @state artifact */
+  /** 🪵️ @state artifact */
   footings: SpreadFoundation[];
-  /** @state artifact */
+  /** 🧬️ @state artifact */
   piles: Pile[];
-  /** @state artifact */
+  /** 🗄️ @state artifact */
   retainingWalls: RetainingWall[];
-  /** @state artifact */
+  /** 📜️ @state artifact */
   slopes: Slope[];
-  /** @state artifact */
+  /** 🧮️ @state artifact */
   upliftCases: UpliftCase[];
 }
 

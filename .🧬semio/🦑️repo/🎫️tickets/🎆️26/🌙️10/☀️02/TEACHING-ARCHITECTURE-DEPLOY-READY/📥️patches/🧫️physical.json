@@ -1,0 +1,8 @@
+{
+  "version":1,
+  "cases":[
+    {"path":"/repo/known.json","declared":true,"refused":false},
+    {"path":"/repo/unknown.json","declared":false,"refused":true},
+    {"path":"/repo/.cache/b/t/m/nx/.stage-neutral/compiler.mjs","declared":false,"refused":true}
+  ]
+}

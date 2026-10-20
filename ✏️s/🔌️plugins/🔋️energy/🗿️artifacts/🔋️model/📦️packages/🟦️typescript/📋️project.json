@@ -7,6 +7,6 @@
  "targets":{
   "build":{"executor":"repo:script","inputs":["energyModelSources","^production"],"cache":true,"outputs":["{projectRoot}/.🧾️store/build.json"],"options":{"cwd":"✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🟦️typescript","command":"bun ./📜️script.ts build","forwardAllArgs":true}},
   "check":{"executor":"repo:script","inputs":["energyModelSources","^production"],"options":{"cwd":"✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🟦️typescript","command":"bun ./📜️script.ts check","forwardAllArgs":true}},
-  "test":{"executor":"repo:script","inputs":["energyModelSources","^production"],"options":{"cwd":"✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🟦️typescript","command":"bun ./📜️script.ts test","forwardAllArgs":true}}
+  "test":{"executor":"repo:script","inputs":["energyModelSources","^production"], "outputs": [],"options":{"cwd":"✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🟦️typescript","command":"bun ./📜️script.ts test","forwardAllArgs":true}}
  }
 }

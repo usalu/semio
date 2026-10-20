@@ -27,3 +27,4 @@ semio-s-artifact-procedural-3d-geometry-oracle-support = { workspace = true }
 semio-s-artifact-procedural-3d-geometry-value = { workspace = true }
 semio-s-artifact-procedural-3d-model = { workspace = true }
 serde_json = { workspace = true }
+parry3d = "0.17"

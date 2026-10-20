@@ -4,17 +4,6 @@
     "id": "playbook",
     "version": "1",
     "title": null,
-    "document": {
-      "childId": "playbook-document",
-      "target": {
-        "artifactId": "playbook-document",
-        "dialect": {
-          "artifactKind": "s.stdio.semio",
-          "standard": "v1",
-          "subset": "document"
-        }
-      }
-    },
     "flow": {
       "childId": "playbook-flow",
       "target": {

@@ -477,3 +477,4 @@ semio-s-artifact-bim-model-spaces = { path = "../../../../💡️inferences/🏠
 semio-s-artifact-bim-model-storey-levels = { path = "../../../../💡️inferences/🏢️storey-levels/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-bim-model-tests-5 = { path = "../../../../💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-bim-model-wall-geometry = { path = "../../../../🧬️mutations/🦉️wall-geometry/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-tests-2 = { path = "../../../../📏️authored/🔗️references/🧪️tests/🔬️unit/📦️packages/🦀️rust" }

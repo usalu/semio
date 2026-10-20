@@ -108,7 +108,7 @@ pub fn derive_canonical_json_tree(input:TokenStream)->TokenStream {
 }
 
 /// 📽️ Composes original immutable record field projections with paid assembly and cancellation.
-#[proc_macro_derive(SnapshotProjection)]
+#[proc_macro_derive(SnapshotProjection, attributes(value))]
 pub fn derive_snapshot_projection(input:TokenStream)->TokenStream{let input=parse_macro_input!(input as DeriveInput);snapshot_projection::expand(&input).unwrap_or_else(|error|error.to_compile_error()).into()}
 
 #[path="🟰️equality/🦀️.rs"] mod retained_equality;

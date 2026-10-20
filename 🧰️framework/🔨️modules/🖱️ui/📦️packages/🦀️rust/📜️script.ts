@@ -43,6 +43,11 @@ class TestScript extends BundleScript {
       await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-ui-wgpu-engine-laws"], cwd: this.root, extraArgs: ["--lib", "--offline", "-E", "test(original_layout_admission_params_cancel_and_full_error_close_with_system_receipts) | test(original_ui_worker_close_)", "--success-output", "immediate"] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
       return;
     }
+    if (segments[0] === "text-editor") {
+      if (segments.length !== 1) throw new Error("Expected test text-editor");
+      await runBudgetedTestCommand(process.execPath, ["test", resolve(this.root, "../../🧱️elements/🔤️Textarea/🧪️tests/🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs(), env: process.env, throwOnFailure: true });
+      return;
+    }
     if (segments[0] === "crate-boundaries") {
       if (segments.length !== 1) throw new Error("Expected test crate-boundaries");
       await runBudgetedTestCommand(process.execPath, ["test", resolve(this.root, "../../🧪️tests/📦️crate-boundaries/🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs(), env: process.env, throwOnFailure: true });

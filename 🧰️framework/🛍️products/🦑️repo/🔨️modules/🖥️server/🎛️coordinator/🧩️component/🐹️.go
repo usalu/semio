@@ -9,7 +9,7 @@
 // #endregion 🧲️Header
 
 // #region 🔑️Package
-// Package declaration for the repo server binary. MUST be package main.
+// 🗜️Package declaration for the repo server binary. MUST be package main.
 package main
 
 // #endregion 🔑️Package

@@ -1,0 +1,211 @@
+{
+  "version": 1,
+  "stopCodes": {
+    "SIGINT": 130,
+    "SIGTERM": 143,
+    "deadline": 124
+  },
+  "timeoutMs": 7200000,
+  "cases": [
+    {
+      "name": "interrupt-zero-transport",
+      "events": [
+        "SIGINT"
+      ],
+      "rawStatus": 0,
+      "cleanupStatus": 0,
+      "status": 130
+    },
+    {
+      "name": "normal-success",
+      "events": [],
+      "rawStatus": 0,
+      "cleanupStatus": 0,
+      "status": 0
+    },
+    {
+      "name": "normal-failure",
+      "events": [],
+      "rawStatus": 7,
+      "cleanupStatus": 0,
+      "status": 7
+    },
+    {
+      "name": "terminate-zero-transport",
+      "events": [
+        "SIGTERM"
+      ],
+      "rawStatus": 0,
+      "cleanupStatus": 0,
+      "status": 143
+    },
+    {
+      "name": "deadline-zero-transport",
+      "events": [
+        "deadline"
+      ],
+      "rawStatus": 0,
+      "cleanupStatus": 0,
+      "status": 124
+    },
+    {
+      "name": "interrupt-one-shot",
+      "events": [
+        "SIGINT",
+        "SIGTERM",
+        "deadline",
+        "SIGINT"
+      ],
+      "rawStatus": 143,
+      "cleanupStatus": 0,
+      "status": 130
+    },
+    {
+      "name": "terminate-one-shot",
+      "events": [
+        "SIGTERM",
+        "deadline",
+        "SIGINT"
+      ],
+      "rawStatus": 0,
+      "cleanupStatus": 0,
+      "status": 143
+    },
+    {
+      "name": "deadline-one-shot",
+      "events": [
+        "deadline",
+        "SIGINT",
+        "SIGTERM"
+      ],
+      "rawStatus": 0,
+      "cleanupStatus": 0,
+      "status": 124
+    },
+    {
+      "name": "interrupt-cleanup-failure",
+      "events": [
+        "SIGINT"
+      ],
+      "rawStatus": 0,
+      "cleanupStatus": 9,
+      "status": 130
+    },
+    {
+      "name": "deadline-cleanup-failure",
+      "events": [
+        "deadline"
+      ],
+      "rawStatus": 0,
+      "cleanupStatus": 9,
+      "status": 124
+    },
+    {
+      "name": "interrupt-waits-child-after-cleanup",
+      "events": [
+        "SIGINT"
+      ],
+      "rawStatus": 0,
+      "cleanupStatus": 0,
+      "status": 130,
+      "childHeld": true
+    },
+    {
+      "name": "interrupt-retains-handlers-through-cleanup",
+      "events": [
+        "SIGINT"
+      ],
+      "lateEvents": [
+        "SIGTERM",
+        "SIGINT",
+        "deadline"
+      ],
+      "rawStatus": 0,
+      "cleanupStatus": 0,
+      "status": 130
+    }
+  ],
+  "nxVerbose": {
+    "hostVariable": "SEMIO_COURSE_NX_VERBOSE",
+    "enabledValue": "1",
+    "dockerArguments": [
+      "--env",
+      "NX_VERBOSE_LOGGING=true"
+    ],
+    "cases": [
+      {
+        "name": "verbose-enabled",
+        "present": true,
+        "value": "1",
+        "accepted": true,
+        "enabled": true
+      },
+      {
+        "name": "verbose-absent",
+        "present": false,
+        "accepted": true,
+        "enabled": false
+      },
+      {
+        "name": "verbose-empty-refused",
+        "present": true,
+        "value": "",
+        "accepted": false,
+        "enabled": false
+      },
+      {
+        "name": "verbose-zero-refused",
+        "present": true,
+        "value": "0",
+        "accepted": false,
+        "enabled": false
+      },
+      {
+        "name": "verbose-true-refused",
+        "present": true,
+        "value": "true",
+        "accepted": false,
+        "enabled": false
+      },
+      {
+        "name": "verbose-false-refused",
+        "present": true,
+        "value": "false",
+        "accepted": false,
+        "enabled": false
+      },
+      {
+        "name": "verbose-left-padding-refused",
+        "present": true,
+        "value": " 1",
+        "accepted": false,
+        "enabled": false
+      },
+      {
+        "name": "verbose-right-padding-refused",
+        "present": true,
+        "value": "1 ",
+        "accepted": false,
+        "enabled": false
+      },
+      {
+        "name": "verbose-other-refused",
+        "present": true,
+        "value": "2",
+        "accepted": false,
+        "enabled": false
+      },
+      {
+        "name": "verbose-deadline-preserved",
+        "present": true,
+        "value": "1",
+        "accepted": true,
+        "enabled": true,
+        "events": [
+          "deadline"
+        ],
+        "status": 124
+      }
+    ]
+  }
+}

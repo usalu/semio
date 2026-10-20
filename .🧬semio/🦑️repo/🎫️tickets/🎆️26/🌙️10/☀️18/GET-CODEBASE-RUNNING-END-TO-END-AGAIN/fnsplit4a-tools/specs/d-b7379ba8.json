@@ -1,0 +1,37 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📚️course/🧪️tests/📬️outbox-delivery/🟦️.tsx",
+ "describeLine": 117,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of the 📬️ answer outbox suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️coalesces-queued-answers-per",
+   "doc": "/** 🔶️ The coalesces queued answers per tests of the 📬️ answer outbox suite. */",
+   "name": "registerCoalescesQueuedAnswersPerTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the coalesces queued answers per tests of the 📬️ answer outbox suite.",
+   "from": 118,
+   "to": 220
+  },
+  {
+   "dir": "🔸️coalesces-one-task-across",
+   "doc": "/** 🔸️ The coalesces one task across tests of the 📬️ answer outbox suite. */",
+   "name": "registerCoalescesOneTaskAcrossTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the coalesces one task across tests of the 📬️ answer outbox suite.",
+   "from": 258,
+   "to": 415
+  },
+  {
+   "dir": "🟠️re-addresses-queued-commands",
+   "doc": "/** 🟠️ The re addresses queued commands tests of the 📬️ answer outbox suite. */",
+   "name": "registerReAddressesQueuedCommandsTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the re addresses queued commands tests of the 📬️ answer outbox suite.",
+   "from": 426,
+   "to": 524
+  }
+ ]
+}

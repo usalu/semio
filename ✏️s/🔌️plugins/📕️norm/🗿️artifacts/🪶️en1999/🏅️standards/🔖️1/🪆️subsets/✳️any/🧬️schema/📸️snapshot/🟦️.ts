@@ -4,23 +4,23 @@
 import { normWireArray, normWireBoolean, normWireInteger, normWireLiteral, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 
 export interface En1999Snapshot {
-  /** @state artifact */
+  /** 📑️ @state artifact */
   annex: AnnexChoice;
-  /** @state artifact */
+  /** 🪵️ @state artifact */
   materials: AluminiumMaterial[];
-  /** @state artifact */
+  /** ✂️ @state artifact */
   sections: AluminiumSection[];
-  /** @state artifact */
+  /** 👤️ @state artifact */
   members: AluminiumMember[];
-  /** @state artifact */
+  /** ⛓️ @state artifact */
   connections: AluminiumConnection[];
-  /** @state artifact */
+  /** ⚡️ @state artifact */
   fireScenarios: FireScenario[];
-  /** @state artifact */
+  /** 🧬️ @state artifact */
   fatigueDetails: FatigueDetail[];
-  /** @state artifact */
+  /** ❄️ @state artifact */
   coldFormed: ColdFormedSheet[];
-  /** @state artifact */
+  /** 🐚️ @state artifact */
   shells: AluminiumShell[];
 }
 

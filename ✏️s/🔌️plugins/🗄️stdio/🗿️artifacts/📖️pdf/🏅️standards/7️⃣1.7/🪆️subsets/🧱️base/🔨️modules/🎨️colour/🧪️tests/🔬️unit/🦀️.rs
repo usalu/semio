@@ -16,6 +16,8 @@ use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfExtGState, PdfLineCap, PdfLineJoin, PdfMatrix, PdfObject, PdfRect, PdfSoftMask};
 use protocol::command::DiffAlgebra;
 use crate::standards::v1_7::subsets::base::modules::colour::*;
+use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
+use semio_s_artifact_stdio_pdf_model::standards::v1_7::subsets::base::schema::snapshot::model::PdfPage;
 
 #[test]
 fn sampled_function_neutral_words_preserve_native_twelve_bit_extent() {

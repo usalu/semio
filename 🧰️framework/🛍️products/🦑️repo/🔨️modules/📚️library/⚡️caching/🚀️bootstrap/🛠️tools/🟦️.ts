@@ -2,19 +2,19 @@ import{requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefi
 import{isToolingHeadroomRefusalV1,withToolingHeadroomRecoveryV1,type ToolingHeadroomRefusalV1}from"./🧹️retention/📏️headroom/🟦️.ts";
 import {nxSdkCompilerEnvironmentV1} from "./📦️sdk/📥️source/🔗️derivative/🎛️environment/🟦️.ts";
 import{requireNxSdkDerivativePatchImagesV1,requireNxSdkDerivativeReceiptImagesV1}from"./📦️sdk/📥️source/🔗️derivative/🩹️patch/🟦️.ts";
-import snapshotPolicy from"./🔏️authorizers/📦️snapshot/🔣️policy.json";
+import snapshotPolicy from"./🔏️authorizers/📦️snapshot/🔣️policy.json" with { type: "json" };
 import{withNxSdkDerivativeProjectionV1,requireNxSdkDerivativeProjectionV1,copyNxSdkDerivativeV1}from"./📦️sdk/📥️source/🔗️derivative/🟦️.ts";
 import{withNxSdkDerivativeReaderV1}from"./📦️sdk/📥️source/🔗️derivative/📥️reader/🟦️.ts";
 import{nxSdkDerivativeHeadroomBytesV1}from"./📦️sdk/🎟️capacity/🧮️formula/🟦️.ts";
 import{captureNxSdkPublicationInputsV1,withNxSdkDerivativePublicationV1,type NxSdkClonePublicationV1}from"./📦️sdk/🎟️capacity/📥️physical/🟦️.ts";
-import{nxDependencyInstallFilesV1}from"./📦️sdk/📥️source/📐️projection/🟦️.ts";
+import{nxDependencyInstallFilesV1,nxExternalPinsV1}from"./📦️sdk/📥️source/📐️projection/🟦️.ts";
 import{ensureNxPristineSdkV1,requireNxPristineSdkV1}from"./📦️sdk/📥️source/🧊️pristine/🟦️.ts";
 import {bindNxSdkSnapshotBinariesV1} from "./📦️sdk/🧊️binary/📥️publication/🟦️.ts";
 import {verifyNxSdkBinaryLinksV1} from "./📦️sdk/🧊️binary/🔎️verification/🟦️.ts";
 import {nxToolingInstallIdentityV1} from "./📦️sdk/🪪️identity/🟦️.ts";
 export {nxToolingInstallIdentityV1} from "./📦️sdk/🪪️identity/🟦️.ts";
 import {prepareManagedToolingStorageV1,withManagedToolingProvisionV1,type ManagedToolingPublisherV1} from "./🧹️retention/📥️physical/🟦️.ts";
-import retentionSchema from "./🧹️retention/📥️physical/🧬️schema/🔣️.json";
+import retentionSchema from "./🧹️retention/📥️physical/🧬️schema/🔣️.json" with { type: "json" };
 import {preflightNxAuthorizersV1} from "./🔏️authorizers/📥️loading/🟦️.ts";
 import {repositoryCachePartitionRootV1} from "../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {withRepositoryToolingStoreV1,type RepositoryToolingStoreV1} from "../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
@@ -119,7 +119,7 @@ async function activateNxToolsOwnedV1(workspace: string, tooling: NxTooling, sto
 
 /** 🧷️ Installs the authored pinned toolset independently of the source package's workspace development dependencies. */
 export function nxToolingInstallManifestV1(recipe:{name:string;private:boolean;packageManager:string;dependencies:Record<string,string>;semio:{toolPatches:Record<string,string>}}){
-  return {name:recipe.name,private:recipe.private,packageManager:recipe.packageManager,dependencies:recipe.dependencies,patchedDependencies:recipe.semio.toolPatches};
+  return {name:recipe.name,private:recipe.private,packageManager:recipe.packageManager,dependencies:nxExternalPinsV1(recipe.dependencies),patchedDependencies:recipe.semio.toolPatches};
 }
 
 /** 🧩️ Gives Bun each patch's immutable content identity while sharing ordinary package downloads. */
@@ -154,7 +154,7 @@ async function captureNxToolingInputsV1(workspace:string,signal:AbortSignal){
   const authorizer=await captureNxAuthorizerSourcesV1(root,RECIPE+"/🔏️authorizers/📦️runtime/🟦️.ts",signal);
   files.set(".semio-authorizer-source.json",Buffer.from(JSON.stringify(authorizer.manifest)+"\n"));
   const compiler=await captureNxAuthorizerSourcesV1(root,RECIPE+"/🔏️authorizers/📜️script.ts",signal);
-  files.set(".semio-authorizer-compiler.json",Buffer.from(JSON.stringify({version:1,mode:"release",bun:manifest.packageManager,resolutions:compiler.manifest.resolutions,sources:compiler.manifest.sources})+"\n"));
+  files.set(".semio-authorizer-compiler.json",Buffer.from(JSON.stringify({version:1,mode:"release",bun:manifest.packageManager,physicalSourceRoot:root,resolutions:compiler.manifest.resolutions,sources:compiler.manifest.sources})+"\n"));
   const report = process.platform === "linux" ? process.report?.getReport?.() as { header?: { glibcVersionRuntime?: string } } : undefined;
   const libc = process.platform === "linux" ? report?.header?.glibcVersionRuntime ? "gnu" : "musl" : "";
   const environment={platform:process.platform,architecture:process.arch,libc},sdkDigest=nxSdkSnapshotIdentityV1(environment,dependencyFiles);
@@ -178,7 +178,7 @@ async function provisionNxToolsOwnedV1(workspace: string, store:RepositoryToolin
     if(marker.binaries?.version!==1||marker.binaries.entry!==".semio-nx-sdk-binaries.json"||Object.keys(marker.binaries).sort().join(",")!=="digest,entry,version")throw new Error("Original SDK binary authority required");await verifyNxSdkBinaryLinksV1(directory,marker.binaries.digest,store,control);
     if(!nxAuthorizerReceiptHoldsV1(directory,marker.authorizers)||marker.authorizers.sourceSha256!==authorizer.digest)throw new Error("Nx immutable authorizer receipt changed");
     const modulePath = join(directory, "node_modules"), require = createRequire(join(directory, "package.json"));
-    for (const [name, version] of Object.entries(manifest.dependencies)) {
+    for (const [name, version] of Object.entries(nxExternalPinsV1(manifest.dependencies))) {
       const path = realpathSync(require.resolve(name + "/package.json")), local = relative(modulePath, path);
       if (isAbsolute(local) || local.startsWith("..") || JSON.parse(readFileSync(path, "utf8")).version !== version) throw new Error(`Incomplete Nx tooling: ${name}`);
     }

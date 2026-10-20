@@ -6,10 +6,13 @@ import {tmpdir} from "node:os";
 import {dirname,join,relative,resolve} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
-import {checkStoreReceiptFileV1,declaredStoreReceiptV1,encodeStoreReceiptV1,isStoreRepairSelectionV1,issueStoreReceiptV1,observeStoreContentV1,parseStoreReceiptV1,recordStoreContentV1,requireStoreReceiptV1,storeReceiptOutputV1,storeRepairNxArgumentsV1,storeTreeDigestV1,verifyStoreReceiptV1} from "../🟨️.mjs";
+import {checkStoreReceiptFileV1,declaredStoreReceiptV1,encodeStoreReceiptV1,isStoreRepairSelectionV1,issueStoreReceiptV1,observeStoreContentV1,parseStoreReceiptV1,recordStoreContentV1,requireStoreReceiptV1,storeReceiptOutputV1,storeRepairNxArgumentsV1,storeTreeDigestV1,verifyStoreReceiptV1,type StoreReceiptEntryV1} from "../🟨️.mjs";
 import {checkStoreReceiptTasksV1,withStoreReceiptsV1,type StoreReceiptTaskV1} from "../🟦️.ts";
 
 const ajv=new Ajv({strict:true,allowUnionTypes:true}),validate=ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:"#/definitions/Receipt"}),workspaceRoot=resolve(import.meta.dir,"../../../../../../../.."),directories:string[]=[];
+/** 🧷️ The fixture rows read as the types the implementation returns: an entry is a file or a directory, a receipt file is in one closed state. */
+const entries=fixture.entries as readonly StoreReceiptEntryV1[];
+type ReceiptFileRow=Omit<(typeof fixture.receiptFiles)[number],"expected">&{readonly expected:Awaited<ReturnType<typeof checkStoreReceiptFileV1>>["state"]};
 const policy=schema.definitions.Policy.const,receiptName=(target:string)=>policy.directory+"/"+target+policy.extension;
 
 /** 🌳️ Materializes the fixture's store tree in a fresh workspace. */
@@ -47,7 +50,7 @@ test("the fixture's digests match an independent SHA-256 implementation",()=>{
 
 test("observing the fixture tree yields the language-agnostic expected entries",async()=>{
  const root=workspace();
- for(const entry of fixture.entries)expect<unknown>(await observeStoreContentV1(root,join(root,entry.path))).toEqual(entry);
+ for(const entry of entries)expect(await observeStoreContentV1(root,join(root,entry.path))).toEqual(entry);
  expect(await storeTreeDigestV1(join(root,"store/site"))).toEqual({sha256:fixture.entries[1]!.sha256,bytes:fixture.entries[1]!.bytes,files:fixture.entries[1]!.files});
  expect(await storeTreeDigestV1(join(root,"store/site"),false)).toMatchObject({bytes:51,files:4});
 });
@@ -91,9 +94,9 @@ test("links bound to published content are part of the receipt and verified with
 
 test("receipt files that are missing or unreadable are told apart from invalid content",async()=>{
  const root=workspace(),file=join(root,receiptName("build"));
- for(const row of fixture.receiptFiles){
+ for(const row of fixture.receiptFiles as readonly ReceiptFileRow[]){
   rmSync(file,{force:true});if(row.content!==null){mkdirSync(dirname(file),{recursive:true});writeFileSync(file,row.content);}
-  expect<string>((await checkStoreReceiptFileV1(root,file)).state,row.name).toBe(row.expected);
+  expect((await checkStoreReceiptFileV1(root,file)).state,row.name).toBe(row.expected);
  }
  mkdirSync(dirname(file),{recursive:true});writeFileSync(file,encodeStoreReceiptV1(receipt()));
  expect((await checkStoreReceiptFileV1(root,file)).state).toBe("valid");
@@ -124,7 +127,7 @@ test("recording merges published content by path and a task without a receipt re
  await recordStoreContentV1({environment:{},workspaceRoot:root,paths:[join(root,"store/site")]});
  expect(existsSync(file)).toBe(false);
  await Promise.all([recordStoreContentV1({environment,workspaceRoot:root,paths:[join(root,"store/site")]}),recordStoreContentV1({environment,workspaceRoot:root,paths:[join(root,"store/bin/proctor")]})]);
- expect<unknown>(parseStoreReceiptV1(readFileSync(file,"utf8"))).toEqual({version:1,project:"fixture/project",target:"build",entries:fixture.entries,links:[]});
+ expect(parseStoreReceiptV1(readFileSync(file,"utf8"))).toEqual({version:1,project:"fixture/project",target:"build",entries,links:[]});
  await recordStoreContentV1({environment,workspaceRoot:root,links:fixture.links.map(({path,target})=>({path,target}))});
  expect(parseStoreReceiptV1(readFileSync(file,"utf8")).links.map(link=>link.path)).toEqual(["proj/dist","proj/📤️dist/prototype"]);
  writeFileSync(join(root,"store/bin/proctor"),"#!/bin/sh\n");

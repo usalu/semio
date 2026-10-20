@@ -13,7 +13,7 @@ import type{NativeStorageStateV1,NativeStoragePolicyV1}from"../../../../../../..
 import{requireNativeStoragePathV1,requireNativePlatformImageV1,type NativeImageStorageV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import schema from"../🏪️store/🧬️schema/🔣️.json";
+import schema from"../🏪️store/🧬️schema/🔣️.json" with { type: "json" };
 
 type CacheChargeReceiptV1=Readonly<{version:1;allocation:string;owner:string;bytes:number}>;
 function readRepositoryCacheChargeV1(path:string):Readonly<{row:CacheChargeReceiptV1;sha:string}>|undefined{

@@ -10,7 +10,8 @@ use crate::viewer::note::modes::view;
 #[allow(unused_imports)]
 use crate::viewer::note::modes::view::windows::composite;
 #[allow(unused_imports)]
-use crate::{NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
+use crate::{NOTE_DOCUMENT_SCHEMA};
+use semio_s_artifact_note_note_schema::NoteSnapshot;
 #[allow(unused_imports)]
 use semio_framework_plugin::ArtifactView;
 #[allow(unused_imports)]

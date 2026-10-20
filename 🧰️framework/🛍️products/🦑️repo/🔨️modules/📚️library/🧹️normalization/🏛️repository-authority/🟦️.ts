@@ -11,8 +11,10 @@ import { pathsOverlap, removalAuthorityPaths } from "../🧐️preimage-assertio
 type TransactionRepositoryAuthorityFailureReason = "missing-authority" | "invalid-index" | "index-drift" | "repository-boundary" | "invalid-access";
 
 export class TransactionRepositoryAuthorityError extends Error {
-  constructor(readonly reason: TransactionRepositoryAuthorityFailureReason, cause: unknown) {
+  readonly reason: TransactionRepositoryAuthorityFailureReason;
+  constructor(reason: TransactionRepositoryAuthorityFailureReason, cause: unknown) {
     super(cause instanceof Error ? cause.message : String(cause), { cause });
+    this.reason = reason;
     this.name = "TransactionRepositoryAuthorityError";
   }
 }

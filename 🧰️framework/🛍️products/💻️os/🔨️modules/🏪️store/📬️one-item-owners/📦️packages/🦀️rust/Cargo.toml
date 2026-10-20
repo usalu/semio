@@ -21,6 +21,10 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+durable-group-testing = ["semio-framework-os-store-one-item-publication/durable-group-testing"]
+test-support = []
+
 [[test]]
 name = "mutation_apply"
 path = "../../../📬️paged-one-item/🧬️mutation-apply/🧪️tests/🦀️.rs"
@@ -46,6 +50,7 @@ semio-framework-value-snapshot-read = { path = "../../../../../../../🔨️modu
 semio-framework-value-factory = { path = "../../../../../../../🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-os-store-one-item-batch = { path = ".", features = ["test-support"] }
 semio-framework-trace = { workspace = true }
 semio-framework-trace-memory-testing = { path = "../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }

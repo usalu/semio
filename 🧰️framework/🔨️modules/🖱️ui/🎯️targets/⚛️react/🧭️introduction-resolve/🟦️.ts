@@ -1,13 +1,13 @@
-import type { IntroductionPoint } from "../../../../🎓️onboarding/🏷️declaration/🟦️.ts";
-import { elementIdSelector } from "../../../🧱️elements/🆔️ElementId/🟦️.tsx";
+import type { IntroductionPoint } from "@semio-tech/framework-onboarding/declaration";
+import { elementIdSelector } from "@semio-tech/ui/elements/ElementId";
 import * as React from "react";
-import { reactHostPort } from "../../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
+import { reactHostPort } from "@semio-tech/ui/elements/Ports/react";
 import { introductionSurfaceResolvers } from "../📐️introduction-geometry/🟦️.ts";
 
 //#region 🎬️DemonstrationResolve
 export type IntroductionResolvedPoint = { readonly x: number; readonly y: number };
 
-/** @emoji 🪡️ A point at `t` (0–1, clamped) along `points` by arc length — linearly interpolates between
+/** 🪡️ A point at `t` (0–1, clamped) along `points` by arc length — linearly interpolates between
  * the two points straddling `t`'s cumulative distance. Degenerate inputs (0 or 1 points, zero-length
  * polyline) return the first point (or the origin) for every `t`, never throw. */
 export function polylinePointAt(points: readonly { readonly x: number; readonly y: number }[], t: number): { readonly x: number; readonly y: number } {
@@ -39,7 +39,7 @@ export function polylinePointAt(points: readonly { readonly x: number; readonly 
   const last=points.at(-1);if(!last)throw Error("Complete polyline terminal point required");return last;
 }
 
-/** @emoji 🪡️ Samples a canvas-layer path (`move`/`line`/`quad`/`cubic` segments, in whatever local
+/** 🪡️ Samples a canvas-layer path (`move`/`line`/`quad`/`cubic` segments, in whatever local
  * coordinate space the caller's points are already expressed in — apply layer transforms before calling)
  * into a flat polyline via de Casteljau evaluation — the one parametric-curve evaluator this codebase has,
  * needed because `IntroductionPoint.Curve` resolves through arc-length interpolation over a polyline, not
@@ -92,7 +92,7 @@ export function sampleBezierSegments(
   return points;
 }
 
-/** @emoji 📌️ Resolves an `IntroductionPoint` to a live viewport pixel. Called every animation frame by a
+/** 📌️ Resolves an `IntroductionPoint` to a live viewport pixel. Called every animation frame by a
  * playing demonstration — re-resolving (rather than caching) keeps a drag path glued to a target that's
  * still moving (a resizing panel, an orbiting 3D camera, a panning 2D canvas). `null` means "not
  * resolvable yet" (element not mounted, no surface resolver registered, entity not found/hidden, or a 3D
@@ -176,7 +176,7 @@ type IntroductionPointerIdleState = {
   readonly lastPositionRef: React.RefObject<IntroductionPointerPosition | null>;
 };
 
-/** @emoji 💤️ Tracks whether the user's real pointer has been still for `thresholdMs` — the gate a
+/** 💤️ Tracks whether the user's real pointer has been still for `thresholdMs` — the gate a
  * demonstration plays behind — and where it last was. Any `pointerdown`/`wheel`/`keydown`, or a
  * `pointermove` with different coordinates or non-zero movement deltas, resets the timer and flips back
  * to not-idle immediately. Same-coordinate, zero-delta moves are ignored because browsers re-fire them

@@ -1,7 +1,7 @@
 import{createHash}from"node:crypto";
 import{validateJsonSchemaSubset}from"../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import{persistentStatePolicyV1}from"../📋️layout/🟦️.ts";
-import publicSchema from"../🧬️schema/🔣️.json";
+import publicSchema from"../🧬️schema/🔣️.json" with { type: "json" };
 const schema=JSON.parse(JSON.stringify(publicSchema))as typeof publicSchema,policy=persistentStatePolicyV1(),owner=policy.owner+":"+createHash("sha256").update(JSON.stringify(policy)).digest("hex");
 /** 🧾️ Binds the actual durable reservation to the complete immutable policy before any intent write. */
 export function persistentStateChargeOwnerV1():string{return owner;}

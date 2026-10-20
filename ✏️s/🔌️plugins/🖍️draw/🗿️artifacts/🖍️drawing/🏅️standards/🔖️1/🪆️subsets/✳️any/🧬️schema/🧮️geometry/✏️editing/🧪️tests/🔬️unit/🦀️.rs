@@ -15,8 +15,8 @@ fn path_algorithms_shared_cases_and_semantic_undo() {
         let layer=semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Algorithm")).to_string().into()).expect("nonempty authored identity"), "Algorithm",source.into());let id=semio_s_artifact_draw_drawing_model::layer_base(&layer).id.clone();
         let before=semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot {layers:vec![layer].into(),..Default::default()};
         let mutation=semio_s_artifact_draw_drawing_transform::update_path_geometry::mutation::update_path_geometry(id,result.into());let undo=mutation.inverse(&before).unwrap();
-        let mut after=before.clone();crate::mutations::apply_drawing_mutation(&mut after,&mutation).unwrap();
-        for inverse in undo {crate::mutations::apply_drawing_mutation(&mut after,&inverse).unwrap();}assert_eq!(after,before);
+        let mut after=before.clone();semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut after,&mutation).unwrap();
+        for inverse in undo {semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut after,&inverse).unwrap();}assert_eq!(after,before);
     }
 }
 

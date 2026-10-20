@@ -1,0 +1,515 @@
+[
+ {
+  "file": "🧪️tests/🧪️diff-only-law-gate/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 1,
+  "secs": 0.4,
+  "owner": "🧪️tests",
+  "cls": "real-defect",
+  "note": "policyHostApplyFileBreaches export missing (library, frozen)",
+  "firstError": "SyntaxError: Export named 'policyHostApplyFileBreaches' not found in module '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚖️laws/🟦️.ts'.",
+  "fails": [],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_tests_diff_only_law_gate_ts.log"
+ },
+ {
+  "file": "🧪️tests/🧪️diff-only-law-gate/🫧️lanes/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 1,
+  "secs": 2.7,
+  "owner": "🧪️tests",
+  "cls": "real-defect",
+  "note": "policyHostApplyFileBreaches export missing (library, frozen)",
+  "firstError": "",
+  "fails": [],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_tests_diff_only_law_gate_lanes_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🧺️heap/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 1,
+  "secs": 0.2,
+  "owner": "framework/modules",
+  "cls": "real-defect",
+  "note": "",
+  "firstError": "",
+  "fails": [
+   "(fail) original heap preserves the neutral priority and custody corpus [3.26ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_value_retirement_tests_heap_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🚮️absence/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 1,
+  "secs": 10.7,
+  "owner": "framework/modules",
+  "cls": "real-defect",
+  "note": "",
+  "firstError": "error: Cannot find module '../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts' from '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-",
+  "fails": [
+   "(fail) the complete JSON reference route executes with products, S, Hub and ticket sources absent [10555.48ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_pack_json_tests_absence_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/📥️inputs/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 3,
+  "secs": 2.0,
+  "owner": "framework/modules",
+  "cls": "real-defect",
+  "note": "",
+  "firstError": "error: expect(received).toBe(expected)",
+  "fails": [
+   "(fail) component Cargo continuation consumes each exact live command view [606.62ms]",
+   "(fail) component unit graph executes the returned command view [131.06ms]",
+   "(fail) component batch effects receive the exact consumed view [100.06ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_process_artifacts_native_build_component_pass_tests_inputs_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🍎️image/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 1,
+  "secs": 60.7,
+  "owner": "framework/modules",
+  "cls": "real-defect",
+  "note": "test lost its imports/helpers in a split (runExactCargoLaws, originalInvocation, ...)",
+  "firstError": "error: Original process admission closed",
+  "fails": [
+   "(fail) actual exact Cargo bounded native laws retain issued storage through compiler and receipt [60518.47ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_process_testing_cargo_exact_tests_image_ts.log"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 23,
+  "failed": 5,
+  "secs": 4.4,
+  "owner": "framework/modules",
+  "cls": "real-defect",
+  "note": "test lost its imports/helpers in a split (runExactCargoLaws, originalInvocation, ...)",
+  "firstError": "ReferenceError: originalInvocation is not defined",
+  "fails": [
+   "(fail) proc-macro exact laws discover controlled compiler runtime: admitted [1.21ms]",
+   "(fail) proc-macro exact laws discover controlled compiler runtime: failed [0.25ms]",
+   "(fail) proc-macro exact laws discover controlled compiler runtime: relative [0.24ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_modules_process_testing_cargo_exact_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 41,
+  "failed": 2,
+  "secs": 10.5,
+  "owner": "framework/products/os",
+  "cls": "real-defect",
+  "note": "",
+  "firstError": "error: 🏢️semio-tech/🎡️play/🔨️modules/📦️site/📜️script.ts",
+  "fails": [
+   "(fail) neutral actual OS and app Vite callers explicitly carry their domain input inventory [92.99ms]",
+   "(fail) neutral engine optimizer names come from exact Source producer DATA without generated package probes [10.35ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_os_modules_dev_builder_vite_artifacts_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🏗️custody/🟦️.ts",
+  "rc": 1,
+  "passed": 1,
+  "failed": 4,
+  "secs": 4.0,
+  "owner": "repo/modules",
+  "cls": "real-defect",
+  "note": "",
+  "firstError": "error: expect(received).toContain(expected)",
+  "fails": [
+   "(fail) neutral actual VSCode compiler publication and package commands retain real factory custody [0.89ms]",
+   "(fail) actual VSCode Source snapshot and coalesced watcher retain genuine ordinary ownership [523.13ms]",
+   "(fail) neutral VSCode production callbacks separate actual compiler CPU from retained publication [63.07ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_client_vscode_tests_custody_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 16,
+  "failed": 1,
+  "secs": 15.6,
+  "owner": "repo/library",
+  "cls": "real-defect",
+  "note": "",
+  "firstError": "",
+  "fails": [
+   "(fail) Bun ownership excludes mutable outputs and preserves authored custody against Node and esbuild [0.59ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_caching_bootstrap_dependencies_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/📥️scope/🟦️.ts",
+  "rc": 1,
+  "passed": 2,
+  "failed": 1,
+  "secs": 3.8,
+  "owner": "repo/library",
+  "cls": "real-defect",
+  "note": "",
+  "firstError": "error: ENOENT: no such file or directory, open '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📜️script.ts'",
+  "fails": [
+   "(fail) published compiler wrapper retains closed captured workspace resolutions [19.58ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_caching_bootstrap_tools_authorizers_tests_scope_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 1,
+  "failed": 7,
+  "secs": 17.6,
+  "owner": "repo/library",
+  "cls": "real-defect",
+  "note": "",
+  "firstError": "error: Cannot find module '../📜️script.ts' from '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧪️tests/🟦️.ts'",
+  "fails": [
+   "(fail) Nx staged publication preserves arbitrary primary while all cleanup failures remain observable [49.75ms]",
+   "(fail) Nx provisioning children retain original awaited progress, continuation and deadline [1.24ms]",
+   "(fail) Nx provisioning serializes headroom admission before immutable SDK clone publication [1076.74ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_caching_bootstrap_tools_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧪️tests/🧹️cleanup/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 1,
+  "secs": 2.2,
+  "owner": "repo/library",
+  "cls": "real-defect",
+  "note": "",
+  "firstError": "",
+  "fails": [
+   "(fail) Nx staged publication preserves arbitrary primary while all cleanup failures remain observable [29.20ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_caching_bootstrap_tools_tests_cleanup_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/💾️cache/📂️files/🗄️catalog/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 7,
+  "failed": 2,
+  "secs": 8.1,
+  "owner": "repo/library",
+  "cls": "real-defect",
+  "note": "",
+  "firstError": "SyntaxError: JSON Parse error: Unexpected EOF",
+  "fails": [
+   "(fail) default transactional catalog corruption is healthy recovery DATA before inactive repair [1166.85ms]",
+   "(fail) (unnamed) [7.66ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_caching_cargo_units_descriptor_cache_files_catalog_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🔗️import-edges/🏛️graph/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 2,
+  "secs": 0.1,
+  "owner": "repo/library",
+  "cls": "real-defect",
+  "note": "",
+  "firstError": "",
+  "fails": [
+   "(fail) ordinary Nx retained Process sources agree with canonical current dependency authority [9.45ms]",
+   "(fail) ordinary Nx published dependency graph equals the full canonical current graph [0.11ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_caching_tests_import_edges_graph_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🛑️coordinator/🔮️oracle/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 1,
+  "secs": 5.2,
+  "owner": "repo/library",
+  "cls": "real-defect",
+  "note": "import.meta in non-module (library, frozen)",
+  "firstError": "SyntaxError: import.meta is only valid inside modules.",
+  "fails": [
+   "(fail) Nx coordinator owns child cancellation for every malformed process observation [4118.97ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_caching_tests_coordinator_oracle_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧾️cargo-provenance/🟦️.ts",
+  "rc": 1,
+  "passed": 5,
+  "failed": 1,
+  "secs": 3.6,
+  "owner": "repo/library",
+  "cls": "real-defect",
+  "note": "manifest.profile[name] undefined (library, frozen)",
+  "firstError": "TypeError: undefined is not an object (evaluating 'manifest.profile[name]')",
+  "fails": [
+   "(fail) no profile keeps incremental state in the shared build-dir, whatever the caller's CARGO_INCREMENTAL (cargo unit-graph oracle) [15.60ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_caching_tests_cargo_provenance_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎨️styling/🏗️builder/🐍️python/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 4,
+  "failed": 2,
+  "secs": 4.9,
+  "owner": "repo/library",
+  "cls": "real-defect",
+  "note": "",
+  "firstError": "error: expect(received).toContain(expected)",
+  "fails": [
+   "(fail) neutral actual Python wheel compiler and consumers retain genuine custody [482.32ms]",
+   "(fail) actual Python environment inventory and post-CPU consumer retain complete ordinary evidence [1116.04ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_styling_builder_python_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🧪️tests/🍎️image/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 1,
+  "secs": 10.1,
+  "owner": "repo/library",
+  "cls": "real-defect",
+  "note": "test lost its imports/helpers in a split (runExactCargoLaws, originalInvocation, ...)",
+  "firstError": "error: Original native caller capabilities required",
+  "fails": [
+   "(fail) actual repository exact Cargo prepares and acquires every selected bounded workspace [7928.97ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_process_cargo_exact_tests_image_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️execution/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 82,
+  "failed": 6,
+  "secs": 16.6,
+  "owner": "repo/library",
+  "cls": "real-defect",
+  "note": "runTestScript not defined (library, frozen)",
+  "firstError": "ReferenceError: runTestScript is not defined",
+  "fails": [
+   "(fail) authored neutral Cargo consumer: Trace [27.88ms]",
+   "(fail) authored neutral Cargo consumer: Async Macros [15.62ms]",
+   "(fail) authored neutral Cargo consumer: Value Derive [10.54ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_process_cargo_execution_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/⚙️arguments/📐️context/🧪️tests/🟦️.ts",
+  "rc": 1,
+  "passed": 6,
+  "failed": 3,
+  "secs": 12.9,
+  "owner": "repo/library",
+  "cls": "real-defect",
+  "note": "",
+  "firstError": "error: expect(received).toEqual(expected)",
+  "fails": [
+   "(fail) neutral actual context observer retains declared issuer writer capacity evidence and cleanup call sites [13.87ms]",
+   "(fail) neutral context observation dashboard controls select the existing finite Cargo route in the dashboard registry [2.27ms]",
+   "(fail) neutral actual context observer enrolls fixture cleanup before SQLite construction [27.43ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_build_mode_profile_tests_arguments_context_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/📏️windows/🟦️.ts",
+  "rc": 1,
+  "passed": 2,
+  "failed": 2,
+  "secs": 6.8,
+  "owner": "repo/library",
+  "cls": "real-defect",
+  "note": "",
+  "firstError": "SyntaxError: JSON Parse error: Unexpected EOF",
+  "fails": [
+   "(fail) exact Source window and JSON reduction children consume actual FD operations [2133.30ms]",
+   "(fail) (unnamed) [1.48ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_build_inputs_tests_windows_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️fingerprint/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 2,
+  "secs": 3.2,
+  "owner": "repo/library",
+  "cls": "real-defect",
+  "note": "bazelTaskInputsV1 not defined (library, frozen)",
+  "firstError": "ReferenceError: bazelTaskInputsV1 is not defined",
+  "fails": [
+   "(fail) Bazel fingerprints declared env and runtime inputs through the actual issued task environment [1162.68ms]",
+   "(fail) Bazel runtime input boundaries cannot alias different ordered command outputs [115.78ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_build_tools_bazel_tests_fingerprint_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/💾️cache/🟦️.ts",
+  "rc": 1,
+  "passed": 7,
+  "failed": 1,
+  "secs": 4.2,
+  "owner": "repo/library",
+  "cls": "real-defect",
+  "note": "",
+  "firstError": "",
+  "fails": [
+   "(fail) artifact packages replay their tests, checks and receipted store-linked build [1953.27ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_build_graph_inference_tests_cache_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧪️tests/🟦️.ts",
+  "rc": -14,
+  "passed": 0,
+  "failed": 0,
+  "secs": 300.1,
+  "owner": "repo/library",
+  "cls": "real-defect",
+  "note": "runTestScript not defined (library, frozen)",
+  "firstError": "error: Original prepared execution inventory required",
+  "fails": [
+   "(fail) every actual generated command family admits its authored execution service through the independent schema [79.09ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_build_execution_tests_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/↪️rust-divergence-callback/🟦️.ts",
+  "rc": 1,
+  "passed": 47,
+  "failed": 1,
+  "secs": 6.1,
+  "owner": "repo/library",
+  "cls": "real-defect",
+  "note": "",
+  "firstError": "",
+  "fails": [
+   "(fail) independent syn callback AST, spans, free variables and target tuples match the neutral contract [78.79ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_rust_divergence_callback_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📦️package-asset-constants/🟦️.ts",
+  "rc": 1,
+  "passed": 4,
+  "failed": 2,
+  "secs": 0.1,
+  "owner": "repo/library",
+  "cls": "real-defect",
+  "note": "",
+  "firstError": "error: ENOENT: no such file or directory, stat '/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🖼️assets/🌱️metabolism/🏙️base/🧊️.glb'",
+  "fails": [
+   "(fail) package asset declarations match the files they declare > 🖼️assets/🌱️metabolism/🏙️metabolism-model: every digest row is the independently computed size and SHA-256 of the named file [1.34ms]",
+   "(fail) package asset declarations match the files they declare > 🪆️subsets/✳️any/🧬️schema: every digest row is the independently computed size and SHA-256 of the named file [0.34ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_package_asset_constants_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔗️markdown-inline-references/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 1,
+  "secs": 1.0,
+  "owner": "repo/library",
+  "cls": "real-defect",
+  "note": "",
+  "firstError": "",
+  "fails": [],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_markdown_inline_references_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🧳️generated-outputs/🟦️.ts",
+  "rc": 1,
+  "passed": 3,
+  "failed": 4,
+  "secs": 21.9,
+  "owner": "repo/library",
+  "cls": "real-defect",
+  "note": "",
+  "firstError": "error: expect(received).toBe(expected)",
+  "fails": [
+   "(fail) current JCO destination authority > preserves tool-owned declaration pairing and the exact vendored shim payloads [7030.19ms]",
+   "(fail) fresh-clone generator outputs > every declared-tracked output is visible to a clone and every external input is tracked [537.02ms]",
+   "(fail) materialized JCO interface filename boundaries > admits the exact physical matrix through indexed and direct resolvers [1114.47ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_workspace_contract_generated_outputs_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥾️cross-platform-bootstrap/🟦️.ts",
+  "rc": 1,
+  "passed": 12,
+  "failed": 5,
+  "secs": 28.3,
+  "owner": "repo/library",
+  "cls": "real-defect",
+  "note": "",
+  "firstError": "error: ENOENT: no such file or directory, open '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📜️script.ts'",
+  "fails": [
+   "(fail) cross-platform bootstrap > Nx entrypoints resolve the declared package layout through independent loaders [143.70ms]",
+   "(fail) cross-platform bootstrap > keeps deferred command imports distinct from initial router imports [0.26ms]",
+   "(fail) cross-platform bootstrap > keeps every tracked path inside the stock Windows MAX_PATH budget below a declared clone root [1658.73ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_cross_platform_bootstrap_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧑‍💻os-dev-composition-ownership/🟦️.ts",
+  "rc": 1,
+  "passed": 4,
+  "failed": 7,
+  "secs": 1.6,
+  "owner": "repo/library",
+  "cls": "real-defect",
+  "note": "",
+  "firstError": "error: 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/🏗️staging/🟦️.ts",
+  "fails": [
+   "(fail) OS development composition ownership > materializes every anonymous semantic implementation owner [0.35ms]",
+   "(fail) OS development composition ownership > leaves the package command as routing without domain behavior or test injection [3.32ms]",
+   "(fail) OS development composition ownership > imports all 47 behavior owners directly into their existing verification concern [60.04ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_os_dev_composition_ownership_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️storybook-discovery/🟦️.ts",
+  "rc": 1,
+  "passed": 0,
+  "failed": 1,
+  "secs": 2.7,
+  "owner": "repo/library",
+  "cls": "real-defect",
+  "note": "admission.form undefined (library, frozen)",
+  "firstError": "TypeError: undefined is not an object (evaluating 'admission.form')",
+  "fails": [],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_storybook_discovery_ts.log"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️owned-script-routes/🟦️.ts",
+  "rc": 1,
+  "passed": 2,
+  "failed": 2,
+  "secs": 3.9,
+  "owner": "repo/library",
+  "cls": "real-defect",
+  "note": "admission.form undefined (library, frozen)",
+  "firstError": "TypeError: undefined is not an object (evaluating 'admission.form')",
+  "fails": [
+   "(fail) real contributions bind Nx package commands and root coordinator imports no specific implementation [351.28ms]",
+   "(fail) every real contribution is reachable from a dispatcher call site and no verify route shadows a root verify command [175.25ms]"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/tst7/logs/_framework_products_repo_modules_library_tests_owned_script_routes_ts.log"
+ }
+]

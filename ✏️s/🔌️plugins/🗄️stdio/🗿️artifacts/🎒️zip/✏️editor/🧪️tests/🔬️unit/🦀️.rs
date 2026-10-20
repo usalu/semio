@@ -362,7 +362,8 @@ fn archive_registered_factory_resumes_the_exact_cursor_and_refuses_another_revis
     use semio_framework_job::{Generation, InteractiveJob, JobOutcomeBorrow, Operation, OperationId, RevisionId, StepBudget, StepContext};
     use semio_framework_action_bus::{ActionBus, ToolOperationSpec, ToolWirePage, TOOL_WIRE_PAGE_BYTES};
     use semio_framework_plugin::app::{AppOperationContext, ArtifactOwnedToolJobContext, ArtifactOwnedToolJobSnapshots, ArtifactToolCompletion, ChildContentView, InteractionHoverState};
-    use semio_framework_plugin::retained_command::{ArtifactOwnedContextHandle, ArtifactRetainedCommandInputs, ArtifactRetainedCommandPayload};
+    use semio_framework_plugin::app::ArtifactOwnedContextHandle;
+    use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandPayload};
     use semio_framework_plugin::{EditorApp, HistoryView};
     use semio_s_artifact_stdio_contract::editing::{BoundedNativeEditToolJobFactory, BoundedNativeEditingEditor};
     use std::sync::Arc;

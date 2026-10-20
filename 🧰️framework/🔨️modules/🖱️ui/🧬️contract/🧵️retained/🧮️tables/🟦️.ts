@@ -1,5 +1,5 @@
 /** 🗂️ Owns the bounded retained numeric table and sibling-key containers shared by retained graph validation and patch transactions. */
-import { NumericIndex, type NumericIndexEdit, type NumericIndexReader, type NumericIndexRetirement, type NumericIndexGrant } from "../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
+import { NumericIndex, type NumericIndexEdit, type NumericIndexReader, type NumericIndexRetirement, type NumericIndexGrant } from "@semio-tech/value-ts/ordered/numeric";
 
 export type Program<T> = Generator<number, T, void>;
 

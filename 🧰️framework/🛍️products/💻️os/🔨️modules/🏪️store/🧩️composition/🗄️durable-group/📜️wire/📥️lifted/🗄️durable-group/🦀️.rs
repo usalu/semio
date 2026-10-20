@@ -38,7 +38,7 @@ pub use outcome_and_journal_receipt_types::{
     close_journal_owner, ArtifactStoreDurableGroupRootV1, DurableBoundOneItemOutcomeV1,
     DurableOwnedGroupJournalAdvanceV1, DurableOwnedGroupJournalCommitV1,
     DurableOwnedGroupJournalReceiptV1, DurableOwnedGroupJournalSinkV1,
-    DurableOwnedGroupVerifiedThreeEditsV1, DurableStorePreparedOutcomeV1,
+    DurableOwnedGroupVerifiedThreeEditsV1, DurablePlanningOutputV1, DurableStorePreparedOutcomeV1,
     DurableStoreVerifiedOutcomeV1, DurableUnboundOneItemOutcomeV1,
 };
 
@@ -67,5 +67,5 @@ use member_identity_and_group_testing_helpers::unsigned_member;
 pub use member_identity_and_group_testing_helpers::{member_identity_matches, member_matches};
 #[cfg(feature="durable-group-testing")]
 pub use member_identity_and_group_testing_helpers::{
-    durable_group_test_bind_member, durable_group_test_member, durable_group_test_outcome,
+    durable_group_test_bind_member, durable_group_test_member, durable_group_test_outcome, DurableOwnedGroupTestMember,
 };

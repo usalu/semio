@@ -1,4 +1,4 @@
-import type {SetShapeCoordinate} from "../../../🔀️transform/🧬️schema/🧬️mutations/🔷️shape-coordinate/🦠️mutation/🟦️.ts";
+import type {SetShapeCoordinate} from "../../../🔀️transform/🧬️schema/🧬️mutations/🔷️set-shape-coordinate/🦠️mutation/🟦️.ts";
 import type {ImportImageAsset} from "../../../🧱️structure/🧬️schema/🧬️mutations/📥️import-image-asset/🦠️mutation/🟦️.ts";
 import type {RemoveImageAsset} from "../../../🧱️structure/🧬️schema/🧬️mutations/🗑️remove-image-asset/🦠️mutation/🟦️.ts";
 import type {UpdateImage} from "../../../🎨️style/🧬️schema/🧬️mutations/🖼️update-image/🦠️mutation/🟦️.ts";

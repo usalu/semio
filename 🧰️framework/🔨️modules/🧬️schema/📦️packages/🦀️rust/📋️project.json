@@ -4,6 +4,11 @@
   "targets": {
     "generate": {
       "executor": "repo:script",
+      "metadata": {
+        "semio": {
+          "sourceInputObservation": "freshness"
+        }
+      },
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts generate",

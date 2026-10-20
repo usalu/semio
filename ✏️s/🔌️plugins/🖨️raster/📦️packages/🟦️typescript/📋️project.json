@@ -12,6 +12,7 @@
   "targets": {
     "test": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
@@ -24,6 +25,7 @@
         "{workspaceRoot}/✏️s/🔌️plugins/🖨️raster/**/*",
         "{workspaceRoot}/🧰️framework/**/*"
       ],
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test renderer-contract",

@@ -13,8 +13,8 @@ import { cleanup, render } from "@semio-tech/ui-react/test";
 import { Mode, type ModeWindowDescriptor, type WindowLayoutNode } from "@semio-tech/ui-react";
 import { afterEach, describe, expect, it } from "vitest";
 import Ajv from "ajv";
-import { manifestUtilitiesInitialFixture as initialUtilityCases, manifestViewContextSchema as viewContextSchema } from "@semio-tech/framework/manifest/testing/fixtures";
-import { parseResolvedPluginViewState } from "@semio-tech/framework/modules/manifest/view-state-and-public-invocation";
+import { manifestUtilitiesInitialFixture as initialUtilityCases, manifestViewContextSchema as viewContextSchema } from "@semio-tech/framework-manifest/testing/fixtures";
+import { parseResolvedPluginViewState } from "@semio-tech/framework-manifest/view-state-and-public-invocation";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -299,7 +299,9 @@ describe("🪟️ the ShellHost decision sites route through the focused program
   });
 
   it("hands keyboard focus to an opened program's active window only while nothing else holds it", () => {
-    const effect = shellHostSource.slice(shellHostSource.indexOf("A program the user just opened takes keyboard focus"));
+    const attempt = shellHostSource.indexOf("const holder = document.activeElement;");
+    expect(attempt, "the focus attempt must still be where this law reads it").toBeGreaterThan(0);
+    const effect = shellHostSource.slice(shellHostSource.lastIndexOf("useEffect(", attempt));
     expect(effect.slice(0, 1600)).toContain("if (holder instanceof HTMLElement && holder !== document.body) return;");
     expect(effect.slice(0, 1600)).toContain(`closest<HTMLElement>('[role="tabpanel"]')`);
   });

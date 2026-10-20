@@ -36,8 +36,8 @@ import {
 } from "@semio-tech/ui-react";
 import { type ContinuousGestureLane } from "@semio-tech/framework";
 import { type Component, type UiNodeRecord, type UiValue } from "@semio-tech/framework";
-import { uiAccessibilityValueV1 } from "@semio-tech/framework/modules/ui/contract/presentation/accessibility";
-import { formatUiNumber, formatUiNumberFixed } from "@semio-tech/framework/modules/ui/contract/presentation/number-format";
+import { uiAccessibilityValueV1 } from "@semio-tech/ui-contract/presentation/accessibility";
+import { formatUiNumber, formatUiNumberFixed } from "@semio-tech/ui-contract/presentation/number-format";
 import {
   uiNumberCrossedBound,
   uiNumberDisplayText,
@@ -46,7 +46,7 @@ import {
   uiNumberTypedValue,
   uiTextInputKey,
   uiTextInputKeyOf
-} from "@semio-tech/framework/modules/ui/contract/component";
+} from "@semio-tech/ui-contract/component";
 import { interpLabel, type UiInterpreterContext } from "../🧷️interpreter-context/🟦️.ts";
 import { dispatchTrigger, resolveControlIconNode, toUiValue, useContinuousTriggerLane } from "../⚡️action-dispatch/🟦️.tsx";
 import { nodeDomId } from "../🪪️stable-dom-ids/🟦️.ts";

@@ -10,6 +10,10 @@ use semio_framework_os_store_durable_group_wire::lifted_durable_group::{DRAWING_
 use semio_framework_value::{DslValue, ToValue as ValueToValue};
 use semio_framework_os_store_durable_group::{DurableOwnedGroupJournalRecordV1, DurableOwnedMapCommitOwnersV1, DurableOwnedMapRecoveryAdmissionV1, DurableOwnedMapRecoveryOwnersV1, DurableOwnedMapRecoveryRejectedV1, DurableOwnedMapRecoveryStartV1, DurableOwnedThreeMemberDecisionV1, DurableOwnedThreeStoreBoundV1, DurableOwnedThreeStoreMapAssemblyOwnersV1, DurableOwnedThreeStoreMapAssemblyV1, DurableOwnedThreeStorePreparedV1, DurableOwnedThreeStoreRecoveryV1, capture_store_owned_three_snapshot};
 use semio_framework_os_spr::{Edit, HybridLogicalTimestamp};
+#[cfg(feature = "durable-group-testing")]
+use semio_framework_os_store_durable_group_wire::lifted_durable_group::{durable_group_test_outcome, DurableOwnedGroupTestMember};
+#[cfg(feature = "durable-group-testing")]
+use semio_framework_os_store_durable_group::durable_owned_group_journal_test_record_from_edits;
 use semio_framework_dsl_record::{FieldValue, Shape};
 use semio_framework_os_store_envelope::owner::OwnerRef;
 use semio_framework_os_pack::{PackDecodeOptions, PackEncodeOptions, PackVerificationLevel, pack_rt};
@@ -22,7 +26,7 @@ include!("🎰️map-host-slot-foreign-anchor-and-carrier-laws/🦀️.rs");
 
 #[cfg(feature = "durable-group-testing")]
 fn fixture_test_member(case: &serde_json::Value, ordinal: u64) -> (DurableOwnedGroupTestMember<DemoSnapshot, String>, std::sync::Weak<DemoSnapshot>) {
-    let actor = semio_framework_value::SharedUtf8::admit(fixture()["openedActor"].as_str().unwrap().to_string(), crate::os_store::component::tests::physical_test_close_grant()).unwrap_or_else(|(error, _)| panic!("original fixture actor: {error}" )).0;
+    let actor = semio_framework_value::SharedUtf8::admit(fixture()["openedActor"].as_str().unwrap().to_string(), semio_framework_value::testing::physical_test_close_grant()).unwrap_or_else(|(error, _)| panic!("original fixture actor: {error}" )).0;
     let edit = Edit { id: format!("durable-fixture-edit-{ordinal}"), actor: Some(actor.clone()), line: None, forwards: serde_json::from_value(case["forwards"].clone()).unwrap(), inverse: serde_json::from_value::<Vec<String>>(case["inverse"].clone()).unwrap().into(), mutation_meta: vec![crate::os_spr::MutationMeta { mutation_id: Some(crate::os_spr::MutationId(format!("durable-fixture-edit-{ordinal}#0"))), dependencies: Vec::new(), base_version: ordinal, author_id: Some(crate::os_spr::ActorId(actor)), timestamp: HybridLogicalTimestamp { actor: ordinal, physical_ms: 1_000 + ordinal, logical: 1 }, undo_policy: crate::os_spr::UndoPolicy::ExactBaseOnly, payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(), transaction: None }], verb: None, sequence_number: ordinal as i32, started_at: String::new(), finished_at: None };
     let post_snapshot = Arc::new(serde_json::from_value::<DemoSnapshot>(case["postSnapshot"].clone()).unwrap());
     let weak = Arc::downgrade(&post_snapshot);

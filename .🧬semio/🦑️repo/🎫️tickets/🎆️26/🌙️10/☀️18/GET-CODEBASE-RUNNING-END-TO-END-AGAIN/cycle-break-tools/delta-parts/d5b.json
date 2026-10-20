@@ -1,0 +1,347 @@
+{
+ "schema": "cycle-break/delta@1",
+ "stagedAt": "2026-10-20T02:40:20.749Z",
+ "manifestOps": [],
+ "newFiles": [],
+ "edits": [
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "from": "../🗺️window-layout/🟦️.ts",
+   "to": "../../🎓️onboarding/🗺️window-layout/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/📦️packages/🟦️typescript/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "from": "../../../../🔨️modules/🖱️ui/🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/📦️packages/🟦️typescript/🛂️manifest/🟦️.ts",
+   "from": "../../../🔨️modules/🖱️ui/🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+   "from": "../../🔨️modules/🖱️ui/🧬️contract/📋️context-menu/🟦️.ts",
+   "to": "../../🔨️modules/🛂️manifest/📋️context-menu/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+   "from": "../../🔨️modules/🖱️ui/🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🎓️onboarding/🏷️declaration/🟦️.ts",
+   "from": "../../🖱️ui/🧬️contract/🗺️window-layout/🟦️.ts",
+   "to": "../🗺️window-layout/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🎯️action-bus/🟦️.ts",
+   "from": "../🖱️ui/🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/💡️inference/🔌️service/🪟️presentation/🟦️.ts",
+   "from": "../../../🖱️ui/🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖥️platform/🟦️.ts",
+   "from": "../🖱️ui/🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖥️platform/🟦️.ts",
+   "from": "../🖱️ui/🧬️contract/🗺️window-layout/🟦️.ts",
+   "to": "../🎓️onboarding/🗺️window-layout/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧩️components/🟦️.ts",
+   "from": "../../🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧩️components/🟦️.ts",
+   "from": "../../🧬️contract/📋️context-menu/🟦️.ts",
+   "to": "../../../🛂️manifest/📋️context-menu/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📋️canvas-pick/🟦️.tsx",
+   "from": "../../../🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+   "from": "../../../🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🎯️canvas-pick-targets/🟦️.ts",
+   "from": "../../🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/♿️accessibility/🟦️.ts",
+   "from": "../../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts",
+   "from": "../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧩️component/🟦️.ts",
+   "from": "../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🔬️accessibility-projection/🟦️.ts",
+   "from": "../../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧪️number-controls/🟦️.ts",
+   "from": "../../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧪️text-controls/🟦️.ts",
+   "from": "../../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts",
+   "from": "../../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts",
+   "from": "../../../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🖼️surface/🟦️.ts",
+   "from": "../../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🛡️validation/🔬️graph/🟦️.ts",
+   "from": "../../../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🛡️validation/🟦️.ts",
+   "from": "../../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️.ts",
+   "from": "../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🔭️virtual-window/🟦️.tsx",
+   "from": "../../../🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🟦️.tsx",
+   "from": "../../🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧩️props/🟦️.ts",
+   "from": "../../../🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧪️tests/🧩️component/🟦️.tsx",
+   "from": "../../../../🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🪢️views/🟦️.tsx",
+   "from": "../../../🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Slider/🟦️.tsx",
+   "from": "../../🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪜️Stepper/🟦️.tsx",
+   "from": "../../🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🛂️manifest/🎬️action-types-and-semantics/🟦️.ts",
+   "from": "../../🖱️ui/🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🛂️manifest/📋️app-definition-refresh-and-context-menu/🟦️.ts",
+   "from": "../../🖱️ui/🧬️contract/🗺️window-layout/🟦️.ts",
+   "to": "../../🎓️onboarding/🗺️window-layout/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🛂️manifest/📋️app-definition-refresh-and-context-menu/🟦️.ts",
+   "from": "../../🖱️ui/🧬️contract/📋️context-menu/🟦️.ts",
+   "to": "../📋️context-menu/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🛂️manifest/📋️app-definition-refresh-and-context-menu/🟦️.ts",
+   "from": "../../🖱️ui/🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "../🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🛂️manifest/🟦️.ts",
+   "from": "../🖱️ui/🧬️contract/🗺️window-layout/🟦️.ts",
+   "to": "../🎓️onboarding/🗺️window-layout/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  }
+ ],
+ "fileOps": [
+  {
+   "op": "move",
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "sha256": "e8ff16627aeda3a306fbdf63a081b53556b349559db7c0710db4eef4489738bd",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "op": "move",
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🗺️window-layout/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🎓️onboarding/🗺️window-layout/🟦️.ts",
+   "sha256": "8d6efb16c05b2b08c1640b47674a03bbef6d567668c82540ac55071071d92b23",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  },
+  {
+   "op": "move",
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📋️context-menu/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🛂️manifest/📋️context-menu/🟦️.ts",
+   "sha256": "b3e1ecb7ad91b689adb8106cf4f488ae23e2f306efdbc32fad2f741ca555476a",
+   "wave": "d5b-manifest-layering",
+   "why": "layering of onboarding, manifest and ui-contract"
+  }
+ ],
+ "flags": []
+}

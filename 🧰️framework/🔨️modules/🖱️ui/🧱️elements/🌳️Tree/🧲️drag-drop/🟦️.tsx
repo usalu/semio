@@ -2,7 +2,7 @@ import * as React from "react";
 import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import { useShellScopeOptional, useShellFloatingSurfaceHost } from "../../🐚️ShellScope/🟦️.tsx";
 import { createPortal } from "react-dom";
-import { ephemeralBox } from "../../../../🫧️transient/🟦️.ts";
+import { ephemeralBox } from "@semio-tech/framework-transient";
 import type { TreeDataItem, TreeDataSection } from "../📋️data/🟦️.ts";
 
 /** 🖱️ Pointer-driven external drag when native `draggable` does not start inside scroll panels. */

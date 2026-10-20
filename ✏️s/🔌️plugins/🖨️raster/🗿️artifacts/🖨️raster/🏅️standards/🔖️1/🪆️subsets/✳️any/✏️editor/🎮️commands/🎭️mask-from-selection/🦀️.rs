@@ -10,6 +10,7 @@ use semio_framework_pixels::{editing::validate_extent, png_encoding::{EncodedPng
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 use semio_framework_value_derive::{FromValue, ToValue};
+use semio_s_artifact_raster_raster_model::RasterTransform;
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "mask-from-selection")]

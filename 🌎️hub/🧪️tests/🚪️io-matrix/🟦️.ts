@@ -34,7 +34,7 @@ import { FAULT, NOISE, awaitBeacon, click, clickUncovered, dismissIntroduction, 
 import { createKind, openSweepSpace, stagedKinds, type HubDocumentSweepOptions, type HubSweepRow } from "../🗂️document-sweep/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "@semio-tech/repo-test/acceptance/orchestration";
 import { decodeDocumentArchiveBytes } from "@semio-tech/framework-os";
-import { EXPORT_ARTIFACT_DOCUMENT_ACTION_ID, IMPORT_ARTIFACT_DOCUMENT_ACTION_ID } from "@semio-tech/framework/manifest";
+import { EXPORT_ARTIFACT_DOCUMENT_ACTION_ID, IMPORT_ARTIFACT_DOCUMENT_ACTION_ID } from "@semio-tech/framework-manifest";
 
 //#region 🔖️Pins
 /** 🧾️ A file format a third-party parser must accept; `any` sniffs the format from the downloaded file's name. */

@@ -10,7 +10,7 @@ async fn definition_declares_the_board_surface_and_body_key() {
 
 #[semio_framework_async_macros::async_test]
 async fn render_lists_real_handle_kind_and_handle_geometry() {
-    use crate::{Block2dHandleKind, Block2dHandleTemplate};
+    use semio_s_artifact_block_2d_model::{Block2dHandleKind, Block2dHandleTemplate};
     let mut document = semio_s_artifact_block_2d_io::text::snapshot::empty_block2d_snapshot();
     document.handle_kinds.push(Block2dHandleKind { id: "k1".into(), name: "k1".into(), label: "Cable".into(), color: "#ff0000".into(), default_wire_kind: "cable.link".into() });
     document.handles.push(Block2dHandleTemplate { id: "h1".into(), handle_kind: "k1".into(), angle: std::f64::consts::PI, radius: 0.5 });

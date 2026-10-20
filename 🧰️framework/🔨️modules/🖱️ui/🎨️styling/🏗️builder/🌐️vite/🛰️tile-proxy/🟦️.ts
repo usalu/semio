@@ -1,4 +1,4 @@
-import { ephemeralMap } from "../../../../../../📦️packages/🟦️typescript/🫧️transient/🟦️.ts";
+import { ephemeralMap } from "@semio-tech/framework-transient";
 import { TILE_PROXY_TRANSPORT_LIMITS_V1, type TileProxyAssetSpecV1, parseTileProxyAssetSpecV1 } from "../../../../../🖼️assets/📦️packages/🟦️typescript/🗺️tile-proxy/🟦️.ts";
 import { resolve, relative, isAbsolute } from "node:path";
 import { mkdir, writeFile } from "node:fs/promises";

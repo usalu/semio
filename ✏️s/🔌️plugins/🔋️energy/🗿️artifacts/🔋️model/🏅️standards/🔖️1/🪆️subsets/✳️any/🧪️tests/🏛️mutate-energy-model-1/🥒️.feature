@@ -277,12 +277,12 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | change-infiltration-flow-per-exterior-area-refuses | 💨️infiltration/🌫️change-flow-per-exterior-area | ⛔️refuses |
       | change-infiltration-constant-term-coefficient-applies | 🕳️leakage/🅰️change-constant-term-coefficient | ✅️applies |
       | change-infiltration-constant-term-coefficient-refuses | 🕳️leakage/🅰️change-constant-term-coefficient | ⛔️refuses |
-      | change-infiltration-temperature-term-coefficient-applies | 🅱️change-infiltration-temperature-term-coefficient | ✅️applies |
-      | change-infiltration-temperature-term-coefficient-refuses | 🅱️change-infiltration-temperature-term-coefficient | ⛔️refuses |
+      | change-infiltration-temperature-term-coefficient-applies | 🕳️leakage/🅱️change-temperature-term-coefficient | ✅️applies |
+      | change-infiltration-temperature-term-coefficient-refuses | 🕳️leakage/🅱️change-temperature-term-coefficient | ⛔️refuses |
       | change-infiltration-velocity-term-coefficient-applies | 🕳️leakage/🆎️change-velocity-term-coefficient | ✅️applies |
       | change-infiltration-velocity-term-coefficient-refuses | 🕳️leakage/🆎️change-velocity-term-coefficient | ⛔️refuses |
-      | change-infiltration-velocity-squared-term-coefficient-applies | 🆑️change-infiltration-velocity-squared-term-coefficient | ✅️applies |
-      | change-infiltration-velocity-squared-term-coefficient-refuses | 🆑️change-infiltration-velocity-squared-term-coefficient | ⛔️refuses |
+      | change-infiltration-velocity-squared-term-coefficient-applies | 🕳️leakage/🆑️change-velocity-squared-term-coefficient | ✅️applies |
+      | change-infiltration-velocity-squared-term-coefficient-refuses | 🕳️leakage/🆑️change-velocity-squared-term-coefficient | ⛔️refuses |
       | create-mechanical-ventilation-applies | 🌪️ventilation/🌪️create | ✅️applies |
       | create-mechanical-ventilation-refuses | 🌪️ventilation/🌪️create | ⛔️refuses |
       | delete-mechanical-ventilation-applies | 🌪️ventilation/🚫️delete | ✅️applies |
@@ -293,10 +293,10 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | change-mechanical-ventilation-schedule-refuses | 🌪️ventilation/📆️change-schedule | ⛔️refuses |
       | change-mechanical-ventilation-design-flow-applies | 🌪️ventilation/🚿️change-design-flow | ✅️applies |
       | change-mechanical-ventilation-design-flow-refuses | 🌪️ventilation/🚿️change-design-flow | ⛔️refuses |
-      | change-mechanical-ventilation-fan-total-efficiency-applies | 💠️change-mechanical-ventilation-fan-total-efficiency | ✅️applies |
-      | change-mechanical-ventilation-fan-total-efficiency-refuses | 💠️change-mechanical-ventilation-fan-total-efficiency | ⛔️refuses |
-      | change-mechanical-ventilation-fan-delta-pressure-applies | 🎈️change-mechanical-ventilation-fan-delta-pressure | ✅️applies |
-      | change-mechanical-ventilation-fan-delta-pressure-refuses | 🎈️change-mechanical-ventilation-fan-delta-pressure | ⛔️refuses |
+      | change-mechanical-ventilation-fan-total-efficiency-applies | 🌪️ventilation/💠️change-fan-total-efficiency | ✅️applies |
+      | change-mechanical-ventilation-fan-total-efficiency-refuses | 🌪️ventilation/💠️change-fan-total-efficiency | ⛔️refuses |
+      | change-mechanical-ventilation-fan-delta-pressure-applies | 🌪️ventilation/🎈️change-fan-delta-pressure | ✅️applies |
+      | change-mechanical-ventilation-fan-delta-pressure-refuses | 🌪️ventilation/🎈️change-fan-delta-pressure | ⛔️refuses |
       | change-infiltration-method-applies | 💨️infiltration/🔬️change-method | ✅️applies |
       | change-infiltration-method-refuses | 💨️infiltration/🔬️change-method | ⛔️refuses |
       | change-infiltration-design-flow-ach-applies | 💨️infiltration/🔄️change-design-flow-ach | ✅️applies |
@@ -327,8 +327,8 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | delete-humidistat-refuses-an-absent-one | 💧️humidistat/🏜️delete | ⛔️refuses |
       | change-humidistat-zone-moves-to-zone-two | 💧️humidistat/🏙️change-zone | ✅️moves |
       | change-humidistat-zone-refuses-an-absent-zone | 💧️humidistat/🏙️change-zone | ⛔️refuses |
-      | change-humidistat-humidifying-setpoint-schedule-repoints-humidifying | ☔️change-humidistat-humidifying-setpoint-schedule | ✅️repoints |
-      | change-humidistat-humidifying-setpoint-schedule-refuses-an-absent-one | ☔️change-humidistat-humidifying-setpoint-schedule | ⛔️refuses |
+      | change-humidistat-humidifying-setpoint-schedule-repoints-humidifying | 💧️humidistat/☔️change-humidifying-setpoint-schedule | ✅️repoints |
+      | change-humidistat-humidifying-setpoint-schedule-refuses-an-absent-one | 💧️humidistat/☔️change-humidifying-setpoint-schedule | ⛔️refuses |
       | change-humidistat-dehumidifying-setpoint-schedule-repoints-drying | 💧️humidistat/🏝️change-dehumidifying-setpoint-schedule | ✅️repoints |
       | change-humidistat-dehumidifying-setpoint-schedule-refuses-an-absent-one | 💧️humidistat/🏝️change-dehumidifying-setpoint-schedule | ⛔️refuses |
       | change-humidistat-humidifying-throttle-range-widens-the-band | 💧️humidistat/🌧️change-humidifying-throttle-range | ✅️widens |
@@ -349,10 +349,10 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | change-ideal-loads-system-max-heating-capacity-refuses-a-stray-value | 💯️ideal-loads/⛽️change-max-heating-capacity | ⛔️refuses |
       | change-ideal-loads-system-max-cooling-capacity-caps-the-cooling | 💯️ideal-loads/🟧️change-max-cooling-capacity | ✅️caps |
       | change-ideal-loads-system-max-cooling-capacity-refuses-a-stray-value | 💯️ideal-loads/🟧️change-max-cooling-capacity | ⛔️refuses |
-      | change-ideal-loads-system-outdoor-air-per-person-ventilates-per-head | 🧍️change-ideal-loads-system-outdoor-air-per-person | ✅️ventilates |
-      | change-ideal-loads-system-outdoor-air-per-person-refuses-a-negative | 🧍️change-ideal-loads-system-outdoor-air-per-person | ⛔️refuses |
-      | change-ideal-loads-system-outdoor-air-per-area-ventilates-per-area | 🔳️change-ideal-loads-system-outdoor-air-per-area | ✅️ventilates |
-      | change-ideal-loads-system-outdoor-air-per-area-refuses-a-negative | 🔳️change-ideal-loads-system-outdoor-air-per-area | ⛔️refuses |
+      | change-ideal-loads-system-outdoor-air-per-person-ventilates-per-head | 💯️ideal-loads/🧍️change-outdoor-air-per-person | ✅️ventilates |
+      | change-ideal-loads-system-outdoor-air-per-person-refuses-a-negative | 💯️ideal-loads/🧍️change-outdoor-air-per-person | ⛔️refuses |
+      | change-ideal-loads-system-outdoor-air-per-area-ventilates-per-area | 💯️ideal-loads/🔳️change-outdoor-air-per-area | ✅️ventilates |
+      | change-ideal-loads-system-outdoor-air-per-area-refuses-a-negative | 💯️ideal-loads/🔳️change-outdoor-air-per-area | ⛔️refuses |
       | create-zone-equipment-adds-a-baseboard | 🔧️zone-equipment/🛠️create | ✅️adds |
       | create-zone-equipment-refuses-rank-zero | 🔧️zone-equipment/🛠️create | ⛔️refuses |
       | delete-zone-equipment-drops-the-baseboard | 🔧️zone-equipment/🗑️delete | ✅️drops |
@@ -884,12 +884,12 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | change-infiltration-flow-per-exterior-area-refuses | 💨️infiltration/🌫️change-flow-per-exterior-area | ⛔️refuses |
       | change-infiltration-constant-term-coefficient-applies | 🕳️leakage/🅰️change-constant-term-coefficient | ✅️applies |
       | change-infiltration-constant-term-coefficient-refuses | 🕳️leakage/🅰️change-constant-term-coefficient | ⛔️refuses |
-      | change-infiltration-temperature-term-coefficient-applies | 🅱️change-infiltration-temperature-term-coefficient | ✅️applies |
-      | change-infiltration-temperature-term-coefficient-refuses | 🅱️change-infiltration-temperature-term-coefficient | ⛔️refuses |
+      | change-infiltration-temperature-term-coefficient-applies | 🕳️leakage/🅱️change-temperature-term-coefficient | ✅️applies |
+      | change-infiltration-temperature-term-coefficient-refuses | 🕳️leakage/🅱️change-temperature-term-coefficient | ⛔️refuses |
       | change-infiltration-velocity-term-coefficient-applies | 🕳️leakage/🆎️change-velocity-term-coefficient | ✅️applies |
       | change-infiltration-velocity-term-coefficient-refuses | 🕳️leakage/🆎️change-velocity-term-coefficient | ⛔️refuses |
-      | change-infiltration-velocity-squared-term-coefficient-applies | 🆑️change-infiltration-velocity-squared-term-coefficient | ✅️applies |
-      | change-infiltration-velocity-squared-term-coefficient-refuses | 🆑️change-infiltration-velocity-squared-term-coefficient | ⛔️refuses |
+      | change-infiltration-velocity-squared-term-coefficient-applies | 🕳️leakage/🆑️change-velocity-squared-term-coefficient | ✅️applies |
+      | change-infiltration-velocity-squared-term-coefficient-refuses | 🕳️leakage/🆑️change-velocity-squared-term-coefficient | ⛔️refuses |
       | create-mechanical-ventilation-applies | 🌪️ventilation/🌪️create | ✅️applies |
       | create-mechanical-ventilation-refuses | 🌪️ventilation/🌪️create | ⛔️refuses |
       | delete-mechanical-ventilation-applies | 🌪️ventilation/🚫️delete | ✅️applies |
@@ -900,10 +900,10 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | change-mechanical-ventilation-schedule-refuses | 🌪️ventilation/📆️change-schedule | ⛔️refuses |
       | change-mechanical-ventilation-design-flow-applies | 🌪️ventilation/🚿️change-design-flow | ✅️applies |
       | change-mechanical-ventilation-design-flow-refuses | 🌪️ventilation/🚿️change-design-flow | ⛔️refuses |
-      | change-mechanical-ventilation-fan-total-efficiency-applies | 💠️change-mechanical-ventilation-fan-total-efficiency | ✅️applies |
-      | change-mechanical-ventilation-fan-total-efficiency-refuses | 💠️change-mechanical-ventilation-fan-total-efficiency | ⛔️refuses |
-      | change-mechanical-ventilation-fan-delta-pressure-applies | 🎈️change-mechanical-ventilation-fan-delta-pressure | ✅️applies |
-      | change-mechanical-ventilation-fan-delta-pressure-refuses | 🎈️change-mechanical-ventilation-fan-delta-pressure | ⛔️refuses |
+      | change-mechanical-ventilation-fan-total-efficiency-applies | 🌪️ventilation/💠️change-fan-total-efficiency | ✅️applies |
+      | change-mechanical-ventilation-fan-total-efficiency-refuses | 🌪️ventilation/💠️change-fan-total-efficiency | ⛔️refuses |
+      | change-mechanical-ventilation-fan-delta-pressure-applies | 🌪️ventilation/🎈️change-fan-delta-pressure | ✅️applies |
+      | change-mechanical-ventilation-fan-delta-pressure-refuses | 🌪️ventilation/🎈️change-fan-delta-pressure | ⛔️refuses |
       | change-infiltration-method-applies | 💨️infiltration/🔬️change-method | ✅️applies |
       | change-infiltration-method-refuses | 💨️infiltration/🔬️change-method | ⛔️refuses |
       | change-infiltration-design-flow-ach-applies | 💨️infiltration/🔄️change-design-flow-ach | ✅️applies |
@@ -934,8 +934,8 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | delete-humidistat-refuses-an-absent-one | 💧️humidistat/🏜️delete | ⛔️refuses |
       | change-humidistat-zone-moves-to-zone-two | 💧️humidistat/🏙️change-zone | ✅️moves |
       | change-humidistat-zone-refuses-an-absent-zone | 💧️humidistat/🏙️change-zone | ⛔️refuses |
-      | change-humidistat-humidifying-setpoint-schedule-repoints-humidifying | ☔️change-humidistat-humidifying-setpoint-schedule | ✅️repoints |
-      | change-humidistat-humidifying-setpoint-schedule-refuses-an-absent-one | ☔️change-humidistat-humidifying-setpoint-schedule | ⛔️refuses |
+      | change-humidistat-humidifying-setpoint-schedule-repoints-humidifying | 💧️humidistat/☔️change-humidifying-setpoint-schedule | ✅️repoints |
+      | change-humidistat-humidifying-setpoint-schedule-refuses-an-absent-one | 💧️humidistat/☔️change-humidifying-setpoint-schedule | ⛔️refuses |
       | change-humidistat-dehumidifying-setpoint-schedule-repoints-drying | 💧️humidistat/🏝️change-dehumidifying-setpoint-schedule | ✅️repoints |
       | change-humidistat-dehumidifying-setpoint-schedule-refuses-an-absent-one | 💧️humidistat/🏝️change-dehumidifying-setpoint-schedule | ⛔️refuses |
       | change-humidistat-humidifying-throttle-range-widens-the-band | 💧️humidistat/🌧️change-humidifying-throttle-range | ✅️widens |
@@ -956,10 +956,10 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | change-ideal-loads-system-max-heating-capacity-refuses-a-stray-value | 💯️ideal-loads/⛽️change-max-heating-capacity | ⛔️refuses |
       | change-ideal-loads-system-max-cooling-capacity-caps-the-cooling | 💯️ideal-loads/🟧️change-max-cooling-capacity | ✅️caps |
       | change-ideal-loads-system-max-cooling-capacity-refuses-a-stray-value | 💯️ideal-loads/🟧️change-max-cooling-capacity | ⛔️refuses |
-      | change-ideal-loads-system-outdoor-air-per-person-ventilates-per-head | 🧍️change-ideal-loads-system-outdoor-air-per-person | ✅️ventilates |
-      | change-ideal-loads-system-outdoor-air-per-person-refuses-a-negative | 🧍️change-ideal-loads-system-outdoor-air-per-person | ⛔️refuses |
-      | change-ideal-loads-system-outdoor-air-per-area-ventilates-per-area | 🔳️change-ideal-loads-system-outdoor-air-per-area | ✅️ventilates |
-      | change-ideal-loads-system-outdoor-air-per-area-refuses-a-negative | 🔳️change-ideal-loads-system-outdoor-air-per-area | ⛔️refuses |
+      | change-ideal-loads-system-outdoor-air-per-person-ventilates-per-head | 💯️ideal-loads/🧍️change-outdoor-air-per-person | ✅️ventilates |
+      | change-ideal-loads-system-outdoor-air-per-person-refuses-a-negative | 💯️ideal-loads/🧍️change-outdoor-air-per-person | ⛔️refuses |
+      | change-ideal-loads-system-outdoor-air-per-area-ventilates-per-area | 💯️ideal-loads/🔳️change-outdoor-air-per-area | ✅️ventilates |
+      | change-ideal-loads-system-outdoor-air-per-area-refuses-a-negative | 💯️ideal-loads/🔳️change-outdoor-air-per-area | ⛔️refuses |
       | create-zone-equipment-adds-a-baseboard | 🔧️zone-equipment/🛠️create | ✅️adds |
       | create-zone-equipment-refuses-rank-zero | 🔧️zone-equipment/🛠️create | ⛔️refuses |
       | delete-zone-equipment-drops-the-baseboard | 🔧️zone-equipment/🗑️delete | ✅️drops |

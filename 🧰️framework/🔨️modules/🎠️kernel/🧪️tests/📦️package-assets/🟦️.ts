@@ -17,7 +17,7 @@ import { descriptorPackageAssets, fetchDescriptorManifest } from "../../🛂️d
 import { OwnedResidentLedger } from "@semio-tech/value-ts/resident";
 import { ShardClient, type ShardBudget } from "@semio-tech/framework-actor/shard-client";
 import { fixtureOriginalWorkStock } from "@semio-tech/framework-actor/retained-turn/bootstrap/testing/fixtures";
-import { renderTextFontsFixtureUrl } from "@semio-tech/framework/ui/testing/fixtures";
+import { renderTextFontsFixtureUrl } from "@semio-tech/ui/testing/fixtures";
 import { canvasRuntimeAssetsFixtureUrl } from "@semio-tech/framework-canvas-ts/testing/fixtures";
 
 const here = dirname(fileURLToPath(import.meta.url));

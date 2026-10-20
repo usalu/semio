@@ -1,16 +1,16 @@
 import"../../../../../🧪️tests/📐️phases/🟦️.ts";
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
-import schema from "@semio-tech/framework/modules/filesystem/observation/journal/schema.json";
+import schema from "@semio-tech/framework-filesystem/observation/journal/schema.json";
 import { mkdir, mkdtemp, writeFile, rm, symlink, rename, readdir } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { createRepositoryFilesystemJournalV1 } from "../🟦️.ts";
-import { createLiveFilesystemJournalV1 } from "@semio-tech/framework/filesystem/observation/journal";
+import { createLiveFilesystemJournalV1 } from "@semio-tech/framework-filesystem/observation/journal";
 import { nxGraphSourceMembershipV2 } from "../../🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json";
-import type { FilesystemJournalChangeV1, FilesystemJournalControlV1 } from "@semio-tech/framework/filesystem/observation/journal";
+import type { FilesystemJournalChangeV1, FilesystemJournalControlV1 } from "@semio-tech/framework-filesystem/observation/journal";
 
 test("repository journal joins installed native watcher, Git census and no-follow scope", async () => {
  const artifact = process.env.SEMIO_TEST_ARTIFACT_DIR; if (!artifact) throw Error("Ticket artifact directory required");

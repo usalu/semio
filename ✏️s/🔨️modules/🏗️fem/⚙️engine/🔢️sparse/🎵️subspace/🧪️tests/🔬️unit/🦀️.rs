@@ -1,6 +1,7 @@
 use semio_s_fem_sparse::{Coo, Csr, NUMERICAL_OWNER_PAGE_BYTES, NumericalCheckpointFault, NumericalOwnerRestoreCursor, NumericalPageCursor, SPARSE_INDEX_SPACE, SPARSE_PAGE_BYTES, SparseColumns, advance_matrix_owner, advance_numerical_page_header, close_vec_owner_step, numerical_page_header, parse_numerical_page, read_checkpoint_u64};
 use super::*;
 use semio_framework_job::StepBudget;
+use semio_s_fem_sparse_ldlt::LdltRestoreCursor;
 use super::*;
 use super::*;
 use semio_s_fem_test_support::close_turn;

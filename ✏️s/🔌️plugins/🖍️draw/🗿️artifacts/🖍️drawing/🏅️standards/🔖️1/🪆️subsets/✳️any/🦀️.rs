@@ -5,13 +5,11 @@
 
 use semio_s_artifact_draw_drawing_examples::examples;
 use semio_s_artifact_draw_drawing_editor as editor;
-use semio_s_artifact_draw_drawing_io as io;
 use semio_s_artifact_draw_drawing_viewer as viewer;
 use semio_s_artifact_draw_drawing_model::DRAWING_DIALECT;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
-use crate::io;
 
 
 fn inference_descriptors() -> &'static [::semio_framework_schema_registry::ArtifactInferenceDescriptor] {
@@ -24,7 +22,7 @@ pub fn subset<A: crate::DrawingApplication>() -> SubsetDeclaration<A> {
     SubsetDeclaration {
         dialect: DRAWING_DIALECT,
         schema: SchemaDeclaration { descriptor: semio_s_artifact_draw_drawing_descriptor::drawing_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
-        io: io::io(),
+        io: crate::io(),
         viewer: viewer_surface::<viewer::DrawingViewer, A>(viewer::create_drawing_viewer()),
         editor: editor_surface::<editor::DrawingPlayApp, A>(crate::editor_manifest::create_drawing_app()),
         examples: examples(),

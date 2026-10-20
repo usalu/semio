@@ -43,6 +43,8 @@ semio-s-artifact-block-2d-mutations = { workspace = true }
 semio-s-artifact-block-2d-schema = { workspace = true }
 semio-s-plugin-block = { workspace = true }
 semio-s-plugin-block-catalog = { workspace = true }
+semio-framework-async = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-s-artifact-block-2d-mut-node-kind = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

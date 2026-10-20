@@ -2,7 +2,7 @@
 import{types}from"node:util";
 import{isAbsolute,join,resolve}from"node:path";
 import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
-import schema from"../🧬️schema/🔣️.json";
+import schema from"../🧬️schema/🔣️.json" with { type: "json" };
 const requestSchema=structuredClone(schema.definitions.Request),wheelSchema=structuredClone(schema.definitions.WheelName);
 export const STYLING_PYTHON_POLICY_V1=Object.freeze({...schema.definitions.Policy.const,environmentKeys:Object.freeze([...schema.definitions.Policy.const.environmentKeys])});
 /** 🐍️ Defines only the authored Python operation and actual build intent. */

@@ -76,7 +76,7 @@ fn prepared_document_mesh(projection: &Generation3dSnapshot) -> semio_framework_
 #[test]
 fn preview_payload_has_meshes_and_instances() {
     let _serial = test_serial();
-    let projection = semio_s_artifact_procedural_3d_model::default_snapshot();
+    let projection = semio_s_artifact_procedural_3d_io_text::snapshot::default_snapshot();
     let config = Generation3dConfig::default();
     let (meshes_json, instances_json) = preview_payload_from_evaluated_fixture(&projection.host_snapshot, &config);
     assert_ne!(meshes_json, "[]", "meshes_json was empty");
@@ -190,8 +190,8 @@ fn mesh_import_preserves_fixture_coordinates_in_an_editable_graph() {
 #[test]
 fn generation3d_mesh_bridges_round_trip_through_obj_glb_stl_codecs() {
     let _serial = test_serial();
-    use semio_framework_plugin::{GlbExporter, GlbImporter, MeshExporter, MeshImporter, ObjExporter, ObjImporter, StlExporter, StlImporter};
-    let default_projection = semio_s_artifact_procedural_3d_model::default_snapshot();
+    use semio_framework_mesh_engine::io::{GlbExporter, GlbImporter, MeshExporter, MeshImporter, ObjExporter, ObjImporter, StlExporter, StlImporter};
+    let default_projection = semio_s_artifact_procedural_3d_io_text::snapshot::default_snapshot();
     let document_json: Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&default_projection)).expect("projection json");
     let prepared = prepared_document_mesh(&default_projection);
     default_projection.retire_cold();
@@ -245,7 +245,7 @@ fn all_bundled_examples_emit_preview_meshes() {
         ("box-shell-preview", semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_BOX_SHELL),
     ];
     for (label, example_id) in cases {
-        let projection = semio_s_artifact_procedural_3d_model::example_snapshot(example_id).unwrap_or_else(|| panic!("{label}: missing projection"));
+        let projection = semio_s_artifact_procedural_3d_io_text::snapshot::example_snapshot(example_id).unwrap_or_else(|| panic!("{label}: missing projection"));
         let (meshes_json, instances_json) = preview_payload_from_evaluated_fixture(&projection.host_snapshot, &config);
         assert_ne!(meshes_json, "[]", "{label}: meshes empty; eval may have failed");
         assert_ne!(instances_json, "[]", "{label}: instances empty");
@@ -265,7 +265,7 @@ fn preview_tolerance_follows_lod_mode() {
 #[test]
 fn wireframe_show_mode_strips_shaded_triangles() {
     let _serial = test_serial();
-    let projection = semio_s_artifact_procedural_3d_model::default_snapshot();
+    let projection = semio_s_artifact_procedural_3d_io_text::snapshot::default_snapshot();
     let config = Generation3dConfig { show_mode: "wireframe".into(), ..Default::default() };
     let (meshes_json, _) = preview_payload_from_evaluated_fixture(&projection.host_snapshot, &config);
     let meshes: Vec<Value> = serde_json::from_str(&meshes_json).expect("meshes");
@@ -467,7 +467,7 @@ fn graph_marks_project_instance_hover_back_onto_its_node_and_port() {
 #[test]
 fn interaction_topology_ports_match_the_node_graph_port_ids() {
     let _serial = test_serial();
-    let projection = semio_s_artifact_procedural_3d_model::default_snapshot();
+    let projection = semio_s_artifact_procedural_3d_io_text::snapshot::default_snapshot();
     let ports_by_node = generation3d_port_ids_by_node(&projection.host_snapshot);
     assert!(!ports_by_node.is_empty(), "default fixture should project graph nodes");
     assert!(ports_by_node.values().any(|ports| !ports.is_empty()), "default fixture should project at least one port");

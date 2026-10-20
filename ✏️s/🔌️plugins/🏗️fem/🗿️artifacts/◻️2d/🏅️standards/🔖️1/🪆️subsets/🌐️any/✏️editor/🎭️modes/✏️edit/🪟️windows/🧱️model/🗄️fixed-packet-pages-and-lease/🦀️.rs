@@ -5,7 +5,7 @@ use super::*;
 //#region 👁️LiveVisualLanguage
 pub(super) const FEM2D_MOUNTED_VISUAL_OUTPUT_BYTES: usize = semio_framework_ui_scene::CANVAS2D_SNAPSHOT_PAGE_CAPACITY * CANVAS2D_SNAPSHOT_PAGE_BYTE_CAPACITY;
 
-const FEM2D_MOUNTED_VISUAL_PAGE_BYTES: usize = 4_096;
+pub const FEM2D_MOUNTED_VISUAL_PAGE_BYTES: usize = 4_096;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Fem2dVisualFreshness {
@@ -18,21 +18,21 @@ pub struct Fem2dVisualFreshness {
     pub renderer_scene_generation: u64,
 }
 
-pub(super) const FEM2D_MOUNTED_VISUAL_PAGE_COUNT: usize = FEM2D_MOUNTED_VISUAL_OUTPUT_BYTES / FEM2D_MOUNTED_VISUAL_PAGE_BYTES;
+pub const FEM2D_MOUNTED_VISUAL_PAGE_COUNT: usize = FEM2D_MOUNTED_VISUAL_OUTPUT_BYTES / FEM2D_MOUNTED_VISUAL_PAGE_BYTES;
 
 #[derive(Debug)]
-pub(super) struct Fem2dFixedPacketPages {
-    pub(super) pages: [Option<Canvas2dSnapshotPage>; FEM2D_MOUNTED_VISUAL_PAGE_COUNT],
+pub struct Fem2dFixedPacketPages {
+    pub pages: [Option<Canvas2dSnapshotPage>; FEM2D_MOUNTED_VISUAL_PAGE_COUNT],
     write_page: usize,
-    pub(super) len: usize,
+    pub len: usize,
 }
 
 impl Fem2dFixedPacketPages {
-    pub(super) fn new() -> Self {
+    pub fn new() -> Self {
         Self { pages: std::array::from_fn(|_| None), write_page: 0, len: 0 }
     }
 
-    pub(super) fn admit_page(&mut self, page: usize) -> Result<(), &'static [u8]> {
+    pub fn admit_page(&mut self, page: usize) -> Result<(), &'static [u8]> {
         let Some(owner) = self.pages.get_mut(page) else { return Err(b"fem2d.visual-page-index") };
         if owner.is_some() {
             return Err(b"fem2d.visual-page-duplicate");
@@ -41,11 +41,11 @@ impl Fem2dFixedPacketPages {
         Ok(())
     }
 
-    pub(super) fn take_page(&mut self, page: usize) -> Option<Canvas2dSnapshotPage> {
+    pub fn take_page(&mut self, page: usize) -> Option<Canvas2dSnapshotPage> {
         self.pages.get_mut(page)?.take()
     }
 
-    pub(super) fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
         let Some(page) = self.pages.iter_mut().find(|page| page.is_some()) else { return (true, 0, 0) };
         if maximum_bytes < FEM2D_MOUNTED_VISUAL_PAGE_BYTES {
             return (false, 0, 0);
@@ -54,7 +54,7 @@ impl Fem2dFixedPacketPages {
         (self.pages.iter().all(Option::is_none), 1, FEM2D_MOUNTED_VISUAL_PAGE_BYTES)
     }
 
-    pub(super) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.pages.iter().all(Option::is_none)
     }
 }

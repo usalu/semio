@@ -1,0 +1,202 @@
+{
+ "description": "Language-agnostic corpus of the staged-merge planner: toy repository files, toy staged sets (anchored replace and base-checked whole-file write) and the plan every implementation must derive.",
+ "files": {
+  "lib/a.txt": "one\ntwo\nthree\nfour\nfive\nsix\n",
+  "lib/b.txt": "base-b\n",
+  "lib/c.txt": "base-c\n",
+  "lib/d.txt": "base-d\n",
+  "lib/e.txt": "base-e\n",
+  "lib/g.txt": "base-g\n",
+  "lib/h.txt": "base-h\n",
+  "lib/f.txt": "base-f\n"
+ },
+ "sets": [
+  {
+   "id": "alpha",
+   "ops": [
+    {
+     "path": "lib/a.txt",
+     "mode": "replace",
+     "from": "one",
+     "to": "ONE"
+    }
+   ]
+  },
+  {
+   "id": "beta",
+   "ops": [
+    {
+     "path": "lib/a.txt",
+     "mode": "replace",
+     "from": "six",
+     "to": "SIX"
+    }
+   ]
+  },
+  {
+   "id": "gamma",
+   "ops": [
+    {
+     "path": "lib/b.txt",
+     "mode": "write",
+     "text": "GAMMA\n"
+    }
+   ]
+  },
+  {
+   "id": "delta",
+   "ops": [
+    {
+     "path": "lib/b.txt",
+     "mode": "replace",
+     "from": "GAMMA",
+     "to": "DELTA"
+    }
+   ]
+  },
+  {
+   "id": "epsilon",
+   "ops": [
+    {
+     "path": "lib/c.txt",
+     "mode": "write",
+     "text": "E1\n"
+    }
+   ]
+  },
+  {
+   "id": "zeta",
+   "ops": [
+    {
+     "path": "lib/c.txt",
+     "mode": "write",
+     "text": "Z1\n"
+    }
+   ]
+  },
+  {
+   "id": "eta",
+   "ops": [
+    {
+     "path": "lib/d.txt",
+     "mode": "replace",
+     "from": "base-d",
+     "to": "eta-d"
+    }
+   ],
+   "verify": [
+    "grep",
+    "-q",
+    "eta-d",
+    "{root}/lib/d.txt"
+   ]
+  },
+  {
+   "id": "theta",
+   "absent": true,
+   "ops": []
+  },
+  {
+   "id": "iota",
+   "ops": [
+    {
+     "path": "lib/f.txt",
+     "mode": "replace",
+     "from": "base-f",
+     "to": "iota-f"
+    }
+   ]
+  },
+  {
+   "id": "kappa",
+   "leaky": true,
+   "ops": [
+    {
+     "path": "lib/e.txt",
+     "mode": "replace",
+     "from": "base-e",
+     "to": "kappa-e"
+    }
+   ]
+  },
+  {
+   "id": "lambda",
+   "allowRebase": true,
+   "ops": [
+    {
+     "path": "lib/g.txt",
+     "mode": "write",
+     "text": "LAMBDA\n",
+     "staleBase": true
+    }
+   ]
+  },
+  {
+   "id": "mu",
+   "ops": [
+    {
+     "path": "lib/h.txt",
+     "mode": "replace",
+     "from": "base-h",
+     "to": "mu-h"
+    }
+   ]
+  }
+ ],
+ "after": {
+  "delta": [
+   "gamma"
+  ],
+  "iota": [
+   "theta"
+  ],
+  "mu": [
+   "zeta"
+  ]
+ },
+ "expect": {
+  "pairs": {
+   "alpha|beta": "commute",
+   "gamma|delta": "ordered",
+   "epsilon|zeta": "conflict"
+  },
+  "first": {
+   "gamma|delta": "gamma"
+  },
+  "excluded": {
+   "zeta": "conflict",
+   "theta": "not-ready",
+   "iota": "predecessor-excluded",
+   "mu": "predecessor-excluded",
+   "kappa": "blocked",
+   "lambda": "blocked"
+  },
+  "order": [
+   "alpha",
+   "beta",
+   "gamma",
+   "delta",
+   "epsilon",
+   "eta"
+  ],
+  "needs": {
+   "delta": [
+    "gamma"
+   ]
+  },
+  "final": {
+   "lib/a.txt": "ONE\ntwo\nthree\nfour\nfive\nSIX\n",
+   "lib/b.txt": "DELTA\n",
+   "lib/c.txt": "E1\n",
+   "lib/d.txt": "eta-d\n"
+  },
+  "rebased": {
+   "lambda": [
+    "--rebase"
+   ]
+  },
+  "finalRebased": {
+   "lib/g.txt": "LAMBDA\n"
+  }
+ }
+}

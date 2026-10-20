@@ -33,6 +33,9 @@ path = "../../🔨️modules/⚡️simulation/⚙️engine/🧾️results/📦�
 [workspace.dependencies.semio-s-plugin-energy-engine-site]
 path = "../../🔨️modules/⚡️simulation/⚙️engine/📍️site/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-plugin-energy-engine-sim]
+path = "../../🔨️modules/⚡️simulation/⚙️engine/🧪️sim/📦️packages/🦀️rust"
+
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"
 unused_lifetimes = "warn"

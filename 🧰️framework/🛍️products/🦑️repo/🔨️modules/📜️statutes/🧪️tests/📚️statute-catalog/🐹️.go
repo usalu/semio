@@ -14,7 +14,7 @@ import (
 
 // region 🔖️Rendering
 
-// policyOwners is the policy that first claims each statute through its territory tree.
+// 📜️policyOwners is the policy that first claims each statute through its territory tree.
 func policyOwners() map[string]string {
 	owner := map[string]string{}
 	for _, policy := range statutes.GetPolicies() {
@@ -27,7 +27,7 @@ func policyOwners() map[string]string {
 	return owner
 }
 
-// renderTerritory renders one territory and its nested territories as a flat, depth-first path list.
+// 🌐️renderTerritory renders one territory and its nested territories as a flat, depth-first path list.
 func renderTerritory(prefix string, territory model.Territory, out *[]string) {
 	path := territory.Name
 	if prefix != "" {
@@ -121,7 +121,7 @@ func theCatalogIsConsistent(_ *host.Context) (host.Outcome, error) {
 
 // region 🔖️Registration
 
-// Adapter is the registration entry point the generated host calls.
+// 🌉️Adapter is the registration entry point the generated host calls.
 func Adapter() *host.Adapter {
 	return host.NewAdapter("go").
 		Subject("the-catalog-is-one-table", theCatalogIsOneTable).

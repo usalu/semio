@@ -37,7 +37,7 @@ use semio_framework_plugin::Editor;
 use semio_framework_plugin::EditorApp;
 use semio_framework_plugin::NoConfig;
     use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members, render_registered_fixture_app, OriginalFixtureScope};
-    use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
     /// ✏️ `EquationPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
     /// `ArtifactApp` — `EditorApp<EquationPlayApp>` (SDK adapter, contract §2.1) is the real

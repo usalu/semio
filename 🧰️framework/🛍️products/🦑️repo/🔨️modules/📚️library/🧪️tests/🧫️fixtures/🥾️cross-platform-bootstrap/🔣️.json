@@ -13,7 +13,7 @@
   "cargoLinker": {
     "config": ".cargo/config.toml",
     "linuxTable": "cfg(all(target_os = \"linux\", target_env = \"gnu\"))",
-    "linuxRustflags": ["-Z", "threads=8", "-C", "linker-features=+lld", "-C", "link-self-contained=+linker", "-Z", "unstable-options"],
+    "linuxRustflags": ["-Z", "threads=0", "-C", "linker-features=+lld", "-C", "link-self-contained=+linker", "-Z", "unstable-options"],
     "forbiddenRustflagFragments": ["fuse-ld="]
   },
   "repoLocalGitConfig": [
@@ -71,6 +71,13 @@
       "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📜️script.ts",
       "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📜️script.ts",
       "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts"
-    ]
+    ],
+    "deferredImports": {
+      "source": "import { sep } from \"node:path\";\nexport const initial = sep;\nexport const load = () => import(\"./command.ts\");\n",
+      "imports": [
+        { "path": "node:path", "kind": "import-statement" },
+        { "path": "./command.ts", "kind": "dynamic-import" }
+      ]
+    }
   }
 }

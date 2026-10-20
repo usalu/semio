@@ -306,9 +306,8 @@ mod example;
 //#endregion 🪢️TaxonomyMounts
 
 //#region 🪢️Mounts
-#[cfg(test)]
-#[path = "🏷️field-meta/🧪️tests/🔬️unit/🦀️.rs"]
-mod field_meta;
+#[path = "🏷️field-meta/🦀️.rs"]
+pub mod field_meta;
 #[path = "."]
 pub mod commands {
     #[path = "🎮️commands/🩹apply-remedy/🦀️.rs"]

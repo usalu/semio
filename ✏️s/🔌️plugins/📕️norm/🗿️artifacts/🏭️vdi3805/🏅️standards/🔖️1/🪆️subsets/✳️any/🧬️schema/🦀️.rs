@@ -12,6 +12,7 @@ use std::collections::BTreeMap;
 
 use semio_s_artifact_norm_vdi3805_model::{CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ParametricGeometry, SecurityLimits};
 use ::framework_schema::ArtifactSchema;
+use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
 
 //#region 🔖️Artifact
 /// 🧬️ Full Vdi3805 artifact state across the artifact and presence lanes.

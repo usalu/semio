@@ -84,9 +84,6 @@ fn kind_catalog_item(section_id: &str, entry: &(usize, &Value), add_action: Opti
     match add_action {
         Some(action) => {
             let drag_data = puzzle5d_catalog_item_drag_data(kind_id, entry);
-            // 🌉️ `tree_item_with_action_draggable` (framework-owned, out of this ticket's
-            // scope) is typed against `semio_framework_pack_json::Value`; bridges this panel's own
-            // `semio_framework_pack_json::Value` drag payload through `DslValue` at this one call.
             let drag_data = drag_data;
             tree_item_with_action_draggable(format!("{section_id}.{index}.{kind_id}"), ui_label(catalog_kind_label(entry))?, Some(kind_id.into()), actions.action(action, Some(add_part_args(kind_id)?))?, &drag_data)
         }
@@ -104,9 +101,6 @@ fn indexed(entries: &[Value]) -> Vec<(usize, &Value)> {
 //#region 🔖️Render
 pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let catalogs = envelope.document.kind_catalogs.clone().unwrap_or(json!({}));
-    // 🧬️ None of the three 5d examples authors `kindCatalogs`, so an authored-only read renders four
-    // empty sections and makes every catalogue drop impossible; a slice the document does not author
-    // falls back to the kinds the document itself already names.
     let slice = |key: &str| match catalogs.get(key).and_then(|value| value.as_array()).cloned().unwrap_or_default() {
         entries if entries.is_empty() => puzzle5d_inferred_kind_rows(&envelope.document, key),
         entries => entries,

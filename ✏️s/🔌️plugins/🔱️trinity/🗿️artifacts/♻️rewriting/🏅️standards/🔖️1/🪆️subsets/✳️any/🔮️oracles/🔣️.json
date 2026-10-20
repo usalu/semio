@@ -59,8 +59,8 @@
       "vectors": [
         {
           "mutationId": "change-parameter-binding",
-          "sourceMutationDirectoryName": "🔧️change-parameter",
-          "mutationDirectoryName": "🔧️change-parameter",
+          "sourceMutationDirectoryName": "🔧️change-parameter-binding",
+          "mutationDirectoryName": "🔧️change-parameter-binding",
           "scenarios": [
             {
               "id": "retitles-the-caption-binding",
@@ -70,8 +70,8 @@
         },
         {
           "mutationId": "change-rule-layout-point",
-          "sourceMutationDirectoryName": "📐️change-rule-layout",
-          "mutationDirectoryName": "📐️change-rule-layout",
+          "sourceMutationDirectoryName": "📐️change-rule-layout-point",
+          "mutationDirectoryName": "📐️change-rule-layout-point",
           "scenarios": [
             {
               "id": "nudges-the-capsule-var-off-the-shaft",
@@ -125,8 +125,8 @@
         },
         {
           "mutationId": "remove-rule-layout-point",
-          "sourceMutationDirectoryName": "🗑️remove-rule-layout",
-          "mutationDirectoryName": "🗑️remove-rule-layout",
+          "sourceMutationDirectoryName": "🗑️remove-rule-layout-point",
+          "mutationDirectoryName": "🗑️remove-rule-layout-point",
           "scenarios": [
             {
               "id": "clears-the-shaft-layout-point",
@@ -136,8 +136,8 @@
         },
         {
           "mutationId": "drag-rule-nodes",
-          "sourceMutationDirectoryName": "🫳️drag-rule",
-          "mutationDirectoryName": "🫳️drag-rule",
+          "sourceMutationDirectoryName": "🫳️drag-rule-nodes",
+          "mutationDirectoryName": "🫳️drag-rule-nodes",
           "scenarios": [
             {
               "id": "drags-two-rule-nodes",
@@ -147,8 +147,8 @@
         },
         {
           "mutationId": "set-rule-layout-points",
-          "sourceMutationDirectoryName": "📍️set-rule-layout",
-          "mutationDirectoryName": "📍️set-rule-layout",
+          "sourceMutationDirectoryName": "📍️set-rule-layout-points",
+          "mutationDirectoryName": "📍️set-rule-layout-points",
           "scenarios": [
             {
               "id": "places-one-rule-node-and-clears-one",

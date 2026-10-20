@@ -9,7 +9,7 @@ async fn primary_asset_is_nonempty() {
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     use crate::schema::inferences::NoteInference;
-    use crate::NoteSnapshot;
+    use semio_s_artifact_note_note_schema::NoteSnapshot;
     use protocol::Inference;
     let snapshot = NoteSnapshot::default();
     assert_eq!(NoteInference::infer(&snapshot).expect("valid materialized inference fixture"), NoteInference::infer(&snapshot).expect("valid materialized inference fixture"));
@@ -18,7 +18,6 @@ async fn inference_determinism_law() {
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
     use crate::schema::inferences::NoteInference;
-    use crate::NoteSnapshot;
     use protocol::Inference;
     assert_eq!(NoteInference::infer(&NoteSnapshot::default()).expect("valid materialized inference fixture"), NoteInference::default());
 }

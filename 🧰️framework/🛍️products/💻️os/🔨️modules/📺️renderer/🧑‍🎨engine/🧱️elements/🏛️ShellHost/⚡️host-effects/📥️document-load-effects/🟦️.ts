@@ -13,7 +13,12 @@ import { resolveManifestLabel } from "../../../🛠️ShellHelpers/🏷️labels
 import { coerceWireBytes } from "../../../🔌️PluginRuntime/🟦️.tsx";
 import type { ShellCoreAfterSpawnedSession } from "../../🛫️spawned-session/🟦️.ts";
 
-/** 📦️ Loads a pack and spr pair through the program's stepped archive loader with progress and cancellation. */
+/**
+ * 📦️ Loads a pack and spr pair through the program's stepped archive loader with progress and cancellation.
+ *
+ * 🚧️ `Effect::LoadDocument` is pack+spr bytes only (no JSON-text fallback exists on the wire) and loads through the
+ * stepped archive load — a program without `loadAppDocumentArchive` simply cannot receive this effect.
+ */
 export async function applyLoadDocumentEffect({ loadedPlugins, uiTerminologyRef, uiLocaleRef, historyStore, loadDocumentPair, isCurrentEffectOwner, refreshHistorySnapshot, baseSession, effect, core, effectOwner }: Pick<ShellCoreAfterSpawnedSession, "loadedPlugins" | "uiTerminologyRef" | "uiLocaleRef" | "historyStore" | "loadDocumentPair" | "isCurrentEffectOwner" | "refreshHistorySnapshot"> & {
   readonly baseSession: ActiveSession;
   readonly effect: Extract<Effect, Readonly<Record<"loadDocument", unknown>>>;

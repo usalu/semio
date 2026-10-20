@@ -3,6 +3,7 @@ use semio_s_artifact_raster_raster_model::{RasterLayerNode, RasterLayerPatch};
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_s_artifact_raster_raster_diff::{diff_patch_layer, RasterDiff};
 use semio_s_artifact_raster_raster_model::{find_layer, layer_transform};
+use semio_s_artifact_raster_raster_model::RasterTransform;
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract=::protocol)]

@@ -1,5 +1,5 @@
-import type { TutorialCameraKeyframe, TutorialCameraState, TutorialDefinition, TutorialUiSnapshot, TutorialUiChange, TutorialEvent, TutorialDocumentEvent } from "../../../../🎓️onboarding/🏷️declaration/🟦️.ts";
-import { reactHostPort } from "../../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
+import type { TutorialCameraKeyframe, TutorialCameraState, TutorialDefinition, TutorialUiSnapshot, TutorialUiChange, TutorialEvent, TutorialDocumentEvent } from "@semio-tech/framework-onboarding/declaration";
+import { reactHostPort } from "@semio-tech/ui/elements/Ports/react";
 
 //#region 🎬️TutorialEngine
 /** ⏱️ Formats a millisecond offset as `mm:ss` (floored to the second, never negative). */

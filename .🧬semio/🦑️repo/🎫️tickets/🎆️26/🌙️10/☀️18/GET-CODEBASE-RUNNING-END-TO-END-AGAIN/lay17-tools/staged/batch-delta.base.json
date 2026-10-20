@@ -1,0 +1,82 @@
+{
+ "note": "STAGED ONLY (lay17). Delta in the exports-stage batch format; merge with merge-delta.ts after the HARD FREEZE lifts, then apply with exports-stage-tools/apply.ts.",
+ "entries": [
+  {
+   "id": "L17-E001",
+   "op": "add",
+   "packageJson": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/framework-os",
+   "field": "exports",
+   "key": "./testkit/renderer-host/backbone-codec",
+   "value": "./🧪️testkit/🖥️renderer-host/📡️backbone-codec/🟦️.ts",
+   "tier": "export",
+   "apply": true,
+   "justification": {
+    "importerFiles": 1,
+    "importerEdges": 1,
+    "target": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
+    "names": [
+     "decodeAppCommand",
+     "decodeBackboneWorkerRequest",
+     "decodePackValue",
+     "encodeBackboneWorkerRequest",
+     "packUInt"
+    ],
+    "sources": [
+     "lay17: renderer-host test reads the OS backbone codec only through a declared testkit export (coordinator ruling 4)"
+    ]
+   },
+   "glueRef": [
+    "L17-G001"
+   ]
+  }
+ ],
+ "glue": [
+  {
+   "id": "L17-G001",
+   "kind": "create",
+   "path": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🧪️testkit/🖥️renderer-host/📡️backbone-codec/🟦️.ts",
+   "content": "/** 🧩️ Public `@semio-tech/framework-os/testkit/renderer-host/backbone-codec` entry: the backbone wire codec a renderer host test reads, explicit re-exports of the source module that owns each member. */\nexport { decodeAppCommand, decodeBackboneWorkerRequest, decodePackValue, encodeBackboneWorkerRequest, packUInt } from \"../../../🟦️.ts\";\n",
+   "entry": "L17-E001",
+   "targets": [
+    {
+     "path": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
+     "names": [
+      "decodeAppCommand",
+      "decodeBackboneWorkerRequest",
+      "decodePackValue",
+      "encodeBackboneWorkerRequest",
+      "packUInt"
+     ]
+    }
+   ]
+  }
+ ],
+ "rewrites": [
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🧪️tests/🔏️retained-and-store/🟦️.tsx",
+   "from": "@semio-tech/framework-os",
+   "to": "@semio-tech/framework-os/testkit/renderer-host/backbone-codec",
+   "entry": "L17-E001"
+  }
+ ],
+ "dropRewrites": [
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts",
+   "from": "@semio-tech/framework/os/modules/renderer/engine/oracles/world3d-scene-shading/script",
+   "why": "the host package script no longer imports the oracle; the oracle owns its router (lay17)"
+  }
+ ],
+ "patchGlue": [
+  {
+   "path": "🧰️framework/📦️packages/🟦️typescript/🧵️job/⏱️context/🧪️testing/🎟️caller/🧪️testing/🟦️.ts",
+   "content": "/** 🧩️ Public `@semio-tech/framework/job/context/testing/caller/testing` entry: explicit re-exports of the source module that owns each member. */\nimport \"../../../../../../../🔨️modules/🧵️job/⏱️context/🧪️testing/🎟️caller/🧪️tests/🟦️.ts\";\n",
+   "why": "side-effect module: the comment-only glue never loaded its target (registered tests would silently vanish)"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🧪️testing/📦️executable/🧪️testing/🌿️/🟦️.ts",
+   "content": "/** 🧩️ Public `@semio-tech/repo-lib/cargo/testing/executable/testing` entry: explicit re-exports of the source module that owns each member. */\nimport \"../../../../../../../🏃️process/🦀️cargo/🧪️testing/📦️executable/🧪️tests/🌿️/🟦️.ts\";\n",
+   "why": "side-effect module: the comment-only glue never loaded its target (registered tests would silently vanish)"
+  }
+ ]
+}

@@ -15,6 +15,7 @@ use semio_s_artifact_bim_model_entities::editor::bim::entities::kind_of;
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::context::{bim_app, dispatch, history_verb, render_text, view, BimApp};
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{applied, ctx, demo, run};
 use semio_framework_ui_locale::{LabelText, Locale};
+use semio_s_artifact_bim_model_bim::editor::bim::BimModelApp;
 
 fn code(result: Result<Emit<ModelMutation, NoConfigMutation>, Fault>) -> Option<String> {
     result.err().map(|fault| fault.code.0)

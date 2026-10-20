@@ -23,11 +23,12 @@ Feature: Developer surfaces share neutral command authority
     And a second successful call preserves the complete inventory
     And missing or broadened inventory policies are refused by independent JSON Schema validation
 
-  Scenario: Protected root instructions retain their explicit human constraint
-    Given the immutable root AGENTS launch sentence
-    Then only that exact sentence at that exact path has a recorded explicit override
-    And mutable README and nested agent instructions have no override
-    And the remaining protected document still validates
+  Scenario: Root agent instructions name the dashboard as the human surface
+    Given the root AGENTS document
+    Then it states once that all human devs are using the repo dashboard
+    And only that exact sentence at that exact path is modeled
+    And mutable README and nested agent instructions are not modeled
+    And the whole document validates without any editor exemption
 
   Scenario: Preserve every root runnable capability through its build owner
     Given the root project manifest and its dashboard declarations

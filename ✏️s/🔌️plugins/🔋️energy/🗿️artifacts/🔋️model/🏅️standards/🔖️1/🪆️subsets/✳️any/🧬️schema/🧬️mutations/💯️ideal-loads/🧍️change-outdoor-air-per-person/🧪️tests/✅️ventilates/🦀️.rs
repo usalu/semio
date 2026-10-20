@@ -33,7 +33,7 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
 fn case() -> Case {
     Case {
         kind: "change-ideal-loads-system-outdoor-air-per-person",
-        directory: "🧍️change-ideal-loads/✅️ventilates",
+        directory: "💯️ideal-loads/🧍️change-outdoor-air-per-person/✅️ventilates",
         before: BEFORE,
         after: AFTER,
         mutation: MUTATION,

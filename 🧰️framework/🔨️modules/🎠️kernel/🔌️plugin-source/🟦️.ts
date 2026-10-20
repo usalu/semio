@@ -60,16 +60,16 @@ async function requireServedPluginModule(sourceId: string, pluginId: string, mod
  */
 export interface PluginSource {
   readonly id: string;
-  /** Every plugin this source can currently install (built or not — the panel shows "available"
+  /** 🪛️ Every plugin this source can currently install (built or not — the panel shows "available"
    * entries that haven't finished their first build yet). */
   list(): Promise<readonly PluginRegistryEntry[]>;
-  /** Makes one install/reload of `pluginId` importable and answers its concrete module URL and stamp: a
+  /** 🧰️ Makes one install/reload of `pluginId` importable and answers its concrete module URL and stamp: a
    * local source checks the module is served and cache-busts it with `rebuiltAt` (its own boot version
    * before any `built` event, which then is the stamp); a remote source downloads and verifies it first,
    * reporting progress and honouring cancellation, and stamps it with the moment it was acquired.
    * {@link PluginModuleUnavailableError} means "not from here". */
   acquireModule(pluginId: string, rebuiltAt: number | undefined, acquisition: PluginModuleAcquisition): Promise<PluginModuleAcquired>;
-  /** Subscribes to availability events; returns an unsubscribe function. Fires an immediate `snapshot`
+  /** 👂️ Subscribes to availability events; returns an unsubscribe function. Fires an immediate `snapshot`
    * on subscribe against sources that support it (the dev source's watch stream sends one on every fresh
    * open, including after a reconnect that could not resume). */
   subscribe(listener: (event: PluginSourceEvent) => void): () => void;

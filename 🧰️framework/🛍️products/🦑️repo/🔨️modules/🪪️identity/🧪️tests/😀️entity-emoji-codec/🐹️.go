@@ -37,7 +37,7 @@ func loadEmojiVectors(ctx *host.Context) (emojiVectorFile, error) {
 	return file, err
 }
 
-// codePoints renders a string as a `U+XXXX` sequence so a projection never hides a selector.
+// 🔘️codePoints renders a string as a `U+XXXX` sequence so a projection never hides a selector.
 func codePoints(value string) string {
 	if value == "" {
 		return "-"
@@ -70,7 +70,7 @@ func theLeadingEmojiGraphemeIsUnicodes(ctx *host.Context) (host.Outcome, error) 
 
 // region 🔖️Registration
 
-// Adapter is the registration entry point the generated host calls.
+// 🌉️Adapter is the registration entry point the generated host calls.
 func Adapter() *host.Adapter {
 	return host.NewAdapter("go").
 		Subject("the-leading-emoji-grapheme-is-unicodes", theLeadingEmojiGraphemeIsUnicodes)

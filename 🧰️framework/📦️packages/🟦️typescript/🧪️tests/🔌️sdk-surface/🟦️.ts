@@ -11,11 +11,23 @@ const packageDir = resolve(import.meta.dir, "../..");
 const manifest = JSON.parse(readFileSync(join(packageDir, "package.json"), "utf8")) as { exports: Record<string, string> };
 const fixture = JSON.parse(readFileSync(join(import.meta.dir, "🧫️fixtures/🔣️.json"), "utf8")) as { facadeCases: { id: string; source: string; accept: boolean }[]; rootBarrel: string };
 
+/** 📄️ Names the local binding of a `import x from "<document>.json" with { type: "json" }` statement, or null. */
+function jsonDocumentImport(statement: ts.Statement): string | null {
+  if (!ts.isImportDeclaration(statement) || !statement.importClause?.name || statement.importClause.namedBindings || statement.importClause.isTypeOnly) return null;
+  if (!ts.isStringLiteral(statement.moduleSpecifier) || !statement.moduleSpecifier.text.endsWith(".json")) return null;
+  const typed = statement.attributes?.elements.some(attribute => attribute.name.text === "type" && ts.isStringLiteral(attribute.value) && attribute.value.text === "json");
+  return typed ? statement.importClause.name.text : null;
+}
+
 /** 🔎️ Lists every reason a facade source is not a pure explicit re-export file. */
 function facadeViolations(name: string, source: string): string[] {
   const file = ts.createSourceFile(name, source, ts.ScriptTarget.ESNext, true, ts.ScriptKind.TS);
   const out: string[] = [];
+  const documents = new Set<string>();
   for (const statement of file.statements) {
+    const document = jsonDocumentImport(statement);
+    if (document !== null) { documents.add(document); continue; }
+    if (ts.isExportAssignment(statement) && !statement.isExportEquals && ts.isIdentifier(statement.expression) && documents.has(statement.expression.text)) continue;
     if (!ts.isExportDeclaration(statement) || !statement.moduleSpecifier) { out.push(`not a re-export: ${ts.SyntaxKind[statement.kind]}`); continue; }
     if (!statement.exportClause) out.push("export * is not explicit");
     else if (ts.isNamespaceExport(statement.exportClause)) out.push("namespace re-export is not explicit");

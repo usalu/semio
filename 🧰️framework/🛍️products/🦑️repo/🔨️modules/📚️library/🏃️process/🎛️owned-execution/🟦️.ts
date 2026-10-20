@@ -5,7 +5,7 @@ import {runOwnedCommand,type OwnedCommandOptions} from "../../../../../../🔨�
 import {advanceScriptInvocation,checkScriptInvocation,type ScriptInvocation,type ScriptProgress} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {scriptInvocationEnvironment} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../📦️packages/🟦️typescript/🧬️schema/🟦️.ts";
-import schema from "./📥️invocation/🧬️schema/🔣️.json";
+import schema from "./📥️invocation/🧬️schema/🔣️.json" with { type: "json" };
 import type {RepositoryCommandPolicyV1,RepositoryCommandOptionsV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 
 /** 🔐️ Admits complete Repository command declarations without installing a default owner. */

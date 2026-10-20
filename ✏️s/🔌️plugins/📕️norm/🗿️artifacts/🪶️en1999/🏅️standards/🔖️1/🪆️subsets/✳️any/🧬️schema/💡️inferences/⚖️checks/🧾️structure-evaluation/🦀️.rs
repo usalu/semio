@@ -67,87 +67,6 @@ pub fn evaluate_structure(doc: &En1999Snapshot) -> CheckReport {
     push_duplicate_id_fails(&mut report, annex, "coldFormed", "Cold-formed sheet", "Kaltprofil", doc.cold_formed.iter().map(|s| s.id.clone()));
     push_duplicate_id_fails(&mut report, annex, "shells", "Shell", "Schale", doc.shells.iter().map(|s| s.id.clone()));
 
-    fn push_action_field_fails(report: &mut CheckReport, annex: AnnexChoice, owner_path: &str, owner_id: &str, actions: &[semio_s_artifact_norm_en1999_model::MemberAction]) {
-        const KINDS: &[&str] = &["permanent", "imposed", "snow", "wind", "temperature", "fire"];
-        const CATS: &[&str] = &["self", "office", "snow", "wind", "residential", "A", "B", "congregation", "C", "retail", "D", "storage", "E", "snow_high", "temperature", "fire"];
-        const SOURCES: &[&str] = &["udl", "external"];
-        for a in actions {
-            let base = format!("{owner_path}[id={owner_id}].actions[id={}]", a.id);
-            if !KINDS.contains(&a.kind.as_str()) {
-                report.push(CheckResult::assess(
-                    format!("en1999.ref.action.kind.{owner_id}.{}", a.id),
-                    "DIN EN 1990",
-                    ClauseId::new("EN 1990", "§6", "6.10"),
-                    SubjectRef::new(owner_id, format!("{base}.kind"), loc("Action kind", "Einwirkungsart")),
-                    loc("Action kind", "Einwirkungsart"),
-                ).status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
-                .explanation(loc(&format!("Unknown action kind '{}'.", a.kind), &format!("Unbekannte Einwirkungsart '{}'.", a.kind)))
-                .annex(annex)
-                .remedy(Remedy::one_of(SubjectRef::new(owner_id, format!("{base}.kind"), loc("Action kind", "Einwirkungsart")), KINDS.iter().map(|s| (*s).to_string()).collect(), loc("Pick a recognised EN 1990 action kind.", "Anerkannte EN-1990-Einwirkungsart wählen.")))
-                .build());
-            }
-            if !CATS.contains(&a.category.as_str()) {
-                report.push(CheckResult::assess(
-                    format!("en1999.ref.action.category.{owner_id}.{}", a.id),
-                    "DIN EN 1990",
-                    ClauseId::new("EN 1990", "§A1.2.2", "A.1.2.2"),
-                    SubjectRef::new(owner_id, format!("{base}.category"), loc("Action category", "Einwirkungskategorie")),
-                    loc("Action category", "Einwirkungskategorie"),
-                ).status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
-                .explanation(loc(&format!("Unknown action category '{}'.", a.category), &format!("Unbekannte Einwirkungskategorie '{}'.", a.category)))
-                .annex(annex)
-                .remedy(Remedy::one_of(SubjectRef::new(owner_id, format!("{base}.category"), loc("Action category", "Einwirkungskategorie")), CATS.iter().map(|s| (*s).to_string()).collect(), loc("Pick a recognised ψ-category.", "Anerkannte ψ-Kategorie wählen.")))
-                .build());
-            }
-            if !SOURCES.contains(&a.source.as_str()) {
-                report.push(CheckResult::assess(
-                    format!("en1999.ref.action.source.{owner_id}.{}", a.id),
-                    "DIN EN 1990",
-                    ClauseId::new("EN 1990", "§6", "6.10"),
-                    SubjectRef::new(owner_id, format!("{base}.source"), loc("Action source", "Einwirkungsquelle")),
-                    loc("Action source", "Einwirkungsquelle"),
-                ).status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
-                .explanation(loc(&format!("Unknown action source '{}'.", a.source), &format!("Unbekannte Einwirkungsquelle '{}'.", a.source)))
-                .annex(annex)
-                .remedy(Remedy::one_of(SubjectRef::new(owner_id, format!("{base}.source"), loc("Action source", "Einwirkungsquelle")), SOURCES.iter().map(|s| (*s).to_string()).collect(), loc("Pick udl or external.", "udl oder external wählen.")))
-                .build());
-            }
-            let permanent = a.kind == "permanent";
-            let self_cat = a.category == "self";
-            if permanent && !self_cat && CATS.contains(&a.category.as_str()) {
-                report.push(CheckResult::assess(
-                    format!("en1999.ref.action.category.kind.{owner_id}.{}", a.id),
-                    "DIN EN 1990",
-                    ClauseId::new("EN 1990", "§A1.2.2", "A.1.2.2"),
-                    SubjectRef::new(owner_id, format!("{base}.category"), loc("Action category", "Einwirkungskategorie")),
-                    loc("Permanent action category", "Kategorie ständiger Einwirkung"),
-                ).status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
-                .explanation(loc(
-                    &format!("Permanent action '{}' must use category 'self', not '{}'.", a.id, a.category),
-                    &format!("Ständige Einwirkung '{}' muss Kategorie 'self' nutzen, nicht '{}'.", a.id, a.category),
-                ))
-                .annex(annex)
-                .remedy(Remedy::one_of(SubjectRef::new(owner_id, format!("{base}.category"), loc("Action category", "Einwirkungskategorie")), vec!["self".into()], loc("Set category to self for permanent actions.", "Kategorie self für ständige Einwirkungen setzen.")))
-                .build());
-            }
-            if !permanent && self_cat {
-                report.push(CheckResult::assess(
-                    format!("en1999.ref.action.category.variable.{owner_id}.{}", a.id),
-                    "DIN EN 1990",
-                    ClauseId::new("EN 1990", "§A1.2.2", "A.1.2.2"),
-                    SubjectRef::new(owner_id, format!("{base}.category"), loc("Action category", "Einwirkungskategorie")),
-                    loc("Variable action category", "Kategorie veränderlicher Einwirkung"),
-                ).status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
-                .explanation(loc(
-                    &format!("Variable action '{}' cannot use permanent category 'self'.", a.id),
-                    &format!("Veränderliche Einwirkung '{}' darf nicht Kategorie 'self' nutzen.", a.id),
-                ))
-                .annex(annex)
-                .remedy(Remedy::one_of(SubjectRef::new(owner_id, format!("{base}.category"), loc("Action category", "Einwirkungskategorie")), vec!["office".into(), "snow".into(), "wind".into(), "storage".into()], loc("Pick a variable ψ-category.", "Veränderliche ψ-Kategorie wählen.")))
-                .build());
-            }
-        }
-    }
 
     for m in &doc.members { push_action_field_fails(&mut report, annex, "members", &m.id, &m.actions); }
     for c in &doc.connections { push_action_field_fails(&mut report, annex, "connections", &c.id, &c.actions); }
@@ -382,5 +301,87 @@ pub fn evaluate_structure(doc: &En1999Snapshot) -> CheckReport {
     }
 
     report
+}
+
+fn push_action_field_fails(report: &mut CheckReport, annex: AnnexChoice, owner_path: &str, owner_id: &str, actions: &[semio_s_artifact_norm_en1999_model::MemberAction]) {
+    const KINDS: &[&str] = &["permanent", "imposed", "snow", "wind", "temperature", "fire"];
+    const CATS: &[&str] = &["self", "office", "snow", "wind", "residential", "A", "B", "congregation", "C", "retail", "D", "storage", "E", "snow_high", "temperature", "fire"];
+    const SOURCES: &[&str] = &["udl", "external"];
+    for a in actions {
+        let base = format!("{owner_path}[id={owner_id}].actions[id={}]", a.id);
+        if !KINDS.contains(&a.kind.as_str()) {
+            report.push(CheckResult::assess(
+                format!("en1999.ref.action.kind.{owner_id}.{}", a.id),
+                "DIN EN 1990",
+                ClauseId::new("EN 1990", "§6", "6.10"),
+                SubjectRef::new(owner_id, format!("{base}.kind"), loc("Action kind", "Einwirkungsart")),
+                loc("Action kind", "Einwirkungsart"),
+            ).status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
+            .explanation(loc(&format!("Unknown action kind '{}'.", a.kind), &format!("Unbekannte Einwirkungsart '{}'.", a.kind)))
+            .annex(annex)
+            .remedy(Remedy::one_of(SubjectRef::new(owner_id, format!("{base}.kind"), loc("Action kind", "Einwirkungsart")), KINDS.iter().map(|s| (*s).to_string()).collect(), loc("Pick a recognised EN 1990 action kind.", "Anerkannte EN-1990-Einwirkungsart wählen.")))
+            .build());
+        }
+        if !CATS.contains(&a.category.as_str()) {
+            report.push(CheckResult::assess(
+                format!("en1999.ref.action.category.{owner_id}.{}", a.id),
+                "DIN EN 1990",
+                ClauseId::new("EN 1990", "§A1.2.2", "A.1.2.2"),
+                SubjectRef::new(owner_id, format!("{base}.category"), loc("Action category", "Einwirkungskategorie")),
+                loc("Action category", "Einwirkungskategorie"),
+            ).status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
+            .explanation(loc(&format!("Unknown action category '{}'.", a.category), &format!("Unbekannte Einwirkungskategorie '{}'.", a.category)))
+            .annex(annex)
+            .remedy(Remedy::one_of(SubjectRef::new(owner_id, format!("{base}.category"), loc("Action category", "Einwirkungskategorie")), CATS.iter().map(|s| (*s).to_string()).collect(), loc("Pick a recognised ψ-category.", "Anerkannte ψ-Kategorie wählen.")))
+            .build());
+        }
+        if !SOURCES.contains(&a.source.as_str()) {
+            report.push(CheckResult::assess(
+                format!("en1999.ref.action.source.{owner_id}.{}", a.id),
+                "DIN EN 1990",
+                ClauseId::new("EN 1990", "§6", "6.10"),
+                SubjectRef::new(owner_id, format!("{base}.source"), loc("Action source", "Einwirkungsquelle")),
+                loc("Action source", "Einwirkungsquelle"),
+            ).status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
+            .explanation(loc(&format!("Unknown action source '{}'.", a.source), &format!("Unbekannte Einwirkungsquelle '{}'.", a.source)))
+            .annex(annex)
+            .remedy(Remedy::one_of(SubjectRef::new(owner_id, format!("{base}.source"), loc("Action source", "Einwirkungsquelle")), SOURCES.iter().map(|s| (*s).to_string()).collect(), loc("Pick udl or external.", "udl oder external wählen.")))
+            .build());
+        }
+        let permanent = a.kind == "permanent";
+        let self_cat = a.category == "self";
+        if permanent && !self_cat && CATS.contains(&a.category.as_str()) {
+            report.push(CheckResult::assess(
+                format!("en1999.ref.action.category.kind.{owner_id}.{}", a.id),
+                "DIN EN 1990",
+                ClauseId::new("EN 1990", "§A1.2.2", "A.1.2.2"),
+                SubjectRef::new(owner_id, format!("{base}.category"), loc("Action category", "Einwirkungskategorie")),
+                loc("Permanent action category", "Kategorie ständiger Einwirkung"),
+            ).status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
+            .explanation(loc(
+                &format!("Permanent action '{}' must use category 'self', not '{}'.", a.id, a.category),
+                &format!("Ständige Einwirkung '{}' muss Kategorie 'self' nutzen, nicht '{}'.", a.id, a.category),
+            ))
+            .annex(annex)
+            .remedy(Remedy::one_of(SubjectRef::new(owner_id, format!("{base}.category"), loc("Action category", "Einwirkungskategorie")), vec!["self".into()], loc("Set category to self for permanent actions.", "Kategorie self für ständige Einwirkungen setzen.")))
+            .build());
+        }
+        if !permanent && self_cat {
+            report.push(CheckResult::assess(
+                format!("en1999.ref.action.category.variable.{owner_id}.{}", a.id),
+                "DIN EN 1990",
+                ClauseId::new("EN 1990", "§A1.2.2", "A.1.2.2"),
+                SubjectRef::new(owner_id, format!("{base}.category"), loc("Action category", "Einwirkungskategorie")),
+                loc("Variable action category", "Kategorie veränderlicher Einwirkung"),
+            ).status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
+            .explanation(loc(
+                &format!("Variable action '{}' cannot use permanent category 'self'.", a.id),
+                &format!("Veränderliche Einwirkung '{}' darf nicht Kategorie 'self' nutzen.", a.id),
+            ))
+            .annex(annex)
+            .remedy(Remedy::one_of(SubjectRef::new(owner_id, format!("{base}.category"), loc("Action category", "Einwirkungskategorie")), vec!["office".into(), "snow".into(), "wind".into(), "storage".into()], loc("Pick a variable ψ-category.", "Veränderliche ψ-Kategorie wählen.")))
+            .build());
+        }
+    }
 }
 //#endregion 🔖️ComplianceHelpers

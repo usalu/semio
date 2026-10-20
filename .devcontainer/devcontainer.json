@@ -36,8 +36,8 @@
   "workspaceFolder": "/workspaces/semio",
   "onCreateCommand": ["sudo", "chown", "vscode:vscode", "/workspaces/semio/node_modules", "/workspaces/semio/.🧬semio/🦑️repo/⚡️cache", "/workspaces/semio/.cache"],
   "postCreateCommand": ["bun", "repo", "run", "workspace:setup"],
-  "postStartCommand": ["bun", "repo", "run", "workspace:setup-devcontainer-start"],
-  "postAttachCommand": ["bun", "repo", "run", "workspace:setup-devcontainer-attach"],
+  "postStartCommand": ["repo", "run", "workspace:setup-devcontainer-start"],
+  "postAttachCommand": ["repo", "run", "workspace:setup-devcontainer-attach"],
   "hostRequirements": {
     "cpus": 4,
     "memory": "8gb",
@@ -112,6 +112,7 @@
     "ELECTRON_DISABLE_SANDBOX": "1"
   },
   "remoteEnv": {
+    "PATH": "/home/vscode/.local/bin:${containerEnv:PATH}",
     "PLAYWRIGHT_BROWSERS_PATH": "${containerWorkspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright",
     "SSH_AUTH_SOCK": "/home/vscode/.ssh/semio-ssh-agent.sock"
   }

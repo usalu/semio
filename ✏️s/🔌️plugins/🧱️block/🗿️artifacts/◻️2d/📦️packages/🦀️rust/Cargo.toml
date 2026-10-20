@@ -29,6 +29,7 @@ semio-s-artifact-block-2d-io = { workspace = true }
 semio-s-artifact-block-2d-model = { workspace = true }
 semio-s-artifact-block-2d-schema = { workspace = true }
 semio-s-artifact-block-2d-viewer = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
 
 [dev-dependencies]
 pack = { workspace = true }
@@ -43,3 +44,7 @@ semio-s-artifact-block-2d-mutations = { workspace = true }
 semio-s-plugin-block = { workspace = true, features = ["test-serde"] }
 serde_json = { workspace = true }
 semio-framework-test-original-snapshot-owners = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }
+semio-s-artifact-block-2d-mut-node-kind = { workspace = true }
+semio-s-artifact-block-2d-mut-handles = { workspace = true }
+semio-s-artifact-block-2d-mut-meta = { workspace = true }
+semio-framework-schema-state = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }

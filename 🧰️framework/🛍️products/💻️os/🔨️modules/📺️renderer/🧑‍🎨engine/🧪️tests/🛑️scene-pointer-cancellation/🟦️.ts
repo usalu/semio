@@ -1,7 +1,7 @@
 
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import nodeGraphSource from "../../🧱️elements/🕸️NodeGraph/🧭️wasm-graph-surface/🟦️.tsx?raw";
+import { wasmGraphSurfaceSourceText as nodeGraphSource } from "@semio-tech/framework-os-node-graph-rs/testing/source-text/wasm-graph-surface";
 import paintSource from "../../🧱️elements/🖌️Paint2dHost/🟦️.tsx?raw";
 import textEditorSource from "../../🧱️elements/✏️TextEditor/🟦️.tsx?raw";
 import fixture from "../🧫️fixtures/🛑️scene-pointer-cancellation/🔣️.json";

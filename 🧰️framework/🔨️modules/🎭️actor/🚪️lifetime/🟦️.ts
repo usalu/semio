@@ -1,3 +1,4 @@
+/// <reference types="vitest/importMeta" />
 //#region 🚪️InstanceLifecycleWire
 export type ActorInstanceLifetime = { readonly activationGeneration: bigint; readonly instanceId: number; readonly guestLifetime: bigint };
 export type ActorInstanceOpenRequest = { readonly kind: "open"; readonly activationGeneration: bigint; readonly instanceId: number; readonly requestSequence: number };

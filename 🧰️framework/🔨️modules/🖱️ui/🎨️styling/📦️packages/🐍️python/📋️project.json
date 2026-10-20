@@ -20,7 +20,12 @@
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python",
         "command": "bun ./📜️script.ts generate"
       },
-      "cache": true,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      },
+      "cache": false,
       "outputs": [],
       "dependsOn": [
         "@semio-tech/ui-styling-tokens:generate"

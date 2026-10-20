@@ -51,7 +51,7 @@ fn every_word(s:&mut Fem3dSnapshot,word:u64){let v=f64::from_bits(word);s.analys
 #[test]fn sqlite_snapshot_fem3d_native_decode_actual_interior_owned_work(){let mut s=state();s.nodes=(0..2048).map(|n|FemNodeValue{id:n.to_string(),x:0.,y:0.,z:0.}).collect();for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(&s)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(pack::snapshot::ArtifactDsl::print_dsl(&s))};let mut interior=false;let mut cb=|p:SqliteSnapshotProgress|{if p.phase==SqliteSnapshotPhase::DecodeNative&&p.completed>=256&&p.completed<p.total{interior=true;false}else{true}};assert!(original_owners::with_decoding(|native_owner|Fem3dSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut cb,SqliteDatabaseLimits::default()), native_owner)).is_err());assert!(interior);assert!(original_owners::with_decoding(|native_owner|Fem3dSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_value_bytes:1024,..SqliteDatabaseLimits::default()}), native_owner)).is_err());}}
 
 mod public_populated_owner {
-    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::sqlite::snapshot::tests::*;
+    use super::*;
     use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
     use semio_framework_plugin::plugin_app_close_prelude::*;
     semio_framework_dispatch_macros::dyn_enum_close! {

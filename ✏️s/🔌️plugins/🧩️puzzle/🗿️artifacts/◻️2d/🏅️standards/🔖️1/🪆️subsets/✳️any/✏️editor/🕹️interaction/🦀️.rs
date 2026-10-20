@@ -265,3 +265,21 @@ pub fn puzzle2d_restore_brush_slot(ctx: &mut Puzzle2dActionCtx<'_>, requested: O
     }
     Some(handle_id)
 }
+
+//#region 📡️ProximityConnect
+/// 📡️ The programmatic twin of the drop-time auto-connect: connects one node's (or the live
+/// selection's) open handles to whatever compatible open handle is inside `radius`.
+pub fn proximity_connect(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
+    let explicit: Vec<String> = args
+        .and_then(|value| value.get("nodeId").or_else(|| value.get("id")))
+        .and_then(Value::as_str)
+        .map(|id| vec![id.to_string()])
+        .unwrap_or_else(|| args.and_then(|value| value.get("ids")).and_then(Value::as_array).map(|ids| ids.iter().filter_map(Value::as_str).map(str::to_string).collect()).unwrap_or_default());
+    let node_ids = if explicit.is_empty() { ctx.selected_ids() } else { explicit };
+    if node_ids.is_empty() {
+        return;
+    }
+    let radius = args.and_then(|value| value.get("radius")).and_then(Value::as_f64).filter(|radius| radius.is_finite()).unwrap_or(ctx.scene.runtime.proximity_radius);
+    crate::editor::puzzle2d::commands::proximity_connect::puzzle2d_proximity_connect(ctx.recorder, &node_ids, radius);
+}
+//#endregion 📡️ProximityConnect

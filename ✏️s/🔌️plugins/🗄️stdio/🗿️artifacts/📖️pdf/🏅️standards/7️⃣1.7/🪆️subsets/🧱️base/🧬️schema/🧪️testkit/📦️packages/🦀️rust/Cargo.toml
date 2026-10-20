@@ -58,6 +58,7 @@ semio-s-artifact-stdio-pdf-mut-family-9 = { path = "../../../../../🖨️x/🚪
 semio-s-artifact-stdio-pdf-snapshot-2 = { path = "../../../📸️snapshot/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-tests-2 = { path = "../../../../../🧾️vt/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 
 [features]
 testkit = ["semio-s-artifact-stdio-pdf-model/testkit", "semio-s-artifact-stdio-pdf-diff/testkit", "semio-s-artifact-stdio-pdf-snapshot-2/testkit", "semio-s-artifact-stdio-pdf-inferences/testkit", "semio-s-artifact-stdio-pdf-graph-projection/testkit", "semio-s-artifact-stdio-pdf-fonts/testkit", "semio-s-artifact-stdio-pdf-mut-base-2/testkit", "semio-s-artifact-stdio-pdf-conformance-support/testkit", "semio-s-artifact-stdio-pdf-mut-base-3/testkit", "semio-s-artifact-stdio-pdf-mut-base-4/testkit", "semio-s-artifact-stdio-pdf-mut-family-5/testkit", "semio-s-artifact-stdio-pdf-mut-family-8/testkit", "semio-s-artifact-stdio-pdf-lift/testkit", "semio-s-artifact-stdio-pdf-mut-family-9/testkit", "semio-s-artifact-stdio-pdf-mut-family-10/testkit", "semio-s-artifact-stdio-pdf-mut-family-11/testkit", "semio-s-artifact-stdio-pdf-lower/testkit", "semio-s-artifact-stdio-pdf-tests-2/testkit"]

@@ -29,6 +29,8 @@ class EcmaRouteScope {
   }
 }
 
+const ECMA_ROUTE_OWNED_PROGRAM = "runScriptProgram";
+
 type EcmaRouteValue = "invalid" | "data" | "finite" | "receipt" | "module" | "closure" | "router" | "error" | "console" | "process";
 
 interface EcmaRouteValidation {
@@ -307,10 +309,20 @@ function ecmaRouteReceivedTerminal(call: EcmaExpression, scope: EcmaRouteScope, 
   return ecmaRouteTerminal({ kind: "expression", expression: arrow.body as EcmaExpression } as EcmaStatement, nested, validation, mainGuard, pattern.names[0]!);
 }
 
+/** 🪺 Accepts the bare entry of a program that owns its process birth: one argument-free call of the program imported from a sibling module. */
+function ecmaRouteOwnedProgram(call: EcmaExpression, scope: EcmaRouteScope): boolean {
+  const name = ecmaRouteIdentifier(call.callee!), binding = name ? scope.resolve(name) : undefined;
+  return binding?.kind === "import-value" && binding.imported === ECMA_ROUTE_OWNED_PROGRAM && /^\.{1,2}\/(?:[^/]+\/)*🟦️\.ts$/u.test(binding.module ?? "") && call.arguments?.length === 0;
+}
+
 function ecmaRouteTerminal(statement: EcmaStatement, scope: EcmaRouteScope, validation: EcmaRouteValidation, mainGuard = false, issued?: string): boolean {
   if (statement.kind !== "expression") return false;
   const expression = ecmaRouteUnwrap(statement.expression!);
   if (expression.kind !== "call") return false;
+  if (mainGuard && issued === undefined && ecmaRouteOwnedProgram(expression, scope)) {
+    validation.terminals++;
+    return true;
+  }
   const callee = ecmaRouteUnwrap(expression.callee!), received = ecmaRouteIdentifier(expression.callee!), receiver = received ? scope.resolve(received) : undefined;
   if (receiver?.kind === "import-value" && receiver.imported === "receiveScriptProcessInvocation") return issued === undefined && ecmaRouteReceivedTerminal(expression, scope, validation, mainGuard);
   if (mainGuard && callee.kind === "member" && callee.property === "run" && (scope.resolve(ecmaRouteIdentifier(callee.object!) ?? "")?.kind === "router" || ecmaRouteRouter(callee.object!, scope, validation))) {

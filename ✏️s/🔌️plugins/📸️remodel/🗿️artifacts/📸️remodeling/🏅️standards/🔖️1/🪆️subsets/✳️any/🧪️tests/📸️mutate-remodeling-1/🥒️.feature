@@ -125,8 +125,8 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | adds-gcp-tower-d71a54    | create-gcp                | 🧿create-gcp/📍️adds                  |
       | adds-a-quay-7569de       | create-gcp                | 🧿create-gcp/📍️adds-a-quay-7569de                     |
       | adds-a-control-298de4    | create-gcp                | 🧿create-gcp/🕳️adds                  |
-      | adds-a-rig-2df5df        | create-rig-extrinsic      | ⛓️create-rig/🔗️adds           |
-      | places-the-0d0b8d        | create-rig-extrinsic      | ⛓️create-rig/🔗️places           |
+      | adds-a-rig-2df5df        | create-rig-extrinsic      | ⛓️create-rig-extrinsic/🔗️adds           |
+      | places-the-0d0b8d        | create-rig-extrinsic      | ⛓️create-rig-extrinsic/🔗️places           |
       | adds-stream-c-458900     | create-stream             | 🌱create-stream/🎥️adds                |
       | adds-a-third-61fb5d      | create-stream             | 🌱create-stream/🛰️adds                 |
       | adds-an-unbound-2b2373   | create-stream             | 🌱create-stream/🎞️adds              |
@@ -170,8 +170,8 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | clears-the-d2f81a        | replace-trajectory        | 🛣️replace-trajectory/🧹️clears             |
       | drops-the-6436a8         | replace-trajectory        | 🛣️replace-trajectory/🕳️drops              |
       | swaps-in-a-three-49b17f  | replace-trajectory        | 🛣️replace-trajectory/🛣️swaps       |
-      | refines-the-cam-0eaef0   | update-camera-calibration | 🛠️update-camera/🔍️refines2     |
-      | refines-the-9fd25a       | update-camera-calibration | 🛠️update-camera/🔍️refines     |
+      | refines-the-cam-0eaef0   | update-camera-calibration | 🛠️update-camera-calibration/🔍️refines2     |
+      | refines-the-9fd25a       | update-camera-calibration | 🛠️update-camera-calibration/🔍️refines     |
       | raises-the-dense-ddb263  | update-dense-params       | 🌁update-dense-params/🔬️raises       |
       | sharpens-the-25044c      | update-dense-params       | 🌁update-dense-params/🧊️sharpens           |
       | switches-the-423de9      | update-feature-params     | 🌠update-feature-params/🔎️switches         |
@@ -184,8 +184,8 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | switches-to-a-kd-d6fa4b  | update-match-params       | 🪢update-match-params/🌳️switches2       |
       | doubles-the-c245d5       | update-mesh-params        | 🕸️update-mesh-params/🔳️doubles            |
       | halves-the-voxel-21b53d  | update-mesh-params        | 🕸️update-mesh-params/🔳️halves       |
-      | enables-motion-2444a3    | update-motion-params      | 🏎️update-motion/🏃️enables       |
-      | triples-the-4bb69f       | update-motion-params      | 🏎️update-motion/🏃️triples          |
+      | enables-motion-2444a3    | update-motion-params      | 🏎️update-motion-params/🏃️enables       |
+      | triples-the-4bb69f       | update-motion-params      | 🏎️update-motion-params/🏃️triples          |
       | retunes-the-cam-4ca5a2   | update-rig-extrinsic      | 🔩update-rig-extrinsic/📍️retunes2       |
       | retunes-the-675f52       | update-rig-extrinsic      | 🔩update-rig-extrinsic/📍️retunes           |
       | switches-the-7f0371      | update-sfm-params         | 🧮update-sfm-params/🎯️switches             |
@@ -220,8 +220,8 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | refuses-an-asset-cb0d4b  | create-asset              | 🧷create-asset/🚫️refuses               | mutation.invariant                     |
       | refuses-a-camera-e92a02  | create-camera-calibration | 🔭create-camera/🚫️refuses  | mutation.duplicate-id                  |
       | refuses-a-19c1ab         | create-gcp                | 🧿create-gcp/🚫️refuses-a-19c1ab                        | mutation.duplicate-id                  |
-      | refuses-a-second-95e04d  | create-rig-extrinsic      | ⛓️create-rig/🚫️refuses2      | mutation.duplicate-id                  |
-      | refuses-a-rig-cb71ba     | create-rig-extrinsic      | ⛓️create-rig/🚫️refuses         | mutation.target-missing                |
+      | refuses-a-second-95e04d  | create-rig-extrinsic      | ⛓️create-rig-extrinsic/🚫️refuses2      | mutation.duplicate-id                  |
+      | refuses-a-rig-cb71ba     | create-rig-extrinsic      | ⛓️create-rig-extrinsic/🚫️refuses         | mutation.target-missing                |
       | rejects-a-6b58da         | create-stream             | 🌱create-stream/🔂️rejects-a-6b58da                     | mutation.duplicate-id                  |
       | rejects-a-stream-aac5c2  | create-stream             | 🌱create-stream/👻️rejects              | mutation.target-missing                |
       | refuses-to-5c6f74        | delete-asset              | 🗞️delete-asset/🗺️refuses                    | mutation.target-referenced             |
@@ -241,7 +241,7 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | refuses-to-clear-30cbb5  | replace-qc                | 🧾replace-qc/🚫️refuses                 | mutation.target-missing                |
       | refuses-to-f7f40d        | replace-stream-source     | 🔁replace-stream/🚫️refuses            | mutation.target-missing                |
       | refuses-to-clear-524569  | replace-trajectory        | 🛣️replace-trajectory/🚫️refuses        | mutation.target-missing                |
-      | refuses-to-b60a39        | update-camera-calibration | 🛠️update-camera/🚫️refuses       | mutation.target-missing                |
+      | refuses-to-b60a39        | update-camera-calibration | 🛠️update-camera-calibration/🚫️refuses       | mutation.target-missing                |
       | refuses-a-d82e38         | update-feature-params     | 🌠update-feature-params/🚫️refuses             | mutation.invariant                     |
       | refuses-a-zero-fa917f    | update-geo-params         | 🌐update-geo-params/🚫️refuses            | mutation.invariant                     |
       | refuses-an-59752a        | update-ingest-params      | 🥣update-ingest-params/🚫️refuses             | mutation.invariant                     |
@@ -274,14 +274,14 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | warns-that-the-b39bab       | replace-mesh-result       | 🧱replace-mesh-result/🔁️warns        | mutation.no-op |
       | warns-that-the-56a3a9       | replace-sparse            | ⭐replace-sparse/🔁️warns             | mutation.no-op |
       | warns-that-the-8dbf82       | replace-tracks            | 🚂replace-tracks/🔁️warns             | mutation.no-op |
-      | warns-that-the-697b4f       | update-camera-calibration | 🛠️update-camera/🔁️warns | mutation.no-op |
+      | warns-that-the-697b4f       | update-camera-calibration | 🛠️update-camera-calibration/🔁️warns | mutation.no-op |
       | warns-that-the-4e65c8       | update-dense-params       | 🌁update-dense-params/🔁️warns        | mutation.no-op |
       | warns-that-the-b6b7dc       | update-feature-params     | 🌠update-feature-params/🔁️warns      | mutation.no-op |
       | warns-that-the-efc6e8       | update-geo-params         | 🌐update-geo-params/🔁️warns          | mutation.no-op |
       | warns-that-the-8eaad8       | update-ingest-params      | 🥣update-ingest-params/🔁️warns       | mutation.no-op |
       | warns-that-the-414aae       | update-match-params       | 🪢update-match-params/🔁️warns        | mutation.no-op |
       | warns-that-the-887e9f       | update-mesh-params        | 🕸️update-mesh-params/🔁️warns        | mutation.no-op |
-      | warns-that-the-83ff67       | update-motion-params      | 🏎️update-motion/🔁️warns      | mutation.no-op |
+      | warns-that-the-83ff67       | update-motion-params      | 🏎️update-motion-params/🔁️warns      | mutation.no-op |
       | warns-that-the-89422a       | update-rig-extrinsic      | 🔩update-rig-extrinsic/🔁️warns       | mutation.no-op |
       | warns-that-the-79a92a       | update-sfm-params         | 🧮update-sfm-params/🔁️warns          | mutation.no-op |
 
@@ -337,8 +337,8 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | adds-gcp-tower-d71a54    | create-gcp                | 🧿create-gcp/📍️adds                  |
       | adds-a-quay-7569de       | create-gcp                | 🧿create-gcp/📍️adds-a-quay-7569de                     |
       | adds-a-control-298de4    | create-gcp                | 🧿create-gcp/🕳️adds                  |
-      | adds-a-rig-2df5df        | create-rig-extrinsic      | ⛓️create-rig/🔗️adds           |
-      | places-the-0d0b8d        | create-rig-extrinsic      | ⛓️create-rig/🔗️places           |
+      | adds-a-rig-2df5df        | create-rig-extrinsic      | ⛓️create-rig-extrinsic/🔗️adds           |
+      | places-the-0d0b8d        | create-rig-extrinsic      | ⛓️create-rig-extrinsic/🔗️places           |
       | adds-stream-c-458900     | create-stream             | 🌱create-stream/🎥️adds                |
       | adds-a-third-61fb5d      | create-stream             | 🌱create-stream/🛰️adds                 |
       | adds-an-unbound-2b2373   | create-stream             | 🌱create-stream/🎞️adds              |
@@ -382,8 +382,8 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | clears-the-d2f81a        | replace-trajectory        | 🛣️replace-trajectory/🧹️clears             |
       | drops-the-6436a8         | replace-trajectory        | 🛣️replace-trajectory/🕳️drops              |
       | swaps-in-a-three-49b17f  | replace-trajectory        | 🛣️replace-trajectory/🛣️swaps       |
-      | refines-the-cam-0eaef0   | update-camera-calibration | 🛠️update-camera/🔍️refines2     |
-      | refines-the-9fd25a       | update-camera-calibration | 🛠️update-camera/🔍️refines     |
+      | refines-the-cam-0eaef0   | update-camera-calibration | 🛠️update-camera-calibration/🔍️refines2     |
+      | refines-the-9fd25a       | update-camera-calibration | 🛠️update-camera-calibration/🔍️refines     |
       | raises-the-dense-ddb263  | update-dense-params       | 🌁update-dense-params/🔬️raises       |
       | sharpens-the-25044c      | update-dense-params       | 🌁update-dense-params/🧊️sharpens           |
       | switches-the-423de9      | update-feature-params     | 🌠update-feature-params/🔎️switches         |
@@ -396,8 +396,8 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | switches-to-a-kd-d6fa4b  | update-match-params       | 🪢update-match-params/🌳️switches2       |
       | doubles-the-c245d5       | update-mesh-params        | 🕸️update-mesh-params/🔳️doubles            |
       | halves-the-voxel-21b53d  | update-mesh-params        | 🕸️update-mesh-params/🔳️halves       |
-      | enables-motion-2444a3    | update-motion-params      | 🏎️update-motion/🏃️enables       |
-      | triples-the-4bb69f       | update-motion-params      | 🏎️update-motion/🏃️triples          |
+      | enables-motion-2444a3    | update-motion-params      | 🏎️update-motion-params/🏃️enables       |
+      | triples-the-4bb69f       | update-motion-params      | 🏎️update-motion-params/🏃️triples          |
       | retunes-the-cam-4ca5a2   | update-rig-extrinsic      | 🔩update-rig-extrinsic/📍️retunes2       |
       | retunes-the-675f52       | update-rig-extrinsic      | 🔩update-rig-extrinsic/📍️retunes           |
       | switches-the-7f0371      | update-sfm-params         | 🧮update-sfm-params/🎯️switches             |
@@ -436,8 +436,8 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | refuses-an-asset-cb0d4b     | create-asset              | 🧷create-asset/🚫️refuses               | mutation.invariant                     |
       | refuses-a-camera-e92a02     | create-camera-calibration | 🔭create-camera/🚫️refuses  | mutation.duplicate-id                  |
       | refuses-a-19c1ab            | create-gcp                | 🧿create-gcp/🚫️refuses-a-19c1ab                        | mutation.duplicate-id                  |
-      | refuses-a-second-95e04d     | create-rig-extrinsic      | ⛓️create-rig/🚫️refuses2      | mutation.duplicate-id                  |
-      | refuses-a-rig-cb71ba        | create-rig-extrinsic      | ⛓️create-rig/🚫️refuses         | mutation.target-missing                |
+      | refuses-a-second-95e04d     | create-rig-extrinsic      | ⛓️create-rig-extrinsic/🚫️refuses2      | mutation.duplicate-id                  |
+      | refuses-a-rig-cb71ba        | create-rig-extrinsic      | ⛓️create-rig-extrinsic/🚫️refuses         | mutation.target-missing                |
       | rejects-a-6b58da            | create-stream             | 🌱create-stream/🔂️rejects-a-6b58da                     | mutation.duplicate-id                  |
       | rejects-a-stream-aac5c2     | create-stream             | 🌱create-stream/👻️rejects              | mutation.target-missing                |
       | refuses-to-5c6f74           | delete-asset              | 🗞️delete-asset/🗺️refuses                    | mutation.target-referenced             |
@@ -461,8 +461,8 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | refuses-to-f7f40d           | replace-stream-source     | 🔁replace-stream/🚫️refuses            | mutation.target-missing                |
       | warns-that-the-8dbf82       | replace-tracks            | 🚂replace-tracks/🔁️warns               | mutation.no-op                         |
       | refuses-to-clear-524569     | replace-trajectory        | 🛣️replace-trajectory/🚫️refuses        | mutation.target-missing                |
-      | refuses-to-b60a39           | update-camera-calibration | 🛠️update-camera/🚫️refuses       | mutation.target-missing                |
-      | warns-that-the-697b4f       | update-camera-calibration | 🛠️update-camera/🔁️warns   | mutation.no-op                         |
+      | refuses-to-b60a39           | update-camera-calibration | 🛠️update-camera-calibration/🚫️refuses       | mutation.target-missing                |
+      | warns-that-the-697b4f       | update-camera-calibration | 🛠️update-camera-calibration/🔁️warns   | mutation.no-op                         |
       | warns-that-the-4e65c8       | update-dense-params       | 🌁update-dense-params/🔁️warns          | mutation.no-op                         |
       | refuses-a-d82e38            | update-feature-params     | 🌠update-feature-params/🚫️refuses             | mutation.invariant                     |
       | warns-that-the-b6b7dc       | update-feature-params     | 🌠update-feature-params/🔁️warns        | mutation.no-op                         |
@@ -473,7 +473,7 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | refuses-a-ratio-65dcb9      | update-match-params       | 🪢update-match-params/🚫️refuses         | mutation.invariant                     |
       | warns-that-the-414aae       | update-match-params       | 🪢update-match-params/🔁️warns          | mutation.no-op                         |
       | warns-that-the-887e9f       | update-mesh-params        | 🕸️update-mesh-params/🔁️warns          | mutation.no-op                         |
-      | warns-that-the-83ff67       | update-motion-params      | 🏎️update-motion/🔁️warns        | mutation.no-op                         |
+      | warns-that-the-83ff67       | update-motion-params      | 🏎️update-motion-params/🔁️warns        | mutation.no-op                         |
       | refuses-to-2cfb53           | update-rig-extrinsic      | 🔩update-rig-extrinsic/🚫️refuses             | mutation.target-missing                |
       | warns-that-the-89422a       | update-rig-extrinsic      | 🔩update-rig-extrinsic/🔁️warns         | mutation.no-op                         |
       | warns-that-the-79a92a       | update-sfm-params         | 🧮update-sfm-params/🔁️warns            | mutation.no-op                         |

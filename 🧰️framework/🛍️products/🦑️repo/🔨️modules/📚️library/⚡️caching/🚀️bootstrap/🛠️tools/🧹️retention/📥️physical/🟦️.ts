@@ -22,8 +22,8 @@ import type {RepositoryToolingStoreV1} from "../../../../💾️storage/🔒️e
 import {nxAuthorizerReceiptHoldsV1,nxAuthorizerRetirementIntegrityHoldsV1} from "../../🔏️authorizers/📤️receipt/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {nxToolingInstallIdentityV1} from "../../📦️sdk/🪪️identity/🟦️.ts";
-import schema from "./🧬️schema/🔣️.json";
-import witnessSchema from "../../📥️use/🧬️schema/📥️witness.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
+import witnessSchema from "../../📥️use/🧬️schema/📥️witness.json" with { type: "json" };
 import{scriptCompilerAdmissionControlV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import type{ScriptInvocation}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type{BigIntStats}from"node:fs";
@@ -126,7 +126,7 @@ export function readSelectedToolingPlanRequestV1(value:unknown):SelectedToolingP
 /** 🎯️ Composes closed selection and canonical current Core DATA without issuing custody or changing allocation intent. */
 export function readSelectedToolingRetirementCommandV1(value:unknown):SelectedToolingRetirementCommandV1{if(!value||typeof value!=="object"||Array.isArray(value)||types.isProxy(value)||Object.getPrototypeOf(value)!==Object.prototype&&Object.getPrototypeOf(value)!==null||Reflect.ownKeys(value).length!==5)throw Error("Closed selected tooling command DATA required");const read=(key:string)=>{const row=Object.getOwnPropertyDescriptor(value,key);if(!row||!("value"in row)||!row.enumerable)throw Error("Own selected command DATA required");return row.value;},version=read("version"),operation=read("operation"),selection=readSelectedToolingRetirementIntentV1(read("selection")),parent=readNativeProtectedMaintenanceRequestV1(read("parent")),artifact=readNativeProtectedArtifactMaintenanceExpectationV1(read("artifact"));if(version!==1||operation!=="observe"&&operation!=="retire"||artifact.action!=="retain-allocation-payload"||artifact.allocation.owner!=="repository:tooling-store")throw Error("Explicit selected payload command retaining tooling allocation required");return Object.freeze({version:1,operation,selection,parent,artifact});}
 
-import{withArtifactRelativeDirectoryV1}from"../../../../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import{withArtifactRelativeDirectoryV1}from"../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 /** 🧭️ Preserves the current exact physical binding without asserting runnable authorizer validity. */
 export interface ToolingRetirementBindingReadV1{readonly version:1;readonly purpose:"preserve-current-tooling-binding";readonly path:string;readonly identity:string;readonly link:Readonly<{path:string;target:string;stamp:string}>;readonly generationStamp:string;readonly ancestors:readonly Readonly<{path:string;identity:string}>[];readonly containers:readonly Readonly<{path:string;identity:string}>[]}
 const selectedBindingReads=new WeakMap<object,Readonly<{workspace:string;context:ToolingRetirementReadContextV1;key:string}>>();

@@ -1,7 +1,7 @@
 //! ⚙️ ⚙️ Remodeling play app commands command — `set-geo-params`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use semio_s_artifact_remodel_remodeling_mut_params::standards::v1::subsets::any::schema::mutations::update_geo_params::update_geo_params;
+use semio_s_artifact_remodel_remodeling_mut_params::standards::v1::subsets::any::schema::mutations::update_geo_params;
 use semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::GeoParams;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;

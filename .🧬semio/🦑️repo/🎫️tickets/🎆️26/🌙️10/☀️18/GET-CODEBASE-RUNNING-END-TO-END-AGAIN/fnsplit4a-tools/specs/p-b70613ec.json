@@ -1,0 +1,40 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧪️tests/🧱️artifact-bootstrap-restore/🟦️.ts",
+ "function": "registerArtifactBootstrapRestoreTests",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟠️shared",
+  "doc": "/** 🟠️ The shared declarations of registerArtifactBootstrapRestoreTests. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️before",
+   "doc": "/** 🔶️ The before phase of registerArtifactBootstrapRestoreTests. */",
+   "phases": [
+    {
+     "name": "buildBeforeState",
+     "emoji": "🔷",
+     "doc": "Builds beforeEach, describe, expect, it of registerArtifactBootstrapRestoreTests.",
+     "from": 14,
+     "to": 16
+    }
+   ]
+  },
+  {
+   "dir": "🔸️artifact-bootstrap-atomic-restore",
+   "doc": "/** 🔸️ The artifact bootstrap atomic restore phase of registerArtifactBootstrapRestoreTests. */",
+   "phases": [
+    {
+     "name": "registerArtifactBootstrapAtomicRestoreTests",
+     "emoji": "🔹",
+     "doc": "Registers the artifact bootstrap atomic restore tests of registerArtifactBootstrapRestoreTests.",
+     "from": 18,
+     "to": 18
+    }
+   ]
+  }
+ ]
+}

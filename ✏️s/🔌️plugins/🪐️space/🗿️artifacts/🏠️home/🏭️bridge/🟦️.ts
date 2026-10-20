@@ -3,8 +3,8 @@ import {join} from "node:path";
 import { runRepositoryMutationBridgeScriptV1 } from "@semio-tech/framework/test/mutation/inventory/execution";
 import { runAdmittedCargoCommandV1 } from "@semio-tech/framework/process/cargo-test";
 import { findWorkspaceRoot } from "@semio-tech/framework/process/routing";
-import {receiveScriptProcessInvocation} from "@semio-tech/framework/process/routing";
-import collector from "./🔣️collector.json" with {type:"json"};
+import { receiveScriptProcessInvocation } from "@semio-tech/framework/process/routing";
+import collector from "./🔣️.json" with {type:"json"};
 
 const packageRoot=join(import.meta.dir,"📦️packages/🦀️rust"),binary="semio-space-home-mutation-bridge";
 /** 🏃️ Program of the sibling router: the former top-level body of its `📜️script.ts`, kept verbatim. */

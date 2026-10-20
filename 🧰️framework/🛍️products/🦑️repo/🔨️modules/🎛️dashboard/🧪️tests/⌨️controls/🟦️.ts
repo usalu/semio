@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import { readFileSync } from "node:fs";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
 const keymap = read("../../⚙️preferences/⌨️keymap/🔣️.json");
@@ -124,7 +125,7 @@ test("Node readline independently decodes terminal bytes into the keymap's canon
 test("every scenario of the keymap feature is proved by a test of this file and by the named Rust tests", () => {
   const feature = readFileSync(new URL("../⌨️keymap/🥒️.feature", import.meta.url), "utf8");
   const own = readFileSync(new URL(import.meta.url), "utf8");
-  const rust = ["../../⚙️preferences/⌨️keymap/🧪️tests/🔬️unit/🦀️.rs", "../../🖥️terminal/🧪️tests/🔬️unit/🦀️.rs"].map((path) => readFileSync(new URL(path, import.meta.url), "utf8")).join("\n");
+  const rust = ["../../⚙️preferences/⌨️keymap/🧪️tests/🔬️unit/🦀️.rs", "../../🖥️terminal/🧪️tests/🔬️unit/🦀️.rs"].map((path) => readModuleTreeSource(new URL(path, import.meta.url))).join("\n");
   const proofs: [string, string[], string[]][] = [
     ["Key spellings fold into one canonical key", ["an independent spelling of keys folds every vector into the same canonical form"], ["spellings_fold_into_one_canonical_key_with_a_readable_label"]],
     ["The keymap is data with action ids", ["Ajv independently validates the shipped keymap and every preference vector that binds keys"], ["shipped_defaults_resolve_per_the_shared_vectors_and_never_collide"]],

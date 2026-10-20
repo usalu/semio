@@ -25,6 +25,7 @@ semio-s-artifact-block-2d-diff = { workspace = true }
 semio-s-artifact-block-2d-model = { workspace = true }
 semio-s-artifact-block-2d-mutations = { workspace = true }
 semio-s-plugin-block = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
 
 [dev-dependencies]
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

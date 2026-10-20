@@ -35,6 +35,13 @@ use semio_s_artifact_block_2d_mut_meta::remove_author::RemoveAuthor;
 use semio_s_artifact_block_2d_mut_meta::move_camera2d::MoveCamera2d;
 use semio_s_artifact_block_2d_mut_meta::scale_camera2d::ScaleCamera2d;
 use semio_s_artifact_block_2d_mut_meta::change_meta_description::ChangeMetaDescription;
+use semio_s_artifact_block_2d_mut_handles_2::create_handle_kind::CreateHandleKind;
+use semio_s_artifact_block_2d_mut_handles_2::delete_handle_kind::DeleteHandleKind;
+use semio_s_artifact_block_2d_mut_handles_2::rename_handle_kind::RenameHandleKind;
+use semio_s_artifact_block_2d_mut_handles_2::change_handle_kind_label::ChangeHandleKindLabel;
+use semio_s_artifact_block_2d_mut_handles_2::change_handle_kind_color::ChangeHandleKindColor;
+use semio_s_artifact_block_2d_mut_meta::add_compatibility_rule::AddCompatibilityRule;
+use semio_s_artifact_block_2d_mut_meta::remove_compatibility_rule::RemoveCompatibilityRule;
 
 //#region 🔖️Store
 pub type Block2dEnvelope = store::os_store::store_schema::ArtifactEnvelope<Block2dSnapshot, Block2dMutation>;

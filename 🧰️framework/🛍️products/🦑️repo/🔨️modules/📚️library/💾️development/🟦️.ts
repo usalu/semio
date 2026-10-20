@@ -1,4 +1,4 @@
-import{withNativePersistentStateTaskV1,type NativePersistentStateV1}from"@semio-tech/process/state";
+import{withNativePersistentStateTaskV1,type NativePersistentStateV1}from"../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/💾️state/🟦️.ts";
 import{withRepositoryDevelopmentStatePartitionV1}from"../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import{readNativeCallerAuthorityV1}from"../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import{requireIssuedResourceControlInvocationV1,type ScriptInvocation}from"../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";

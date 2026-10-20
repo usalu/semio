@@ -1,0 +1,18 @@
+Feature: Reuse Complete Current Ownership Evidence
+  Scenario: A settled unchanged frontier avoids rediscovery
+    Given exact original positive and negative path states and directory projections
+    When a custody barrier rechecks unchanged physical evidence
+    Then package discovery is not rerun
+    And every policy and manifest byte remains checked
+  Scenario Outline: Source changes preserve the original ownership result
+    Given the original controlled ownership computation
+    When <change> occurs before or during recheck
+    Then <outcome> retains the complete derivation as the conservative fallback
+    Examples:
+      | change | outcome |
+      | package addition removal rename | rejection |
+      | ancestor or symlink replacement | rejection |
+      | preserved-mtime manifest rewrite | rejection |
+      | irrelevant source or generated output churn | acceptance |
+      | unsettled incomplete observation | full verification |
+      | original cancellation or final-yield mutation | refusal |

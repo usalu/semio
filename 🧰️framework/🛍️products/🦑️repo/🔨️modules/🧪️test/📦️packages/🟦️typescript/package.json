@@ -23,7 +23,8 @@
     "./acceptance/orchestration/interface-import-census": "./🎯️acceptance/📋️orchestration/🔌️interface-import-census/🟦️.ts",
     "./acceptance/orchestration/placeholder-and-job-census": "./🎯️acceptance/📋️orchestration/🧮️placeholder-and-job-census/🟦️.ts",
     "./acceptance/orchestration/artifact-neutrality": "./🎯️acceptance/📋️orchestration/🪢️artifact-neutrality/🟦️.ts",
-    "./inventory/schema.json": "./🏭️inventory/🧬️schema/🔣️json/🟦️.ts"
+    "./inventory/schema.json": "./🏭️inventory/🧬️schema/🔣️json/🟦️.ts",
+    "./tooling": "./🟨️.mjs"
   },
   "scripts": {
     "lint": "bun --cwd \"../../../../../../..\" repo run @semio-tech/repo-test:lint",
@@ -43,7 +44,8 @@
     "@semio-tech/schema-validator-ts": "workspace:*",
     "@semio-tech/schema-ts": "workspace:*",
     "@semio-tech/framework": "workspace:*",
-    "@semio-tech/framework-compiler-ts": "workspace:*"
+    "@semio-tech/framework-compiler-ts": "workspace:*",
+    "@semio-tech/framework-manifest": "workspace:*"
   },
   "_comment": "🔮️ Every dependency here is test-only by construction: this package is the repository test platform, never a production target. `clsx` is a REGISTERED ORACLE (📇️registry/🔣️.json) — `bun ./📜️script.ts dependency` fails if it ever becomes production-reachable."
 }

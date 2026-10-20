@@ -17,14 +17,15 @@ def main():
             try: done.add(json.loads(l)["file"])
             except Exception: pass
     os.makedirs(G + "/logs", exist_ok=True)
-    os.makedirs(ART, exist_ok=True)
+    ART_ = os.environ.get("TST7_ART") or ART
+    os.makedirs(ART_, exist_ok=True)
     wire = json.loads(subprocess.run(["bun", C + "/tst7-tools/envwire.ts"], cwd=ROOT, capture_output=True, text=True).stdout)
     env = dict(os.environ, NO_COLOR="1", SEMIO_REPO_ROOT=ROOT, REPO_ROOT=ROOT, SEMIO_TICKET_DIR=C, SEMIO_BUILD_MODE="prototype", **wire)
     t0 = time.time()
     todo = [f for f in files if f not in done]
     def run(f):
         if time.time() - t0 > budget: return None
-        e = dict(env, SEMIO_TEST_ARTIFACT_DIR=tempfile.mkdtemp(dir=ART, prefix="r"))
+        e = dict(env, SEMIO_TEST_ARTIFACT_DIR=tempfile.mkdtemp(dir=ART_, prefix="r"))
         s = time.time()
         try:
             p = subprocess.run(["perl", "-e", "alarm " + cap + "; exec @ARGV", "--", "bun", "test", "--timeout", "120000", "./" + f], cwd=ROOT, env=e, capture_output=True)

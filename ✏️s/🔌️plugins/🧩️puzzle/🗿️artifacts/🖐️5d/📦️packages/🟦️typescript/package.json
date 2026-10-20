@@ -1,0 +1,13 @@
+{
+  "name": "@semio-tech/puzzle-5d-ts",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./examples/concrete-forest/assets/forest": "./📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🟦️.ts",
+    "./examples/nakagin-capsule-tower/assets/tower": "./📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🟦️.ts",
+    "./examples/capsule-dream/assets/dream": "./📚️examples/🌙️capsule-dream/🖼️assets/🌙️dream/🟦️.ts"
+  },
+  "license": "LGPL-3.0-or-later",
+  "bundleKind": "library"
+}

@@ -1,0 +1,11 @@
+{
+ "version": 1,
+ "cases": [
+  {"name": "a cached task must produce what it declares", "definition": {"cache": true}, "refused": true},
+  {"name": "an uncached task may leave a declared output unwritten", "definition": {"cache": false}, "refused": false},
+  {"name": "a task without a cache declaration is not replayed", "definition": {}, "refused": false},
+  {"name": "optionalOutputs lets a cached task skip an output", "definition": {"cache": true, "metadata": {"semio": {"optionalOutputs": true}}}, "refused": false},
+  {"name": "optionalOutputs must be the boolean true", "definition": {"cache": true, "metadata": {"semio": {"optionalOutputs": "yes"}}}, "refused": true},
+  {"name": "other semio metadata does not relax the rule", "definition": {"cache": true, "metadata": {"semio": {"hermetic": {"version": 1, "tools": ["bun"]}}}}, "refused": true}
+ ]
+}

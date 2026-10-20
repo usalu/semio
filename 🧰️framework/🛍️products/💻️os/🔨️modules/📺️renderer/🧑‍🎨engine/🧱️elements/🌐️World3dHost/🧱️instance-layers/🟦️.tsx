@@ -7,7 +7,7 @@
  */
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { hopTrace } from "@semio-tech/framework/trace";
+import { hopTrace } from "@semio-tech/framework-trace";
 
 // #region 🔌️Adapters
 import { reactHostPort, type GumballHandleKind, type GumballPose, BufferGeometry, EdgesGeometry, Group } from "@semio-tech/ui-react";
@@ -15,7 +15,7 @@ import { reactHostPort, type GumballHandleKind, type GumballPose, BufferGeometry
 // #endregion 🔌️Adapters
 import { type World3dSubElementPaint } from "../📏️modelling/🟦️.tsx";
 import { type MergeMode } from "@semio-tech/framework";
-import { worldProjectionGumballPlane, WorldLayerStack, type WorldProjectionSpec } from "@semio-tech/infinite-world-r3f";
+import { worldProjectionGumballPlane, WorldLayerStack, type WorldProjectionSpec } from "@semio-tech/framework/infinite/world/r3f";
 import { type WorldEnvironmentRecord, type WorldHoverComponent, type WorldInstanceRecord, type WorldMeshData, type WorldMeshRecord, type WorldSelectionRecord } from "../🔭️scene-schema/🟦️.ts";
 import { useThree } from "../🎨️mesh-render/🟦️.tsx";
 import { type MeshStylePalette } from "../🎨️mesh-render/🖌️mesh-style-palette/🟦️.ts";
@@ -132,11 +132,11 @@ export function WorldInstancesLayer({
   readonly onGumballDrag?: (kind: GumballHandleKind, pose: GumballPose) => void;
   readonly onGumballDragEnd: (kind: GumballHandleKind, before: GumballPose, after: GumballPose) => void;
   readonly onFaceDragStart?: (args: { objectId: string; faceId: number; normal: readonly [number, number, number]; point: readonly [number, number, number]; faceExtent?: readonly [number, number] }) => void;
-  /** Live drag-preview merged component id set (null when no marquee drag is in progress). */
+  /** 🧬️ Live drag-preview merged component id set (null when no marquee drag is in progress). */
   readonly mergedComponentIds?: readonly number[] | null;
-  /** Live drag-preview merged whole-instance id set (null when no marquee drag is in progress). */
+  /** 🤝️ Live drag-preview merged whole-instance id set (null when no marquee drag is in progress). */
   readonly mergedInstanceIds?: readonly string[] | null;
-  /** Disables instance picking; passed for brush engagements so a click meant for a vortex marker can't fall through and select/gumball the underlying object instead. */
+  /** 🔳️ Disables instance picking; passed for brush engagements so a click meant for a vortex marker can't fall through and select/gumball the underlying object instead. */
   readonly blockPick?: boolean;
   readonly environment?: WorldEnvironmentRecord | null;
   readonly subElementPaint: World3dSubElementPaint;

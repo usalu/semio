@@ -6,7 +6,7 @@ import{Database}from"bun:sqlite";
 import Ajv from"ajv/dist/2020";
 import{IndexedEnergyResults,RESULT_FIELDS,RESULT_BANDS}from"../🟦️.ts";
 import small from"../🔎️indexed/🧪️tests/🧫️fixtures/🔣️.json";
-import{PayloadReadView,validatePayloadUpdate,validatePayloadContinuation,type PayloadIndexedSource,type PayloadUpdate}from"../../../../../../../../../../../../🧰️framework/🔨️modules/⏯️tool-run/📨️payload/🌊️stream/🟦️.ts";
+import{PayloadReadView,validatePayloadUpdate,validatePayloadContinuation,type PayloadIndexedSource,type PayloadUpdate}from"@semio-tech/framework/tool-run/payload/stream";
 const energy="✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📊️results";
 const stream="🧰️framework/🔨️modules/⏯️tool-run/📨️payload/🌊️stream";
 type Law={opaqueRows:number;windowRows:number;headerBytes:number;rowBytes:number;chunkBytes:number;queryIds:number[]};

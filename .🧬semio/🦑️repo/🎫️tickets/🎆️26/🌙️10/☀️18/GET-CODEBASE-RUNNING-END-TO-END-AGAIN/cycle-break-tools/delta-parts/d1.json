@@ -1,0 +1,291 @@
+{
+ "schema": "cycle-break/delta@1",
+ "stagedAt": "2026-10-20T02:12:18.625Z",
+ "manifestOps": [],
+ "newFiles": [],
+ "edits": [
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🌐️i18n/📖️source-text/🟦️.ts",
+   "from": "../../../../🌐️i18n/🟦️.ts?raw",
+   "to": "../../../../../../🌐️i18n/🟦️.ts?raw",
+   "mode": "specifier",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/⚙️configuration/🟦️.ts",
+   "from": "../../../../🧱️elements/📚️I18n/🟦️.tsx",
+   "to": "../../🧱️elements/📚️I18n/🟦️.tsx",
+   "mode": "specifier",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🎓️guidance/🟦️.ts",
+   "from": "../../../../🧱️elements/📚️I18n/🟦️.tsx",
+   "to": "../../🧱️elements/📚️I18n/🟦️.tsx",
+   "mode": "specifier",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🟦️.ts",
+   "from": "../../../🔨️modules/🗄️storage-port/🟦️.ts",
+   "to": "../🔨️modules/🗄️storage-port/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🟦️.ts",
+   "from": "../../../🧱️elements/📚️I18n/🟦️.tsx",
+   "to": "../🧱️elements/📚️I18n/🟦️.tsx",
+   "mode": "specifier",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🤝️collaboration/🟦️.ts",
+   "from": "../../../../🧱️elements/📚️I18n/🟦️.tsx",
+   "to": "../../🧱️elements/📚️I18n/🟦️.tsx",
+   "mode": "specifier",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🧩️content-hosts/🟦️.ts",
+   "from": "../../../../🧱️elements/📚️I18n/🟦️.tsx",
+   "to": "../../🧱️elements/📚️I18n/🟦️.tsx",
+   "mode": "specifier",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🧭️shell-chrome/🟦️.ts",
+   "from": "../../../../🧱️elements/📚️I18n/🟦️.tsx",
+   "to": "../../🧱️elements/📚️I18n/🟦️.tsx",
+   "mode": "specifier",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌓️appearance/🟦️.ts",
+   "from": "../../../🔨️modules/🗄️storage-port/🟦️.ts",
+   "to": "../🔨️modules/🗄️storage-port/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌓️appearance/🟦️.ts",
+   "from": "../../../📱️device/🟦️.ts",
+   "to": "../📱️device/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌓️appearance/🟦️.ts",
+   "from": "../../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts",
+   "to": "../🧱️elements/🔌️Ports/⚛️react/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌓️appearance/🟦️.ts",
+   "from": "../../../🧱️elements/🚗️UiDriver/🟦️.tsx",
+   "to": "../🧱️elements/🚗️UiDriver/🟦️.tsx",
+   "mode": "specifier",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌓️appearance/🟦️.ts",
+   "from": "../../../🔨️modules/👂️dom-event-binding/🟦️.ts",
+   "to": "../🔨️modules/👂️dom-event-binding/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌓️appearance/🟦️.ts",
+   "from": "../../../🔨️modules/📝️form-control-presentation/🟦️.ts",
+   "to": "../🔨️modules/📝️form-control-presentation/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎓️introduction/🟦️.tsx",
+   "from": "../🌐️i18n/🟦️.ts",
+   "to": "../../../🌐️i18n/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🌐️i18n.ts",
+   "from": "../../🌐️i18n/🟦️.ts",
+   "to": "../../../../🌐️i18n/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🌐️i18n/🟦️.ts",
+   "from": "../../../🌐️i18n/🟦️.ts",
+   "to": "../../../../../🌐️i18n/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🌓️appearance/🟦️.ts",
+   "from": "../../../🌓️appearance/🟦️.ts",
+   "to": "../../../../../🌓️appearance/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📱️device-context/🟦️.tsx",
+   "from": "../🌓️appearance/🟦️.ts",
+   "to": "../../../🌓️appearance/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🖥️fullscreen/🟦️.tsx",
+   "from": "../🌓️appearance/🟦️.ts",
+   "to": "../../../🌓️appearance/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗣️i18n-terminology/🟦️.ts",
+   "from": "../🌐️i18n/🟦️.ts",
+   "to": "../../../🌐️i18n/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🪞️chrome-exports/🟦️.ts",
+   "from": "../🌓️appearance/🟦️.ts",
+   "to": "../../../🌓️appearance/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🪞️chrome-exports/🟦️.ts",
+   "from": "../🌐️i18n/🟦️.ts",
+   "to": "../../../🌐️i18n/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🪟️chrome/🟦️.ts",
+   "from": "../🌓️appearance/🟦️.ts",
+   "to": "../../../🌓️appearance/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🩺️window-fault/🟦️.ts",
+   "from": "../../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🟦️.ts?raw",
+   "to": "../../../../../../../🔨️modules/🖱️ui/🌐️i18n/🟦️.ts?raw",
+   "mode": "specifier",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "file": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/tsconfig.json",
+   "from": "\"@semio-tech/ui-react/i18n\": [\"../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🟦️.ts\"]",
+   "to": "\"@semio-tech/ui-react/i18n\": [\"../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️i18n/🟦️.ts\"]",
+   "mode": "text",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "path mapping follows the moved module"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🗄️browser-prefs-persistence/🦀️.rs",
+   "from": "\"🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌓️appearance/🟦️.ts\",",
+   "to": "\"🧰️framework/🔨️modules/🖱️ui/🌓️appearance/🟦️.ts\",",
+   "mode": "text",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "storage-key census reads the moved module"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🗄️browser-prefs-persistence/🦀️.rs",
+   "from": "\"🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🟦️.ts\",",
+   "to": "\"🧰️framework/🔨️modules/🖱️ui/🌐️i18n/🟦️.ts\",",
+   "mode": "text",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "storage-key census reads the moved module"
+  }
+ ],
+ "fileOps": [
+  {
+   "op": "move",
+   "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/⚙️configuration/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🖱️ui/🌐️i18n/⚙️configuration/🟦️.ts",
+   "sha256": "af2fced7d50a278f4761bd48b433ffbd36122ccccfc04f6e1442121db0ce40b0",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "op": "move",
+   "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🎓️guidance/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🖱️ui/🌐️i18n/🎓️guidance/🟦️.ts",
+   "sha256": "a8b3f9c0959e9a52e6821de4f1c0c43311e0c0ac8522f850364356681b4e19b7",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "op": "move",
+   "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🖱️ui/🌐️i18n/🟦️.ts",
+   "sha256": "b5bb7403cab5382247c34be5c45d1b54d8f21bb32a6a8b263e33c805ea9224ba",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "op": "move",
+   "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🤝️collaboration/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🖱️ui/🌐️i18n/🤝️collaboration/🟦️.ts",
+   "sha256": "9a9571a6fd55c776a6230a1075ddc3d34ef09f445d9199cc532417a026b64841",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "op": "move",
+   "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🧩️content-hosts/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🖱️ui/🌐️i18n/🧩️content-hosts/🟦️.ts",
+   "sha256": "e4012570f716051073db2cc48ab9fa0a5841d1a2fc16958b17c7316a0914a99c",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "op": "move",
+   "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🧭️shell-chrome/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🖱️ui/🌐️i18n/🧭️shell-chrome/🟦️.ts",
+   "sha256": "b30122c0e64a1e9a8801f3b5d04521968143a6cc401be57cbbc5d5620ed77ec1",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  },
+  {
+   "op": "move",
+   "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌓️appearance/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🖱️ui/🌓️appearance/🟦️.ts",
+   "sha256": "d28e2b7a92146956aed485d2b3694c596e576fedbb6df34228c5ac3c7bcf7164",
+   "wave": "d1-ui-core-owns-appearance-i18n",
+   "why": "ui elements import appearance and i18n: they belong to ui, the react target re-exports them"
+  }
+ ],
+ "flags": []
+}

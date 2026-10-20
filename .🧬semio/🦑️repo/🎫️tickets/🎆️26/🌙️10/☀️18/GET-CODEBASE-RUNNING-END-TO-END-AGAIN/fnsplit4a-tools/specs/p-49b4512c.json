@@ -1,0 +1,66 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🛂️manifest/📥️mutation-input-schema/🟦️.ts",
+ "function": "inputSchemaReader",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟣️shared",
+  "doc": "/** 🟣️ The shared declarations of inputSchemaReader. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️root",
+   "doc": "/** 🔶️ The root phase of inputSchemaReader. */",
+   "phases": [
+    {
+     "name": "buildRootState",
+     "emoji": "🔷",
+     "doc": "Builds root, documents, active, fail of inputSchemaReader.",
+     "from": 162,
+     "to": 302
+    }
+   ]
+  },
+  {
+   "dir": "🔸️number",
+   "doc": "/** 🔸️ The number phase of inputSchemaReader. */",
+   "phases": [
+    {
+     "name": "buildNumberState",
+     "emoji": "🔹",
+     "doc": "Builds number, reference, guarded, itemSchema of inputSchemaReader.",
+     "from": 310,
+     "to": 410
+    }
+   ]
+  },
+  {
+   "dir": "🟠️value-schema",
+   "doc": "/** 🟠️ The value schema phase of inputSchemaReader. */",
+   "phases": [
+    {
+     "name": "buildValueSchemaState",
+     "emoji": "🟡",
+     "doc": "Builds valueSchema, input, members of inputSchemaReader.",
+     "from": 437,
+     "to": 577
+    }
+   ]
+  },
+  {
+   "dir": "🟢️fields",
+   "doc": "/** 🟢️ The fields phase of inputSchemaReader. */",
+   "phases": [
+    {
+     "name": "buildFieldsState",
+     "emoji": "🔵",
+     "doc": "Builds fields, union, variants, variantInputs of inputSchemaReader.",
+     "from": 584,
+     "to": 666
+    }
+   ]
+  }
+ ]
+}

@@ -1,5 +1,5 @@
-import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
-import publicSchema from"./🧬️schema/🔣️.json";
+import{validateJsonSchemaSubset}from"../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import publicSchema from"./🧬️schema/🔣️.json" with { type: "json" };
 const schema=structuredClone(publicSchema);
 export interface RustUnitSourceSnapshotRowV1{readonly path:string;readonly digest:string;readonly bytes:number}
 export interface RustUnitSourceSnapshotV1{readonly version:1;readonly expected:readonly RustUnitSourceSnapshotRowV1[];readonly observed:readonly RustUnitSourceSnapshotRowV1[]}

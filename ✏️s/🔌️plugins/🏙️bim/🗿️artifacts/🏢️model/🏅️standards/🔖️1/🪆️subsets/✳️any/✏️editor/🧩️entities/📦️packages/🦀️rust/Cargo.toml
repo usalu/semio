@@ -118,6 +118,36 @@ semio-s-artifact-stdio-pdf = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }
 semio-s-artifact-stdio-xml = { workspace = true }
 serde_json = { workspace = true, optional = true }
+semio-s-artifact-bim-model-schema = { path = "../../../../🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-28 = { path = "../../../../🧬️schema/🧬️mutations/🔭️set-view/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-tests-2 = { path = "../../../../🧬️schema/📏️authored/🔗️references/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-34 = { path = "../../../../🧬️schema/🧬️mutations/🪄️set-zone/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-104 = { path = "../../../../🧬️schema/🧬️mutations/📒️delete-sheet/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-106 = { path = "../../../../🧬️schema/🧬️mutations/📘️delete-sheet-revision/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-105 = { path = "../../../../🧬️schema/🧬️mutations/📕️delete-viewport/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-36 = { path = "../../../../🧬️schema/🧬️mutations/📑️set-sheet/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-38 = { path = "../../../../🧬️schema/🧬️mutations/📗️set-sheet-revision/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-37 = { path = "../../../../🧬️schema/🧬️mutations/📔️set-viewport/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-118 = { path = "../../../../🧬️schema/🧬️mutations/💢️delete-clash-set/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-120 = { path = "../../../../🧬️schema/🧬️mutations/📢️delete-issue/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-121 = { path = "../../../../🧬️schema/🧬️mutations/💭️delete-issue-comment/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-119 = { path = "../../../../🧬️schema/🧬️mutations/❗️delete-rule/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-52 = { path = "../../../../🧬️schema/🧬️mutations/🚥️set-clash-set/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-54 = { path = "../../../../🧬️schema/🧬️mutations/🏁️set-issue/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-55 = { path = "../../../../🧬️schema/🧬️mutations/🗨️set-issue-comment/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-53 = { path = "../../../../🧬️schema/🧬️mutations/🚦️set-rule/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-25 = { path = "../../../../🧬️schema/🧬️mutations/🎐️set-ceiling-type/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-storey-levels = { path = "../../../../🧬️schema/💡️inferences/🏢️storey-levels/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-91 = { path = "../../../../🧬️schema/🧬️mutations/🛹️set-ramp/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-176 = { path = "../../../../🧬️schema/🧬️mutations/🕹️set-opening/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-187 = { path = "../../../../🧬️schema/🧬️mutations/🪠️set-wall-sweep/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-40 = { path = "../../../../🧬️schema/🧬️mutations/🛠️set-property-template/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-42 = { path = "../../../../🧬️schema/🧬️mutations/🪆️set-family/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-43 = { path = "../../../../🧬️schema/🧬️mutations/📦️set-family-solid/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-122 = { path = "../../../../🧬️schema/🧬️mutations/🚽️delete-component/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-155 = { path = "../../../../🧬️schema/🧬️mutations/🛁️set-component/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-123 = { path = "../../../../🧬️schema/🧬️mutations/💦️delete-mep-element/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-158 = { path = "../../../../🧬️schema/🧬️mutations/💨️set-mep-element/📦️packages/🦀️rust" }
 
 [features]
 testkit = ["dep:serde_json", "dep:quick-xml", "dep:gltf", "dep:semio-framework-test-fixtures", "semio-framework-plugin/artifact-app-testing", "semio-framework-os-kernel/protocol-laws", "semio-framework-os-kernel/mutation-testing", "semio-s-artifact-bim-model-formula/testkit", "semio-s-artifact-bim-model-tests/testkit", "semio-s-artifact-bim-model-snapshot/testkit", "semio-s-artifact-bim-model-authored/testkit", "semio-s-artifact-bim-model-diff/testkit", "semio-s-artifact-bim-model-ramp-runs/testkit", "semio-s-artifact-bim-model-mut-any-4/testkit", "semio-s-artifact-bim-model-mut-any-5/testkit", "semio-s-artifact-bim-model-mut-any-17/testkit", "semio-s-artifact-bim-model-mut-any-26/testkit", "semio-s-artifact-bim-model-mut-any-27/testkit", "semio-s-artifact-bim-model-mut-any-30/testkit", "semio-s-artifact-bim-model-mut-any-35/testkit", "semio-s-artifact-bim-model-mut-any-41/testkit", "semio-s-artifact-bim-model-mut-any-50/testkit", "semio-s-artifact-bim-model-mut-any-51/testkit", "semio-s-artifact-bim-model-mut-any-63/testkit", "semio-s-artifact-bim-model-mut-any-79/testkit", "semio-s-artifact-bim-model-mut-any-86/testkit", "semio-s-artifact-bim-model-mut-any-89/testkit", "semio-s-artifact-bim-model-mut-any-94/testkit", "semio-s-artifact-bim-model-mut-any-100/testkit", "semio-s-artifact-bim-model-mut-any-102/testkit", "semio-s-artifact-bim-model-mut-any-108/testkit", "semio-s-artifact-bim-model-mut-any-115/testkit", "semio-s-artifact-bim-model-mut-any-116/testkit", "semio-s-artifact-bim-model-mut-any-117/testkit", "semio-s-artifact-bim-model-wall-layout/testkit", "semio-s-artifact-bim-model-mut-any-135/testkit", "semio-s-artifact-bim-model-mut-any-136/testkit", "semio-s-artifact-bim-model-mut-any-137/testkit", "semio-s-artifact-bim-model-mut-any-138/testkit", "semio-s-artifact-bim-model-mut-any-139/testkit", "semio-s-artifact-bim-model-mut-any-140/testkit", "semio-s-artifact-bim-model-mut-any-141/testkit", "semio-s-artifact-bim-model-mut-any-142/testkit", "semio-s-artifact-bim-model-mut-any-143/testkit", "semio-s-artifact-bim-model-mut-any-145/testkit", "semio-s-artifact-bim-model-mut-any-146/testkit", "semio-s-artifact-bim-model-mut-any-147/testkit", "semio-s-artifact-bim-model-mut-any-148/testkit", "semio-s-artifact-bim-model-mut-any-149/testkit", "semio-s-artifact-bim-model-mut-any-150/testkit", "semio-s-artifact-bim-model-mut-any-151/testkit", "semio-s-artifact-bim-model-mut-any-152/testkit", "semio-s-artifact-bim-model-mut-any-153/testkit", "semio-s-artifact-bim-model-mut-any-154/testkit", "semio-s-artifact-bim-model-mut-any-156/testkit", "semio-s-artifact-bim-model-mut-any-157/testkit", "semio-s-artifact-bim-model-spaces/testkit", "semio-s-artifact-bim-model-quantities/testkit", "semio-s-artifact-bim-model-plan-linework/testkit", "semio-s-artifact-bim-model-inferences/testkit", "semio-s-artifact-bim-model-modify/testkit", "semio-s-artifact-bim-model-sheets/testkit", "semio-s-artifact-bim-model-mut-any-174/testkit", "semio-s-artifact-bim-model-mut-any-178/testkit", "semio-s-artifact-bim-model-mut-any-186/testkit", "semio-s-artifact-bim-model-mut-any-188/testkit", "semio-s-artifact-bim-model-mut-any-190/testkit", "semio-s-artifact-bim-model-viewer/testkit"]

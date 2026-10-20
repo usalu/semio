@@ -160,9 +160,9 @@ class AddWidgetRetainedCheckScript extends BundleScript {
       change(request, row.change);
       assert.deepEqual(model(request), row.expected, row.id);
     }
-    const source = await Bun.file(new URL("🦀️.rs", root)).text();
+    const source = readModuleTreeSource(new URL("🦀️.rs", root));
     for (const witness of [
-      'const FLOW_CHILD_GROUP_TOOL_IDS: &[&str] = &["addWidget"]',
+      'pub const FLOW_CHILD_GROUP_TOOL_IDS: &[&str] = &["addWidget"',
       "struct FlowChildGroupWork",
       "impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for FlowChildGroupWork",
       "struct FlowChildGroupJobFactory",

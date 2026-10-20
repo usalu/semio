@@ -4,7 +4,7 @@ import {requireIssuedResourceControlInvocationV1,createRequestedIssuedResourceCo
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {withRepositoryCacheStoreV1} from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {readNativeCallerAuthorityV1} from "../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 /** 🧰️ Carries the actual incoming phase into paid dependency and mutable product storage. */
 export type RepositoryTypeScriptCheckOptionsV1=Omit<TypeScriptCheckOptions,"stateRoot"|"storage"|"storageControl"|"mode">;

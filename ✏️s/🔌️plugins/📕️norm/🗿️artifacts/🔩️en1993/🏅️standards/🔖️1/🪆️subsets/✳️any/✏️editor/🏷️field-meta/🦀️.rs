@@ -255,3 +255,6 @@ pub fn en1993_field_meta(path: &str) -> Option<NormFieldMeta> {
     lookup_norm_field_meta(TABLE, path)
 }
 
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

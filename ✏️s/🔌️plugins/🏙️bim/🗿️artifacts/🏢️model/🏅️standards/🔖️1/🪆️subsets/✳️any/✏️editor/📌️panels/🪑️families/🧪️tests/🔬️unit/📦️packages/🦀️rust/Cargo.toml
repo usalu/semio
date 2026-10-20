@@ -121,3 +121,5 @@ semio-s-artifact-bim-model-svg = { path = "../../../../../../../🚪️io/📤�
 semio-s-artifact-bim-model-tests = { path = "../../../../../../../🧬️schema/📸️snapshot/🕰️phases/🧪️tests/🔬️unit/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-bim-model-viewer = { path = "../../../../../../../👁️viewer/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-bim-model-wall-layout = { path = "../../../../../../../🧬️schema/💡️inferences/🧱️wall-layout/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-schema = { path = "../../../../../../../🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-incremental-tests = { path = "../../../../../../../🧬️schema/💡️inferences/🕸️model-graph/🧪️tests/📈️incremental/📦️packages/🦀️rust" }

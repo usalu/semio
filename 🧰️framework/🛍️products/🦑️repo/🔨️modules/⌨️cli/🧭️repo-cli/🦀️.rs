@@ -17,3 +17,6 @@ mod run_and_projection;
 pub use run_and_projection::{command_paths, export_records_json, graphql_roundtrip_json, hook_verb_dispatch_json, mcp_conversation, projection, render_stream_json, run, test_verb_lines_json, usage};
 
 //#endregion 🧭️RepoCli
+
+#[path = "🚪️entrypoint/🦀️.rs"]
+pub mod entrypoint;

@@ -1,4 +1,4 @@
-import { ephemeralBox, ephemeralSet, ephemeralMap } from "@semio-tech/framework/transient";
+import { ephemeralBox, ephemeralSet, ephemeralMap } from "@semio-tech/framework-transient";
 import { type StylingAppearanceName, STYLING_SEMIO_THEME } from "../../🤖️generated/🔤️tokens/🟦️.ts";
 import type { UiTheme } from "../🏛️model/🟦️.ts";
 

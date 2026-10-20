@@ -1,0 +1,12 @@
+✏️s/🔌️plugins/➗️mathematical
+✏️s/🔌️plugins/🌀️procedural
+✏️s/🔌️plugins/🎥️shooting
+✏️s/🔌️plugins/💠️lowpoly
+✏️s/🔌️plugins/📐️cad
+✏️s/🔌️plugins/📸️remodel
+✏️s/🔌️plugins/🔱️trinity
+✏️s/🔌️plugins/🖍️draw
+✏️s/🔌️plugins/🖨️raster
+✏️s/🔌️plugins/🧱️block
+✏️s/🔌️plugins/🔋️energy
+✏️s/🔌️plugins/🗄️stdio

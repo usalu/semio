@@ -4,22 +4,20 @@ import { dirname, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import Ajv from "ajv";
 import { Root } from "protobufjs";
-import { parseFem2dSupportPatch } from "../../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts";
-import { parseFem3dSupportPatch } from "../../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts";
-import { parseFemSupport as parseSupport2d } from "../../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🟦️.ts";
-import { parseFemSupport as parseSupport3d } from "../../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🟦️.ts";
 
 const owner = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const read = (path: string) => JSON.parse(readFileSync(path, "utf8"));
 
-describe("support membership and concrete snapshot schemas", () => {
-  for (const dimension of ["2d", "3d"] as const) {
+/** 🛡️ Registers the support and snapshot-schema laws of one dimension against that artifact's own parsers. */
+export function registerBoundaryFieldIntent(dimension: "2d" | "3d", parsers: { parseSupportPatch(patch: any): unknown; parseSupportRow(row: any): { fixed: unknown } }): void {
+describe(`${dimension} support membership and concrete snapshot schemas`, () => {
+  {
     const subsets = resolve(owner, `🗿️artifacts/${dimension === "2d" ? "◻️2d" : "🧊️3d"}/🏅️standards/🔖️1/🪆️subsets`);
     const ajv = new Ajv({ strict: false, strictNumbers: true, validateFormats: false });
     const support = ajv.compile(read(resolve(subsets, "🛡️boundary/🧬️schema/🧬️mutations/🩹️change-support/🧬️schema/🔣️.json")));
     const snapshot = ajv.compile(read(resolve(subsets, "🌐️any/🧬️schema/📸️snapshot/🔣️.json")));
-    const parsePatch = dimension === "2d" ? parseFem2dSupportPatch : parseFem3dSupportPatch;
-    const parseRow = dimension === "2d" ? parseSupport2d : parseSupport3d;
+    const parsePatch = parsers.parseSupportPatch;
+    const parseRow = parsers.parseSupportRow;
 
     it(`${dimension} admits canonical fixed sets and rejects permutations or duplicates`, () => {
       for (const fixed of [[], ["Tx", "Ty", "Rz"], ["Ty", "Rz"]]) {
@@ -57,3 +55,4 @@ describe("support membership and concrete snapshot schemas", () => {
     });
   }
 });
+}

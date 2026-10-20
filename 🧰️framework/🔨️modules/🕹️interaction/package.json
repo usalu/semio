@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@semio-tech/framework-interaction",
+  "version": "0.1.0",
+  "description": "framework · interaction vocabulary",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./🟦️.ts",
+    "./gesture": "./👆️gesture/🟦️.ts",
+    "./schema": "./🧬️schema/🟦️.ts",
+    "./schema.json": "./🧬️schema/🔣️.json",
+    "./testing/fixtures": "./🧪️tests/🧫️fixtures/🟦️.ts",
+    "./testing/set-laws": "./🧪️tests/🎯️set-laws/🟦️.ts"
+  },
+  "license": "LGPL-3.0-or-later",
+  "bundleKind": "library",
+  "devDependencies": {
+    "ajv": "8.20.0",
+    "three": "^0.182.0"
+  }
+}

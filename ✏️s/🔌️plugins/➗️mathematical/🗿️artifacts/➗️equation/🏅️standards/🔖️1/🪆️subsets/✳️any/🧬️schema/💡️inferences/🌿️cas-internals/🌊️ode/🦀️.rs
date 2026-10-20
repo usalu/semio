@@ -228,7 +228,7 @@ pub fn solve_linear_constant_coeff_homogeneous(coeffs: &[Rational], x: &Expr) ->
                 let alpha = b.neg().div(&a.mul(&Rational::from_i64(2, 1).unwrap()))?;
                 let disc = b.mul(&b).sub(&a.mul(&cc).mul(&Rational::from_i64(4, 1).unwrap()));
                 if !disc.numer().is_negative() {
-                    return None; // real roots reaching here would mean `factor` wasn't actually irreducible
+                    return None;
                 }
                 let beta_sq = disc.neg().div(&a.mul(&a).mul(&Rational::from_i64(4, 1).unwrap()))?;
                 let beta = crate::cas::solve::sqrt_of_rational(&beta_sq);

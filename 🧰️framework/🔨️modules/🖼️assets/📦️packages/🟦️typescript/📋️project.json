@@ -17,6 +17,11 @@
   "targets": {
     "build": {
       "executor": "repo:script",
+      "metadata": {
+        "semio": {
+          "sourceInputObservation": "freshness"
+        }
+      },
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts build",
@@ -48,6 +53,7 @@
     "check-generated": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts check-generated"
@@ -60,7 +66,12 @@
         "command": "bun ./📜️script.ts export-logo",
         "forwardAllArgs": true
       },
-      "cache": true,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      },
+      "cache": false,
       "dependsOn": [
         "generate-logo",
         "workspace:deps-browsers"

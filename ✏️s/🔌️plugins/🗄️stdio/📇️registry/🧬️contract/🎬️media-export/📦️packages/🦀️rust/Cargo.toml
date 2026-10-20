@@ -20,5 +20,6 @@ semio-framework-job = { path = "../../../../../../../../🧰️framework/🔨️
 semio-framework-job-fault-publication = { path = "../../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/📦️packages/🦀️rust" }
 semio-framework-plugin = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework = { path = "../../../../../../../../🧰️framework/📦️packages/🦀️rust" }
 
 [dev-dependencies]

@@ -7,6 +7,7 @@
 //! @see ../📏️spacing/🟦️.ts — the TypeScript twin
 
 use crate::draft::{carve, crowd_on, shoulders, Draft, Room, RATE};
+use semio_framework_pets_clearance::Body;
 use semio_framework_pets_contract::schema::{Activity, Perch, Point, Species, Ticks};
 use semio_framework_pets_kinematics::terrain::{hop_step, larger, perch_at, smaller, Flight, Hop};
 use semio_framework_pets_kinematics::trigonometry::clamp;

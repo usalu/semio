@@ -771,11 +771,11 @@
         "control": "test-immutable-root-clone",
         "groups": [
           {
-            "package": "semio-framework-value",
-            "manifest": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
-            "library": "semio_framework_value",
+            "package": "semio-framework-value-persistent",
+            "manifest": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust/Cargo.toml",
+            "library": "semio_framework_value_persistent",
             "laws": [
-              "value::snapshot_projection::immutable_clone::list_tests::persistent_list_retained_clone_preserves_original_root_without_payload_copy"
+              "immutable_clone::list_tests::persistent_list_retained_clone_preserves_original_root_without_payload_copy"
             ],
             "lawSources": [
               "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️sealed-shared-list/📋️list/🧪️tests/🦀️.rs"
@@ -818,11 +818,11 @@
         "control": "test-owned-projection",
         "groups": [
           {
-            "package": "semio-framework-value",
-            "manifest": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
-            "library": "semio_framework_value",
+            "package": "semio-framework-value-snapshot-projection",
+            "manifest": "🧰️framework/🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust/Cargo.toml",
+            "library": "semio_framework_value_snapshot_projection",
             "laws": [
-              "value::snapshot_projection::tests::owned::owned_snapshot_projection_composes_real_string_and_byte_fields_with_exact_custody"
+              "snapshot_projection::tests::owned::owned_snapshot_projection_composes_real_string_and_byte_fields_with_exact_custody"
             ],
             "lawSources": [
               "🧰️framework/🔨️modules/🌱️value/📽️projection/🧪️tests/📦️owned/🦀️.rs"
@@ -832,7 +832,7 @@
       },
       {
         "class": "RetainedUtf8CheckScript",
-        "control": "test-retained-utf",
+        "control": "test-retained-utf8",
         "groups": [
           {
             "package": "semio-framework-value",
@@ -894,7 +894,33 @@
             ]
           }
         ]
+      },
+      {
+        "class": "ImmutableProjectionCheckScript",
+        "control": "test-immutable-projection",
+        "groups": [
+          {
+            "package": "semio-framework-value-snapshot-projection",
+            "manifest": "🧰️framework/🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust/Cargo.toml",
+            "library": "semio_framework_value_snapshot_projection",
+            "laws": [
+              "snapshot_projection::tests::quick_immutable_snapshot_projection_original_root_and_every_prefix",
+              "snapshot_projection::tests::quick_immutable_snapshot_projection_bad_receipt_keeps_unadmitted_original_owner",
+              "snapshot_projection::tests::quick_immutable_snapshot_projection_composed_record_every_prefix"
+            ],
+            "lawSources": [
+              "🧰️framework/🔨️modules/🌱️value/📽️projection/🧪️tests/🦀️.rs",
+              "🧰️framework/🔨️modules/🌱️value/📽️projection/🧪️tests/🦀️.rs",
+              "🧰️framework/🔨️modules/🌱️value/📽️projection/🧪️tests/🦀️.rs"
+            ]
+          }
+        ]
       }
     ]
+  },
+  "sourceDispatch": {
+    "selector": "dispatch",
+    "target": "test-dispatch",
+    "test": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts"
   }
 }

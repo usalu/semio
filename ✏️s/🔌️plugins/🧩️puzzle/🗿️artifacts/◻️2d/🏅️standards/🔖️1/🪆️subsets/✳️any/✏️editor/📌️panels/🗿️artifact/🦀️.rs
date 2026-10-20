@@ -184,7 +184,6 @@ pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels, windows: &TreeW
         .interaction_domain(PUZZLE2D_PLAY_CONTROLLER_ID, PUZZLE2D_INTERACTION_DOMAIN)?
         .window_section_or_placeholder(windows, NODES_SECTION, Some(ui_label(labels.nodes.as_str())?), true, board_snapshot_nodes(snapshot), |node| node_row(node, snapshot, labels), ui_label(labels.none.as_str())?)?
         .window_section_or_placeholder(windows, EDGES_SECTION, Some(ui_label(labels.edges.as_str())?), false, board_snapshot_edges(snapshot), |edge| edge_row(edge, snapshot), ui_label(labels.none.as_str())?)?
-        // 🎯️ Slice 2F's own section — collapsed by default, exactly as puzzle3d collapses its target volumes.
         .window_section_or_placeholder(windows, TARGET_REGIONS_SECTION, Some(ui_label(labels.target_regions.as_str())?), false, snapshot_target_regions(snapshot), |region| target_region_row(region, labels), ui_label(labels.none.as_str())?)?
         .build()
 }

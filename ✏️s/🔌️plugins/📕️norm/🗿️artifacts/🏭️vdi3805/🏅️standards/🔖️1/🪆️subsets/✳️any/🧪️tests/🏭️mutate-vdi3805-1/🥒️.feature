@@ -56,6 +56,8 @@ Feature: Apply every typed VDI 3805 mutation against an independent Python imple
       | add-curve                    | 📈️add-curve                    | ✅apply  |
       | remove-curve                 | 📉️remove-curve                 | ✅apply  |
       | change-curve-points          | 📍️change-curve-points          | ✅apply  |
+      | remove-geometry-connection-middle | ✂️remove-geometry-connection   | 🧭️middle |
+      | remove-product-middle        | 🗑️remove-product               | 🧭️middle |
 
   @id-inverse
   @level-exhaustive

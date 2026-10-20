@@ -11,8 +11,8 @@ import {resolveTestLevel} from "../../../../../../../🔨️modules/🏃️proce
 import {configuredExactCargoLawPolicyV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {readNativeOwnerCapabilities,type NativeOwnerCapabilities} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import nativeSchema from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json";
-import preparationPolicy from "../🛠️preparation/📋️policy/🔣️.json";
+import nativeSchema from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json" with { type: "json" };
+import preparationPolicy from "../🛠️preparation/📋️policy/🔣️.json" with { type: "json" };
 import type {RepositoryExactCargoLawOptions} from "../🎯️exact/🟦️.ts";
 
 const endpoint=fileURLToPath(new URL("./📜️script.ts",import.meta.url));

@@ -31,7 +31,15 @@
     "./shard-client/quota": "./📮️shard-client/🚨️quota/🟦️.ts",
     "./shard-client/ui-patch": "./📮️shard-client/🩹️ui-patch/🟦️.ts",
     "./shard-client/wire": "./📮️shard-client/📜️wire/🟦️.ts",
-    "./shard-runtime": "./🧵️shard-runtime/🟦️.ts"
+    "./shard-runtime": "./🧵️shard-runtime/🟦️.ts",
+    "./shard-client/state": "./📮️shard-client/🗃️state/🟦️.ts",
+    "./wire-turn/diagnostic": "./🖼️wire-turn/⚠️diagnostic/🟦️.ts",
+    "./wire-turn/diagnostic/delivery": "./🖼️wire-turn/⚠️diagnostic/📣️delivery/🟦️.ts",
+    "./wire-turn/diagnostic/testing/fixtures.json": "./🖼️wire-turn/⚠️diagnostic/🧪️testing/🧫️fixtures/🔣️json/🟦️.ts",
+    "./wire-turn/inbound-request": "./🖼️wire-turn/📥️inbound-request/🟦️.ts",
+    "./wire-turn/more-work-drive": "./🖼️wire-turn/🚚️more-work-drive/🟦️.ts",
+    "./wire-turn/retained-ui-patch": "./🖼️wire-turn/🩹️retained-ui-patch/🟦️.ts",
+    "./wire-turn/turn-result": "./🖼️wire-turn/🔖️turn-result/🟦️.ts"
   },
   "scripts": {
     "test": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-actor:test"
@@ -44,14 +52,16 @@
   },
   "bundleKind": "library",
   "devDependencies": {
+    "@semio-tech/framework": "workspace:*",
     "@semio-tech/process": "workspace:*",
     "@semio-tech/schema-ts": "workspace:*",
     "immer": "10.1.1",
     "tree-sitter-wasms": "0.1.13"
   },
   "dependencies": {
-    "@semio-tech/framework": "workspace:*",
-    "@semio-tech/framework-kernel": "workspace:*",
+    "@semio-tech/framework-effect": "workspace:*",
+    "@semio-tech/framework-trace": "workspace:*",
+    "@semio-tech/ui-contract": "workspace:*",
     "@semio-tech/value-ts": "workspace:*"
   }
 }

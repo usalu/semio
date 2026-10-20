@@ -8,22 +8,14 @@ const owner=resolve(import.meta.dir,".."),fixture=JSON.parse(readFileSync(join(o
 const oracle=new Ajv({strict:true}).compile(schema),generated=process.env.SEMIO_TEST_ARTIFACT_DIR!;
 if(!generated)throw Error("Ticket-owned test artifact directory required");
 const root=mkdtempSync(join(generated,"dt-")),file=join(root,"app/space 🧪 file.ts");mkdirSync(join(root,"app"));writeFileSync(file,"export const value=1;\n");
-for(const row of fixture.sourceCases)test(`source ${row.platform} ${row.request.editor}`,async()=>{
- expect(oracle(row.request)).toBe(true);const plan=await planDeveloperRequest(root,row.request,row.platform,row.environment??{});
- expect(plan.command).toBe(row.command);expect(plan.args).toEqual(row.args.map((value:string)=>value.replace("{file}",file)));expect(plan.cwd).toBe(root);
-});
 for(const row of fixture.gitCases)test(`read-only ${JSON.stringify(row.request)}`,async()=>{
  expect(oracle(row.request)).toBe(true);const plan=await planDeveloperRequest(root,row.request,process.platform,{});
  expect(plan.command).toBe("git");expect(plan.args.slice(-row.tail.length)).toEqual(row.tail);expect(plan.args).toContain("--no-optional-locks");expect(plan.args).toContain("core.hooksPath=");expect(plan.args).toContain("diff.external=");
 });
 for(const request of fixture.refusals)test(`refuses ${JSON.stringify(request)}`,async()=>{await expect(planDeveloperRequest(root,request,process.platform,{})).rejects.toBeDefined();});
-test("physical source cannot cross a symlink",async()=>{
- const foreign=mkdtempSync(join(generated,"df-"));writeFileSync(join(foreign,"foreign.ts"),"");symlinkSync(foreign,join(root,"linked"),process.platform==="win32"?"junction":"dir");
- await expect(planDeveloperRequest(root,{command:"open-source",file:"linked/foreign.ts",editor:"system"},process.platform,{})).rejects.toBeDefined();
-});
 test("original cancellation and recorded process port are retained",async()=>{
- const controller=new AbortController(),records:unknown[]=[];const port={run:async(plan:unknown,signal:AbortSignal)=>{expect(signal).toBe(controller.signal);records.push(plan);},open:async(plan:unknown,signal:AbortSignal)=>{expect(signal).toBe(controller.signal);records.push(plan);}};
- await executeDeveloperRequest(root,{command:"open-source",file:"app/space 🧪 file.ts",editor:"system"},port,controller.signal,process.platform,{});expect(records.length).toBe(1);controller.abort();
+ const controller=new AbortController(),records:unknown[]=[];const port={run:async(plan:unknown,signal:AbortSignal)=>{expect(signal).toBe(controller.signal);records.push(plan);}};
+ await executeDeveloperRequest(root,{command:"git-status"},port,controller.signal,process.platform,{});expect(records.length).toBe(1);controller.abort();
  await expect(executeDeveloperRequest(root,{command:"git-status"},port,controller.signal,process.platform,{})).rejects.toBeDefined();expect(records.length).toBe(1);
 });
 test("typed CLI refuses duplicates, trailing arbitrary words and unsupported flags",()=>{
@@ -78,7 +70,7 @@ test("debug custody preserves immutable arguments, cancellation and physical wor
  const input={command:"debug",profile:"node-inspect",program:"app/space 🧪 file.ts",arguments:["original"]},captured=readDeveloperRequest(input);input.arguments[0]="changed";expect(captured.command==="debug"&&captured.arguments).toEqual(["original"]);
  const foreign=mkdtempSync(join(generated,"dg-"));writeFileSync(join(foreign,"foreign.ts"),"");symlinkSync(foreign,join(root,"debug-linked"),process.platform==="win32"?"junction":"dir");await expect(planDeveloperRequest(root,{command:"debug",profile:"node-inspect",program:"debug-linked/foreign.ts"},process.platform,{})).rejects.toBeDefined();
  await expect(planDeveloperRequest(root,{command:"debug",profile:"node-inspect",program:"app/space 🧪 file.ts",arguments:Array(5).fill("x".repeat(2048))},process.platform,{})).rejects.toBeDefined();
- const controller=new AbortController(),records:unknown[]=[];await executeDeveloperRequest(root,captured,{run:async(plan,signal)=>{expect(signal).toBe(controller.signal);records.push(plan);},open:async()=>{throw Error("Debugger must remain supervised");}},controller.signal,process.platform,{});expect(records).toHaveLength(1);controller.abort();await expect(executeDeveloperRequest(root,captured,{run:async()=>{throw Error("Cancelled debugger executed");},open:async()=>{}},controller.signal,process.platform,{})).rejects.toBeDefined();
+ const controller=new AbortController(),records:unknown[]=[];await executeDeveloperRequest(root,captured,{run:async(plan,signal)=>{expect(signal).toBe(controller.signal);records.push(plan);}},controller.signal,process.platform,{});expect(records).toHaveLength(1);controller.abort();await expect(executeDeveloperRequest(root,captured,{run:async()=>{throw Error("Cancelled debugger executed");}},controller.signal,process.platform,{})).rejects.toBeDefined();
 });
 
 
@@ -145,3 +137,8 @@ test("managed Windows LLDB preserves the default Python and supplies its private
 });
 
 
+
+/** 🛑️ Native workspace editing has no external IDE launch request or process capability. */
+test("external source editor delegation is absent and rejected before all effects",async()=>{
+ const {Database}=await import("bun:sqlite"),db=new Database(":memory:"),project=JSON.parse(readFileSync(join(owner,"📋️project.json"),"utf8")),script=readFileSync(join(owner,"📜️script.ts"),"utf8");try{for(const row of fixture.retiredSourceCases){let accepted=true;try{readDeveloperRequest(row.request);}catch{accepted=false;}expect(accepted).toBe(row.accepted);expect(oracle(row.request)).toBe(row.accepted);const declared=db.query("select count(*) n from json_each(?1,'$.oneOf') where json_extract(value,'$.properties.command.const')=?2").get(JSON.stringify(schema),row.request.command)as{n:number};expect(declared.n).toBe(0);let effects=0;const controller=new AbortController();await expect(executeDeveloperRequest(root,row.request,{run:async()=>{effects++;}},controller.signal,row.platform,{SEMIO_SOURCE_OPENER:'["must-never-run"]'})).rejects.toThrow("developer.request.invalid");expect(effects).toBe(0);expect(()=>parseDeveloperArguments(["open-source","--file","app/space 🧪 file.ts"])).toThrow();}expect(project.targets["open-source"]).toBeUndefined();expect(script).not.toContain('"open-source"');expect(script).not.toContain("detachedDesktop");}finally{db.close();}
+});

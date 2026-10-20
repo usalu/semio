@@ -144,7 +144,7 @@ use crate::{editor::shooting::commands::shot::add_shot, editor::shooting::comman
     use semio_framework_plugin::app::EditorApp;
     use semio_framework_plugin::artifact_app_laws::{self, meta, new_app_with_registry};
     use semio_framework_plugin::app::TypedOperationResultLane;
-    use semio_framework_plugin::{Effect, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowMeasure};
+    use semio_framework_plugin::{Effect, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
 
     /// 🧪️ The registered, MOUNTED fixture app every editor test drives — bound to
     /// [`SHOOTING_TEST_INSTANCE`] so typed commands reach their retained routes, and retired through the

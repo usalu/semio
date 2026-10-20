@@ -17,7 +17,7 @@ import { World3dAnnotationOverlay, World3dAnnotationProjector, World3dScalarLege
 import { type ComponentSceneHostProps, type InteractionTarget,
   type MergeMode
 } from "@semio-tech/framework";
-import { DEFAULT_LOD_GRID_FACTOR, DEFAULT_MANUAL_LOD, WorldCanvas, WorldLodBridge, WorldOrbitGated, WorldOrbitViewControls, WorldOrbitViewSnapGateProvider, WorldProjectionRig, WorldReferenceLayer, WorldVolumeLayer } from "@semio-tech/infinite-world-r3f";
+import { DEFAULT_LOD_GRID_FACTOR, DEFAULT_MANUAL_LOD, WorldCanvas, WorldLodBridge, WorldOrbitGated, WorldOrbitViewControls, WorldOrbitViewSnapGateProvider, WorldProjectionRig, WorldReferenceLayer, WorldVolumeLayer } from "@semio-tech/framework/infinite/world/r3f";
 
 import { WorldTerrainLayer } from "../🗺️WorldTerrainLayer/🟦️.tsx";
 import { world3dMarqueeOverlayShape } from "../🛠️ShellHelpers/🛑️extension-io/🟦️.ts";

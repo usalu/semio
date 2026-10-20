@@ -16,7 +16,7 @@ import { dirname, join, resolve, relative } from "node:path";
 import { buildGraphPathV1 } from "@semio-tech/repo-lib/build";
 import {readBuildMode} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {readModuleTreeSource} from "@semio-tech/framework-compiler-ts/syntax/module-tree";
-import { installedDashboard } from "../../📦️installation/🟦️.ts";
+import { installedDashboard } from "../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts";
 import {Oracle} from "../🗺️coverage/🔮️oracle/🟦️.ts";
 
 type Json = Record<string, any>;

@@ -2,6 +2,7 @@
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use protocol::{Mutation, OpBinary, OpText};
+use semio_framework_mutation_diff::MutationDiff;
 
 #[test]
 fn change_layer_pixels_matches_independent_json_and_round_trips() {

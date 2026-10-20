@@ -12,5 +12,11 @@
     "./generated/plugins": "./🤖️generated/🧩️plugins/🟦️.ts",
     "./publication": "./📣️publication/🟦️.ts",
     "./session": "./🎮️session/🟦️.ts"
+  },
+  "dependencies": {
+    "@semio-tech/plugin-registry-publication": "workspace:*"
+  },
+  "devDependencies": {
+    "@semio-tech/framework-manifest": "workspace:*"
   }
 }

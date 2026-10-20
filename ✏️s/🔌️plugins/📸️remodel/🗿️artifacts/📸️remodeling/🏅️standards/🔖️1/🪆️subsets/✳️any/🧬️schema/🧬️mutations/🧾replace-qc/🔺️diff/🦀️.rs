@@ -6,7 +6,7 @@ use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any:
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::ReplaceQc, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
+pub fn diff(payload: &crate::standards::v1::subsets::any::schema::mutations::replace_qc::component::ReplaceQc, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
     if payload.qc.is_none() && base.results.qc.is_none() {
         return protocol::MutationOutcome::error("mutation.target-missing", "There is no QC report to clear.".to_string(), [base.id.clone()]);
     }

@@ -14,6 +14,8 @@
     "test-retained-indexed-replacement-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-replication-rs:test-retained-indexed-replacement-native"
   },
   "devDependencies": {
+    "@semio-tech/framework-hash": "workspace:*",
+    "@semio-tech/framework-interaction": "workspace:*",
     "@semio-tech/process": "workspace:*",
     "ajv": "8.20.0",
     "crc-32": "^1.2.2"

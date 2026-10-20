@@ -10,8 +10,8 @@ export function planGhosts(v: Vfs, log: (row: Record<string, unknown>) => void):
   const tools = `${LIB}/${E(0x26A1)}caching/${E(0x1F680)}bootstrap/${E(0x1F6E0)}tools`, from = `${tools}/${E(0x1F4DC)}script.ts`, to = `${tools}/${E(0x1F7E6)}.ts`;
   if (v.exists(from)) throw new Error("the removed tools script reappeared");
   const touched: string[] = [];
-  for (const file of readFileSync(`${C}/🗑️generated/tax-stage/grep-files.txt`, "utf8").split("\n")) {
-    if (!file.startsWith(tools + "/") || !v.exists(file)) continue;
+  for (const file of readFileSync(`${C}/tax-stage-tools/index/grep-files.txt`, "utf8").split("\n")) {
+    if (!file.startsWith(tools + "/") || !v.exists(file) || file.endsWith("/package.json")) continue;
     const r = rewriteReferences(v.read(file), dirname(join(REPO, file)), from, to, false);
     if (r.count) { v.write(file, r.text); touched.push(file.replace(LIB, "L")); }
   }

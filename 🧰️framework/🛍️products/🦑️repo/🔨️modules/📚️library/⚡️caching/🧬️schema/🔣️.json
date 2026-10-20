@@ -10,6 +10,7 @@
     "uncached",
     "uncachedExact",
     "cachedExact",
+    "targetClasses",
     "continuous",
     "generatedDirectories",
     "toolchains",
@@ -47,6 +48,29 @@
         "type": "string"
       },
       "uniqueItems": true
+    },
+    "targetClasses": {
+      "description": "Ordered, closed classification of target names into cache classes; a leading emoji or other symbol prefix never hides a name from its row. A row that lists the name in `exact` decides before any head, tail or token of any row, then the first row with a matching head (`<head>` or `<head>-…`), tail (`<tail>` or `…-<tail>`) or token (a hyphen-delimited segment) decides. Only `deterministic` rows replay; a target no row, declaration or verifying command classifies is `unclassified` and never replays.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["decision"],
+        "properties": {
+          "decision": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["class", "reason"],
+            "properties": { "class": { "type": "string" }, "reason": { "type": "string" } }
+          },
+          "exact": { "type": "array", "items": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$" }, "uniqueItems": true },
+          "heads": { "type": "array", "items": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$" }, "uniqueItems": true },
+          "tails": { "type": "array", "items": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$" }, "uniqueItems": true },
+          "tokens": { "type": "array", "items": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$" }, "uniqueItems": true }
+        },
+        "anyOf": [{ "required": ["exact"] }, { "required": ["heads"] }, { "required": ["tails"] }, { "required": ["tokens"] }]
+      }
     },
     "continuous": {
       "type": "array",

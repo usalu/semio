@@ -35,6 +35,40 @@
   },
   "description": "Portable authoritative Source membership recipes use literal path components, * and ? within a component, and ** for zero or more components. Brackets and braces are literal Source names. Native Bun workspaces are the complete current byte-sorted native literal directory projection of independently owned packages, excluding the installation scope itself and all testing collections. Native metacharacters are escaped and an empty brace alternative selects that same exact directory through Bun glob interpretation; ordinary directories remain direct literal entries. Leading ! is prefixed with ./ to preserve literal identity. Source discovery does not depend on published native projection. Only the explicitly selected scopes are refreshed through the original caller control before the first installation; current topology, manifest and policy guards refuse concurrent changes.",
   "$defs": {
+    "FrontierReplayProtocol": {
+      "const": {
+        "version": 1,
+        "stamp": ["dev", "ino", "mode", "mtimeNs", "ctimeNs"],
+        "settlement": "before-complete-listing",
+        "negativeStates": "all-original-decisions",
+        "unsettled": "exact-projected-relist-before-and-after-continuation",
+        "finalFence": "synchronous-states-stamps-policy-and-manifest-bytes",
+        "uncertainty": "complete-original-derivation"
+      }
+    },
+    "FrontierReplayCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "before", "after", "settled", "expected"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "before": {"type": ["string", "null"]},
+        "after": {"type": ["string", "null"]},
+        "settled": {"type": "boolean"},
+        "expected": {"enum": ["reuse", "relist", "derive"]}
+      }
+    },
+    "FrontierStateCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dev", "ino", "mode", "expected"],
+      "properties": {
+        "dev": {"type":"string","pattern":"^[0-9]+$"},
+        "ino": {"type":"string","pattern":"^[0-9]+$"},
+        "mode": {"type":"integer","minimum":0},
+        "expected": {"$ref":"#/$defs/PhysicalObservationRecord/properties/state"}
+      }
+    },
     "RecheckFenceCase": {
       "type": "object",
       "additionalProperties": false,
@@ -83,6 +117,7 @@
             "list",
             "readText",
             "membership",
+            "frontier",
             "selection",
             "publication"
           ]
@@ -614,6 +649,67 @@
           }
         }
       }
+    },
+    "PhysicalPolicySource": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ownershipPath": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^(?:/|[A-Za-z]:[\\\\/]|\\\\\\\\)"
+        },
+        "ownershipSource": {
+          "type": "string",
+          "maxLength": 65536
+        }
+      },
+      "required": [
+        "ownershipPath",
+        "ownershipSource"
+      ]
+    },
+    "CompiledOwnershipCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fault": {
+          "enum": [
+            "none",
+            "before",
+            "after"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "fault",
+        "accepted"
+      ]
+    },
+    "PhysicalPolicyCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fault": {
+          "enum": [
+            "none",
+            "text",
+            "relative",
+            "extra"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "fault",
+        "accepted"
+      ]
     }
   }
 }

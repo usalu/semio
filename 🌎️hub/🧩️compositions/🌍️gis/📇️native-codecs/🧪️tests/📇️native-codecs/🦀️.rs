@@ -131,9 +131,9 @@ fn gis_native_controlled_inference_executes_literal_progress_cancel_and_deadline
     let proposal = inferred.bounds_proposal(&snapshot, fixture["proposalJobId"].as_str().unwrap()).unwrap();
     let expected: semio_s_artifact_gis_gismap::mutations::GisMapMutation = FromValue::from_value(DslValue::from(&fixture["proposal"])).unwrap();
     assert_eq!(proposal, expected);
-    let updated = protocol::apply_diff(proposal.diff(&snapshot).diff(), &snapshot).unwrap();
+    let updated = protocol::apply_diff_cold(proposal.diff(&snapshot).diff(), &snapshot).unwrap();
     assert_eq!(updated.regions.len(), snapshot.regions.len() + 1);
-    let restored = proposal.inverse(&snapshot).iter().rev().try_fold(updated.clone(), |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state)).unwrap();
+    let restored = proposal.inverse(&snapshot).iter().rev().try_fold(updated.clone(), |state, inverse| protocol::apply_diff_cold(inverse.diff(&state).diff(), &state)).unwrap();
     assert_eq!(restored, snapshot);
     assert!(inferred.bounds_proposal(&updated, fixture["proposalJobId"].as_str().unwrap()).is_err());
     assert!(inferred.bounds_proposal(&snapshot, "untrusted-job").is_err());

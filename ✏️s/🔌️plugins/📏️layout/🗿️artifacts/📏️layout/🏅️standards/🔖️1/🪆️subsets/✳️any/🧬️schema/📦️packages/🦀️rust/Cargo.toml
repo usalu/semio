@@ -36,6 +36,7 @@ semio-framework-value-derive = { workspace = true }
 semio-framework-value-dictionary = { workspace = true }
 serde = { workspace = true }
 semio-framework-io-ports = { workspace = true }
+semio-framework-pack = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

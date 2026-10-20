@@ -35,3 +35,4 @@ semio-s-artifact-draw-drawing-model = { workspace = true, features = ["testkit"]
 semio-s-artifact-draw-drawing-mutations = { workspace = true, features = ["testkit"] }
 semio-s-artifact-draw-drawing-scene = { workspace = true, features = ["testkit"] }
 serde_json = { workspace = true }
+semio-framework-diagnostic = { workspace = true }

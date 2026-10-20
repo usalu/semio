@@ -47,8 +47,8 @@ pub fn definition() -> WindowKindDefinition {
 pub fn window_measures(config: &RasterConfig, labels: &crate::terminology::RasterPlayLabels) -> Vec<WindowMeasure> {
     let mut measures=vec![options::brush::measure(config,labels),options::eraser::measure(config,labels),options::bucket::measure(config,labels)];
     for measure in &mut measures {if let WindowMeasure::Group{id,children,..}=measure{
-        children.push(WindowMeasure::Select{id:format!("{id}-target"),label:Some(labels.paint_target.as_str().into()),value:config.paint_target.clone(),items:[("pixels",labels.paint_pixels.as_str()),("mask",labels.paint_mask.as_str())].into_iter().map(|(value,label)|semio_framework_plugin::MeasureSelectItem{id:value.into(),value:value.into(),label:label.into()}).collect(),on_change:crate::editor::raster::raster_measure_action("setPaintTarget")});
-        children.push(WindowMeasure::Slider{id:format!("{id}-mask-value"),label:Some(labels.mask_value.as_str().into()),value:f64::from(config.mask_value),min:0.0,max:255.0,step:Some(1.0),ready:None,loading:None,waiting:None,disabled:Some(config.paint_target!="mask"),on_change:crate::editor::raster::raster_measure_action("setMaskValue")});
+        children.push(WindowMeasure::Select{id:format!("{id}-target"),label:Some(labels.paint_target.as_str().into()),value:config.paint_target.clone(),items:[("pixels",labels.paint_pixels.as_str()),("mask",labels.paint_mask.as_str())].into_iter().map(|(value,label)|semio_framework_plugin::MeasureSelectItem{id:value.into(),value:value.into(),label:label.into()}).collect(),on_change:semio_s_artifact_raster_raster_editor_session::raster_measure_action("setPaintTarget")});
+        children.push(WindowMeasure::Slider{id:format!("{id}-mask-value"),label:Some(labels.mask_value.as_str().into()),value:f64::from(config.mask_value),min:0.0,max:255.0,step:Some(1.0),ready:None,loading:None,waiting:None,disabled:Some(config.paint_target!="mask"),on_change:semio_s_artifact_raster_raster_editor_session::raster_measure_action("setMaskValue")});
     }}
     measures
 }

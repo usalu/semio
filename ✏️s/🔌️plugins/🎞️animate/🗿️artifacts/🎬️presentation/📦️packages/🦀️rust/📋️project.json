@@ -15,9 +15,9 @@
     ]
   },
   "targets": {
-    "test-snapshot-sqlite": {"executor":"repo:script","cache":true,"options":{"cwd":"✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite","forwardAllArgs":true}},
-    "test-snapshot-sqlite-native": {"executor":"repo:script","cache":true,"options":{"cwd":"✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite native","forwardAllArgs":true}},
-    "test-snapshot-sqlite-source": {"executor":"repo:script","cache":true,"options":{"cwd":"✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite source","forwardAllArgs":true}},
+    "test-snapshot-sqlite": {"executor":"repo:script","cache":true, "outputs": [],"options":{"cwd":"✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite","forwardAllArgs":true}},
+    "test-snapshot-sqlite-native": {"executor":"repo:script","cache":true, "outputs": [],"options":{"cwd":"✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite native","forwardAllArgs":true}},
+    "test-snapshot-sqlite-source": {"executor":"repo:script","cache":true, "outputs": [],"options":{"cwd":"✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite source","forwardAllArgs":true}},
     "build": {
       "executor": "repo:script",
       "cache": true,
@@ -44,6 +44,7 @@
     },
     "test": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -53,6 +54,7 @@
     "verify-presentation-document-contract": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify presentation-document-contract",

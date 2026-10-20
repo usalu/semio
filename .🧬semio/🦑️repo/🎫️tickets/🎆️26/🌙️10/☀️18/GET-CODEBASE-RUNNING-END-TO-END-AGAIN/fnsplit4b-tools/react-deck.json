@@ -1,0 +1,37 @@
+{
+ "file": "/Users/ueli/Documents/semio/♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🧪️tests/🎞️react-deck/🟦️.tsx",
+ "describeLine": 9,
+ "shared": {
+  "dir": "🧰️react-deck-fixtures",
+  "doc": "/** 🧰️ The shared react deck test fixtures. */"
+ },
+ "parts": [
+  {
+   "dir": "🎬️focus-to-labels-morph",
+   "doc": "/** 🎬️ The catalogue focus to inline column labels auto animate test. */",
+   "name": "registerFocusToLabelsMorphTests",
+   "emoji": "🏷",
+   "fdoc": "Registers the catalogue focus to inline column labels auto animate test.",
+   "from": 10,
+   "to": 10
+  },
+  {
+   "dir": "👻️ghosts-and-wrappers",
+   "doc": "/** 👻️ The catalogue rest figure, ghost anchor and tile wrapper tests. */",
+   "name": "registerGhostAndWrapperTests",
+   "emoji": "🪞",
+   "fdoc": "Registers the catalogue rest figure, target ghost, reveal data id and focus layout tests.",
+   "from": 133,
+   "to": 208
+  },
+  {
+   "dir": "🧭️label-frames-and-advance",
+   "doc": "/** 🧭️ The catalogue label frame placement and focus advance tests. */",
+   "name": "registerLabelFramesAndAdvanceTests",
+   "emoji": "📍",
+   "fdoc": "Registers the catalogue label ghost frame and the focus to labels advance tests.",
+   "from": 232,
+   "to": 258
+  }
+ ]
+}

@@ -12,6 +12,7 @@ import progressSchema from "../../../🧭️routing/📥️invocation/🏃️pro
 import {createIssuedResourceControlV1,createRequestedIssuedResourceControlV1} from "../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {createScriptProcessEnvelope,withScriptProcessEnvelope} from "../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 
+/** 🏁️ Separate OS processes prove that queued writers are served within a bound, dead requesters are reaped by their successors, waiting is cheap, upgrades cannot deadlock and queue waits name their head request; Python SQLite readers are the independent third-party oracle for the unqueued starvation controls. */
 const implementation=fileURLToPath(new URL("../../🟦️.ts",import.meta.url)),worker=fileURLToPath(new URL("./📥️worker/🟦️.ts",import.meta.url)),bounds=fixture.bounds;
 const python=`import sqlite3,sys,time
 db,hold,until=sys.argv[1],float(sys.argv[2]),float(sys.argv[3])
@@ -76,7 +77,6 @@ for(const row of fixture.starvation)test(`writer ${row.outcome} against ${row.re
     const finished=readers.flatMap(reader=>reader.lines).filter(line=>line.done===true);
     expect(finished.length).toBe(bounds.readers);
     for(const line of finished)expect(line.acquisitions as number).toBeGreaterThan(2);
-    console.log(`[DEBUG] Lease fairness ${row.id}: ${JSON.stringify(result)}`);
   }finally{await cleanup(directory);}
 },120000);
 
@@ -111,7 +111,6 @@ test("waiting behind a long holder costs a bounded fraction of one core per wait
     await Promise.all(waiters.map(waiter=>waiter.done));
     holder.release();
     for(const waiter of waiters){const line=waiter.lines.find(row=>row.role==="waiter")!;expect(line.outcome,JSON.stringify(line)).toBe("timed-out");expect(line.cpuMs as number).toBeLessThanOrEqual(bounds.waiterObservationMilliseconds*bounds.waiterCpuFractionMaximum);}
-    console.log(`[DEBUG] Lease queue waiters cost ${waiters.map(waiter=>Math.round(waiter.lines[0]!.cpuMs as number)).join(",")} ms CPU over ${bounds.waiterObservationMilliseconds} ms`);
     await until(()=>tickets(directory,resource).length===0,bounds.reapMaximumMilliseconds,"timed-out waiter tickets removed");
   }finally{await cleanup(directory);}
 },120000);

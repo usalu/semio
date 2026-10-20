@@ -44,6 +44,7 @@
   "dependencies": {
     "@napi-rs/canvas": "^1.0.2",
     "@semio-tech/framework": "workspace:*",
+    "@semio-tech/framework-filesystem": "workspace:*",
     "@semio-tech/framework-sqlite-snapshot-ts": "workspace:*",
     "@semio-tech/print-viz-inference": "workspace:*",
     "@semio-tech/schema-validator-ts": "workspace:*",

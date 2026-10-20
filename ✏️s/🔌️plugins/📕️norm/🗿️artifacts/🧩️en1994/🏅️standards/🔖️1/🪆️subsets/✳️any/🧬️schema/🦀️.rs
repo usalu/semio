@@ -10,6 +10,9 @@ extern crate semio_framework_value_derive as value_derive;
 
 use semio_s_plugin_norm_compliance::AnnexChoice;
 use framework_schema::ArtifactSchema;
+use semio_s_artifact_norm_en1994_model::CompositeBeam;
+use semio_s_artifact_norm_en1994_model::CompositeColumn;
+use semio_s_artifact_norm_en1994_model::CompositeSlab;
 
 //#region 🔖️Artifact
 

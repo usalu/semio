@@ -277,14 +277,14 @@ impl Drop for DatabaseSyncHelloRejected {
 /// frames the chosen bootstrap needs (a single `Commands` frame for `Tail`; one `SnapshotChunk`
 /// per chunk plus a trailing `SnapshotDone` for a non-inlined `Snapshot`; none for `None` or an
 /// inlined `Snapshot`, whose bytes already travel inside `Welcome.bootstrap`).
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 #[derive(Clone, Debug, PartialEq)]
 pub struct WelcomeResponse {
     pub welcome: protocol::ServerFrame,
     pub follow_up: Vec<protocol::ServerFrame>,
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 struct BootstrapPageRangeCopy<'a> {
     pub(super) pages: &'a db_io_core::DbIoPages,
     skip: usize,
@@ -322,7 +322,7 @@ impl std::future::Future for BootstrapPageRangeCopy<'_> {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 fn bootstrap_page_range_copy(pages: &db_io_core::DbIoPages, start: usize, len: usize) -> Result<BootstrapPageRangeCopy<'_>, DbError> {
     let end = start.checked_add(len).ok_or(DbError::LimitExceeded("bootstrap page range"))?;
     if end > pages.len() {
@@ -338,7 +338,7 @@ fn bootstrap_page_range_copy(pages: &db_io_core::DbIoPages, start: usize, len: u
 /// `Bootstrap::Snapshot.inline` (no follow-up frames); a larger one is chunked instead — this
 /// crate's own choice of threshold behavior, since the contract fixes `Bootstrap::Snapshot`'s two
 /// shapes but not when to prefer one over the other.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 async fn lower_bootstrap_plan(plan: &BootstrapPlan, state: &ArtifactSyncState, origin: &protocol::ActorId, snapshot_chunk_bytes: usize) -> Result<(protocol::Bootstrap, Vec<protocol::ServerFrame>), DbError> {
     match plan {
         BootstrapPlan::None => Ok((protocol::Bootstrap::None, Vec::new())),
@@ -371,7 +371,7 @@ async fn lower_bootstrap_plan(plan: &BootstrapPlan, state: &ArtifactSyncState, o
 /// 🏗️ Builds the full `WelcomeResponse` for `plan` against `state`. `snapshot_chunk_bytes`
 /// must be non-zero (validated before `lower_bootstrap_plan` could otherwise divide the snapshot
 /// into a runaway number of zero-progress chunks).
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub async fn build_welcome(state: &ArtifactSyncState, plan: &BootstrapPlan, session_id: String, origin: &protocol::ActorId, snapshot_chunk_bytes: usize) -> Result<WelcomeResponse, DbError> {
     if snapshot_chunk_bytes == 0 {
         return Err(DbError::InvalidArgument("snapshot_chunk_bytes must be non-zero".to_string()));

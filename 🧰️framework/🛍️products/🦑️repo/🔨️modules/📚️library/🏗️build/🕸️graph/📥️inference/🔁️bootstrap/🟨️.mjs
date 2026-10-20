@@ -31,6 +31,8 @@ function currentCommandInputs(commandInputs) {
 export const loaded = {
   commandInputHash: undefined,
   commandSourceImports: (path, source) => currentCommandInputs(loadedCommandInputs).commandSourceImports(path, source),
+  runtimeModuleSourceImports: (path, source) => currentCommandInputs(loadedCommandInputs).runtimeModuleSourceImports(path, source),
+  commandUrlReferences: (path, source) => currentCommandInputs(loadedCommandInputs).commandUrlReferences(path, source),
   moduleSourceImports: (path, source) => currentCommandInputs(loadedCommandInputs).moduleSourceImports(path, source),
   productionModuleSourceImports: (path, source) => currentCommandInputs(loadedCommandInputs).productionModuleSourceImports(path, source),
   declaredBrowserSessionEnginesV1: undefined,
@@ -65,6 +67,8 @@ export function wire(registry) {
   }).then((commandInputs) => {
     const admitted = currentCommandInputs(commandInputs);
     loaded.commandSourceImports = admitted.commandSourceImports;
+    loaded.runtimeModuleSourceImports = admitted.runtimeModuleSourceImports;
+    loaded.commandUrlReferences = admitted.commandUrlReferences;
     loaded.moduleSourceImports = admitted.moduleSourceImports;
     loaded.productionModuleSourceImports = admitted.productionModuleSourceImports;
     return importRevision(new URL(`./${RUNTIME_COMPONENT_MODULE}`, LIBRARY_URL), createHash("sha256").update(readPhysicalSource(join(LIBRARY_ROOT, RUNTIME_COMPONENT_MODULE))).digest("hex"));

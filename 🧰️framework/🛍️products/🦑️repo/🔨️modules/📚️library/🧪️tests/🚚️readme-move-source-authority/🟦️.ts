@@ -19,6 +19,7 @@ const compilers = [
   { name: "TypeScript", compile: (code: string) => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText },
 ];
 const declarations = new Map(tree.statements.filter(ts.isFunctionDeclaration).map((node) => [node.name?.text ?? "", node]));
+const APPLY_PHASES = ["applyTaxonomyPlan", "bindTransactionNames", "checkPlanAuthority", "discoverTransactionAttempts", "defineAttemptValidators", "selectAttempt", "defineLeaseAndPreChecks", "capturePreflight", "lockResumeSnapshot", "prepareAttemptJournal", "runTransactionAttempt", "stageTransactionOperations", "stageEmbeddedRootsAndInstallMoves", "installRelocationsAndRetargetSymlinks", "applyReferenceEditGroups", "regenerateGeneratorOutputs", "verifyAndCommitTransaction"];
 
 /** 🧮️ Builds the independent canonical oracle from parsed JSON and the declared identifier-array law. */
 function oracleJson(value: unknown): string {
@@ -96,9 +97,9 @@ function implementation(compiler: typeof compilers[number], adapters: Record<str
   const moveError = tree.statements.find((node) => ts.isClassDeclaration(node) && node.name?.text === vector.forwardBoundary.typedError);
   if (moveError) selected.push(moveError.getText(tree));
   const constants = tree.statements.filter(ts.isVariableStatement).filter((node) => node.declarationList.declarations.some((item) => ["PLAN_HASH", "PLAN_OPERATION_ID", "PLAN_COMMIT_ID"].includes(item.name.getText(tree))));
-  const apply = declarations.get("applyTaxonomyPlan")!, blocks: ts.VariableStatement[] = [];
+  const apply = APPLY_PHASES.map((name) => declarations.get(name)!), blocks: ts.VariableStatement[] = [];
   const visit = (node: ts.Node): void => { if (ts.isVariableStatement(node) && node.declarationList.declarations.some((item) => item.name.getText(tree) === "operationSets")) blocks.push(node); ts.forEachChild(node, visit); };
-  visit(apply);
+  apply.forEach(visit);
   if (blocks.length !== 1 || !ts.isBlock(blocks[0]!.parent)) throw new Error("The actual preflight operation comparison is not uniquely identified");
   const siblings = (blocks[0]!.parent as ts.Block).statements, offset = siblings.indexOf(blocks[0]!);
   const guard = siblings.slice(offset, offset + 3).map((node) => node.getText(tree)).join("\n");
@@ -239,9 +240,9 @@ for (const compiler of compilers) test(compiler.name + " generator-free revised 
 });
 
 test("actual selected-resume catch inverse-recovers typed move input drift but not unknown owned drift", () => {
-  const apply = declarations.get("applyTaxonomyPlan")!, catches: ts.CatchClause[] = [];
+  const apply = APPLY_PHASES.map((name) => declarations.get(name)!), catches: ts.CatchClause[] = [];
   const visit = (node: ts.Node): void => { if (ts.isCatchClause(node) && node.block.getText(tree).includes("TaxonomyGeneratorInputDriftError") && node.block.getText(tree).includes("rollbackTransaction")) catches.push(node); ts.forEachChild(node, visit); };
-  visit(apply);
+  apply.forEach(visit);
   expect(catches).toHaveLength(1);
   class MoveInputDrift extends Error {}
   class GeneratorInputDrift extends Error {}
@@ -261,9 +262,9 @@ test("actual selected-resume catch inverse-recovers typed move input drift but n
 });
 
 test("actual final forward gate validates revised moves even when there are no generators", () => {
-  const apply = declarations.get("applyTaxonomyPlan")!, gates: ts.IfStatement[] = [];
+  const apply = APPLY_PHASES.map((name) => declarations.get(name)!), gates: ts.IfStatement[] = [];
   const visit = (node: ts.Node): void => { if (ts.isIfStatement(node) && node.expression.getText(tree).includes("plan.regenerations.length") && node.expression.getText(tree).includes("validateResumeTuples")) gates.push(node); ts.forEachChild(node, visit); };
-  visit(apply);
+  apply.forEach(visit);
   expect(gates).toHaveLength(1);
   for (const compiler of compilers) for (const row of vector.finalGateCases) {
     const plan = fixture(row.revised ? "revised" : "ordinary").plan;

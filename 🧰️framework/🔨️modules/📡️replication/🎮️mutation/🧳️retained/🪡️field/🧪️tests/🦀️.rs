@@ -53,9 +53,9 @@ fn retained_field_exchange_matches_neutral_strings_and_physical_receipts() {
         assert_eq!(unpublished,vector["before"].as_str().unwrap());
         assert_eq!(field.value().unwrap(),vector["authored"].as_str().unwrap());
         let grant = quote(field.exchange_demand().unwrap());
-        let (denied,heap) = observe(|| field.install(&mut unpublished,super::super::super::mint_capability(),Default::default()).unwrap());
+        let (denied,heap) = observe(|| field.install(&mut unpublished,semio_framework_mutation_diff::testing_apply_capability(),Default::default()).unwrap());
         assert_eq!(denied,Default::default()); assert_eq!(heap,(0,0));
-        let (receipt,heap) = observe(|| field.install(&mut unpublished,super::super::super::mint_capability(),grant).unwrap());
+        let (receipt,heap) = observe(|| field.install(&mut unpublished,semio_framework_mutation_diff::testing_apply_capability(),grant).unwrap());
         assert!(receipt.fits(grant)); assert_eq!(heap,(0,0));
         assert_eq!(unpublished,vector["expected"].as_str().unwrap());
         close(&mut field,&mut original);

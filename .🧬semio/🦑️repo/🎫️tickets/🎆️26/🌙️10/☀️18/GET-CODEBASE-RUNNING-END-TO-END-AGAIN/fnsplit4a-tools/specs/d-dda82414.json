@@ -1,0 +1,46 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🧿️mutation-ownership/🟦️.ts",
+ "describeLine": 32,
+ "shared": {
+  "dir": "🟣️shared",
+  "doc": "/** 🟣️ The shared declarations of the direct mutation ownership suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️mutation-root-discovery-projects",
+   "doc": "/** 🔶️ The mutation root discovery projects tests of the direct mutation ownership suite. */",
+   "name": "registerMutationRootDiscoveryProjectsTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the mutation root discovery projects tests of the direct mutation ownership suite.",
+   "from": 33,
+   "to": 160
+  },
+  {
+   "dir": "🔸️recognizes-binary-leaf-tag",
+   "doc": "/** 🔸️ The recognizes binary leaf tag tests of the direct mutation ownership suite. */",
+   "name": "registerRecognizesBinaryLeafTagTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the recognizes binary leaf tag tests of the direct mutation ownership suite.",
+   "from": 187,
+   "to": 314
+  },
+  {
+   "dir": "🟠️requires-one-enabled-reachable",
+   "doc": "/** 🟠️ The requires one enabled reachable tests of the direct mutation ownership suite. */",
+   "name": "registerRequiresOneEnabledReachableTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the requires one enabled reachable tests of the direct mutation ownership suite.",
+   "from": 329,
+   "to": 443
+  },
+  {
+   "dir": "🟢️requires-fresh-clean-terminal",
+   "doc": "/** 🟢️ The requires fresh clean terminal tests of the direct mutation ownership suite. */",
+   "name": "registerRequiresFreshCleanTerminalTests",
+   "emoji": "🔵",
+   "fdoc": "Registers the requires fresh clean terminal tests of the direct mutation ownership suite.",
+   "from": 470,
+   "to": 470
+  }
+ ]
+}

@@ -258,31 +258,39 @@ function inputMatcher(pattern:string,broad=true):{prefix:string;match:(path:stri
  return{prefix,match:path=>broad&&path.startsWith(prefix)};
 }
 
-/** 🧮️ A sorted workspace inventory whose distinct declared patterns each select by one binary-searched prefix range, so thousands of tasks share the matching work. */
-export interface BazelSourceIndexV1{readonly files:readonly string[];select(inputs:readonly unknown[]):{marks:Uint8Array;extra:string[]};}
+/** 🔑️ One cacheable unit of a task's source selection: an include pattern minus exactly the exclusions that can overlap it, so every task and project that names the same pattern shares one cover. */
+export interface BazelSourceKeyV1{include:string;excludes:readonly string[]}
 
-/** 🧮️ Indexes an inventory once and caches every distinct pattern's matches; `select` marks the inventory entries a task's inputs name and lists the literal inputs and bundled manifests that are not in the inventory. */
+/** 🧮️ A sorted workspace inventory whose distinct patterns each select by a binary-searched prefix range and are cached: `keys` splits a task's inputs into shareable units, `select` resolves one unit, `selectAll` resolves a whole task. */
+export interface BazelSourceIndexV1{readonly files:readonly string[];keys(inputs:readonly unknown[]):{keys:BazelSourceKeyV1[];extra:string[]};select(key:BazelSourceKeyV1):Uint32Array;selectAll(inputs:readonly unknown[]):{marks:Uint8Array;extra:string[]};}
+
+/** 🧮️ Indexes an inventory once. An exclusion can only remove files an include pattern matches when their literal prefixes are prefixes of one another, so a unit carries just those exclusions and equals the task-wide selection exactly; literal inputs and bundled manifests outside the inventory are reported as `extra`. */
 export function bazelSourceIndexV1(inventory:readonly string[]):BazelSourceIndexV1{
- const files=[...new Set(inventory)].sort(),position=new Map(files.map((path,index)=>[path,index])),cache=new Map<string,{match:(path:string)=>boolean;indices:Uint32Array}>();
+ const files=[...new Set(inventory)].sort(),position=new Map(files.map((path,index)=>[path,index])),patterns=new Map<string,{prefix:string;match:(path:string)=>boolean;indices:Uint32Array}>(),selected=new Map<string,Uint32Array>(),literal=(value:string)=>!/[?*{[]/u.test(value);
  const lower=(prefix:string)=>{let low=0,high=files.length;while(low<high){const middle=(low+high)>>>1;if(files[middle]!<prefix)low=middle+1;else high=middle;}return low;};
  const compiled=(pattern:string,broad:boolean)=>{
-  const key=(broad?"+":"-")+pattern;let row=cache.get(key);
-  if(!row){const{prefix,match}=inputMatcher(pattern,broad),found:number[]=[];for(let index=lower(prefix);index<files.length&&files[index]!.startsWith(prefix);index++)if(match(files[index]!))found.push(index);row={match,indices:Uint32Array.from(found)};cache.set(key,row);}
+  const key=(broad?"+":"-")+pattern;let row=patterns.get(key);
+  if(!row){const{prefix,match}=inputMatcher(pattern,broad),found:number[]=[];for(let index=lower(prefix);index<files.length&&files[index]!.startsWith(prefix);index++)if(match(files[index]!))found.push(index);row={prefix,match,indices:Uint32Array.from(found)};patterns.set(key,row);}
   return row;
  };
- return{files,select(inputs){
-  const strings=inputs.filter((value):value is string=>typeof value==="string"),included=strings.filter(value=>!value.startsWith("!")),excluders=[...new Set(strings.filter(value=>value.startsWith("!")).map(value=>value.slice(1)))].map(pattern=>compiled(pattern,false)),marks=new Uint8Array(files.length),extra=new Set<string>();
-  for(const pattern of new Set(included))for(const index of compiled(pattern,true).indices)marks[index]=1;
-  for(const row of excluders)for(const index of row.indices)marks[index]=0;
-  const bundled=inputs.some(input=>typeof input==="object"&&input!==null&&"externalDependencies" in input)?actions.sources.bundled:[];
-  for(const literal of [...included.filter(value=>!/[?*{[]/u.test(value)&&!excluders.some(row=>row.match(value))),...bundled]){const index=position.get(literal);if(index===undefined)extra.add(literal);else marks[index]=1;}
-  return{marks,extra:[...extra].sort()};
- }};
+ const keys=(inputs:readonly unknown[])=>{
+  const strings=inputs.filter((value):value is string=>typeof value==="string"),included=[...new Set(strings.filter(value=>!value.startsWith("!")))],excluders=[...new Set(strings.filter(value=>value.startsWith("!")).map(value=>value.slice(1)))].map(pattern=>({pattern,...compiled(pattern,false)})),extra=new Set<string>();
+  const units:BazelSourceKeyV1[]=included.filter(include=>compiled(include,true).indices.length||literal(include)&&position.has(include)).map(include=>{const{prefix}=compiled(include,true);return{include,excludes:excluders.filter(row=>row.indices.length&&(row.prefix.startsWith(prefix)||prefix.startsWith(row.prefix))).map(row=>row.pattern).sort()};});
+  for(const value of included)if(literal(value)&&!position.has(value)&&!excluders.some(row=>row.match(value)))extra.add(value);
+  for(const value of inputs.some(input=>typeof input==="object"&&input!==null&&"externalDependencies" in input)?actions.sources.bundled:[])if(position.has(value))units.push({include:value,excludes:[]});else extra.add(value);
+  return{keys:[...new Map(units.map(unit=>[JSON.stringify(unit),unit])).values()],extra:[...extra].sort()};
+ };
+ const select=(unit:BazelSourceKeyV1):Uint32Array=>{
+  const text=JSON.stringify(unit);let known=selected.get(text);
+  if(!known){const excluders=unit.excludes.map(pattern=>compiled(pattern,false)),found=new Set<number>();for(const index of compiled(unit.include,true).indices)if(!excluders.some(row=>row.match(files[index]!)))found.add(index);const at=literal(unit.include)?position.get(unit.include):undefined;if(at!==undefined&&!excluders.some(row=>row.match(unit.include)))found.add(at);known=Uint32Array.from([...found].sort((left,right)=>left-right));selected.set(text,known);}
+  return known;
+ };
+ return{files,keys,select,selectAll(inputs){const{keys:units,extra}=keys(inputs),marks=new Uint8Array(files.length);for(const unit of units)for(const index of select(unit))marks[index]=1;return{marks,extra};}};
 }
 
 /** 🧿 Selects the workspace paths that declared input patterns, literal inputs and bundled dependency manifests name. */
 export function bazelTaskSourcePathsV1(inputs:readonly unknown[],files:readonly string[]):string[]{
- const index=bazelSourceIndexV1(files),{marks,extra}=index.select(inputs);
+ const index=bazelSourceIndexV1(files),{marks,extra}=index.selectAll(inputs);
  return [...new Set([...index.files.filter((_path,position)=>marks[position]),...extra])].sort();
 }
 
@@ -305,11 +313,11 @@ export async function bazelSourceClassesV1(root:string,paths:readonly string[],c
 /** 🏷️ Names a checkout file by the in-package Bazel label that reaches it through the source link, emoji and other non-ASCII names are valid Bazel target-name bytes, only package names must be ASCII. */
 export function bazelSourceLabelV1(path:string):string{return actions.sources.link+"/"+path;}
 
-/** 🗂️ One generated filegroup: nested directory groups and the individual files it lists. */
+/** 🗂️ One generated filegroup: nested groups and the individual files it lists. */
 export interface BazelSourceGroupV1{groups:readonly string[];files:readonly string[]}
 
-/** 🗂️ Covers selections of declarable files with per-directory filegroups: a directory whose every file is selected is referenced as one group (a project root is one group), a partly selected directory lists its selected files and recurses, and single-child chains collapse; every file is listed once in its directory group however many tasks select it, which keeps the BUILD proportional to the inventory instead of to the sum of the selections. `universe` is the sorted list of declarable files, `selected` marks entries of it, and `extra` adds files outside it. */
-export function bazelSourceCoverV1(universe:readonly string[]):{groups:Map<string,BazelSourceGroupV1>;cover(selected:ArrayLike<number>,extra?:readonly string[]):string|undefined}{
+/** 🗂️ Covers selections of declarable files with per-directory filegroups. A directory whose every file is selected is one group (a project root is one group), a partly selected directory lists its selected files and recurses, and single-child chains collapse, so each file is listed once in its directory group however many tasks select it. `universe` is the sorted list of declarable files. `cover` turns a dense selection over it into the groups and loose files that expand to exactly that selection, `merge` unites covers, and `compose` names a cover as one shared group (`k` for a pattern unit shared by many tasks, `i` for a task), or returns the lone group a cover already is. */
+export function bazelSourceCoverV1(universe:readonly string[]):{groups:Map<string,BazelSourceGroupV1>;cover(selected:ArrayLike<number>):BazelSourceGroupV1;merge(covers:readonly BazelSourceGroupV1[]):BazelSourceGroupV1;compose(cover:BazelSourceGroupV1,kind:"i"|"k"):string|undefined}{
  type Directory={path:string;low:number;high:number;files:number[];children:string[];rep?:Directory};
  const directories=new Map<string,Directory>(),groups=new Map<string,BazelSourceGroupV1>(),prefix=new Int32Array(universe.length+1),order=(left:string,right:string)=>left<right?-1:left>right?1:0;
  const ensure=(path:string,index:number):Directory=>{let row=directories.get(path);if(!row){row={path,low:index,high:index+1,files:[],children:[]};directories.set(path,row);if(path){const cut=path.lastIndexOf("/");ensure(cut<0?"":path.slice(0,cut),index).children.push(path);}}return row;};
@@ -321,20 +329,25 @@ export function bazelSourceCoverV1(universe:readonly string[]):{groups:Map<strin
   if(!groups.has(name))groups.set(name,{groups:owner.children.map(child=>define(directories.get(child)!)),files:owner.files.map(index=>universe[index]!)});
   return name;
  };
- return{groups,cover(selected,extra=[]){
-  for(let index=0;index<universe.length;index++)prefix[index+1]=prefix[index]!+(selected[index]?1:0);
-  const names=new Set<string>(),files=new Set<string>(extra),visit=(row:Directory)=>{
-   const count=prefix[row.high]!-prefix[row.low]!;if(!count)return;
-   if(count===row.high-row.low){names.add(define(row));return;}
-   for(const index of row.files)if(selected[index])files.add(universe[index]!);
-   for(const child of row.children)visit(directories.get(child)!);
-  };
-  if(universe.length)visit(directories.get("")!);
-  if(!names.size&&!files.size)return undefined;
-  const sortedNames=[...names].sort(order),sortedFiles=[...files].sort(order);
-  if(sortedNames.length===1&&!sortedFiles.length)return sortedNames[0]!;
-  const name="i_"+hash(sortedNames.join("\0")+"\u0001"+sortedFiles.join("\0")).slice(0,16);groups.set(name,{groups:sortedNames,files:sortedFiles});return name;
- }};
+ const sorted=(values:Iterable<string>)=>[...new Set(values)].sort(order);
+ return{groups,
+  cover(selected){
+   for(let index=0;index<universe.length;index++)prefix[index+1]=prefix[index]!+(selected[index]?1:0);
+   const names:string[]=[],files:string[]=[],visit=(row:Directory)=>{
+    const count=prefix[row.high]!-prefix[row.low]!;if(!count)return;
+    if(count===row.high-row.low){names.push(define(row));return;}
+    for(const index of row.files)if(selected[index])files.push(universe[index]!);
+    for(const child of row.children)visit(directories.get(child)!);
+   };
+   if(universe.length)visit(directories.get("")!);
+   return{groups:sorted(names),files:sorted(files)};
+  },
+  merge(covers){return{groups:sorted(covers.flatMap(cover=>cover.groups)),files:sorted(covers.flatMap(cover=>cover.files))};},
+  compose(cover,kind){
+   if(!cover.groups.length&&!cover.files.length)return undefined;
+   if(cover.groups.length===1&&!cover.files.length)return cover.groups[0]!;
+   const name=kind+"_"+hash(cover.groups.join("\0")+"\u0001"+cover.files.join("\0")).slice(0,16);groups.set(name,cover);return name;
+  }};
 }
 
 /** 📑 Renders the BUILD file whose declarations alone define every action, its inputs and its cache policy. */
@@ -499,15 +512,16 @@ export async function generateBazelWorkspaceV1(root:string,graph:BuildGraphV1,re
  const emitted=bazelActionsV1(graph,plan,request.skipCache===true),declared=[...emitted.values()].filter(action=>action.kind==="task"&&action.cache.cache),inputs=new Map(declared.map(action=>[action.id,bazelTaskInputsV1(graph,plan.tasks[action.id]!)])),bundled=(values:unknown[])=>values.some(input=>typeof input==="object"&&input!==null&&"externalDependencies" in input)?actions.sources.bundled:[];
  const files=await sourceFiles(root,invocation,[...new Set([...inputs.values()].flatMap(values=>[...values.filter((value):value is string=>typeof value==="string"&&!value.startsWith("!")),...bundled(values)]))]);
  await mkdir(workspace,{recursive:true,mode:0o700});await chmod(workspace,0o700);if(dirname(implementation.snapshot)!==workspace)throw new Error("Captured Bazel planner workspace changed");recheck();await writeChanged(join(workspace,"MODULE.bazel"),BAZEL_MODULE);await writeChanged(join(workspace,"tasks.bzl"),STARLARK_RULES);await linkBazelSourcesV1(root,workspace);
- const index=bazelSourceIndexV1(files),union=new Uint8Array(index.files.length),literals=new Set<string>(),classes=new Map<string,Promise<"file"|"hash"|"absent">>(),boundaries=new Map<string,Promise<boolean>>(),memo=new Map<string,Promise<string>>(),sources=new Map<string,string>(),hashed=new Map<string,string[]>(),selections=new Map<string,{source?:string;hashed:string[]}>();
- for(const values of new Map(declared.map(action=>[JSON.stringify(inputs.get(action.id)!),inputs.get(action.id)!])).values()){checkScriptInvocation(invocation);const{marks,extra}=index.select(values);for(let position=0;position<marks.length;position++)if(marks[position])union[position]=1;for(const path of extra)literals.add(path);}
- const named=[...index.files.filter((_path,position)=>union[position]),...[...literals].sort()],classified=await bazelSourceClassesV1(root,named,classes,boundaries,invocation),declarable=new Set(classified.files),universe=index.files.filter(path=>declarable.has(path)),compact=new Int32Array(index.files.length).fill(-1);
+ const index=bazelSourceIndexV1(files),union=new Uint8Array(index.files.length),literals=new Set<string>(),units=new Map<string,BazelSourceKeyV1>(),keyed=new Map<string,ReturnType<typeof index.keys>>(),classes=new Map<string,Promise<"file"|"hash"|"absent">>(),boundaries=new Map<string,Promise<boolean>>(),memo=new Map<string,Promise<string>>(),sources=new Map<string,string>(),hashed=new Map<string,string[]>();
+ for(const action of declared){checkScriptInvocation(invocation);const values=inputs.get(action.id)!,text=JSON.stringify(values);if(!keyed.has(text)){const row=index.keys(values);keyed.set(text,row);for(const unit of row.keys)units.set(JSON.stringify(unit),unit);for(const path of row.extra)literals.add(path);}}
+ for(const unit of units.values())for(const position of index.select(unit))union[position]=1;
+ const classified=await bazelSourceClassesV1(root,[...index.files.filter((_path,position)=>union[position]),...[...literals].sort()],classes,boundaries,invocation),declarable=new Set(classified.files),flagged=new Set(classified.hashed),universe=index.files.filter(path=>declarable.has(path)),compact=new Int32Array(index.files.length).fill(-1);
  for(let position=0,next=0;position<index.files.length;position++)if(declarable.has(index.files[position]!))compact[position]=next++;
- const tree=bazelSourceCoverV1(universe),flagged=new Set(classified.hashed);
+ const tree=bazelSourceCoverV1(universe),shared=new Map<string,{cover:BazelSourceGroupV1;hashed:string[]}>(),composed=new Map<string,{source?:string;hashed:string[]}>();
+ const unitCover=(unit:BazelSourceKeyV1)=>{const text=JSON.stringify(unit);let row=shared.get(text);if(!row){const chosen=new Uint8Array(universe.length),hashing:string[]=[];for(const position of index.select(unit)){const path=index.files[position]!;if(compact[position]!>=0)chosen[compact[position]!]=1;else if(flagged.has(path))hashing.push(path);}const cover=tree.cover(chosen);row={cover:cover.groups.length+cover.files.length>2?{groups:[tree.compose(cover,"k")!],files:[]}:cover,hashed:hashing};shared.set(text,row);}return row;};
  for(const action of declared){
-  checkScriptInvocation(invocation);const key=JSON.stringify(inputs.get(action.id)!);let row=selections.get(key);
-  if(!row){const{marks,extra}=index.select(inputs.get(action.id)!),chosen=new Uint8Array(universe.length),hashing:string[]=[];for(let position=0;position<marks.length;position++)if(marks[position]){if(compact[position]>=0)chosen[compact[position]!]=1;else if(flagged.has(index.files[position]!))hashing.push(index.files[position]!);}
-   row={source:tree.cover(chosen,extra.filter(path=>declarable.has(path))),hashed:[...hashing,...extra.filter(path=>flagged.has(path))].sort()};selections.set(key,row);}
+  checkScriptInvocation(invocation);const text=JSON.stringify(inputs.get(action.id)!);let row=composed.get(text);
+  if(!row){const{keys:units,extra}=keyed.get(text)!,parts=units.map(unitCover);row={source:tree.compose(tree.merge([...parts.map(part=>part.cover),{groups:[],files:extra.filter(path=>declarable.has(path))}]),"i"),hashed:[...new Set([...parts.flatMap(part=>part.hashed),...extra.filter(path=>flagged.has(path))])].sort()};composed.set(text,row);}
   if(row.source)sources.set(action.id,row.source);hashed.set(action.id,row.hashed);
  }
  let authorized:Set<string>|undefined;

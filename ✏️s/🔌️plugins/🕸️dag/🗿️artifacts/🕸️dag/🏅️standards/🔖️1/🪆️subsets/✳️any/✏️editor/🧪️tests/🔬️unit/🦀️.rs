@@ -281,9 +281,6 @@ async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructi
 
     let mut app: DagApp = new_app_with_registry().await;
     let node_ids: Vec<String> = crate::editor::dag::unit_tests::context::live_scene(&app).await.nodes.iter().map(|node| node.id.clone()).collect();
-    // 🕹️ The click-carried `request.surface.selection` drives the menu directly —
-    // `dag_context_menu_items`'s own `selected` fallback param is always `&[]` now (`render`/
-    // `context_menu` carry no `InteractionView`, ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
     let request = ContextMenuRequest {
         menu: UiMenuRef { id: "nodeGraph".into(), args: None },
         surface: Some(ContextMenuSurfaceTarget {

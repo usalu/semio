@@ -1,6 +1,6 @@
 import { lstatSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
-import { createRequire } from "node:module";
+import {ownsPayload as physicalOwnsPayload} from "./🟨️.cjs";
 export interface PackagePayloadOwner { readonly absDir: string; readonly name?: string; readonly exports?: unknown; }
 export interface PackagePayloadEntry {
   readonly kind: "directory" | "file" | "symlink" | "other";
@@ -53,7 +53,6 @@ export const NATIVE_DISCOVERY_OPERATIONS: PackagePayloadOperations = {
 };
 
 type PackagePayloadOwnership = (owner: PackagePayloadOwner, payload: PackagePayloadOwner) => boolean;
-const physical: { readonly ownsPayload: PackagePayloadOwnership } = createRequire(import.meta.url)("./🟨️.cjs");
 
 /** 🔗️ Binds a payload to its nearest package owner through a concrete authored export namespace. */
-export const ownsPayload: PackagePayloadOwnership = physical.ownsPayload;
+export const ownsPayload: PackagePayloadOwnership = physicalOwnsPayload;

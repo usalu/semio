@@ -14,7 +14,7 @@ use semio_s_artifact_stdio_zip::opc::sqlite::OpcSqliteTables;
 mod backing;
 use crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native;
 #[path = "🛡️subset/🦀️.rs"]
-mod subset;
+pub mod subset;
 
 const OPC: OpcSqliteTables =
     OpcSqliteTables { package: "xlsx_package", part: "xlsx_binary_part", default_type: "xlsx_default_content_type", override_type: "xlsx_override_content_type", relationship_owner: "xlsx_relationship_owner", relationship: "xlsx_relationship" };

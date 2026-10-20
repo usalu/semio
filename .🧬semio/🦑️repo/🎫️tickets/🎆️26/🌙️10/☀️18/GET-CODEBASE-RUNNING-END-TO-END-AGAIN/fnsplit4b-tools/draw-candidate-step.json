@@ -1,0 +1,87 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🪜️candidate-step/🦀️.rs",
+ "function": "step",
+ "nth": 0,
+ "match_line": 20,
+ "types": {
+  "mutation": "&DrawingMutation",
+  "access": "&mut DrawingSourceAccess<'_, '_>"
+ },
+ "ret": "Result<bool, &'static str>",
+ "inline": true,
+ "arms": [
+  {
+   "line": 29,
+   "name": "step_preflight_mutation",
+   "doc": "🧱️ Digests the mutation and admits its arena capacities.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 96,
+   "name": "step_locate_primary",
+   "doc": "🪵️ Locates the primary layer node of the mutation.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 137,
+   "name": "step_prepare_owned_value",
+   "doc": "🔩️ Prepares the owned value the mutation carries.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 270,
+   "name": "step_apply",
+   "doc": "⚙️ Applies the mutation to the candidate snapshot.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 433,
+   "name": "step_rebuild_source",
+   "doc": "🧲️ Rebuilds the source container index.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 471,
+   "name": "step_rebuild_destination",
+   "doc": "🪛️ Rebuilds the destination container index.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  }
+ ],
+ "method": {
+  "self_param": "&mut self",
+  "call": "self.{name}({args})"
+ },
+ "argexpr": {
+  "access": "&mut access"
+ }
+}

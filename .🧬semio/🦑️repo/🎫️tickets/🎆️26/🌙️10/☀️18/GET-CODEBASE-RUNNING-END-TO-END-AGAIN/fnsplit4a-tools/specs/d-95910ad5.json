@@ -1,0 +1,46 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🛰️framework-plugin-runtime/🟦️.ts",
+ "describeLine": 8,
+ "shared": {
+  "dir": "🟣️shared",
+  "doc": "/** 🟣️ The shared declarations of the framework plugin runtime suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️adaptpluginhandle-s-own-refreshui",
+   "doc": "/** 🔶️ The adaptpluginhandle s own refreshui tests of the framework plugin runtime suite. */",
+   "name": "registerAdaptpluginhandleSOwnRefreshuiTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the adaptpluginhandle s own refreshui tests of the framework plugin runtime suite.",
+   "from": 9,
+   "to": 60
+  },
+  {
+   "dir": "🔸️applyuipatchtoretained",
+   "doc": "/** 🔸️ The applyuipatchtoretained tests of the framework plugin runtime suite. */",
+   "name": "registerApplyuipatchtoretainedTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the applyuipatchtoretained tests of the framework plugin runtime suite.",
+   "from": 78,
+   "to": 233
+  },
+  {
+   "dir": "🟠️serializes-complete-multi-turn",
+   "doc": "/** 🟠️ The serializes complete multi turn tests of the framework plugin runtime suite. */",
+   "name": "registerSerializesCompleteMultiTurnTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the serializes complete multi turn tests of the framework plugin runtime suite.",
+   "from": 248,
+   "to": 356
+  },
+  {
+   "dir": "🟢️adaptpluginhandle-exposes-setmergepolicy",
+   "doc": "/** 🟢️ The adaptpluginhandle exposes setmergepolicy resolveconflict tests of the framework plugin runtime suite. */",
+   "name": "registerAdaptpluginhandleExposesSetmergepolicyResolveconflictTests",
+   "emoji": "🔵",
+   "fdoc": "Registers the adaptpluginhandle exposes setmergepolicy resolveconflict tests of the framework plugin runtime suite.",
+   "from": 394,
+   "to": 438
+  }
+ ]
+}

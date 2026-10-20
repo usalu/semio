@@ -10,6 +10,7 @@ extern crate semio_framework_value_derive as value_derive;
 
 use semio_s_artifact_norm_din18599_model::{Adjacency, Attachment, AutomationClass, BuildingCategory, CalculationMethod, CoolingSystem, DhwSystem, Din18599ClimateChild, EnvelopeElement, HeatingSystem, LightingSystem, MonthlyClimate, Renewables, ThermalZone, UsageProfile, UseClass, VentilationSystem};
 use framework_schema::ArtifactSchema;
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 
 //#region 🔖️Artifact
 /// 🧬️ Full Din18599 artifact state across the artifact and presence lanes.

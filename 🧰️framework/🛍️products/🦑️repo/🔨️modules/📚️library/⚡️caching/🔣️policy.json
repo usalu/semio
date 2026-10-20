@@ -52,6 +52,97 @@
     "hub-live-catalog-native-check",
     "hub-live-catalog-oracle"
   ],
+  "targetClasses": [
+    {
+      "decision": { "class": "live", "reason": "drives-running-process" },
+      "exact": ["acceptance-goal", "acceptance-plan"]
+    },
+    {
+      "decision": { "class": "side-effecting", "reason": "mutates-workspace" },
+      "exact": ["channel-version-generate", "logo", "schema-mirror"],
+      "heads": ["generator"]
+    },
+    {
+      "decision": { "class": "driver-owned", "reason": "freshness-owned-by-driver" },
+      "exact": ["activate-lanes-prototype", "activate-prototype", "prepare-prototype", "prepare-release"]
+    },
+    {
+      "decision": { "class": "deterministic", "reason": "pure-function-of-inputs" },
+      "exact": [
+        "compile-extension",
+        "cpp-build",
+        "cpp-configure",
+        "extension-package",
+        "generator-inputs",
+        "graph-generate",
+        "mcp-build",
+        "mutation-leaf-taxonomy-generate",
+        "native-build",
+        "native-codec-projection",
+        "package",
+        "schema-docs",
+        "schema-generate",
+        "typegen",
+        "ui-storybook-build",
+        "wasm"
+      ]
+    },
+    {
+      "decision": { "class": "deterministic", "reason": "check-without-outputs" },
+      "exact": [
+        "akteursnetz-validate",
+        "boundaries",
+        "canonical-architecture",
+        "carrier-reproduce",
+        "catalog-complete",
+        "conformance",
+        "conformance-command",
+        "conformance-process",
+        "cpp-custody",
+        "cpp-test",
+        "cpp-test-toolchain",
+        "declarations",
+        "examples",
+        "generate-taxonomy-census",
+        "generate-taxonomy-duplicates",
+        "generation-root-policy",
+        "graph-check",
+        "info",
+        "io-descriptor-parity",
+        "mutation-inventory",
+        "ownership",
+        "package-graph",
+        "policy-check",
+        "preview-distribution",
+        "preview-generated",
+        "preview-playground-session",
+        "preview-schema-index",
+        "publication-authority-audit",
+        "router-effect-source-custody",
+        "shared-schema",
+        "toolchain",
+        "twin",
+        "typescript",
+        "utility-action-policy"
+      ],
+      "heads": [
+        "test",
+        "check",
+        "lint",
+        "typecheck",
+        "format-check",
+        "verify",
+        "schema",
+        "stdio"
+      ],
+      "tails": ["check", "test", "oracle", "lint", "source", "native"],
+      "tokens": ["contract"]
+    },
+    {
+      "decision": { "class": "deterministic", "reason": "pure-function-of-inputs" },
+      "heads": ["build", "generate"]
+    }
+  ],
   "continuous": [
     "dev",
     "serve",

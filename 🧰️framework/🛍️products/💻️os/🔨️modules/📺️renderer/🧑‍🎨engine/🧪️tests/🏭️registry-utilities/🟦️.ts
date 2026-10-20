@@ -4,7 +4,7 @@ import gumballTargetsSchema from "../../🧱️elements/🌐️World3dHost/🧬�
 import gumballLiveProtocolFixture from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🛠️gumball-live-protocol.json";
 import { worldGumballStep, WORLD_GUMBALL_IDLE, type WorldGumballEvent, type WorldGumballTargets } from "../../🧱️elements/🌐️World3dHost/🧮️gumball-math/🟦️.ts";
 import { type ReactElement } from "react";
-import { hostArmedViewContext, windowViewContext } from "@semio-tech/framework/modules/manifest/view-state-and-public-invocation";
+import { hostArmedViewContext, windowViewContext } from "@semio-tech/framework-manifest/view-state-and-public-invocation";
 import Ajv2020 from "ajv/dist/2020";
 import labelResolutionFixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🔣️label-resolution.json";
 import * as THREE from "three";

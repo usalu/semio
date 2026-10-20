@@ -257,8 +257,8 @@
         },
         {
           "mutationId": "create-rig-extrinsic",
-          "sourceMutationDirectoryName": "⛓️create-rig",
-          "mutationDirectoryName": "⛓️create-rig",
+          "sourceMutationDirectoryName": "⛓️create-rig-extrinsic",
+          "mutationDirectoryName": "⛓️create-rig-extrinsic",
           "scenarios": [
             {
               "id": "adds-a-rig-2df5df",
@@ -663,13 +663,9 @@
         },
         {
           "mutationId": "update-camera-calibration",
-          "sourceMutationDirectoryName": "🛠️update-camera",
-          "mutationDirectoryName": "🛠️update-camera",
+          "sourceMutationDirectoryName": "🛠️update-camera-calibration",
+          "mutationDirectoryName": "🛠️update-camera-calibration",
           "scenarios": [
-            {
-              "id": "refines-the-cam-0eaef0",
-              "directoryName": "🔍️refines-the-cam-0eaef0"
-            },
             {
               "id": "refuses-to-b60a39",
               "directoryName": "🚫️refuses"
@@ -820,8 +816,8 @@
         },
         {
           "mutationId": "update-motion-params",
-          "sourceMutationDirectoryName": "🏎️update-motion",
-          "mutationDirectoryName": "🏎️update-motion",
+          "sourceMutationDirectoryName": "🏎️update-motion-params",
+          "mutationDirectoryName": "🏎️update-motion-params",
           "scenarios": [
             {
               "id": "enables-motion-2444a3",

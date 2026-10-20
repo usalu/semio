@@ -32,17 +32,17 @@ pub mod set_layer_boolean_operation {
 }
 #[path = "."]
 pub mod shape_coordinate {
-    #[path = "../../🧬️schema/🧬️mutations/🔷️shape-coordinate/🧪️tests/🔬️unit/🦀️.rs"]
+    #[path = "../../🧬️schema/🧬️mutations/🔷️set-shape-coordinate/🧪️tests/🔬️unit/🦀️.rs"]
     pub mod tests;
 }
 #[path = "."]
 pub mod update_layer_trace_params {
-    #[path = "../../🧬️schema/🧬️mutations/🔍️update-layer/🧪️tests/🔍️sharpens/🦀️.rs"]
+    #[path = "../../🧬️schema/🧬️mutations/🔍️update-layer-trace-params/🧪️tests/🔍️sharpens/🦀️.rs"]
     pub mod tests_sharpens_the_trace;
 }
 #[path = "."]
 pub mod update_layer_transform {
-    #[path = "../../🧬️schema/🧬️mutations/🔄️update-layer/🧪️tests/📐️translates/🦀️.rs"]
+    #[path = "../../🧬️schema/🧬️mutations/🔄️update-layer-transform/🧪️tests/📐️translates/🦀️.rs"]
     pub mod tests_translates_and_scales_shape_a;
 }
 #[path = "."]

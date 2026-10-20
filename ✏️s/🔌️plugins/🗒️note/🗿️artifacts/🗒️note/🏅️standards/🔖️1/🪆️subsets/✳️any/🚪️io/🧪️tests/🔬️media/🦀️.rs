@@ -1,4 +1,5 @@
-use crate::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
+use crate::{NoteBlockNode, NoteTextParagraph, NoteTextRun};
+use semio_s_artifact_note_note_schema::NoteSnapshot;
 use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing;
 use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry;
 use semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawNode;

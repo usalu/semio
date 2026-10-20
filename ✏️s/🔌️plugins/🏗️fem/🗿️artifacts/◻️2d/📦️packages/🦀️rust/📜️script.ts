@@ -1,6 +1,6 @@
 
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runOwnedVerifyScript, runMaterialNativeScript, runFixedDofScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 /** 🏛️ Checks portable event/window oracles and exact native transform, removal, and history laws. */
 class OwnedVerifyScript extends BundleScript {

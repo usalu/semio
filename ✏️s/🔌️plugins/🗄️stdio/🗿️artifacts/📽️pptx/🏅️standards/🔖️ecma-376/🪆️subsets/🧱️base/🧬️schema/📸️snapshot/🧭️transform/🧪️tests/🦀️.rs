@@ -1,9 +1,9 @@
 use semio_framework_test_fixtures::fixture_text;
-use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::transform::from_value;
-use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::transform::to_value;
-use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::transform::DslValue;
+use semio_s_artifact_stdio_pptx_base_vocabulary::transform::from_value;
+use semio_s_artifact_stdio_pptx_base_vocabulary::transform::to_value;
+use semio_framework_os_kernel::DslValue;
 use serde_json::Value as Json;
-
+#[cfg(test)]
 #[test]
 fn pptx_transform_wire_vectors_match_independent_serde_signed64() {
     let corpus: Json = serde_json::from_str(&fixture_text!("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📸️snapshot/🧭️transform/🔣️.json").to_owned()).unwrap();

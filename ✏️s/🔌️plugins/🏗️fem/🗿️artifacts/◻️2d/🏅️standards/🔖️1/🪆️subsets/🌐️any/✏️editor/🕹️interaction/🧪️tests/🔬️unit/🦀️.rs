@@ -144,7 +144,7 @@ fn select_and_hover_effects_carry_the_framework_wire_contract() {
 fn structure_layers_paint_stable_selected_and_hovered_emphasis() {
     let doc = demo();
     let snapshot = Fem2dInteractionSnapshot { selected_ids: vec!["scope:1:4:node2:n1".into(), "scope:1:7:element2:e3".into(), "scope:1:6:region2:r1".into(), "scope:1:7:support2:s1".into(), "scope:1:4:load4:live2:l6".into()], hovered_ids: vec!["scope:1:4:node2:n2".into()] };
-    let bare = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(model_window::fem2d_structure_layers(&doc, "#38bdf8", "#94a3b8", "#f97316")));
+    let bare = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(model_window::fem2d_structure_layers_with(&doc, "#38bdf8", "#94a3b8", "#f97316", &Fem2dInteractionSnapshot::default())));
     let painted = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(model_window::fem2d_structure_layers_with(&doc, "#38bdf8", "#94a3b8", "#f97316", &snapshot)));
     for id in ["sel-node-n1", "sel-el-e3", "sel-region-r1", "sel-support-s1", "sel-load-scope:1:4:load4:live2:l6", "hov-node-n2"] {
         assert!(painted.contains(id), "missing emphasis layer {id}");
@@ -163,7 +163,8 @@ fn identity_fixture() -> (serde_json::Value, Fem2dSnapshot) {
 
 #[test]
 fn scoped_entity_identity_prevents_cross_kind_and_case_collisions() {
-    use semio_s_artifact_fem_2d_editor::editor::fem2d::{commands::{patch_load, remove_selection}, panels::{artifact, inspection}, terminology::fem2d_labels};
+    use semio_s_artifact_fem_2d_editor::editor::fem2d::{panels::{artifact, inspection}, terminology::fem2d_labels};
+    use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::{patch_load, remove_selection};
     use semio_framework_plugin::ArtifactView;
     use semio_framework_plugin::ConfigView;
     use semio_framework_plugin::HistoryView;

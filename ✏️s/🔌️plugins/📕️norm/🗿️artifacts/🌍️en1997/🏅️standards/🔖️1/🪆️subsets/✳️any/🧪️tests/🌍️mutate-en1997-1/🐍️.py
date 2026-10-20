@@ -78,6 +78,9 @@ VECTORS = {
     "insert-pile": ("📥insert-pile", "✅apply"),
     "insert-pile-dupe": ("insert-pile", "📥insert-pile", "⛔dupe"),
     "remove-pile": ("📤remove-pile", "✅apply"),
+    "remove-footing-middle": ("remove-footing", "➖remove-footing", "🧭️middle"),
+    "remove-layer-middle": ("remove-layer", "➖️remove-layer", "🧭️middle"),
+    "remove-pile-middle": ("remove-pile", "📤remove-pile", "🧭️middle"),
 }
 
 #: 🗣️ The real committed EN 1997 document, read where the domain already keeps it.

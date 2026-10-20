@@ -20,7 +20,7 @@ import { OwnedShellDialog, type OwnedShellDialogProps } from "../../🧱️eleme
 import { createInstance as createTranslationOracle } from "i18next";
 import type { DialogDefinition } from "@semio-tech/framework";
 import { unresolvedActionArgs } from "@semio-tech/framework";
-import { argumentResolutionChoicesFixture as choiceFixture } from "@semio-tech/framework/action-argument-resolution/testing/fixtures";
+import { argumentResolutionChoicesFixture as choiceFixture } from "@semio-tech/framework-action-argument-resolution/testing/fixtures";
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 import { fireEvent, render } from "@semio-tech/ui-react/test";
 import { describe, expect, it, vi } from "vitest";

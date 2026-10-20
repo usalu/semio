@@ -233,9 +233,6 @@ fn project_gif(bytes: &[u8]) -> Result<String, String> {
 
     let mut frames: Vec<ProjectedFrame> = Vec::new();
     loop {
-        // 🧭️ `next_frame_info` returns metadata BEFORE pixel decoding — `interlaced` still holds
-        // the real Image Descriptor flag here. Captured into owned locals so the borrow ends
-        // before the mutable `read_into_buffer` call below (see module docstring).
         let (left, top, w, h, interlaced, palette, delay, dispose, transparent, needs_user_input) = {
             match decoder.next_frame_info().map_err(|error| format!("independent reader could not read frame metadata: {error}"))? {
                 None => break,

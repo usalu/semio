@@ -1,0 +1,245 @@
+{
+  "version": 1,
+  "contracts": [
+    {
+      "component": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json",
+      "definition": "ActionBirth",
+      "removed": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/📥️birth.json",
+      "sha256": "d8221916d9a0e97095846a6c3f21d0813d672575778ada6f3505bc7af927a8ed"
+    },
+    {
+      "component": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json",
+      "definition": "OutputSnapshot",
+      "removed": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/📦️snapshot.json",
+      "sha256": "d8acada8f6a93fa79ece3ba0dbfe5d304b97ae671a00d6e4552526d7fae61109"
+    },
+    {
+      "component": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json",
+      "definition": "ModuleSetup",
+      "removed": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🛠️modules.json",
+      "sha256": "9b3ba49ec2a72a2e1f599ba6694cc9c9008af2da6388ac5c80fd01ae68dc592c"
+    },
+    {
+      "component": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json",
+      "definition": "ImplementationPolicy",
+      "removed": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/⚙️policy.json",
+      "sha256": "0867a1cace7e955ec25fa73db5ae934c4a0019fce294542563e90b75a7fee30e"
+    },
+    {
+      "component": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json",
+      "definition": "Planner",
+      "removed": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/📋️planner.json",
+      "sha256": "aee2629df3d475ef29549896e0bffe91480629544848600a152c372034d5771d"
+    },
+    {
+      "component": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json",
+      "definition": "Implementation",
+      "removed": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔏️implementation.json",
+      "sha256": "766cd3755d45e852f7249de481fbda85534348eff12cb9c2715b1450f0ba5965"
+    },
+    {
+      "component": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧬️schema/🔣️.json",
+      "definition": "Command",
+      "removed": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🎛️command/🧬️schema/🔣️.json",
+      "sha256": "2bb5b0acd8ff9a63031370b3d16abc0bef5cba55bf6f17c058f8e14c71f7f7dd"
+    },
+    {
+      "component": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧬️schema/🔣️.json",
+      "definition": "PreparationReceipt",
+      "removed": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧬️schema/📥️receipt.json",
+      "sha256": "11fc5fe658e283f3f4f33a3d1d372837be4829576e5c3c1bce9d3b72c8fa0818"
+    },
+    {
+      "component": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧬️schema/🔣️.json",
+      "definition": "MaterializedPaths",
+      "removed": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧬️schema/📥️paths.json",
+      "sha256": "aa754355b28abc984546644fc54bdd137a5ff1e1989d47d2c5f7c6f42fe8d231"
+    },
+    {
+      "component": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧬️schema/🔣️.json",
+      "definition": "PreparationObservation",
+      "removed": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/👓️observation/🧬️schema/🔣️.json",
+      "sha256": "a211d2a637f5920182297aceda2b37b62c5e7312acf71b049785cd5a05f78dbf"
+    },
+    {
+      "component": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📥️operation/🧬️schema/🔣️.json",
+      "definition": "OpenLifetime",
+      "removed": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📥️operation/🤲️lifetime/🧬️schema/🔣️.json",
+      "sha256": "def34feb2774f41a8a15f89628076bfa1ffa801a7c39456cbf36adcd89b863d3"
+    },
+    {
+      "component": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json",
+      "definition": "StorageLayout",
+      "removed": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/💾️storage/🧬️schema/🔣️.json",
+      "sha256": "e26909ffc36cc4bf690bc0a6449e14cbe6f57b97b5cadaf8bcbe02b4e1aee59e"
+    }
+  ],
+  "vectors": [
+    {
+      "component": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json",
+      "reference": "ActionBirth/definitions/ParameterGrants",
+      "value": [
+        [
+          "/one"
+        ],
+        [
+          "/two"
+        ]
+      ],
+      "admit": true
+    },
+    {
+      "component": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json",
+      "reference": "ActionBirth/definitions/ParameterGrants",
+      "value": {},
+      "admit": false
+    },
+    {
+      "component": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json",
+      "reference": "OutputSnapshot",
+      "value": {
+        "version": 1,
+        "roots": [
+          "out"
+        ],
+        "entries": []
+      },
+      "admit": true
+    },
+    {
+      "component": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json",
+      "reference": "OutputSnapshot",
+      "value": {
+        "version": 1,
+        "roots": [
+          "out"
+        ],
+        "entries": [],
+        "foreign": true
+      },
+      "admit": false
+    },
+    {
+      "component": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json",
+      "reference": "ModuleSetup",
+      "value": {
+        "version": 1,
+        "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "lockSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "blobs": [
+          "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        ]
+      },
+      "admit": true
+    },
+    {
+      "component": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json",
+      "reference": "ModuleSetup",
+      "value": {
+        "version": 1,
+        "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "lockSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "blobs": [
+          "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        ],
+        "foreign": true
+      },
+      "admit": false
+    },
+    {
+      "component": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧬️schema/🔣️.json",
+      "reference": "Command/definitions/Request",
+      "value": {
+        "version": 1,
+        "platform": "linux",
+        "phase": "body",
+        "action": "allocate",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 0
+      },
+      "admit": true
+    },
+    {
+      "component": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧬️schema/🔣️.json",
+      "reference": "Command/definitions/Request",
+      "value": {
+        "version": 1,
+        "platform": "linux",
+        "phase": "body",
+        "action": "allocate",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 0,
+        "foreign": true
+      },
+      "admit": false
+    },
+    {
+      "component": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📥️operation/🧬️schema/🔣️.json",
+      "reference": "OpenLifetime",
+      "value": {
+        "name": "closed",
+        "closeFails": false,
+        "undefinedFailure": false,
+        "cancel": false,
+        "expected": "success"
+      },
+      "admit": true
+    },
+    {
+      "component": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📥️operation/🧬️schema/🔣️.json",
+      "reference": "OpenLifetime",
+      "value": {
+        "name": "closed",
+        "closeFails": false,
+        "undefinedFailure": false,
+        "cancel": false,
+        "expected": "success",
+        "foreign": true
+      },
+      "admit": false
+    },
+    {
+      "component": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json",
+      "reference": "StorageLayout",
+      "value": {
+        "version": 1,
+        "executable": "/owned/executable",
+        "install": "/owned/install",
+        "modules": "/owned/modules",
+        "workspace": "/owned/workspace",
+        "outputs": "/owned/outputs",
+        "actions": "/owned/actions",
+        "server": "/owned/server",
+        "temporary": "/owned/temporary"
+      },
+      "admit": true
+    },
+    {
+      "component": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json",
+      "reference": "StorageLayout",
+      "value": {
+        "version": 1,
+        "executable": "/owned/executable",
+        "install": "/owned/install",
+        "modules": "/owned/modules",
+        "workspace": "/owned/workspace",
+        "outputs": "/owned/outputs",
+        "actions": "/owned/actions",
+        "server": "/owned/server",
+        "temporary": "/owned/temporary",
+        "foreign": true
+      },
+      "admit": false
+    }
+  ],
+  "retiredIds": [
+    "semio:native-fixed-command:v1",
+    "https://json.schemas.assets.semio-tech.com/framework/process/artifacts/native-build/storage/fixed/observation/component.json"
+  ]
+}

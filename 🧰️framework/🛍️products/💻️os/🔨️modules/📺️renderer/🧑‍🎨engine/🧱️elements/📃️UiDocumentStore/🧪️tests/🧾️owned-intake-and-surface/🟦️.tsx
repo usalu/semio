@@ -1,6 +1,6 @@
 /** 🧾 Owned root source, intake, instance tokens, surface mint and surface publication laws. */
 import { container, grant, leaf, nativeInstanceFixture, type UiNodeRecord, createTypedWireSupport, type TypedWireVitest, type TypedWireDependencies } from "../🪛️typedwire-helpers/🟦️.tsx";
-import { loadRetainedRootSourceFixture, loadRetainedWireOperationsFixture, loadUiRetainedIntakeFixture, loadWorld3dSceneLanesFixture, loadIntakeCloseFaultFixture, loadRetainedIntakeNotificationFixture, loadRetainedInstanceOwnerFixture, loadRetainedOwnedSurfaceFixture, loadRetainedWireFieldsFixture } from "@semio-tech/framework/ui/testing/fixtures";
+import { loadRetainedRootSourceFixture, loadRetainedWireOperationsFixture, loadUiRetainedIntakeFixture, loadWorld3dSceneLanesFixture, loadIntakeCloseFaultFixture, loadRetainedIntakeNotificationFixture, loadRetainedInstanceOwnerFixture, loadRetainedOwnedSurfaceFixture, loadRetainedWireFieldsFixture } from "@semio-tech/ui/testing/fixtures";
 
 export async function registerOwnedIntakeAndSurfaceTests(vitest: TypedWireVitest, dependencies: TypedWireDependencies): Promise<void> {
   const { describe, expect, it, vi } = vitest;
@@ -10,7 +10,7 @@ export async function registerOwnedIntakeAndSurfaceTests(vitest: TypedWireVitest
   //#region 🧾️TypedWireTests
   describe("TypedWire", () => {
     it("OwnedRootSource renders exact native roots through independent consumers and retains close until unmount", async () => {
-      const { OwnedUiInstance } = await import("@semio-tech/framework/modules/ui/contract/retained/instance"); const { useOwnedUiView, useOwnedUiNode } = await import("../../📖️owned/🟦️.tsx");
+      const { OwnedUiInstance } = await import("@semio-tech/ui-contract/retained/instance"); const { useOwnedUiView, useOwnedUiNode } = await import("../../📖️owned/🟦️.tsx");
       const fixture = await loadRetainedRootSourceFixture(); const fields = await loadRetainedWireOperationsFixture();
       const { encodePackValue } = await import("@semio-tech/framework/packs"); const { render, act, cleanup } = await import("@testing-library/react"); const { createElement, StrictMode } = await import("react"); const native = await nativeInstanceFixture(); const { activation, lifetime } = native; const owner = new OwnedUiInstance(activation, lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); native.lease.bindHostRetirement(owner); const lookup = owner.beginSurfaceLookup(activation, lifetime, "window")!; expect(finish(lookup)).toBe("ready"); const source = lookup.takeResult()!; close(lookup);
       function Node({ id }: { id: number }) { const record = useOwnedUiNode(source, id); return createElement("span", null, record?.component.type === "text" ? record.component.value : "pending"); }
@@ -34,7 +34,7 @@ export async function registerOwnedIntakeAndSurfaceTests(vitest: TypedWireVitest
     });
 
     it("OwnedIntake retains one lookup and exact native source until successful publication receipt", async () => {
-      const { OwnedUiPatchIntake } = await import("../../📥️intake/🟦️.ts"); const { OwnedUiInstance } = await import("@semio-tech/framework/modules/ui/contract/retained/instance"); const fixture = await loadUiRetainedIntakeFixture(); const fields = await loadRetainedWireOperationsFixture(); const { encodePackValue } = await import("@semio-tech/framework/packs"); const native = await nativeInstanceFixture(); const { activation, lifetime } = native; const owner = new OwnedUiInstance(activation, lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); const foreign = new OwnedUiInstance(activation, lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); native.lease.bindHostRetirement(owner); const source = await native.source([{ tag: "upsert", val: { node: encodePackValue(fields.node) } }, { tag: "set-root", val: BigInt(fields.root) }]); expect(source.value.operationCount).toBe(fixture.operationCount); expect(() => new OwnedUiPatchIntake(foreign, source)).toThrow(/owner/);
+      const { OwnedUiPatchIntake } = await import("../../📥️intake/🟦️.ts"); const { OwnedUiInstance } = await import("@semio-tech/ui-contract/retained/instance"); const fixture = await loadUiRetainedIntakeFixture(); const fields = await loadRetainedWireOperationsFixture(); const { encodePackValue } = await import("@semio-tech/framework/packs"); const native = await nativeInstanceFixture(); const { activation, lifetime } = native; const owner = new OwnedUiInstance(activation, lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); const foreign = new OwnedUiInstance(activation, lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); native.lease.bindHostRetirement(owner); const source = await native.source([{ tag: "upsert", val: { node: encodePackValue(fields.node) } }, { tag: "set-root", val: BigInt(fields.root) }]); expect(source.value.operationCount).toBe(fixture.operationCount); expect(() => new OwnedUiPatchIntake(foreign, source)).toThrow(/owner/);
       const busy = owner.beginSurfaceLookup(activation, lifetime, "window")!; const intake = new OwnedUiPatchIntake(owner, source); expect(intake.advance({ maxItems: 0, maxBytes: 4096 }).kind).toBe("blocked"); expect(intake.advance(grant)).toMatchObject({ kind: "blocked", phase: "intake-lookup-capacity" }); expect(intake.takeSurface()).toBeNull(); expect(source.inputRetired).toBe(false); close(busy);
       for (let n = 0; !intake.peekAcknowledgement(); n++) { expect(n).toBeLessThan(10000); const current = intake.advance(grant); expect(current.kind, intake.failure ?? "intake").not.toBe("rejected"); expect(current.items).toBeLessThanOrEqual(1); expect(current.bytes).toBeLessThanOrEqual(4096); expect(intake.takeSurface()).toBeNull(); }
       const token = intake.peekAcknowledgement()!; expect(source.inputRetired).toBe(true); expect(intake.advance(grant).kind).toBe("blocked"); native.worker.refuse = true; await expect(native.lease.submitUiAcknowledgement(source, token, native.budget)).rejects.toThrow(/refusal/); expect(intake.peekAcknowledgement()).toBe(token); expect(intake.acceptAcknowledgement(Object.create(Object.getPrototypeOf(token)))).toBe(false);
@@ -42,7 +42,7 @@ export async function registerOwnedIntakeAndSurfaceTests(vitest: TypedWireVitest
     });
 
     it("OwnedIntake drives a Nakagin-scale paged scene-lane surface patch to acknowledgement inside the credited budget", async () => {
-      const { OwnedUiPatchIntake, retainedUiIntakeStepCeiling, RETAINED_UI_INTAKE_STEPS_PER_NODE } = await import("../../📥️intake/🟦️.ts"); const { OwnedUiInstance } = await import("@semio-tech/framework/modules/ui/contract/retained/instance");
+      const { OwnedUiPatchIntake, retainedUiIntakeStepCeiling, RETAINED_UI_INTAKE_STEPS_PER_NODE } = await import("../../📥️intake/🟦️.ts"); const { OwnedUiInstance } = await import("@semio-tech/ui-contract/retained/instance");
       const contract = await loadWorld3dSceneLanesFixture(); const { encodePackValue } = await import("@semio-tech/framework/packs");
       const { leafBytes, childrenMax, measuredFaultBytes } = contract.carrier;
       const nodes: UiNodeRecord[] = []; const laneRoots: number[] = []; const laneRecords: UiNodeRecord[][] = []; let nextId = 1; const laneBytes = Math.ceil(measuredFaultBytes / contract.lanes.length);
@@ -103,7 +103,7 @@ export async function registerOwnedIntakeAndSurfaceTests(vitest: TypedWireVitest
      * drives one packed carrier through the REAL intake and reads the published record back the way
      * `PluginRuntime.projectOwnedUiSurface` does. */
     it("OwnedIntake publishes a packed scene-lane leaf whose data-attribute slices all survive the wire", async () => {
-      const { OwnedUiPatchIntake } = await import("../../📥️intake/🟦️.ts"); const { OwnedUiInstance } = await import("@semio-tech/framework/modules/ui/contract/retained/instance");
+      const { OwnedUiPatchIntake } = await import("../../📥️intake/🟦️.ts"); const { OwnedUiInstance } = await import("@semio-tech/ui-contract/retained/instance");
       const contract = await loadWorld3dSceneLanesFixture(); const { encodePackValue } = await import("@semio-tech/framework/packs"); const { packedTextLeaf } = await import("../../../🔌️PluginRuntime/🧳️packed-text/🟦️.ts");
       const { leafBytes, packChunks, packBytes } = contract.carrier; expect(packBytes).toBe(leafBytes * packChunks);
       const lane = contract.lanes.find((entry) => entry.lane === "instances")!;
@@ -152,7 +152,7 @@ export async function registerOwnedIntakeAndSurfaceTests(vitest: TypedWireVitest
      * document must stay a delta (W-R), measured 18 565 steps against the first publication's 105 416.
      */
     it("OwnedIntake takes a whole packed world-3d lane set in at a bounded cost per carried byte", async () => {
-      const { OwnedUiPatchIntake } = await import("../../📥️intake/🟦️.ts"); const { OwnedUiInstance } = await import("@semio-tech/framework/modules/ui/contract/retained/instance");
+      const { OwnedUiPatchIntake } = await import("../../📥️intake/🟦️.ts"); const { OwnedUiInstance } = await import("@semio-tech/ui-contract/retained/instance");
       const contract = await loadWorld3dSceneLanesFixture(); const { encodePackValue } = await import("@semio-tech/framework/packs");
       const { leafBytes, packChunks, childrenMax } = contract.carrier;
       /** 📏️ The lane byte counts the puzzle 3d editor publishes for the Nakagin Capsule Tower,
@@ -201,7 +201,7 @@ export async function registerOwnedIntakeAndSurfaceTests(vitest: TypedWireVitest
     });
 
     it("OwnedIntake cancellation retires each accepted prefix without closing the whole instance", async () => {
-      const { OwnedUiPatchIntake } = await import("../../📥️intake/🟦️.ts"); const { OwnedUiInstance } = await import("@semio-tech/framework/modules/ui/contract/retained/instance"); const fixture = await loadUiRetainedIntakeFixture(); const fields = await loadRetainedWireOperationsFixture(); const { encodePackValue } = await import("@semio-tech/framework/packs");
+      const { OwnedUiPatchIntake } = await import("../../📥️intake/🟦️.ts"); const { OwnedUiInstance } = await import("@semio-tech/ui-contract/retained/instance"); const fixture = await loadUiRetainedIntakeFixture(); const fields = await loadRetainedWireOperationsFixture(); const { encodePackValue } = await import("@semio-tech/framework/packs");
       for (const prefix of fixture.cancelPrefixes) {
         const native = await nativeInstanceFixture(); const { activation, lifetime } = native; const owner = new OwnedUiInstance(activation, lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); native.lease.bindHostRetirement(owner); const source = await native.source([{ tag: "upsert", val: { node: encodePackValue(fields.node) } }, { tag: "set-root", val: BigInt(fields.root) }]); const intake = new OwnedUiPatchIntake(owner, source);
         for (let n = 0; n < prefix; n++) { const current = intake.advance(grant); expect(current.kind, intake.failure ?? "prefix").not.toBe("rejected"); if (intake.peekAcknowledgement()) break; }
@@ -212,7 +212,7 @@ export async function registerOwnedIntakeAndSurfaceTests(vitest: TypedWireVitest
     });
 
     it("OwnedIntake late cancellation preserves committed notification and ACK under the shared close driver", async () => {
-      const { OwnedUiPatchIntake } = await import("../../📥️intake/🟦️.ts"); const { OwnedUiInstance } = await import("@semio-tech/framework/modules/ui/contract/retained/instance"); const fields = await loadRetainedWireOperationsFixture(); const { encodePackValue } = await import("@semio-tech/framework/packs");
+      const { OwnedUiPatchIntake } = await import("../../📥️intake/🟦️.ts"); const { OwnedUiInstance } = await import("@semio-tech/ui-contract/retained/instance"); const fields = await loadRetainedWireOperationsFixture(); const { encodePackValue } = await import("@semio-tech/framework/packs");
       const native = await nativeInstanceFixture(); const { activation, lifetime } = native; const owner = new OwnedUiInstance(activation, lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); native.lease.bindHostRetirement(owner); const lookup = owner.beginSurfaceLookup(activation, lifetime, "window")!; expect(finish(lookup)).toBe("ready"); const surface = lookup.takeResult()!; close(lookup); let notifications = 0; const subscription = surface.subscribeView(() => { notifications++; }); while (owner.maintenancePending) owner.advanceMaintenance(grant); const before = notifications;
       const source = await native.source([{ tag: "upsert", val: { node: encodePackValue(fields.node) } }, { tag: "set-root", val: BigInt(fields.root) }]); const intake = new OwnedUiPatchIntake(owner, source);
       for (let n = 0; surface.view.revision === 0; n++) { expect(n).toBeLessThan(10000); const current = intake.advance(grant); expect(current.kind, intake.failure ?? "publication").not.toBe("rejected"); }
@@ -225,7 +225,7 @@ export async function registerOwnedIntakeAndSurfaceTests(vitest: TypedWireVitest
     });
 
     it("OwnedIntake preserves an injected committed close rejection and its exact retained owner", async () => {
-      const { OwnedUiPatchIntake } = await import("../../📥️intake/🟦️.ts"); const { OwnedUiInstance, OwnedUiInstancePatch } = await import("@semio-tech/framework/modules/ui/contract/retained/instance"); const fixture = await loadIntakeCloseFaultFixture(); const fields = await loadRetainedWireOperationsFixture(); const { encodePackValue } = await import("@semio-tech/framework/packs"); const native = await nativeInstanceFixture(); const { activation, lifetime } = native; const owner = new OwnedUiInstance(activation, lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); native.lease.bindHostRetirement(owner); const lookup = owner.beginSurfaceLookup(activation, lifetime, "window")!; expect(finish(lookup)).toBe("ready"); const surface = lookup.takeResult()!; close(lookup); const source = await native.source([{ tag: "upsert", val: { node: encodePackValue(fields.node) } }, { tag: "set-root", val: BigInt(fields.root) }]); const intake = new OwnedUiPatchIntake(owner, source);
+      const { OwnedUiPatchIntake } = await import("../../📥️intake/🟦️.ts"); const { OwnedUiInstance, OwnedUiInstancePatch } = await import("@semio-tech/ui-contract/retained/instance"); const fixture = await loadIntakeCloseFaultFixture(); const fields = await loadRetainedWireOperationsFixture(); const { encodePackValue } = await import("@semio-tech/framework/packs"); const native = await nativeInstanceFixture(); const { activation, lifetime } = native; const owner = new OwnedUiInstance(activation, lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); native.lease.bindHostRetirement(owner); const lookup = owner.beginSurfaceLookup(activation, lifetime, "window")!; expect(finish(lookup)).toBe("ready"); const surface = lookup.takeResult()!; close(lookup); const source = await native.source([{ tag: "upsert", val: { node: encodePackValue(fields.node) } }, { tag: "set-root", val: BigInt(fields.root) }]); const intake = new OwnedUiPatchIntake(owner, source);
       for (let n = 0; surface.view.revision === 0; n++) { expect(n).toBeLessThan(10000); expect(intake.advance(grant).kind).not.toBe("rejected"); } intake.beginClose();
       const fault = vi.spyOn(OwnedUiInstancePatch.prototype, "closeStep").mockReturnValueOnce({ kind: "rejected", phase: fixture.phase, items: fixture.items, bytes: fixture.bytes });
       try { const actual = intake.closeStep(grant); expect(actual).toEqual(produce({ kind: fixture.kind, phase: fixture.phase, items: fixture.items, bytes: fixture.bytes }, () => {})); expect(intake.failure).toContain(fixture.phase); expect(intake.terminalIsEmpty()).toBe(!fixture.retainsOwner); expect(intake.peekAcknowledgement() !== null).toBe(fixture.issuesAcknowledgement); expect(intake.takeSurface()).toBeNull(); } finally { fault.mockRestore(); }
@@ -234,7 +234,7 @@ export async function registerOwnedIntakeAndSurfaceTests(vitest: TypedWireVitest
     });
 
     it("OwnedIntake preserves failed notification ownership and permits exact consumer retry before later publication", async () => {
-      const { OwnedUiPatchIntake } = await import("../../📥️intake/🟦️.ts"); const { OwnedUiInstance } = await import("@semio-tech/framework/modules/ui/contract/retained/instance"); const fixture = await loadRetainedIntakeNotificationFixture(); const fields = await loadRetainedWireOperationsFixture(); const { encodePackValue } = await import("@semio-tech/framework/packs"); const native = await nativeInstanceFixture(); const { activation, lifetime } = native; const owner = new OwnedUiInstance(activation, lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); native.lease.bindHostRetirement(owner); const lookup = owner.beginSurfaceLookup(activation, lifetime, "window")!; expect(finish(lookup)).toBe("ready"); const surface = lookup.takeResult()!; close(lookup); const events: string[] = []; let fail = true;
+      const { OwnedUiPatchIntake } = await import("../../📥️intake/🟦️.ts"); const { OwnedUiInstance } = await import("@semio-tech/ui-contract/retained/instance"); const fixture = await loadRetainedIntakeNotificationFixture(); const fields = await loadRetainedWireOperationsFixture(); const { encodePackValue } = await import("@semio-tech/framework/packs"); const native = await nativeInstanceFixture(); const { activation, lifetime } = native; const owner = new OwnedUiInstance(activation, lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); native.lease.bindHostRetirement(owner); const lookup = owner.beginSurfaceLookup(activation, lifetime, "window")!; expect(finish(lookup)).toBe("ready"); const surface = lookup.takeResult()!; close(lookup); const events: string[] = []; let fail = true;
       const subscription: import("../../📖️owned/🟦️.tsx").OwnedUiReadSubscription = surface.subscribeNode(fields.root, () => { const snapshot = subscription.snapshot!; if (snapshot.version === 1 && fail) { fail = false; events.push("rejected"); throw new Error("Temporary consumer failure"); } events.push(String(snapshot.version)); surface.acknowledgeRead(subscription, snapshot); }); while (owner.maintenancePending) owner.advanceMaintenance(grant);
       const publish = async (operations: readonly unknown[], revision: number) => { const source = await native.source(operations, revision - 1, revision); const intake = new OwnedUiPatchIntake(owner, source); for (let n = 0; !intake.peekAcknowledgement(); n++) { expect(n).toBeLessThan(10000); expect(intake.advance(grant).kind, intake.failure ?? "notification").not.toBe("rejected"); } const token = intake.peekAcknowledgement()!; const receipt = await native.answer(native.lease.submitUiAcknowledgement(source, token, native.budget), { status: { tag: "idle" } }); expect(intake.acceptAcknowledgement(receipt.receipt)).toBe(true); expect(finish(intake)).toBe("ready"); expect(intake.takeSurface()).toBe(surface); close(intake); };
       await publish([{ tag: "upsert", val: { node: encodePackValue(fields.node) } }, { tag: "set-root", val: BigInt(fields.root) }], 1); expect(events).toEqual(fixture.events.slice(0, 2)); expect(owner.terminalIsEmpty()).toBe(fixture.retireBeforeRetry); expect(surface.retryNotification(subscription)).toBe(fixture.retryAccepted); expect(surface.retryNotification(subscription)).toBe(fixture.duplicateRetryAccepted); while (owner.maintenancePending) owner.advanceMaintenance(grant); expect(events).toEqual(fixture.events.slice(0, 3));
@@ -242,7 +242,7 @@ export async function registerOwnedIntakeAndSurfaceTests(vitest: TypedWireVitest
     });
 
     it("OwnedInstance old patch facades cannot read or release a successor input receipt", async () => {
-      const { OwnedUiInstance } = await import("@semio-tech/framework/modules/ui/contract/retained/instance"); const fields = await loadRetainedWireOperationsFixture(); const { encodePackValue } = await import("@semio-tech/framework/packs");
+      const { OwnedUiInstance } = await import("@semio-tech/ui-contract/retained/instance"); const fields = await loadRetainedWireOperationsFixture(); const { encodePackValue } = await import("@semio-tech/framework/packs");
       const native = await nativeInstanceFixture(); const { activation, lifetime } = native; const instance = new OwnedUiInstance(activation, lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); native.lease.bindHostRetirement(instance);
       const lookup = instance.beginSurfaceLookup(activation, lifetime, "window")!; expect(finish(lookup)).toBe("ready"); const view = lookup.takeResult()!; close(lookup);
       const old = instance.beginPatch(await native.source([]), view); close(old); const next = instance.beginPatch(await native.source([{ tag: "upsert", val: { node: encodePackValue(fields.node) } }]), view); expect(next.offer(0)).toBe(true); expect(finish(next)).toBe("ready"); const receipt = next.peekInputReceipt()!;
@@ -250,12 +250,12 @@ export async function registerOwnedIntakeAndSurfaceTests(vitest: TypedWireVitest
     });
 
     it("OwnedInstance acknowledgement token rejects forged roots without consulting public properties", async () => {
-      const { OwnedUiPatchAcknowledgement } = await import("@semio-tech/framework/modules/ui/contract/retained/instance"); let reads = 0; const source = Object.freeze({}); const forged = { get value() { reads++; throw new Error("Forged value access"); }, matches() { reads++; return true; } };
+      const { OwnedUiPatchAcknowledgement } = await import("@semio-tech/ui-contract/retained/instance"); let reads = 0; const source = Object.freeze({}); const forged = { get value() { reads++; throw new Error("Forged value access"); }, matches() { reads++; return true; } };
       expect(OwnedUiPatchAcknowledgement.matches(forged, source)).toBe(false); expect(() => Reflect.construct(OwnedUiPatchAcknowledgement, [forged, source, forged])).toThrow(/authority/); expect(reads).toBe(0);
     });
 
     it("OwnedInstance input-retirement token rejects forged ordinals and preserves cancelled exact source ownership", async () => {
-      const { OwnedUiInstance, OwnedUiPatchInputRetirement } = await import("@semio-tech/framework/modules/ui/contract/retained/instance"); const { encodePackValue } = await import("@semio-tech/framework/packs"); const fields = await loadRetainedWireOperationsFixture();
+      const { OwnedUiInstance, OwnedUiPatchInputRetirement } = await import("@semio-tech/ui-contract/retained/instance"); const { encodePackValue } = await import("@semio-tech/framework/packs"); const fields = await loadRetainedWireOperationsFixture();
       let reads = 0; const forged = { get ordinal() { reads++; return 0; }, matches() { reads++; return true; } }; expect(OwnedUiPatchInputRetirement.matches(forged, {}, 0, {})).toBe(false); expect(() => Reflect.construct(OwnedUiPatchInputRetirement, [forged, {}, 0, {}])).toThrow(/authority/); expect(reads).toBe(0);
       const native = await nativeInstanceFixture(); const { activation, lifetime } = native; const owner = new OwnedUiInstance(activation, lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); native.lease.bindHostRetirement(owner); const lookup = owner.beginSurfaceLookup(activation, lifetime, "window")!; expect(finish(lookup)).toBe("ready"); const surface = lookup.takeResult()!; close(lookup);
       const bytes = encodePackValue(fields.node); const operation = { tag: "upsert", val: { node: bytes } }; const source = await native.source([operation]); const patch = owner.beginPatch(source, surface); expect(patch.offer(0)).toBe(true); expect(patch.peekInputReceipt()).toBeNull(); native.lease.beginClose(); patch.beginClose(); expect(patch.closeStep({ maxItems: 0, maxBytes: 4096 }).kind).toBe("blocked"); expect(patch.peekInputReceipt()).toBeNull();
@@ -264,13 +264,13 @@ export async function registerOwnedIntakeAndSurfaceTests(vitest: TypedWireVitest
     });
 
     it("OwnedInstance input acceptance is privately minted only after successful wire admission", async () => {
-      const { OwnedUiInstance, OwnedUiPatchInputAcceptance } = await import("@semio-tech/framework/modules/ui/contract/retained/instance"); let reads = 0; const forged = { get ordinal() { reads++; return 0; }, matches() { reads++; return true; } }; expect(OwnedUiPatchInputAcceptance.matches(forged, {}, 0, {})).toBe(false); expect(() => Reflect.construct(OwnedUiPatchInputAcceptance, [forged, {}, 0, {}])).toThrow(/authority/); expect(reads).toBe(0);
+      const { OwnedUiInstance, OwnedUiPatchInputAcceptance } = await import("@semio-tech/ui-contract/retained/instance"); let reads = 0; const forged = { get ordinal() { reads++; return 0; }, matches() { reads++; return true; } }; expect(OwnedUiPatchInputAcceptance.matches(forged, {}, 0, {})).toBe(false); expect(() => Reflect.construct(OwnedUiPatchInputAcceptance, [forged, {}, 0, {}])).toThrow(/authority/); expect(reads).toBe(0);
       const native = await nativeInstanceFixture(); const { activation, lifetime } = native; const owner = new OwnedUiInstance(activation, lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); native.lease.bindHostRetirement(owner); const lookup = owner.beginSurfaceLookup(activation, lifetime, "window")!; expect(finish(lookup)).toBe("ready"); const surface = lookup.takeResult()!; close(lookup);
       const allocation = new Uint8Array(10); const partial = allocation.subarray(2, 4); const operation = { tag: "upsert", val: { node: partial } }; const source = await native.source([operation]); const patch = owner.beginPatch(source, surface); expect(() => patch.offer(0)).toThrow("Native ownership requires an entire non-shared admitted buffer"); expect(allocation.byteLength).toBe(10); expect(patch.peekInputReceipt()).toBeNull(); expect(source.inputRetired).toBe(false); close(patch); expect(patch.peekInputReceipt()).toBeNull(); close(owner); native.client.disposeAll();
     });
 
     it("OwnedInstance retirement witness requires exact terminal descendants and transfers once after revocation", async () => {
-      const { OwnedUiInstance, OwnedUiInstanceRetirement } = await import("@semio-tech/framework/modules/ui/contract/retained/instance"); const fixture = await loadRetainedInstanceOwnerFixture();
+      const { OwnedUiInstance, OwnedUiInstanceRetirement } = await import("@semio-tech/ui-contract/retained/instance"); const fixture = await loadRetainedInstanceOwnerFixture();
       let active = true; const activation = Object.freeze({ actorId: fixture.actor, activationGeneration: 9n, assertActive() { if (!active) throw new Error("Revoked activation"); }, async turn() { return {}; } }); const lifetime = Object.freeze({ activationGeneration: 9n, instanceId: fixture.instanceId, guestLifetime: BigInt(fixture.guestLifetimes[0]!) }); const nextLife = produce(lifetime, draft => { draft.guestLifetime = BigInt(fixture.guestLifetimes[1]!); });
       const owner = new OwnedUiInstance(activation, lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); const foreign = new OwnedUiInstance(activation, lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 });
       const lookup = owner.beginSurfaceLookup(activation, lifetime, "window")!; expect(finish(lookup)).toBe("ready"); const surface = lookup.takeResult()!; close(lookup); const reader = surface.subscribeNode(7, () => {}); while (owner.maintenancePending) owner.advanceMaintenance(grant);
@@ -281,9 +281,9 @@ export async function registerOwnedIntakeAndSurfaceTests(vitest: TypedWireVitest
     });
 
     it("OwnedInstance cancels one-cell lookups and rejects forged facades at the native name boundary", async () => {
-      const { OwnedUiInstance, OwnedUiInstanceSurface, OwnedUiSurfaceLookup } = await import("@semio-tech/framework/modules/ui/contract/retained/instance"); const fixture = await loadRetainedInstanceOwnerFixture();
+      const { OwnedUiInstance, OwnedUiInstanceSurface, OwnedUiSurfaceLookup } = await import("@semio-tech/ui-contract/retained/instance"); const fixture = await loadRetainedInstanceOwnerFixture();
       const activation = Object.freeze({ actorId: fixture.actor, activationGeneration: 9n, assertActive() {}, async turn() { return {}; } }); const lifetime = { activationGeneration: 9n, instanceId: 7, guestLifetime: 13n }; const instance = new OwnedUiInstance(activation, lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); const independent = new OwnedUiInstance(activation, lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 });
-      const surfaces: import("@semio-tech/framework/modules/ui/contract/retained/instance").OwnedUiInstanceSurface[] = [];
+      const surfaces: import("@semio-tech/ui-contract/retained/instance").OwnedUiInstanceSurface[] = [];
       for (const name of [...fixture.surfaceNames, "😀".repeat(fixture.nativeSurfaceMaximumBytes / 4)]) { const lookup = instance.beginSurfaceLookup(activation, lifetime, name)!; expect(finish(lookup)).toBe("ready"); surfaces.push(lookup.takeResult()!); close(lookup); }
       expect(() => instance.beginSurfaceLookup(activation, lifetime, "😀".repeat(fixture.nativeSurfaceMaximumBytes / 4 + 1))).toThrow(/capacity/);
       let reads = 0; const forged = { get owner() { reads++; throw new Error("Forged owner access"); } }; expect(() => Reflect.construct(OwnedUiInstanceSurface, [forged])).toThrow(/authority/); expect(() => Reflect.construct(OwnedUiSurfaceLookup, [forged])).toThrow(/authority/); expect(reads).toBe(0);
@@ -291,7 +291,7 @@ export async function registerOwnedIntakeAndSurfaceTests(vitest: TypedWireVitest
     });
 
     it("OwnedInstance binds native patch source to issued ACK and retries the exact pair after revocation", async () => {
-      const { OwnedUiInstance, OwnedUiPatchAcknowledgement, OwnedUiInstanceRetirement } = await import("@semio-tech/framework/modules/ui/contract/retained/instance"); const fields = await loadRetainedWireOperationsFixture(); const { encodePackValue } = await import("@semio-tech/framework/packs");
+      const { OwnedUiInstance, OwnedUiPatchAcknowledgement, OwnedUiInstanceRetirement } = await import("@semio-tech/ui-contract/retained/instance"); const fields = await loadRetainedWireOperationsFixture(); const { encodePackValue } = await import("@semio-tech/framework/packs");
       const native = await nativeInstanceFixture(); const { activation, lifetime } = native; const owner = new OwnedUiInstance(activation, lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); const foreign = new OwnedUiInstance(activation, lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); native.lease.bindHostRetirement(owner);
       const lookup = owner.beginSurfaceLookup(activation, lifetime, "window")!; expect(finish(lookup)).toBe("ready"); const surface = lookup.takeResult()!; close(lookup); const bytes = encodePackValue(fields.node); const source = await native.source([{ tag: "upsert", val: { node: bytes } }, { tag: "set-root", val: BigInt(fields.root) }]);
       expect(() => foreign.beginPatch(source, surface)).toThrow(/owner/); const patch = owner.beginPatch(source, surface); expect(patch.peekAcknowledgement()).toBeNull(); let notifications = 0; const reader = surface.subscribeNode(fields.root, () => { notifications++; }); while (owner.maintenancePending) owner.advanceMaintenance(grant); const initial = reader.snapshot;
@@ -300,19 +300,19 @@ export async function registerOwnedIntakeAndSurfaceTests(vitest: TypedWireVitest
       expect(token.value.receipt).toEqual(source.value.receipt); expect(token.value.receipt.patchSequence).toBe(51n); expect(token.value.receipt.patchSequence).not.toBe(BigInt(token.value.revision)); expect(Object.isFrozen(token.value.receipt)).toBe(true); expect(Object.isFrozen(token.value.receipt.lifetime)).toBe(true);
       const closeRequest = native.lease.beginClose(); owner.beginClose(); expect(() => activation.assertActive()).toThrow(/revoked/); expect(owner.closeStep(grant).kind).toBe("blocked"); expect(owner.takeRetirementWitness()).toBeNull(); expect(patch.acceptAcknowledgement({ success: true })).toBe(false); native.worker.refuse = true; await expect(native.lease.submitUiAcknowledgement(source, token, native.budget)).rejects.toThrow(/refusal/); expect(patch.peekAcknowledgement()).toBe(token);
       await expect(native.answer(native.lease.submitUiAcknowledgement(source, token, native.budget), { status: { tag: "fault", val: "fixture" } })).rejects.toThrow(/not-admitted/); expect(patch.peekAcknowledgement()).toBe(token); const submitted = await native.answer(native.lease.submitUiAcknowledgement(source, token, native.budget), { status: { tag: "idle" } }); expect(patch.acceptAcknowledgement(submitted.receipt)).toBe(true); expect(patch.acceptAcknowledgement(submitted.receipt)).toBe(false); expect(patch.peekAcknowledgement()).toBeNull();
-      const { encodeActorInstanceLifecycle } = await import("../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts"); const accepted = { kind: "accepted" as const, lifetime, requestSequence: closeRequest.requestSequence, closeGeneration: 17n }; const retired = { ...accepted, kind: "retired" as const };
+      const { encodeActorInstanceLifecycle } = await import("@semio-tech/framework/actor/lifetime"); const accepted = { kind: "accepted" as const, lifetime, requestSequence: closeRequest.requestSequence, closeGeneration: 17n }; const retired = { ...accepted, kind: "retired" as const };
       await native.answer(native.lease.close(native.budget), { status: { tag: "idle" }, lifecycleReceipt: encodeActorInstanceLifecycle(accepted) }); await native.answer(native.lease.acknowledge(accepted, native.budget), { status: { tag: "idle" }, lifecycleReceipt: encodeActorInstanceLifecycle(retired) }); close(foreign); const foreignWitness = foreign.takeRetirementWitness()!; await expect(native.lease.acknowledge(retired, native.budget, foreignWitness)).rejects.toThrow(/host-retirement-pending/); expect(owner.takeRetirementWitness()).toBeNull();
       surface.unsubscribeNode(reader); close(owner); const witness = owner.takeRetirementWitness()!; expect(OwnedUiInstanceRetirement.matches(witness, owner, activation, lifetime)).toBe(true); native.worker.refuse = true; await expect(native.lease.acknowledge(retired, native.budget, witness)).rejects.toThrow(/refusal/); expect(native.lease.pendingReceipt).toEqual(retired); await native.answer(native.lease.acknowledge(retired, native.budget, witness), { status: { tag: "idle" } }); expect(native.lease.progress().kind).toBe("complete"); native.client.dispose("native-ui"); native.client.disposeAll();
     });
 
     it("OwnedInstance refuses the same native source on an independently owned same-lifetime surface", async () => {
-      const { OwnedUiInstance } = await import("@semio-tech/framework/modules/ui/contract/retained/instance"); const native = await nativeInstanceFixture(); const { activation, lifetime } = native;
+      const { OwnedUiInstance } = await import("@semio-tech/ui-contract/retained/instance"); const native = await nativeInstanceFixture(); const { activation, lifetime } = native;
       const owner = new OwnedUiInstance(activation, lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); const foreign = new OwnedUiInstance(activation, lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); native.lease.bindHostRetirement(owner); const source = await native.source([]); const lookup = foreign.beginSurfaceLookup(activation, lifetime, "window")!; expect(finish(lookup)).toBe("ready"); const facade = lookup.takeResult()!; close(lookup);
       expect(() => foreign.beginPatch(source, facade)).toThrow(/owner/); expect(facade.view.revision).toBe(0); close(foreign); close(owner); native.client.disposeAll();
     });
 
     it("OwnedSurfaceMint refuses forged subscription detachment and private patch source access", async () => {
-      const { OwnedUiSurface, OwnedUiSurfacePatch } = await import("@semio-tech/framework/modules/ui/contract/retained/surface");
+      const { OwnedUiSurface, OwnedUiSurfacePatch } = await import("@semio-tech/ui-contract/retained/surface");
       const surface = new OwnedUiSurface({ actor: "mint", instance: 1, surface: "window" }, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); const real = surface.subscribeNode(7, () => {}); while (surface.maintenancePending) surface.advanceMaintenance(grant); const token = real.snapshot;
       const prototype: unknown = Object.getPrototypeOf(real); if (!prototype || typeof prototype !== "object" || !("constructor" in prototype) || typeof prototype.constructor !== "function") throw new Error("Missing reflected constructor");
       let rejected = false;
@@ -324,9 +324,9 @@ export async function registerOwnedIntakeAndSurfaceTests(vitest: TypedWireVitest
     });
 
     it("OwnedSurface publishes a validated hashed flat root before ACK and retires exact subscription owners", async () => {
-      const { OwnedUiSurface } = await import("@semio-tech/framework/modules/ui/contract/retained/surface");
-      const { OwnedUiOperation } = await import("@semio-tech/framework/modules/ui/contract/retained/operations");
-      const { RetainedUiTypedCursor } = await import("@semio-tech/framework/modules/ui/contract/retained/wire/typed");
+      const { OwnedUiSurface } = await import("@semio-tech/ui-contract/retained/surface");
+      const { OwnedUiOperation } = await import("@semio-tech/ui-contract/retained/operations");
+      const { RetainedUiTypedCursor } = await import("@semio-tech/ui-contract/retained/wire/typed");
       const fixture = await loadRetainedOwnedSurfaceFixture();
       const fields = await loadRetainedWireFieldsFixture();
       const { encodePackValue } = await import("@semio-tech/framework/packs");
@@ -347,16 +347,16 @@ export async function registerOwnedIntakeAndSurfaceTests(vitest: TypedWireVitest
     });
 
     it("OwnedSurface React reads initialize incrementally and exact unmount releases the final published byte owner", async () => {
-      const { OwnedUiSurface } = await import("@semio-tech/framework/modules/ui/contract/retained/surface");
-      const { OwnedUiOperation } = await import("@semio-tech/framework/modules/ui/contract/retained/operations");
-      const { RetainedUiTypedCursor } = await import("@semio-tech/framework/modules/ui/contract/retained/wire/typed");
+      const { OwnedUiSurface } = await import("@semio-tech/ui-contract/retained/surface");
+      const { OwnedUiOperation } = await import("@semio-tech/ui-contract/retained/operations");
+      const { RetainedUiTypedCursor } = await import("@semio-tech/ui-contract/retained/wire/typed");
       const { useOwnedUiNode } = await import("../../📖️owned/🟦️.tsx");
       const fields = await loadRetainedWireFieldsFixture();
       const { encodePackValue } = await import("@semio-tech/framework/packs"); const { render, act, cleanup } = await import("@testing-library/react"); const { createElement } = await import("react");
       const surface = new OwnedUiSurface({ actor: "DOM", instance: 7, surface: "window" }, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 });
       const decoder = new RetainedUiTypedCursor(encodePackValue(fields.node), "node"); expect(finish(decoder)).toBe("ready"); const payload = decoder.takeResult()!;
       const seed = surface.beginPatch(0, 1); seed.pushOperation(OwnedUiOperation.upsert(payload)); retire(payload.beginClose()); close(decoder); expect(finish(seed)).toBe("ready"); seed.pushOperation(OwnedUiOperation.setRoot(fields.node.id)); expect(finish(seed)).toBe("ready"); seed.finishInput(); expect(finish(seed)).toBe("ready"); expect(seed.takeAcknowledgement()?.revision).toBe(1); close(seed);
-      let last: import("@semio-tech/framework/modules/ui/contract/retained/wire/typed").RetainedUiNodeRecord | undefined;
+      let last: import("@semio-tech/ui-contract/retained/wire/typed").RetainedUiNodeRecord | undefined;
       function View() { const record = useOwnedUiNode(surface, fields.node.id); last = record; return createElement("span", { "aria-label": "Ansicht / View" }, record?.component.type === "surface" ? String(record.component.doc.bytes.byteAt(0)) : record?.component.type === "text" ? record.component.value : "pending"); }
       const root = render(createElement(View)); expect(root.getByLabelText("Ansicht / View").textContent).toBe("pending");
       await act(async () => { while (surface.maintenancePending) surface.advanceMaintenance(grant); }); expect(root.getByLabelText("Ansicht / View").textContent).toBe("3");
@@ -369,9 +369,9 @@ export async function registerOwnedIntakeAndSurfaceTests(vitest: TypedWireVitest
     });
 
     it("OwnedSurface notifications use an exact cutoff across unsubscribe, reentrant subscribe and thrown callbacks", async () => {
-      const { OwnedUiSurface } = await import("@semio-tech/framework/modules/ui/contract/retained/surface");
-      const { OwnedUiOperation } = await import("@semio-tech/framework/modules/ui/contract/retained/operations");
-      const { RetainedUiTypedCursor } = await import("@semio-tech/framework/modules/ui/contract/retained/wire/typed");
+      const { OwnedUiSurface } = await import("@semio-tech/ui-contract/retained/surface");
+      const { OwnedUiOperation } = await import("@semio-tech/ui-contract/retained/operations");
+      const { RetainedUiTypedCursor } = await import("@semio-tech/ui-contract/retained/wire/typed");
       const fields = await loadRetainedWireFieldsFixture();
       const { encodePackValue } = await import("@semio-tech/framework/packs");
       const surface = new OwnedUiSurface({ actor: "notices", instance: 1, surface: "window" }, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); const events: string[] = [];
@@ -389,9 +389,9 @@ export async function registerOwnedIntakeAndSurfaceTests(vitest: TypedWireVitest
     });
 
     it("OwnedSurface rejects text and patch quotas without publishing and preserves rejected input ownership", async () => {
-      const { OwnedUiSurface } = await import("@semio-tech/framework/modules/ui/contract/retained/surface");
-      const { OwnedUiOperation } = await import("@semio-tech/framework/modules/ui/contract/retained/operations");
-      const { RetainedUiTypedCursor } = await import("@semio-tech/framework/modules/ui/contract/retained/wire/typed");
+      const { OwnedUiSurface } = await import("@semio-tech/ui-contract/retained/surface");
+      const { OwnedUiOperation } = await import("@semio-tech/ui-contract/retained/operations");
+      const { RetainedUiTypedCursor } = await import("@semio-tech/ui-contract/retained/wire/typed");
       const fields = await loadRetainedWireFieldsFixture(); const { encodePackValue } = await import("@semio-tech/framework/packs");
       for (const limit of ["maxTextBytes", "maxPatchBytes", "maxPatchOps"] as const) {
         const surface = new OwnedUiSurface({ actor: "quota", instance: 1, surface: "window" }, { ...DEFAULT_UI_DOCUMENT_LIMITS, [limit]: 0 }, { usizeBits: 64 }); const previous = surface.view;
@@ -403,9 +403,9 @@ export async function registerOwnedIntakeAndSurfaceTests(vitest: TypedWireVitest
     });
 
     it("OwnedSurface every cancellation prefix preserves bytes and completes committed notifications and receipt obligations", async () => {
-      const { OwnedUiSurface } = await import("@semio-tech/framework/modules/ui/contract/retained/surface");
-      const { OwnedUiOperation } = await import("@semio-tech/framework/modules/ui/contract/retained/operations");
-      const { RetainedUiTypedCursor } = await import("@semio-tech/framework/modules/ui/contract/retained/wire/typed");
+      const { OwnedUiSurface } = await import("@semio-tech/ui-contract/retained/surface");
+      const { OwnedUiOperation } = await import("@semio-tech/ui-contract/retained/operations");
+      const { RetainedUiTypedCursor } = await import("@semio-tech/ui-contract/retained/wire/typed");
       const fields = await loadRetainedWireFieldsFixture(); const { encodePackValue } = await import("@semio-tech/framework/packs");
       const run = (cursor: { advance(budget: typeof grant): { kind: string; bytes: number; items: number } }) => { for (let n = 0; n < 10000; n++) { const step = cursor.advance(grant); if (step.bytes > 4096 || step.items > 1) throw new Error("Exceeded grant"); if (step.kind === "ready") return; if (step.kind === "rejected") throw new Error("Unexpected rejection"); } throw new Error("Cursor failed to finish"); };
       const setup = () => {
@@ -444,7 +444,7 @@ export async function registerOwnedIntakeAndSurfaceTests(vitest: TypedWireVitest
     });
 
     it("closes cancellation at every normalization step and traverses deep UiValue without recursive execution", async () => {
-      const { RetainedUiTypedCursor } = await import("@semio-tech/framework/modules/ui/contract/retained/wire/typed");
+      const { RetainedUiTypedCursor } = await import("@semio-tech/ui-contract/retained/wire/typed");
       const { encodePackValue } = await import("@semio-tech/framework/packs");
       const wire = { type: "surface", kind: "node-graph", docSchema: "node-graph@1", doc: { bytes: [2, 4] }, bindings: [{ trigger: "activate", action: { scope: "a", name: "b", version: 1 }, args: { nested: ["Ü", true] } }] };
       let normalizationSteps = 0;

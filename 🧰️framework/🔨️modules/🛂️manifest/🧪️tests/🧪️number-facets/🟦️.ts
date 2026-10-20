@@ -8,9 +8,10 @@ import Decimal from "decimal.js";
 
 import corpus from "../🧫️fixtures/🧫️number-facets/🔣️.json" with { type: "json" };
 
-import { numberRangeIsValid, snapsAreValid } from "../../../🖱️ui/🧬️contract/🛡️limits/🟦️.ts";
+import { numberRangeIsValid, snapsAreValid } from "@semio-tech/ui-contract/limits";
 import { type ShellLocale } from "../../🟦️.ts";
-import { actionArgNumberFacets, actionArgUnitSymbol, type ActionArgDef, type ActionArgNumberFacets } from "../../🎬️action-types-and-semantics/🟦️.ts";
+import type { ActionArgDef } from "../../🎬️action-types-and-semantics/🟦️.ts";
+import { actionArgNumberFacets, actionArgUnitSymbol, type ActionArgNumberFacets } from "@semio-tech/ui-contract/action-arg-facets";
 
 type Case = { readonly name: string; readonly locale: ShellLocale; readonly def: ActionArgDef; readonly facets: ActionArgNumberFacets | null };
 const cases = corpus.cases as unknown as readonly Case[];

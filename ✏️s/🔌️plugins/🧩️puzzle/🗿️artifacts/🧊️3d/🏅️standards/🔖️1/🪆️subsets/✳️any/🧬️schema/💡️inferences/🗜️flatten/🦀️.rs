@@ -1,6 +1,6 @@
 //! 🎛 Compose-parity absolute pose flatten over a puzzle-3d attraction graph.
 //!
-//! Byte-faithful port of `compose/client/lib/rs/lib.rs` `geom::flatten` (constants, matrix algebra,
+//! Byte-faithful port of the retired compose client `geom::flatten` (constants, matrix algebra,
 //! child-plane solve, BFS). Diagram centers use attraction `x`/`y` (compose `u`/`v`).
 
 use {semio_s_artifact_puzzle_3d_model::Puzzle3dAttraction, semio_s_artifact_puzzle_3d_model::Puzzle3dObject, semio_s_artifact_puzzle_3d_model::Puzzle3dObjectAnchor, semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot, semio_s_artifact_puzzle_3d_model::Puzzle3dVortex};

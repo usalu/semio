@@ -2,7 +2,7 @@ import{withRepositoryToolingOperationV1}from"../../../../💾️storage/🔒️e
 import{requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1,withRequestedIssuedResourceControlV1,withIssuedResourceOperationV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{requireToolingPublicationValueV1}from"../../🧹️retention/📏️headroom/🟦️.ts";
 import {withManagedToolingProvisionV1} from "../../🧹️retention/📥️physical/🟦️.ts";
-import retentionSchema from "../../🧹️retention/📥️physical/🧬️schema/🔣️.json";
+import retentionSchema from "../../🧹️retention/📥️physical/🧬️schema/🔣️.json" with { type: "json" };
 import {constants} from "node:fs";
 import {open,lstat,mkdir,readFile,writeFile,rename,chmod,rm} from "node:fs/promises";
 import {createHash} from "node:crypto";
@@ -15,7 +15,7 @@ import {repositoryCachePartitionRootV1,repositoryLeaseDirectoryV1} from "../../.
 import type {RepositoryToolingStoreV1} from "../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import {readNativeCallerAuthorityV1} from "../../../../../📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import schema from "../🧬️schema/🔣️.json";
+import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 /** 🌐️ Selects only the officially published native host family. */
 export function rustupHostTripleV1(platform:string,architecture:string,libc:"gnu"|"musl"="gnu"):string{const cpu=architecture==="arm64"?"aarch64":architecture==="x64"?"x86_64":undefined;if(!cpu)throw Error("Supported Rustup native architecture required");if(platform==="darwin")return cpu+"-apple-darwin";if(platform==="win32")return cpu+"-pc-windows-msvc";if(platform==="linux"){if(libc!=="gnu"&&libc!=="musl")throw Error("Supported Rustup native libc required");return cpu+"-unknown-linux-"+libc;}throw Error("Supported Rustup native platform required");}
 /** 💾️ Awaits durable directory publication on the enforcing backing. */

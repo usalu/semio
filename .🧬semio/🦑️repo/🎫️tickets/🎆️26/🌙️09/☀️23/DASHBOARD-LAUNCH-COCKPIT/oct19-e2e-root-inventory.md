@@ -345,3 +345,53 @@ Combined preliminary attribution with controls: 152 unique permanent source/remo
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1`
 
 228 unique permanent source/input/removal paths; 177 present and 51 deliberate removals. Maximum absolute UTF-16 length 193, none over256. Reports are separate retained ticket files.
+
+
+October20 direct-import regression attribution: `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts`; report `oct20-bootstrap-performance.md`. Existing Source-demand law now imports actual discovery and calls actual admission helper with unchanged neutral/SQLite vectors.
+
+
+## October20 Bootstrap Follow-On Files
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🎚️ui-axes/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🛗️zero-touch/🗂️closures/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🛗️zero-touch/🧪️tests/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🟦️.ts`
+
+The Source-demand law executes actual module imports; UI axes bootstrap has relative semantic imports; both declared prerequisities enter the full zero-touch roster, with completeness regression and the actual independent zero-touch test suite mounted by workspace:test-workspace-build.
+
+### Additional Native Recovery Guard Coverage
+
+Extended the already-attributed full zero-touch closure roster and tests with MCP script, native build owner and canonical Go plan. All three require full mode; no post-install seam or static-only exception was added. Independent bounded source review accepted the exact entries and relative semantic imports; actual compiler-backed full-closure execution remains pending new native availability.
+
+
+## October20 Native Source Workspace Attribution
+
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/📋️project.json`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/📜️script.ts`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/📦️packages/🦀️rust/📋️project.json`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🟦️.ts`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🦀️.rs`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🧪️tests/🟦️.ts`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🧪️tests/🥒️.feature`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🧫️fixtures/🔣️.json`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🧬️schema/🔣️.json`
+- `.gitignore`
+- `Cargo.toml`
+- `Cargo.lock`
+- `🧰️framework/Cargo.toml`
+- `🧰️framework/Cargo.lock`
+- `🧰️framework/🔨️modules/📁️filesystem/package.json`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧩️widgets/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📦️packages/🦀️rust/Cargo.toml`
+
+The new semantic workspace backend, schema, sixteen neutral vectors, ten native laws, seven Source cases and genuine ScriptRouter target are root-owned. Shared manifests/locks also contain other agents’ preserved changes; only the workspace membership/dependency and existing test-library edges were added here. Actual native whole command53877 passed all ten laws on macOS; Source oracle and dashboard/editor bodies remain separate gates.
+
+
+## Exact New Module Owner Registration
+
+- `📋️build-owners.json`
+
+Three missing owner rows were handcrafted for the Source workspace, its existing native package and the new snapshot-projection native package. Each name/root/manifest is read from its actual project declaration, packages remains empty because these modules own no package.json, and existing rows/provider declarations/order are preserved. This is registration only; no generated migration or broad registry sync was added.

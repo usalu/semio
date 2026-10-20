@@ -23,6 +23,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-pets-staging-draft = { path = "../../../📝️draft/📦️packages/🦀️rust" }
+semio-framework-pets-clearance = { path = "../../../🚧️clearance/📦️packages/🦀️rust" }
 semio-framework-pets-character = { path = "../../../🎭️character/📦️packages/🦀️rust" }
 semio-framework-pets-contract = { path = "../../../📜️contract/📦️packages/🦀️rust" }
 semio-framework-pets-interaction = { path = "../../../🖱️interaction/📦️packages/🦀️rust" }

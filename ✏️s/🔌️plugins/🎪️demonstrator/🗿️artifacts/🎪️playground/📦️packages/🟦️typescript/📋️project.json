@@ -73,6 +73,7 @@
         "{projectRoot}/📜️script.ts",
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*"
       ],
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify snapshot-sqlite-source",

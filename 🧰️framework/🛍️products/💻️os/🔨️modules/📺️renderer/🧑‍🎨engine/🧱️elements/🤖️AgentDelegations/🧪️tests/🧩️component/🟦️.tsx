@@ -48,7 +48,7 @@ import {
   type AgentDelegationRowV1,
   type AgentDelegationSummaryV1
 } from "@semio-tech/framework/directory/delegations";
-import { agentDelegationListFixture as delegationListVectors, directorySchema, mcpClientConfigFixture as mcpClientLaw } from "@semio-tech/framework/os/modules/directory/testing/fixtures";
+import { agentDelegationListFixture as delegationListVectors, directorySchema, mcpClientConfigFixture as mcpClientLaw } from "@semio-tech/framework-os/modules/directory/testing/fixtures";
 import { AgentDelegations, agentDelegationInstantV1 } from "../../🟦️.tsx";
 import Ajv from "ajv";
 import { useHubConnection } from "../../../🔗️HubConnection/🟦️.tsx";

@@ -1,0 +1,42 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️owned-locale-detector-retirement/🎛️shell-components-7/🟦️.tsx",
+ "function": "registerShellComponents7Tests",
+ "keep": [
+  21
+ ],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟠️shared",
+  "doc": "/** 🟠️ The shared declarations of registerShellComponents7Tests. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️canvas",
+   "doc": "/** 🔶️ The canvas phase of registerShellComponents7Tests. */",
+   "phases": [
+    {
+     "name": "buildCanvasState",
+     "emoji": "🔷",
+     "doc": "Builds Canvas, Engagement, Input, Mode of registerShellComponents7Tests.",
+     "from": 5,
+     "to": 8
+    }
+   ]
+  },
+  {
+   "dir": "🔸️shell-components",
+   "doc": "/** 🔸️ The shell components phase of registerShellComponents7Tests. */",
+   "phases": [
+    {
+     "name": "registerShellComponentsTests",
+     "emoji": "🔹",
+     "doc": "Registers the shell components tests of registerShellComponents7Tests.",
+     "from": 38,
+     "to": 38
+    }
+   ]
+  }
+ ]
+}

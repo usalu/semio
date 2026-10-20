@@ -17,7 +17,7 @@ export interface SemioImageFramesDiff {
 export interface NamedModified<D> { key: string; diff: D }
 export interface SemioImageMetadataDiff {
   removed: string[];
-  modified: NamedModified<string>[]; // weak collection: diff IS the whole new value
+  modified: NamedModified<string>[];
   added: SemioImageMetadataEntry[];
 }
 

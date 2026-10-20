@@ -36,6 +36,7 @@ semio-framework-value-persistent = { workspace = true }
 semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 serde = { workspace = true, optional = true }
+semio-framework-pack = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
@@ -45,3 +46,4 @@ semio-framework-test-fixtures = { path = "../../../../../../../../../../../../�
 serde = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-test-original-snapshot-owners = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }
+semio-s-artifact-draw-drawing-io = { workspace = true }

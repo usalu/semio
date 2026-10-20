@@ -11,7 +11,7 @@ use semio_framework_plugin_actor_host::requests;
 use semio_framework_value::{DslValue, RetainedCloneGrant};
 use semio_framework_job_native_decode::{OriginalNativeDecodeSource, OriginalNativeDecodePolicy, OriginalNativeDecodeIssued};
 use semio_framework_pack_json::{JsonGrammarCursor, JsonSourceCursor, JsonReadLimits, JsonMemberPolicy};
-use semio_framework_pack::record::intrinsic::{RetainedIntrinsicDocument};
+use pack::intrinsic::RetainedIntrinsicDocument;
 #[doc(hidden)]
 #[path="⚠️fault/🦀️.rs"]
 pub mod fault;

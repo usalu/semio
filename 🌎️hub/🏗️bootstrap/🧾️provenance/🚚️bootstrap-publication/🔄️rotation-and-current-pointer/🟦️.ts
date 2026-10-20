@@ -6,7 +6,7 @@ import { readTrustedCatalogPublicationProvenanceV1, trustedCatalogByteClaimV1, c
 import { checkResourceLeaseControl } from "@semio-tech/process/leases";
 import { type CompilerAdmissionControl } from "@semio-tech/process/compiler-capacity";
 import { requireIssuedResourceControlInvocationV1, type ScriptInvocation } from "@semio-tech/process/routing";
-import { observePhysicalFileV1, readPhysicalFileV1, type FileObservationControlV1 } from "@semio-tech/framework/filesystem/observation";
+import { observePhysicalFileV1, readPhysicalFileV1, type FileObservationControlV1 } from "@semio-tech/framework-filesystem/observation";
 import { createHash, randomBytes } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, renameSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";

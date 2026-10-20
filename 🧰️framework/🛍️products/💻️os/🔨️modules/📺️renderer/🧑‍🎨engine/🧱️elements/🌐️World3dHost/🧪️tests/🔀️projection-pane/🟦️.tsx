@@ -2,10 +2,10 @@
 
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { FlowProvider } from "@semio-tech/ui-react";
-import { WorldProjectionKindSwitch, worldProjectionDefaults, worldProjectionTemplateSelectionId } from "@semio-tech/infinite-world-r3f";
+import { WorldProjectionKindSwitch, worldProjectionDefaults, worldProjectionTemplateSelectionId } from "@semio-tech/framework/infinite/world/r3f";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import fixture from "../🧫️fixtures/🔀️projection-pane/🔣️.json" with { type: "json" };
-import { treeTextFlowFixture as readingFlow } from "@semio-tech/framework/ui/testing/fixtures";
+import { treeTextFlowFixture as readingFlow } from "@semio-tech/ui/testing/fixtures";
 
 afterEach(cleanup);
 

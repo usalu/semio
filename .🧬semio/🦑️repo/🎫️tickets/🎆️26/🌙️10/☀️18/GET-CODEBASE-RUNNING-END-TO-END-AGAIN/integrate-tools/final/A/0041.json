@@ -1,0 +1,596 @@
+{
+  "name": "@semio-tech/semio-tech-play",
+  "$schema": "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "!{projectRoot}/dist/**",
+      "!{projectRoot}/test-results/**",
+      "sharedGlobals"
+    ],
+    "activationSources": [
+      "production",
+      "^production",
+      "!{projectRoot}/dist/**",
+      "!{projectRoot}/test-results/**"
+    ]
+  },
+  "targets": {
+    "prepare-prototype": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "inputs": [
+        "activationSources",
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        }
+      ],
+      "dependsOn": [
+        "@semio-tech/framework-os-dev:prepare-demonstrator-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-imperative-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-stdio-png-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-lowpoly-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-remodel-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-draw-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-raster-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-layout-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-shooting-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-block2d-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-wfc2d-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-fem2d-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-energy-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-architect-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-din4108-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-note-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-writer-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-forms-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-mathematical-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-reasoning-wires-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-dag-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-trinity-jack-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-stdio-mp4-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-stdio-step-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-bim-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-stdio-ifc-2x3-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-stdio-gltf-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-stdio-pdf-1-4-a-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-stdio-docx-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-stdio-semio-brep-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-stdio-binary-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-animate-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-sequence-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-vcs-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-home-react-prototype"
+      ],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts prepare",
+        "forwardAllArgs": false,
+        "env": {
+          "SEMIO_BUILD_MODE": "prototype"
+        }
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "driver-owned", "reason": "freshness-owned-by-driver" }
+        }
+      },
+      "defaultConfiguration": "prototype"
+    },
+    "activate-prototype": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [
+        "{projectRoot}/dist/♻️activation/prototype"
+      ],
+      "inputs": [
+        "activationSources",
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        }
+      ],
+      "dependsOn": [
+        "prepare-prototype",
+        "@semio-tech/framework-os-dev:activate-demonstrator-react-prototype",
+        "@semio-tech/framework-os-dev:activate-imperative-react-prototype",
+        "@semio-tech/framework-os-dev:activate-stdio-png-react-prototype",
+        "@semio-tech/framework-os-dev:activate-lowpoly-react-prototype",
+        "@semio-tech/framework-os-dev:activate-remodel-react-prototype",
+        "@semio-tech/framework-os-dev:activate-draw-react-prototype",
+        "@semio-tech/framework-os-dev:activate-raster-react-prototype",
+        "@semio-tech/framework-os-dev:activate-layout-react-prototype",
+        "@semio-tech/framework-os-dev:activate-shooting-react-prototype",
+        "@semio-tech/framework-os-dev:activate-block2d-react-prototype",
+        "@semio-tech/framework-os-dev:activate-wfc2d-react-prototype",
+        "@semio-tech/framework-os-dev:activate-fem2d-react-prototype",
+        "@semio-tech/framework-os-dev:activate-energy-react-prototype",
+        "@semio-tech/framework-os-dev:activate-architect-react-prototype",
+        "@semio-tech/framework-os-dev:activate-din4108-react-prototype",
+        "@semio-tech/framework-os-dev:activate-note-react-prototype",
+        "@semio-tech/framework-os-dev:activate-writer-react-prototype",
+        "@semio-tech/framework-os-dev:activate-forms-react-prototype",
+        "@semio-tech/framework-os-dev:activate-mathematical-react-prototype",
+        "@semio-tech/framework-os-dev:activate-reasoning-wires-react-prototype",
+        "@semio-tech/framework-os-dev:activate-dag-react-prototype",
+        "@semio-tech/framework-os-dev:activate-trinity-jack-react-prototype",
+        "@semio-tech/framework-os-dev:activate-stdio-mp4-react-prototype",
+        "@semio-tech/framework-os-dev:activate-stdio-step-react-prototype",
+        "@semio-tech/framework-os-dev:activate-bim-react-prototype",
+        "@semio-tech/framework-os-dev:activate-stdio-ifc-2x3-react-prototype",
+        "@semio-tech/framework-os-dev:activate-stdio-gltf-react-prototype",
+        "@semio-tech/framework-os-dev:activate-stdio-pdf-1-4-a-react-prototype",
+        "@semio-tech/framework-os-dev:activate-stdio-docx-react-prototype",
+        "@semio-tech/framework-os-dev:activate-stdio-semio-brep-react-prototype",
+        "@semio-tech/framework-os-dev:activate-stdio-binary-react-prototype",
+        "@semio-tech/framework-os-dev:activate-animate-react-prototype",
+        "@semio-tech/framework-os-dev:activate-sequence-react-prototype",
+        "@semio-tech/framework-os-dev:activate-vcs-react-prototype",
+        "@semio-tech/framework-os-dev:activate-home-react-prototype"
+      ],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts activate",
+        "forwardAllArgs": false,
+        "env": {
+          "SEMIO_BUILD_MODE": "prototype"
+        }
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "driver-owned", "reason": "freshness-owned-by-driver" }
+        }
+      },
+      "defaultConfiguration": "prototype"
+    },
+    "dev": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6033,
+              "portEnv": "SEMIO_TECH_PLAY_PORT"
+            }
+          }
+        }
+      },
+      "executor": "repo:script",
+      "dependsOn": [
+        "activate-prototype"
+      ],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts serve",
+        "env": {
+          "SEMIO_TECH_PLAY_PORT": "6033",
+          "NODE_OPTIONS": "",
+          "SEMIO_BUILD_DYNAMIC_OUTPUT": "false",
+          "SEMIO_BUILD_TERMINAL": "false",
+          "VSCODE_INSPECTOR_OPTIONS": ""
+        },
+        "forwardAllArgs": false
+      },
+      "cache": false,
+      "continuous": true,
+      "outputs": []
+    },
+    "serve": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6033,
+              "portEnv": "SEMIO_TECH_PLAY_PORT"
+            }
+          }
+        }
+      },
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts serve",
+        "forwardAllArgs": false
+      },
+      "cache": false,
+      "continuous": true,
+      "outputs": [],
+      "dependsOn": [
+        "activate-prototype"
+      ]
+    },
+    "build": {
+      "executor": "repo:script",
+      "metadata": {
+        "semio": {
+          "orchestrator": true,
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "generation",
+                "title": { "en": "Native build generation", "de": "Native Build-Generation" },
+                "description": { "en": "Fresh starts the release drivers from a cold generation instead of reusing retained native builds.", "de": "Fresh startet die Release-Treiber aus einer kalten Generation, statt behaltene native Builds wiederzuverwenden." },
+                "kind": "choice",
+                "values": [{ "id": "fresh", "env": { "SEMIO_NATIVE_BUILD_GENERATION": "fresh" } }]
+              }
+            ]
+          },
+          "release": {
+            "prerequisites": [
+              "workspace:deps-wasm-opt",
+              "@semio-tech/plugin-registry:generate",
+              "@semio-tech/assets:build"
+            ],
+            "stageAfter": {
+              "describe": [
+                "job:describe-tool"
+              ],
+              "browser": [
+                "job:support"
+              ]
+            },
+            "jobs": [
+              {
+                "id": "describe-tool",
+                "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "build"
+                ],
+                "after": [],
+                "profile": "release",
+                "target": "host",
+                "workerProtocol": "jobserver",
+                "policies": [
+                  "process",
+                  "cargo"
+                ]
+              },
+              {
+                "id": "font-assets",
+                "root": "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "build"
+                ],
+                "after": [],
+                "profile": "release",
+                "target": "host",
+                "workerProtocol": "jobserver",
+                "policies": [
+                  "process",
+                  "cargo"
+                ]
+              },
+              {
+                "id": "fonts",
+                "root": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "fonts"
+                ],
+                "after": [
+                  "job:font-assets"
+                ],
+                "profile": "release",
+                "target": "host",
+                "workerProtocol": "jobserver",
+                "policies": [
+                  "process",
+                  "cargo"
+                ]
+              },
+              {
+                "id": "support",
+                "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "support"
+                ],
+                "after": [
+                  "job:fonts"
+                ],
+                "profile": "release",
+                "target": "host",
+                "workerProtocol": "reserved",
+                "policies": [
+                  "process"
+                ]
+              },
+              {
+                "id": "canvas-runtime-assets",
+                "root": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "stage-runtime-assets"
+                ],
+                "after": [],
+                "profile": "release",
+                "target": "host",
+                "workerProtocol": "reserved",
+                "policies": [
+                  "process"
+                ]
+              },
+              {
+                "id": "flow-wasm",
+                "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "wasm"
+                ],
+                "after": [],
+                "lane": "release",
+                "profile": "release",
+                "target": "wasm32-unknown-unknown",
+                "workerProtocol": "exclusive",
+                "policies": [
+                  "process",
+                  "cargo",
+                  "wasm"
+                ]
+              },
+              {
+                "id": "surface-wasm",
+                "root": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "wasm"
+                ],
+                "after": [],
+                "lane": "release",
+                "profile": "release",
+                "target": "wasm32-unknown-unknown",
+                "workerProtocol": "exclusive",
+                "policies": [
+                  "process",
+                  "cargo",
+                  "wasm"
+                ]
+              },
+              {
+                "id": "editor-wasm",
+                "root": "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "wasm"
+                ],
+                "after": [],
+                "lane": "release",
+                "profile": "release",
+                "target": "wasm32-unknown-unknown",
+                "workerProtocol": "exclusive",
+                "policies": [
+                  "process",
+                  "cargo",
+                  "wasm"
+                ]
+              },
+              {
+                "id": "graph-wasm",
+                "root": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "wasm"
+                ],
+                "after": [],
+                "lane": "release",
+                "profile": "release",
+                "target": "wasm32-unknown-unknown",
+                "workerProtocol": "exclusive",
+                "policies": [
+                  "process",
+                  "cargo",
+                  "wasm"
+                ]
+              },
+              {
+                "id": "puzzle-wasm",
+                "root": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "wasm"
+                ],
+                "after": [],
+                "lane": "release",
+                "profile": "release",
+                "target": "wasm32-unknown-unknown",
+                "workerProtocol": "exclusive",
+                "policies": [
+                  "process",
+                  "cargo",
+                  "wasm"
+                ]
+              },
+              {
+                "id": "map-tiles",
+                "root": "🏢️semio-tech/🎡️play/🔨️modules/📦️site",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "map-tiles"
+                ],
+                "after": [],
+                "profile": "release",
+                "target": "host",
+                "workerProtocol": "reserved",
+                "policies": [
+                  "process"
+                ]
+              },
+              {
+                "id": "bundle",
+                "root": "🏢️semio-tech/🎡️play/🔨️modules/📦️site",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "bundle"
+                ],
+                "after": [
+                  "job:flow-wasm",
+                  "job:surface-wasm",
+                  "job:editor-wasm",
+                  "job:graph-wasm",
+                  "job:puzzle-wasm",
+                  "job:map-tiles"
+                ],
+                "profile": "release",
+                "target": "host",
+                "workerProtocol": "reserved",
+                "policies": [
+                  "process"
+                ]
+              },
+              {
+                "id": "pages",
+                "root": "🏢️semio-tech/🎡️play/🔨️modules/📦️site",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "pages"
+                ],
+                "after": [
+                  "job:bundle",
+                  "job:support",
+                  "job:canvas-runtime-assets",
+                  "components:complete"
+                ],
+                "profile": "release",
+                "target": "host",
+                "workerProtocol": "reserved",
+                "policies": [
+                  "process"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "dependsOn": [],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./🔨️modules/📦️site/📜️script.ts build",
+        "forwardAllArgs": false
+      },
+      "cache": false,
+      "outputs": [
+        "{projectRoot}/.🧾️store/build.json"
+      ]
+    },
+    "test": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "prepare-e2e": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "activate-prototype",
+        "workspace:deps-browsers"
+      ],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts prepare-test",
+        "forwardAllArgs": false
+      }
+    },
+    "serve-e2e": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "prepare-e2e"
+      ],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts serve-test",
+        "forwardAllArgs": false
+      },
+      "continuous": true,
+      "metadata": {
+        "semio": {
+          "continuousSharing": false
+        }
+      }
+    },
+    "test-release-routing": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./🔨️modules/🧪️e2e/📜️script.ts test-release-routing",
+        "forwardAllArgs": false
+      }
+    },
+    "test-release": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "workspace:deps-browsers"
+      ],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./🔨️modules/🧪️e2e/📜️script.ts test-release",
+        "forwardAllArgs": true
+      }
+    },
+    "test-e2e-enduser": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "serve-e2e"
+      ],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./🔨️modules/🧪️e2e/📜️script.ts test-enduser",
+        "forwardAllArgs": false
+      }
+    },
+    "test-e2e": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "serve-e2e"
+      ],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./🔨️modules/🧪️e2e/📜️script.ts test",
+        "forwardAllArgs": false
+      }
+    },
+    "release-verify": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./🔨️modules/📦️site/📜️script.ts verify",
+        "forwardAllArgs": false
+      }
+    }
+  }
+}

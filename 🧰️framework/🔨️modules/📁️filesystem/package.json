@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@semio-tech/framework-filesystem",
+  "version": "0.1.0",
+  "description": "framework · filesystem observation contracts (leaf)",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./observation": "./🧾️observation/🟦️.ts",
+    "./observation/current": "./🧾️observation/📁️current/🟦️.ts",
+    "./observation/descriptor": "./🧾️observation/📁️descriptor/🟦️.ts",
+    "./observation/journal": "./🧾️observation/📥️journal/🟦️.ts",
+    "./observation/journal/schema.json": "./🧾️observation/📥️journal/🧬️schema/🔣️.json",
+    "./testing/fixtures": "./🧪️tests/🧫️fixtures/🟦️.ts",
+    "./workspace": "./📝️workspace/🟦️.ts"
+  },
+  "license": "LGPL-3.0-or-later",
+  "bundleKind": "library",
+  "devDependencies": {
+    "@noble/hashes": "2.4.0",
+    "ajv": "8.20.0",
+    "esbuild": "^0.27.2",
+    "fast-glob": "3.3.3",
+    "graphlib": "2.1.8",
+    "lodash": "4.18.1",
+    "picomatch": "^4.0.7",
+    "typescript": "^5.9.3"
+  }
+}

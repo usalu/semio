@@ -1,0 +1,5 @@
+useShellUriAndDocuments 4 phases, keep=-, final return=true
+71-191 useScopeState
+207-333 useOpenDocument
+344-521 useCloseDocumentState
+526-526 useSpawnProgram

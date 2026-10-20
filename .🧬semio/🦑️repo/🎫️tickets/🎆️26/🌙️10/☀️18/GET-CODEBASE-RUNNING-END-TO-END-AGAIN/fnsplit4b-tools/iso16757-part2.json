@@ -1,0 +1,93 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/📐️part2/🦀️.rs",
+ "function": "check_part_2",
+ "nth": 0,
+ "types": {
+  "geometry": "&semio_s_artifact_norm_iso16757_model::part_2::GeometryCatalogue",
+  "id": "&String",
+  "obj": "&semio_s_artifact_norm_iso16757_model::part_2::GeometryObject",
+  "report": "&mut CheckReport",
+  "graph_fail": "u32",
+  "volume_fail": "u32",
+  "port_fail": "u32",
+  "space_fail": "u32",
+  "binding_fail": "u32",
+  "objects_ok": "u32"
+ },
+ "modes": {
+  "graph_fail": "mut",
+  "volume_fail": "mut",
+  "port_fail": "mut",
+  "space_fail": "mut",
+  "binding_fail": "mut",
+  "objects_ok": "mut"
+ },
+ "keep": [],
+ "phases": [
+  {
+   "name": "check_geometry_graph_validity",
+   "doc": "🧱️ Validates the geometry graph of one object and counts a failure.",
+   "from": 36,
+   "to": 38,
+   "rewrite": [
+    [
+     "graph_fail += 1",
+     "*graph_fail += 1"
+    ]
+   ]
+  },
+  {
+   "name": "check_geometry_shape_and_volume",
+   "doc": "🪵️ Checks the bounding box, volume, space and graph of one geometry object.",
+   "from": 67,
+   "to": 67,
+   "rewrite": [
+    [
+     "volume_fail += 1",
+     "*volume_fail += 1"
+    ],
+    [
+     "objects_ok += 1",
+     "*objects_ok += 1"
+    ],
+    [
+     "space_fail += 1",
+     "*space_fail += 1"
+    ],
+    [
+     "graph_fail += 1",
+     "*graph_fail += 1"
+    ]
+   ]
+  },
+  {
+   "name": "check_geometry_ports_and_bindings",
+   "doc": "🔩️ Checks the ports and the parameter bindings of one geometry object.",
+   "from": 260,
+   "to": 317,
+   "rewrite": [
+    [
+     "port_fail += 1",
+     "*port_fail += 1"
+    ],
+    [
+     "binding_fail += 1",
+     "*binding_fail += 1"
+    ]
+   ]
+  }
+ ],
+ "block_line": 35,
+ "context": {
+  "geometry": "&semio_s_artifact_norm_iso16757_model::part_2::GeometryCatalogue",
+  "id": "&String",
+  "obj": "&semio_s_artifact_norm_iso16757_model::part_2::GeometryObject",
+  "report": "&mut CheckReport",
+  "graph_fail": "u32",
+  "volume_fail": "u32",
+  "port_fail": "u32",
+  "space_fail": "u32",
+  "binding_fail": "u32",
+  "objects_ok": "u32"
+ }
+}

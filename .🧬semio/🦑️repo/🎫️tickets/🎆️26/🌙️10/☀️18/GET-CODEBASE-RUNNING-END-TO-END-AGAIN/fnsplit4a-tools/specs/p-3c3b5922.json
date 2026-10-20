@@ -1,0 +1,40 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧪️tests/🎭️browser-actor-reservation/🟦️.ts",
+ "function": "registerBrowserActorReservationTests",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟠️shared",
+  "doc": "/** 🟠️ The shared declarations of registerBrowserActorReservationTests. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️before",
+   "doc": "/** 🔶️ The before phase of registerBrowserActorReservationTests. */",
+   "phases": [
+    {
+     "name": "buildBeforeState",
+     "emoji": "🔷",
+     "doc": "Builds beforeEach, describe, expect, it of registerBrowserActorReservationTests.",
+     "from": 13,
+     "to": 15
+    }
+   ]
+  },
+  {
+   "dir": "🔸️backbone-worker-offline-resilience",
+   "doc": "/** 🔸️ The backbone worker offline resilience phase of registerBrowserActorReservationTests. */",
+   "phases": [
+    {
+     "name": "registerBackboneWorkerOfflineResilienceTests",
+     "emoji": "🔹",
+     "doc": "Registers the backbone worker offline resilience tests of registerBrowserActorReservationTests.",
+     "from": 17,
+     "to": 17
+    }
+   ]
+  }
+ ]
+}

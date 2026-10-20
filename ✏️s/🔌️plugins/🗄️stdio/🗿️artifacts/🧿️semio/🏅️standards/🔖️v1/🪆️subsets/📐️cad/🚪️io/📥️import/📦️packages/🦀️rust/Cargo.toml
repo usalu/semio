@@ -30,6 +30,7 @@ semio-s-artifact-stdio-dwg-model = { workspace = true }
 semio-s-artifact-stdio-dxf = { workspace = true }
 semio-s-artifact-stdio-step = { workspace = true }
 # /🧩️ Capability Dependencies
+semio-s-artifact-stdio-step-snapshot = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async = { workspace = true }

@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import ts from "typescript";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 interface Fixture { readonly schemaVersion: 1; readonly neutralFixture: string; readonly neutralRouter: string; readonly writerFixture: string; readonly writerRouter: string; readonly caseIds: readonly string[]; readonly neutralLaws: readonly string[]; readonly writerLaws: readonly string[]; readonly deniedNeutralKeys: readonly string[]; readonly writerMarkers: readonly string[]; readonly neutralMarkers: readonly string[] }
 const root = resolve(import.meta.dir, "../../../../../../../..");
@@ -9,9 +10,11 @@ const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🧱️ru
 
 const source = (path: string): string => readFileSync(resolve(root, path), "utf8");
 const json = (path: string): any => JSON.parse(source(path));
-function owner(path: string, name: string): ts.ClassDeclaration {
-  const tree = ts.createSourceFile(path, source(path), ts.ScriptTarget.Latest, true);
-  return tree.statements.find(node => ts.isClassDeclaration(node) && node.name?.text === name) as ts.ClassDeclaration;
+function owner(path: string, name: string): ts.Node {
+  const tree = ts.createSourceFile(path, readModuleTreeSource(resolve(root, path), { tests: true }), ts.ScriptTarget.Latest, true);
+  const declared = tree.statements.find(node => ts.isClassDeclaration(node) && node.name?.text === name) as ts.ClassDeclaration;
+  const callee = /await\s+(\w+)\(/u.exec(declared.getText(tree))?.[1];
+  return (callee === undefined ? undefined : tree.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === callee)) ?? declared;
 }
 function nativeGroups(node: ts.Node, executor: string): unknown[] {
   const groups: unknown[] = [];

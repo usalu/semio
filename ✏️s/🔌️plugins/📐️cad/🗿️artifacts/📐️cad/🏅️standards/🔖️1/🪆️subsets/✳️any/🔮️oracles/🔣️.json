@@ -148,8 +148,8 @@
         },
         {
           "mutationId": "create-structure-classic-model",
-          "sourceMutationDirectoryName": "🏛️create-structure-classic",
-          "mutationDirectoryName": "🏛️create-structure-classic",
+          "sourceMutationDirectoryName": "🏛️create-structure-classic-model",
+          "mutationDirectoryName": "🏛️create-structure-classic-model",
           "scenarios": [
             {
               "id": "rehandles-the-occupied-structure-classic-slot",

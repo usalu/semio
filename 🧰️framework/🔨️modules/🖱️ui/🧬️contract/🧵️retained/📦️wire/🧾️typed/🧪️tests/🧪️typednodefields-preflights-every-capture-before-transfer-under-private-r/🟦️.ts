@@ -8,7 +8,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   const { it, expect } = vitest;
       const { default: fixture } = await import("../../../🧪️tests/🧫️fixtures/🏷️fields/🔣️.json");
-  const { default: rowExtentFixture } = await import("../../../../../../🧪️tests/🧫️fixtures/🌳️tree-window-row-extent/🔣️.json");
+  const { default: rowExtentFixture } = await import("@semio-tech/ui/testing/fixtures/tree-window-row-extent.json");
   const { default: typedFixture } = await import("../../../🧪️tests/🧫️fixtures/🧾️typed/🔣️.json");
 
   function prepared<P extends Profile>(kind: P, value: unknown): OwnedUiPayloadOf<RetainedUiTypedValues[P]> {

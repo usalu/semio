@@ -360,7 +360,8 @@ pub fn register_artifact_inferences() {
 /// `register_pilot_languages` established.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_pilot_languages() {
-    #[cfg(test)] use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::{diff, mutations, snapshot};
+    #[cfg(test)] use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::{diff, snapshot};
+#[cfg(test)] use semio_s_artifact_stdio_ifc_2x3_base_mutations::standards::v2x3::subsets::base::schema::mutations;
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.ifc.2x3",
         extension: Some("ifc"),

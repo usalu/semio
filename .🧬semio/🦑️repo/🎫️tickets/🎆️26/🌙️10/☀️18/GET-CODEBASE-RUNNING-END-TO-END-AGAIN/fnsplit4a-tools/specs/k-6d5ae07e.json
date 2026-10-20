@@ -1,0 +1,69 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️owned-locale-detector-retirement/📚️shell-components-8/🟦️.tsx",
+ "function": "registerShellComponents8Tests",
+ "kit": {
+  "dir": "💠️test-kit",
+  "doc": "/** 💠️ The shared test kit of registerShellComponents8Tests: the destructured dependencies and the shared fixtures. */",
+  "name": "createShellComponents8Kit",
+  "emoji": "🔰",
+  "fdoc": "Creates the shared test kit of registerShellComponents8Tests from the injected dependencies.",
+  "typeName": "ShellComponents8Kit"
+ },
+ "groups": [
+  {
+   "dir": "🔶️shell-components",
+   "doc": "/** 🔶️ The shell components describe block of registerShellComponents8Tests: its wrapper and parts. */",
+   "name": "registerShellComponentsSuite",
+   "emoji": "🔷",
+   "fdoc": "Registers the shell components describe block from its parts.",
+   "describeLine": 40,
+   "parts": [
+    {
+     "dir": "🟠️mode-escape-aborts-active",
+     "doc": "/** 🟠️ The mode escape aborts active tests of registerShellComponents8Tests. */",
+     "name": "registerModeEscapeAbortsActiveTests",
+     "emoji": "🟡",
+     "fdoc": "Registers the mode escape aborts active tests of registerShellComponents8Tests.",
+     "from": 42,
+     "to": 147
+    },
+    {
+     "dir": "🟢️window-pane-inputs-keep",
+     "doc": "/** 🟢️ The window pane inputs keep tests of registerShellComponents8Tests. */",
+     "name": "registerWindowPaneInputsKeepTests",
+     "emoji": "🔵",
+     "fdoc": "Registers the window pane inputs keep tests of registerShellComponents8Tests.",
+     "from": 159,
+     "to": 305
+    },
+    {
+     "dir": "🟣️engagement-action-token-equals",
+     "doc": "/** 🟣️ The engagement action token equals tests of registerShellComponents8Tests. */",
+     "name": "registerEngagementActionTokenEqualsTests",
+     "emoji": "🟤",
+     "fdoc": "Registers the engagement action token equals tests of registerShellComponents8Tests.",
+     "from": 312,
+     "to": 456
+    },
+    {
+     "dir": "⭐️window-engagement-measures-overlays",
+     "doc": "/** ⭐️ The window engagement measures overlays tests of registerShellComponents8Tests. */",
+     "name": "registerWindowEngagementMeasuresOverlaysTests",
+     "emoji": "🌟",
+     "fdoc": "Registers the window engagement measures overlays tests of registerShellComponents8Tests.",
+     "from": 468,
+     "to": 485
+    }
+   ],
+   "helpers": {
+    "dir": "🔸️helpers",
+    "doc": "/** 🔸️ The callback-local helpers shared by the parts of the shell components describe block. */",
+    "name": "createShellComponentsHelpers",
+    "emoji": "🔹",
+    "fdoc": "Creates the callback-local helpers shared by the parts of the shell components describe block.",
+    "typeName": "ShellComponentsHelpers"
+   }
+  }
+ ],
+ "rootKeep": []
+}

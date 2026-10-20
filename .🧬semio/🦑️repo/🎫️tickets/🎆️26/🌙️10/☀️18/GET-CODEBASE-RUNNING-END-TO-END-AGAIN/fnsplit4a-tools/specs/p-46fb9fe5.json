@@ -1,0 +1,40 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️owned-locale-detector-retirement/🧵️tree-helpers-2/🟦️.tsx",
+ "function": "registerTreeHelpers2Tests",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟠️shared",
+  "doc": "/** 🟠️ The shared declarations of registerTreeHelpers2Tests. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️create-tree-selection",
+   "doc": "/** 🔶️ The create tree selection phase of registerTreeHelpers2Tests. */",
+   "phases": [
+    {
+     "name": "buildCreateTreeSelectionState",
+     "emoji": "🔷",
+     "doc": "Builds createTreeSelectionStore, getElementById, getTreeItemOrderedIds, getTreeNextSelectionState of registerTreeHelpers2Tests.",
+     "from": 7,
+     "to": 8
+    }
+   ]
+  },
+  {
+   "dir": "🔸️tree-helpers",
+   "doc": "/** 🔸️ The tree helpers phase of registerTreeHelpers2Tests. */",
+   "phases": [
+    {
+     "name": "registerTreeHelpersTests",
+     "emoji": "🔹",
+     "doc": "Registers the tree helpers tests of registerTreeHelpers2Tests.",
+     "from": 10,
+     "to": 10
+    }
+   ]
+  }
+ ]
+}

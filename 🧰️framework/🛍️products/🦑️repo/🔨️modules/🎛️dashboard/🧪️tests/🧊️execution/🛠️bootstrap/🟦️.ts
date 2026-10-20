@@ -4,14 +4,14 @@ import Ajv from "ajv";
 import { readFileSync, lstatSync } from "node:fs";
 import { resolve, join } from "node:path";
 import ts from "typescript";
-import { dashboardBuildDescendantsV1, dashboardInvocation, dashboardPackageRoot } from "../../../📦️installation/🟦️.ts";
+import { dashboardBuildDescendantsV1, dashboardInvocation, dashboardPackageRoot } from "../../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts";
 import { createBuildBootstrapCapabilitiesV1 } from "../../../../📚️library/🏗️build/📥️caller/📤️child/🟦️.ts";
 import { createNativeBuildCallerCapabilitiesV1, type NativeBuildCallerCapabilitiesV1 } from "../../../../📚️library/🏗️build/📥️caller/🟦️.ts";
 import callerSchema from "../../../../📚️library/🏗️build/🧬️schema/📥️caller.json";
 import orchestrationSchema from "../../../../📚️library/🏗️build/📥️caller/📤️orchestration/🧬️schema/🔣️.json";
 import executionSchema from "../../../../📚️library/🏗️build/🏃️execution/🧬️schema/🔣️.json";
 import { validateJsonSchemaSubset } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import schema from "../../../📦️installation/🧬️schema/🚀️launch/🔣️.json" with { type: "json" };
+import schema from "../../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🧬️schema/🚀️launch/🔣️.json" with { type: "json" };
 import fixture from "../../🧫️fixtures/🧊️execution/🔣️.json" with { type: "json" };
 
 test("dashboard bootstrap closes exact authored build and compile requests before Original birth", async () => {
@@ -45,7 +45,7 @@ test("dashboard bootstrap closes exact authored build and compile requests befor
 });
 
 test("dashboard bootstrap refuses malformed or unowned authored child declarations", () => {
-  const file = new URL("../../../📦️installation/🟦️.ts", import.meta.url), source = readFileSync(file, "utf8"), tree = ts.createSourceFile(file.pathname, source, ts.ScriptTarget.Latest, true);
+  const file = new URL("../../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts", import.meta.url), source = readFileSync(file, "utf8"), tree = ts.createSourceFile(file.pathname, source, ts.ScriptTarget.Latest, true);
   const method = tree.statements.find((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && node.name?.text === "dashboardBuildDescendantsV1")!;
   const body = ts.transpileModule(method.getText(tree).replace(/^export\s+/u, ""), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
   const original = JSON.parse(readFileSync(join(dashboardPackageRoot, "📋️project.json"), "utf8")), oracle = new Ajv({ strict: true }).compile(orchestrationSchema);
@@ -65,6 +65,6 @@ test("dashboard bootstrap refuses malformed or unowned authored child declaratio
 });
 
 test("dashboard bootstrap accepts closed source and native leaves without child authority",()=>{
- const file=new URL("../../../📦️installation/🟦️.ts",import.meta.url),source=readFileSync(file,"utf8"),tree=ts.createSourceFile(file.pathname,source,ts.ScriptTarget.Latest,true),method=tree.statements.find((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text==="dashboardBuildDescendantsV1")!,body=ts.transpileModule(method.getText(tree).replace(/^export\s+/u,""),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,original=JSON.parse(readFileSync(join(dashboardPackageRoot,"📋️project.json"),"utf8")),oracle=new Ajv({strict:true}).compile(executionSchema);
+ const file=new URL("../../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts",import.meta.url),source=readFileSync(file,"utf8"),tree=ts.createSourceFile(file.pathname,source,ts.ScriptTarget.Latest,true),method=tree.statements.find((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text==="dashboardBuildDescendantsV1")!,body=ts.transpileModule(method.getText(tree).replace(/^export\s+/u,""),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,original=JSON.parse(readFileSync(join(dashboardPackageRoot,"📋️project.json"),"utf8")),oracle=new Ajv({strict:true}).compile(executionSchema);
  for(const row of fixture.bootstrapLeaves){expect(oracle(row.declaration)).toBe(row.accepted);const owner=structuredClone(original);owner.targets.run.metadata.semio.execution=row.declaration;const ports={join,dashboardPackageRoot,lstatSync,orchestrationSchema,executionSchema,validateJsonSchemaSubset,readFileSync:()=>JSON.stringify(owner)},read=new Function(...Object.keys(ports),body+";return dashboardBuildDescendantsV1;")(...Object.values(ports));if(row.accepted)expect(read(["run","@semio-tech/repo-dashboard-rs:run"])).toEqual([]);else expect(()=>read(["run","@semio-tech/repo-dashboard-rs:run"])).toThrow("Closed dashboard bootstrap declaration required");}
 });

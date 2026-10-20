@@ -27,10 +27,6 @@ pub(crate) mod context {
     pub async fn new_app() -> SourcingTestApp {
         let scope = OriginalFixtureScope::admit();
         let mut app = new_app_with_registry_impl::<EditorApp<SourcingCurationApp>, semio_s_artifact_stdio_semio::SemioMembers>(sourcing_manifest_for_tests, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
-        // 🪪️ `dispatch_typed_command_inner` refuses any command whose `ActionMeta.instance_id` is not the
-        // app's bound live runtime instance, and a freshly constructed app has none — so bind the id
-        // `artifact_app_laws::meta` stamps. A test that wants another instance rebinds (see
-        // `retained_example_load_publishes_authored_stock_and_closes_exact_owners`, which uses 7).
         app.bind_instance_id(1).await;
         SourcingTestApp(app, scope)
     }
@@ -406,11 +402,7 @@ use semio_framework_plugin::{EditorApp, PluginApp};
 
 #[semio_framework_async_macros::async_test]
 async fn view_kind_config_only_commands_pass_kind_discipline() {
-    // 🧬️ A registry-backed wrapper so the View-kind declarations actually get enforced.
     let mut app = new_app().await;
-    // 🏁️ Through the settling helper: a bare `dispatch_typed` leaves the migrated command's retained
-    // operation pending, and a store that still owes a publication never reaches the terminal-empty
-    // shallow shell the guard drains for on `Drop`.
     let result = dispatch(&mut app, SourcingCurationCommand::SetFilterQuery(set_filter_query::SetFilterQuery { value: "glulam".into() })).await;
     assert!(result.mutations.is_empty(), "setFilterQuery is config-only, no document operations");
 }

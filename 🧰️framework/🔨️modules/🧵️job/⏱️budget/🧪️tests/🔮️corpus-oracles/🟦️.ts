@@ -2,8 +2,8 @@ import { expect, test } from "bun:test";
 import Decimal from "decimal.js";
 import { readFileSync } from "node:fs";
 import { toolJobMicrosecondBudgetSelfTests } from "../🔬️tool-job-microsecond-budget/🟦️.ts";
-import { toolJobTelemetryContentionSelfTests } from "../../../../⏱️trace/⏱️clock/🧪️tests/🔬️tool-job-telemetry-contention/🟦️.ts";
-import { traceClockContentionFixtureUrl } from "../../../../⏱️trace/🧪️tests/🧫️fixtures/🟦️.ts";
+import { toolJobTelemetryContentionSelfTests } from "@semio-tech/framework-trace/clock/testing/tool-job-telemetry-contention";
+import { traceClockContentionFixtureUrl } from "@semio-tech/framework-trace/testing/fixtures";
 
 test("microsecond deadline and worker binding observations remain executable", () => {
   expect(toolJobMicrosecondBudgetSelfTests()).toBeGreaterThan(0);

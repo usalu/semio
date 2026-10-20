@@ -17,7 +17,7 @@
     },
     "build-lean": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "dependsOn": [
         "deps"
       ],
@@ -30,6 +30,11 @@
       "options": {
         "cwd": "👴️leutwiler/💤️realparts-of-powers-z-n",
         "command": "bun ./📜️script.ts build lean"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "build-notes": {

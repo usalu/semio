@@ -110,7 +110,8 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     assert.equal(cacheInternals.matchesUncached("setup-git", policy), true);
     assert.equal(cacheInternals.matchesUncached("cache-report", policy), true);
     assert.equal(cacheInternals.cacheableFamily("format-check"), true);
-    assert.equal(cacheInternals.cacheableFamily("generator-inputs"), false);
+    assert.equal(cacheInternals.targetClassV1("generator-inputs").reason, "pure-function-of-inputs", "the generator input registry is a declared producer, not a fixture generator");
+    assert.equal(cacheInternals.cacheableFamily("🏭️generator-build"), false, "an emoji-prefixed fixture generator is classed like its bare name and never replays");
     assert.equal(cacheInternals.mutatingName("build-report"), false, "a document id that happens to be named 'report' must not be treated as a mutating report writer");
     assert.equal(cacheInternals.mutatingName("verify-dependencies-freeze-write-baseline"), false, "a deterministic baseline writer must not be blanket-matched by 'write-baseline'");
     assert.equal(cacheInternals.mutatingName("reset-document-ownership"), false, "a cargo test proving reset behavior is not itself a mutating reset");

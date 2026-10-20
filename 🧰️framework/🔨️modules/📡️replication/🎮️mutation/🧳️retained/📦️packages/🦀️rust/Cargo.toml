@@ -31,6 +31,7 @@ semio-framework-value-native-owned.workspace = true
 semio-framework-diagnostic = { path = "../../../../../⚠️diagnostic/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-mutation-diff = { path = "../../../🔺️diff/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-trace-memory-testing = { path = "../../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 semio-framework-replication-ids = { path = "../../../../🆔️ids/📦️packages/🦀️rust" }

@@ -1,0 +1,46 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🎨️artifact-path-projection/🟦️.ts",
+ "describeLine": 37,
+ "shared": {
+  "dir": "🟣️shared",
+  "doc": "/** 🟣️ The shared declarations of the artifact path projection authority suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️authored-draw-preflight-context",
+   "doc": "/** 🔶️ The authored draw preflight context tests of the artifact path projection authority suite. */",
+   "name": "registerAuthoredDrawPreflightContextTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the authored draw preflight context tests of the artifact path projection authority suite.",
+   "from": 38,
+   "to": 191
+  },
+  {
+   "dir": "🔸️authored-draw-residue-recovery",
+   "doc": "/** 🔸️ The authored draw residue recovery tests of the artifact path projection authority suite. */",
+   "name": "registerAuthoredDrawResidueRecoveryTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the authored draw residue recovery tests of the artifact path projection authority suite.",
+   "from": 202,
+   "to": 304
+  },
+  {
+   "dir": "🟠️authored-draw-source-producer",
+   "doc": "/** 🟠️ The authored draw source producer tests of the artifact path projection authority suite. */",
+   "name": "registerAuthoredDrawSourceProducerTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the authored draw source producer tests of the artifact path projection authority suite.",
+   "from": 347,
+   "to": 495
+  },
+  {
+   "dir": "🟢️artifact-example-model-catalog",
+   "doc": "/** 🟢️ The artifact example model catalog tests of the artifact path projection authority suite. */",
+   "name": "registerArtifactExampleModelCatalogTests",
+   "emoji": "🔵",
+   "fdoc": "Registers the artifact example model catalog tests of the artifact path projection authority suite.",
+   "from": 506,
+   "to": 591
+  }
+ ]
+}

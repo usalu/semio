@@ -45,7 +45,7 @@ export async function registerUiIntakeAdmissionTests(vitest: PluginRuntimeVitest
       const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/⏱️lifecycle-scheduler.json");
       const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
       const { encodeActorUiPatchReceipt } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts");
-      const { OwnedUiInstance } = await import("@semio-tech/framework/modules/ui/contract/retained/instance");
+      const { OwnedUiInstance } = await import("@semio-tech/ui-contract/retained/instance");
       const sent: Array<{ kind: string; requestId: string; events?: readonly ShardEventEnvelope[] }> = [];
       const worker: ShardWorkerLike = { onmessage: null, onerror: null, postMessage(message) { sent.push(message as typeof sent[number]); }, terminate() {} };
       const client = new ShardClient({ originalWorkStock: fixtureOriginalWorkStock(), residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });

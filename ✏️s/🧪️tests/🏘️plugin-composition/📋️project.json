@@ -12,7 +12,15 @@
       "options": {
         "command": "bun ./📜️script.ts test",
         "cwd": "✏️s/🧪️tests/🏘️plugin-composition"
-      }
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🧪️tests/🏘️plugin-composition/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/**/*",
+        "{workspaceRoot}/🧰️framework/**/*"
+      ],
+      "outputs": []
     }
   }
 }

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@semio-tech/plugin-registry-publication",
+  "version": "0.1.0",
+  "description": "plugin catalog · publication contract and build contribution (leaf)",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./🟦️.ts",
+    "./build": "./🏗️build/🟦️.ts",
+    "./build/schema/contribution.json": "./🏗️build/🧬️schema/📣️contribution/🔣️.json",
+    "./publication.json": "./🔣️.json",
+    "./schema.json": "./🧬️schema/🔣️.json"
+  },
+  "license": "LGPL-3.0-or-later",
+  "bundleKind": "library",
+  "devDependencies": {
+    "ajv": "8.20.0"
+  }
+}

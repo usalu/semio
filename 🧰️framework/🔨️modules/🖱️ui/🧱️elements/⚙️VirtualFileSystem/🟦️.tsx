@@ -20,7 +20,7 @@ import { type TreeSelectionMode } from "../🌳️Tree/📋️data/🟦️.ts";
 import { normalizeTreeSelectedIds, getTreeNextSelectionState } from "../🌳️Tree/🎚️selection/🟦️.ts";
 import { useLabel, useUiTranslation } from "../🏷️Label/🟦️.tsx";
 import { Icon } from "../🔣️Icons/🟦️.tsx";
-import { formatHostTemporalValueV1 } from "../../🧬️contract/🖼️presentation/🕰️host-temporal-format/🟦️.ts";
+import { formatHostTemporalValueV1 } from "@semio-tech/ui-contract/presentation/host-temporal-format";
 // #endregion 🔌️Adapters
 
 // #region 📁️VirtualFileSystem

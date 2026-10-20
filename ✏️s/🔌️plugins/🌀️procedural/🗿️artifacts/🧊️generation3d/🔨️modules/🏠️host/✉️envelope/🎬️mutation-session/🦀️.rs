@@ -14,7 +14,7 @@ enum Generation3dMutationSessionPhase {
     Closed,
 }
 
-pub(super) struct Generation3dMutationSession {
+pub struct Generation3dMutationSession {
     phase: Generation3dMutationSessionPhase,
     expected_bytes: usize,
     pub(super) maximum_items: usize,
@@ -30,7 +30,7 @@ pub(super) struct Generation3dMutationSession {
 }
 
 impl Generation3dMutationSession {
-    pub(super) fn new(expected_bytes: usize, maximum_items: usize) -> Result<Self, &'static str> {
+    pub fn new(expected_bytes: usize, maximum_items: usize) -> Result<Self, &'static str> {
         if !(3..=GENERATION3D_OWNER_BYTES).contains(&expected_bytes) || maximum_items == 0 {
             return Err("generation3d-mutation.exact-credits");
         }
@@ -50,7 +50,7 @@ impl Generation3dMutationSession {
         })
     }
 
-    pub(super) fn admit_byte(&mut self, value: u8) -> Result<(), u8> {
+    pub fn admit_byte(&mut self, value: u8) -> Result<(), u8> {
         if self.pending.is_some() || self.sealed || self.admitted == self.expected_bytes {
             return Err(value);
         }
@@ -59,13 +59,13 @@ impl Generation3dMutationSession {
         Ok(())
     }
 
-    pub(super) fn ingress_ready(&self) -> bool {
+    pub fn ingress_ready(&self) -> bool {
         self.pending.is_none()
             && (self.phase != Generation3dMutationSessionPhase::Body
                 || self.body.as_ref().is_some_and(store::mounted_pack_rt::RetainedRecordBodyCursor::ingress_ready))
     }
 
-    pub(super) fn seal(&mut self) -> Result<(), &'static str> {
+    pub fn seal(&mut self) -> Result<(), &'static str> {
         if self.pending.is_some() || self.admitted != self.expected_bytes || self.phase != Generation3dMutationSessionPhase::Body {
             return Err("generation3d-mutation.exact-byte-seal");
         }
@@ -74,7 +74,7 @@ impl Generation3dMutationSession {
         Ok(())
     }
 
-    pub(super) fn grant(&mut self) -> Result<bool, &'static str> {
+    pub fn grant(&mut self) -> Result<bool, &'static str> {
         if matches!(self.phase, Generation3dMutationSessionPhase::Ready | Generation3dMutationSessionPhase::Published) {
             return Ok(true);
         }
@@ -147,7 +147,7 @@ impl Generation3dMutationSession {
         Ok(false)
     }
 
-    pub(super) fn take(&mut self) -> Option<Generation3dMutation> {
+    pub fn take(&mut self) -> Option<Generation3dMutation> {
         if self.phase != Generation3dMutationSessionPhase::Ready {
             return None;
         }
@@ -156,30 +156,30 @@ impl Generation3dMutationSession {
         Some(value)
     }
 
-    pub(super) fn next_retained_allocation_bytes(&mut self) -> Result<Option<usize>, &'static str> {
+    pub fn next_retained_allocation_bytes(&mut self) -> Result<Option<usize>, &'static str> {
         let Some(body) = self.body.as_mut() else { return Ok(None) };
         body.next_allocation_bytes().map_err(|_| "generation3d-mutation.body-allocation")
     }
 
-    pub(super) fn reserve_retained_allocation(&mut self, maximum_bytes: usize) -> Result<(bool, usize), &'static str> {
+    pub fn reserve_retained_allocation(&mut self, maximum_bytes: usize) -> Result<(bool, usize), &'static str> {
         let body = self.body.as_mut().ok_or("generation3d-mutation.body-owner")?;
         body.reserve_allocation(maximum_bytes)
             .map(|step| (step.progressed, step.allocated_bytes))
             .map_err(|_| "generation3d-mutation.body-allocation")
     }
 
-    fn retained_allocated_bytes(&self) -> usize {
+    pub fn retained_allocated_bytes(&self) -> usize {
         self.body.as_ref().map_or(0, store::mounted_pack_rt::RetainedRecordBodyCursor::allocated_bytes)
     }
 
-    pub(super) fn next_retained_release_allocation_bytes(&self) -> Option<usize> {
+    pub fn next_retained_release_allocation_bytes(&self) -> Option<usize> {
         if self.pending.is_some() || self.owner.is_some() {
             return None;
         }
         self.body.as_ref()?.next_release_allocation_bytes().ok().flatten()
     }
 
-    pub(super) fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::mounted_pack_rt::RetainedPackCloseStep, store::PackRefusal> {
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::mounted_pack_rt::RetainedPackCloseStep, store::PackRefusal> {
         use store::mounted_pack_rt::RetainedPackCloseStep;
         if self.phase == Generation3dMutationSessionPhase::Closed {
             return Ok(RetainedPackCloseStep::Complete);
@@ -216,7 +216,7 @@ impl Generation3dMutationSession {
         Ok(RetainedPackCloseStep::Complete)
     }
 
-    pub(super) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.phase == Generation3dMutationSessionPhase::Closed && self.owner.is_none() && self.body.is_none() && self.pending.is_none()
     }
 }

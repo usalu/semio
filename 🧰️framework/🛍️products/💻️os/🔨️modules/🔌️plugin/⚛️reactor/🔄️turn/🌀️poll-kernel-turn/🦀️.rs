@@ -50,7 +50,7 @@ pub(super) async fn poll_kernel_turn<PA: semio_framework_plugin_reactor_app::Plu
     }
 
     trace_turn_phase_retention("continuation");
-    let result_page_work=crate::plugin_runtime::plugin_drive_result_pages(runtime,&mut effects,budget.max_effects as usize,cx)?;
+    let result_page_work=semio_framework_plugin_reactor_lifecycle::result_publication::plugin_drive_result_pages(runtime,&mut effects,budget.max_effects as usize,cx)?;
     let now_ms = u64::try_from(semio_framework_plugin_actor_host::now_ms().await).unwrap_or(0);
 
     trace_turn_phase_retention("presence-clock");

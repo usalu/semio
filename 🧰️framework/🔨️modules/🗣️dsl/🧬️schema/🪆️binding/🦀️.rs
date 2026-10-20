@@ -609,6 +609,4 @@ mod value_type_binding;
 #[path = "🪆️optional/🦀️.rs"]
 mod optional_field;
 
-#[path="📖️grammar/🦀️.rs"]
-mod grammar_fields;
-pub use grammar_fields::record_fields_matcher;
+

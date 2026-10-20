@@ -5,7 +5,7 @@ import { readFileSync, mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { createHash } from "node:crypto";
 import { joinProtectedActorResponsesV1, ProtectedActorResponseCaptureV1, executeProtectedActorChildV1, type ProtectedActorBrowserPortV1, protectedActorChildUrlV1, observeNormalDevHubPublicationOwnerV1 } from "../🟦️.ts";
-import { blake3Hex } from "@semio-tech/framework/hash";
+import { blake3Hex } from "@semio-tech/framework-hash";
 import { targetLeaseV1FixtureUrl } from "@semio-tech/framework-os/modules/directory/testing/fixtures";
 
 /** 🧪️ Exercises semantic byte joins using plain cases and independent JSON Schema/WebCrypto oracles. */

@@ -3,41 +3,61 @@
   "targets": {
     "🏭️generator": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator",
         "command": "bun ./📜️script.ts generate",
         "forwardAllArgs": true
       },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      },
       "outputs": []
     },
     "🏭️generator-manifests": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator",
         "command": "bun ./📜️script.ts manifests",
         "forwardAllArgs": true
       },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      },
       "outputs": []
     },
     "🏭️generator-encryption": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator",
         "command": "bun ./📜️script.ts encryption",
         "forwardAllArgs": true
       },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      },
       "outputs": []
     },
     "🏭️generator-encryption-manifests": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator",
         "command": "bun ./📜️script.ts encryption-manifests",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       },
       "outputs": []
     }

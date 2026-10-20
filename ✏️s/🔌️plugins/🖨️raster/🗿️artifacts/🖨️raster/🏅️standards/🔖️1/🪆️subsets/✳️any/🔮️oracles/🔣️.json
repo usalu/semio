@@ -70,8 +70,8 @@
         },
         {
           "mutationId": "change-layer-adjustment-kind",
-          "sourceMutationDirectoryName": "🎚️change-layer-adjustment",
-          "mutationDirectoryName": "🎚️change-layer-adjustment",
+          "sourceMutationDirectoryName": "🎚️change-layer-adjustment-kind",
+          "mutationDirectoryName": "🎚️change-layer-adjustment-kind",
           "scenarios": [
             {
               "id": "switches-the-tone-layer-from-levels-to-curves",
@@ -202,8 +202,8 @@
         },
         {
           "mutationId": "change-layer-adjustment-parameter",
-          "sourceMutationDirectoryName": "🎛️change-layer",
-          "mutationDirectoryName": "🎛️change-layer",
+          "sourceMutationDirectoryName": "🎛️change-layer-adjustment-parameter",
+          "mutationDirectoryName": "🎛️change-layer-adjustment-parameter",
           "scenarios": [
             {
               "id": "preserves-other-parameters",

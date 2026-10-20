@@ -260,13 +260,18 @@
         { "dependentTasksOutputFiles": "**/*" },
         "cargoToolchain"
       ],
-      "cache": true,
+      "cache": false,
       "dependsOn": [
         "build"
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts schema-mirror"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       },
       "outputs": []
     },

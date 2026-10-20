@@ -12,3 +12,9 @@ Feature: Localized compiler source work
     When process progress is published
     Then no friendly source text is inferred
     And the raw structured event remains available
+  Scenario: Provider presentation is bounded under one original process
+    Given every original provider progress call and cancellation checkpoint
+    When provider counters arrive faster than 250 monotonic milliseconds
+    Then presentation retains the newest counter
+    And phase changes and settlement flush that counter
+    And command output errors semantic receipts and original yields remain unchanged

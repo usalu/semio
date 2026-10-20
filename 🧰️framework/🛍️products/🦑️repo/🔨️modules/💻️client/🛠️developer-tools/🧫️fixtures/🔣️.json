@@ -1,100 +1,4 @@
 {
-  "sourceCases": [
-    {
-      "request": {
-        "command": "open-source",
-        "file": "app/space 🧪 file.ts",
-        "line": 37,
-        "editor": "system"
-      },
-      "platform": "linux",
-      "environment": {
-        "SEMIO_SOURCE_OPENER": "[\"editor-fixture\",\"--goto\"]"
-      },
-      "command": "editor-fixture",
-      "args": [
-        "--goto",
-        "{file}:37"
-      ]
-    },
-    {
-      "request": {
-        "command": "open-source",
-        "file": "app/space 🧪 file.ts",
-        "line": 37,
-        "editor": "vscode"
-      },
-      "platform": "linux",
-      "command": "code",
-      "args": [
-        "--reuse-window",
-        "--goto",
-        "{file}:37"
-      ]
-    },
-    {
-      "request": {
-        "command": "open-source",
-        "file": "app/space 🧪 file.ts",
-        "editor": "codium"
-      },
-      "platform": "linux",
-      "command": "codium",
-      "args": [
-        "--reuse-window",
-        "{file}"
-      ]
-    },
-    {
-      "request": {
-        "command": "open-source",
-        "file": "app/space 🧪 file.ts",
-        "line": 8,
-        "editor": "sublime"
-      },
-      "platform": "darwin",
-      "command": "subl",
-      "args": [
-        "{file}:8"
-      ]
-    },
-    {
-      "request": {
-        "command": "open-source",
-        "file": "app/space 🧪 file.ts",
-        "editor": "system"
-      },
-      "platform": "win32",
-      "command": "explorer.exe",
-      "args": [
-        "{file}"
-      ]
-    },
-    {
-      "request": {
-        "command": "open-source",
-        "file": "app/space 🧪 file.ts",
-        "editor": "system"
-      },
-      "platform": "darwin",
-      "command": "open",
-      "args": [
-        "{file}"
-      ]
-    },
-    {
-      "request": {
-        "command": "open-source",
-        "file": "app/space 🧪 file.ts",
-        "editor": "system"
-      },
-      "platform": "linux",
-      "command": "xdg-open",
-      "args": [
-        "{file}"
-      ]
-    }
-  ],
   "gitCases": [
     {
       "request": {
@@ -1230,6 +1134,74 @@
         "lldb",
         "lldb"
       ]
+    }
+  ],
+  "retiredSourceCases": [
+    {
+      "platform": "linux",
+      "request": {
+        "command": "open-source",
+        "file": "app/space 🧪 file.ts",
+        "line": 37,
+        "editor": "system"
+      },
+      "accepted": false
+    },
+    {
+      "platform": "linux",
+      "request": {
+        "command": "open-source",
+        "file": "app/space 🧪 file.ts",
+        "line": 37,
+        "editor": "vscode"
+      },
+      "accepted": false
+    },
+    {
+      "platform": "linux",
+      "request": {
+        "command": "open-source",
+        "file": "app/space 🧪 file.ts",
+        "editor": "codium"
+      },
+      "accepted": false
+    },
+    {
+      "platform": "darwin",
+      "request": {
+        "command": "open-source",
+        "file": "app/space 🧪 file.ts",
+        "line": 8,
+        "editor": "sublime"
+      },
+      "accepted": false
+    },
+    {
+      "platform": "win32",
+      "request": {
+        "command": "open-source",
+        "file": "app/space 🧪 file.ts",
+        "editor": "system"
+      },
+      "accepted": false
+    },
+    {
+      "platform": "darwin",
+      "request": {
+        "command": "open-source",
+        "file": "app/space 🧪 file.ts",
+        "editor": "system"
+      },
+      "accepted": false
+    },
+    {
+      "platform": "linux",
+      "request": {
+        "command": "open-source",
+        "file": "app/space 🧪 file.ts",
+        "editor": "system"
+      },
+      "accepted": false
     }
   ]
 }

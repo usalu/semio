@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 import { type AgentBridgeConfig, useAgentBridge } from "../../🟦️.tsx";
 import { decodeShellToGateway, encodeGatewayToShell, type GatewayToShell, type ShellToGateway } from "@semio-tech/framework/mcp/bridge";
-import { policyApprovalWithdrawalFixtureUrl } from "@semio-tech/framework/os/modules/mcp/testing/fixtures";
+import { policyApprovalWithdrawalFixtureUrl } from "@semio-tech/framework-os-mcp/testing/fixtures";
 // #endregion 🔌️Adapters
 
 const here = dirname(fileURLToPath(import.meta.url));

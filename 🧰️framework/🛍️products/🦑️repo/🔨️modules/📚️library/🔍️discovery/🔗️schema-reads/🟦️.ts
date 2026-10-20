@@ -21,7 +21,9 @@ interface ReadValue {
 interface ReadBinding { value: ReadValue; readonly imported: boolean; }
 class ReadScope {
   readonly bindings = new Map<string, ReadBinding>();
-  constructor(readonly parent?: ReadScope, readonly functionBoundary = !parent) {}
+  readonly parent?: ReadScope;
+  readonly functionBoundary: boolean;
+  constructor(parent?: ReadScope, functionBoundary = !parent) { this.parent = parent; this.functionBoundary = functionBoundary; }
   binding(name: string): ReadBinding | undefined { return this.bindings.get(name) ?? this.parent?.binding(name); }
   functionScope(): ReadScope { return this.functionBoundary ? this : this.parent!.functionScope(); }
 }
@@ -37,7 +39,11 @@ class SchemaReadInspector {
   private readonly emitted = new Set<string>();
   private conditionalDepth = 0;
   readonly readerHash: string;
-  constructor(readonly readerPath: string, readonly source: string, readonly read: (path: string) => string | undefined, readonly checkCancellation?: () => void) { this.readerHash = sha(source); }
+  readonly readerPath: string;
+  readonly source: string;
+  readonly read: (path: string) => string | undefined;
+  readonly checkCancellation?: () => void;
+  constructor(readerPath: string, source: string, read: (path: string) => string | undefined, checkCancellation?: () => void) { this.readerPath = readerPath; this.source = source; this.read = read; this.checkCancellation = checkCancellation; this.readerHash = sha(source); }
   private issue(node: { readonly start: number; readonly end: number }, reason: string): void {
     const key = `${node.start}:${node.end}:${reason}`;
     if (this.emitted.has(key)) return;

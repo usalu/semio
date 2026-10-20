@@ -29,7 +29,7 @@ import (
 
 // #region 🎊️Query Cache
 
-// Local event index under .🦑️repo/⚡️cache for keyword search. Uses a composite repository fingerprint for invalidation.
+// 🗄️Local event index under .🦑️repo/⚡️cache for keyword search. Uses a composite repository fingerprint for invalidation.
 // 📌️cacheSchemaVersion holds the data fields for a cacheSchemaVersion record.
 const cacheSchemaVersion = 3
 

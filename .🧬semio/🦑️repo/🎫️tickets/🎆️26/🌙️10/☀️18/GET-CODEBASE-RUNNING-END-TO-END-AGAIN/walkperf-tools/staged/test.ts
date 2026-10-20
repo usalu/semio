@@ -2,7 +2,7 @@ import {test,expect} from "bun:test";
 import Ajv from "ajv";
 import {build as esbuild} from "esbuild";
 import {createRequire} from "node:module";
-import {lstatSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,readlinkSync,realpathSync,renameSync,rmSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
+import {chmodSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,readlinkSync,realpathSync,renameSync,rmSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
 import {spawnSync} from "node:child_process";
 import {tmpdir} from "node:os";
 import {dirname,join,relative,resolve} from "node:path";
@@ -65,11 +65,11 @@ function verifyInput(root:string,store:string,receipt:GenerationReceiptV1,files:
 function mutate(root:string,place:(value:string)=>string,mutation:Mutation,env:Record<string,string|undefined>){
  const path=join(root,mutation.path);
  if(mutation.op==="env")env[mutation.path]=mutation.text;
- else if(mutation.op==="unset")delete env[mutation.path];
  else if(mutation.op==="write"){mkdirSync(dirname(path),{recursive:true});writeFileSync(path,mutation.text!);}
  else if(mutation.op==="mkdir")mkdirSync(path,{recursive:true});
  else if(mutation.op==="remove")rmSync(path,{recursive:true,force:true});
  else if(mutation.op==="symlink")symlinkSync(place(mutation.target!),path);
+ else if(mutation.op==="chmod")chmodSync(path,parseInt(mutation.text!,8));
  else if(mutation.op==="touch"){const now=new Date(Date.now()+5000);utimesSync(path,now,now);}
  else if(mutation.op==="replace"){const bytes=readFileSync(path);writeFileSync(path+".tmp",bytes);renameSync(path+".tmp",path);}
  else throw Error("Closed mutation required");

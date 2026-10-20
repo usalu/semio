@@ -4,7 +4,8 @@
  */
 function buildDependencyDirectionPolicy({ taxonomy: TAXONOMY, plugins: PLUGINS, workspacePackages, nodeBuiltins }) {
 const api = TAXONOMY?.dependencyDirections?.publicApi;
-if (!api || Object.keys(api).sort().join("|") !== "rulePrefix|sdkPackage|toolingRoles|version" || api.version !== 1 || api.rulePrefix !== "no-cross-package-relative-" || typeof api.sdkPackage !== "string" || !api.sdkPackage || /\s/u.test(api.sdkPackage) || !Array.isArray(api.toolingRoles) || api.toolingRoles.length) throw Error("Dependency policy requires canonical authored public API authority");
+if (!api || Object.keys(api).sort().join("|") !== "rulePrefix|sdkFoundationPackages|sdkPackage|toolingRoles|version" || api.version !== 1 || api.rulePrefix !== "no-cross-package-relative-" || typeof api.sdkPackage !== "string" || !api.sdkPackage || /\s/u.test(api.sdkPackage) || !Array.isArray(api.toolingRoles) || api.toolingRoles.length) throw Error("Dependency policy requires canonical authored public API authority");
+if (!Array.isArray(api.sdkFoundationPackages) || !api.sdkFoundationPackages.length || new Set(api.sdkFoundationPackages).size !== api.sdkFoundationPackages.length || api.sdkFoundationPackages.some(name => typeof name !== "string" || !/^@[^/\s]+\/[^/\s]+$/u.test(name) || name === api.sdkPackage)) throw Error("Dependency policy requires unique admitted SDK foundation package names");
 const packageOwners = new Map(), packageNames = new Map();
 for (const pkg of workspacePackages) {
   if (typeof pkg.owner !== "string" || !pkg.owner || pkg.sourceOwner !== (pkg.owner.includes("/📦️packages/") ? pkg.owner.split("/📦️packages/")[0] : pkg.owner) || !Array.isArray(pkg.exportTargets) || !Array.isArray(pkg.exports)) throw Error("Dependency policy requires complete authored package authority");
@@ -26,12 +27,22 @@ const BUILDER_SOURCE_PATH = "(^|/)🏗️builder/";
 const UI_TEST_SOURCE_PATH = "(^|/)🧪️(?:tests|testing)/|\\.(?:test|spec|story)\\.[cm]?[jt]sx?$";
 const RENDERER_HOST_ROOT = "^🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/(🎯️targets/⚛️react|🧱️elements)/";
 /** 🖥️ The renderer host's UI contract with the OS package: only the declared `elements` subpaths of `@semio-tech/framework-os` (the published entries of the host's own element modules), never any other OS internals. */
-const RENDERER_HOST_UI_CONTRACT = Object.freeze({ package: "@semio-tech/framework-os", subpathPrefixes: Object.freeze(["./modules/renderer/engine/elements/"]) });
+const RENDERER_HOST_UI_CONTRACT = Object.freeze({ package: "@semio-tech/framework-os", subpathPrefixes: Object.freeze(["./modules/renderer/engine/elements/", "./testkit/renderer-host/"]) });
+/** 🎬️ The media window-kit contract the media transport host and the window kit share: the only plugin-owned subpaths a host may read. */
+const RENDERER_HOST_WINDOW_KIT_CONTRACT = Object.freeze({ package: "@semio-tech/plugin-window-kits", subpathPrefixes: Object.freeze(["./media"]) });
+/** 🧫️ Language-neutral corpora a host test reads through declared exports: published fixture modules and schema JSON modules. */
+const RENDERER_HOST_CORPUS_PATHS = Object.freeze(["(?:^|/)🧪️testing/🧫️fixtures/", "(?:^|/)🧬️schema/🔣️json/🟦️\\.ts$"]);
 const RENDERER_HOST_UI_CONTRACT_TARGETS = exportTargetPatterns(workspacePackages.filter(pkg => pkg.name === RENDERER_HOST_UI_CONTRACT.package).map(pkg => ({ ...pkg, exportTargets: pkg.exportTargets.filter(row => RENDERER_HOST_UI_CONTRACT.subpathPrefixes.some(prefix => row.subpath.startsWith(prefix))) })));
+const RENDERER_HOST_WINDOW_KIT_TARGETS = exportTargetPatterns(workspacePackages.filter(pkg => pkg.name === RENDERER_HOST_WINDOW_KIT_CONTRACT.package).map(pkg => ({ ...pkg, exportTargets: pkg.exportTargets.filter(row => RENDERER_HOST_WINDOW_KIT_CONTRACT.subpathPrefixes.some(prefix => row.subpath === prefix || row.subpath.startsWith(prefix + "/"))) })));
+/** 🗝️ The authored public targets of the admitted SDK foundation packages (`publicApi.sdkFoundationPackages`): neutral modules that carry keys once published by the SDK package, shared by plugins and renderer hosts. */
+const SDK_FOUNDATION_TARGETS = exportTargetPatterns(workspacePackages.filter(pkg => api.sdkFoundationPackages.includes(pkg.name)));
 const RESOLVED_NODE_BUILTIN_PATH = `^(?:node:)?(?:${[...new Set(nodeBuiltins.map((name) => name.replace(/^node:/, "")).filter((name) => !name.includes(":")))].map(escapeRegex).join("|")})(?:$|/)`;
 const RENDERER_HOST_ALLOWED_RESOLVED_PATHS = [
   RENDERER_HOST_ROOT,
   ...RENDERER_HOST_UI_CONTRACT_TARGETS,
+  ...RENDERER_HOST_WINDOW_KIT_TARGETS,
+  ...SDK_FOUNDATION_TARGETS,
+  ...RENDERER_HOST_CORPUS_PATHS,
   "^🧰️framework/🔨️modules/🖱️ui/",
   "^🧰️framework/📦️packages/",
   installedPackagePath(["react", "react-dom"]),
@@ -431,10 +442,10 @@ function pluginNoExtensionOrArtifactRules() {
   }));
 }
 
-/** 🔌️ Every plugin source owner consumes only the admitted neutral public SDK. */
+/** 🔌️ Every plugin source owner consumes only the admitted neutral public SDK and its foundation packages. */
 function pluginsFrameworkSdkOnlyRule() {
   const sdk = workspacePackages.filter(pkg => pkg.name === TAXONOMY.dependencyDirections.publicApi.sdkPackage);
-  return { name: "plugins-framework-sdk-only", severity: "error", comment: "Plugin runtime and executable owners use the neutral authored public SDK; private framework and product APIs are forbidden", from: { path: "^✏️s/🔌️plugins/" }, to: { path: [sourceOwnerPattern("🧰️framework"), ...packageOwnerPatterns(FRAMEWORK_PACKAGES.map(pkg => pkg.name))], pathNot: exportTargetPatterns(sdk) } };
+  return { name: "plugins-framework-sdk-only", severity: "error", comment: "Plugin runtime and executable owners use the neutral authored public SDK and the admitted SDK foundation packages; private framework and product APIs are forbidden", from: { path: "^✏️s/🔌️plugins/" }, to: { path: [sourceOwnerPattern("🧰️framework"), ...packageOwnerPatterns(FRAMEWORK_PACKAGES.map(pkg => pkg.name))], pathNot: [...exportTargetPatterns(sdk), ...SDK_FOUNDATION_TARGETS] } };
 }
 
 /** 🖥️ Enforces the renderer host's presentation-only dependency boundary against dependency-cruiser's canonical resolved paths. */
@@ -442,7 +453,7 @@ function rendererHostsOnlyUiRule() {
   return {
     name: "renderer-hosts-only-ui",
     severity: "error",
-    comment: "the react renderer host may depend only on ui/styling, framework-core protocol types, react, and itself — never os-shell, ui-interpreter, or app packages",
+    comment: "the react renderer host may depend only on ui/styling, the admitted SDK foundation packages, framework-core protocol types, react, and itself — never os-shell, ui-interpreter, or app packages",
     from: { path: RENDERER_HOST_ROOT },
     to: { pathNot: RENDERER_HOST_ALLOWED_RESOLVED_PATHS },
   };

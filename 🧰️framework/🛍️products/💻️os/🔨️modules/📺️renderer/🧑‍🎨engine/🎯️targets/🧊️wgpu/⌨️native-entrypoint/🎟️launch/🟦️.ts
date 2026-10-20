@@ -1,7 +1,7 @@
 import { readIssuedScriptProcessEnvelopeV1, type ScriptInvocation } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import schema from "./🧬️schema/🔣️.json";
-import admissionSchema from "./📨️admission/🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
+import admissionSchema from "./📨️admission/🧬️schema/🔣️.json" with { type: "json" };
 /** 🎟️ The native launcher owns independent currencies before any startup or host I/O job exists. */
 export type NativeLaunchGrantV1=Readonly<{maximumItems:number;maximumCopyBytes:number;maximumCapacityBytes:number;maximumReleaseBytes:number;maximumDepth:number}>;
 export type NativeLaunchOperationPolicyV1=Readonly<{fuel:number;maximumElapsedMicroseconds:number;grant:NativeLaunchGrantV1;retirementReserve:Readonly<{fuel:number;grant:NativeLaunchGrantV1}>}>;

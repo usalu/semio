@@ -6,7 +6,7 @@ import type { ServiceCompositionTestDependenciesV1 } from "../🧰️dependencie
 type BackboneWorkerResponse = import("@semio-tech/framework-os").BackboneWorkerResponse;
 type DocumentScope = import("@semio-tech/framework/directory/schema").DocumentScope;
 type PersistenceBinding = import("@semio-tech/framework-os").PersistenceBinding;
-type UiNodeRecord = import("@semio-tech/framework/manifest").UiNodeRecord;
+type UiNodeRecord = import("@semio-tech/framework-manifest").UiNodeRecord;
 type WireFrontierSummary = import("@semio-tech/framework-replication").WireFrontierSummary;
 type Vitest = NonNullable<ImportMeta["vitest"]>;
 

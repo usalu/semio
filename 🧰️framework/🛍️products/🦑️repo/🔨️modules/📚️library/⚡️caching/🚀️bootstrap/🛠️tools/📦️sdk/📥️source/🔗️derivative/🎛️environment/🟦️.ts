@@ -1,4 +1,4 @@
-import schema from "../🧬️schema/🔣️.json";
+import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 
 /** 🎛️ Closes runtime options for the bounded SDK compiler and preflight child roles. */
 export function nxSdkCompilerEnvironmentV1(environment:Readonly<Record<string,string|undefined>>):Readonly<Record<string,string|undefined>>{

@@ -1,0 +1,203 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "owner": "physical",
+      "failure": "open",
+      "expected": {
+        "opened": 0,
+        "closed": 0,
+        "retained": 0,
+        "error": "fault:open",
+        "digest": null
+      }
+    },
+    {
+      "owner": "physical",
+      "failure": "before",
+      "expected": {
+        "opened": 1,
+        "closed": 1,
+        "retained": 0,
+        "error": "fault:before",
+        "digest": null
+      }
+    },
+    {
+      "owner": "physical",
+      "failure": "named",
+      "expected": {
+        "opened": 1,
+        "closed": 1,
+        "retained": 0,
+        "error": "fault:named",
+        "digest": null
+      }
+    },
+    {
+      "owner": "physical",
+      "failure": "identity",
+      "expected": {
+        "opened": 1,
+        "closed": 1,
+        "retained": 0,
+        "error": "Physical compiler lock identity changed",
+        "digest": null
+      }
+    },
+    {
+      "owner": "physical",
+      "failure": "retain",
+      "expected": {
+        "opened": 1,
+        "closed": 1,
+        "retained": 0,
+        "error": "fault:retain",
+        "digest": null
+      }
+    },
+    {
+      "owner": "physical",
+      "failure": "none",
+      "expected": {
+        "opened": 1,
+        "closed": 0,
+        "retained": 1,
+        "error": null,
+        "digest": null
+      }
+    },
+    {
+      "owner": "baseline",
+      "failure": "open",
+      "expected": {
+        "opened": 0,
+        "closed": 0,
+        "retained": 0,
+        "error": "fault:open",
+        "digest": null
+      }
+    },
+    {
+      "owner": "baseline",
+      "failure": "before",
+      "expected": {
+        "opened": 1,
+        "closed": 1,
+        "retained": 0,
+        "error": "fault:before",
+        "digest": null
+      }
+    },
+    {
+      "owner": "baseline",
+      "failure": "hash",
+      "expected": {
+        "opened": 1,
+        "closed": 1,
+        "retained": 0,
+        "error": "fault:hash",
+        "digest": null
+      }
+    },
+    {
+      "owner": "baseline",
+      "failure": "buffer",
+      "expected": {
+        "opened": 1,
+        "closed": 1,
+        "retained": 0,
+        "error": "fault:buffer",
+        "digest": null
+      }
+    },
+    {
+      "owner": "baseline",
+      "failure": "identity",
+      "expected": {
+        "opened": 1,
+        "closed": 1,
+        "retained": 0,
+        "error": "Bounded physical baseline catalog required",
+        "digest": null
+      }
+    },
+    {
+      "owner": "baseline",
+      "failure": "read",
+      "expected": {
+        "opened": 1,
+        "closed": 1,
+        "retained": 0,
+        "error": "fault:read",
+        "digest": null
+      }
+    },
+    {
+      "owner": "baseline",
+      "failure": "short",
+      "expected": {
+        "opened": 1,
+        "closed": 1,
+        "retained": 0,
+        "error": "Complete baseline bytes required",
+        "digest": null
+      }
+    },
+    {
+      "owner": "baseline",
+      "failure": "update",
+      "expected": {
+        "opened": 1,
+        "closed": 1,
+        "retained": 0,
+        "error": "fault:update",
+        "digest": null
+      }
+    },
+    {
+      "owner": "baseline",
+      "failure": "after",
+      "expected": {
+        "opened": 1,
+        "closed": 1,
+        "retained": 0,
+        "error": "fault:after",
+        "digest": null
+      }
+    },
+    {
+      "owner": "baseline",
+      "failure": "mutated",
+      "expected": {
+        "opened": 1,
+        "closed": 1,
+        "retained": 0,
+        "error": "Original baseline bytes changed",
+        "digest": null
+      }
+    },
+    {
+      "owner": "baseline",
+      "failure": "digest",
+      "expected": {
+        "opened": 1,
+        "closed": 1,
+        "retained": 0,
+        "error": "fault:digest",
+        "digest": null
+      }
+    },
+    {
+      "owner": "baseline",
+      "failure": "none",
+      "expected": {
+        "opened": 1,
+        "closed": 1,
+        "retained": 0,
+        "error": null,
+        "digest": "3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"
+      }
+    }
+  ]
+}

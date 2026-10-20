@@ -1,7 +1,7 @@
 //! 🔍️ Layout inspector: document summary, then editable document, page, and frame fields.
 
 use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::config::LayoutWindowConfig;
-use semio_s_artifact_layout_layout_editor_panels::terminology::LayoutLabels;
+use crate::terminology::LayoutLabels;
 use semio_s_artifact_layout_layout_editor_commands::{layout_action, ui_label, ui_value_map, ui_value_text, LayoutInteractionSnapshot};
 use semio_s_artifact_layout_layout_model::rgba_to_hex;
 use semio_s_artifact_layout_layout_model::{Frame, Page, LAYOUT_DOCUMENT_SCHEMA};

@@ -3,11 +3,11 @@
 use super::{EnergyModelConfig, EnergyModelConfigDiff};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
-#[path = "⏱️change-simulation/🦀️.rs"]
+#[path = "⏱️change-simulation-settings/🦀️.rs"]
 mod change_simulation_settings;
 pub use change_simulation_settings::ChangeSimulationSettings;
 
-#[path = "🎨️change-result/🦀️.rs"]
+#[path = "🎨️change-result-field/🦀️.rs"]
 mod change_result_field;
 pub use change_result_field::ChangeResultField;
 

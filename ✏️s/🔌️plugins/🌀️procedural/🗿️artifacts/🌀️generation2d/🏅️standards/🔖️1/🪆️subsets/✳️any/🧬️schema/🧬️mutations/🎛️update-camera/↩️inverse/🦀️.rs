@@ -4,6 +4,7 @@
 use crate::update_camera;
 
 use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
+use crate::update_camera::component::UpdateCamera;
 
 pub fn inverse<Op: From<UpdateCamera>>(_payload: &super::UpdateCamera, base: &Generation2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {

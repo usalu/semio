@@ -185,19 +185,19 @@ test("ordinary build entry launches native dashboard commands before install and
   if (!branch) throw Error("Actual native dashboard dispatch branch required");
   const compile = (body: string): string => { const compiled = ts.transpileModule(body, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext }, reportDiagnostics: true });expect(compiled.diagnostics).toEqual([]);return compiled.outputText.replace(/import\(([^)]+)\)/gu, "load($1)"); };
   const code = compile("async function run(){" + branch.getText(tree) + ";fallback();}");
-  const routing = await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"), leases = await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts"), capacity = await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts"), native = await import("@semio-tech/framework/products/repo/modules/dashboard/installation");
+  const routing = await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"), leases = await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts"), capacity = await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts"), native = await import("../../⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts");
   const oracle = new Ajv({ strict: false }).compile(schema), own = compileJsonSchemaSubset(schema), database = new Database(":memory:");
   try {
     expect(oracle(fixture)).toBe(true);expect(own.validate(fixture)).toEqual([]);
     for (const row of fixture.dashboardRoutes) await routing.withScriptProcessEnvelope(routing.createScriptProcessEnvelope({ version: 1, owner: "dashboard:build-route-test", maximumElapsedMilliseconds: 0 }, {}, Date.now()), async invocation => {
-      const network = Object.freeze({ offline: true }), events: string[] = [], bindings = {
+      const network = Object.freeze({ offline: true }), events: string[] = [], invoked = native.dashboardInvocation(row.args), bindings = {
         root, resolved: { args: row.args, env: {} }, capabilities: { buildMode: row.mode }, invocation,
         readBuildMode: (value: string) => { expect(value).toBe(row.mode);return value; },
         scriptCompilerAdmissionControlV1: capacity.scriptCompilerAdmissionControlV1,
         fallback: () => { events.push("build"); },
         load: async (path: string) => {
           if (path.endsWith("/📦️installation/🟦️.ts")) return { dashboardInvocation: native.dashboardInvocation, dashboardInstalled: () => row.installed, launchDashboard: async (workspace: string, args: readonly string[], options: any) => {
-            expect(workspace).toBe(root);expect(options.workspace).toBe(root);expect(options.invocation).toBe(invocation);expect(options.mode).toBe(row.mode);expect(options.network).toBe(network);routing.requireIssuedResourceControlInvocationV1(options.control, invocation);expect(options.control.signal).toBe(invocation.control.signal);leases.checkResourceLeaseControl(options.control);events.push("native");expect(args).toEqual(native.dashboardInvocation(row.args));await Promise.resolve();leases.checkResourceLeaseControl(options.control);return row.status;
+            expect(workspace).toBe(root);expect(options.workspace).toBe(root);expect(options.invocation).toBe(invocation);expect(options.mode).toBe(row.mode);expect(options.network).toBe(network);routing.requireIssuedResourceControlInvocationV1(options.control, invocation);expect(options.control.signal).toBe(invocation.control.signal);leases.checkResourceLeaseControl(options.control);events.push("native");if(invoked===undefined)throw Error("A dashboard launch needs a dashboard invocation: "+row.args.join(" "));expect(args).toEqual(invoked);await Promise.resolve();leases.checkResourceLeaseControl(options.control);return row.status;
           } };
           if (path.endsWith("/📥️invocation/🟦️.ts")) return { readNativeCallerAuthorityV1: (value: unknown) => { expect(value).toBe(invocation.capabilities);return { network }; } };
           throw Error("Undeclared dashboard route port: " + path);
@@ -243,7 +243,7 @@ test("shared developer tooling declarations and all lock scopes retain canonical
 });
 
 test("all-command axes match neutral vectors and SQLite without enumerating the verb vocabulary", async () => {
-  const dashboard="🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard",cases=JSON.parse(read(dashboard+"/🧪️tests/🧫️fixtures/🎮️registry/🎯️axes.json")),schema=JSON.parse(read(dashboard+"/🧬️schema/🎮️registry/🔣️.json")),contract={...schema,$ref:"#/$defs/AppliesTo"},own=compileJsonSchemaSubset(contract),oracle=new Ajv2020({strict:false}).compile(contract),database=new Database(":memory:"),{axisApplies}=await import("../../../🎛️dashboard/🧪️tests/🗺️coverage/🔮️oracle/🟦️.ts");
+  const dashboard="🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard",cases=JSON.parse(read(dashboard+"/🧪️tests/🧫️fixtures/🎮️registry/🎯️axes.json")),schema=JSON.parse(read(dashboard+"/🧬️schema/🎮️registry/🔣️.json")),contract={...schema,$ref:"#/$defs/AppliesTo"},own=compileJsonSchemaSubset(contract),oracle=new Ajv2020({strict:false}).compile(contract),database=new Database(":memory:"),{axisApplies}=await import("@semio-tech/repo-product/modules/dashboard/testing/coverage/oracle");
   try{
     for(const [rows,accepted]of [[cases.accepted,true],[cases.rejected,false]]as const)for(const value of rows){expect(oracle(value),JSON.stringify(value)).toBe(accepted);expect(own.validate(value).length===0,JSON.stringify(value)).toBe(accepted);}
     for(const row of cases.cases){const parameter=row.parameter,scope=parameter.appliesTo,effect=Boolean(parameter.valueEnv||parameter.args?.length||parameter.env&&Object.keys(parameter.env).length),selected=database.query("select case when ?1='playground' then coalesce(json_extract(?2,'$.playground'),0)=1 when ?1='tool' then ?4=1 and ?2 is not null and (coalesce(json_extract(?2,'$.all'),0)=1 or exists(select 1 from json_each(?2,'$.verbs') where value=?3)) else ?2 is null or coalesce(json_extract(?2,'$.all'),0)=1 or exists(select 1 from json_each(?2,'$.verbs') where value=?3) end selected").get(row.command,scope===undefined?null:JSON.stringify(scope),row.verb,effect?1:0)as{selected:number};expect(Boolean(selected.selected),JSON.stringify(row)).toBe(row.expected);expect(axisApplies(parameter,row.verb,row.command),JSON.stringify(row)).toBe(row.expected);}
@@ -266,6 +266,10 @@ test("selected process deadlines share numeric grammar and immutable elapsed-tim
 
 type CensusKind = "file" | "directory" | "symlink";
 type ManifestRole="active"|"ticket"|"retained"|"neutral";
+type IdeDisposition="excluded"|"retired"|"accepted";
+/** 🧷️ Census fixture rows whose authored expectations are read as the closed unions the implementation returns. */
+type PathCaseRow=Omit<(typeof censusFixture.pathCases)[number],"expected">&{readonly expected:IdeDisposition};
+type RoleCaseRow=Omit<(typeof censusFixture.roleCases)[number],"expectedRole">&{readonly expectedRole:ManifestRole};
 
 function censusXmlRoot(text:string):string|null{
   let remaining=text.replace(/^\uFEFF/u,"").replace(/^[ \t\r\n]+/u,"");
@@ -298,7 +302,7 @@ function censusReadText(file:string,maximum=2000000,prefix=false):{text:string;t
 
 const ideDirectories=new Set(censusFixture.directories),ideFiles=new Set(censusFixture.files),ideExclusions=new Set(censusFixture.excludedDirectories);
 
-function retiredIdePath(path:string,kind:CensusKind,reference=false,content?:string):"excluded"|"retired"|"accepted"{
+function retiredIdePath(path:string,kind:CensusKind,reference=false,content?:string):IdeDisposition{
   const parts=path.toLowerCase().split(reference?/[\\/\s"'=;:,()\[\]{}]+/u:/[\\/]+/u).filter(Boolean),last=parts.at(-1)??"";
   if(!reference&&parts.some(part=>ideExclusions.has(part)))return "excluded";
   const file=(part:string)=>ideFiles.has(part)||censusFixture.suffixes.some(suffix=>part.endsWith("."+suffix));
@@ -327,11 +331,11 @@ test("physical IDE census and manifest references refuse unknown ignored owner c
       const query="WITH RECURSIVE prolog(rest,n) AS (SELECT ltrim(?1,?2),0 UNION ALL SELECT ltrim(CASE WHEN substr(rest,1,2)='<?' THEN substr(rest,instr(rest,'?>')+2) ELSE substr(rest,instr(rest,'-->')+3) END,?2),n+1 FROM prolog WHERE n<?3 AND ((substr(rest,1,2)='<?' AND instr(rest,'?>')>0) OR (substr(rest,1,4)='<!--' AND instr(rest,'-->')>0))),root AS (SELECT CASE WHEN substr(rest,1,9)='<!DOCTYPE' AND substr(rest,10,1) IN (' ',char(9),char(10),char(13)) THEN ltrim(substr(rest,10),?2) WHEN substr(rest,1,1)='<' THEN substr(rest,2) ELSE '' END raw FROM prolog ORDER BY n DESC LIMIT 1),normalized AS (SELECT "+normalized+" raw FROM root),token AS (SELECT substr(raw,1,instr(raw||' ',' ')-1) name FROM normalized) SELECT nullif(CASE WHEN instr(name,':')>0 THEN substr(name,instr(name,':')+1) ELSE name END,'') name FROM token";
       return(database.query(query).get(text," \t\r\n\uFEFF",censusFixture.maximumXmlPrologSections)as{name:string|null}).name;
     };
-    const classify=(value:string,kind:CensusKind,reference=false,content?:string):string=>{
+    const classify=(value:string,kind:CensusKind,reference=false,content?:string):IdeDisposition=>{
       const query="WITH RECURSIVE parts(rest,part,n) AS (SELECT lower("+(reference?normalized:"replace(?1,char(92),'/')")+")||'/',null,0 UNION ALL SELECT substr(rest,instr(rest,'/')+1),substr(rest,1,instr(rest,'/')-1),n+1 FROM parts WHERE rest<>'') SELECT CASE WHEN ?2=0 AND EXISTS(SELECT 1 FROM parts JOIN json_each(?3) names ON part=names.value) THEN 'excluded' WHEN EXISTS(SELECT 1 FROM parts JOIN json_each(?4) names ON part=names.value) OR EXISTS(SELECT 1 FROM parts WHERE (?2=1 OR (?5<>'directory' AND n=(SELECT max(n) FROM parts))) AND (part IN (SELECT value FROM json_each(?6)) OR EXISTS(SELECT 1 FROM json_each(?7) suffix WHERE substr(part,-length(suffix.value)-1)='.'||suffix.value))) THEN 'retired' ELSE 'accepted' END disposition";
-      const disposition=(database.query(query).get(value,reference?1:0,JSON.stringify(censusFixture.excludedDirectories),JSON.stringify(censusFixture.directories),kind,JSON.stringify(censusFixture.files),JSON.stringify(censusFixture.suffixes))as{disposition:string}).disposition;return disposition==="accepted"&&!reference&&kind!=="directory"&&value.toLowerCase().endsWith(".launch")&&content!==undefined&&xmlRootOracle(content)==="launchConfiguration"?"retired":disposition;
+      const disposition=(database.query(query).get(value,reference?1:0,JSON.stringify(censusFixture.excludedDirectories),JSON.stringify(censusFixture.directories),kind,JSON.stringify(censusFixture.files),JSON.stringify(censusFixture.suffixes))as{disposition:IdeDisposition}).disposition;return disposition==="accepted"&&!reference&&kind!=="directory"&&value.toLowerCase().endsWith(".launch")&&content!==undefined&&xmlRootOracle(content)==="launchConfiguration"?"retired":disposition;
     };
-    for(const row of censusFixture.pathCases){expect(retiredIdePath(row.path,row.kind as CensusKind,false,"content"in row?row.content:undefined),row.path).toBe(row.expected);expect(classify(row.path,row.kind as CensusKind,false,"content"in row?row.content:undefined),row.path).toBe(row.expected);}
+    for(const row of censusFixture.pathCases as readonly PathCaseRow[]){expect(retiredIdePath(row.path,row.kind as CensusKind,false,"content"in row?row.content:undefined),row.path).toBe(row.expected);expect(classify(row.path,row.kind as CensusKind,false,"content"in row?row.content:undefined),row.path).toBe(row.expected);}
     const manifestOracle=(document:Record<string,any>,ticket=false):string[]=>{
       const rows=database.query("WITH entries AS (SELECT value,CASE WHEN ?2=0 AND fullkey GLOB '$.nx.*' THEN '$.'||substr(fullkey,6) ELSE fullkey END fullkey,type FROM json_tree(?1)) SELECT value,fullkey FROM entries WHERE type='text' AND ((?2=1 AND (fullkey GLOB '$.tools*' OR fullkey GLOB '$.compounds*') AND (fullkey GLOB '*.command*' OR fullkey GLOB '*.args*' OR fullkey GLOB '*.env*')) OR (?2=0 AND (fullkey GLOB '$.scripts.*' OR fullkey GLOB '$.namedInputs.*' OR fullkey GLOB '$.inputs*' OR fullkey GLOB '$.outputs*' OR fullkey GLOB '$.dependsOn*' OR fullkey GLOB '$.command*' OR fullkey GLOB '$.options*' OR fullkey GLOB '$.configurations*' OR ((fullkey GLOB '$.targets.*' OR fullkey GLOB '$.targetDefaults.*' OR fullkey GLOB '$.tasks*') AND (fullkey GLOB '*.inputs*' OR fullkey GLOB '*.outputs*' OR fullkey GLOB '*.dependsOn*' OR fullkey GLOB '*.options*' OR fullkey GLOB '*.configurations*' OR fullkey GLOB '*.command*')) OR ((fullkey GLOB '$.metadata.semio.dashboard.*' OR fullkey GLOB '$.targets.*.metadata.semio.dashboard.*' OR fullkey GLOB '$.targetDefaults.*.metadata.semio.dashboard.*' OR fullkey GLOB '$.tasks*.metadata.semio.dashboard.*') AND (fullkey GLOB '*.command*' OR fullkey GLOB '*.args*' OR fullkey GLOB '*.env*')))))").all(JSON.stringify(document),ticket?1:0)as{value:string;fullkey:string}[];
       return [...new Set(rows.filter(row=>!((row.fullkey.includes(".inputs")||row.fullkey.includes(".outputs")||row.fullkey.includes(".dependsOn")||row.fullkey.startsWith("$.namedInputs."))&&row.value.trimStart().startsWith("!"))&&classify(row.value,"file",true)==="retired").map(row=>row.value))].sort();
@@ -341,7 +345,7 @@ test("physical IDE census and manifest references refuse unknown ignored owner c
       const normalized=path.replaceAll("\\","/").toLowerCase(),declaration=censusFixture.semanticRoles,parts=JSON.stringify(normalized.split("/"));
       return(database.query("SELECT CASE WHEN EXISTS(SELECT 1 FROM json_each(?2) roots WHERE substr(?1,1,length(roots.value)+1)=roots.value||'/') AND EXISTS(SELECT 1 FROM json_each(?3) parts JOIN json_each(?4) names ON parts.value=names.value) THEN 'retained' WHEN (SELECT value FROM json_each(?3) ORDER BY cast(key AS integer) DESC LIMIT 1)=?5 THEN CASE WHEN ?6='open' THEN 'ticket' ELSE 'neutral' END WHEN (SELECT value FROM json_each(?3) ORDER BY cast(key AS integer) DESC LIMIT 1) IN (SELECT value FROM json_each(?7)) THEN 'active' ELSE 'neutral' END role").get(normalized,JSON.stringify(declaration.ticketRoots),parts,JSON.stringify(declaration.retainedInputDirectories),declaration.ticketCommandName,status,JSON.stringify(censusFixture.manifestNames))as{role:ManifestRole}).role;
     };
-    for(const row of censusFixture.roleCases){
+    for(const row of censusFixture.roleCases as readonly RoleCaseRow[]){
       const role=censusManifestRole(row.path,row.ticketStatus);expect(role,row.path).toBe(row.expectedRole);expect(roleOracle(row.path,row.ticketStatus),row.path).toBe(role);
       if(row.expectedParse==="not-read"){expect(censusManifestDocument(row.text,role)).toBeNull();continue;}
       const independent=ts.parseConfigFileTextToJson(row.path,row.text);expect(independent.error!==undefined,row.path).toBe(row.expectedParse==="invalid");

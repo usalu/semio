@@ -8,9 +8,9 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as schema;
 
 //#region 🪢️TaxonomyMounts
-#[path = "../🎚️change-layer-adjustment/🦀️.rs"]
+#[path = "../🎚️change-layer-adjustment-kind/🦀️.rs"]
 pub mod change_layer_adjustment_kind;
-#[path = "../🎛️change-layer/🦀️.rs"]
+#[path = "../🎛️change-layer-adjustment-parameter/🦀️.rs"]
 pub mod change_layer_adjustment_parameter;
 #[path = "../🎨change-layer-blend-mode/🦀️.rs"]
 pub mod change_layer_blend_mode;

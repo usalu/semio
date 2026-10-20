@@ -1,11 +1,12 @@
 [mcp_servers.repo]
-command = "bun"
-args = ["./📜️script.ts", "dev", "mcp", "stdio", "codex"]
+command = "repo"
+args = ["mcp"]
+env = { SEMIO_REPO_MCP_CLIENT = "codex" }
 enabled = true
 cwd = "."
 
 [mcp_servers.semio]
-command = "bun"
-args = ["./📜️script.ts", "dev", "mcp", "stdio", "os", "--folder", ".🧬semio/🔗space/os-mcp", "--scopes", "workspace.read,artifact.write,inference.execute,ui.observe,ui.control,conversation.write"]
+command = "repo"
+args = ["dev", "mcp", "stdio", "os", "--folder", ".🧬semio/🔗space/os-mcp", "--scopes", "workspace.read,artifact.write,inference.execute,ui.observe,ui.control,conversation.write"]
 enabled = true
 cwd = "."

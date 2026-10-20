@@ -79,8 +79,8 @@ const mcpStagingEnvironment = (): NodeJS.ProcessEnv => ({ ...process.env, CARGO_
 /** 🏗️ Non-blocking staging: the neutral build target runs as a child while the caller keeps serving; resolves with its exit status, `-1` when it cannot start. */
 export function stageMcpBinaryAsync(repoRoot: string, progress: (line: string) => void, signal?: AbortSignal): Promise<number> {
   return new Promise((resolveStatus) => {
-    progress(`[semio-os-mcp] staging via bun repo run ${MCP_BINARY_TARGET}`);
-    const child = spawn("bun", ["repo", "run", MCP_BINARY_TARGET, "--output=stream"], { cwd: repoRoot, shell: false, env: mcpStagingEnvironment(), stdio: ["ignore", "pipe", "pipe"], signal });
+    progress(`[semio-os-mcp] staging via repo run ${MCP_BINARY_TARGET}`);
+    const child = spawn("repo", ["run", MCP_BINARY_TARGET, "--output=stream"], { cwd: repoRoot, shell: false, env: mcpStagingEnvironment(), stdio: ["ignore", "pipe", "pipe"], signal });
     for (const stream of [child.stdout, child.stderr]) createInterface({ input: stream }).on("line", (line) => void (line.trim() && progress(line)));
     child.on("error", (error) => {
       progress(`[semio-os-mcp] ${error.message}`);
@@ -92,8 +92,8 @@ export function stageMcpBinaryAsync(repoRoot: string, progress: (line: string) =
 
 const nativeMcpBinaryStagingFor = (repoRoot: string): McpBinaryStaging => ({
   stage: (progress) => {
-    progress(`[semio-os-mcp] staging via bun repo run ${MCP_BINARY_TARGET}`);
-    const result = spawnSync("bun", ["repo", "run", MCP_BINARY_TARGET, "--output=stream"], {
+    progress(`[semio-os-mcp] staging via repo run ${MCP_BINARY_TARGET}`);
+    const result = spawnSync("repo", ["run", MCP_BINARY_TARGET, "--output=stream"], {
       cwd: repoRoot,
       encoding: "utf8",
       maxBuffer: 16 * 1024 * 1024,

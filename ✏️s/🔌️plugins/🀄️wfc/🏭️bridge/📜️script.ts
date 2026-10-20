@@ -21,7 +21,7 @@
 
 //#region 🔌️Adapters
 import { runRepositoryMutationBridgeScriptV1 } from "../../../../🧰️framework/📦️packages/🟦️typescript/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🟦️.ts";
-import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from "../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🚪️Entry

@@ -29,6 +29,7 @@ use semio_framework_ui_locale::{Label, LocalizedLabel};
 use semio_framework_3d_brep_engine::{Brep, GeometryHandle};
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::HashMap;
+use semio_s_artifact_cad_cad_interaction as interaction;
 
 //#region 🔖️Constants
 pub const CAD_PLAY_APP_ID: &str = "cad-play";
@@ -487,9 +488,6 @@ pub fn export_spatial_json(_envelope: &CadPlayView, mode: &str, pane: Option<Cad
 /// `schema`/`id` — a genesis envelope with no history to encode.
 pub fn reset_document_effect(scene: &CadSnapshot) -> Effect {
     let pack = <CadSnapshot as pack::snapshot::ArtifactPack>::encode_pack(scene);
-    // 🪪️ An edit-free history log, never a throwaway `create_document_envelope`: an envelope dropped
-    // without its bounded retirement authority traps (`terminal shell reached Drop …`). The host
-    // re-stamps the log's identity with the live store's before archive hydration.
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr(&scene.id, &scene.schema));
     Effect::LoadDocument { pack, spr }
 }
@@ -623,19 +621,19 @@ pub fn try_commit_session_entries(models: &CadPaneModels, runtime: &mut CadPlayR
     }
     let mut kernel = cad_brep_kernel();
     let label_count = models.model(session.pane).map_or(0, |model| model.elements.len());
-    let outcome = interaction::commit_session(&mut kernel, session, label_count, next_cad_id);
+    let outcome = semio_s_artifact_cad_cad_interaction::commit_session(&mut kernel, session, label_count, next_cad_id);
     let interaction_id = session.interaction_id.clone();
     let pane = if session.pane == pane { pane } else { session.pane };
     runtime.engagement_input.clear();
     runtime.last_finalized_interaction_id = Some(interaction_id.clone());
     runtime.engagement_session = None;
     let (entries, step): (Vec<CadToolEntry>, String) = match outcome {
-        Some(interaction::CommitOutcome::Objects(objects)) => {
+        Some(semio_s_artifact_cad_cad_interaction::CommitOutcome::Objects(objects)) => {
             let count = objects.len();
             (objects.iter().map(|object| create_object_entry(pane, object)).collect(), format!("Committed {count} object(s)"))
         }
-        Some(interaction::CommitOutcome::Move { targets, delta }) => (vec![CadToolEntry::Transform(CadTransformRecord::drag(targets, delta))], "Moved".to_string()),
-        Some(interaction::CommitOutcome::Copy { targets, delta }) => {
+        Some(semio_s_artifact_cad_cad_interaction::CommitOutcome::Move { targets, delta }) => (vec![CadToolEntry::Transform(CadTransformRecord::drag(targets, delta))], "Moved".to_string()),
+        Some(semio_s_artifact_cad_cad_interaction::CommitOutcome::Copy { targets, delta }) => {
             let entries = targets
                 .iter()
                 .filter_map(|target| {
@@ -646,9 +644,9 @@ pub fn try_commit_session_entries(models: &CadPaneModels, runtime: &mut CadPlayR
                 .collect();
             (entries, "Copied".to_string())
         }
-        Some(interaction::CommitOutcome::Rotate { targets, axis, angle }) => (vec![CadToolEntry::Transform(CadTransformRecord::rotate(targets, axis, angle))], "Rotated".to_string()),
-        Some(interaction::CommitOutcome::Scale { targets, factors }) => (vec![CadToolEntry::Transform(CadTransformRecord::scale(targets, factors))], "Scaled".to_string()),
-        Some(interaction::CommitOutcome::Unsupported(action)) => (Vec::new(), format!("Unsupported: {action}")),
+        Some(semio_s_artifact_cad_cad_interaction::CommitOutcome::Rotate { targets, axis, angle }) => (vec![CadToolEntry::Transform(CadTransformRecord::rotate(targets, axis, angle))], "Rotated".to_string()),
+        Some(semio_s_artifact_cad_cad_interaction::CommitOutcome::Scale { targets, factors }) => (vec![CadToolEntry::Transform(CadTransformRecord::scale(targets, factors))], "Scaled".to_string()),
+        Some(semio_s_artifact_cad_cad_interaction::CommitOutcome::Unsupported(action)) => (Vec::new(), format!("Unsupported: {action}")),
         None => (Vec::new(), "Nothing to commit".to_string()),
     };
     runtime.engagement_step = if entries.is_empty() && step.starts_with("Committed") { "Nothing to commit".into() } else { step };
@@ -659,9 +657,6 @@ pub fn try_commit_session_entries(models: &CadPaneModels, runtime: &mut CadPlayR
 pub fn engagement_submit_entries(models: &CadPaneModels, runtime: &mut CadPlayRuntime, pane: CadPaneId) -> Vec<CadToolEntry> {
     let input = runtime.engagement_input.trim().to_string();
     if input.is_empty() {
-        // ⏎️ An empty line during a session is the shell's Enter/Space: it is the state's own
-        // `confirm` when the spec declares one ("Accept height", "Finalize"), else a no-op that keeps
-        // the session.
         if let Some(session) = runtime.engagement_session.as_mut() {
             if apply_event(session, "confirm", None) {
                 runtime.engagement_step = session.state.clone();
@@ -676,15 +671,9 @@ pub fn engagement_submit_entries(models: &CadPaneModels, runtime: &mut CadPlayRu
     }
     let model_definition_id = pane.model_definition_id();
     if let Some((event_kind, payload)) = interaction::parse_repl_line_for(&input, runtime.engagement_session.as_ref()) {
-        // An active session's own events/keyed-transitions always take priority over starting an
-        // unrelated interaction by key — otherwise a mid-flow keypress that happens to collide
-        // with another interaction's top-level key (e.g. box's "d" for diagonal mode vs. length's
-        // top-level key "d") would silently abandon the current session.
         if let Some(session) = runtime.engagement_session.as_mut() {
             if apply_event(session, &event_kind, payload.as_ref()) {
                 runtime.engagement_step = session.state.clone();
-                // 🧹️ The line was consumed: a scalar entry that keeps its state ("2" in the height
-                // prompt) must not linger as the published line, or the shell's next Enter re-submits it.
                 runtime.engagement_input.clear();
                 let session_snapshot = session.clone();
                 return try_commit_session_entries(models, runtime, pane, &session_snapshot);
@@ -776,10 +765,6 @@ pub fn cad_io() -> semio_framework_plugin::AppIo {
                 multiplicity: semio_framework::PortMultiplicity::Many,
             },
         ],
-        // 🌉️ Ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6:
-        // `AppIo` carries no string-kind peer field (unlike `ArtifactKindSpec::export_stdio_kinds`
-        // below), so — matching the precedent already set by the raster/block plugins' own
-        // migrations — this stays empty; the real stdio kind ids live on `artifact_kind()`.
         export_formats: vec![],
         import_formats: vec![],
         artifact: semio_framework_plugin::ArtifactPresentation { id: "3d.cad".into(), name: "3D CAD".into(), dimension: "3d".into(), component_kind: "cad".into() },

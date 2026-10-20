@@ -27,7 +27,8 @@
         "default",
         "{workspaceRoot}/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document/**/*.ts"
-      ]
+      ],
+      "outputs": []
     },
     "test-snapshot-sqlite": {
       "executor": "repo:script",
@@ -36,6 +37,7 @@
         "{workspaceRoot}/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*.ts"
       ],
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test-snapshot-sqlite",
@@ -44,6 +46,7 @@
     },
     "test": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",

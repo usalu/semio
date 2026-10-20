@@ -47,6 +47,7 @@ semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
 semio-framework-async-macros = { workspace = true }
 semio-framework-dsl = { workspace = true }
 semio-s-artifact-stdio-semio-value-mutations = { workspace = true, features = ["testkit"] }
+serde_json = { workspace = true }
 
 [[test]]
 name = "value_path_frames"

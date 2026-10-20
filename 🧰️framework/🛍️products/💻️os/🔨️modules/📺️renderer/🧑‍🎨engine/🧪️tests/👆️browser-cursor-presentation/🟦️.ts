@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 import { chromium, type Browser, type Page } from "playwright";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { uiWgpuCursorFixture as fixture } from "@semio-tech/framework/ui/testing/fixtures";
+import { uiWgpuCursorFixture as fixture } from "@semio-tech/ui/testing/fixtures";
 import { BrowserFrameTransport } from "@semio-tech/framework-renderer-wgpu/browser-frame-transport";
 import { type BrowserFrameUiMessage, type BrowserFrameWorkerMessage, type BrowserFrameWorkerPort } from "@semio-tech/framework-renderer-wgpu/browser-frame-transport/contract";
 import { resolveWgpuBootDescriptor } from "@semio-tech/framework-renderer-wgpu/boot-descriptor";

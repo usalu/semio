@@ -1,4 +1,4 @@
-//! transient `Puzzle2dScene` bundle its command/panel/window nodes mutate and render, the shared
+//! 💨️ transient `Puzzle2dScene` bundle its command/panel/window nodes mutate and render, the shared
 //! 🧩️ Puzzle 2d play app — the plugin's 2d play app: its `ArtifactApp` impl (dispatch-only), the
 //! snapshot helpers they build on, and the manifest that stitches those nodes together.
 //!

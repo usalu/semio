@@ -4,6 +4,13 @@ use semio_s_artifact_draw_drawing_editor::{DRAWING_GESTURE_RAW_BYTES, DRAWING_GE
 use semio_s_artifact_draw_drawing_editor_tool as canvas_pointer_down;
 use semio_framework_job::{InteractiveJob as _, InteractiveJobCloseStep};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_plugin::Emit;
+use semio_framework_diagnostic::FaultOrigin;
+use semio_framework_diagnostic::FaultCode;
+use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::Fault;
 
 fn grant(items: usize, bytes: usize) -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: bytes, maximum_capacity_bytes: bytes, maximum_release_bytes: bytes, maximum_depth: 32 }

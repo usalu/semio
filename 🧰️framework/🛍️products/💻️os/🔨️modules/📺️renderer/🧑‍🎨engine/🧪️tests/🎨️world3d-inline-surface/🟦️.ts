@@ -4,7 +4,7 @@ import React from "react";
 import {render,fireEvent,cleanup} from "@testing-library/react";
 
 import { BufferGeometry,Float32BufferAttribute,MeshStandardMaterial,SRGBColorSpace,FrontSide,DoubleSide } from "three";
-import { world3dInlineSurfaceFixture as fixture } from "@semio-tech/framework/ui/testing/fixtures";
+import { world3dInlineSurfaceFixture as fixture } from "@semio-tech/ui/testing/fixtures";
 import { advanceWorldMeshResidency } from "../../🧱️elements/🌐️World3dHost/🎨️mesh-render/🧱️mesh-parsing-and-residency/🟦️.ts";
 import { buildMeshVisuals, disposeMeshVisuals } from "../../🧱️elements/🌐️World3dHost/🎨️mesh-render/🔺️mesh-geometry-and-appearance/🟦️.ts";
 import { WorldSurfaceStatusPane } from "../../🧱️elements/🌐️World3dHost/🎯️marquee-and-bridges/🟦️.tsx";

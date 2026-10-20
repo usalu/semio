@@ -34,3 +34,5 @@ use browser_host_helpers_and_linear_memory_port::{
     unavailable_from_reply, validate_budget, validate_listener_handle,
 };
 pub use browser_host_helpers_and_linear_memory_port::LinearMemoryBrowserHostPort;
+#[cfg(feature = "testkit")]
+pub use browser_host_helpers_and_linear_memory_port::linear_memory_test_import;

@@ -19,7 +19,7 @@ import {
   type TreeWindowHostV1
 } from "../../🌳️tree-windows/🟦️.tsx";
 import { createTreeWindowReporterV1 } from "../../../🗣️Interpreter/🪟️tree-windows/🟦️.ts";
-import reportsFixture from "@semio-tech/framework/os/modules/renderer/engine/testing/fixtures/body-window-reports.json";
+import reportsFixture from "@semio-tech/framework-os/modules/renderer/engine/testing/fixtures/body-window-reports.json";
 import Ajv2020 from "ajv/dist/2020";
 // #endregion 🔌️Adapters
 

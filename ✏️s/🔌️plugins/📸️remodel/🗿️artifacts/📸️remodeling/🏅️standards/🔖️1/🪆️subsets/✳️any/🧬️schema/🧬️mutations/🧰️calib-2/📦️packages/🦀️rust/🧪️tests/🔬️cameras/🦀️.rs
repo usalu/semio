@@ -4,13 +4,13 @@ extern crate semio_framework_os_kernel as protocol;
 
 use semio_s_artifact_remodel_remodeling_mut_vectors as vectors;
 
-#[path = "../../../../../⛓️create-rig/🧪️tests/🔗️adds/🦀️.rs"]
+#[path = "../../../../../⛓️create-rig-extrinsic/🧪️tests/🔗️adds/🦀️.rs"]
 mod create_rig_tests_adds_a_rig_2df5df;
-#[path = "../../../../../⛓️create-rig/🧪️tests/🔗️places/🦀️.rs"]
+#[path = "../../../../../⛓️create-rig-extrinsic/🧪️tests/🔗️places/🦀️.rs"]
 mod create_rig_tests_places_the_0d0b8d;
-#[path = "../../../../../⛓️create-rig/🧪️tests/🚫️refuses/🦀️.rs"]
+#[path = "../../../../../⛓️create-rig-extrinsic/🧪️tests/🚫️refuses/🦀️.rs"]
 mod create_rig_tests_refuses_a_rig_cb71ba;
-#[path = "../../../../../⛓️create-rig/🧪️tests/🚫️refuses2/🦀️.rs"]
+#[path = "../../../../../⛓️create-rig-extrinsic/🧪️tests/🚫️refuses2/🦀️.rs"]
 mod create_rig_tests_refuses_a_second_95e04d;
 #[path = "../../../../../✂️delete-rig-extrinsic/🧪️tests/⏮️unplaces/🦀️.rs"]
 mod delete_rig_extrinsic_tests_unplaces_the_f5b35e;

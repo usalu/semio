@@ -1,7 +1,7 @@
 /** 📏️ Source-bound SemioSans plain-text advances, independent of filesystem and drawing backends. */
-import authored from "./🔣️.json";
-import cjkAuthored from "./🌏️.json";
-import catalog from "../🔣️.json";
+import authored from "./🔣️.json" with { type: "json" };
+import cjkAuthored from "./🌏️.json" with { type: "json" };
+import catalog from "../🔣️.json" with { type: "json" };
 export type PrintFontPositionTable = {readonly coverage:readonly number[];readonly pairs:readonly (readonly number[])[]} | {readonly coverage:readonly number[];readonly firstClasses:readonly number[];readonly secondClasses:readonly number[];readonly adjustments:readonly (readonly number[])[]};
 export type PrintFontMetrics = {readonly family:string;readonly sha256:string;readonly unitsPerEm:number;readonly unicodeRanges?:readonly (readonly [number,number])[];readonly characters:Readonly<Record<string,number>>;readonly advances:readonly number[];readonly classes:readonly number[];readonly substitutions:readonly {readonly kind:"multiple"|"ligature";readonly ignoreMarks:boolean;readonly rules:readonly {readonly input:readonly number[];readonly output:readonly number[]}[]}[];readonly positioning:readonly {readonly ignoreMarks:boolean;readonly tables:readonly PrintFontPositionTable[]}[]};
 const metrics=authored as unknown as PrintFontMetrics;

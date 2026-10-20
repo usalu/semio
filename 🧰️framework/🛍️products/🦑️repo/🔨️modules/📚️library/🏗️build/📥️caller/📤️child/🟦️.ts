@@ -1,5 +1,5 @@
 import type{NativeBuildCallerCapabilitiesV1}from"../🟦️.ts";
-import callerSchema from"../../🧬️schema/📥️caller.json";
+import callerSchema from"../../🧬️schema/📥️caller.json" with { type: "json" };
 import{validateJsonSchemaSubset}from"../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {advanceScriptInvocation,scriptInvocationBudget,requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
@@ -18,15 +18,17 @@ export async function createBuildBootstrapCapabilitiesV1(root:string,arguments_:
 }
 
 async function expandBuildBootstrapCapabilitiesV1(root:string,args:readonly string[],effective:NodeJS.ProcessEnv,grant:NativeBuildCallerCapabilitiesV1):Promise<object>{
+ const{readNativeRepoRecoveryPlanV1,nativeRepoRecoveryBuildDescendantsV1}=await import("../../🚀️bootstrap/⌨️cli/🟦️.ts");
  const{parseBuildInvocationV1,resolveBuildInvocationV1}=await import("../../🧭️invocation/🟦️.ts"),{nxOperationArgumentsV1}=await import("../../../⚡️caching/🚀️bootstrap/🛠️tools/⚙️operations/🟦️.ts"),selected=parseBuildInvocationV1(args,{...effective,SEMIO_BUILD_TOOL:grant.tool});if(selected.tool!==grant.tool)throw Error("Original bootstrap build implementation changed");
   const {watchBuildChildArgumentsV1,maximumWatchBuildDescendantsV1}=await import("../../🧭️selection/👁️watch/🟦️.ts"),launches=[...grant.launches],pending=[selected.args],seen=new Set<string>();
   const add=(request:readonly string[])=>{if(!launches.some(owned=>JSON.stringify(owned)===JSON.stringify(request)))launches.push([...request]);};
   while(pending.length){
    const args=pending.shift()!,key=JSON.stringify(args);if(seen.has(key))continue;if(seen.size>=maximumWatchBuildDescendantsV1)throw Error("Bounded watch descendant declarations required");seen.add(key);
    const parsed=parseBuildInvocationV1(args,{...effective,SEMIO_BUILD_TOOL:selected.tool});if(parsed.tool!==selected.tool)throw Error("Watch callback cannot change the original build implementation");
-   const invocation=resolveBuildInvocationV1(root,parsed.args,{...effective,SEMIO_BUILD_MODE:grant.buildMode}),command=invocation.args[0],tools=invocation.args[2]??selected.tool,main=command==="tools"?(tools!=="bazel"?["--version"]:undefined):command==="reset"?(selected.tool==="nx"?["reset"]:undefined):selected.tool==="nx"&&!["dependencies","cargo","watch","preflight"].includes(command??"")?nxOperationArgumentsV1(invocation.args):undefined;
+   const invocation=resolveBuildInvocationV1(root,parsed.args,{...effective,SEMIO_BUILD_MODE:grant.buildMode}),command=invocation.args[0],tools=invocation.args[2]??selected.tool,nativeRecovery=readNativeRepoRecoveryPlanV1(root,invocation.args),main=nativeRecovery?undefined:command==="tools"?(tools!=="bazel"?["--version"]:undefined):command==="reset"?(selected.tool==="nx"?["reset"]:undefined):selected.tool==="nx"&&!["dependencies","cargo","watch","preflight"].includes(command??"")?nxOperationArgumentsV1(invocation.args):undefined;
    add(["repo",...parsed.args]);
-   if(command==="run"&&invocation.args[1]?.startsWith("@semio-tech/repo-dashboard-rs:")){const{dashboardBuildDescendantsV1}=await import("../../../../🎛️dashboard/📦️installation/🟦️.ts");for(const child of dashboardBuildDescendantsV1(invocation.args))pending.push(child);}
+   for(const child of nativeRepoRecoveryBuildDescendantsV1(root,invocation.args))pending.push(child);
+   if(command==="run"&&invocation.args[1]?.startsWith("@semio-tech/repo-dashboard-rs:")){const{dashboardBuildDescendantsV1}=await import("../../../⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts");for(const child of dashboardBuildDescendantsV1(invocation.args))pending.push(child);}
    if(main){const{resolveNxBootstrapLaunchesV1}=await import("../../../⚡️caching/🚀️bootstrap/📥️caller/🟦️.ts"),nx=resolveNxBootstrapLaunchesV1(root,["nx",...main],{...effective,...invocation.env,SEMIO_BUILD_MODE:grant.buildMode});for(const launch of nx.launches)add(["nx",...launch]);}
    const boundary=invocation.args.indexOf("--"),callback=command==="watch"?watchBuildChildArgumentsV1(root,boundary<0?[]:invocation.args.slice(boundary+1)):undefined;
    if(callback)pending.push(callback);if(invocation.watch)pending.push(["run",invocation.watch,"--output=stream"]);

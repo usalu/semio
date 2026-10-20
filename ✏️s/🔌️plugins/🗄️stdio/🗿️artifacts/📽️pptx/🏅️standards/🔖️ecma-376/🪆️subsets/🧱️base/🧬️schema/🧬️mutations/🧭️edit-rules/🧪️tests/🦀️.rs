@@ -4,6 +4,11 @@ use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::
 use semio_s_artifact_stdio_zip::opc::{OpcRelationship, OpcTargetMode};
 use semio_framework_value::DslValue;
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr;
+#[cfg(test)] use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
+#[cfg(test)] use semio_s_artifact_stdio_xml_snapshot::standards::v1_0::subsets::base::schema::snapshot::XmlNode;
+#[cfg(test)] use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::opc_layer;
+#[cfg(test)] use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
+#[cfg(test)] use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::PptxMutation;
 
 fn slide_part(snapshot: &PptxSnapshot) -> usize {
     snapshot.xml_parts.iter().position(|part| part.path.starts_with("ppt/slides/slide")).expect("the fixture has a slide part")

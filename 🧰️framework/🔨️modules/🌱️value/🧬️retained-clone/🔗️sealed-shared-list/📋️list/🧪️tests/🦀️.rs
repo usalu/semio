@@ -1,7 +1,7 @@
 use semio_framework_test_fixtures::fixture_text;
 use super::*;
 use crate::{retained_clone::{RetainedCloneSource, retained_clone_close_demands}, retirement::controlled::ControlledRetirement, shared_issuance::SharedIssuer};
-use semio_framework_value_persistent::list::persistent::{PersistentList, PERSISTENT_PAGE_FANOUT};
+use crate::list::persistent::{PersistentList, PERSISTENT_PAGE_FANOUT};
 fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 #[derive(crate::RetireOwned)]#[value(crate="crate")]
 struct Row {value:i64,text:String}
@@ -18,7 +18,7 @@ fn samples(list:&PersistentList<Row>)->Vec<i64>{(0..list.len()).filter(|i|*i<3||
 /// 🌳️ One retained immutable root preserves original rows without requiring their RetainedClone implementation.
 #[test]
 fn persistent_list_retained_clone_preserves_original_root_without_payload_copy(){
- let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../🧬️retained-clone/🔗️sealed-shared-list/📋️list/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧬️retained-clone/🔗️sealed-shared-list/📋️list/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){let count=row["length"].as_u64().unwrap()as usize;for order in fixture["closeOrders"].as_array().unwrap(){for cut in std::iter::once(None).chain(fixture["cuts"].as_array().unwrap().iter().map(|cut|Some(cut.as_u64().unwrap()as usize))){
   let(original,mut total)=semio_framework_value_testing_allocator::observe_retirement_allocations(||source(pages(count)));let first=original.borrow().get().get(0).map(|row|(row as*const Row,row.text.as_ptr()));let mut cursor=PersistentList::<Row>::retained_clone_cursor();let mut output=None;let mut turns=0;let mut close_turns=0;
   while !cursor.output_ready()&&cut.is_none_or(|cut|turns<cut){let d=cursor.advance_demands(original.borrow(),4096).unwrap();let funded=grant(d);for denied in[RetainedCloneGrant{maximum_items:0,..funded},RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes.saturating_sub(1),..funded},RetainedCloneGrant{maximum_depth:0,..funded}].into_iter().filter(|denied|denied.maximum_items==0||denied.maximum_depth==0||d.copy_bytes>0&&denied.maximum_copy_bytes<d.copy_bytes){let(step,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||cursor.advance(original.borrow(), 4096, denied).unwrap());assert_eq!(heap,(0,0));assert_eq!(step.progress(),Default::default());}

@@ -1,4 +1,4 @@
-import type { UiDocumentLimits, UiNumberLimits, UiNumberScale } from "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
+import type { UiDocumentLimits, UiNumberLimits, UiNumberScale } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
 import { uiNumberCrossedBound } from "../🧩️component/🟦️.ts";
 
 /** 🛡️ Cross-renderer document admission limits shared by browser and native UI hosts. */

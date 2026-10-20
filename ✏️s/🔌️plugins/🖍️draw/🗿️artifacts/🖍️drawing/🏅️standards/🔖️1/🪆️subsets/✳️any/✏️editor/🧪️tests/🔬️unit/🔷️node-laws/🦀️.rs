@@ -2,6 +2,9 @@
 
 use super::*;
 use semio_framework_test_fixtures::fixture_text;
+use semio_s_artifact_draw_drawing_geometry::editing::PathAxis;
+use semio_s_artifact_draw_drawing_editor_interaction as interaction;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 #[semio_framework_async_macros::async_test]
 async fn point_click_persists_and_local_position_rebinds_but_topology_edit_prunes() {

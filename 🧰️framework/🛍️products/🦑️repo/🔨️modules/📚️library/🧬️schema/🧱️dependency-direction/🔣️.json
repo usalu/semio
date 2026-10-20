@@ -159,6 +159,7 @@
             "version",
             "rulePrefix",
             "sdkPackage",
+            "sdkFoundationPackages",
             "toolingRoles"
           ],
           "properties": {
@@ -171,6 +172,15 @@
             "sdkPackage": {
               "type": "string",
               "minLength": 1
+            },
+            "sdkFoundationPackages": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^@[^/\\s]+/[^/\\s]+$"
+              }
             },
             "toolingRoles": {
               "const": []

@@ -2,20 +2,18 @@
   "mcpServers": {
     "repo": {
       "type": "stdio",
-      "command": "bun",
+      "command": "repo",
       "args": [
-        "./📜️script.ts",
-        "dev",
-        "mcp",
-        "stdio",
-        "client"
-      ]
+        "mcp"
+      ],
+      "env": {
+        "SEMIO_REPO_MCP_CLIENT": "client"
+      }
     },
     "semio": {
       "type": "stdio",
-      "command": "bun",
+      "command": "repo",
       "args": [
-        "./📜️script.ts",
         "dev",
         "mcp",
         "stdio",

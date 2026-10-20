@@ -34,6 +34,7 @@ semio-framework-diagnostic = { path = "../../../../../../../../../../../../🧰�
 semio-s-artifact-procedural-3d-mesh-bridge = { workspace = true }
 semio-s-artifact-procedural-3d-model = { workspace = true }
 semio-framework-ui-declaration = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-framework-async = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }

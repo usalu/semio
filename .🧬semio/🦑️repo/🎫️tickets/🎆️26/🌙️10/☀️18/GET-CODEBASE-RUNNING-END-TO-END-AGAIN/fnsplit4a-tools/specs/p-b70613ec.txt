@@ -1,0 +1,3 @@
+registerArtifactBootstrapRestoreTests 2 phases, keep=-, final return=false
+14-16 buildBeforeState
+18-18 registerArtifactBootstrapAtomicRestoreTests

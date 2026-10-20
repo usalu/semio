@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { scopeContributionsJson } from "../../🧾️contributions-json/🟦️.ts";
-import { dialectFromLegacyExampleAppId, examplesForApp, normalizeManifestExampleRow, normalizeManifestExamples, type PluginManifest } from "@semio-tech/framework/manifest";
+import { dialectFromLegacyExampleAppId, examplesForApp, normalizeManifestExampleRow, normalizeManifestExamples, type PluginManifest } from "@semio-tech/framework-manifest";
 import fixture from "../🧫️fixtures/🔬️scope-contributions/🔣️.json";
 
 describe("normalizeManifestExamples", () => {

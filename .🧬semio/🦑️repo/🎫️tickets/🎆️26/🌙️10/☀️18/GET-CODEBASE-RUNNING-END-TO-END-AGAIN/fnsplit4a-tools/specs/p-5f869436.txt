@@ -1,0 +1,3 @@
+registerShellComponents1Tests 2 phases, keep=-, final return=false
+7-10 buildAppState
+12-12 registerShellComponentsTests

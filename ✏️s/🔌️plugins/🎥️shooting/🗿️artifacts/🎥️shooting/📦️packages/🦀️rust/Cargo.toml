@@ -34,7 +34,7 @@ semio-s-artifact-shooting-shooting-mut-any-2 = { path = "../../🏅️standards/
 semio-s-artifact-shooting-shooting-set-active-asset = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️set-active-asset/📦️packages/🦀️rust" }
 semio-s-artifact-shooting-shooting-mutations = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-asset/🧪️tests/➕️appends/📦️packages/🦀️rust" }
 semio-s-artifact-shooting-shooting-mut-any-3 = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️scale-assets/🧪️tests/📏️doubles/📦️packages/🦀️rust" }
-semio-s-artifact-shooting-shooting-tests-dims-scene-sun-to-half = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡️change-scene-sun/🧪️tests/💡️dims/📦️packages/🦀️rust" }
+semio-s-artifact-shooting-shooting-tests-dims-scene-sun-to-half = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡️change-scene-sun-intensity/🧪️tests/💡️dims/📦️packages/🦀️rust" }
 semio-s-artifact-shooting-shooting-shooting = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }

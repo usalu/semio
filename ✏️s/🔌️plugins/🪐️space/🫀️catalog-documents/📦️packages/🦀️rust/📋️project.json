@@ -38,6 +38,7 @@
     "test": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",

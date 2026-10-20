@@ -1,5 +1,6 @@
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
+import {Database} from "bun:sqlite";
 import {spawnSync} from "node:child_process";
 import {createRequire} from "node:module";
 import {mkdtempSync,readFileSync,realpathSync,rmSync,writeFileSync} from "node:fs";
@@ -38,6 +39,26 @@ test("the operation catalogue is schema-valid, unique and every synopsis and fla
  expect(new Set(names).size).toBe(names.length);
  expect([...names].sort()).toEqual([...schema.definitions.OperationName.enum].sort());
  for(const language of help.languages){const root=renderBuildHelpV1(help,{},language);for(const row of help.operations)expect(root.includes(row.synopsis),language+" "+row.name+": "+row.synopsis).toBe(true);for(const flag of help.flags)for(const name of [flag.name,...(flag.aliases??[])])expect(root.includes(name),language+" "+name).toBe(true);}
+});
+
+test("human help and examples use the canonical native frontend in every declared language",()=>{
+ const validate=validator("Example"),database=new Database(":memory:");
+ try{
+  const rows=database.query("SELECT json_extract(example.value, '$.command') AS command FROM json_each(?, '$.operations') operation, json_each(operation.value, '$.examples') example").all(JSON.stringify(catalog)) as {command:string}[];
+  expect(rows.length).toBeGreaterThan(0);
+  for(const row of rows){
+   expect(row.command.startsWith("repo "),row.command).toBe(true);
+   expect(row.command.includes("bun repo"),row.command).toBe(false);
+   const description={en:"Native frontend",de:"Natives Frontend"};
+   expect(validate({...row,description})).toBe(true);
+   expect(validate({command:"bun "+row.command,description})).toBe(false);
+  }
+  for(const language of help.languages)for(const name of ["root",...help.operations.map(row=>row.name)]){
+   const rendered=renderBuildHelpV1(help,readBuildHelpRequestV1(help,entry(name)),language);
+   expect(rendered.startsWith(name==="root"?"repo - ":"repo "+name+" - ")).toBe(true);
+   expect(rendered.includes("bun repo")).toBe(false);
+  }
+ }finally{database.close();}
 });
 
 test("every neutral operation has a tool state, and unimplemented states are honest",async()=>{
@@ -96,7 +117,7 @@ test("every command prints its own usage, distinct from the root usage, and each
  const english=new Set<string>();
  for(const row of help.operations){
   const own=renderBuildHelpV1(help,{operation:row.name},"en");
-  expect(own.includes(`bun repo ${row.name} - `),row.name).toBe(true);
+  expect(own.includes(`repo ${row.name} - `),row.name).toBe(true);
   expect(own.includes(row.synopsis),row.name).toBe(true);
   expect(own.includes("Examples:"),row.name).toBe(true);
   expect(own,row.name).not.toBe(renderBuildHelpV1(help,{},"en"));
@@ -148,7 +169,7 @@ test("exec exports the tool-neutral project environment and the catalogue never 
 test("the real CLI prints the own help of a command, also for preflight, without running it",()=>{
  const script=join(import.meta.dir,"../../📜️script.ts");
  const run=(args:string[])=>spawnSync(process.execPath,[script,"repo",...args],{cwd:root,encoding:"utf8",env:{...process.env,SEMIO_LANGUAGE:undefined,LANG:"C",LC_ALL:"C"} as NodeJS.ProcessEnv});
- for(const [args,expected] of [[["preflight","--help"],"bun repo preflight - "],[["cache","clear","--help"],"bun repo cache clear - "],[["dependencies","lock","--help","--lang=de"],"Verwendung:"]] as const){
+ for(const [args,expected] of [[["preflight","--help"],"repo preflight - "],[["cache","clear","--help"],"repo cache clear - "],[["dependencies","lock","--help","--lang=de"],"Verwendung:"]] as const){
   const result=run([...args]);
   expect(result.status,args.join(" ")+result.stderr).toBe(0);
   expect(result.stdout.includes(expected),args.join(" ")+"\n"+result.stdout).toBe(true);

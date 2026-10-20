@@ -7,7 +7,7 @@
 //! setter, the put-synonym asset upsert, and the whole-document-replace escape hatch — see
 //! `📓️taxonomy.md`/`📓️derivation-rules.md` in ticket `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`).
 
-use crate::NoteDiff;
+use semio_s_artifact_note_note_diff::standards::v1::subsets::any::schema::diff::NoteDiff;
 use crate::NoteSnapshot;
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};

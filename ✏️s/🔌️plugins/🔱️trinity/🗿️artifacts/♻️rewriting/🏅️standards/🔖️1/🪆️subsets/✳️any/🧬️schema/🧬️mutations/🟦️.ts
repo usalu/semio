@@ -2,12 +2,12 @@
 import type { EditWorkingGraph } from "./🖼️edit-working-graph/🟦️.ts";
 import type { EditLhs } from "./👈️edit-lhs/🟦️.ts";
 import type { EditRhs } from "./👉️edit-rhs/🟦️.ts";
-import type { ChangeParameterBinding } from "./🔧️change-parameter/🟦️.ts";
+import type { ChangeParameterBinding } from "./🔧️change-parameter-binding/🟦️.ts";
 import type { RemoveParameterBinding } from "./🧹️remove-parameter-binding/🟦️.ts";
-import type { ChangeRuleLayoutPoint } from "./📐️change-rule-layout/🟦️.ts";
-import type { RemoveRuleLayoutPoint } from "./🗑️remove-rule-layout/🟦️.ts";
-import type { DragRuleNodes } from "./🫳️drag-rule/🟦️.ts";
-import type { SetRuleLayoutPoints } from "./📍️set-rule-layout/🟦️.ts";
+import type { ChangeRuleLayoutPoint } from "./📐️change-rule-layout-point/🟦️.ts";
+import type { RemoveRuleLayoutPoint } from "./🗑️remove-rule-layout-point/🟦️.ts";
+import type { DragRuleNodes } from "./🫳️drag-rule-nodes/🟦️.ts";
+import type { SetRuleLayoutPoints } from "./📍️set-rule-layout-points/🟦️.ts";
 
 export type RewriteRuleMutation =
   | ({ mutation: "editWorkingGraph" } & EditWorkingGraph)

@@ -27,7 +27,7 @@ type Fixture = {
 
 const here = fileURLToPath(new URL(".", import.meta.url));
 const readJson = (path: string): any => JSON.parse(readFileSync(path, "utf8"));
-const fixture = readJson(`${here}/../../🧫️fixtures/🔬️window/🔣️.json`) as Fixture;
+const fixture = readJson(`${here}/../🧫️fixtures/🔬️window/🔣️.json`) as Fixture;
 const configSchema = readJson(`${here}/../../🧬️schema/🔣️.json`);
 const transientSchema = readJson(`${here}/../../../🫧️transient/🧬️schema/🔣️.json`);
 const schemaRoot = fileURLToPath(new URL("../../../../../../../../🧬️schema", import.meta.url));

@@ -6,7 +6,7 @@
 
 // #endregion 🧲️Header
 
-// Package coordinator owns the repo coordinator service: storage, projections and HTTP.
+// 🗜️Package coordinator owns the repo coordinator service: storage, projections and HTTP.
 package coordinator
 
 import (

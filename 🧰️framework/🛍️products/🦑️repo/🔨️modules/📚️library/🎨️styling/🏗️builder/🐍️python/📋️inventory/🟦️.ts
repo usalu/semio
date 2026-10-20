@@ -4,8 +4,8 @@ import{lstat,opendir,readlink,realpath}from"node:fs/promises";
 import{isAbsolute,join,relative,sep}from"node:path";
 import{requireIssuedResourceControlV1}from"@semio-tech/process/routing/invocation/process";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
-import{observePhysicalFileV1,type PhysicalFileClaimV1}from"@semio-tech/framework/filesystem/observation";
-import{withArtifactDescriptorV1}from"@semio-tech/framework/filesystem/observation/descriptor";
+import{observePhysicalFileV1,type PhysicalFileClaimV1}from"@semio-tech/framework-filesystem/observation";
+import{withArtifactDescriptorV1}from"@semio-tech/framework-filesystem/observation/descriptor";
 import{STYLING_PYTHON_POLICY_V1 as policy}from"@semio-tech/ui-styling/builder/python/contract";
 /** 🧾️ Complete bounded byte observations; this DATA cannot issue environment or interpreter custody. */
 export type StylingPythonInventoryV1=Readonly<{version:1;sha256:string;files:number;entries:number;bytes:number}>;

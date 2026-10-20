@@ -126,8 +126,8 @@
         },
         {
           "mutationId": "change-object-kind-description",
-          "sourceMutationDirectoryName": "📃️change-object-kind",
-          "mutationDirectoryName": "📃️change-object-kind",
+          "sourceMutationDirectoryName": "📃️change-object-kind-description",
+          "mutationDirectoryName": "📃️change-object-kind-description",
           "scenarios": [
             {
               "id": "rewrites-object-kind-description",

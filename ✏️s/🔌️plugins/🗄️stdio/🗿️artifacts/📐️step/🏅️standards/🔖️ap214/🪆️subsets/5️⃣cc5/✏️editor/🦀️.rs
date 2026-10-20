@@ -5,7 +5,7 @@
 use crate::editor::step_cc5::modes::edit;
 use crate::editor::step_cc5::modes::edit::windows::main;
 use semio_s_artifact_stdio_step_cc5::standards::v_ap214::subsets::cc5::schema::mutations::StepCc5Mutation;
-use semio_s_artifact_stdio_step_cc5::standards::v_ap214::subsets::cc5::schema::snapshot::StepSnapshot;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;

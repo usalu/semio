@@ -1,5 +1,5 @@
 /** 🎯️ CAD renderer REPL: the selection commit, prune and dispatch, the hover and camera callbacks, the spatial interaction event and the drag selection gesture. */
-import { reactHostPort, gumballPointerConsumesCanvasEventRef } from "@semio-tech/framework/ui/targets/react";
+import { reactHostPort, gumballPointerConsumesCanvasEventRef } from "@semio-tech/ui-react";
 import { type Vec3 } from "@semio-tech/cad-engine-ts/registry";
 import { type ModelEntityKind } from "@semio-tech/s-spatial-kernel-ts/geometry";
 import { defaultModelDefinitionId } from "@semio-tech/s-spatial-kernel-ts/geometry/definition-catalog";

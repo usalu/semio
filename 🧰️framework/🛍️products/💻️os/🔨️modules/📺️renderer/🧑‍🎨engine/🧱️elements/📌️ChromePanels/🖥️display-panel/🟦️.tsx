@@ -2,7 +2,7 @@
 import { type ReactNode } from "react";
 import { Button, COMPOSE_WINDOW_TEMPLATE_MIME, Icon, type IconName, Input, type PanelTabNode, type TreeDataItem, type TreePanelConfig, singleTreeLeaf, windowTemplatePaletteTreeDragController, childElementId } from "@semio-tech/ui-react";
 import { type NamedLayout } from "@semio-tech/framework";
-import { createWorldProjectionTemplates, encodeWorldProjectionTemplateId, type WorldProjectionTemplateDescriptor } from "@semio-tech/infinite-world-r3f";
+import { createWorldProjectionTemplates, encodeWorldProjectionTemplateId, type WorldProjectionTemplateDescriptor } from "@semio-tech/framework/infinite/world/r3f";
 import { shellLabel, shellTabIcon } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { FRAMEWORK_DISPLAY_LAYOUT_TAB_ID, FRAMEWORK_DISPLAY_WINDOWS_TAB_ID } from "../🆔️panel-ids/🟦️.ts";
 

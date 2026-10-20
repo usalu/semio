@@ -1,5 +1,5 @@
 import {withArtifactDescriptorSlotV1} from "@semio-tech/process/artifacts/publication/sources";
-import {withArtifactDescriptorV1,artifactReadFlagsV1} from "@semio-tech/framework/filesystem/observation/descriptor";
+import {withArtifactDescriptorV1,artifactReadFlagsV1} from "@semio-tech/framework-filesystem/observation/descriptor";
 import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {type CompilerAdmissionControl} from "@semio-tech/process/compiler-capacity";
 import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";

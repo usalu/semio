@@ -10,6 +10,10 @@ use store::{
     },
 };
 use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_s_plugin_block::BlockKindIdentity;
+use semio_s_plugin_block::BlockAttribute;
+use semio_s_plugin_block::BlockAuthor;
+use semio_s_plugin_block::BlockCompatibilityRule;
 fn invalid(message: impl Into<String>) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
 
 fn class(v: f64) -> &'static str {

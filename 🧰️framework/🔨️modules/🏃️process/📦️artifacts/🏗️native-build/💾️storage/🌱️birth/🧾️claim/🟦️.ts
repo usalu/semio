@@ -4,7 +4,7 @@ import{nativeRetirementBackendV1}from"../../🔌️retirement-backend/🟦️.ts
 import{constants,opendirSync}from"node:fs";
 import{lstat,mkdir,open,unlink}from"node:fs/promises";
 import{dirname,join}from"node:path";
-import{withArtifactDescriptorV1,requireArtifactDescriptorClosureV1}from"../../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import{withArtifactDescriptorV1,requireArtifactDescriptorClosureV1}from"../../../../../../📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import{requireAcceptedPhysicalCleanupWriterProofV1,requireResourceLeaseWriterProofV1,resourceLeasePathV1,requireMaterializedPathV1,checkResourceLeaseControl,type ResourceLeaseControl,type ResourceLeaseWriterProofV1}from"../../../../../🔒️leases/🟦️.ts";
 import{withAcceptedPhysicalCleanupOperationV1,checkAcceptedPhysicalCleanupV1,withIssuedResourceOperationV1,requireAcceptedPhysicalCleanupDescendantV1,requireIssuedResourceControlRefinementV1}from"../../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";

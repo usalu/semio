@@ -1,4 +1,4 @@
-import{captureBoundedSourceRevisionV1}from"../../🔏️revision/🟨️.mjs";
+import{captureBoundedSourceRevisionV1,physicalSourceOriginV1}from"../../🔏️revision/🟨️.mjs";
 import{fileURLToPath}from"node:url";
 import{requireCurrentSourceInventoryV1,captureExactSourcePathV1,captureRepositorySourceRootV1,admitExactSourceExtentV1}from"../../📋️data/📥️load/🟨️.mjs";
 export{admitExactSourceExtentV1}from"../../📋️data/📥️load/🟨️.mjs";
@@ -10,8 +10,8 @@ import{createHash}from"node:crypto";
 import{createRequire}from"node:module";
 import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1,withIssuedResourceOperationV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{checkResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import{withArtifactDescriptorV1}from"../../../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
-const sourceURL=new URL(import.meta.url),policyURL=new URL("./🧬️schema/🔣️.json",import.meta.url),loadedPolicy=captureBoundedSourceRevisionV1(fileURLToPath(policyURL),65536,true),schema=JSON.parse(loadedPolicy.text??""),loadedRevision=captureBoundedSourceRevisionV1(fileURLToPath(sourceURL),8388608).sha256,loadedPolicyRevision=loadedPolicy.sha256;
+import{withArtifactDescriptorV1}from"../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+const sourceURL=new URL(physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),policyURL=new URL("./🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),loadedPolicy=captureBoundedSourceRevisionV1(fileURLToPath(policyURL),65536,true),schema=JSON.parse(loadedPolicy.text??""),loadedRevision=captureBoundedSourceRevisionV1(fileURLToPath(sourceURL),8388608).sha256,loadedPolicyRevision=loadedPolicy.sha256;
 const policy=Object.freeze({...schema.definitions.Policy.const}),owners=new WeakMap();
 /** 🧷️ Refuses retained reader behavior or privately captured policy superseded before managed admission or delivery. */
 export function requireCurrentExactSourceReadV1(){requireCurrentSourceInventoryV1();if(captureBoundedSourceRevisionV1(fileURLToPath(sourceURL),8388608).sha256!==loadedRevision||captureBoundedSourceRevisionV1(fileURLToPath(policyURL),65536).sha256!==loadedPolicyRevision)throw Error("Stale loaded exact Source reader; restart required");}
@@ -50,4 +50,4 @@ export function requireExactSourceReadBatchV1(batch,root){if(owner(batch).root!=
 /** 📊️ Copies finite observation counters without exposing a descriptor, control or effect port. */
 export function exactSourceReadBatchFactsV1(batch){const scope=owners.get(batch);if(!scope?.live)throw Error("Actual live Source batch facts required");check(scope);return Object.freeze({files:scope.paths.size,sourceBytes:scope.sourceBytes,metadataBytes:scope.metadataBytes,readOperations:scope.work,bytesRead:scope.bytesRead});}
 /** 🗃️ Reads only a fixed inventory namespace/key captured from the existing canonical dataset path owner. */
-export function readExactSourceInventoryV1(batch,namespace,key){if(!owner(batch).store)throw Error("Managed Graph inventory batch required");if(!["build-input-closures","build-lock-closures"].includes(namespace)||typeof key!=="string"||!/^[a-f0-9]{64}$/u.test(key))throw Error("Closed Source inventory identity required");return read(batch,key+".json","json",namespace);}
+export function readExactSourceInventoryV1(batch,namespace,key,maximumBytes){if(!owner(batch).store)throw Error("Managed Graph inventory batch required");if(!["build-input-closures","build-lock-closures"].includes(namespace)||typeof key!=="string"||!/^[a-f0-9]{64}$/u.test(key))throw Error("Closed Source inventory identity required");return read(batch,key+".json","json",namespace,maximumBytes);}

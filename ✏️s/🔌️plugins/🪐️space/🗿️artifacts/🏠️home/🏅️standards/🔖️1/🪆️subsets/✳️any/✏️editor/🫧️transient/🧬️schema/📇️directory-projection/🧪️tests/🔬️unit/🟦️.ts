@@ -24,7 +24,7 @@ function independentProjection(value: unknown): boolean {
 /** 📇️ Proves the Home transient directory projection uses the shared host's exact camel-case wire. */
 export function testHomeDirectoryProjectionSchema(root: string): void {
   const schema = JSON.parse(readFileSync(frameworkSourcePath("🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json"), "utf8")) as AnySchema & { $id: string };
-  const fixture = JSON.parse(readFileSync(join(root, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📇️projection-wire-v1/🔣️.json"), "utf8")) as ProjectionFixture;
+  const fixture = JSON.parse(readFileSync(join(root, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧪️tests/🧫️fixtures/📇️projection-wire-v1/🔣️.json"), "utf8")) as ProjectionFixture;
   const validate = new Ajv({ strict: true, allErrors: true }).addKeyword("x-semio-note").addSchema(schema).getSchema(`${schema.$id}#/$defs/DirectoryReadModel`);
   assert(validate);
   assert(validate(fixture.wire), JSON.stringify(validate.errors));

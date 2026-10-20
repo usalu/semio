@@ -53,7 +53,7 @@ async fn it_writes_exactly_its_rectangle_and_inverts_with_the_base_samples() {
 async fn it_obeys_the_cold_inverse_sum_law() {
     let base = raster_image_test_snapshot();
     let write = RasterMutation::WritePixelRegion(mutation(&base, true));
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&write, &base, <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<RasterSnapshot>>::retire_projection, <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<RasterSnapshot>>::retire_cold).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&write, &base).await;
     retire(base);
 }
 

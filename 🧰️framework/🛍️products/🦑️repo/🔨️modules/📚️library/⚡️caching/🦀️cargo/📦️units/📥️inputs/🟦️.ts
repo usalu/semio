@@ -1,11 +1,11 @@
 import{rustUnitSourceSnapshotMatchesV1}from"./🔏️snapshot/🟦️.ts";
 import{resolve}from"node:path";
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
-import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
-import{readPhysicalCargoSourceV1}from"@semio-tech/process/artifacts/native-build/source/admission/read";
-import{readRustSourceClosureV1}from"@semio-tech/process/artifacts/native-build/source";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import{readPhysicalCargoSourceV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
+import{readRustSourceClosureV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
 import { type RustUnitV1 } from "../🧬️definition/🟦️.ts";
-import publicSchema from"./🧬️schema/🔣️.json";
+import publicSchema from"./🧬️schema/🔣️.json" with { type: "json" };
 const schema=structuredClone(publicSchema);
 /** 📏️ Admits primitive closed Source bounds before any discovery read; repeated probes receive only their own extent credit. */
 export async function readRustUnitSourceClosureV1(root:string,unit:RustUnitV1,boundary:Readonly<{version:1;maxSourceBytes:number;maxSourceFiles:number;maxActiveLines:number}>,control:ResourceLeaseControl){checkResourceLeaseControl(control);if(validateJsonSchemaSubset(schema.definitions.Boundary,boundary,schema).length||validateJsonSchemaSubset(schema.definitions.Limits,unit.limits,schema).length)throw Error("Closed Rust unit Source admission bounds required");const limits=Object.freeze({bytes:Math.min(boundary.maxSourceBytes,unit.limits.maximumSourceBytes),files:Math.min(boundary.maxSourceFiles,unit.limits.maximumSourceFiles),lines:boundary.maxActiveLines}),entry=resolve(root,unit.target.entry),cfg=[...unit.cfgSnapshot],seen=new Map<string,number>();let used=0;const inputs=await readRustSourceClosureV1([entry],root,cfg,async path=>{checkResourceLeaseControl(control);const previous=seen.get(path),bytes=await readPhysicalCargoSourceV1(path,{version:1,root,expectedBytes:null,maximumBytes:limits.bytes-used+(previous??0),remainingFiles:previous===undefined?limits.files-seen.size:1},control);if(bytes!==null){used+=bytes.byteLength-(previous??0);seen.set(path,bytes.byteLength);if(used>limits.bytes||seen.size>limits.files)throw Error("Rust crate Source boundary exceeded before compiler: "+unit.id);}return bytes;}).catch(error=>{if(error instanceof Error&&error.message.startsWith("Rust crate Source"))throw Error(error.message+": "+unit.id,{cause:error});throw error;});if(inputs.length>limits.files||inputs.reduce((sum,input)=>sum+input.bytes,0)>limits.bytes||inputs.reduce((sum,input)=>sum+input.activeLines,0)>limits.lines)throw Error("Rust crate Source boundary exceeded before compiler: "+unit.id);checkResourceLeaseControl(control);return inputs;}

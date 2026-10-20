@@ -291,7 +291,7 @@ fn dhw_remedy_inverts_profile_limit() {
 
 #[test]
 fn norm_table_rows_match_cited_sources() {
-    use semio_s_artifact_norm_din18599_schema::{
+    use crate::{
         din_v_18599_10_dhw_specific, din_v_18599_10_fan_hours, din_v_18599_10_zone_defaults, din_v_18599_11_automation_factor, din_v_18599_12_tabelle5_qp_specific, din_v_18599_2_adjacency_fx, din_v_18599_2_solar_geometry_factors, din_v_18599_4_lighting_power_density, DIN_V_18599_1_HOURS_PER_MONTH, DIN_V_18599_1_RHO_CA, DIN_V_18599_2_UTILIZATION_A, DIN_V_18599_5_ETA_SYS_FLOOR, DIN_V_18599_5_ETA_SYS_MIN, DIN_V_18599_7_COOLING_TO_HEATING_RATIO, din_v_18599_7_g_remedy, din_v_18599_8_dhw_loss_fractions, geg_anlage1_tabelle1_heating_eta, geg_anlage2_ht_prime_limits, geg_anlage2_reference_u, geg_anlage3_mean_u, geg_anlage4_primary_energy_factors, GEG_ANLAGE1_DELTA_U_WB_REF, GEG_ANLAGE1_TABELLE1_ETA_WRG_REF, GEG_ANLAGE1_WINDOW_G_REF, GEG_SECTION10_QP_FACTOR_DEFAULT,
     };
     assert!((geg_anlage4_primary_energy_factors::NATURAL_GAS - 1.1).abs() < 1e-12);

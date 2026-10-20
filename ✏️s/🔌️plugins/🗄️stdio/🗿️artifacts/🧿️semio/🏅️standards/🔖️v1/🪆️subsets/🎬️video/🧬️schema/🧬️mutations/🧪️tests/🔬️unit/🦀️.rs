@@ -95,19 +95,8 @@ fn kinds_match_the_enum_and_the_catalog() {
 
 //#region 🔖️MutationDiffLaw
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-pub(crate) fn sample_mutations() -> Vec<SemioVideoMutation> {
-    vec![
-        SemioVideoMutation::InsertStream(insert_stream::InsertStream {
-            index: 1,
-            stream: SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "srt".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() },
-        }),
-        SemioVideoMutation::RemoveStream(remove_stream::RemoveStream { index: 0 }),
-        SemioVideoMutation::SetStreamMeta(set_stream_meta::SetStreamMeta { index: 0, kind: SemioVideoStreamKind::Audio, codec: "vp9".into(), width: 1280, height: 720, rate: SemioRational { num: 60, den: 1 } }),
-        SemioVideoMutation::InsertSample(insert_sample::InsertSample { stream_index: 0, index: 1, sample: SemioVideoSample { pts: 99, key: true, data: vec![9, 9] } }),
-        SemioVideoMutation::RemoveSample(remove_sample::RemoveSample { stream_index: 0, index: 0 }),
-        SemioVideoMutation::SetSampleData(set_sample_data::SetSampleData { stream_index: 0, index: 0, data: vec![42] }),
-        SemioVideoMutation::SetSampleFlags(set_sample_flags::SetSampleFlags { stream_index: 0, index: 0, pts: 500, key: true }),
-    ]
+fn sample_mutations() -> Vec<SemioVideoMutation> {
+    super::demo_mutation_cases()
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

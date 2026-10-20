@@ -1,0 +1,111 @@
+# Native Borrower Operation Admission Boundary
+
+Current: release15 owned15747 TERMINAL1/expiredfalse,2026-10-20T02:49:14.980Z–03:14:58.880Z (1543.9seconds), unchanged7200000ms cap. Immutable generated/private-build-20261020T024914-ace24a38.json; generated/2026-10-20-runtime-course-ts-release15.log5622734B SHA256b07352b84fad5e00ecac44da3dc9b1355a2e5a6067dcf3296ededabc4c618850. Actual portable-inputs/graph complete markers and later selected closure checks progressed into NxSDKbinarybindings/derivative/recheck; new firstcausal refusal Native borrower operation admission closed or full at borrower26:758→storage88→mapping19→async_hooks. Count/topOpen/nestedLive/framepending not inlog; do not infercapacityvsclosed. No collection/assertion/projectcompiler/generator observed. All own sessions terminal; private overlay19 restored exactly, all diagnostics inactive, no active managed command. Root narrow tools probe separately established scope.pending=32 at maximum32 while admission/frames remained live; release15 raw fields remain unobserved. Release owns host-only checkpoint TDD; next reviewed coherent cohort precedes root narrow tools setup, then any course retry.
+
+The combined refusal covers multiple law inputs; actual values are not logged. No guard/limit/lifetime change is justified until exact frozen caller and context evidence establishes the failing branch.
+
+
+## Exact Frozen Guard And Least-Broad Authored Route
+
+Read-only private Node text/hash reads confirm borrower SHA2567e74eb8720b6a9b6f373d191be1f7ce29c703e1bc60a79212040ef774d829359/13708B, storage rootb2e8ec9c0ce405d30c075dca6dc2c6459a2497a2ac97f9087d2663ebe4437bac/67368B and operation schema7c2d47d8184ea9d75f729a336268beca9706888000499ab45164876cd0bc5721/4378B exactly equal host. No Source evaluation/mutation/copy was performed. Protocol maximumPendingOperations=32. Released owner and nonaccepting frame have earlier distinct errors; the observed combined refusal still covers scope.pending>=32, closedtop without retained live same-owner ancestor, or current.pending>=32. Pending membership includes accepted nested descendants as well as siblings, so log/source alone does not establish fanout versus lifetime.
+
+Parent owns refusal-only bounded private diagnostic preparation with exacthash/anchor/inverse, no guard change. Runtime independently audits frozen SDK derivative/callers and actual sharedcounter neutralbarrier reproduction; this worker owns eventual permanent repair/test/corpus. Shared counter checkpoint amplification is a candidate only until exact fields or an independent meaningful law regression establishes a repair.
+
+The least-broad authored route is runner command tools setup nx: buildscript tools132–146 retains dependencies Store and invokes runOwnedNxInvocationV1 with [--version]; NxScript.runIssued specialversion branch skips graphcache/graphConsumer, but reaches the same runInStorage/ToolingStore/provisionNxTools/SDKderivative. This preserves issued build/tooling authority, not rawinstallation. Its outer graph/snapshot borrower nesting differs from the course invocation, so a successful tool setup cannot disprove a contextual course borrower failure. No managed/private command by this worker.
+
+
+## Independent Refusal Diagnostic Review
+
+The retained borrowerDiagnosticSource and borrowerDiagnostic implementation was reviewed without execution or private mutation. It changes the single original throw site while preserving its condition and original error message. A process-once refusal record contains numeric admission/lifetime state, at most eight frame summaries, resource length 256 and at most eight stack rows of 256 characters. A numeric-state fallback bounds the record to 8,192 bytes plus newline; no Source bytes or environment are emitted. Base and nineteen overlay hashes, continuous preimages, exact private prehash, transpilation, posthash and exact inverse restoration are required. Five neutral cases cover scope full, current-frame full, closed top admission, open admission and retained nested acceptance. These controls preserve custody/refusal behavior but do not diagnose the actual failed invocation until its observed fields exist. No concrete blocker was found.
+
+The installed private diagnostic independently hashes to `1662de64d978fc9741bdc90ecffc1ae6704b0c894006e23c7398985508cd08a5`; replacing its single refusal block with the original throw reconstructs `7e74eb8720b6a9b6f373d191be1f7ce29c703e1bc60a79212040ef774d829359` exactly. The nineteen-overlay plan is unchanged and only borrower-admission-trace is active; other diagnostic flags are inactive. This read-only observation starts no managed command.
+## Root Refusal-State Diagnostic Preparation
+
+The retained transfer helper now has borrower-check, borrower-instrument and borrower-remove modes plus language-neutral 🧫️borrower.json. Direct RED exited1 because the initial transform emitted no refusal-state record. GREEN exited0 with five state vectors,100 repeated calls each, independent SQLite admission/substitution checks, ambiguous-anchor refusals, whole-file syntax and exact inverse. These test the temporary diagnostic, not actual Native custody or the cause of release15.
+
+The transform replaces only the single original throw statement, preserving its enclosing admission predicate and exact final error. It emits at most one DEBUG JSON record per process on that refusal, with actual scope/frame pending counts, open/live/retained status, maximum, up to eight frame summaries, bounded resource and stack. It bounds the record to8192bytes with numeric-state fallback and catches diagnostic errors before throwing the unchanged primary error. No Source contents or environment are logged. Low independently reviewed the transform and direct evidence before application.
+
+Actual private installation exited0: original borrower hash7e74eb8720b6a9b6f373d191be1f7ce29c703e1bc60a79212040ef774d829359→temporary1662de64d978fc9741bdc90ecffc1ae6704b0c894006e23c7398985508cd08a5. Receipt generated/private-borrower-instrument.json and installation log are retained. Low independently verified the private hash, exact inverse,19-overlay chain and single active diagnostic before the managed probe. No managed success follows from installation.
+
+## Actual Narrow Managed Probe And Restoration
+
+Root-owned8638 ran genuine bun repo tools setup nx through the retained runner, original release environment and unchanged2h supervisor/quick300 budgets. Actual terminal1/expiredfalse,2026-10-20T03:27:19.417Z–03:27:46.628Z. Its53,244-byte console is generated/2026-10-20-borrower-tools-nx-diagnostic.log, SHA2568ac6f52aa55f65a74d498e3063ebc069c12f5c27da900fddd49f64c58aef0e86. It reproduced the same borrower→storage88→mapping19 refusal without the full course graph.
+
+The single actual critical row reports scope.pending32,maximum32,topOpen:true,ownerLive:true,closing:false,nestedLive:true,currentPresent/currentLive/currentAccepting:true,currentPending0. Two retained live same-scope frames have pending0 and1. Resource is native-fixed-image:/repo/.cache/b/t. This establishes scope-wide pending capacity, rather than closed admission or current-frame saturation, for this actual narrow probe. Release15 did not carry these fields; the probe does not retroactively invent its exact state or prove checkpoint duplication is the sole cause. Caller operation fanout must still be checked.
+
+Root removal exited0 and restored exact original7e74eb8720b6a9b6f373d191be1f7ce29c703e1bc60a79212040ef774d829359; generated/private-borrower-remove.json and removal log retain inverse hashes. Low independently confirmed the actual private restored hash and all diagnostic flags inactive. Root has no active command and has not retried either managed route. The failed probe is not a suite/compiler/artifact pass.
+
+
+
+## Actual Bounded Nx Setup Refusal
+
+The actual tools setup nx diagnostic log records terminal status 1, expired false. Its sole refusal state has scope pending 32 at maximum 32, while top admission, owner, retained nesting and current frame are live/accepting; closing is false and current pending is zero. Two same-scope frames show pending zero and one. The resource is the genuine tooling fixed image `/repo/.cache/b/t`. This proves the scope-wide pending ceiling caused this event, ruling out closed-top admission and current-frame fullness. It does not identify the producer or imply checkpoint-only causation. Exact restoration remains pending.
+
+The removal receipt and actual private filesystem hash independently restore borrower Source SHA-256 `7e74eb8720b6a9b6f373d191be1f7ce29c703e1bc60a79212040ef774d829359`; all diagnostic flags are inactive. The immutable probe receipt records status 1/expired false, and its 53,244-byte log matches SHA-256 `8ac6f52aa55f65a74d498e3063ebc069c12f5c27da900fddd49f64c58aef0e86`. No diagnostic remains installed.
+
+## Verified Completion Checkpoint Regression
+
+The exact frozen derivative copy function read a shared file/directory/link counter after awaiting destination verification. A controlled sixteen-worker completion wave reproduces sixteen checkpoint calls at 128 rows and thirty-two at 256, rather than one and two. This is a proven checkpoint amplification defect; it is not by itself proof that every pending operation in the actual tooling refusal came from that callback. Runtime independent evidence is retained in [Borrower Admission](2026-10-20-borrower-admission.md).
+
+The candidate uses a dedicated verified-completion ordinal and the existing schema-owned continuationEntries=128, then chains each boundary checkpoint. Counts, bytes, physical inode checks, sixteen layer workers, the thirty-two-operation Native ceiling and all custody guards remain unchanged. The held-first-checkpoint vector forces later completed rows to reach a second boundary before the first recheck settles; checkpoint concurrency remains one. Exact error, thrown undefined and cancellation cleanup controls settle accepted work.
+
+The permanent neutral regression is executed directly through the retained 🧵️checkpoints/📜️script.ts owner, evaluating actual copy/layer function bytes against explicit filesystem/custody ports. Ajv validates cases and SQLite independently computes ordinal boundaries. This is pure Source behavior evidence, not Native admission or a managed course test. Meaningful RED in generated/2026-10-20-derivative-checkpoint-red.log expected one checkpoint and observed sixteen. First GREEN attempt timed out at 120 seconds because the test's injected failure stranded an artificial sixteen-arrival wave; the test now releases its artificial waiters on failure. Corrected generated/2026-10-20-derivative-checkpoint-green2.log is terminal0: one test, 41,193 assertions, 1.053 seconds (test body510.32ms).
+
+A finite same-cause audit also identified independently numbered checkpoints in source-index capture and sealed-source verification that can overlap a held earlier checkpoint. Runtime owns actual-function held-checkpoint RED controls; no sibling implementation change is accepted solely from this static possibility. The final cohort remains unfrozen pending those controls and independent review.
+
+## Final Host Checkpoint Cohort
+
+Runtime's exact frozen sibling RED processes 2,048 files/2,049 entries in each actual capture/verification driver: sixteen distinct cadence checkpoints overlap at peak sixteen while held. Its source hashes are fenced to base plus nineteen overlays. The permanent focused sibling regression independently fails before the index edit at peak two rather than one for 256 files. This is overlap of unique boundaries, distinct from copy's duplicated shared-counter boundary.
+
+All three finite drivers now serialize only checkpoint publish/yield/physical-recheck work per invocation. Copy increments a dedicated completed ordinal after destination verification; capture and verification preserve their existing unique completed ordinals. Filesystem traversal still uses the unchanged sixteen-worker layer. Queued callbacks recheck current control before side effects, failed chains remain rejected, and the actual worker layer drains accepted work. Neither the Native operation ceiling32 nor any byte/physical/digest/custody law changes.
+
+Final focused direct Source proof generated/2026-10-20-derivative-checkpoint-cohort-green1.log is terminal0: two tests, 44,882 assertions, 672ms. Nine copy cases and eight read cases cover threshold counts, mixed physical kinds/counts/bytes, held first checkpoint while later rows complete, exact Error/undefined propagation and cancellation; Ajv and independent SQLite ordinal queries agree. Source read fences for actual copy/index/layer function bytes pass. The meaningful sibling RED is generated/2026-10-20-derivative-sibling-checkpoint-red.log (one pass/one failure, expected peak1 received2). The earlier artificial failure-barrier timeout remains historical evidence and is not counted as a product failure.
+
+The frozen version1.rows handoff is generated/2026-10-20-sdk-checkpoint-handoff.json: five existing files,114,212bytes. Root derivative runtime d7605cd7f6b67bcb9cc5ac7195767e9cc936c7085c2725b800b51487bbdc7b7d/16,382B; index runtime90284063d28cdb3f3305f5f685a5b31868f279707c70b7f7af22f4042616251b/21,758B; schema92715311b878ab144e0ee7eab75d75e26395ace527fadb24b44042935fb1976b/7,710B; test216165580a001cd44a1dceadae465675a702cae5e6fe48e6ad2d4c8843764077/60,233B; corpusc779b220a8cef1b8cfa2895cf14b161c03d6f755a567b96c087f86a2e258f5a4/8,129B. All paths are below256characters. Runtime independent candidate/error/cancellation/fence proof and Low review are pending before root transfer. No managed success or actual capacity recovery is claimed from these pure tests.
+
+
+## Final Checkpoint Serialization Review
+
+All five frozen handoff Source hashes match actual host files. Copy uses a unique completed ordinal before cadence selection. Copy, capture and verification each serialize checkpoints through an invocation-local promise chain, awaited inside the accepted worker callback, preserving its live async context. The unchanged layer scheduler drains every accepted worker and retains an exact first failure using a separate failed boolean, including undefined and cancellation. Worker parallelism sixteen and borrower pending ceiling thirty-two remain unchanged.
+
+The reviewed final runtime checkpoint candidate proof retains held-boundary controls for all three drivers, strict failure/cancellation controls and exact Source fences. It proves redundant copy checkpoint scheduling and sibling overlap in neutral actual-function ports; it does not identify every scope-wide operation in the real pending-thirty-two diagnostic. No concrete blocker was found. No managed retry or private mutation was performed by this auditor.
+
+## Independent Final Candidate Verification
+
+Runtime independent candidate session66413 is terminal0; generated/2026-10-20-runtime-checkpoint-candidate-green1.log and generated/2026-10-20-runtime-checkpoint-handoff-proof.json retain five exact handoff hashes and read fences. Actual capture and verification each complete2,048 hashes/2,049entries with sixteen unique cadence checks and peak one; a held first check admits only one before release while later Source rows progress. Copy16/127/128/256rows yields0/0/1/2checks; held512 yields four/peakone. A competing later failure retains the first checkpoint Error; cancellation retains its exact reason; thrown undefined is preserved; accepted work drains. SQLite independently agrees with completed boundary counts. This worker read the final log/proof and accepts their actual-function neutral-port scope. Layer16 and Native32 remain exact; no real managed tooling pass follows from this evidence. All owned processes are terminal and the five-file cohort remains frozen.
+
+Overlay twenty independently verifies all twenty receipt hashes/continuous chains and all five final private hashes/bytes. The private borrower guard and Native operation policy match their authentic expected preimages; diagnostics are inactive. This is bounded provenance, not normal tooling setup success.
+
+
+## Parent Overlay20 Application
+
+Root preflight exited0 and actual mutation41558 exited0. Applied2026-10-20T03:38:21.899Z, five existing paths114212B, maximum absolute host path164UTF16units. Receipt generated/2026-10-19-source-overlay-20.json SHA256fafc5e44981e7d92bd57fff2b36f5306f35dbba44cd490c9853e4e79e3c0497e. Root independently read both actual GREEN consoles/final proof and matched all five handoff, host and receipt hashes/byte extents; private posthashes were checked by the mutation. The plan now has20overlays and every diagnostic flag is inactive. No dependency/lock edits or repeated sync. Low's independent actual private verification and bootstrap/narrow managed setup follow separately; application itself is not a managed gate pass.
+
+## Parent Exact Overlay20 Transfer
+
+Current: parent overlay20 transfer41558 is actual terminal0 at2026-10-20T03:38:21.899Z, five paths114212B/maxhost164; receipt SHA256fafc5e44981e7d92bd57fff2b36f5306f35dbba44cd490c9853e4e79e3c0497e. Root handoff/host/private hashes match and all diagnostics are inactive. Low independent twenty-chain/private verification pending; parent owns bootstrap --help20 then narrow managed tools setup nx. No other managed lane or full course16 handoff yet. The real earlier narrow probe established scope-wide pending32 with live admission/frames; release15 exact raw fields remain unobserved. Focused and independent actual-function checkpoint proofs pass; no actual tooling recovery/course collection pass is claimed before managed terminal evidence.
+
+Low independently verified all twenty overlay chains/private hashes and inactive diagnostics. Parent managed --help20 session67722 terminal0/expiredfalse,2026-10-20T03:39:23.620Z–03:39:27.835Z,7190B SHA256faa21b123e97938c918fc22535c80710bc9b69da93784aacc2e3696a2ad39180. Parent now owns sole managed session3481 tools setup nx, generated/2026-10-20-tools-nx-checkpoint20.log, unchanged2h supervisor/quick300budgets. Worker does not poll this session or launch another managed command. Full course16 awaits actual narrow Nx terminal0 and explicit handoff.
+
+Parent narrow tools setup nx session3481 is terminal1, not expired, after overlay20. It crossed the prior borrower refusal and actually executed the published .semio-authorizer-compiler.mjs child. The new child failure is ENOENT lstat of the stage-relative 🧬️schema directory at bundled compiler25:8890→25:10876→26:3330; nx:authorizers status1. generated/2026-10-20-tools-nx-checkpoint20.log retains exact console. No course16 or other managed command is active. Release owns exact bundled schema/path causal repair/TDD after runtime frozen attribution; no schema path is guessed and no physical guard weakened.
+
+
+## Actual Post-Overlay20 Bootstrap And Narrow Setup
+
+Root --help67722 exited0/expiredfalse,2026-10-20T03:39:23.620Z–03:39:27.835Z, immutable private-build-20261020T033923-52a5f911.json;7190B log has unchanged bootstrap SHA256faa21b123e97938c918fc22535c80710bc9b69da93784aacc2e3696a2ad39180. Root verified20overlays/all diagnostics inactive in the actual receipt before the next command.
+
+Root tools setup nx3481 exited1/expiredfalse,2026-10-20T03:39:42.873Z–03:40:25.548Z; immutable private-build-20261020T033942-6990dd88.json. Console generated/2026-10-20-tools-nx-checkpoint20.log is259101B/SHA25634290ed99ce0c2efd5b857c28155ee549e2d37af68ca4a77b07f91ec7d0547c5, independently matched by Low. No borrower-admission error was emitted; the actual bundled .semio-authorizer-compiler.mjs child ran, then failed ENOENT lstat its .stage-yx2yAX/🧬️schema path. This is progress beyond the previous actual borrower refusal but not a completed SDK setup, compiler-product pass or course collection. The exact new bundle/runtime-path cause is under frozen Source audit; no full-course retry, dependency sync or guard relaxation follows from this failed command. All root-owned processes are terminal.
+
+
+## Independent Post-Repair Narrow Gate Observation
+
+The immutable `private-build-20261020T033942-6990dd88.json` independently records tools setup nx status 1, expired false, 03:39:42.873Z–03:40:25.548Z. Its 259,101-byte log matches SHA-256 `34290ed99ce0c2efd5b857c28155ee549e2d37af68ca4a77b07f91ec7d0547c5`. No borrower admission refusal appears; execution reached the generated authorizer compiler child, which refused an ENOENT staging schema path. This is a later tooling boundary, not proof of compiler-product, course collection or application success. The Source cause of the new child failure remains under separate audit.
+
+
+## Generated Authorizer Failure Diagnostic Review
+
+The new retained helper adds a single failure catch before the unchanged original finally. It preserves the primary throw and cleanup, validates the actual generated compiler program hash and existing output ceiling, and emits only bounded generated-artifact fragments. At most 128 fragments fit the 57,344-byte fragment budget and 65,536-byte console budget plus newline. Digest/base/continuous overlay/private prehash/transpile/posthash/exact inverse controls remain explicit. No full checked-in Source file is copied to the ticket. This is a reviewed diagnostic design, not evidence of the ENOENT cause or an executed diagnostic. No concrete blocker was found.
+
+The installed authorizer diagnostic actual private hash matches `1e9e56ac93833e86f40760a5e457bb3b171fe6d2f9eae6824630fe27b00c69b1`; removing the sole catch reconstructs exact original `2e10b345c93e426f1a27ef8e5d5c0befc8cd90eac3bc520e71dbecaa085294bd`. Only authorizer-failure-image is active under the unchanged twenty-overlay plan. No managed command was started by this audit.
+
+The actual private tools Source is restored exactly to SHA-256 `2e10b345c93e426f1a27ef8e5d5c0befc8cd90eac3bc520e71dbecaa085294bd`; the removal receipt matches and all diagnostic flags are inactive under twenty overlays. The bounded pretty-printed failure-image JSON is 4,514 bytes and records five fragments from the authenticated generated compiler bundle. Those fragments support Source-revision helper/schema-initializer attribution; they do not constitute a repaired or successful authorizer.

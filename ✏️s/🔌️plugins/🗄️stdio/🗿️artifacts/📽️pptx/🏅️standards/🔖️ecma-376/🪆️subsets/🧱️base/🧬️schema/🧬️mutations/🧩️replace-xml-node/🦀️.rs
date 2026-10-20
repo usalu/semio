@@ -1,7 +1,7 @@
 //! 🧩️ `replace-xml-node` -- replaces one revision-bound canonical XML node exactly; it is the exact inverse of every node-level edit.
 
 use super::*;
-use semio_s_artifact_stdio_pptx_transitional::standards::v_ecma_376::subsets::transitional::schema::xml_address::PptxXmlAddress;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::xml_address::PptxXmlAddress;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

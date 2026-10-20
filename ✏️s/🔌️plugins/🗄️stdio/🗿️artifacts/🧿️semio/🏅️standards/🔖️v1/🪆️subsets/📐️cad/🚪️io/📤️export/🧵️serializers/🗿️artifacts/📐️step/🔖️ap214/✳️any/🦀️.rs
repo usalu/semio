@@ -7,11 +7,11 @@
 
 use semio_s_artifact_stdio_semio_cad::schema::snapshot::{CadEntity, SemioCadSnapshot};
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_s_artifact_stdio_step::schema::snapshot::StepEntity;
-use semio_s_artifact_stdio_step::schema::snapshot::StepFileName;
-use semio_s_artifact_stdio_step::schema::snapshot::StepFileSchema;
-use semio_s_artifact_stdio_step::schema::snapshot::StepHeader;
-use semio_s_artifact_stdio_step::schema::snapshot::StepValue;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepEntity;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepFileName;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepFileSchema;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepHeader;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepValue;
 use semio_s_artifact_stdio_step::StepSnapshot;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("cad") };

@@ -1,0 +1,330 @@
+{
+  "cases": [
+    {
+      "id": "ordered-authored-source-names",
+      "data": {
+        "testsDirName": "tests",
+        "testFixturesDirName": "fixtures",
+        "testOraclesDirName": "oracles",
+        "packagesDirName": "packages",
+        "testAdapterFileKinds": {
+          "🐹️go": "go"
+        },
+        "fileKinds": {
+          "go": {
+            "emoji": "G",
+            "extensionChains": [
+              ".go"
+            ]
+          }
+        },
+        "semanticDirectoryMemberKinds": {
+          "members-of-members-of-members-of-modules": {
+            "memberNames": [
+              "alpha",
+              "beta"
+            ]
+          }
+        }
+      },
+      "accepted": true,
+      "names": [
+        "alpha",
+        "beta"
+      ]
+    },
+    {
+      "id": "missing-tests",
+      "data": {
+        "testFixturesDirName": "fixtures",
+        "testOraclesDirName": "oracles",
+        "packagesDirName": "packages",
+        "testAdapterFileKinds": {
+          "🐹️go": "go"
+        },
+        "fileKinds": {
+          "go": {
+            "emoji": "G",
+            "extensionChains": [
+              ".go"
+            ]
+          }
+        },
+        "semanticDirectoryMemberKinds": {
+          "members-of-members-of-members-of-modules": {
+            "memberNames": [
+              "alpha",
+              "beta",
+              "alpha"
+            ]
+          }
+        }
+      },
+      "accepted": false,
+      "names": []
+    },
+    {
+      "id": "missing-language",
+      "data": {
+        "testsDirName": "tests",
+        "testFixturesDirName": "fixtures",
+        "testOraclesDirName": "oracles",
+        "packagesDirName": "packages",
+        "testAdapterFileKinds": {},
+        "fileKinds": {
+          "go": {
+            "emoji": "G",
+            "extensionChains": [
+              ".go"
+            ]
+          }
+        },
+        "semanticDirectoryMemberKinds": {
+          "members-of-members-of-members-of-modules": {
+            "memberNames": [
+              "alpha",
+              "beta",
+              "alpha"
+            ]
+          }
+        }
+      },
+      "accepted": false,
+      "names": []
+    },
+    {
+      "id": "missing-kind",
+      "data": {
+        "testsDirName": "tests",
+        "testFixturesDirName": "fixtures",
+        "testOraclesDirName": "oracles",
+        "packagesDirName": "packages",
+        "testAdapterFileKinds": {
+          "🐹️go": "go"
+        },
+        "fileKinds": {},
+        "semanticDirectoryMemberKinds": {
+          "members-of-members-of-members-of-modules": {
+            "memberNames": [
+              "alpha",
+              "beta",
+              "alpha"
+            ]
+          }
+        }
+      },
+      "accepted": false,
+      "names": []
+    },
+    {
+      "id": "multiple-extensions",
+      "data": {
+        "testsDirName": "tests",
+        "testFixturesDirName": "fixtures",
+        "testOraclesDirName": "oracles",
+        "packagesDirName": "packages",
+        "testAdapterFileKinds": {
+          "🐹️go": "go"
+        },
+        "fileKinds": {
+          "go": {
+            "emoji": "G",
+            "extensionChains": [
+              ".go",
+              ".rs"
+            ]
+          }
+        },
+        "semanticDirectoryMemberKinds": {
+          "members-of-members-of-members-of-modules": {
+            "memberNames": [
+              "alpha",
+              "beta",
+              "alpha"
+            ]
+          }
+        }
+      },
+      "accepted": false,
+      "names": []
+    },
+    {
+      "id": "bad-extension",
+      "data": {
+        "testsDirName": "tests",
+        "testFixturesDirName": "fixtures",
+        "testOraclesDirName": "oracles",
+        "packagesDirName": "packages",
+        "testAdapterFileKinds": {
+          "🐹️go": "go"
+        },
+        "fileKinds": {
+          "go": {
+            "emoji": "G",
+            "extensionChains": [
+              ".rs"
+            ]
+          }
+        },
+        "semanticDirectoryMemberKinds": {
+          "members-of-members-of-members-of-modules": {
+            "memberNames": [
+              "alpha",
+              "beta",
+              "alpha"
+            ]
+          }
+        }
+      },
+      "accepted": false,
+      "names": []
+    },
+    {
+      "id": "empty-source",
+      "data": {
+        "testsDirName": "tests",
+        "testFixturesDirName": "fixtures",
+        "testOraclesDirName": "oracles",
+        "packagesDirName": "packages",
+        "testAdapterFileKinds": {
+          "🐹️go": "go"
+        },
+        "fileKinds": {
+          "go": {
+            "emoji": "G",
+            "extensionChains": [
+              ".go"
+            ]
+          }
+        },
+        "semanticDirectoryMemberKinds": {
+          "members-of-members-of-members-of-modules": {
+            "memberNames": []
+          }
+        }
+      },
+      "accepted": false,
+      "names": []
+    },
+    {
+      "id": "separator-source",
+      "data": {
+        "testsDirName": "tests",
+        "testFixturesDirName": "fixtures",
+        "testOraclesDirName": "oracles",
+        "packagesDirName": "packages",
+        "testAdapterFileKinds": {
+          "🐹️go": "go"
+        },
+        "fileKinds": {
+          "go": {
+            "emoji": "G",
+            "extensionChains": [
+              ".go"
+            ]
+          }
+        },
+        "semanticDirectoryMemberKinds": {
+          "members-of-members-of-members-of-modules": {
+            "memberNames": [
+              "a/b"
+            ]
+          }
+        }
+      },
+      "accepted": false,
+      "names": []
+    },
+    {
+      "id": "overlap-source",
+      "data": {
+        "testsDirName": "tests",
+        "testFixturesDirName": "fixtures",
+        "testOraclesDirName": "oracles",
+        "packagesDirName": "packages",
+        "testAdapterFileKinds": {
+          "🐹️go": "go"
+        },
+        "fileKinds": {
+          "go": {
+            "emoji": "G",
+            "extensionChains": [
+              ".go"
+            ]
+          }
+        },
+        "semanticDirectoryMemberKinds": {
+          "members-of-members-of-members-of-modules": {
+            "memberNames": [
+              "tests"
+            ]
+          }
+        }
+      },
+      "accepted": false,
+      "names": []
+    },
+    {
+      "id": "duplicate-opaque",
+      "data": {
+        "testsDirName": "tests",
+        "testFixturesDirName": "fixtures",
+        "testOraclesDirName": "fixtures",
+        "packagesDirName": "packages",
+        "testAdapterFileKinds": {
+          "🐹️go": "go"
+        },
+        "fileKinds": {
+          "go": {
+            "emoji": "G",
+            "extensionChains": [
+              ".go"
+            ]
+          }
+        },
+        "semanticDirectoryMemberKinds": {
+          "members-of-members-of-members-of-modules": {
+            "memberNames": [
+              "alpha",
+              "beta",
+              "alpha"
+            ]
+          }
+        }
+      },
+      "accepted": false,
+      "names": []
+    },
+    {
+      "id": "duplicate-source",
+      "data": {
+        "testsDirName": "tests",
+        "testFixturesDirName": "fixtures",
+        "testOraclesDirName": "oracles",
+        "packagesDirName": "packages",
+        "testAdapterFileKinds": {
+          "🐹️go": "go"
+        },
+        "fileKinds": {
+          "go": {
+            "emoji": "G",
+            "extensionChains": [
+              ".go"
+            ]
+          }
+        },
+        "semanticDirectoryMemberKinds": {
+          "members-of-members-of-members-of-modules": {
+            "memberNames": [
+              "alpha",
+              "beta",
+              "alpha"
+            ]
+          }
+        }
+      },
+      "accepted": false,
+      "names": []
+    }
+  ]
+}

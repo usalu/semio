@@ -1,5 +1,6 @@
 use super::*;
-use semio_framework_value::{RetirementDemand, retained_clone::{RetainedCloneGrant, RetainedCloneSource}, retirement::{RetireOwned, controlled::ControlledRetirement, shared::sealed::SealedShared}};
+use std::mem::size_of;
+use semio_framework_value::{RetirementDemand, retained_clone::{RetainedCloneGrant, RetainedCloneSource}, retirement::{RetireOwned, controlled::ControlledRetirement},shared_issuance::SealedShared};
 use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeReceive, native_decoding::NativeReceiver, native_decoding::owned::NativeFlatRecord, native_decoding::owned::NativeRecordField};
 #[test]
 fn native_record_receive_borrows_actual_text_ordinals_and_payloads(){

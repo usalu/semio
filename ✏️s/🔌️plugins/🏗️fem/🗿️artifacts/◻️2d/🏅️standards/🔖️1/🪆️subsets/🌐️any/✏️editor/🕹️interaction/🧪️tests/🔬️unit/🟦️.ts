@@ -5,7 +5,7 @@ import { applyPatch } from "fast-json-patch";
 import reconnect from "../../../🧪️tests/🔬️unit/🔣️.json" with { type: "json" };
 import transform from "../../../../../🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🧪️tests/🔣️.json" with { type:"json" };
 import selection from "../../../🎮️commands/🗂️remove-selection/🧪️tests/🔬️unit/🔣️.json" with { type:"json" };
-import { encodeScopedIdentity, decodeScopedIdentity } from "@semio-tech/framework-replication";
+import { encodeScopedIdentity, decodeScopedIdentity } from "@semio-tech/framework/replication";
 
 /** 🔮️ Independent Three matrix and typed scope oracles adjudicate the shared native mutation scenarios. */
 export function testFem2dEventMechanisms(): void {

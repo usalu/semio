@@ -62,6 +62,6 @@ pub fn en1995_artifact_schema_descriptor() -> semio_framework_schema_registry::A
 #[path = "."]
 pub mod checks {
     #[path = "⚖️timber/🦀️.rs"]
-    mod timber;
+    pub mod timber;
 }
 //#endregion 🪢️Mounts

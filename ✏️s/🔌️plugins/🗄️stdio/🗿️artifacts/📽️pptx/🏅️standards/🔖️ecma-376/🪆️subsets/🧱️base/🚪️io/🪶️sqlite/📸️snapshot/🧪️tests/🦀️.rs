@@ -548,3 +548,6 @@ async fn sqlite_snapshot_pptx_strict_initial_has_independent_complete_package_an
     }
     owner.retire_sqlite_snapshot();
 }
+
+#[path = "💰️backing/🦀️.rs"]
+mod backing;

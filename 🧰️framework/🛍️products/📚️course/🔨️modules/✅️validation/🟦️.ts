@@ -14,7 +14,7 @@
  * @see ./🦀️.rs — the Rust twin
  */
 import { COURSE_ROOT_IDS, CHALLENGES, MAX_TIMESTAMP, MOTIONS, SCALES, SCREENS, SHORT_LENGTH, TASK_KINDS, type Answer, type Command, type Query, type Quiz, type Rejection, type Scale, type SheetMatchingTask, type SheetTask, type Timestamp } from "../../🧬️schema/🟦️.ts";
-import CONTRACT from "../../🧬️schema/🔣️.json";
+import CONTRACT from "../../🧬️schema/🔣️.json" with { type: "json" };
 
 /** 🩺️ One finding: where (JSON pointer) and what (kebab-case code). */
 export type ValidationIssue = { readonly path: string; readonly code: string };

@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { scriptInvocationBudget } from "@semio-tech/framework/process/routing";
 import { runBudgetedTestCommand } from "@semio-tech/framework/process/test-execution";
-import { resolveTypescriptCompilerV1 } from "@semio-tech/process/execution";
+import { resolveTypescriptCompilerV1 } from "@semio-tech/framework/process/execution";
 import { resolve as scriptDirectoryResolve } from "node:path";
 
 const SCRIPT_DIR = scriptDirectoryResolve(import.meta.dir, "../../📦️packages/🦀️rust");

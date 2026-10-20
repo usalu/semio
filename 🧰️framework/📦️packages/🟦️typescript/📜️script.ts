@@ -427,9 +427,9 @@ class DocumentScopeScript extends BundleScript {
 class WindowUtilityScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("window-utility-check accepts no arguments");
-    const source = fileURLToPath(new URL("../../🔨️modules/🛂️manifest/🧪️tests/🔬️window-view-context/🟦️.ts", import.meta.url));
+    const source = fileURLToPath(new URL("@semio-tech/framework-manifest/testing/window-view-context", import.meta.url));
     await runOwnedCommand(process.execPath, [resolveTypescriptCompilerV1(this.root), "--noEmit", "--strict", "--skipLibCheck", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", source], this.root, "framework:window-utility-types", 120_000, { signal: this.invocation.control.signal });
-    const { testWindowViewContext } = await import("../../🔨️modules/🛂️manifest/🧪️tests/🔬️window-view-context/🟦️.ts");
+    const { testWindowViewContext } = await import("@semio-tech/framework-manifest/testing/window-view-context");
     testWindowViewContext();
   }
 }

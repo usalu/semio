@@ -17,6 +17,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-s-artifact-stdio-mp3-metadata = { path = "../../../../🧬️schema/📸️snapshot/🏷️metadata/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-dsl = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust" }

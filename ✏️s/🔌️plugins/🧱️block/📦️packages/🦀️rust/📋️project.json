@@ -32,6 +32,7 @@
     "test": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test --features test-serde",

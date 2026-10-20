@@ -2,7 +2,7 @@ import{createHash}from"node:crypto";
 import{compareRustUnitTextV1 as compare}from"../📋️plan/🔏️identity/🟦️.ts";
 import{compileJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import type{RustUnitV1}from"../🧬️definition/🟦️.ts";
-import schema from"./🧬️schema/🔣️.json";
+import schema from"./🧬️schema/🔣️.json" with { type: "json" };
 const contract=compileJsonSchemaSubset(schema);
 export interface RustUnitCompilerContextV1{version:4;facts:ReturnType<typeof facts>;digest:string;metadata:string}
 function canonical(value:unknown):unknown{if(typeof value==="string"){if(Buffer.from(value,"utf8").toString("utf8")!==value)throw Error("Unicode scalar compiler context required");return value;}if(Array.isArray(value))return value.map(canonical);if(value&&typeof value==="object")return Object.fromEntries(Object.entries(value).map(([key,item])=>{canonical(key);return[key,canonical(item)] as const;}).sort(([a],[b])=>compare(a,b)));return value;}

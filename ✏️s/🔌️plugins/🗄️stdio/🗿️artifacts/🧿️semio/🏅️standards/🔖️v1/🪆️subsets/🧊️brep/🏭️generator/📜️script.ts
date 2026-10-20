@@ -253,12 +253,6 @@ function measureShape(b: Kernel, shape: unknown): Record<string, unknown> {
   const validSolid = tryMeasure(() => (b.isValidSolid as unknown as (s: unknown) => boolean)(shape)) as boolean | null;
   const isCompound = tryMeasure(() => (b.isCompound as unknown as (s: unknown) => boolean)(shape)) as boolean | null;
   const eulerCharacteristic = vertices.length - edges.length + faces.length;
-  // 🔺️Genus is only well-defined for a SHAPE THAT IS ITSELF ONE closed valid solid of one shell —
-  // Euler's `V-E+F=2-2g` does not resolve to a meaningful integer for an open shell, a bare wire, or a
-  // COMPOUND that merely CONTAINS one solid alongside other loose entities (`isValidSolid` measured
-  // `true` even on `compound(box, looseVertex)`, so that guard alone is not enough — the extra vertex's
-  // count still pollutes `eulerCharacteristic` and must be excluded by requiring the shape not be a
-  // compound at all, not merely by counting how many solids it holds).
   const genus = !isCompound && solids.length === 1 && shells.length === 1 && validSolid === true ? (2 - eulerCharacteristic) / 2 : null;
   const boundingBoxDiagonal = bounds !== null ? Math.hypot((bounds.xMax ?? 0) - (bounds.xMin ?? 0), (bounds.yMax ?? 0) - (bounds.yMin ?? 0), (bounds.zMax ?? 0) - (bounds.zMin ?? 0)) : null;
   return { solids: solids.length, shells: shells.length, faces: faces.length, edges: edges.length, vertices: vertices.length, boundingBox: bounds, boundingBoxDiagonal, volume, area, validSolid, eulerCharacteristic, genus };
@@ -320,10 +314,6 @@ async function generateOne(b: Kernel, recipe: Recipe, outDir: string): Promise<R
   const measurements: Record<string, unknown> = { declaredOutcome: recipe.outcome, kind: recipe.kind, hasExpected: result !== null };
   if (result !== null) {
     const preMeasure = measureShape(b, result);
-    // 🫙️A Boolean that measures NOTHING at all — a `cut` fully engulfed, an `intersect` with no shared
-    // volume — is `outcome: "empty"`'s proof, but OCCT's own STEP writer THROWS `STEP_EXPORT_UNSERIALIZABLE`
-    // on a shape with zero sub-entities rather than emitting a valid empty document. MEASURED directly:
-    // attempting the export anyway turns a correct `empty` fixture into a reported generator FAILURE.
     const trulyEmpty = preMeasure.solids === 0 && preMeasure.shells === 0 && preMeasure.faces === 0 && preMeasure.edges === 0 && preMeasure.vertices === 0;
     if (trulyEmpty) {
       Object.assign(measurements, preMeasure);
@@ -331,7 +321,6 @@ async function generateOne(b: Kernel, recipe: Recipe, outDir: string): Promise<R
       measurements.measuredFrom = "in-memory result — the kernel's own shape has no sub-entities at all; STEP export refuses to serialize empty geometry";
     } else {
       try {
-        // 📥️Export FIRST, then measure what was written — never the in-memory shape. See `reimport` above.
         const exportedText = canonicalizeStep(await blobText(call(b, "exportSTEP", result)));
         write(join(dir, EXPECTED_STEP_FILENAME), exportedText);
         files.push({ role: "expected-step", path: `../🧫️fixtures/${fixtureDirectory}/${EXPECTED_STEP_FILENAME}`, mediaType: "model/step", sha256: await contentDigest(exportedText), bytes: Buffer.byteLength(exportedText) });
@@ -339,9 +328,6 @@ async function generateOne(b: Kernel, recipe: Recipe, outDir: string): Promise<R
         Object.assign(measurements, measureShape(b, measured));
         measurements.measuredFrom = "expected.step, re-imported";
 
-        // 🫙️A shape with no measurable extent (no volume AND no area — a bare vertex or a degenerate
-        // self-intersecting face) has nothing to tessellate; forcing a mesh through it would either fail
-        // in the kernel or record a fabricated zero-triangle mesh as if it meant something.
         const hasExtent = ((measurements.volume as number | null) ?? 0) !== 0 || ((measurements.area as number | null) ?? 0) !== 0;
         if (hasExtent && measurements.boundingBoxDiagonal !== null) {
           const tessellationTolerance = tessellationToleranceFor(measurements.boundingBoxDiagonal as number);
@@ -362,10 +348,6 @@ async function generateOne(b: Kernel, recipe: Recipe, outDir: string): Promise<R
           measurements.meshSkippedReason = "no measurable volume or area";
         }
       } catch (error) {
-        // 🧯️Not every empty-ish shape is caught by the zero-sub-entity guard above (e.g. a shape that
-        // still reports sub-entities but that the STEP writer nonetheless finds degenerate) — this is
-        // the second, narrower net, and it still records a REAL measurement (of the in-memory shape)
-        // rather than silently downgrading the fixture to a bare failure.
         Object.assign(measurements, preMeasure);
         measurements.hasExpected = false;
         measurements.measuredFrom = "in-memory result only — STEP export threw and was not attempted again";
@@ -373,14 +355,9 @@ async function generateOne(b: Kernel, recipe: Recipe, outDir: string): Promise<R
       }
     }
   } else {
-    // 🚫️`outcome: "rejected"` with no exportable AFTER at all — the BEFORE operand(s) above are the
-    // whole bundle, and `notes` says what the kernel did when the transition was attempted.
     Object.assign(measurements, measureShape(b, operands[0]!.shape));
     measurements.measuredFrom = "before operand only — kernel produced no AFTER shape";
   }
-  // 📌️Recorded regardless of which branch ran above: a `rejected` recipe whose attempted AFTER still
-  // exported SOMETHING (e.g. `delete-face-still-bounding-closed-shell`, where `solid()` on 5 of 6 faces
-  // does not throw) needs its rejection evidence in the metrics just as much as one where it's `null`.
   if (rejectionReason !== undefined) measurements.rejectionReason = rejectionReason;
 
   const metricsBody = `${JSON.stringify(measurements, null, 2)}\n`;
@@ -407,8 +384,6 @@ async function generateOne(b: Kernel, recipe: Recipe, outDir: string): Promise<R
     provenance: { source: "generated", license: "Apache-2.0", attribution: "Generated with brepjs (Apache-2.0) over brepjs-opencascade (LGPL-2.1-only, OpenCASCADE 8.0 WASM)", security: "scanned-clean", privacy: "no-personal-data" },
     comparisonProfile: "semantic-brep-kernel-edit-v1",
     toleranceProfile: recipe.tolerance,
-    // 🏭️Filled in by `verifyReproducibility` below — a MEASURED fact from an actual second generation
-    // pass and byte-comparison, never a default or an assumption. See that function's docstring.
     reproducible: false,
     family: recipe.family,
     notes: recipe.notes,
@@ -609,10 +584,6 @@ function validateToleranceContract(): number {
     if (mutation === undefined) throw new Error(`${testCase.id}: missing delete mutation`);
     const [kind, deletePayload] = mutation;
     const before = testCase.before as { vertices?: Record<string, unknown>[]; edges?: Record<string, unknown>[]; faces?: Record<string, unknown>[] };
-    // Every `create-` verb APPENDS, so restoring a removed vertex at its own index lifts the whole
-    // vertex tail and the edge tail above the first edge incident to it off, then re-declares both in
-    // base order: edges the cascade did not take are deleted, then the later vertices, then every
-    // tail vertex and tail edge is re-created.
     const deleteVertexInverse = () => {
       const vertices = before.vertices ?? [];
       const edges = before.edges ?? [];
@@ -775,20 +746,12 @@ async function main(argv: readonly string[]): Promise<number> {
         if (command === "generate") {
           const scratchDir = join(outDir, ".reproduce-tmp");
           const repro = await verifyReproducibility(b, recipe, outDir, scratchDir);
-          // 🧭️Reproducibility belongs on the MANIFEST and nowhere else. Writing it back into
-          // `expected.metrics.json` — as this did — rewrote the file AFTER its digest had been recorded,
-          // so every one of the 72 recorded `expected-measurements` hashes described content that no
-          // longer existed on disk. It also made the file self-referential: a metrics file whose content
-          // states whether that same file reproduces. The metrics describe the geometry; whether the
-          // bundle regenerates byte-identically is a fact about the bundle.
           manifest.reproducible = repro.reproducible;
           (manifest as Record<string, unknown>).reproducibilityDiffs = repro.diffs;
         }
         manifests.push(manifest);
         console.error(`[generator] ${recipe.id} (${recipe.family}, ${recipe.kind}, ${recipe.outcome})${command === "generate" ? ` reproducible=${manifest.reproducible}` : ""}`);
       } catch (error) {
-        // 🧭️A recipe the kernel refuses is REPORTED, never dropped: a corpus that quietly shrank to
-        // whatever happened to build would read as complete coverage of a smaller matrix.
         failed += 1;
         failures.push({ id: recipe.id, error: (error as Error).message });
         console.error(`[generator] ${recipe.id} FAILED — ${(error as Error).message}`);
@@ -797,8 +760,6 @@ async function main(argv: readonly string[]): Promise<number> {
     if (existsSync(join(outDir, ".reproduce-tmp"))) rmSync(join(outDir, ".reproduce-tmp"), { recursive: true, force: true });
     if (command === "manifests") process.stdout.write(`${JSON.stringify(manifests, null, 2)}\n`);
     else {
-      // 🧬️A NARROWED run MERGES into the manifest index; it does not replace it — see the sibling
-      // generator's docstring for the incident this guards against.
       const indexPath = join(outDir, "🔣️.json");
       const previous = (() => {
         if (only === null || !existsSync(indexPath)) return [];

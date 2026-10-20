@@ -38,3 +38,4 @@ semio-framework-os-kernel = { workspace = true, features = ["mutation-testing", 
 semio-s-artifact-layout-layout-engine = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-io-ports = { workspace = true, features = ["testkit"] }
+semio-s-artifact-layout-layout-mutations = { workspace = true }

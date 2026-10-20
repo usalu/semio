@@ -20,7 +20,7 @@ import {lstat,opendir} from "node:fs/promises";
 import {join,relative,dirname} from "node:path";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/process/leases";
 import {captureOwnedCommandResultV1} from "@semio-tech/process/owned-execution";
-import {observePhysicalFileV1} from "@semio-tech/framework/filesystem/observation";
+import {observePhysicalFileV1} from "@semio-tech/framework-filesystem/observation";
 import schema from "./🧬️schema/🔣️.json";
 import {hubProbeCall,hubProbeCreateArtifact,hubProbeCreateSpace,hubProbeCreationCatalog,hubProbeOpenDocument,hubProbeSignIn} from "@semio-tech/framework-os/modules/directory/testkit/client-probe";
 import {sealSpaceArtifactCreateV1} from "@semio-tech/framework-os/modules/directory/schema/space-artifact-creation-v1";

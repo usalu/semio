@@ -1,0 +1,604 @@
+{
+  "version": 1,
+  "contract": {
+    "version": 1,
+    "accepted": [
+      {
+        "name": "off without an endpoint",
+        "environment": {},
+        "contract": null
+      },
+      {
+        "name": "empty endpoint is off",
+        "environment": {
+          "SEMIO_REMOTE_CACHE_ENDPOINT": ""
+        },
+        "contract": null
+      },
+      {
+        "name": "other variables alone do not enable it",
+        "environment": {
+          "SEMIO_REMOTE_CACHE_INSTANCE": "team-a",
+          "SEMIO_REMOTE_CACHE_ACCESS": "read-write"
+        },
+        "contract": null
+      },
+      {
+        "name": "endpoint alone takes every default",
+        "environment": {
+          "SEMIO_REMOTE_CACHE_ENDPOINT": "http://127.0.0.1:6090"
+        },
+        "contract": {
+          "version": 1,
+          "endpoint": "http://127.0.0.1:6090",
+          "instance": "main",
+          "access": "read-only",
+          "upload": true,
+          "compression": true,
+          "download": "toplevel",
+          "timeoutSeconds": 30,
+          "retries": 3,
+          "auth": {
+            "tokenEnvironment": "SEMIO_REMOTE_CACHE_TOKEN"
+          }
+        }
+      },
+      {
+        "name": "every field overridden",
+        "environment": {
+          "SEMIO_REMOTE_CACHE_ENDPOINT": "https://cache.example.test:8443",
+          "SEMIO_REMOTE_CACHE_INSTANCE": "team-a",
+          "SEMIO_REMOTE_CACHE_ACCESS": "read-write",
+          "SEMIO_REMOTE_CACHE_UPLOAD": "false",
+          "SEMIO_REMOTE_CACHE_COMPRESSION": "false",
+          "SEMIO_REMOTE_CACHE_DOWNLOAD": "all",
+          "SEMIO_REMOTE_CACHE_TIMEOUT_SECONDS": "60",
+          "SEMIO_REMOTE_CACHE_RETRIES": "0",
+          "SEMIO_REMOTE_CACHE_TOKEN_ENVIRONMENT": "CI_CACHE_TOKEN"
+        },
+        "contract": {
+          "version": 1,
+          "endpoint": "https://cache.example.test:8443",
+          "instance": "team-a",
+          "access": "read-write",
+          "upload": false,
+          "compression": false,
+          "download": "all",
+          "timeoutSeconds": 60,
+          "retries": 0,
+          "auth": {
+            "tokenEnvironment": "CI_CACHE_TOKEN"
+          }
+        }
+      },
+      {
+        "name": "empty override values fall back to the defaults",
+        "environment": {
+          "SEMIO_REMOTE_CACHE_ENDPOINT": "http://[::1]:6090",
+          "SEMIO_REMOTE_CACHE_ACCESS": "",
+          "SEMIO_REMOTE_CACHE_UPLOAD": "",
+          "SEMIO_REMOTE_CACHE_TIMEOUT_SECONDS": ""
+        },
+        "contract": {
+          "version": 1,
+          "endpoint": "http://[::1]:6090",
+          "instance": "main",
+          "access": "read-only",
+          "upload": true,
+          "compression": true,
+          "download": "toplevel",
+          "timeoutSeconds": 30,
+          "retries": 3,
+          "auth": {
+            "tokenEnvironment": "SEMIO_REMOTE_CACHE_TOKEN"
+          }
+        }
+      }
+    ],
+    "refused": [
+      {
+        "name": "endpoint with a path",
+        "environment": {
+          "SEMIO_REMOTE_CACHE_ENDPOINT": "http://cache.example.test/team"
+        }
+      },
+      {
+        "name": "endpoint with credentials",
+        "environment": {
+          "SEMIO_REMOTE_CACHE_ENDPOINT": "http://user:secret@cache.example.test"
+        }
+      },
+      {
+        "name": "endpoint with a query",
+        "environment": {
+          "SEMIO_REMOTE_CACHE_ENDPOINT": "http://cache.example.test?x=1"
+        }
+      },
+      {
+        "name": "endpoint with a foreign scheme",
+        "environment": {
+          "SEMIO_REMOTE_CACHE_ENDPOINT": "grpc://cache.example.test"
+        }
+      },
+      {
+        "name": "endpoint without a scheme",
+        "environment": {
+          "SEMIO_REMOTE_CACHE_ENDPOINT": "cache.example.test:443"
+        }
+      },
+      {
+        "name": "endpoint with whitespace",
+        "environment": {
+          "SEMIO_REMOTE_CACHE_ENDPOINT": "http://cache.example.test --remote_executor=evil"
+        }
+      },
+      {
+        "name": "instance is a protocol route",
+        "environment": {
+          "SEMIO_REMOTE_CACHE_ENDPOINT": "http://h",
+          "SEMIO_REMOTE_CACHE_INSTANCE": "cas"
+        }
+      },
+      {
+        "name": "instance has upper case",
+        "environment": {
+          "SEMIO_REMOTE_CACHE_ENDPOINT": "http://h",
+          "SEMIO_REMOTE_CACHE_INSTANCE": "Team"
+        }
+      },
+      {
+        "name": "instance has a slash",
+        "environment": {
+          "SEMIO_REMOTE_CACHE_ENDPOINT": "http://h",
+          "SEMIO_REMOTE_CACHE_INSTANCE": "a/b"
+        }
+      },
+      {
+        "name": "access is unknown",
+        "environment": {
+          "SEMIO_REMOTE_CACHE_ENDPOINT": "http://h",
+          "SEMIO_REMOTE_CACHE_ACCESS": "write"
+        }
+      },
+      {
+        "name": "upload is not boolean",
+        "environment": {
+          "SEMIO_REMOTE_CACHE_ENDPOINT": "http://h",
+          "SEMIO_REMOTE_CACHE_UPLOAD": "yes"
+        }
+      },
+      {
+        "name": "compression is not boolean",
+        "environment": {
+          "SEMIO_REMOTE_CACHE_ENDPOINT": "http://h",
+          "SEMIO_REMOTE_CACHE_COMPRESSION": "1"
+        }
+      },
+      {
+        "name": "download is unknown",
+        "environment": {
+          "SEMIO_REMOTE_CACHE_ENDPOINT": "http://h",
+          "SEMIO_REMOTE_CACHE_DOWNLOAD": "none"
+        }
+      },
+      {
+        "name": "timeout is zero",
+        "environment": {
+          "SEMIO_REMOTE_CACHE_ENDPOINT": "http://h",
+          "SEMIO_REMOTE_CACHE_TIMEOUT_SECONDS": "0"
+        }
+      },
+      {
+        "name": "timeout is too long",
+        "environment": {
+          "SEMIO_REMOTE_CACHE_ENDPOINT": "http://h",
+          "SEMIO_REMOTE_CACHE_TIMEOUT_SECONDS": "601"
+        }
+      },
+      {
+        "name": "timeout is not a number",
+        "environment": {
+          "SEMIO_REMOTE_CACHE_ENDPOINT": "http://h",
+          "SEMIO_REMOTE_CACHE_TIMEOUT_SECONDS": "30s"
+        }
+      },
+      {
+        "name": "retries are negative",
+        "environment": {
+          "SEMIO_REMOTE_CACHE_ENDPOINT": "http://h",
+          "SEMIO_REMOTE_CACHE_RETRIES": "-1"
+        }
+      },
+      {
+        "name": "retries are too many",
+        "environment": {
+          "SEMIO_REMOTE_CACHE_ENDPOINT": "http://h",
+          "SEMIO_REMOTE_CACHE_RETRIES": "11"
+        }
+      },
+      {
+        "name": "token variable is lower case",
+        "environment": {
+          "SEMIO_REMOTE_CACHE_ENDPOINT": "http://h",
+          "SEMIO_REMOTE_CACHE_TOKEN_ENVIRONMENT": "my_token"
+        }
+      }
+    ],
+    "message": "Closed remote cache contract required"
+  },
+  "patterns": {
+    "Endpoint": {
+      "accepted": [
+        "http://127.0.0.1:6090",
+        "https://cache.example.test",
+        "https://cache.example.test:8443",
+        "http://[::1]:6090",
+        "http://localhost"
+      ],
+      "refused": [
+        "",
+        "http://",
+        "http://h/",
+        "http://h/x",
+        "http://u@h",
+        "ftp://h",
+        "http://h:",
+        "http://h:123456",
+        "http:/h",
+        "HTTP://h x"
+      ]
+    },
+    "Instance": {
+      "accepted": [
+        "main",
+        "team-a",
+        "a",
+        "ci.1_x",
+        "0"
+      ],
+      "refused": [
+        "",
+        "Main",
+        "-a",
+        "_a",
+        "a/b",
+        "ac",
+        "cas",
+        "v1",
+        "healthz",
+        "status",
+        "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      ]
+    },
+    "Token": {
+      "accepted": [
+        "a",
+        "tok-123",
+        "A.b_c~d+e/f=g",
+        "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      ],
+      "refused": [
+        "",
+        "bad token",
+        "tok\"en",
+        "tok'en",
+        "tok$en",
+        "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "tök"
+      ]
+    },
+    "EnvironmentName": {
+      "accepted": [
+        "A",
+        "SEMIO_REMOTE_CACHE_TOKEN",
+        "CI_CACHE_TOKEN2"
+      ],
+      "refused": [
+        "",
+        "a",
+        "1A",
+        "A-B",
+        "A B",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      ]
+    }
+  },
+  "bazel": [
+    {
+      "name": "default is read-only with every switch spelled",
+      "environment": {
+        "SEMIO_REMOTE_CACHE_ENDPOINT": "http://127.0.0.1:6090"
+      },
+      "directory": "/h",
+      "platform": "linux",
+      "restoresOutputs": true,
+      "flags": [
+        "--remote_cache=http://127.0.0.1:6090/main",
+        "--remote_instance_name=main",
+        "--noremote_upload_local_results",
+        "--remote_cache_compression",
+        "--remote_download_outputs=toplevel",
+        "--remote_timeout=30s",
+        "--remote_retries=3"
+      ],
+      "tokenEnvironment": {},
+      "helper": null,
+      "uploadEnforcedBy": "client"
+    },
+    {
+      "name": "read-write with a token pushes and uses the credential helper scoped to the cache host",
+      "environment": {
+        "SEMIO_REMOTE_CACHE_ENDPOINT": "https://cache.example.test:8443",
+        "SEMIO_REMOTE_CACHE_INSTANCE": "team-a",
+        "SEMIO_REMOTE_CACHE_ACCESS": "read-write",
+        "SEMIO_REMOTE_CACHE_TOKEN_ENVIRONMENT": "CI_CACHE_TOKEN",
+        "CI_CACHE_TOKEN": "tok-123"
+      },
+      "directory": "/h",
+      "platform": "linux",
+      "restoresOutputs": true,
+      "flags": [
+        "--remote_cache=https://cache.example.test:8443/team-a",
+        "--remote_instance_name=team-a",
+        "--remote_upload_local_results",
+        "--remote_cache_compression",
+        "--remote_download_outputs=toplevel",
+        "--remote_timeout=30s",
+        "--remote_retries=3",
+        "--credential_helper=cache.example.test=/h/remote-cache-credentials.sh"
+      ],
+      "tokenEnvironment": {
+        "CI_CACHE_TOKEN": "tok-123"
+      },
+      "helper": {
+        "path": "/h/remote-cache-credentials.sh",
+        "mode": 493,
+        "content": "#!/bin/sh\ncat >/dev/null\nprintf '{\"headers\":{\"Authorization\":[\"Bearer %s\"]}}\\n' \"$CI_CACHE_TOKEN\"\n"
+      },
+      "uploadEnforcedBy": "none"
+    },
+    {
+      "name": "the Windows helper is a cmd file",
+      "environment": {
+        "SEMIO_REMOTE_CACHE_ENDPOINT": "https://cache.example.test:8443",
+        "SEMIO_REMOTE_CACHE_INSTANCE": "team-a",
+        "SEMIO_REMOTE_CACHE_ACCESS": "read-write",
+        "SEMIO_REMOTE_CACHE_TOKEN_ENVIRONMENT": "CI_CACHE_TOKEN",
+        "CI_CACHE_TOKEN": "tok-123"
+      },
+      "directory": "C:\\h",
+      "platform": "win32",
+      "restoresOutputs": true,
+      "flags": [
+        "--remote_cache=https://cache.example.test:8443/team-a",
+        "--remote_instance_name=team-a",
+        "--remote_upload_local_results",
+        "--remote_cache_compression",
+        "--remote_download_outputs=toplevel",
+        "--remote_timeout=30s",
+        "--remote_retries=3",
+        "--credential_helper=cache.example.test=C:\\h\\remote-cache-credentials.cmd"
+      ],
+      "tokenEnvironment": {
+        "CI_CACHE_TOKEN": "tok-123"
+      },
+      "helper": {
+        "path": "C:\\h\\remote-cache-credentials.cmd",
+        "mode": 420,
+        "content": "@echo off\r\nmore >nul\r\necho {\"headers\":{\"Authorization\":[\"Bearer %CI_CACHE_TOKEN%\"]}}\r\n"
+      },
+      "uploadEnforcedBy": "none"
+    },
+    {
+      "name": "read-write credentials with upload off stay read-only on the client",
+      "environment": {
+        "SEMIO_REMOTE_CACHE_ENDPOINT": "https://cache.example.test:8443",
+        "SEMIO_REMOTE_CACHE_INSTANCE": "team-a",
+        "SEMIO_REMOTE_CACHE_ACCESS": "read-write",
+        "SEMIO_REMOTE_CACHE_TOKEN_ENVIRONMENT": "CI_CACHE_TOKEN",
+        "SEMIO_REMOTE_CACHE_UPLOAD": "false"
+      },
+      "directory": "/h",
+      "platform": "linux",
+      "restoresOutputs": true,
+      "flags": [
+        "--remote_cache=https://cache.example.test:8443/team-a",
+        "--remote_instance_name=team-a",
+        "--noremote_upload_local_results",
+        "--remote_cache_compression",
+        "--remote_download_outputs=toplevel",
+        "--remote_timeout=30s",
+        "--remote_retries=3"
+      ],
+      "tokenEnvironment": {},
+      "helper": null,
+      "uploadEnforcedBy": "client"
+    },
+    {
+      "name": "compression off, all outputs, long timeout",
+      "environment": {
+        "SEMIO_REMOTE_CACHE_ENDPOINT": "http://127.0.0.1:6090",
+        "SEMIO_REMOTE_CACHE_COMPRESSION": "false",
+        "SEMIO_REMOTE_CACHE_DOWNLOAD": "all",
+        "SEMIO_REMOTE_CACHE_TIMEOUT_SECONDS": "120",
+        "SEMIO_REMOTE_CACHE_RETRIES": "5"
+      },
+      "directory": "/h",
+      "platform": "linux",
+      "restoresOutputs": true,
+      "flags": [
+        "--remote_cache=http://127.0.0.1:6090/main",
+        "--remote_instance_name=main",
+        "--noremote_upload_local_results",
+        "--noremote_cache_compression",
+        "--remote_download_outputs=all",
+        "--remote_timeout=120s",
+        "--remote_retries=5"
+      ],
+      "tokenEnvironment": {},
+      "helper": null,
+      "uploadEnforcedBy": "client"
+    },
+    {
+      "name": "IPv6 endpoint scopes the helper to the bare address",
+      "environment": {
+        "SEMIO_REMOTE_CACHE_ENDPOINT": "http://[::1]:6090",
+        "SEMIO_REMOTE_CACHE_TOKEN_ENVIRONMENT": "CI_CACHE_TOKEN",
+        "CI_CACHE_TOKEN": "tok-123"
+      },
+      "directory": "/h",
+      "platform": "linux",
+      "restoresOutputs": true,
+      "flags": [
+        "--remote_cache=http://[::1]:6090/main",
+        "--remote_instance_name=main",
+        "--noremote_upload_local_results",
+        "--remote_cache_compression",
+        "--remote_download_outputs=toplevel",
+        "--remote_timeout=30s",
+        "--remote_retries=3",
+        "--credential_helper=::1=/h/remote-cache-credentials.sh"
+      ],
+      "tokenEnvironment": {
+        "CI_CACHE_TOKEN": "tok-123"
+      },
+      "helper": {
+        "path": "/h/remote-cache-credentials.sh",
+        "mode": 493,
+        "content": "#!/bin/sh\ncat >/dev/null\nprintf '{\"headers\":{\"Authorization\":[\"Bearer %s\"]}}\\n' \"$CI_CACHE_TOKEN\"\n"
+      },
+      "uploadEnforcedBy": "client"
+    },
+    {
+      "name": "minimal is refused when the adapter restores snapshots",
+      "environment": {
+        "SEMIO_REMOTE_CACHE_ENDPOINT": "http://127.0.0.1:6090",
+        "SEMIO_REMOTE_CACHE_DOWNLOAD": "minimal"
+      },
+      "directory": "/h",
+      "platform": "linux",
+      "restoresOutputs": true,
+      "refused": "needs remote cache download toplevel or all"
+    },
+    {
+      "name": "minimal is rendered when nothing is restored",
+      "environment": {
+        "SEMIO_REMOTE_CACHE_ENDPOINT": "http://127.0.0.1:6090",
+        "SEMIO_REMOTE_CACHE_DOWNLOAD": "minimal"
+      },
+      "directory": "/h",
+      "platform": "linux",
+      "restoresOutputs": false,
+      "flags": [
+        "--remote_cache=http://127.0.0.1:6090/main",
+        "--remote_instance_name=main",
+        "--noremote_upload_local_results",
+        "--remote_cache_compression",
+        "--remote_download_outputs=minimal",
+        "--remote_timeout=30s",
+        "--remote_retries=3"
+      ],
+      "tokenEnvironment": {},
+      "helper": null,
+      "uploadEnforcedBy": "client"
+    },
+    {
+      "name": "a token with shell metacharacters is refused",
+      "environment": {
+        "SEMIO_REMOTE_CACHE_ENDPOINT": "http://127.0.0.1:6090",
+        "SEMIO_REMOTE_CACHE_TOKEN": "a b"
+      },
+      "directory": "/h",
+      "platform": "linux",
+      "restoresOutputs": true,
+      "refused": "Closed remote cache token required"
+    }
+  ],
+  "nx": [
+    {
+      "name": "off clears both variables so nothing stale can enable a cache",
+      "environment": {
+        "NX_SELF_HOSTED_REMOTE_CACHE_SERVER": "http://stale",
+        "NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN": "stale"
+      },
+      "variables": {
+        "NX_SELF_HOSTED_REMOTE_CACHE_SERVER": null,
+        "NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN": null
+      },
+      "applied": [],
+      "unsupported": [],
+      "uploadEnforcedBy": "none"
+    },
+    {
+      "name": "default is read-only: the server is the origin plus the namespace and uploads are left to the server",
+      "environment": {
+        "SEMIO_REMOTE_CACHE_ENDPOINT": "http://127.0.0.1:6090"
+      },
+      "variables": {
+        "NX_SELF_HOSTED_REMOTE_CACHE_SERVER": "http://127.0.0.1:6090/main",
+        "NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN": null
+      },
+      "applied": [
+        "NX_SELF_HOSTED_REMOTE_CACHE_SERVER=http://127.0.0.1:6090/main"
+      ],
+      "unsupported": [
+        "compression",
+        "download",
+        "timeoutSeconds",
+        "retries"
+      ],
+      "uploadEnforcedBy": "server"
+    },
+    {
+      "name": "read-write with a token",
+      "environment": {
+        "SEMIO_REMOTE_CACHE_ENDPOINT": "https://cache.example.test:8443",
+        "SEMIO_REMOTE_CACHE_INSTANCE": "team-a",
+        "SEMIO_REMOTE_CACHE_ACCESS": "read-write",
+        "SEMIO_REMOTE_CACHE_TOKEN_ENVIRONMENT": "CI_CACHE_TOKEN",
+        "CI_CACHE_TOKEN": "tok-123"
+      },
+      "variables": {
+        "NX_SELF_HOSTED_REMOTE_CACHE_SERVER": "https://cache.example.test:8443/team-a",
+        "NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN": "tok-123"
+      },
+      "applied": [
+        "NX_SELF_HOSTED_REMOTE_CACHE_SERVER=https://cache.example.test:8443/team-a",
+        "NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN=<redacted>"
+      ],
+      "unsupported": [
+        "compression",
+        "download",
+        "timeoutSeconds",
+        "retries"
+      ],
+      "uploadEnforcedBy": "none"
+    },
+    {
+      "name": "read-write with upload off is enforced by the server",
+      "environment": {
+        "SEMIO_REMOTE_CACHE_ENDPOINT": "https://cache.example.test:8443",
+        "SEMIO_REMOTE_CACHE_INSTANCE": "team-a",
+        "SEMIO_REMOTE_CACHE_ACCESS": "read-write",
+        "SEMIO_REMOTE_CACHE_TOKEN_ENVIRONMENT": "CI_CACHE_TOKEN",
+        "SEMIO_REMOTE_CACHE_UPLOAD": "false",
+        "CI_CACHE_TOKEN": "tok-123"
+      },
+      "variables": {
+        "NX_SELF_HOSTED_REMOTE_CACHE_SERVER": "https://cache.example.test:8443/team-a",
+        "NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN": "tok-123"
+      },
+      "applied": [
+        "NX_SELF_HOSTED_REMOTE_CACHE_SERVER=https://cache.example.test:8443/team-a",
+        "NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN=<redacted>"
+      ],
+      "unsupported": [
+        "compression",
+        "download",
+        "timeoutSeconds",
+        "retries"
+      ],
+      "uploadEnforcedBy": "server"
+    }
+  ]
+}

@@ -8,9 +8,9 @@ import { existsSync, readFileSync, realpathSync, writeFileSync, mkdirSync, readd
 import { createHash } from "node:crypto";
 import { cargoInputDigestV1, cargoDirectoryEntriesV1, cargoProvenancePhysicalControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import { cargoDepInfoResolvedChecksumsV1, cargoDepInfoResolvedSourcesV1, cargoDepInfoSourcesV1, decodeCargoProvenanceV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
-import { blake3Hex } from "@semio-tech/framework/hash";
-import type {FileObservationControlV1} from "@semio-tech/framework/filesystem";
-import {CurrentPhysicalOwnerV1,type CurrentPhysicalPortV1} from "@semio-tech/framework/filesystem";
+import { blake3Hex } from "@semio-tech/framework-hash";
+import type {FileObservationControlV1} from "@semio-tech/framework-filesystem/observation";
+import {CurrentPhysicalOwnerV1,type CurrentPhysicalPortV1} from "@semio-tech/framework-filesystem/observation";
 import {cmdBudgetMs} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { inspectRuntimeGraphV1, runtimeEcmaReferencesV1, runtimeRustReferencesV1, runtimeFixturePathV1, type RuntimeResourceReadOwnerV1, type RuntimeGraphEvidenceV1, type RuntimeGraphFindingV1 } from "../🟦️.ts";

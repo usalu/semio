@@ -278,6 +278,12 @@ export function validateTicketImportantDirectories(repoRoot: string, entries: Ma
   }
 }
 
+/** 🛂️ Whether the direct children of one `🧬️mutations` root are payload owners that must carry their own canonical descriptor. A fixture mirror (`🧪️tests/🧫️fixtures/🧬️mutations`) and a codec projection (`🚪️io/<representation>/🧬️mutations`) consume the schema-side owner, which holds the descriptor. @see https://json-schema.org/draft-07/schema */
+export function mutationOwnerRootHoldsDescriptors(root: string, taxonomy: Pick<LoadedTaxonomy["discoverySchema"], "testFixturesDirName" | "representationDirs">): boolean {
+  const parent = basename(dirname(root));
+  return parent !== taxonomy.testFixturesDirName && !taxonomy.representationDirs.includes(parent);
+}
+
 /** 🪢️ Validates each descriptor's authored schema pointer without relocating its payload file. */
 export function validateMutationPayloadSchemas(repoRoot: string, entries: Map<string, MutableInventoryEntry>, taxonomy: LoadedTaxonomy): void {
   const contract = taxonomy.discoverySchema.mutationPayloadSchemaAuthority;
@@ -288,7 +294,7 @@ export function validateMutationPayloadSchemas(repoRoot: string, entries: Map<st
     const owner = entry.nodeKind === "directory" ? entry.sourcePath : dirname(entry.sourcePath), marker = owner.lastIndexOf("/🧬️mutations/");
     if (marker < 0) continue;
     const root = owner.slice(0, marker + "/🧬️mutations".length);
-    if (basename(dirname(root)) === taxonomy.discoverySchema.testFixturesDirName) continue;
+    if (!mutationOwnerRootHoldsDescriptors(root, taxonomy.discoverySchema)) continue;
     const identity = mutationOwnerIdentity(root, owner.slice(root.length + 1), taxonomy.discoverySchema);
     if (identity === null) continue;
     const state = owners.get(owner) ?? { identity, children: [] };

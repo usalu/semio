@@ -1,0 +1,27 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-filesystem-workspace"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Bounded source-workspace commands, revisions and retained publication events"
+
+[package.metadata.semio]
+role = "framework"
+id = "filesystem-workspace"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+
+[dev-dependencies]
+serde_json = { workspace = true }

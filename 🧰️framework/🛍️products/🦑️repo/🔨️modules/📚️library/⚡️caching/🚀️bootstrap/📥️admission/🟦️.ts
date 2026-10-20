@@ -1,4 +1,4 @@
-import admissionSchema from "./🧬️schema/🔣️.json";
+import admissionSchema from "./🧬️schema/🔣️.json" with { type: "json" };
 import { readdir } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { isAbsolute, join, resolve } from "node:path";

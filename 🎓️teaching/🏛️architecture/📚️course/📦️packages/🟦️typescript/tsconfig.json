@@ -13,7 +13,7 @@
       "@semio-tech/framework": ["../../../../../🧰️framework/📦️packages/🟦️typescript/🟦️.ts"],
       "@semio-tech/framework/async": ["../../../../../🧰️framework/📦️packages/🟦️typescript/⏳️async/🟦️.ts"],
       "@semio-tech/framework-server": ["../../../../../🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript/🟦️.ts"],
-      "@semio-tech/ui-react/i18n": ["../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🟦️.ts"],
+      "@semio-tech/ui-react/i18n": ["../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️i18n/🟦️.ts"],
       "@semio-tech/ui-react/introduction": ["../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/👋️introduction/🟦️.tsx"],
       "@semio-tech/ui-react/chrome": ["../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🪟️chrome/🟦️.ts"],
       "@semio-tech/ui-react": ["../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx"]

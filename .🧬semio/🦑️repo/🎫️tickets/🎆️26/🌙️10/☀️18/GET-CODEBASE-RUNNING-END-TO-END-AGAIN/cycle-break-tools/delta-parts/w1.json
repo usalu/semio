@@ -1,0 +1,317 @@
+{
+ "schema": "cycle-break/delta@1",
+ "stagedAt": "2026-10-20T03:19:24.352Z",
+ "manifestOps": [
+  {
+   "packageJson": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/puzzle-2d",
+   "field": "exports",
+   "key": "./examples/concrete-forest/assets/forest",
+   "value": "./📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🟦️.ts",
+   "op": "add",
+   "why": "typed DSL text asset of @semio-tech/puzzle-2d for the puzzle stories",
+   "wave": "w1-query-imports"
+  },
+  {
+   "packageJson": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/puzzle-2d",
+   "field": "exports",
+   "key": "./examples/nakagin-capsule-tower/assets/tower",
+   "value": "./📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🟦️.ts",
+   "op": "add",
+   "why": "typed DSL text asset of @semio-tech/puzzle-2d for the puzzle stories",
+   "wave": "w1-query-imports"
+  },
+  {
+   "packageJson": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/puzzle-3d-ts",
+   "field": "exports",
+   "key": "./examples/concrete-forest/assets/forest",
+   "value": "./📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🟦️.ts",
+   "op": "add",
+   "why": "typed DSL text asset of @semio-tech/puzzle-3d-ts for the puzzle stories",
+   "wave": "w1-query-imports"
+  },
+  {
+   "packageJson": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/puzzle-3d-ts",
+   "field": "exports",
+   "key": "./examples/nakagin-capsule-tower/assets/tower",
+   "value": "./📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🟦️.ts",
+   "op": "add",
+   "why": "typed DSL text asset of @semio-tech/puzzle-3d-ts for the puzzle stories",
+   "wave": "w1-query-imports"
+  },
+  {
+   "packageJson": "✏️s/package.json",
+   "package": "semio-s-workspace",
+   "field": "devDependencies",
+   "key": "@semio-tech/puzzle-2d",
+   "value": "workspace:*",
+   "op": "add",
+   "why": "story imports the typed DSL asset of this puzzle artifact",
+   "wave": "w1-query-imports"
+  },
+  {
+   "packageJson": "✏️s/package.json",
+   "package": "semio-s-workspace",
+   "field": "devDependencies",
+   "key": "@semio-tech/puzzle-3d-ts",
+   "value": "workspace:*",
+   "op": "add",
+   "why": "story imports the typed DSL asset of this puzzle artifact",
+   "wave": "w1-query-imports"
+  },
+  {
+   "packageJson": "✏️s/package.json",
+   "package": "semio-s-workspace",
+   "field": "devDependencies",
+   "key": "@semio-tech/puzzle-5d-ts",
+   "value": "workspace:*",
+   "op": "add",
+   "why": "story imports the typed DSL asset of this puzzle artifact",
+   "wave": "w1-query-imports"
+  },
+  {
+   "packageJson": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/assets",
+   "field": "exports",
+   "key": "./logos/emblem/dark-round",
+   "value": "./🪧️logos/🛡️emblem/🌘️dark-round/🟦️.ts",
+   "op": "add",
+   "why": "typed url asset of the dark round emblem for the teaching course",
+   "wave": "w1-query-imports"
+  },
+  {
+   "packageJson": "🎓️teaching/package.json",
+   "package": "semio-teaching-workspace",
+   "field": "dependencies",
+   "key": "@semio-tech/assets",
+   "value": "workspace:*",
+   "op": "add",
+   "why": "course entry imports the emblem url asset",
+   "wave": "w1-query-imports"
+  },
+  {
+   "packageJson": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/ui-styling",
+   "field": "exports",
+   "key": "./palette/text",
+   "value": "./🎨️palette/🟦️.ts",
+   "op": "add",
+   "why": "typed stylesheet text of the palette for contrast laws",
+   "wave": "w1-query-imports"
+  },
+  {
+   "packageJson": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/ui-styling",
+   "field": "exports",
+   "key": "./chrome/text",
+   "value": "./🖌️ui/🟦️.ts",
+   "op": "add",
+   "why": "typed stylesheet text of the ui chrome for contrast laws",
+   "wave": "w1-query-imports"
+  },
+  {
+   "packageJson": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/framework-renderer-wgpu",
+   "field": "exports",
+   "key": "./testing/source-text/host-io",
+   "value": "./🧪️testing/📖️source-text/🚪️host-io/🟦️.ts",
+   "op": "add",
+   "why": "typed source text of the wgpu host-io module for the renderer parity law",
+   "wave": "w1-query-imports"
+  },
+  {
+   "packageJson": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/package.json",
+   "package": "@semio-tech/framework-renderer-wgpu",
+   "field": "exports",
+   "key": "./testing/source-text/renderer-boot",
+   "value": "./🧪️testing/📖️source-text/🎬️renderer-boot/🟦️.ts",
+   "op": "add",
+   "why": "typed source text of the wgpu renderer-boot module for the renderer parity law",
+   "wave": "w1-query-imports"
+  },
+  {
+   "packageJson": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust/package.json",
+   "package": "@semio-tech/framework-os-node-graph-rs",
+   "field": "exports",
+   "key": "./testing/source-text/wasm-graph-surface",
+   "value": "./🧪️testing/📖️source-text/🧭️wasm-graph-surface/🟦️.ts",
+   "op": "add",
+   "why": "typed source text of the wasm graph surface element for the pointer-cancellation law",
+   "wave": "w1-query-imports"
+  }
+ ],
+ "newFiles": [
+  {
+   "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🟦️typescript/package.json",
+   "content": "{\n  \"name\": \"@semio-tech/puzzle-5d-ts\",\n  \"private\": true,\n  \"type\": \"module\",\n  \"sideEffects\": false,\n  \"exports\": {\n    \"./examples/concrete-forest/assets/forest\": \"./📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🟦️.ts\",\n    \"./examples/nakagin-capsule-tower/assets/tower\": \"./📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🟦️.ts\",\n    \"./examples/capsule-dream/assets/dream\": \"./📚️examples/🌙️capsule-dream/🖼️assets/🌙️dream/🟦️.ts\"\n  },\n  \"license\": \"LGPL-3.0-or-later\",\n  \"bundleKind\": \"library\"\n}\n",
+   "why": "puzzle 5d artifact had no TypeScript package; the typed example assets need an owner",
+   "wave": "w1-query-imports"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️testing/📖️source-text/🟦️.ts",
+   "content": "/** 📖️ Public entry `@semio-tech/ui-contract/testing/source-text/retained-fixtures`: typed loaders of the retained resident and owned scene JSON fixture texts for the ui fixture corpus. */\n/// <reference types=\"vite/client\" />\nexport const loadRetainedOwnedSceneFixtureText = (): Promise<string> => import(\"../../🧪️tests/🧫️fixtures/🎬️owned-scene/🔣️.json?raw\").then(module => module.default);\nexport const loadRetainedResidentReaderFixtureText = (): Promise<string> => import(\"../../💾️resident/📖️reader/🧪️tests/🧫️fixtures/🔣️.json?raw\").then(module => module.default);\nexport const loadRetainedResidentPageFixtureText = (): Promise<string> => import(\"../../💾️resident/📃️page/🧪️tests/🧫️fixtures/🔣️.json?raw\").then(module => module.default);\n",
+   "why": "the ui fixture corpus read the ui-contract JSON fixtures by relative ?raw imports across the package boundary",
+   "wave": "w1-query-imports"
+  }
+ ],
+ "edits": [
+  {
+   "file": "✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️2d-fixtures/🧪️.story.tsx",
+   "from": "import concreteForestFixtureDsl from \"../../../../🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🗣️.dsl.semio?raw\";",
+   "to": "import { puzzle2dConcreteForestDsl as concreteForestFixtureDsl } from \"@semio-tech/puzzle-2d/examples/concrete-forest/assets/forest\";",
+   "mode": "text",
+   "why": "typed asset module of the owning puzzle artifact package",
+   "wave": "w1-query-imports"
+  },
+  {
+   "file": "✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️2d-fixtures/🧪️.story.tsx",
+   "from": "import nakaginCapsuleTowerFixtureDsl from \"../../../../🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio?raw\";",
+   "to": "import { puzzle2dNakaginCapsuleTowerDsl as nakaginCapsuleTowerFixtureDsl } from \"@semio-tech/puzzle-2d/examples/nakagin-capsule-tower/assets/tower\";",
+   "mode": "text",
+   "why": "typed asset module of the owning puzzle artifact package",
+   "wave": "w1-query-imports"
+  },
+  {
+   "file": "✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️3d-world/🧪️.story.tsx",
+   "from": "import concreteForestFixtureDsl from \"../../../../🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🗣️.dsl.semio?raw\";",
+   "to": "import { puzzle3dConcreteForestDsl as concreteForestFixtureDsl } from \"@semio-tech/puzzle-3d-ts/examples/concrete-forest/assets/forest\";",
+   "mode": "text",
+   "why": "typed asset module of the owning puzzle artifact package",
+   "wave": "w1-query-imports"
+  },
+  {
+   "file": "✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️3d-world/🧪️.story.tsx",
+   "from": "import nakaginCapsuleTowerFixtureDsl from \"../../../../🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio?raw\";",
+   "to": "import { puzzle3dNakaginCapsuleTowerDsl as nakaginCapsuleTowerFixtureDsl } from \"@semio-tech/puzzle-3d-ts/examples/nakagin-capsule-tower/assets/tower\";",
+   "mode": "text",
+   "why": "typed asset module of the owning puzzle artifact package",
+   "wave": "w1-query-imports"
+  },
+  {
+   "file": "✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️5d-timeline/🧪️.story.tsx",
+   "from": "import concreteForestFixtureDsl from \"../../../../🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🗣️.dsl.semio?raw\";",
+   "to": "import { puzzle5dConcreteForestDsl as concreteForestFixtureDsl } from \"@semio-tech/puzzle-5d-ts/examples/concrete-forest/assets/forest\";",
+   "mode": "text",
+   "why": "typed asset module of the owning puzzle artifact package",
+   "wave": "w1-query-imports"
+  },
+  {
+   "file": "✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️5d-timeline/🧪️.story.tsx",
+   "from": "import nakaginCapsuleTowerFixtureDsl from \"../../../../🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio?raw\";",
+   "to": "import { puzzle5dNakaginCapsuleTowerDsl as nakaginCapsuleTowerFixtureDsl } from \"@semio-tech/puzzle-5d-ts/examples/nakagin-capsule-tower/assets/tower\";",
+   "mode": "text",
+   "why": "typed asset module of the owning puzzle artifact package",
+   "wave": "w1-query-imports"
+  },
+  {
+   "file": "✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️5d-timeline/🧪️.story.tsx",
+   "from": "import capsuleDreamFixtureDsl from \"../../../../🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌙️capsule-dream/🖼️assets/🌙️dream/🗣️.dsl.semio?raw\";",
+   "to": "import { puzzle5dCapsuleDreamDsl as capsuleDreamFixtureDsl } from \"@semio-tech/puzzle-5d-ts/examples/capsule-dream/assets/dream\";",
+   "mode": "text",
+   "why": "typed asset module of the owning puzzle artifact package",
+   "wave": "w1-query-imports"
+  },
+  {
+   "file": "🎓️teaching/🏛️architecture/📚️course/🟦️.ts",
+   "from": "import logo from \"../../../🧰️framework/🔨️modules/🖼️assets/🪧️logos/🛡️emblem/🌘️dark-round/🖋️vector.svg?url\";",
+   "to": "import { darkRoundEmblemSvgUrl as logo } from \"@semio-tech/assets/logos/emblem/dark-round\";",
+   "mode": "text",
+   "why": "typed url asset module of the assets package",
+   "wave": "w1-query-imports"
+  },
+  {
+   "file": "🧰️framework/🛍️products/📚️course/🧪️tests/🌗️contrast-states/🟦️.tsx",
+   "from": "import palette from \"../../../../🔨️modules/🖱️ui/🎨️styling/🎨️palette/🎨️.css?raw\";",
+   "to": "import { paletteCssText as palette } from \"@semio-tech/ui-styling/palette/text\";",
+   "mode": "text",
+   "why": "typed stylesheet text module of ui-styling",
+   "wave": "w1-query-imports"
+  },
+  {
+   "file": "🧰️framework/🛍️products/📚️course/🧪️tests/🌗️contrast-states/🟦️.tsx",
+   "from": "import chrome from \"../../../../🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css?raw\";",
+   "to": "import { chromeCssText as chrome } from \"@semio-tech/ui-styling/chrome/text\";",
+   "mode": "text",
+   "why": "typed stylesheet text module of ui-styling",
+   "wave": "w1-query-imports"
+  },
+  {
+   "file": "🧰️framework/🛍️products/📚️course/🧪️tests/💭️crowd-client/🟦️.tsx",
+   "from": "import palette from \"../../../../🔨️modules/🖱️ui/🎨️styling/🎨️palette/🎨️.css?raw\";",
+   "to": "import { paletteCssText as palette } from \"@semio-tech/ui-styling/palette/text\";",
+   "mode": "text",
+   "why": "typed stylesheet text module of ui-styling",
+   "wave": "w1-query-imports"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🌐️i18n/📖️source-text/🟦️.ts",
+   "from": "`@semio-tech/ui-react/i18n/source-text`: the ui-react i18n bundle module source text",
+   "to": "`@semio-tech/ui/i18n/source-text`: the ui i18n bundle module source text",
+   "mode": "text",
+   "why": "docstring follows the owning package",
+   "wave": "w1-query-imports"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🌐️i18n/📖️source-text/🟦️.ts",
+   "from": "\"../../../../../../🌐️i18n/🟦️.ts?raw\"",
+   "to": "\"../🟦️.ts?raw\"",
+   "mode": "text",
+   "why": "the typed source text sits beside the bundle it reads",
+   "wave": "w1-query-imports"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts",
+   "from": "export const loadRetainedOwnedSceneFixtureText = () => import(\"../../🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🎬️owned-scene/🔣️.json?raw\").then(module => module.default);\nexport const loadRetainedResidentReaderFixtureText = () => import(\"../../🧬️contract/🧵️retained/💾️resident/📖️reader/🧪️tests/🧫️fixtures/🔣️.json?raw\").then(module => module.default);\nexport const loadRetainedResidentPageFixtureText = () => import(\"../../🧬️contract/🧵️retained/💾️resident/📃️page/🧪️tests/🧫️fixtures/🔣️.json?raw\").then(module => module.default);",
+   "to": "export { loadRetainedOwnedSceneFixtureText, loadRetainedResidentPageFixtureText, loadRetainedResidentReaderFixtureText } from \"@semio-tech/ui-contract/testing/source-text/retained-fixtures\";",
+   "mode": "text",
+   "why": "the loaders live with the fixtures they read",
+   "wave": "w1-query-imports"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔁️refresh-coalescing/🟦️.ts",
+   "from": "const { default: hostIo } = await import(\"../../🎯️targets/🧊️wgpu/🚪️host-io/🟦️.ts?raw\");",
+   "to": "const { wgpuHostIoSourceText: hostIo } = await import(\"@semio-tech/framework-renderer-wgpu/testing/source-text/host-io\");",
+   "mode": "text",
+   "why": "typed source text module of the wgpu package",
+   "wave": "w1-query-imports"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🛑️scene-pointer-cancellation/🟦️.ts",
+   "from": "import nodeGraphSource from \"../../🧱️elements/🕸️NodeGraph/🧭️wasm-graph-surface/🟦️.tsx?raw\";",
+   "to": "import { wasmGraphSurfaceSourceText as nodeGraphSource } from \"@semio-tech/framework-os-node-graph-rs/testing/source-text/wasm-graph-surface\";",
+   "mode": "text",
+   "why": "typed source text module of the node graph package",
+   "wave": "w1-query-imports"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🩺️window-fault/🟦️.ts",
+   "from": "import uiBundleSource from \"../../../../../../../🔨️modules/🖱️ui/🌐️i18n/🟦️.ts?raw\";",
+   "to": "import { uiI18nBundleSourceText as uiBundleSource } from \"@semio-tech/ui/i18n/source-text\";",
+   "mode": "text",
+   "why": "typed source text module of the ui",
+   "wave": "w1-query-imports"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪆️embedded-mount/🟦️.ts",
+   "from": "import wgpuBootSource from \"../../🎯️targets/🧊️wgpu/🎬️renderer-boot/🟦️.ts?raw\";",
+   "to": "import { wgpuRendererBootSourceText as wgpuBootSource } from \"@semio-tech/framework-renderer-wgpu/testing/source-text/renderer-boot\";",
+   "mode": "text",
+   "why": "typed source text module of the wgpu package",
+   "wave": "w1-query-imports"
+  }
+ ],
+ "fileOps": [
+  {
+   "op": "move",
+   "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🌐️i18n/📖️source-text/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🖱️ui/🌐️i18n/📖️source-text/🟦️.ts",
+   "sha256": "2ee2295dc44e5645e38c4c3236bfab1821942a439d6646c23061457ee49caa49",
+   "wave": "w1-query-imports",
+   "why": "the typed source text lives with the i18n bundles it reads: the ui owns them since the i18n moved from the react target into the ui"
+  }
+ ],
+ "flags": []
+}

@@ -2,7 +2,7 @@ import {cargoRegistryReadSelectionV1} from "../📋️selection/🟦️.ts";
 import {AsyncLocalStorage} from "node:async_hooks";
 import {requireIssuedResourceControlRefinementV1,withIssuedResourceOperationV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type {ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import continuationSchema from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🤲️continuations/🧬️schema/🔣️.json";
+import continuationSchema from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🤲️continuations/🧬️schema/🔣️.json" with { type: "json" };
 import {createHash,randomBytes} from "node:crypto";
 import {mkdir,writeFile,rename,rm,lstat} from "node:fs/promises";
 import {dirname,join,relative,resolve,isAbsolute,sep} from "node:path";

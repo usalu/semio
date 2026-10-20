@@ -2,7 +2,7 @@ import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
-import {mutationInputDefs} from "@semio-tech/framework/manifest";
+import {mutationInputDefs} from "@semio-tech/framework-manifest";
 import { valueSchema as valueSchema } from "@semio-tech/framework/value/schema";
 import fixture from "../../../🧪️tests/🧫️fixtures/🧪️tests/🔢️number-inputs/🔣️.json";
 const root=resolve(import.meta.dir,"../..");

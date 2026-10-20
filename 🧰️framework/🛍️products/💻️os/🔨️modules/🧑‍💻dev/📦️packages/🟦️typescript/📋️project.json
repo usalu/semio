@@ -170,12 +170,16 @@
         "command": "bun ../../🚚️distribution/🏁completion/📜️script.ts complete",
         "forwardAllArgs": true
       },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "aggregate", "reason": "orders-prerequisites" }
+        }
+      },
       "dependsOn": [
         "build-s-react"
       ],
-      "cache": true,
-      "outputs": [],
-      "inputs": []
+      "cache": false,
+      "outputs": []
     },
     "test": {
       "executor": "repo:script",
@@ -219,7 +223,7 @@
     },
     "plugin": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "inputs": [
         "default",
         "^default",
@@ -234,6 +238,11 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts plugin",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "driver-owned", "reason": "freshness-owned-by-driver" }
+        }
       }
     },
     "plugin-size": {
@@ -248,10 +257,16 @@
     },
     "parity": {
       "executor": "repo:script",
+      "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts parity",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
       }
     },
     "index-lint": {
@@ -632,6 +647,7 @@
     "check-distribution": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts distribution check",
@@ -753,11 +769,16 @@
         "production",
         "^production"
       ],
-      "cache": true,
+      "cache": false,
       "outputs": [],
       "options": {
         "command": "bun ../../🚚️distribution/📜️script.ts inputs",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
       }
     },
     "channel-version-check": {
@@ -781,11 +802,16 @@
         "^default"
       ],
       "outputs": [],
-      "cache": true,
+      "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts channel-version generate",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "serve-hold": {

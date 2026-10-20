@@ -25,9 +25,9 @@ semio-s-artifact-stdio-gltf-mutations-mut-any-4 = { path = "../../🧪️tests/�
 semio-s-artifact-stdio-gltf-mutations-mut-any-5 = { path = "../../✅️required/➕️add/🧪️tests/🔬️t041/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-gltf-mutations-mut-any-6 = { path = "../../📃️document/🧩️change-extensions/🧪️tests/🔬️t053/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-gltf-mutations-mut-any-7 = { path = "../../🧬️morph/🌱️create/🧪️tests/🔬️t065/📦️packages/🦀️rust" }
-semio-s-artifact-stdio-gltf-mutations-mut-any-8 = { path = "../../🔺️primitive/🗑️delete/🧪️tests/🚫️removes-the-8d7de9/📦️packages/🦀️rust" }
-semio-s-artifact-stdio-gltf-mutations-mut-any-9 = { path = "../../🎬️scene/🚚️move/🧪️tests/⬇️demotes-the-first-f41a10/📦️packages/🦀️rust" }
-semio-s-artifact-stdio-gltf-mutations-mut-any-10 = { path = "../../🦴️skin/🔀️reorder/🧪️tests/🔀️flips-the-two-1fc9d9/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gltf-mutations-mut-any-8 = { path = "../../🔺️primitive/🗑️delete/🧪️tests/🚫️removes/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gltf-mutations-mut-any-9 = { path = "../../🎬️scene/🚚️move/🧪️tests/⬇️demotes/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gltf-mutations-mut-any-10 = { path = "../../🦴️skin/🔀️reorder/🧪️tests/🔀️flips/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { workspace = true }
 semio-framework-os-kernel = { workspace = true }

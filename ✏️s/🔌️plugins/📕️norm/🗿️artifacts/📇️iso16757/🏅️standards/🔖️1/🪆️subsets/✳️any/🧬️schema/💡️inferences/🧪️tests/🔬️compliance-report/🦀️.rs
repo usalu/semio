@@ -6,6 +6,7 @@ use semio_s_artifact_norm_iso16757_model::CatalogueValue;
 use semio_s_plugin_norm_compliance::LocalizedText;
 use std::collections::HashSet;
 use std::path::PathBuf;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 
 #[semio_framework_async_macros::async_test]
 async fn evaluate_exercises_all_parts_with_numeric_checks() {
@@ -182,7 +183,6 @@ async fn snapshot_validates_against_committed_json_schema() {
             String::from_utf8_lossy(&status.stderr)
         );
     }
-    // Deliberately malformed snapshot must be rejected by the strict schema.
     let mut bad = serde_json::to_value(&Iso16757Snapshot::default()).expect("snap");
     bad["catalogue"] = serde_json::Value::String("not-a-catalogue-object".into());
     let tmp = std::env::temp_dir().join(format!("iso16757-snap-bad-{}.json", std::process::id()));
@@ -226,7 +226,6 @@ async fn typescript_facets_have_no_stub_unknown_collections() {
     let mut hits = Vec::new();
     for path in paths {
         let text = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
-        // Only scan exported type/interface definitions — skip generated parser helpers that take `unknown`.
         let defs = text
             .split("//#region 🚪️Parsers")
             .next()
@@ -357,7 +356,6 @@ async fn applying_applicable_fail_remedies_reduces_failures() {
         assert!(check.remedies.iter().any(|r| r.applicable), "fail {} lacks applicable remedy", check.id);
     }
 
-    // Apply clearance remedies via setField paths.
     if let Some(gid) = doc.geometry.objects.keys().next().cloned() {
         let mut tree = semio_framework_value::ToValue::to_value(&doc);
         for axis in 0..3usize {
@@ -382,7 +380,6 @@ async fn applying_applicable_fail_remedies_reduces_failures() {
                 variant.geometry_id = Some(gid.clone());
             }
             variant.parameter_values.insert("dn".into(), CatalogueValue::Decimal { value: 50.0 });
-            // Restore required property values cleared by the broken fixture.
             if variant.property_values.is_empty() {
                 if let Some(def) = doc.catalogue.property_definitions.iter().find(|d| d.id == "prop-dn") {
                     variant.property_values.push(semio_s_artifact_norm_iso16757_model::part_1::PropertyValue {
@@ -445,7 +442,6 @@ fn walk_dsl_leaves(prefix: &str, value: &semio_framework_value::DslValue, visit:
 fn is_descriptive_name_or_title_leaf(path: &str) -> bool {
     let leaf = path.rsplit(['.', '[']).next().unwrap_or(path);
     let leaf = leaf.trim_end_matches(|c: char| c == ']' || c.is_ascii_digit() || c == '=');
-    // for [id=foo].text the leaf after rsplit may be odd — also check ends_with
     if path.ends_with(".text") || path.ends_with(".title") || path.ends_with(".shortName") || path.ends_with(".label") {
         return true;
     }
@@ -508,7 +504,6 @@ fn perturb_dsl_leaf(path: &str, value: &semio_framework_value::DslValue) -> Opti
         semio_framework_value::DslValue::Number(n) => {
             let v = n.as_f64();
             Some(if n.is_integer() {
-                // Always move integer leaves by ≥1 so small i8/u32 dimensions/cardinalities change.
                 let base = if v < 0.0 { (v as i64).saturating_sub(1) as u64 } else { (v as u64).saturating_add(1) };
                 semio_framework_value::DslValue::uint(base.max(0))
             } else {
@@ -538,8 +533,6 @@ fn perturb_dsl_leaf(path: &str, value: &semio_framework_value::DslValue) -> Opti
 
 #[semio_framework_async_macros::async_test]
 async fn every_editable_leaf_perturbation_changes_a_check() {
-    // Scope-aware (CORRECTION 13:43): perturb each leaf on the committed example where it applies.
-    // Exempt descriptive name/title labels listed by `is_descriptive_name_or_title_leaf`.
     let subjects = [
         ("default", Iso16757Snapshot::default()),
         ("broken", Iso16757Snapshot::broken_fixture()),

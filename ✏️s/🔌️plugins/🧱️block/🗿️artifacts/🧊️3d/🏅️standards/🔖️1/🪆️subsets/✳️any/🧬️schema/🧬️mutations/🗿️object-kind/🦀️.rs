@@ -9,7 +9,7 @@ extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 //#region 🪢️Mounts
-#[path = "../📃️change-object-kind/🦀️.rs"]
+#[path = "../📃️change-object-kind-description/🦀️.rs"]
 pub mod change_object_kind_description;
 #[path = "../🖼️change-object-kind-icon/🦀️.rs"]
 pub mod change_object_kind_icon;

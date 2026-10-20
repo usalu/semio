@@ -1,5 +1,5 @@
 /** 🗄️ The plugin module store's schema constants, read from the sibling schema document (`🔣️.json`): the store layout, the transfer retry policy, the hub program id pattern and the module source values. The record validation over these constants stays with the plugin registry hub source. */
-import storeSchemaModule from "./🔣️.json";
+import storeSchemaModule from "./🔣️.json" with { type: "json" };
 
 /** 🗄️ The store's constants, read from the sibling schema module (`PluginModuleStoreV1`). */
 export const PLUGIN_MODULE_STORE_V1: Readonly<{ name: string; storeRoot: string; serveRoute: string; lockPrefix: string; storeLock: string; programSeparator: string }> = Object.freeze({ ...storeSchemaModule["x-semio-constants"] });

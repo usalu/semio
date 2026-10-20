@@ -1,0 +1,65 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🟦️.tsx",
+ "function": "LayeredOverview",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "shared": {
+  "dir": "🟣️shared",
+  "doc": "/** 🟣️ The shared declarations of LayeredOverview. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️panes",
+   "doc": "/** 🔶️ The panes phase of LayeredOverview. */",
+   "phases": [
+    {
+     "name": "usePanesState",
+     "emoji": "🔷",
+     "doc": "Builds panes, cells, renderCard, labels of LayeredOverview.",
+     "from": 44,
+     "to": 171
+    }
+   ]
+  },
+  {
+   "dir": "🔸️move",
+   "doc": "/** 🔸️ The move phase of LayeredOverview. */",
+   "phases": [
+    {
+     "name": "useMoveState",
+     "emoji": "🔹",
+     "doc": "Builds moveTo, glideTo, follow, focusView of LayeredOverview.",
+     "from": 201,
+     "to": 358
+    }
+   ]
+  },
+  {
+   "dir": "🟠️pane-styles",
+   "doc": "/** 🟠️ The pane styles phase of LayeredOverview. */",
+   "phases": [
+    {
+     "name": "usePaneStylesState",
+     "emoji": "🟡",
+     "doc": "Builds paneStyles, insetTop, insetBottom, insets of LayeredOverview.",
+     "from": 362,
+     "to": 517
+    }
+   ]
+  },
+  {
+   "dir": "🟢️overview-button",
+   "doc": "/** 🟢️ The overview button phase of LayeredOverview. */",
+   "phases": [
+    {
+     "name": "buildOverviewButton",
+     "emoji": "🔵",
+     "doc": "Builds overviewButton of LayeredOverview.",
+     "from": 518,
+     "to": 518
+    }
+   ]
+  }
+ ]
+}

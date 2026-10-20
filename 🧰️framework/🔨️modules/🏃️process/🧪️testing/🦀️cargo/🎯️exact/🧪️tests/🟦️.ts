@@ -1,8 +1,13 @@
-import {exactExecutableFingerprint,generatedOutputHasLiveLease,originalNativeLibraryEnvironment}from"../🟦️.ts";
+import {exactExecutableFingerprint,generatedOutputHasLiveLease,originalNativeLibraryEnvironment,runExactCargoLaws,configuredExactCargoLawPolicyV1,type ExactCargoLawPort}from"../🟦️.ts";
 import {readExactCargoExecutableV1,selectExactCargoLawsV1,requireExactCargoLawResultV1,requireExactCargoFingerprintV1,requireExactCargoTargetBoundaryV1,readExactCargoLawNamesV1}from"../📋️protocol/🟦️.ts";
 import "./📥️inputs/🟦️.ts";
 import "./📦️executable/🟦️.ts";
 import {test,expect}from"bun:test";
+import type {IssuedScriptInvocationV1}from"../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import {withBuildTestInvocationV1}from"../../../../🧪️testing/📥️invocation/🟦️.ts";
+import type {ScriptInvocation}from"../../../../🧭️routing/📥️invocation/🟦️.ts";
+import {withIssuedLawStorageV1,lawSourceBoundaryV1}from"../../../../📦️artifacts/🏗️native-build/🧪️tests/🦀️cargo/🟦️.ts";
+import {writeOwnerPackageV1}from"../../🧪️tests/🗄️admission/🟦️.ts";
 import{readFileSync,mkdtempSync,renameSync,writeFileSync,mkdirSync,utimesSync}from"node:fs";
 import glob from"fast-glob";
 import{join,resolve}from"node:path";
@@ -37,36 +42,39 @@ test("compiler runtime loader matches neutral platform vectors and independent S
 });
 
 for (const outcome of ["admitted", "failed", "relative", "multiline", "cancelled"] as const) {
-  test(`proc-macro exact laws discover controlled compiler runtime: ${outcome}`, async () => {
-    const root = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "proc-macro-loader-"));
-    const executable = join(root, "native.exe"), directory = join(root, "compiler-lib");
-    mkdirSync(directory);
-    const controller = new AbortController(), original = originalInvocation();
-    const invocation: ScriptInvocation = { ...original, control: { ...original.control, signal: controller.signal } };
-    const calls: string[] = [];
-    const port: ExactCargoLawPort = {
-      fingerprint: path => ({ path, sha256: "12".repeat(32) }),
-      async probe(command, args, options) {
-        calls.push(command);
-        expect(options.invocation).toBe(invocation);
-        if (command === "cargo") return { status: 0, signal: null, stderr: "", stdout: JSON.stringify({ reason: "compiler-artifact", package_id: "registry#fixture@1.0.0", profile: { test: true }, target: { name: "fixture", kind: ["proc-macro"] }, executable }) };
-        if (command === "rustc") {
-          expect(args).toEqual(["--print", "target-libdir"]);
-          expect(options.budgetMs).toBeGreaterThan(0);
-          expect(options.env.COMPILER_AUTHORITY).toBe("original");
-          if (outcome === "cancelled") controller.abort();
-          return { status: outcome === "failed" ? 1 : 0, signal: null, stderr: "", stdout: outcome === "relative" ? "relative\n" : outcome === "multiline" ? directory + "\n/injected\n" : directory + "\r\n" };
-        }
-        const key = process.platform === "win32" ? "PATH" : process.platform === "darwin" ? "DYLD_FALLBACK_LIBRARY_PATH" : "LD_LIBRARY_PATH";
-        expect(options.env[key]).toBe(directory);
-        expect(options.env.COMPILER_AUTHORITY).toBe("native");
-        return { status: 0, signal: null, stderr: "", stdout: args[0] === "--list" ? "fixture::law: test\n" : "test fixture::law ... ok\ntest result: ok. 1 passed; 0 failed; 0 ignored;\n" };
-      },
-    };
-    const result = runExactCargoLaws({ invocation, policy: configuredExactCargoLawPolicyV1(), cwd: root, artifactDir: root, cargoTargetDir: join(root, "target"), env: { COMPILER_AUTHORITY: "original" }, nativeEnv: { COMPILER_AUTHORITY: "native" }, groups: [{ package: "fixture", target: { kind: "lib", name: "fixture" }, laws: ["fixture::law"] }], manifestPaths: { fixture: join(root, "Cargo.toml") } }, port);
-    if (outcome === "admitted") { expect((await result)[0]?.assertions).toBe(1); expect(calls).toEqual(["cargo", "rustc", executable, executable]); }
-    else { await expect(result).rejects.toThrow(); expect(calls).toEqual(["cargo", "rustc"]); }
-  });
+  test(`proc-macro exact laws discover controlled compiler runtime: ${outcome}`, () => {
+    const controller = new AbortController();
+    return withBuildTestInvocationV1((original) => withIssuedLawStorageV1(original as IssuedScriptInvocationV1, controller.signal, async (law, control, invocation) => {
+      const source = join(law.root, "s"), target = join(law.root, "t"), build = join(law.root, "b"), artifacts = join(law.root, "a");
+      for (const path of [target, build, artifacts]) mkdirSync(path, { recursive: true });
+      const manifest = writeOwnerPackageV1(source, "fixture");
+      const executable = join(law.root, "native.exe"), directory = join(law.root, "compiler-lib");
+      mkdirSync(directory);
+      const calls: string[] = [];
+      const port: ExactCargoLawPort = {
+        fingerprint: path => ({ path, sha256: "12".repeat(32) }),
+        async probe(command, args, options) {
+          calls.push(command);
+          expect(options.invocation?.policy).toBe(invocation.policy);
+          if (command === "cargo") return { status: 0, signal: null, stderr: "", stdout: JSON.stringify({ reason: "compiler-artifact", package_id: "registry#fixture@1.0.0", profile: { test: true }, target: { name: "fixture", kind: ["proc-macro"] }, executable }) };
+          if (command === "rustc") {
+            expect(args).toEqual(["--print", "target-libdir"]);
+            expect(options.budgetMs).toBeGreaterThan(0);
+            expect(options.env?.COMPILER_AUTHORITY).toBe("original");
+            if (outcome === "cancelled") controller.abort();
+            return { status: outcome === "failed" ? 1 : 0, signal: null, stderr: "", stdout: outcome === "relative" ? "relative\n" : outcome === "multiline" ? directory + "\n/injected\n" : directory + "\r\n" };
+          }
+          const key = process.platform === "win32" ? "PATH" : process.platform === "darwin" ? "DYLD_FALLBACK_LIBRARY_PATH" : "LD_LIBRARY_PATH";
+          expect(options.env?.[key]).toBe(directory);
+          expect(options.env?.COMPILER_AUTHORITY).toBe("native");
+          return { status: 0, signal: null, stderr: "", stdout: args[0] === "--list" ? "fixture::law: test\n" : "test fixture::law ... ok\ntest result: ok. 1 passed; 0 failed; 0 ignored;\n" };
+        },
+      };
+      const result = runExactCargoLaws({ invocation, control, storage: law.storage, leaseDirectory: join(process.cwd(), ".cache/b/l/m/data"), sourceBoundary: lawSourceBoundaryV1, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 60000, listMilliseconds: 60000, lawMilliseconds: 60000 }, cwd: source, artifactDir: artifacts, cargoTargetDir: target, env: { ...process.env, ...law.environment, SEMIO_TEST_ARTIFACT_DIR: undefined, CARGO_BUILD_BUILD_DIR: build, COMPILER_AUTHORITY: "original" }, nativeEnv: { COMPILER_AUTHORITY: "native" }, groups: [{ package: "fixture", target: { kind: "lib", name: "fixture" }, laws: ["fixture::law"] }], manifestPaths: { fixture: manifest } }, port);
+      if (outcome === "admitted") { expect((await result)[0]?.assertions).toBe(1); expect(calls).toEqual(["cargo", "rustc", executable, executable]); }
+      else { await expect(result).rejects.toThrow(); expect(calls).toEqual(["cargo", "rustc"]); }
+    }));
+  }, 120000);
 }
 
 test("generated cleanup preserves fresh live managed owners and admits terminal, dead or stale output", () => {

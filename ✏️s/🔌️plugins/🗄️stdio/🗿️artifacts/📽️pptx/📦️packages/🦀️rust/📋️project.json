@@ -42,6 +42,7 @@
     },
     "test": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -50,6 +51,7 @@
     },
     "test-snapshot-sqlite": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite",

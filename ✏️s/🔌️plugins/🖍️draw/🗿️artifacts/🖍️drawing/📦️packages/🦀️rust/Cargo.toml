@@ -45,6 +45,7 @@ semio-s-artifact-draw-drawing-read = { workspace = true }
 semio-s-artifact-draw-drawing-scene = { workspace = true }
 semio-s-artifact-draw-drawing-viewer = { workspace = true }
 semio-s-artifact-draw-drawing-write = { workspace = true }
+semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 png = { workspace = true }

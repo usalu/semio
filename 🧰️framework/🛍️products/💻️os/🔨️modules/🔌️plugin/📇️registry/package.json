@@ -26,8 +26,6 @@
     "./playground/session/schema.json": "./🎮️playground/🧭️session/🧬️schema/🔣️.json",
     "./playground/session": "./🎮️playground/🧭️session/🟦️.ts",
     "./catalog-view": "./📖️catalog-view/🟦️.ts",
-    "./publication/build": "./📣️publication/🏗️build/🟦️.ts",
-    "./publication": "./📣️publication/🟦️.ts",
     "./runtime": "./📥️runtime/🟦️.ts",
     "./deployment/schema": "./📦️deployment/🧬️schema/🟦️.ts",
     "./deployment/routes.json": "./📦️deployment/🛣️routes.json",
@@ -38,7 +36,9 @@
     "./refresh": "./🔄️refresh/🟦️.ts",
     "./discovery/schema": "./🔎️discovery/🧬️schema/🟦️.ts",
     "./discovery": "./🔎️discovery/🟦️.ts",
-    "./testing/fixtures/composition.json": "./🧪️tests/🧫️fixtures/🧩️composition/🔣️.json"
+    "./testing/fixtures/composition.json": "./🧪️tests/🧫️fixtures/🧩️composition/🔣️.json",
+    "./publication/build/schema/contribution.json": "./📣️publication/🏗️build/🧬️schema/📣️contribution/🔣️.json",
+    "./publication/schema.json": "./📣️publication/🧬️schema/🔣️.json"
   },
   "scripts": {
     "generate": "bun --cwd \"../../../../../..\" repo run @semio-tech/plugin-registry:generate",
@@ -69,6 +69,7 @@
     "yargs-parser": "21.1.1"
   },
   "dependencies": {
+    "@semio-tech/plugin-registry-publication": "workspace:*",
     "@semio-tech/schema-validator-ts": "workspace:*"
   }
 }

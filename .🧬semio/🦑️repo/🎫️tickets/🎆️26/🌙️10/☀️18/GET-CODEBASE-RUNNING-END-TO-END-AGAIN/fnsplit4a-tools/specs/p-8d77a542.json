@@ -1,0 +1,86 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️tests/📦️package-boundary-classification/🟦️.ts",
+ "function": "ecmaDispositionOracle",
+ "keep": [
+  126,
+  137,
+  464,
+  468,
+  481,
+  493
+ ],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "⭐️shared",
+  "doc": "/** ⭐️ The shared declarations of ecmaDispositionOracle. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️role",
+   "doc": "/** 🔶️ The role phase of ecmaDispositionOracle. */",
+   "phases": [
+    {
+     "name": "buildRole",
+     "emoji": "🔷",
+     "doc": "Builds role of ecmaDispositionOracle.",
+     "from": 125,
+     "to": 125
+    }
+   ]
+  },
+  {
+   "dir": "🔸️source",
+   "doc": "/** 🔸️ The source phase of ecmaDispositionOracle. */",
+   "phases": [
+    {
+     "name": "buildSourceState",
+     "emoji": "🔹",
+     "doc": "Builds source, calls of ecmaDispositionOracle.",
+     "from": 127,
+     "to": 128
+    }
+   ]
+  },
+  {
+   "dir": "🟠️has-module",
+   "doc": "/** 🟠️ The has module phase of ecmaDispositionOracle. */",
+   "phases": [
+    {
+     "name": "buildHasModuleState",
+     "emoji": "🟡",
+     "doc": "Builds hasModule, declarations, conditionals, root of ecmaDispositionOracle.",
+     "from": 465,
+     "to": 467
+    }
+   ]
+  },
+  {
+   "dir": "🟢️identifiers",
+   "doc": "/** 🟢️ The identifiers phase of ecmaDispositionOracle. */",
+   "phases": [
+    {
+     "name": "buildIdentifiersState",
+     "emoji": "🔵",
+     "doc": "Builds identifiers, referenced of ecmaDispositionOracle.",
+     "from": 482,
+     "to": 489
+    }
+   ]
+  },
+  {
+   "dir": "🟣️conditional",
+   "doc": "/** 🟣️ The conditional phase of ecmaDispositionOracle. */",
+   "phases": [
+    {
+     "name": "buildConditional",
+     "emoji": "🟤",
+     "doc": "Builds conditional of ecmaDispositionOracle.",
+     "from": 494,
+     "to": 494
+    }
+   ]
+  }
+ ]
+}

@@ -48,7 +48,7 @@ function cancellationRequested(): boolean {
 /** 🦀️ Executes the authoritative native exporter into an isolated output path. */
 export async function exportActorTypegen(packageRoot: string, outputPath: string, targetDir?: string, deadlineMs = buildBudgetMs()): Promise<void> {
   if (cancellationRequested()) throw new Error("actor typegen export cancelled");
-  const child = Bun.spawn(["cargo", "test", "--locked", "--features", "typegen", TYPEGEN_TEST_FILTER], {
+  const child = Bun.spawn(["cargo", "test", "--locked", "--test", "typegen", TYPEGEN_TEST_FILTER], {
     cwd: packageRoot,
     env: { ...process.env, ...(targetDir ? { CARGO_TARGET_DIR: targetDir } : {}), SEMIO_TYPEGEN_OUT: outputPath },
     stdout: "inherit",

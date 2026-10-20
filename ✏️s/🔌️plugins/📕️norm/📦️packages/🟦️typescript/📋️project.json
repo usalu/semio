@@ -4,6 +4,7 @@
   "targets": {
     "test": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
@@ -12,6 +13,7 @@
     },
     "test-wire-twins": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts wire-twins",

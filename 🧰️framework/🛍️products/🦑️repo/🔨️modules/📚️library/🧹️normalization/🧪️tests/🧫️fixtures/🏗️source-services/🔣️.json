@@ -47,13 +47,8 @@
       "path": "🔣️taxonomy/🟦️.ts",
       "dependencies": [
         "📁️input/🟦️.ts",
-        "🔣️taxonomy/🌳️descendants/🟦️.ts",
-        "🔣️taxonomy/🏭️generators-packages/🟦️.ts",
         "🔣️taxonomy/📐️kind-specs/🟦️.ts",
-        "🔣️taxonomy/📚️loaded/🟦️.ts",
-        "🔣️taxonomy/🗃️owned-file-projection/🟦️.ts",
-        "🔣️taxonomy/🧭️path-projection/🟦️.ts",
-        "🛣️path/🟦️.ts"
+        "🔣️taxonomy/📚️loaded/🟦️.ts"
       ]
     },
     {

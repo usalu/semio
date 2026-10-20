@@ -1,0 +1,573 @@
+{
+ "version": 1,
+ "sets": [
+  {
+   "id": "lease-fair",
+   "dir": "lease-fair-tools",
+   "result": "result-lease-fair.md",
+   "note": "reader-preference starvation fix in the process lease module",
+   "verify": [
+    {
+     "name": "lease fairness law",
+     "argv": [
+      "bun",
+      "test",
+      "./🧰️framework/🔨️modules/🏃️process/🔒️leases/⚖️fairness/🧪️tests/🟦️.ts"
+     ],
+     "timeoutSeconds": 900
+    },
+    {
+     "name": "progress vector law",
+     "argv": [
+      "bun",
+      "test",
+      "./🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️progress/🟦️.ts"
+     ],
+     "timeoutSeconds": 600
+    }
+   ]
+  },
+  {
+   "id": "tax-stage",
+   "dir": "tax-stage-tools",
+   "result": "result-tax-stage.md",
+   "note": "restructures 43 library script modules into router skeletons + sibling owner modules; must precede sets that patch those script files",
+   "verify": [
+    {
+     "name": "root script builds",
+     "argv": [
+      "bun",
+      "build",
+      "--target=bun",
+      "./📜️script.ts",
+      "--outdir",
+      "{tmp}"
+     ],
+     "timeoutSeconds": 300
+    },
+    {
+     "name": "repo cli boots",
+     "argv": [
+      "bun",
+      "repo",
+      "--help"
+     ],
+     "timeoutSeconds": 300
+    },
+    {
+     "name": "path budget law",
+     "argv": [
+      "bun",
+      "test",
+      "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧮️path-budget/🟦️.ts"
+     ],
+     "timeoutSeconds": 300
+    }
+   ],
+   "restage": [
+    "bun",
+    "stage.ts"
+   ]
+  },
+  {
+   "id": "tsc-stage",
+   "dir": "tsc-stage-tools",
+   "result": "result-tsc-stage.md",
+   "after": [
+    "tax-stage"
+   ],
+   "note": "23 frozen-library type fixes; runs on top of tax-stage's result (hard edge)",
+   "verify": [
+    {
+     "name": "path budget law",
+     "argv": [
+      "bun",
+      "test",
+      "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧮️path-budget/🟦️.ts"
+     ],
+     "timeoutSeconds": 300
+    },
+    {
+     "name": "cache probe tool tests",
+     "argv": [
+      "bun",
+      "test",
+      "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔁️probe/🧪️tests/🟦️.ts"
+     ],
+     "timeoutSeconds": 300
+    },
+    {
+     "name": "repo tsc reports 0 errors",
+     "argv": [
+      "node",
+      "node_modules/typescript/bin/tsc",
+      "-p",
+      "🧰️framework/🛍️products/🦑️repo/tsconfig.json",
+      "--noEmit",
+      "--pretty",
+      "false"
+     ],
+     "heavy": true,
+     "timeoutSeconds": 1800
+    }
+   ],
+   "restage": [
+    "python3",
+    "stage.py",
+    "restage",
+    "{tree}"
+   ]
+  },
+  {
+   "id": "walkperf",
+   "dir": "walkperf-tools",
+   "result": "result-walkperf.md",
+   "after": [
+    "tsc-stage"
+   ],
+   "note": "dependency generation receipt; runs on top of tsc-stage (item 22 removes the [DEBUG] log); its bases accept the tsc-stage lineage",
+   "verify": [
+    {
+     "name": "generation receipt suite",
+     "argv": [
+      "sh",
+      "{set}/run-tests.sh",
+      "real",
+      "gate"
+     ],
+     "timeoutSeconds": 1800
+    },
+    {
+     "name": "walkperf neighbour suites",
+     "argv": [
+      "sh",
+      "{set}/run-tests.sh",
+      "real"
+     ],
+     "gate": false,
+     "timeoutSeconds": 1800
+    }
+   ],
+   "restage": [
+    "python3",
+    "walkperf.py",
+    "bases-from",
+    "{tree}"
+   ]
+  },
+  {
+   "id": "walkperf2",
+   "dir": "walkperf2-tools",
+   "result": "result-walkperf2.md",
+   "after": [
+    "walkperf"
+   ],
+   "note": "walkperf soundness follow-up (registered ahead of time, skipped until it stages files)",
+   "verify": []
+  },
+  {
+   "id": "bzl-stage",
+   "dir": "bzl-stage-tools",
+   "result": "result-bzl-stage.md",
+   "note": "Bazel adapter suites (sources, workspace) and script updates",
+   "verify": [
+    {
+     "name": "bazel suites",
+     "argv": [
+      "sh",
+      "{set}/run-tests.sh",
+      "real",
+      "🧪️tests/🟦️.ts",
+      "🧪️tests/📥️actions/🟦️.ts",
+      "🧪️tests/📥️fingerprint/🟦️.ts",
+      "🧪️tests/📥️sources/🟦️.ts",
+      "🧪️tests/📥️workspace/🟦️.ts"
+     ],
+     "gate": false,
+     "timeoutSeconds": 1800
+    }
+   ],
+   "after": [
+    "tax-stage",
+    "tsc-stage"
+   ],
+   "restage": [
+    "python3",
+    "stage.py",
+    "restage",
+    "{tree}"
+   ]
+  },
+  {
+   "id": "cargo-pressure",
+   "dir": "cargo-pressure-tools",
+   "result": "result-cargo-pressure.md",
+   "note": "admission recheck throttle (12.3 s -> 3.0 s per unit)",
+   "verify": [
+    {
+     "name": "admission recheck law",
+     "argv": [
+      "bun",
+      "test",
+      "./🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🧪️tests/🔁️recheck/🟦️.ts"
+     ],
+     "timeoutSeconds": 600
+    },
+    {
+     "name": "admission suite (1 existing failure: progress vectors)",
+     "argv": [
+      "bun",
+      "test",
+      "./🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🧪️tests/🟦️.ts"
+     ],
+     "gate": false,
+     "timeoutSeconds": 600
+    },
+    {
+     "name": "admission read suite",
+     "argv": [
+      "bun",
+      "test",
+      "./🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🧪️tests/🟦️.ts"
+     ],
+     "timeoutSeconds": 600
+    },
+    {
+     "name": "compiler pressure recovery law (real image)",
+     "argv": [
+      "bun",
+      "test",
+      "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/♻️pressure/🟦️.ts"
+     ],
+     "heavy": true,
+     "timeoutSeconds": 900
+    }
+   ]
+  },
+  {
+   "id": "fixups6",
+   "dir": "fixups6-tools",
+   "result": "result-fixups6.md",
+   "after": [
+    "tax-stage",
+    "tsc-stage"
+   ],
+   "note": "splits the graph test into an aggregator plus ten owned suites; staged against tax-stage's and tsc-stage's result of that file (hard edges)",
+   "verify": [
+    {
+     "name": "aggregator and groups bundle",
+     "argv": [
+      "bun",
+      "build",
+      "--target=bun",
+      "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts",
+      "--outdir",
+      "{tmp}"
+     ],
+     "timeoutSeconds": 300
+    }
+   ],
+   "restage": [
+    "sh",
+    "restage.sh",
+    "{tree}"
+   ]
+  },
+  {
+   "id": "env-pass2",
+   "dir": "env-pass2-tools",
+   "result": "result-env-pass2.md",
+   "note": "envelope-gated test suites call withBuildTestInvocationV1 (41 files); anchors are count-checked and idempotent",
+   "verify": [
+    {
+     "name": "patch set idempotent",
+     "argv": [
+      "sh",
+      "{set}/apply.sh",
+      "check"
+     ],
+     "timeoutSeconds": 300
+    }
+   ],
+   "after": [
+    "tax-stage",
+    "tsc-stage"
+   ]
+  },
+  {
+   "id": "own-crash",
+   "dir": "own-crash-tools",
+   "result": "result-own-crash.md",
+   "note": "package-implementation-admission treats an omitted admission as none (verify scan crash); applied by the coordinator once, planner reports already-applied",
+   "verify": [
+    {
+     "name": "admission law",
+     "argv": [
+      "bun",
+      "test",
+      "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️package-implementation-admission/🟦️.ts"
+     ],
+     "timeoutSeconds": 600
+    }
+   ]
+  },
+  {
+   "id": "own-crash2",
+   "dir": "own-crash2-tools",
+   "result": "result-stage-fix.md",
+   "after": [
+    "tsc-stage"
+   ],
+   "note": "follow-up of own-crash: the taxonomy reader normalises an absent implementationAdmission to null, the consumer drops the widened `| undefined`; anchored, composes with tsc-stage's patch of the same test",
+   "verify": [
+    {
+     "name": "admission law",
+     "argv": [
+      "bun",
+      "test",
+      "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️package-implementation-admission/🟦️.ts"
+     ],
+     "timeoutSeconds": 600
+    }
+   ]
+  },
+  {
+   "id": "bzl-real",
+   "dir": "bzl-real-tools",
+   "result": "result-bzl-real.md",
+   "note": "real Bazel execution fixes: no .bazelignore (it removed the link from the execroot and disabled every Bazel cache write), //:all queries, closed store-receipt guard for emoji targets; anchored edits-json built by bzl-real-tools/build-patches.py",
+   "verify": [
+    {
+     "name": "store receipt law",
+     "argv": [
+      "bun",
+      "test",
+      "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧾️store-receipt/🧪️tests/🟦️.ts"
+     ],
+     "timeoutSeconds": 600
+    },
+    {
+     "name": "bazel workspace law incl. real Bazel disk cache oracle",
+     "argv": [
+      "env",
+      "SEMIO_TEST_BAZEL_BINARY={root}/.cache/b/t/m/bazel/bin/45e9388abf21d110/bazel",
+      "bun",
+      "test",
+      "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️workspace/🟦️.ts"
+     ],
+     "timeoutSeconds": 1200
+    },
+    {
+     "name": "bazel source group law",
+     "argv": [
+      "bun",
+      "test",
+      "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️sources/🟦️.ts"
+     ],
+     "timeoutSeconds": 900
+    }
+   ]
+  },
+  {
+   "id": "law-sweep2",
+   "dir": "law-sweep2-tools",
+   "result": "result-law-sweep2.md",
+   "note": "queued root verify-law fixes (declare verify commands when the set lands)",
+   "verify": []
+  },
+  {
+   "id": "exports-stage",
+   "dir": "exports-stage-tools",
+   "result": "result-exports-stage.md",
+   "note": "package.json export manifest batch (deps owner); last; then `bun repo dependencies lock` and `sync`, then exports-stage-tools/simulate.ts",
+   "verify": [],
+   "confirm": "--freeze-lifted",
+   "after": [
+    "tax-stage",
+    "tsc-stage"
+   ]
+  },
+  {
+   "id": "lib-defects",
+   "dir": "lib-defects-tools",
+   "result": "result-lib-defects.md",
+   "note": "library test-law and child-script defects (anchored edits-json, refuses during a dependency sync and on anchor drift); re-export with `python3 export.py` from the overlay edit log",
+   "verify": [
+    {
+     "name": "law 🐍️python/🧪️tests",
+     "argv": [
+      "zsh",
+      "{set}/run.sh",
+      "{root}",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎨️styling/🏗️builder/🐍️python/🧪️tests/🟦️.ts"
+     ],
+     "timeoutSeconds": 300
+    },
+    {
+     "name": "law 🏃️execution/🧪️tests",
+     "argv": [
+      "zsh",
+      "{set}/run.sh",
+      "{root}",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️execution/🧪️tests/🟦️.ts"
+     ],
+     "timeoutSeconds": 300
+    },
+    {
+     "name": "law 📦️dependencies/🧪️tests",
+     "argv": [
+      "zsh",
+      "{set}/run.sh",
+      "{root}",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts"
+     ],
+     "timeoutSeconds": 300
+    },
+    {
+     "name": "law 🗄️catalog/🧪️tests",
+     "argv": [
+      "zsh",
+      "{set}/run.sh",
+      "{root}",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/💾️cache/📂️files/🗄️catalog/🧪️tests/🟦️.ts"
+     ],
+     "timeoutSeconds": 300
+    },
+    {
+     "name": "law 🧪️tests/📏️windows",
+     "argv": [
+      "zsh",
+      "{set}/run.sh",
+      "{root}",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/📏️windows/🟦️.ts"
+     ],
+     "timeoutSeconds": 300
+    },
+    {
+     "name": "law 🧪️tests/💾️cache",
+     "argv": [
+      "zsh",
+      "{set}/run.sh",
+      "{root}",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/💾️cache/🟦️.ts"
+     ],
+     "timeoutSeconds": 300
+    },
+    {
+     "name": "law 🧪️tests/📥️fingerprint",
+     "argv": [
+      "zsh",
+      "{set}/run.sh",
+      "{root}",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️fingerprint/🟦️.ts"
+     ],
+     "timeoutSeconds": 300
+    },
+    {
+     "name": "law 🧪️tests/📥️scope",
+     "argv": [
+      "zsh",
+      "{set}/run.sh",
+      "{root}",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/📥️scope/🟦️.ts"
+     ],
+     "timeoutSeconds": 300
+    },
+    {
+     "name": "law 🧪️tests/🧹️cleanup",
+     "argv": [
+      "zsh",
+      "{set}/run.sh",
+      "{root}",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧪️tests/🧹️cleanup/🟦️.ts"
+     ],
+     "timeoutSeconds": 300
+    },
+    {
+     "name": "law arguments/context",
+     "argv": [
+      "zsh",
+      "{set}/run.sh",
+      "{root}",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/⚙️arguments/📐️context/🧪️tests/🟦️.ts"
+     ],
+     "timeoutSeconds": 300
+    },
+    {
+     "name": "law bazel aggregator",
+     "argv": [
+      "zsh",
+      "{set}/run.sh",
+      "{root}",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/🟦️.ts"
+     ],
+     "gate": false,
+     "timeoutSeconds": 300
+    },
+    {
+     "name": "cross-platform bootstrap (2 known policy reds)",
+     "argv": [
+      "zsh",
+      "{set}/run.sh",
+      "{root}",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥾️cross-platform-bootstrap/🟦️.ts"
+     ],
+     "gate": false,
+     "timeoutSeconds": 300
+    }
+   ]
+  },
+  {
+   "id": "tax4",
+   "dir": "tax4-tools",
+   "result": "result-tax4.md",
+   "note": "io-owner descriptor roots (mutation payload authority 409 findings fewer) + schema catalog identity paths; anchored staged/apply.py behind apply.sh (--dry-run = its --check); statutes-owner-root-predicate injects the new predicate into the extracted-function evaluator of the path emoji statutes law",
+   "verify": [
+    {
+     "name": "owner descriptor roots law",
+     "argv": [
+      "bun",
+      "test",
+      "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛂️mutation-owner-descriptor-roots/🟦️.ts"
+     ],
+     "timeoutSeconds": 600
+    },
+    {
+     "name": "path emoji statutes law",
+     "argv": [
+      "bun",
+      "test",
+      "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔏️path-emoji-statutes/🟦️.ts"
+     ],
+     "timeoutSeconds": 900
+    }
+   ]
+  },
+  {
+   "id": "tax5",
+   "dir": "tax5-tools",
+   "result": "result-tax5.md",
+   "note": "leaf case table coverage source (taxonomy fixtureCoverage.leafCaseTable, discovery module, engine, tests); anchored staged/apply.py behind apply.sh",
+   "verify": [
+    {
+     "name": "leaf case table law",
+     "argv": [
+      "bun",
+      "test",
+      "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🗂️mutation-leaf-case-table/🟦️.ts"
+     ],
+     "timeoutSeconds": 600
+    },
+    {
+     "name": "path emoji statutes law",
+     "argv": [
+      "bun",
+      "test",
+      "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔏️path-emoji-statutes/🟦️.ts"
+     ],
+     "timeoutSeconds": 900
+    }
+   ]
+  }
+ ]
+}

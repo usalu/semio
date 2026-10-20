@@ -307,7 +307,7 @@ fn sqlite_snapshot_jack_exact_row_admission_and_all_four_real_interior_copy_phas
 }
 
 mod populated_public_owner {
-use crate::hoisted_snapshot_10::*;use semio_framework_plugin::__semio_dispatch_PluginApp;use semio_framework_plugin::plugin_app_close_prelude::*;use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits};
+use crate::hoisted_snapshot_10::*;use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;use semio_framework_plugin::plugin_app_close_prelude::*;use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits};
 semio_framework_dispatch_macros::dyn_enum_close! {
 /// 🗃️ Actual owner editor/viewer app wrappers for public I/O registration.
 pub(crate) enum PublicApps: PluginApp {Editor(VcsArtifactApp<EditorApp<crate::editor::jack::TrinityJackPlayApp<crate::test_support::FixtureComposition>>,store::NoMembers>),Viewer(VcsArtifactApp<ViewerApp<crate::viewer::jack::TrinityJackViewer<crate::test_support::FixtureComposition>>,store::NoMembers>),}

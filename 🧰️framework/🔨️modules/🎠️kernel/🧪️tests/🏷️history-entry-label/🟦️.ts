@@ -8,7 +8,7 @@
  *    was already kept for the locale axis and not for the terminology axis.
  */
 import { describe, expect, it } from "vitest";
-import type { LocalizedLabel } from "@semio-tech/framework/manifest/generated/ui-axes";
+import type { LocalizedLabel } from "@semio-tech/framework-manifest/generated/ui-axes";
 import { historyEntryLabelText } from "../../🕰️history/🟦️.ts";
 
 const filled = { native: { en: "Add Widget", de: "Widget hinzufügen" }, reuse: { en: "Add Part", de: "Teil hinzufügen" } } as unknown as LocalizedLabel;

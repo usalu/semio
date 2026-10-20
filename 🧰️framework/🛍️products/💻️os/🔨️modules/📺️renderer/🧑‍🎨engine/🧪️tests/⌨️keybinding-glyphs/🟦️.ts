@@ -7,7 +7,7 @@
  * (`🐚️Shell/🧪️tests/🎓️tour-overlay-and-chord-glyphs/🦀️.rs`), so the two tables cannot drift apart.
  */
 import { describe, expect, it } from "vitest";
-import { formatKeybindingShortcut, keybindingPlatformUsesMetaV1 } from "@semio-tech/framework/modules/ui/modules/keybinding-text-interpretation";
+import { formatKeybindingShortcut, keybindingPlatformUsesMetaV1 } from "@semio-tech/ui/modules/keybinding-text-interpretation";
 import fixture from "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/⌨️keybinding-glyphs/🔣️.json" with { type: "json" };
 
 describe("⌨️ keybinding glyphs", () => {

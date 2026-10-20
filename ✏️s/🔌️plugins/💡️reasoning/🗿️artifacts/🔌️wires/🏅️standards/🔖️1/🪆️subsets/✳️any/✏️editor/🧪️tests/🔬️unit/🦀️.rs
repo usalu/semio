@@ -28,7 +28,7 @@ use semio_framework_plugin::EditorApp;
 use semio_framework_plugin::Fault;
 use semio_framework_plugin::HierarchyProvider;
     use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members};
-    use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    use semio_framework_plugin::{App, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
     pub type WiresApp = VcsArtifactApp<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
     

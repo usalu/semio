@@ -156,4 +156,4 @@ pub fn dec_svg_node_bin(reader: &mut store::ByteReader<'_>) -> Result<SvgNode, S
     }
 }
 
-pub fn enc_svg_node_bin(node:&crate::schema::snapshot::SvgNode,out:&mut Vec<u8>) {semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::binary::diff::enc_xml_node_bin(&crate::standards::v1_1::subsets::base::io::text::snapshot::native_svg_node(node),out)}
+pub fn enc_svg_node_bin(node:&crate::schema::snapshot::SvgNode,out:&mut Vec<u8>) {semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::binary::snapshot::enc_xml_node_bin(&crate::standards::v1_1::subsets::base::io::text::snapshot::native_svg_node(node),out)}

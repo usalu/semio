@@ -90,7 +90,7 @@ interface ActivationResidentEntry {
 export interface ActivationRegistryOptions {
   readonly shardClient: ShardClient;
   readonly defaultBudget: ShardBudget;
-  /** LRU cap driving memory-pressure suspension (design-runtime.md §1 `FailurePolicy`) — activating
+  /** ↔️ LRU cap driving memory-pressure suspension (design-runtime.md §1 `FailurePolicy`) — activating
    * beyond this count checkpoints + suspends the least-recently-touched resident actor first. Explicit
    * override; omit to derive the cap from {@link memoryProbe} instead (see that option's own doc). */
   readonly maxResidentActors?: number;

@@ -1,0 +1,28 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🎤️presentation/🧪️tests/👻️morph-ghost-and-auto-animate-rendering/🟦️.tsx",
+ "describeLine": 8,
+ "shared": {
+  "dir": "🟠️shared",
+  "doc": "/** 🟠️ The shared declarations of the PresentationDeck suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️clearrevealautoanimateinlinelayout-remov",
+   "doc": "/** 🔶️ The clearrevealautoanimateinlinelayout removes only flip tests of the PresentationDeck suite. */",
+   "name": "registerClearrevealautoanimateinlinelayoutRemovesOnlyFlipTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the clearrevealautoanimateinlinelayout removes only flip tests of the PresentationDeck suite.",
+   "from": 9,
+   "to": 124
+  },
+  {
+   "dir": "🔸️does-not-mark-many",
+   "doc": "/** 🔸️ The does not mark many tests of the PresentationDeck suite. */",
+   "name": "registerDoesNotMarkManyTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the does not mark many tests of the PresentationDeck suite.",
+   "from": 171,
+   "to": 325
+  }
+ ]
+}

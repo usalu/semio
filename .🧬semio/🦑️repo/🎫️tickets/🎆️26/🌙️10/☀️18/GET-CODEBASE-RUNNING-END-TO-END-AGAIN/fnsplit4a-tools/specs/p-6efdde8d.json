@@ -1,0 +1,53 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/👆️pointer-and-drop/🟦️.ts",
+ "function": "useWorldPointerAndDrop",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of useWorldPointerAndDrop. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️active-utility",
+   "doc": "/** 🔶️ The active utility phase of useWorldPointerAndDrop. */",
+   "phases": [
+    {
+     "name": "useActiveUtilityState",
+     "emoji": "🔷",
+     "doc": "Builds activeUtility, beginRelocateDrag, cameraRef, cameraState of useWorldPointerAndDrop.",
+     "from": 15,
+     "to": 100
+    }
+   ]
+  },
+  {
+   "dir": "🔸️handle-pointer-up",
+   "doc": "/** 🔸️ The handle pointer up phase of useWorldPointerAndDrop. */",
+   "phases": [
+    {
+     "name": "useHandlePointerUpState",
+     "emoji": "🔹",
+     "doc": "Builds handlePointerUp, handleEmptyClick, clearCatalogueDrop, readCatalogueDragEncoded of useWorldPointerAndDrop.",
+     "from": 142,
+     "to": 285
+    }
+   ]
+  },
+  {
+   "dir": "🟠️catalogue-drag-enter",
+   "doc": "/** 🟠️ The catalogue drag enter phase of useWorldPointerAndDrop. */",
+   "phases": [
+    {
+     "name": "useCatalogueDragEnterState",
+     "emoji": "🟡",
+     "doc": "Builds onCatalogueDragEnter, onCatalogueDragLeave, onCatalogueDragOver, onCatalogueDrop of useWorldPointerAndDrop.",
+     "from": 294,
+     "to": 349
+    }
+   ]
+  }
+ ]
+}

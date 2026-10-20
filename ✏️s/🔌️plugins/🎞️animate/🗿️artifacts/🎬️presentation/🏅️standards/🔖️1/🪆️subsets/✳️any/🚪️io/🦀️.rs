@@ -92,7 +92,7 @@ pub mod text {
     pub use semio_s_artifact_animate_presentation_viewer::standards::v1::subsets::any::io::text::*;
     pub use semio_s_artifact_animate_presentation_inferences::standards::v1::subsets::any::io::text::diff;
     pub use semio_s_artifact_animate_presentation_examples::standards::v1::subsets::any::io::text::inferences;
-    pub use semio_s_artifact_animate_presentation_mutations::standards::v1::subsets::any::io::text::mutations;
+    pub use crate::mirror::standards::v1::subsets::any::io::text::mutations;
 }
 
 

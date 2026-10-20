@@ -42,3 +42,5 @@ semio-s-artifact-draw-drawing-mutations = { workspace = true, features = ["testk
 semio-s-artifact-draw-drawing-scene = { workspace = true, features = ["testkit"] }
 semio-s-artifact-stdio-pdf = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-pack = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-framework-interaction = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🕹️interaction/📦️packages/🦀️rust" }

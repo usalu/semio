@@ -1,0 +1,802 @@
+import {binary32Value,binary64Value,type Binary32,type Binary64} from "@semio-tech/framework/value/ieee754";
+import type {ByteBuffer, Float32Buffer} from "../📸️snapshot/🟦️.ts";
+/** 🧬️ Remodeling mutation vocabulary — TypeScript twin of `🧬️mutations/🦀️.rs` and of all
+ *  thirty-six `<slug>/🔺️diff/🦀️.rs` leaves.
+ *
+ *  `RemodelingMutation` carries `#[serde(tag = "mutation", rename_all = "camelCase")]`, so the wire
+ *  tag is the camelCase form of the Rust variant name (`createStream`), never the kebab-case
+ *  `#[dsl(keyword)]` slug used for the directory names. Each payload's own fields are the camelCase
+ *  rename of its Rust struct.
+ *
+ *  `remodelingMutationOutcome` is a second implementation of every leaf's `diff`, written from the
+ *  Rust source rather than derived from it: the guard ORDER differs per leaf (some check the no-op
+ *  first, some the invariant first) and that order is reproduced exactly, because it decides which
+ *  message a refusal carries.
+ */
+
+import { contentId } from "@semio-tech/framework/schema/artifact-reference";
+import {applyRemodelingDiff, assigned, calibrationRows, emptyRemodelingDiff, paramsDiff, resultsDiff, streamPatch, type RemodelingAssetEntry, type RemodelingContentRow, type RemodelingDiff, type RemodelingNoPatch, type RemodelingRow, type RemodelingRows} from "../🔺️diff/🟦️.ts";
+import {CAMERA_CALIBRATION_SPEC, CAMERA_TRAJECTORY_SPEC, DENSE_CLOUD_SPEC, DENSE_PARAMS_SPEC, FEATURE_PARAMS_SPEC, FRAME_REF_SPEC, GCP_OBSERVATION_SPEC, GEO_PARAMS_SPEC, GEO_PRODUCTS_SPEC, GROUND_CONTROL_POINT_SPEC, IMAGE_ASSET_SPEC, INGEST_PARAMS_SPEC, MATCH_PARAMS_SPEC, MEDIA_KINDS, REMODELING_CONTENT_KINDS, MEDIA_STREAM_SPEC, MESH_PARAMS_SPEC, MOTION_PARAMS_SPEC, MOTION_TRACK_SUMMARY_SPEC, QC_REPORT_SPEC, REMODELING_MESH_SPEC, RIG_EXTRINSIC_SPEC, SFM_PARAMS_SPEC, SPARSE_CLOUD_SPEC, VIDEO_SOURCE_SPEC, camelOf, type CalibrationState, type CameraCalibration, type CameraTrajectory, type DenseCloud, type DenseParams, type FeatureParams, type FieldSpec, type FrameRef, type GcpObservation, type GeoParams, type GeoProducts, type GroundControlPoint, type ImageAsset, type IngestParams, type MatchParams, type MediaKind, type MediaStream, type MeshParams, type MotionParams, type MotionTrackSummary, type QcReportSnapshot, type ReconstructionResults, type RecordSpec, type RemodelingAssetChild, type RemodelingContentKind, type RemodelingDurableArtifact, type RemodelingDurableArtifactStore, type RemodelingMesh, type RemodelingSnapshot, type RigExtrinsic, type SfmParams, type SparseCloud, type ValueSpec, type VideoSource} from "../📸️snapshot/🟦️.ts";
+
+//#region 🔖️Payloads
+export interface CreateStream {
+  stream: MediaStream;
+}
+export interface DeleteStream {
+  id: string;
+}
+export interface ChangeStreamSync {
+  id: string;
+  newSyncOffsetMs: Binary64;
+}
+export interface AddStreamFrame {
+  id: string;
+  frame: FrameRef;
+  kind: MediaKind;
+}
+export interface RemoveStreamFrame {
+  id: string;
+  frameIndex: number;
+}
+export interface ReplaceStreamSource {
+  id: string;
+  source: VideoSource | null;
+}
+export interface CreateAsset {
+  key: string;
+  asset: ImageAsset;
+}
+export interface DeleteAsset {
+  key: string;
+}
+export interface CreateCameraCalibration {
+  camera: CameraCalibration;
+}
+export interface UpdateCameraCalibration {
+  camera: CameraCalibration;
+}
+export interface DeleteCameraCalibration {
+  cameraId: string;
+}
+export interface CreateRigExtrinsic {
+  extrinsic: RigExtrinsic;
+}
+export interface DeleteRigExtrinsic {
+  cameraId: string;
+}
+export interface UpdateRigExtrinsic {
+  extrinsic: RigExtrinsic;
+}
+export interface CreateGcp {
+  gcp: GroundControlPoint;
+}
+export interface DeleteGcp {
+  id: string;
+}
+export interface AddGcpObservation {
+  id: string;
+  observation: GcpObservation;
+}
+export interface RemoveGcpObservation {
+  id: string;
+  observationIndex: number;
+}
+export interface UpdateIngestParams {
+  params: IngestParams;
+}
+export interface UpdateFeatureParams {
+  params: FeatureParams;
+}
+export interface UpdateMatchParams {
+  params: MatchParams;
+}
+export interface UpdateSfmParams {
+  params: SfmParams;
+}
+export interface UpdateDenseParams {
+  params: DenseParams;
+}
+export interface UpdateMeshParams {
+  params: MeshParams;
+}
+export interface UpdateMotionParams {
+  params: MotionParams;
+}
+export interface UpdateGeoParams {
+  params: GeoParams;
+}
+export interface ReplaceSparse {
+  sparse: SparseCloud | null;
+}
+export interface ReplaceDense {
+  dense: DenseCloud | null;
+}
+export interface ReplaceMeshResult {
+  mesh: RemodelingMesh;
+}
+export interface ReplaceTrajectory {
+  trajectory: CameraTrajectory | null;
+}
+export interface ReplaceTracks {
+  tracks: MotionTrackSummary[];
+}
+export interface ReplaceGeoProducts {
+  geo: GeoProducts | null;
+}
+export interface ReplaceQc {
+  qc: QcReportSnapshot | null;
+}
+export interface AppendContent {
+  contentId: string;
+  kind: RemodelingContentKind;
+  mime: string | null;
+  width: number;
+  height: number;
+  first: bigint;
+  chunks: ByteBuffer[];
+}
+export interface RemoveContent {
+  contentId: string;
+  from: bigint;
+}
+export interface ReconstructionAssetCommit {
+  id: string;
+  contentId: string | null;
+}
+export interface CommitReconstruction {
+  sparse: SparseCloud | null;
+  trajectory: CameraTrajectory | null;
+  mesh: RemodelingMesh | null;
+  geo: GeoProducts | null;
+  qc: QcReportSnapshot | null;
+  assets: ReconstructionAssetCommit[];
+}
+
+export type RemodelingMutationTag =
+  | "createStream"
+  | "deleteStream"
+  | "changeStreamSync"
+  | "addStreamFrame"
+  | "removeStreamFrame"
+  | "replaceStreamSource"
+  | "createAsset"
+  | "deleteAsset"
+  | "createCameraCalibration"
+  | "updateCameraCalibration"
+  | "deleteCameraCalibration"
+  | "createRigExtrinsic"
+  | "deleteRigExtrinsic"
+  | "updateRigExtrinsic"
+  | "createGcp"
+  | "deleteGcp"
+  | "addGcpObservation"
+  | "removeGcpObservation"
+  | "updateIngestParams"
+  | "updateFeatureParams"
+  | "updateMatchParams"
+  | "updateSfmParams"
+  | "updateDenseParams"
+  | "updateMeshParams"
+  | "updateMotionParams"
+  | "updateGeoParams"
+  | "replaceSparse"
+  | "replaceDense"
+  | "replaceMeshResult"
+  | "replaceTrajectory"
+  | "replaceTracks"
+  | "replaceGeoProducts"
+  | "replaceQc"
+  | "appendContent"
+  | "removeContent"
+  | "commitReconstruction";
+
+export type RemodelingMutation =
+  | ({ mutation: "createStream" } & CreateStream)
+  | ({ mutation: "deleteStream" } & DeleteStream)
+  | ({ mutation: "changeStreamSync" } & ChangeStreamSync)
+  | ({ mutation: "addStreamFrame" } & AddStreamFrame)
+  | ({ mutation: "removeStreamFrame" } & RemoveStreamFrame)
+  | ({ mutation: "replaceStreamSource" } & ReplaceStreamSource)
+  | ({ mutation: "createAsset" } & CreateAsset)
+  | ({ mutation: "deleteAsset" } & DeleteAsset)
+  | ({ mutation: "createCameraCalibration" } & CreateCameraCalibration)
+  | ({ mutation: "updateCameraCalibration" } & UpdateCameraCalibration)
+  | ({ mutation: "deleteCameraCalibration" } & DeleteCameraCalibration)
+  | ({ mutation: "createRigExtrinsic" } & CreateRigExtrinsic)
+  | ({ mutation: "deleteRigExtrinsic" } & DeleteRigExtrinsic)
+  | ({ mutation: "updateRigExtrinsic" } & UpdateRigExtrinsic)
+  | ({ mutation: "createGcp" } & CreateGcp)
+  | ({ mutation: "deleteGcp" } & DeleteGcp)
+  | ({ mutation: "addGcpObservation" } & AddGcpObservation)
+  | ({ mutation: "removeGcpObservation" } & RemoveGcpObservation)
+  | ({ mutation: "updateIngestParams" } & UpdateIngestParams)
+  | ({ mutation: "updateFeatureParams" } & UpdateFeatureParams)
+  | ({ mutation: "updateMatchParams" } & UpdateMatchParams)
+  | ({ mutation: "updateSfmParams" } & UpdateSfmParams)
+  | ({ mutation: "updateDenseParams" } & UpdateDenseParams)
+  | ({ mutation: "updateMeshParams" } & UpdateMeshParams)
+  | ({ mutation: "updateMotionParams" } & UpdateMotionParams)
+  | ({ mutation: "updateGeoParams" } & UpdateGeoParams)
+  | ({ mutation: "replaceSparse" } & ReplaceSparse)
+  | ({ mutation: "replaceDense" } & ReplaceDense)
+  | ({ mutation: "replaceMeshResult" } & ReplaceMeshResult)
+  | ({ mutation: "replaceTrajectory" } & ReplaceTrajectory)
+  | ({ mutation: "replaceTracks" } & ReplaceTracks)
+  | ({ mutation: "replaceGeoProducts" } & ReplaceGeoProducts)
+  | ({ mutation: "replaceQc" } & ReplaceQc)
+  | ({ mutation: "appendContent" } & AppendContent)
+  | ({ mutation: "removeContent" } & RemoveContent)
+  | ({ mutation: "commitReconstruction" } & CommitReconstruction);
+
+export interface RemodelingMutationEnvelope {
+  mutation: RemodelingMutationTag;
+}
+//#endregion 🔖️Payloads
+
+//#region 🔖️Spec
+const f = (name: string, spec: ValueSpec, dflt: () => unknown, extra: Partial<FieldSpec> = {}): FieldSpec => ({ name, spec, dflt, ...extra });
+const text = { k: "text" } as const;
+const uint = { k: "uint" } as const;
+const f64 = { k: "f64" } as const;
+const opt = (of: ValueSpec): ValueSpec => ({ k: "opt", of });
+const list = (of: ValueSpec): ValueSpec => ({ k: "list", of });
+const rec = (of: () => RecordSpec): ValueSpec => ({ k: "rec", of });
+const nothing = () => null;
+const required = () => {
+  throw new Error("payload field has no Rust default");
+};
+
+const payload = (title: string, fields: FieldSpec[]): RecordSpec => ({ title, serdeDefault: false, fields });
+
+export const RECONSTRUCTION_ASSET_COMMIT_SPEC: RecordSpec = payload("ReconstructionAssetCommit", [f("id", text, required), f("content_id", opt(text), nothing, { jsonOptional: true })]);
+
+/** 🧬️ One `RecordSpec` per wire tag; the `mutation` tag itself is handled by the decoder. */
+export const REMODELING_MUTATION_SPECS: Record<RemodelingMutationTag, RecordSpec> = {
+  createStream: payload("CreateStream", [f("stream", rec(() => MEDIA_STREAM_SPEC), required)]),
+  deleteStream: payload("DeleteStream", [f("id", text, required)]),
+  changeStreamSync: payload("ChangeStreamSync", [f("id", text, required), f("new_sync_offset_ms", f64, required)]),
+  addStreamFrame: payload("AddStreamFrame", [f("id", text, required), f("frame", rec(() => FRAME_REF_SPEC), required), f("kind", { k: "enum", of: MEDIA_KINDS }, required)]),
+  removeStreamFrame: payload("RemoveStreamFrame", [f("id", text, required), f("frame_index", uint, required)]),
+  replaceStreamSource: payload("ReplaceStreamSource", [f("id", text, required), f("source", opt(rec(() => VIDEO_SOURCE_SPEC)), nothing, { jsonOptional: true })]),
+  createAsset: payload("CreateAsset", [f("key", text, required), f("asset", rec(() => IMAGE_ASSET_SPEC), required)]),
+  deleteAsset: payload("DeleteAsset", [f("key", text, required)]),
+  createCameraCalibration: payload("CreateCameraCalibration", [f("camera", rec(() => CAMERA_CALIBRATION_SPEC), required)]),
+  updateCameraCalibration: payload("UpdateCameraCalibration", [f("camera", rec(() => CAMERA_CALIBRATION_SPEC), required)]),
+  deleteCameraCalibration: payload("DeleteCameraCalibration", [f("camera_id", text, required)]),
+  createRigExtrinsic: payload("CreateRigExtrinsic", [f("extrinsic", rec(() => RIG_EXTRINSIC_SPEC), required)]),
+  deleteRigExtrinsic: payload("DeleteRigExtrinsic", [f("camera_id", text, required)]),
+  updateRigExtrinsic: payload("UpdateRigExtrinsic", [f("extrinsic", rec(() => RIG_EXTRINSIC_SPEC), required)]),
+  createGcp: payload("CreateGcp", [f("gcp", rec(() => GROUND_CONTROL_POINT_SPEC), required)]),
+  deleteGcp: payload("DeleteGcp", [f("id", text, required)]),
+  addGcpObservation: payload("AddGcpObservation", [f("id", text, required), f("observation", rec(() => GCP_OBSERVATION_SPEC), required)]),
+  removeGcpObservation: payload("RemoveGcpObservation", [f("id", text, required), f("observation_index", uint, required)]),
+  updateIngestParams: payload("UpdateIngestParams", [f("params", rec(() => INGEST_PARAMS_SPEC), required)]),
+  updateFeatureParams: payload("UpdateFeatureParams", [f("params", rec(() => FEATURE_PARAMS_SPEC), required)]),
+  updateMatchParams: payload("UpdateMatchParams", [f("params", rec(() => MATCH_PARAMS_SPEC), required)]),
+  updateSfmParams: payload("UpdateSfmParams", [f("params", rec(() => SFM_PARAMS_SPEC), required)]),
+  updateDenseParams: payload("UpdateDenseParams", [f("params", rec(() => DENSE_PARAMS_SPEC), required)]),
+  updateMeshParams: payload("UpdateMeshParams", [f("params", rec(() => MESH_PARAMS_SPEC), required)]),
+  updateMotionParams: payload("UpdateMotionParams", [f("params", rec(() => MOTION_PARAMS_SPEC), required)]),
+  updateGeoParams: payload("UpdateGeoParams", [f("params", rec(() => GEO_PARAMS_SPEC), required)]),
+  replaceSparse: payload("ReplaceSparse", [f("sparse", opt(rec(() => SPARSE_CLOUD_SPEC)), nothing, { jsonOptional: true })]),
+  replaceDense: payload("ReplaceDense", [f("dense", opt(rec(() => DENSE_CLOUD_SPEC)), nothing, { jsonOptional: true })]),
+  replaceMeshResult: payload("ReplaceMeshResult", [f("mesh", rec(() => REMODELING_MESH_SPEC), required)]),
+  replaceTrajectory: payload("ReplaceTrajectory", [f("trajectory", opt(rec(() => CAMERA_TRAJECTORY_SPEC)), nothing, { jsonOptional: true })]),
+  replaceTracks: payload("ReplaceTracks", [f("tracks", list(rec(() => MOTION_TRACK_SUMMARY_SPEC)), required)]),
+  replaceGeoProducts: payload("ReplaceGeoProducts", [f("geo", opt(rec(() => GEO_PRODUCTS_SPEC)), nothing, { jsonOptional: true })]),
+  replaceQc: payload("ReplaceQc", [f("qc", opt(rec(() => QC_REPORT_SPEC)), nothing, { jsonOptional: true })]),
+  appendContent: payload("AppendContent", [
+    f("content_id", text, required),
+    f("kind", { k: "enum", of: REMODELING_CONTENT_KINDS }, required),
+    f("mime", opt(text), nothing, { jsonOptional: true }),
+    f("width", uint, required),
+    f("height", uint, required),
+    f("first", {k:"u64"}, required),
+    f("chunks", list({k:"bytes"}), required),
+  ]),
+  removeContent: payload("RemoveContent", [f("content_id", text, required), f("from", {k:"u64"}, required)]),
+  commitReconstruction: payload("CommitReconstruction", [
+    f("sparse", opt(rec(() => SPARSE_CLOUD_SPEC)), nothing),
+    f("trajectory", opt(rec(() => CAMERA_TRAJECTORY_SPEC)), nothing),
+    f("mesh", opt(rec(() => REMODELING_MESH_SPEC)), nothing),
+    f("geo", opt(rec(() => GEO_PRODUCTS_SPEC)), nothing),
+    f("qc", opt(rec(() => QC_REPORT_SPEC)), nothing),
+    f("assets", list(rec(() => RECONSTRUCTION_ASSET_COMMIT_SPEC)), required),
+  ]),
+};
+
+export const REMODELING_MUTATION_TAGS = Object.keys(REMODELING_MUTATION_SPECS) as RemodelingMutationTag[];
+//#endregion 🔖️Spec
+
+//#region 🔖️AssetHandles
+const REMODELING_DURABLE_CHUNK_RAW_BYTES = 4096;
+const REMODELING_DURABLE_CHUNK_ENCODED_BYTES = Math.floor((REMODELING_DURABLE_CHUNK_RAW_BYTES + 2) / 3) * 4;
+const REMODELING_RASTER_CONTENT_BYTES = 1_114_112;
+const REMODELING_BOUNDED_MESH_VERTICES = 512;
+const REMODELING_BOUNDED_MESH_TRIANGLES = 512;
+
+/** 📏 `RemodelingContentKind::{max_bytes, max_chunks}` — each content lane's exact bounded envelope. */
+export const REMODELING_CONTENT_ENVELOPES: Readonly<Record<RemodelingContentKind, { maxBytes: number; maxChunks: number }>> = {
+  sparse: { maxBytes: 512 * 3 * 4, maxChunks: 2 },
+  mesh: { maxBytes: 87_552 + 30, maxChunks: 30 },
+  image: { maxBytes: REMODELING_RASTER_CONTENT_BYTES, maxChunks: 272 },
+};
+
+const parseCount = (value:string):bigint|null => /^(0|[1-9][0-9]{0,19})$/.test(value)&&BigInt(value)<=18446744073709551615n?BigInt(value):null;
+
+/** ☁️ Construct the actual retained Content variant. */
+export const contentFloat32Buffer=(contentId:string,chunkCount:bigint):Float32Buffer=>({kind:"content",contentId,chunkCount});
+/** 🔗 Read the actual typed retained reference without interpreting content strings. */
+export const float32BufferContentReference=(value:Float32Buffer):[string,bigint]|null=>value.kind==="content"?[value.contentId,value.chunkCount]:null;
+
+/** 🔗 `remodeling_mesh_content_handle` — the composed mesh child naming durable mesh content. */
+export const remodelingMeshContentHandle = (contentId: string, chunkCount: bigint): RemodelingAssetChild => ({
+  childId: contentId,
+  target: { artifactId: `remodeling-mesh-content:${chunkCount}`, dialect: { artifactKind: "s.stdio.semio", standard: "v1", subset: "mesh" } },
+});
+
+/** 🔗 `remodeling_mesh_content_handle_parts` — `[childId, chunkCount]` of a durable mesh content handle. */
+export function remodelingMeshContentHandleParts(handle: RemodelingAssetChild): [string, bigint] | null {
+  if (!handle.target.artifactId.startsWith("remodeling-mesh-content:")) return null;
+  const count = parseCount(handle.target.artifactId.slice("remodeling-mesh-content:".length));
+  return count === null ? null : [handle.childId, count];
+}
+
+/** 🖼️ `committed_remodeling_asset_handle` — the `assets` handle a reconstruction binding writes. */
+export const committedRemodelingAssetHandle = (assetId: string, contentId: string): RemodelingAssetChild => ({
+  childId: contentId,
+  target: { artifactId: `${assetId}-image`, dialect: { artifactKind: "s.stdio.semio", standard: "v1", subset: "image" } },
+});
+
+/** 🧱 `decode_remodeling_durable_chunk` — raw bytes of one leaf, `null` above the 4 KiB leaf envelope. */
+export function decodeRemodelingDurableChunk(bytes:ByteBuffer):Uint8Array|null{return bytes instanceof Uint8Array&&bytes.length<=REMODELING_DURABLE_CHUNK_RAW_BYTES?bytes:null}
+
+/** 🧊 `apply_mesh_chunk` + `mesh_is_within_resolution_envelope` over field-tagged leaves. */
+function meshLeavesResolve(chunks: readonly ByteBuffer[]): boolean {
+  const lengths = new Array<number>(12).fill(0);
+  const indices: number[] = [];
+  const decoder = new TextDecoder("utf-8", { fatal: true });
+  const componentLimits: Record<number, number> = { 0: 1536, 1: 1536, 2: 2048, 3: 1536, 4: 1024, 5: 512, 6: 512, 7: 3072, 8: 1536, 9: 2048, 10: 1536, 11: 24_576 };
+  let lastField = -1;
+  let total = 0;
+  for (const encoded of chunks) {
+    const bytes = decodeRemodelingDurableChunk(encoded);
+    if (bytes === null) return false;
+    total += bytes.length;
+    if (total > REMODELING_CONTENT_ENVELOPES.mesh.maxBytes || bytes.length === 0) return false;
+    const field = bytes[0]!;
+    const values = bytes.subarray(1);
+    if (field > 11 || field < lastField) return false;
+    if (field <= 9 && values.length % 4 !== 0) return false;
+    if (field === 11) {
+      try {
+        decoder.decode(values);
+      } catch {
+        return false;
+      }
+    }
+    const added = field <= 9 ? values.length / 4 : values.length;
+    if (lengths[field]! + added > componentLimits[field]!) return false;
+    lengths[field]! += added;
+    if (field === 3) for (let offset = 0; offset < values.length; offset += 4) indices.push(new DataView(values.buffer, values.byteOffset + offset, 4).getUint32(0, true));
+    lastField = field;
+  }
+  const [positions, normals, colors, , uvs, faceIds, vertexIds] = lengths as [number, number, number, number, number, number, number];
+  if (positions % 3 !== 0 || indices.length % 3 !== 0) return false;
+  const vertices = positions / 3;
+  const triangles = indices.length / 3;
+  return (
+    vertices <= REMODELING_BOUNDED_MESH_VERTICES &&
+    triangles <= REMODELING_BOUNDED_MESH_TRIANGLES &&
+    indices.every((index) => index < vertices) &&
+    (normals === 0 || normals === vertices * 3) &&
+    (colors === 0 || colors === vertices * 3 || colors === vertices * 4) &&
+    (uvs === 0 || uvs === vertices * 2) &&
+    (faceIds === 0 || faceIds === triangles) &&
+    (vertexIds === 0 || vertexIds === vertices)
+  );
+}
+
+/** ✅ `remodeling_content_is_complete` — exactly `chunkCount` leaves of `kind` inside the kind's envelope. */
+export function remodelingContentIsComplete(store: RemodelingDurableArtifactStore, contentId: string, kind: RemodelingContentKind, chunkCount: bigint): boolean {
+  const artifact = Object.hasOwn(store, contentId) ? store[contentId] : undefined;
+  if (artifact === undefined || artifact.kind !== kind || chunkCount === 0n || BigInt(artifact.chunks.length) !== chunkCount) return false;
+  if (kind === "mesh") return meshLeavesResolve(artifact.chunks);
+  let total = 0;
+  return artifact.chunks.every((encoded) => {
+    const bytes = decodeRemodelingDurableChunk(encoded);
+    total += bytes?.length ?? 0;
+    return bytes !== null && total <= REMODELING_CONTENT_ENVELOPES[kind].maxBytes;
+  });
+}
+
+/** 🕸️ `image_asset_child_handle` — content-addressed CHILD handle for one bounded durable asset. */
+export function imageAssetChildHandle(assetId: string, asset: ImageAsset): RemodelingAssetChild {
+  const childId = contentId("remodeling-asset", new TextEncoder().encode(`${asset.mime}\u001f${asset.data}`));
+  return { childId, target: { artifactId: `${assetId}-image`, dialect: { artifactKind: "s.stdio.semio", standard: "v1", subset: "image" } } };
+}
+
+const base64Bytes = (value: string): Uint8Array | null => {
+  try {
+    const binary = atob(value);
+    const bytes = new Uint8Array(binary.length);
+    for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+    return bytes;
+  } catch {
+    return null;
+  }
+};
+
+const base64Text = (bytes: Uint8Array): string => {
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary);
+};
+
+/** 🧩️ `durable_remodeling_asset` — bounded 4 KiB leaves, or `null` when the payload is too large. */
+export function durableRemodelingAsset(asset: ImageAsset): RemodelingDurableArtifact | null {
+  const bytes = base64Bytes(asset.data);
+  if (bytes === null || bytes.length > REMODELING_RASTER_CONTENT_BYTES) return null;
+  const chunks: ByteBuffer[] = [];
+  for (let offset = 0; offset < bytes.length; offset += REMODELING_DURABLE_CHUNK_RAW_BYTES) chunks.push(bytes.slice(offset, offset + REMODELING_DURABLE_CHUNK_RAW_BYTES));
+  return { kind: "image", mime: asset.mime, width: asset.width, height: asset.height, chunks };
+}
+//#endregion 🔖️AssetHandles
+
+//#region 🔖️Outcome
+export type RemodelingMessageSeverity = "info" | "warning" | "error" | "fatal";
+
+export interface RemodelingMutationMessage {
+  severity: RemodelingMessageSeverity;
+  code: string;
+  message: string;
+  target: string[];
+}
+
+export interface RemodelingMutationOutcome {
+  diff: RemodelingDiff;
+  messages: RemodelingMutationMessage[];
+}
+
+const ok = (patch: Partial<RemodelingDiff>): RemodelingMutationOutcome => ({ diff: { ...emptyRemodelingDiff(), ...patch }, messages: [] });
+const empty = (): RemodelingMutationOutcome => ({ diff: emptyRemodelingDiff(), messages: [] });
+const noted = (outcome: RemodelingMutationOutcome, severity: RemodelingMessageSeverity, code: string, message: string, target: string[] = []): RemodelingMutationOutcome => ({
+  diff: outcome.diff,
+  messages: [...outcome.messages, { severity, code, message, target }],
+});
+const refuse = (severity: "error" | "fatal", code: string, message: string, target: string[] = []): RemodelingMutationOutcome => noted(empty(), severity, code, message, target);
+
+const same = (left: unknown, right: unknown): boolean => {
+  if (left === right) return true;
+  if (left === null || right === null || typeof left !== "object" || typeof right !== "object") return false;
+  if (Array.isArray(left) !== Array.isArray(right)) return false;
+  const leftKeys = Object.keys(left as object);
+  const rightKeys = Object.keys(right as object);
+  if (leftKeys.length !== rightKeys.length) return false;
+  return leftKeys.every((key) => key in (right as object) && same((left as Record<string, unknown>)[key], (right as Record<string, unknown>)[key]));
+};
+
+const clone = <T,>(value: T): T => structuredClone(value);
+const rows = <E, P = RemodelingNoPatch>(...entries: RemodelingRow<E, P>[]): RemodelingRows<E, P> => ({ rows: entries });
+const createContentRow = (id: string, artifact: RemodelingDurableArtifact): RemodelingContentRow => ({
+  row: "append",
+  id,
+  header: { kind: artifact.kind, mime: artifact.mime, width: artifact.width, height: artifact.height },
+  chunks: clone(artifact.chunks),
+});
+const numberOf=(value:Binary32|Binary64):number=>typeof value.bits==="bigint"?binary64Value(value as Binary64):binary32Value(value as Binary32);
+const finite=(value:Binary32|Binary64):boolean=>Number.isFinite(numberOf(value));
+//#endregion 🔖️Outcome
+
+//#region 🔖️Diffs
+/** 🔺️ The second implementation of every leaf's `diff`, guard order included. */
+export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: RemodelingMutation): RemodelingMutationOutcome {
+  switch (mutation.mutation) {
+    case "createStream": {
+      const payloadStream = mutation.stream;
+      if (base.streams.some((stream) => stream.id === payloadStream.id)) return refuse("fatal", "mutation.duplicate-id", `A stream with id "${payloadStream.id}" already exists.`, [payloadStream.id]);
+      if (payloadStream.cameraId !== null && !base.calibration.cameras.some((camera) => camera.id === payloadStream.cameraId))
+        return refuse("error", "mutation.target-missing", `Stream "${payloadStream.id}" references unknown camera "${payloadStream.cameraId}".`, [payloadStream.cameraId]);
+      return ok({ streams: rows({ row: "insert", entity: clone(payloadStream) }) });
+    }
+    case "deleteStream": {
+      if (!base.streams.some((stream) => stream.id === mutation.id)) return refuse("error", "mutation.target-missing", `Stream "${mutation.id}" does not exist.`, [mutation.id]);
+      const referencing = base.gcps.filter((gcp) => gcp.observations.some((observation) => observation.streamId === mutation.id)).map((gcp) => gcp.id);
+      if (referencing.length > 0)
+        return refuse("error", "mutation.target-referenced", `Stream "${mutation.id}" is still observed by ${referencing.length} ground control point(s); remove those observations first.`, referencing);
+      return ok({ streams: rows({ row: "remove", key: mutation.id }) });
+    }
+    case "changeStreamSync": {
+      const existing = base.streams.find((stream) => stream.id === mutation.id);
+      if (existing === undefined) return refuse("error", "mutation.target-missing", `Stream "${mutation.id}" does not exist.`, [mutation.id]);
+      if (!finite(mutation.newSyncOffsetMs)) return refuse("fatal", "mutation.invariant", `Stream "${mutation.id}" sync offset must be finite, got ${mutation.newSyncOffsetMs}.`, [mutation.id]);
+      if (existing.syncOffsetMs.bits === mutation.newSyncOffsetMs.bits) return noted(empty(), "warning", "mutation.no-op", `Stream "${mutation.id}" sync offset is already ${mutation.newSyncOffsetMs}ms.`);
+      return ok({ streams: rows({ row: "patch", key: mutation.id, patch: streamPatch({ syncOffsetMs: mutation.newSyncOffsetMs }) }) });
+    }
+    case "addStreamFrame": {
+      const stream = base.streams.find((candidate) => candidate.id === mutation.id);
+      if (stream === undefined) return refuse("error", "mutation.target-missing", `Stream "${mutation.id}" does not exist.`, [mutation.id]);
+      if (mutation.kind !== stream.kind) return refuse("error", "mutation.target-missing", `Stream "${mutation.id}" is not of the media kind this frame declares.`, [mutation.id]);
+      if (stream.frames.some((frame) => same(frame, mutation.frame))) return noted(empty(), "warning", "mutation.no-op", `Stream "${mutation.id}" already has frame ${mutation.frame.index}.`);
+      return ok({ streams: rows({ row: "patch", key: mutation.id, patch: streamPatch({ frames: { removed: [], added: [clone(mutation.frame)] } }) }) });
+    }
+    case "removeStreamFrame": {
+      const stream = base.streams.find((candidate) => candidate.id === mutation.id);
+      if (stream === undefined) return refuse("error", "mutation.target-missing", `Stream "${mutation.id}" does not exist.`, [mutation.id]);
+      if (mutation.frameIndex >= stream.frames.length) return refuse("error", "mutation.target-missing", `Stream "${mutation.id}" has no frame at index ${mutation.frameIndex}.`, [mutation.id]);
+      return ok({ streams: rows({ row: "patch", key: mutation.id, patch: streamPatch({ frames: { removed: [clone(stream.frames[mutation.frameIndex]!)], added: [] } }) }) });
+    }
+    case "replaceStreamSource": {
+      if (!base.streams.some((stream) => stream.id === mutation.id)) return refuse("error", "mutation.target-missing", `Stream "${mutation.id}" does not exist.`, [mutation.id]);
+      return ok({ streams: rows({ row: "patch", key: mutation.id, patch: streamPatch({ source: assigned(clone(mutation.source)) }) }) });
+    }
+    case "createAsset": {
+      const artifact = durableRemodelingAsset(mutation.asset);
+      if (artifact === null) return refuse("fatal", "mutation.invariant", "The asset payload is malformed or exceeds its exact bounded envelope.", [mutation.key]);
+      const handle = imageAssetChildHandle(mutation.key, mutation.asset);
+      const previous = Object.hasOwn(base.assets, mutation.key) ? base.assets[mutation.key] : undefined;
+      const content: RemodelingContentRow[] = [];
+      let released: string | null = null;
+      if (previous !== undefined && Object.hasOwn(base.durableArtifacts, previous.childId)) {
+        content.push({ row: "truncate", id: previous.childId, from: 0n });
+        released = previous.childId;
+      }
+      const held = Object.hasOwn(base.durableArtifacts, handle.childId) ? base.durableArtifacts[handle.childId] : undefined;
+      if (held !== undefined && released !== handle.childId && same(held, artifact)) {
+      } else if (held !== undefined && released !== handle.childId) content.push({ row: "truncate", id: handle.childId, from: 0n }, createContentRow(handle.childId, artifact));
+      else content.push(createContentRow(handle.childId, artifact));
+      return ok({ assets: rows({ row: previous === undefined ? "insert" : "replace", entity: { key: mutation.key, child: handle } }), durableArtifacts: content.length > 0 ? { rows: content } : null });
+    }
+    case "deleteAsset": {
+      if (!(mutation.key in base.assets)) return refuse("error", "mutation.target-missing", `Asset "${mutation.key}" does not exist.`, [mutation.key]);
+      const referencing = base.streams.filter((stream) => stream.frames.some((frame) => frame.assetId === mutation.key)).map((stream) => stream.id);
+      if (base.results.mesh.textureAssetId === mutation.key) referencing.push("results.mesh.textureAssetId");
+      if (base.results.geo !== null)
+        for (const [lane, assetId] of [["dsm", base.results.geo.dsmAssetId], ["dtm", base.results.geo.dtmAssetId], ["ortho", base.results.geo.orthoAssetId]] as const)
+          if (assetId === mutation.key) referencing.push(`results.geo.${lane}AssetId`);
+      if (referencing.length > 0) return refuse("error", "mutation.target-referenced", `Asset "${mutation.key}" is still referenced by ${referencing.length} place(s) in the document.`, referencing);
+      const childId = base.assets[mutation.key]!.childId;
+      const content: RemodelingContentRow[] = Object.hasOwn(base.durableArtifacts, childId) ? [{ row: "truncate", id: childId, from: 0n }] : [];
+      return ok({ assets: rows({ row: "remove", key: mutation.key }), durableArtifacts: content.length > 0 ? { rows: content } : null });
+    }
+    case "createCameraCalibration": {
+      if (base.calibration.cameras.some((camera) => camera.id === mutation.camera.id)) return refuse("fatal", "mutation.duplicate-id", `A camera calibration with id "${mutation.camera.id}" already exists.`, [mutation.camera.id]);
+      return ok({ calibration: calibrationRows({ cameras: rows({ row: "insert", entity: clone(mutation.camera) }) }) });
+    }
+    case "updateCameraCalibration": {
+      const existing = base.calibration.cameras.find((camera) => camera.id === mutation.camera.id);
+      if (existing === undefined) return refuse("error", "mutation.target-missing", `Camera calibration "${mutation.camera.id}" does not exist.`, [mutation.camera.id]);
+      const camera = mutation.camera;
+      const nonFinite = ![camera.fx, camera.fy, camera.cx, camera.cy, camera.skew].every(finite) || !camera.distortion.every(finite) || (camera.rmsReprojectionPx !== null && !finite(camera.rmsReprojectionPx));
+      if (nonFinite) return refuse("fatal", "mutation.invariant", `Camera calibration "${camera.id}" has non-finite intrinsics or distortion.`, [camera.id]);
+      if (same(existing, camera)) return noted(empty(), "warning", "mutation.no-op", `Camera calibration "${mutation.camera.id}" is already up to date.`);
+      return ok({ calibration: calibrationRows({ cameras: rows({ row: "replace", entity: clone(camera) }) }) });
+    }
+    case "deleteCameraCalibration": {
+      if (!base.calibration.cameras.some((camera) => camera.id === mutation.cameraId)) return refuse("error", "mutation.target-missing", `Camera calibration "${mutation.cameraId}" does not exist.`, [mutation.cameraId]);
+      const referencing = base.streams.filter((stream) => stream.cameraId === mutation.cameraId).map((stream) => stream.id);
+      if (base.calibration.rig.some((extrinsic) => extrinsic.cameraId === mutation.cameraId)) referencing.push(`calibration.rig.${mutation.cameraId}`);
+      if (referencing.length > 0)
+        return refuse("error", "mutation.target-referenced", `Camera calibration "${mutation.cameraId}" is still referenced by ${referencing.length} record(s); detach them first.`, referencing);
+      return ok({ calibration: calibrationRows({ cameras: rows({ row: "remove", key: mutation.cameraId }) }) });
+    }
+    case "createRigExtrinsic": {
+      const cameraId = mutation.extrinsic.cameraId;
+      if (base.calibration.rig.some((extrinsic) => extrinsic.cameraId === cameraId)) return refuse("fatal", "mutation.duplicate-id", `A rig extrinsic for camera "${cameraId}" already exists.`, [cameraId]);
+      if (!base.calibration.cameras.some((camera) => camera.id === cameraId)) return refuse("error", "mutation.target-missing", `Rig extrinsic references unknown camera "${cameraId}".`, [cameraId]);
+      return ok({ calibration: calibrationRows({ rig: rows({ row: "insert", entity: clone(mutation.extrinsic) }) }) });
+    }
+    case "deleteRigExtrinsic": {
+      if (!base.calibration.rig.some((extrinsic) => extrinsic.cameraId === mutation.cameraId)) return refuse("error", "mutation.target-missing", `Rig extrinsic for camera "${mutation.cameraId}" does not exist.`, [mutation.cameraId]);
+      return ok({ calibration: calibrationRows({ rig: rows({ row: "remove", key: mutation.cameraId }) }) });
+    }
+    case "updateRigExtrinsic": {
+      const extrinsic = mutation.extrinsic;
+      const existing = base.calibration.rig.find((candidate) => candidate.cameraId === extrinsic.cameraId);
+      if (existing === undefined) return refuse("error", "mutation.target-missing", `Rig extrinsic "${extrinsic.cameraId}" does not exist.`, [extrinsic.cameraId]);
+      if (!extrinsic.rotationWxyz.every(finite) || !extrinsic.translationM.every(finite))
+        return refuse("fatal", "mutation.invariant", `Rig extrinsic "${extrinsic.cameraId}" has a non-finite rotation or translation.`, [extrinsic.cameraId]);
+      if (same(existing, extrinsic)) return noted(empty(), "warning", "mutation.no-op", `Rig extrinsic "${extrinsic.cameraId}" is unchanged.`);
+      return ok({ calibration: calibrationRows({ rig: rows({ row: "replace", entity: clone(extrinsic) }) }) });
+    }
+    case "createGcp": {
+      if (base.gcps.some((gcp) => gcp.id === mutation.gcp.id)) return refuse("fatal", "mutation.duplicate-id", `A GCP with id "${mutation.gcp.id}" already exists.`, [mutation.gcp.id]);
+      return ok({ gcps: rows({ row: "insert", entity: clone(mutation.gcp) }) });
+    }
+    case "deleteGcp": {
+      const gcp = base.gcps.find((candidate) => candidate.id === mutation.id);
+      if (gcp === undefined) return refuse("error", "mutation.target-missing", `GCP "${mutation.id}" does not exist.`, [mutation.id]);
+      const cascaded = gcp.observations.length;
+      const outcome = ok({ gcps: rows({ row: "remove", key: mutation.id }) });
+      return cascaded === 0 ? outcome : noted(outcome, "info", "mutation.cascade", `Deleting GCP "${mutation.id}" also removed ${cascaded} observation(s).`);
+    }
+    case "addGcpObservation": {
+      const gcp = base.gcps.find((candidate) => candidate.id === mutation.id);
+      if (gcp === undefined) return refuse("error", "mutation.target-missing", `GCP "${mutation.id}" does not exist.`, [mutation.id]);
+      if (!base.streams.some((stream) => stream.id === mutation.observation.streamId))
+        return refuse("error", "mutation.target-missing", `GCP "${mutation.id}" cannot be observed in unknown stream "${mutation.observation.streamId}".`, [mutation.observation.streamId]);
+      if (gcp.observations.some((observation) => same(observation, mutation.observation))) return noted(empty(), "warning", "mutation.no-op", `GCP "${mutation.id}" already has this observation.`);
+      return ok({ gcps: rows({ row: "patch", key: mutation.id, patch: { observations: { removed: [], added: [clone(mutation.observation)] } } }) });
+    }
+    case "removeGcpObservation": {
+      const gcp = base.gcps.find((candidate) => candidate.id === mutation.id);
+      if (gcp === undefined) return refuse("error", "mutation.target-missing", `GCP "${mutation.id}" does not exist.`, [mutation.id]);
+      if (mutation.observationIndex >= gcp.observations.length) return refuse("error", "mutation.target-missing", `GCP "${mutation.id}" has no observation at index ${mutation.observationIndex}.`, [mutation.id]);
+      return ok({ gcps: rows({ row: "patch", key: mutation.id, patch: { observations: { removed: [clone(gcp.observations[mutation.observationIndex]!)], added: [] } } }) });
+    }
+    case "updateIngestParams": {
+      const params = mutation.params;
+      if (!finite(params.minSharpness) || numberOf(params.minSharpness) < 0 || params.maxFrames === 0 || params.frameSampleStride === 0)
+        return refuse(
+          "fatal",
+          "mutation.invariant",
+          `Ingest params need a finite non-negative min sharpness and positive max frames/frame sample stride (got min_sharpness=${params.minSharpness}, max_frames=${params.maxFrames}, frame_sample_stride=${params.frameSampleStride}).`,
+        );
+      if (same(params, base.params.ingest)) return noted(empty(), "warning", "mutation.no-op", "Ingest params are unchanged.");
+      return ok({ params: paramsDiff({ ingest: clone(params) }) });
+    }
+    case "updateFeatureParams": {
+      const params = mutation.params;
+      if (params.targetCount === 0 || !finite(params.edgeThreshold) || numberOf(params.edgeThreshold) < 0)
+        return refuse("fatal", "mutation.invariant", `Feature params need a positive target count and a finite non-negative edge threshold (got target_count=${params.targetCount}, edge_threshold=${params.edgeThreshold}).`);
+      if (same(params, base.params.feature)) return noted(empty(), "warning", "mutation.no-op", "Feature params are unchanged.");
+      return ok({ params: paramsDiff({ feature: clone(params) }) });
+    }
+    case "updateMatchParams": {
+      const params = mutation.params;
+      if (!finite(params.ratioTest) || numberOf(params.ratioTest) <= 0 || numberOf(params.ratioTest) > 1) return refuse("fatal", "mutation.invariant", `Match ratio test ${params.ratioTest} must be finite and within (0, 1].`);
+      if (same(params, base.params.matching)) return noted(empty(), "warning", "mutation.no-op", "Matching params are unchanged.");
+      return ok({ params: paramsDiff({ matching: clone(params) }) });
+    }
+    case "updateSfmParams": {
+      const params = mutation.params;
+      if (!finite(params.ransacThresholdPx) || !finite(params.huberDeltaPx)) return refuse("fatal", "mutation.invariant", "SfM params have non-finite thresholds.", [base.id]);
+      if (same(params, base.params.sfm)) return noted(empty(), "warning", "mutation.no-op", "SfM params are already up to date.");
+      return ok({ params: paramsDiff({ sfm: clone(params) }) });
+    }
+    case "updateDenseParams": {
+      const params = mutation.params;
+      if (!finite(params.confidenceThreshold)) return refuse("fatal", "mutation.invariant", "Dense params have a non-finite confidence threshold.", [base.id]);
+      if (same(params, base.params.dense)) return noted(empty(), "warning", "mutation.no-op", "Dense params are already up to date.");
+      return ok({ params: paramsDiff({ dense: clone(params) }) });
+    }
+    case "updateMeshParams": {
+      const params = mutation.params;
+      if (!finite(params.tsdfVoxelSizeMm) || !finite(params.tsdfTruncationMm)) return refuse("fatal", "mutation.invariant", "Mesh params have a non-finite TSDF voxel size or truncation.", [base.id]);
+      if (same(params, base.params.mesh)) return noted(empty(), "warning", "mutation.no-op", "Mesh params are already up to date.");
+      return ok({ params: paramsDiff({ mesh: clone(params) }) });
+    }
+    case "updateMotionParams": {
+      const params = mutation.params;
+      if (!finite(params.minTrackQuality)) return refuse("fatal", "mutation.invariant", "Motion params have a non-finite minimum track quality.", [base.id]);
+      if (same(params, base.params.motion)) return noted(empty(), "warning", "mutation.no-op", "Motion params are already up to date.");
+      return ok({ params: paramsDiff({ motion: clone(params) }) });
+    }
+    case "updateGeoParams": {
+      const params = mutation.params;
+      const distancesOk = [params.gsdM, params.dsmCellM, params.dtmFilterRadiusM].every((value) => finite(value) && numberOf(value) > 0);
+      const latOk = params.originLat === null || (finite(params.originLat) && numberOf(params.originLat) >= -90 && numberOf(params.originLat) <= 90);
+      const lonOk = params.originLon === null || (finite(params.originLon) && numberOf(params.originLon) >= -180 && numberOf(params.originLon) <= 180);
+      if (!distancesOk || params.orthoMaxPx === 0 || !latOk || !lonOk)
+        return refuse("fatal", "mutation.invariant", "Geo params need finite positive distances, a positive ortho resolution, and an in-range origin.");
+      if (same(params, base.params.geo)) return noted(empty(), "warning", "mutation.no-op", "Geo params are unchanged.");
+      return ok({ params: paramsDiff({ geo: clone(params) }) });
+    }
+    case "replaceSparse": {
+      if (same(mutation.sparse, base.results.sparse)) return noted(empty(), "warning", "mutation.no-op", "Sparse results already have this value.");
+      return ok({ results: resultsDiff({ sparse: assigned(clone(mutation.sparse)) }) });
+    }
+    case "replaceDense": {
+      if (same(mutation.dense, base.results.dense)) return noted(empty(), "warning", "mutation.no-op", "Dense results already have this value.");
+      return ok({ results: resultsDiff({ dense: assigned(clone(mutation.dense)) }) });
+    }
+    case "replaceMeshResult": {
+      const meshContent = remodelingMeshContentHandleParts(mutation.mesh.mesh);
+      if (meshContent !== null && !remodelingContentIsComplete(base.durableArtifacts, meshContent[0], "mesh", meshContent[1]))
+        return refuse("error", "mutation.target-mismatch", "The mesh names durable content that is not complete.", [mutation.mesh.mesh.childId]);
+      if (same(mutation.mesh, base.results.mesh)) return noted(empty(), "warning", "mutation.no-op", "Mesh result is already up to date.");
+      return ok({ results: resultsDiff({ mesh: clone(mutation.mesh) }) });
+    }
+    case "replaceTrajectory": {
+      if (mutation.trajectory === null && base.results.trajectory === null) return refuse("error", "mutation.target-missing", "There is no trajectory to clear.", [base.id]);
+      if (same(mutation.trajectory, base.results.trajectory)) return noted(empty(), "warning", "mutation.no-op", "Trajectory is already up to date.");
+      return ok({ results: resultsDiff({ trajectory: assigned(clone(mutation.trajectory)) }) });
+    }
+    case "replaceTracks": {
+      if (same(mutation.tracks, base.results.tracks)) return noted(empty(), "warning", "mutation.no-op", "Tracks already have this value.");
+      return ok({ results: resultsDiff({ tracks: clone(mutation.tracks) }) });
+    }
+    case "replaceGeoProducts": {
+      if (mutation.geo === null && base.results.geo === null) return refuse("error", "mutation.target-missing", "There are no geo products to clear.", [base.id]);
+      if (same(mutation.geo, base.results.geo)) return noted(empty(), "warning", "mutation.no-op", "Geo products are already up to date.");
+      return ok({ results: resultsDiff({ geo: assigned(clone(mutation.geo)) }) });
+    }
+    case "replaceQc": {
+      if (mutation.qc === null && base.results.qc === null) return refuse("error", "mutation.target-missing", "There is no QC report to clear.", [base.id]);
+      if (same(mutation.qc, base.results.qc)) return noted(empty(), "warning", "mutation.no-op", "QC report is already up to date.");
+      return ok({ results: resultsDiff({ qc: assigned(clone(mutation.qc)) }) });
+    }
+    case "appendContent": {
+      const target = [mutation.contentId];
+      let appendedBytes = 0;
+      for (const chunk of mutation.chunks) {
+        const bytes = decodeRemodelingDurableChunk(chunk);
+        if (bytes === null) return refuse("fatal", "mutation.invariant", "A content leaf is not literal octets or exceeds the 4 KiB leaf envelope.", target);
+        appendedBytes += bytes.length;
+      }
+      if (mutation.chunks.length === 0) return refuse("fatal", "mutation.invariant", "An append carries no content leaves.", target);
+      const existing = Object.hasOwn(base.durableArtifacts, mutation.contentId) ? base.durableArtifacts[mutation.contentId] : undefined;
+      const stored = existing?.chunks ?? [];
+      if (mutation.first > BigInt(stored.length)) return refuse("error", "mutation.target-mismatch", `Leaf ${mutation.first} would leave a gap after ${stored.length} stored leaves.`, target);
+      const first=Number(mutation.first);
+      if (existing !== undefined && (existing.kind !== mutation.kind || existing.mime !== mutation.mime || existing.width !== mutation.width || existing.height !== mutation.height))
+        return refuse("error", "mutation.target-mismatch", `Content "${mutation.contentId}" is stored as another kind or presentation.`, target);
+      const overlap = Math.min(Math.max(stored.length - first, 0), mutation.chunks.length);
+      if (!same(stored.slice(first, first + overlap), mutation.chunks.slice(0, overlap)))
+        return refuse("error", "mutation.target-mismatch", "An appended leaf differs from the leaf already stored at its index.", target);
+      if (overlap === mutation.chunks.length) return noted(empty(), "warning", "mutation.no-op", `Content "${mutation.contentId}" already stores these leaves.`);
+      const storedBytes = stored.slice(0, first + overlap).reduce((sum, chunk) => sum + (decodeRemodelingDurableChunk(chunk)?.length ?? 0), 0);
+      const envelope = REMODELING_CONTENT_ENVELOPES[mutation.kind];
+      if (first + mutation.chunks.length > envelope.maxChunks || storedBytes + appendedBytes > envelope.maxBytes)
+        return refuse("error", "mutation.target-mismatch", `Content "${mutation.contentId}" would exceed its ${mutation.kind} envelope.`, target);
+      return ok({
+        durableArtifacts: {
+          rows: [{ row: "append", id: mutation.contentId, header: existing === undefined ? { kind: mutation.kind, mime: mutation.mime, width: mutation.width, height: mutation.height } : null, chunks: clone(mutation.chunks.slice(overlap)) }],
+        },
+      });
+    }
+    case "removeContent": {
+      const target = [mutation.contentId];
+      const artifact = Object.hasOwn(base.durableArtifacts, mutation.contentId) ? base.durableArtifacts[mutation.contentId] : undefined;
+      if (artifact === undefined) return refuse("error", "mutation.target-missing", `Content "${mutation.contentId}" does not exist.`, target);
+      const stored = artifact.chunks.length;
+      if (mutation.from > BigInt(stored)) return refuse("error", "mutation.target-mismatch", `Content "${mutation.contentId}" stores only ${stored} leaves.`, target);
+      if (mutation.from === BigInt(stored)) return noted(empty(), "warning", "mutation.no-op", `Content "${mutation.contentId}" stores no leaf from ${stored} on.`);
+      return ok({ durableArtifacts: { rows: [{ row: "truncate", id: mutation.contentId, from: mutation.from }] } });
+    }
+    case "commitReconstruction": {
+      const sparseContent = mutation.sparse === null ? null : float32BufferContentReference(mutation.sparse.points);
+      if (sparseContent !== null && !remodelingContentIsComplete(base.durableArtifacts, sparseContent[0], "sparse", sparseContent[1]))
+        return refuse("error", "mutation.target-mismatch", "The sparse cloud names durable content that is not complete.", ["sparse"]);
+      const meshContent = mutation.mesh === null ? null : remodelingMeshContentHandleParts(mutation.mesh.mesh);
+      if (meshContent !== null && !remodelingContentIsComplete(base.durableArtifacts, meshContent[0], "mesh", meshContent[1]))
+        return refuse("error", "mutation.target-mismatch", "The mesh names durable content that is not complete.", [meshContent[0]]);
+      const bindings = new Map<string, string | null>();
+      for (const binding of mutation.assets) bindings.set(binding.id, binding.contentId);
+      const assetRows: RemodelingRow<RemodelingAssetEntry, RemodelingNoPatch>[] = [];
+      for (const id of [...bindings.keys()].sort()) {
+        const contentId = bindings.get(id)!;
+        if (contentId === null) {
+          if (Object.hasOwn(base.assets, id)) assetRows.push({ row: "remove", key: id });
+          continue;
+        }
+        const artifact = Object.hasOwn(base.durableArtifacts, contentId) ? base.durableArtifacts[contentId] : undefined;
+        if (artifact === undefined || artifact.kind !== "image" || !remodelingContentIsComplete(base.durableArtifacts, contentId, "image", BigInt(artifact.chunks.length)))
+          return refuse("error", "mutation.target-mismatch", "A bound asset names durable image content that is not complete.", [id]);
+        const child = committedRemodelingAssetHandle(id, contentId);
+        const held = Object.hasOwn(base.assets, id) ? base.assets[id] : undefined;
+        if (held === undefined) assetRows.push({ row: "insert", entity: { key: id, child } });
+        else if (!same(held, child)) assetRows.push({ row: "replace", entity: { key: id, child } });
+      }
+      const results = resultsDiff({
+        sparse: same(mutation.sparse, base.results.sparse) ? null : assigned(clone(mutation.sparse)),
+        mesh: mutation.mesh === null || same(mutation.mesh, base.results.mesh) ? null : clone(mutation.mesh),
+        trajectory: same(mutation.trajectory, base.results.trajectory) ? null : assigned(clone(mutation.trajectory)),
+        geo: same(mutation.geo, base.results.geo) ? null : assigned(clone(mutation.geo)),
+        qc: same(mutation.qc, base.results.qc) ? null : assigned(clone(mutation.qc)),
+      });
+      const resultsEmpty = Object.values(results).every((slot) => slot === null);
+      if (assetRows.length === 0 && resultsEmpty) return noted(empty(), "warning", "mutation.no-op", "The reconstruction result is already committed.");
+      return ok({ assets: assetRows.length > 0 ? { rows: assetRows } : null, results: resultsEmpty ? null : results });
+    }
+  }
+}
+
+/** ▶️ `apply_remodeling_mutation` — the outcome's diff applied; a refusal leaves `base` untouched. */
+export function applyRemodelingMutation(snapshot: RemodelingSnapshot, mutation: RemodelingMutation): RemodelingSnapshot {
+  return applyRemodelingDiff(remodelingMutationOutcome(snapshot, mutation).diff, snapshot);
+}
+
+/** 🏷️ The wire tag for one kebab-case leaf slug (`create-stream` → `createStream`). */
+export const mutationTagOfSlug = (slug: string): RemodelingMutationTag => camelOf(slug.replace(/-/g, "_")) as RemodelingMutationTag;
+//#endregion 🔖️Diffs

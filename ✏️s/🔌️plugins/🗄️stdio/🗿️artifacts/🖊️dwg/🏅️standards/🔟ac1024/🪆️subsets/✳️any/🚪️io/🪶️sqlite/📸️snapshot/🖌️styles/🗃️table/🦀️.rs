@@ -28,7 +28,7 @@ pub fn project(p:&mut Projection<'_,'_>,id:i64,v:&DwgTableStyle)->Result<(),Valu
  let mut ordinal=0;for(edge,v)in [("top",&v.borders.top),("horizontal_inside",&v.borders.horizontal_inside),("bottom",&v.borders.bottom),("left",&v.borders.left),("vertical_inside",&v.borders.vertical_inside),("right",&v.borders.right)]{if let Some(v)=v{let handle=optional_words(v.linetype_handle);let border=p.insert("dwg_cell_border",&[I(style),I(ordinal),T(edge),I(i64::from(v.override_flags)),I(i64::from(v.border_type)),I(i64::from(v.lineweight)),handle[0],handle[1],I(i64::from(v.visible)),R(v.double_line_spacing)])?;color::project(p,"dwg_cell_border_color",border,&v.color)?;ordinal+=1;}}
  }Ok(())
 }
-fn reconstruct_cell(r:&mut Reader<'_,'_,'_>,row:super::number::Row<'_>,role:&str)->Result<DwgCellStyle,ValueError>{
+fn reconstruct_cell(r:&mut Reader<'_,'_,'_>,row:semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::number::Row<'_>,role:&str)->Result<DwgCellStyle,ValueError>{
  if row.text(3)?!=role{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG table style cell roles are out of order"));}
  let id=row.rowid;let c=r.component("dwg_cell_content_format",id)?;let m=r.component("dwg_cell_margins",id)?;
  let mut borders=DwgCellBorders::default();let mut prior=None;

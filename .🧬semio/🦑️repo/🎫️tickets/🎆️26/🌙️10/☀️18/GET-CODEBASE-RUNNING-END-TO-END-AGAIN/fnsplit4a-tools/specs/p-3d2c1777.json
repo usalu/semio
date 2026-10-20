@@ -1,0 +1,40 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧪️tests/🎯️execution-target-lease/🟦️.ts",
+ "function": "registerExecutionTargetLeaseTests",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟠️shared",
+  "doc": "/** 🟠️ The shared declarations of registerExecutionTargetLeaseTests. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️before",
+   "doc": "/** 🔶️ The before phase of registerExecutionTargetLeaseTests. */",
+   "phases": [
+    {
+     "name": "buildBeforeState",
+     "emoji": "🔷",
+     "doc": "Builds beforeEach, describe, expect, it of registerExecutionTargetLeaseTests.",
+     "from": 12,
+     "to": 14
+    }
+   ]
+  },
+  {
+   "dir": "🔸️backbone-worker-offline-resilience",
+   "doc": "/** 🔸️ The backbone worker offline resilience phase of registerExecutionTargetLeaseTests. */",
+   "phases": [
+    {
+     "name": "registerBackboneWorkerOfflineResilienceTests",
+     "emoji": "🔹",
+     "doc": "Registers the backbone worker offline resilience tests of registerExecutionTargetLeaseTests.",
+     "from": 16,
+     "to": 16
+    }
+   ]
+  }
+ ]
+}

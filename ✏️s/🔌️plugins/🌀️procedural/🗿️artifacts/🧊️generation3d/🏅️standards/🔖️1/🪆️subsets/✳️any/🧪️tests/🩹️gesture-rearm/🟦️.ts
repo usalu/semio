@@ -143,7 +143,7 @@ function nextHop(latches: Map<string, WindowLatch>, windows: string[]): number |
 
 export function testGeneration3dGestureRearm(): void {
   const here = fileURLToPath(new URL(".", import.meta.url));
-  const fixture = JSON.parse(readFileSync(`${here}/../../🧫️fixtures/⏯️preview-eval-run.json`, "utf8")) as {
+  const fixture = JSON.parse(readFileSync(`${here}/../🧫️fixtures/⏯️preview-eval-run.json`, "utf8")) as {
     format: string;
     version: number;
     gestureRearm: { note: string; rows: GestureRearmRow[] };

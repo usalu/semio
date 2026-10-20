@@ -1,5 +1,5 @@
 //! 📝️ Physical owned-value text encoding for conformance mutations.
-use crate::standards::v_ecma_376::subsets::strict::schema::mutations::XlsxStrictMutation;
+use semio_s_artifact_stdio_xlsx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::mutations::XlsxStrictMutation;
 impl protocol::OpText for XlsxStrictMutation {
     fn print_op(&self) -> String { semio_framework_pack_json::to_json_string(self) }
     fn parse_op(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {

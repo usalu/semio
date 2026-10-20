@@ -320,7 +320,7 @@
     }
   ],
   "nativePythonImport": {
-    "sourcePath": "🧫️fixtures/🧱️command-composition-source/🐍️.py",
+    "sourcePath": "🧪️tests/🧫️fixtures/🧱️command-composition-source/🐍️.py",
     "module": "🐍️",
     "marker": "declared-local-source",
     "argument": "--local-source"

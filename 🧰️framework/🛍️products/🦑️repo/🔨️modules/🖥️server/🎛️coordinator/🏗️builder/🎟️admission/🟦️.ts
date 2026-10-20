@@ -1,4 +1,5 @@
 import { acquireCompilerCapacityLeaseV1, type CompilerAdmissionControl } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { createRequestedIssuedResourceControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 /** 🎟️ One development rebuild shares its host claim across overlapping compilers and releases it while idle. */
@@ -13,7 +14,7 @@ export function createNextRebuildAdmissionV1(options: Readonly<{ directory: stri
     granted.catch(() => undefined);
     const group: Group = { participants: new Set(), admitted: false, controller: new AbortController(), granted, accept, refuse, end, operation: Promise.resolve() };
     group.operation = options.run(async original => {
-      const control: CompilerAdmissionControl = { signal: AbortSignal.any([original.signal, group.controller.signal]), remainingMilliseconds: () => original.remainingMilliseconds(), publish: progress => original.publish(progress), yieldContinuation: () => original.yieldContinuation() };
+      const control: CompilerAdmissionControl = createRequestedIssuedResourceControlV1(original, 0, group.controller.signal);
       const lease = await acquireCompilerCapacityLeaseV1({request:{kind:"whole-host"}, directory: options.directory, control, environment: options.environment });
       try { group.admitted = true; group.accept(); await ended; }
       finally { lease.release(); }

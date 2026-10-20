@@ -1,0 +1,39 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧪️tests/📨️document-backbone-batches/🟦️.ts",
+ "function": "registerDocumentBackboneBatchTests",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "shared": {
+  "dir": "🟠️shared",
+  "doc": "/** 🟠️ The shared declarations of registerDocumentBackboneBatchTests. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️before",
+   "doc": "/** 🔶️ The before phase of registerDocumentBackboneBatchTests. */",
+   "phases": [
+    {
+     "name": "buildBeforeState",
+     "emoji": "🔷",
+     "doc": "Builds beforeEach, describe, expect, it of registerDocumentBackboneBatchTests.",
+     "from": 12,
+     "to": 14
+    }
+   ]
+  },
+  {
+   "dir": "🔸️backbone-worker-offline-resilience",
+   "doc": "/** 🔸️ The backbone worker offline resilience phase of registerDocumentBackboneBatchTests. */",
+   "phases": [
+    {
+     "name": "registerBackboneWorkerOfflineResilienceTests",
+     "emoji": "🔹",
+     "doc": "Registers the backbone worker offline resilience tests of registerDocumentBackboneBatchTests.",
+     "from": 16,
+     "to": 16
+    }
+   ]
+  }
+ ]
+}

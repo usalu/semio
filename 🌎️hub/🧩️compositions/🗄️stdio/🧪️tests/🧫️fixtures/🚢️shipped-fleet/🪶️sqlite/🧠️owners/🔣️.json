@@ -1,0 +1,341 @@
+{
+  "schema": "semio.stdio.primary-snapshot-payloads/v1",
+  "schemaVersion": 1,
+  "integrity": [
+    {
+      "integrity_check": "ok"
+    }
+  ],
+  "foreignKeys": [],
+  "witnesses": [
+    {
+      "kind": "s.stdio.binary",
+      "standard": "raw",
+      "subset": "*",
+      "schema": "stdio.binary",
+      "naturalText": "semio stdio.binary.dsl v1\n68656c6c6f",
+      "domainRows": {
+        "binary_document": [
+          {
+            "id": 1,
+            "schema": "stdio.binary"
+          }
+        ],
+        "binary_byte": [
+          {
+            "id": 1,
+            "document_id": 1,
+            "ordinal": 0,
+            "value": 104
+          },
+          {
+            "id": 2,
+            "document_id": 1,
+            "ordinal": 1,
+            "value": 101
+          },
+          {
+            "id": 3,
+            "document_id": 1,
+            "ordinal": 2,
+            "value": 108
+          },
+          {
+            "id": 4,
+            "document_id": 1,
+            "ordinal": 3,
+            "value": 108
+          },
+          {
+            "id": 5,
+            "document_id": 1,
+            "ordinal": 4,
+            "value": 111
+          }
+        ]
+      }
+    },
+    {
+      "kind": "s.stdio.txt",
+      "standard": "utf-8",
+      "subset": "*",
+      "schema": "stdio.txt",
+      "naturalText": "Hello, stdio.txt!\n",
+      "domainRows": {
+        "text_document": [
+          {
+            "id": 1,
+            "schema": "stdio.txt",
+            "trailing_newline": 1,
+            "line_ending": "lf"
+          }
+        ],
+        "text_line": [
+          {
+            "id": 1,
+            "document_id": 1,
+            "ordinal": 0,
+            "content": "Hello, stdio.txt!"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "s.stdio.json",
+      "standard": "rfc8259",
+      "subset": "geojson",
+      "schema": "stdio.json",
+      "naturalText": "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[7.5,46.25]},\"properties\":{\"name\":\"Grüße\",\"visible\":true,\"nullable\":null,\"tags\":[\"a\",\"b\"]},\"id\":\"site-1\"}",
+      "invalidNaturalTexts": ["null"],
+      "logicalValue": {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            7.5,
+            46.25
+          ]
+        },
+        "properties": {
+          "name": "Grüße",
+          "visible": true,
+          "nullable": null,
+          "tags": [
+            "a",
+            "b"
+          ]
+        },
+        "id": "site-1"
+      },
+      "domainRows": {
+        "json_document": [
+          {
+            "id": 1,
+            "schema": "stdio.json",
+            "root_value_id": 1
+          }
+        ],
+        "json_value": [
+          {
+            "id": 1,
+            "kind": "object",
+            "boolean_value": null,
+            "number_lexeme": null,
+            "string_value": null,
+            "number_value": null
+          },
+          {
+            "id": 2,
+            "kind": "string",
+            "boolean_value": null,
+            "number_lexeme": null,
+            "string_value": "Feature",
+            "number_value": null
+          },
+          {
+            "id": 3,
+            "kind": "object",
+            "boolean_value": null,
+            "number_lexeme": null,
+            "string_value": null,
+            "number_value": null
+          },
+          {
+            "id": 4,
+            "kind": "string",
+            "boolean_value": null,
+            "number_lexeme": null,
+            "string_value": "Point",
+            "number_value": null
+          },
+          {
+            "id": 5,
+            "kind": "array",
+            "boolean_value": null,
+            "number_lexeme": null,
+            "string_value": null,
+            "number_value": null
+          },
+          {
+            "id": 6,
+            "kind": "number",
+            "boolean_value": null,
+            "number_lexeme": "7.5",
+            "string_value": null,
+            "number_value": 7.5
+          },
+          {
+            "id": 7,
+            "kind": "number",
+            "boolean_value": null,
+            "number_lexeme": "46.25",
+            "string_value": null,
+            "number_value": 46.25
+          },
+          {
+            "id": 8,
+            "kind": "object",
+            "boolean_value": null,
+            "number_lexeme": null,
+            "string_value": null,
+            "number_value": null
+          },
+          {
+            "id": 9,
+            "kind": "string",
+            "boolean_value": null,
+            "number_lexeme": null,
+            "string_value": "Grüße",
+            "number_value": null
+          },
+          {
+            "id": 10,
+            "kind": "boolean",
+            "boolean_value": 1,
+            "number_lexeme": null,
+            "string_value": null,
+            "number_value": null
+          },
+          {
+            "id": 11,
+            "kind": "null",
+            "boolean_value": null,
+            "number_lexeme": null,
+            "string_value": null,
+            "number_value": null
+          },
+          {
+            "id": 12,
+            "kind": "array",
+            "boolean_value": null,
+            "number_lexeme": null,
+            "string_value": null,
+            "number_value": null
+          },
+          {
+            "id": 13,
+            "kind": "string",
+            "boolean_value": null,
+            "number_lexeme": null,
+            "string_value": "a",
+            "number_value": null
+          },
+          {
+            "id": 14,
+            "kind": "string",
+            "boolean_value": null,
+            "number_lexeme": null,
+            "string_value": "b",
+            "number_value": null
+          },
+          {
+            "id": 15,
+            "kind": "string",
+            "boolean_value": null,
+            "number_lexeme": null,
+            "string_value": "site-1",
+            "number_value": null
+          }
+        ],
+        "json_object_member": [
+          {
+            "id": 1,
+            "object_value_id": 1,
+            "ordinal": 0,
+            "key": "type",
+            "value_id": 2
+          },
+          {
+            "id": 2,
+            "object_value_id": 1,
+            "ordinal": 1,
+            "key": "geometry",
+            "value_id": 3
+          },
+          {
+            "id": 3,
+            "object_value_id": 3,
+            "ordinal": 0,
+            "key": "type",
+            "value_id": 4
+          },
+          {
+            "id": 4,
+            "object_value_id": 3,
+            "ordinal": 1,
+            "key": "coordinates",
+            "value_id": 5
+          },
+          {
+            "id": 5,
+            "object_value_id": 1,
+            "ordinal": 2,
+            "key": "properties",
+            "value_id": 8
+          },
+          {
+            "id": 6,
+            "object_value_id": 8,
+            "ordinal": 0,
+            "key": "name",
+            "value_id": 9
+          },
+          {
+            "id": 7,
+            "object_value_id": 8,
+            "ordinal": 1,
+            "key": "visible",
+            "value_id": 10
+          },
+          {
+            "id": 8,
+            "object_value_id": 8,
+            "ordinal": 2,
+            "key": "nullable",
+            "value_id": 11
+          },
+          {
+            "id": 9,
+            "object_value_id": 8,
+            "ordinal": 3,
+            "key": "tags",
+            "value_id": 12
+          },
+          {
+            "id": 10,
+            "object_value_id": 1,
+            "ordinal": 3,
+            "key": "id",
+            "value_id": 15
+          }
+        ],
+        "json_array_element": [
+          {
+            "id": 1,
+            "array_value_id": 5,
+            "ordinal": 0,
+            "value_id": 6
+          },
+          {
+            "id": 2,
+            "array_value_id": 5,
+            "ordinal": 1,
+            "value_id": 7
+          },
+          {
+            "id": 3,
+            "array_value_id": 12,
+            "ordinal": 0,
+            "value_id": 13
+          },
+          {
+            "id": 4,
+            "array_value_id": 12,
+            "ordinal": 1,
+            "value_id": 14
+          }
+        ]
+      }
+    }
+  ]
+}

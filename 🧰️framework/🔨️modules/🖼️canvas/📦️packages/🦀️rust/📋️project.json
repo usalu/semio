@@ -45,7 +45,7 @@
     },
     "stage-runtime-assets": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "inputs": [
         "sharedGlobals",
         "{projectRoot}/📜️script.ts",
@@ -75,7 +75,8 @@
           "execution": {
             "version": 1,
             "kind": "source"
-          }
+          },
+          "cache": { "version": 1, "class": "managed-output", "reason": "outputs-in-managed-store" }
         }
       }
     }

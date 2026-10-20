@@ -10,7 +10,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
 import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { blake3Hex } from "../../../../../../../📦️packages/🟦️typescript/🔏️hash/🟦️.ts";
+import { blake3Hex } from "@semio-tech/framework-hash";
 import { MemberHistoryIdentitySourceScript, MemberHistoryIdScript, MemberHistoryInputScript } from "../🪪️member-history-identity/🟦️.ts";
 
 /** 🔤️ Test-only retained UTF-8 scalar model shared by payload and actual-input owner oracles. */

@@ -29,7 +29,7 @@
   "bindings": [
     {
       "rule": "repo_task",
-      "kind": "birth-action",
+      "kind": "work-action",
       "inputs": [
         "manifest",
         "fingerprint",

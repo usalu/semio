@@ -211,7 +211,7 @@ export interface WasmCanvasSession {
 export interface WasmCanvasProps {
   readonly className?: string;
   readonly sessionFactory: () => WasmCanvasSession;
-  /** The owner's session handle ({@link frameDemandingSessionV1}): calls through it repaint the canvas on demand. */
+  /** 📸️ The owner's session handle ({@link frameDemandingSessionV1}): calls through it repaint the canvas on demand. */
   readonly onSessionReady?: (session: WasmCanvasSession) => void;
   readonly enablePointer?: boolean;
 }

@@ -5,15 +5,15 @@ import { normWireArray, normWireBoolean, normWireDefault, normWireInteger, normW
 import { type ConcentratedLoad, type En1996ExposureClass, type En1996MortarClass, type En1996MortarType, type En1996UnitGroup, type En1996UnitMaterial, type En1996WallType, type MasonryWall, parseConcentratedLoad, parseEn1996ExposureClass, parseEn1996MortarClass, parseEn1996MortarType, parseEn1996UnitGroup, parseEn1996UnitMaterial, parseEn1996WallType, parseMasonryWall, parseWallLoadCase, parseWallOpening, type WallLoadCase, type WallOpening } from "../📸️snapshot/🟦️.ts";
 
 export interface En1996Diff {
-  /** @state artifact */
+  /** 📑️ @state artifact */
   annex: ("En" | "De") | null;
-  /** @state artifact */
+  /** 🏷️ @state artifact */
   masonryClass: ("Class1" | "Class2" | "Class3" | "Class4" | "Class5") | null;
-  /** @state artifact */
+  /** 🎨️ @state artifact */
   designSituation: ("Persistent" | "Transient" | "Accidental" | "Seismic") | null;
-  /** @state artifact */
+  /** 🏢️ @state artifact */
   storeys: number | null;
-  /** @state artifact */
+  /** 🧱️ @state artifact */
   walls?: En1996WallDelta;
 }
 

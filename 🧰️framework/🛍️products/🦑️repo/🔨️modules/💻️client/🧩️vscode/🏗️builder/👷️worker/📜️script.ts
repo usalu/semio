@@ -10,4 +10,4 @@ class RunScript extends BundleScript {
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("run", RunScript);
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "run" }));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, argv: ["run"] }));

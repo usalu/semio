@@ -1,7 +1,8 @@
 //! 🗃️ 🗃️ Note play app commands command — `load-document-json`.
 
 use crate::op::NoteMutation;
-use crate::{NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
+use crate::{NOTE_DOCUMENT_SCHEMA};
+use semio_s_artifact_note_note_schema::NoteSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde_json::Value;

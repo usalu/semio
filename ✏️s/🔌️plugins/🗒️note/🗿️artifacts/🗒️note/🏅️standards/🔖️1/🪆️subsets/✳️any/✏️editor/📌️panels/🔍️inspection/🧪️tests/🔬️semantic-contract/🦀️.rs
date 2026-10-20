@@ -7,7 +7,7 @@ use crate::editor::note::support::ui_label;
 #[allow(unused_imports)]
 use crate::schema::flatten_blocks;
 #[allow(unused_imports)]
-use crate::NoteSnapshot;
+use semio_s_artifact_note_note_schema::NoteSnapshot;
 #[allow(unused_imports)]
 use semio_framework_plugin::tree_item_desc;
 #[allow(unused_imports)]

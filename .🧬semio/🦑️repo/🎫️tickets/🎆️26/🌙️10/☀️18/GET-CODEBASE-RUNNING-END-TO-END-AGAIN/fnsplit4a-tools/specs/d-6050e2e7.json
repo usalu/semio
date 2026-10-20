@@ -1,0 +1,28 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🎤️presentation/🧪️tests/🎯️canvas-disposition-interaction/🟦️.tsx",
+ "describeLine": 9,
+ "shared": {
+  "dir": "🟠️shared",
+  "doc": "/** 🟠️ The shared declarations of the presentation interaction dom suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️drags-positioned-disposition",
+   "doc": "/** 🔶️ The drags positioned disposition tests of the presentation interaction dom suite. */",
+   "name": "registerDragsPositionedDispositionTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the drags positioned disposition tests of the presentation interaction dom suite.",
+   "from": 10,
+   "to": 110
+  },
+  {
+   "dir": "🔸️shows-tile-disposition-drag",
+   "doc": "/** 🔸️ The shows tile disposition drag tests of the presentation interaction dom suite. */",
+   "name": "registerShowsTileDispositionDragTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the shows tile disposition drag tests of the presentation interaction dom suite.",
+   "from": 178,
+   "to": 312
+  }
+ ]
+}

@@ -1,10 +1,10 @@
 // 🔗 Reference index and rewriting over the virtual overlay: quoted path references to moved files, in import position or anywhere.
 import {existsSync, readFileSync} from "node:fs";
-import {dirname, join, relative, resolve} from "node:path";
+import {dirname, join, posix, relative, resolve} from "node:path";
 import {C, REPO, Vfs} from "./vfs.ts";
 
 export type Ref = {file: string; line: number; spec: string; kind: "relative" | "path"};
-const index: Record<string, Ref[]> = JSON.parse(readFileSync(`${C}/🗑️generated/tax-stage/refs.json`, "utf8"));
+const index: Record<string, Ref[]> = JSON.parse(readFileSync(`${C}/tax-stage-tools/index/refs.json`, "utf8"));
 export const refsOf = (target: string): Ref[] => index[target] ?? [];
 
 const abs = (p: string): string => join(REPO, p);
@@ -16,13 +16,14 @@ export function rewriteReferences(text: string, referencerDir: string, from: str
   const out = text.replace(/(["'`])((?:\\.|(?!\1)[^\n\\])*)\1/gu, (m, q: string, v: string, offset: number) => {
     if (v.includes("${")) return m;
     if (importOnly && !IMPORT_CONTEXT.test(text.slice(Math.max(0, offset - 24), offset))) return m;
+    const shift = relative(dirname(abs(from)), abs(to)), keepStyle = (): string => { const head = posix.dirname(v); return (head === "." ? (v.startsWith("./") ? "./" : "") : head + "/") + shift; };
     if (v.startsWith(".")) {
       if (resolve(referencerDir, v) !== abs(from)) return m;
       count++;
-      const r = relative(referencerDir, abs(to));
-      return q + (r.startsWith(".") ? r : "./" + r) + q;
+      return q + keepStyle() + q;
     }
     if (v === from || v.endsWith("/" + from)) { count++; return q + v.slice(0, v.length - from.length) + to + q; }
+    if (!/^(?:[A-Za-z]:|\/|@)/u.test(v) && resolve(referencerDir, v) === abs(from)) { count++; return q + keepStyle() + q; }
     return m;
   });
   return {text: out, count};
@@ -56,14 +57,18 @@ export function rebaseOwn(text: string, oldDir: string, newDir: string, v: Vfs):
   });
 }
 
-export type RefKind = "IMPORT" | "READ" | "SPAWN" | "DATA" | "OTHER";
+export type RefKind = "IMPORT" | "READ" | "READ?" | "SPAWN" | "DATA" | "OTHER";
 /** 🏷️ Classifies one indexed reference by the code around it. */
 export function classifyRef(r: Ref): RefKind {
   const line = readFileSync(abs(r.file), "utf8").split("\n")[r.line - 1] ?? "";
   const at = line.indexOf(r.spec), before = line.slice(Math.max(0, at - 160), at);
   if (/\.(json|toml|md)$/u.test(r.file)) return "DATA";
   if (/(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s*)["'`]$/u.test(line.slice(Math.max(0, at - 24), at))) return "IMPORT";
-  if (/readFile|Bun\.file|createSourceFile|\.text\(\)|statSync|existsSync/u.test(before)) return "READ";
+  if (/readFile|Bun\.file|createSourceFile|\.text\(\)|statSync|existsSync/u.test(before)) {
+    const after = line.slice(at + r.spec.length, at + r.spec.length + 60), close = line[at - 1] ?? "";
+    const pre = before.replace(/["'`]$/u, ""), bound = /new URL\(\s*$/u.test(pre) && new RegExp("^" + close.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&") + "\\s*,\\s*import\\.meta\\.url").test(after) || /(?:join|resolve)\(\s*(?:import\.meta\.dir|importMetaDirectory)\s*,\s*$/u.test(pre);
+    return bound ? "READ" : "READ?";
+  }
   if (/runOwnedCommand|captureOwned|spawn|execPath|runCmd|"bun"|Command|execute/u.test(before)) return "SPAWN";
   return "OTHER";
 }
@@ -80,6 +85,22 @@ export function repointKinds(v: Vfs, from: string, to: string, kinds: ReadonlySe
     let count = 0;
     for (const n of lines) { const r = rewriteReferences(rows[n - 1]!, dirname(abs(file)), from, to, false); if (r.count) { rows[n - 1] = r.text; count += r.count; } }
     if (count) { v.write(file, rows.join("\n")); touched.push(file); }
+  }
+  return touched;
+}
+
+/** 🔁 Re-points the indexed references of `from` at explicitly named `<file substring>:<line>` sites that the classifier cannot bind to a base directory. */
+export function repointSites(v: Vfs, from: string, to: string, sites: readonly string[]): string[] {
+  const touched: string[] = [];
+  for (const site of sites) {
+    const cut = site.lastIndexOf(":"), where = site.slice(0, cut), line = Number(site.slice(cut + 1));
+    const hit = refsOf(from).find((r) => r.file.includes(where) && r.line === line);
+    if (!hit) throw new Error(`no indexed reference at ${site}`);
+    const rows = v.read(hit.file).split("\n"), r = rewriteReferences(rows[line - 1]!, dirname(abs(hit.file)), from, to, false);
+    if (!r.count) throw new Error(`reference at ${site} did not rewrite`);
+    rows[line - 1] = r.text;
+    v.write(hit.file, rows.join("\n"));
+    touched.push(hit.file);
   }
   return touched;
 }

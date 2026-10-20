@@ -6,7 +6,8 @@ use crate::schema::mutations::{
     rename_block, resize_block,
 };
 use crate::schema::{block_bounds, find_block};
-use crate::{NoteSnapshot, NoteTextParagraph, NoteTextRun};
+use crate::{NoteTextParagraph, NoteTextRun};
+use semio_s_artifact_note_note_schema::NoteSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 

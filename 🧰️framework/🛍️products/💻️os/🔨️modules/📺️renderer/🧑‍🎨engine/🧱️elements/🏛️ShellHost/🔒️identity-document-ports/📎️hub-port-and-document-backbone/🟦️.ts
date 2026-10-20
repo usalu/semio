@@ -39,7 +39,13 @@ import type { ShellCoreAfterShellCoreState } from "../../🧩️shell-core-state
 import type { useIdentityAgentBridgeAndDirectoryState } from "../🪪️identity-and-directory-state/🟦️.ts";
 import type { MountedInferenceHistoryV1, OpenDocumentSession, RetainedBrowserActorUiV1 } from "../🧰️identity-port-types/🟦️.ts";
 
-/** 🔌 Builds the hub connection port, the inference and presence refs and the document backbone ports. */
+/**
+ * 🔌 Builds the hub connection port, the inference and presence refs and the document backbone ports.
+ *
+ * 🎯️ The scope this shell asks the agent-bridge supervisor with (ticket 26/09/23, G12 session 14c — scoped offers): its
+ * hub, the space it has open and the agents THIS human delegated there, read from the hub, which lists only the asking
+ * human's own. A hub-bound gateway's offer is then served to its own human's shell and to no other.
+ */
 export function useHubPortInferenceAndDocumentBackbone({ hubSessionCapabilityRef, rememberHubSessionCapability, agentBridgeOfferScopeRef, hubEnv, openSpaceId, spaceAdministration, closeDocumentRef, backboneWorkerRef, applyRemoteMergeRef, documentPortsRef, documentAttachmentLane, core }: Pick<ReturnType<typeof useIdentityAgentBridgeAndDirectoryState>, "hubSessionCapabilityRef" | "rememberHubSessionCapability" | "agentBridgeOfferScopeRef" | "hubEnv" | "openSpaceId" | "spaceAdministration" | "closeDocumentRef" | "backboneWorkerRef" | "applyRemoteMergeRef" | "documentPortsRef" | "documentAttachmentLane"> & { readonly core: ShellCoreAfterShellCoreState }) {
   const hubConnectionPort = useMemo<HubConnectionPortV1>(
     () =>

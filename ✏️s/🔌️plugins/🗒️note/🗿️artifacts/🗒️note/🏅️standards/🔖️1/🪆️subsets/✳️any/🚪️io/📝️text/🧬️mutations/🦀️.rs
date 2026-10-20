@@ -34,7 +34,7 @@ impl protocol::OpText for NoteMutation {
 mod mutations_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::mutations::*;
-use crate::NoteDiff;
+use semio_s_artifact_note_note_diff::standards::v1::subsets::any::schema::diff::NoteDiff;
 use crate::NoteSnapshot;
 use protocol::{Mutation, MutationDiff};
 use semio_framework_value_derive::{FromValue, ToValue};

@@ -4,7 +4,7 @@
  */
 
 import { type SchemaDiagnostic } from "../../../📦️packages/🟦️typescript/🟦️.ts";
-import { type FaultNoticeDefinition, isFaultNoticeCode, validateFaultNotices } from "@semio-tech/framework/manifest";
+import { type FaultNoticeDefinition, isFaultNoticeCode, validateFaultNotices } from "@semio-tech/framework-manifest";
 import { readJsonObject } from "../📚️schema-documents/🟦️.ts";
 import { rustCallArguments, rustFunctions, rustGroupEnd, rustImplBlocks, rustLex, rustPathAt, type RustToken } from "../🦀️rust-tokens/🟦️.ts";
 import { rustSources } from "../🌳️mutation-tree/🟦️.ts";

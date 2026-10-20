@@ -5,7 +5,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { describe, expect, it } from "vitest";
-import { retainedFrameProgressFixtureUrl } from "@semio-tech/framework/ui/testing/fixtures";
+import { retainedFrameProgressFixtureUrl } from "@semio-tech/ui/testing/fixtures";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");

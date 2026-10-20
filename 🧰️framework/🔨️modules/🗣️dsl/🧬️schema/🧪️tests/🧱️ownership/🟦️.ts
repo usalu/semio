@@ -35,7 +35,7 @@ test("actual generic record metadata has one independent canonical package below
   expect(native).toEqual(TOML.parse(source) as typeof native);
   expect(native.package.name).toBe("semio-framework-dsl-record");
   expect(native.lib).toEqual({name: "semio_framework_dsl_record", path: "../../🦀️.rs"});
-  expect(Object.keys(native.dependencies).sort()).toEqual(["semio-framework-diagnostic", "semio-framework-dsl", "semio-framework-dsl-notation", "semio-framework-dsl-record-emission", "semio-framework-dsl-record-model", "semio-framework-io-control", "semio-framework-pack-json", "semio-framework-value"]);
+  expect(Object.keys(native.dependencies).sort()).toEqual(["semio-framework-diagnostic", "semio-framework-dsl", "semio-framework-dsl-notation", "semio-framework-dsl-record-emission", "semio-framework-dsl-record-model", "semio-framework-io-control", "semio-framework-pack-json", "semio-framework-value", "semio-framework-value-native-owned"]);
 });
 
 test("record model and binding definitions directly select the actual neutral value and JSON floors", () => {

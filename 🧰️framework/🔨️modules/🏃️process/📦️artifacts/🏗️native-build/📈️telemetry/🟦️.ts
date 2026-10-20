@@ -1,6 +1,6 @@
 import {open} from "node:fs/promises";
 import {constants} from "node:fs";
-import {withArtifactDescriptorV1} from "../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import {withArtifactDescriptorV1} from "../../../../📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../🔒️leases/🟦️.ts";
 import {requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1} from "../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {captureOwnedCommandResultV1} from "../../../🎛️owned-execution/📥️capture/🟦️.ts";

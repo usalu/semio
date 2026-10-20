@@ -28,6 +28,10 @@ semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-block-2d-diff = { workspace = true }
 semio-s-artifact-block-2d-model = { workspace = true }
+semio-s-artifact-block-2d-mut-node-kind = { workspace = true }
+semio-s-artifact-block-2d-mut-handles = { workspace = true }
+semio-s-artifact-block-2d-mut-meta = { workspace = true }
+semio-s-artifact-block-2d-mut-handles-2 = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

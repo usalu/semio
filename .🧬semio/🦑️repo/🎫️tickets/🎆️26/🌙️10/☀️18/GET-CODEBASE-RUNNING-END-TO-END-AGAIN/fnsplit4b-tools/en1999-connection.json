@@ -1,0 +1,73 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🔗️connection-checks/🦀️.rs",
+ "function": "check_connection",
+ "nth": 0,
+ "types": {
+  "params": "na_de::AnnexParams",
+  "alloy": "part_1_1::AlloyProps",
+  "part": "&str",
+  "out": "Vec<CheckResult>",
+  "kind": "String",
+  "combo": "&str",
+  "action_id": "&str",
+  "lever": "f64",
+  "n_ed": "f64",
+  "v_ed": "f64",
+  "m_ed": "f64",
+  "conn_dig": "String"
+ },
+ "modes": {
+  "out": "mut",
+  "kind": "ref",
+  "alloy": "ref",
+  "params": "ref",
+  "conn_dig": "ref",
+  "lever": "val",
+  "n_ed": "val",
+  "v_ed": "val",
+  "m_ed": "val",
+  "annex": "val"
+ },
+ "keep": [
+  7,
+  8,
+  29,
+  30,
+  31,
+  33,
+  40,
+  41,
+  42,
+  43,
+  44,
+  45,
+  46,
+  47,
+  339,
+  353
+ ],
+ "phases": [
+  {
+   "name": "check_bolted_connection",
+   "doc": "🧱️ Checks the bearing, shear, tension and interaction resistance of the bolts of a connection.",
+   "from": 69,
+   "to": 69
+  },
+  {
+   "name": "check_welded_connection",
+   "doc": "🪵️ Checks the weld resistance of a connection.",
+   "from": 182,
+   "to": 182,
+   "allow_control": [
+    198
+   ]
+  },
+  {
+   "name": "check_connection_serviceability",
+   "doc": "🔩️ Checks the serviceability of a connection under its frequent actions.",
+   "from": 253,
+   "to": 253
+  }
+ ],
+ "allow_reason": "the extracted check keeps the connection values of its original function as explicit parameters"
+}

@@ -8,7 +8,7 @@
 
 use semio_framework_pets_staging_draft::attention::watched;
 use semio_framework_pets_staging_draft::draft::{actor_key, clip_at, clip_of, release, settle, shift, Draft};
-use semio_framework_pets_staging_draft::locomotion::{hops_of, leave, paced, stroll};
+use semio_framework_pets_staging_draft::locomotion::{geared, hops_of, leave, paced, reaches, set_out, stroll, Venture};
 use crate::sociability::{reconcile, sulk};
 use semio_framework_pets_staging_draft::spacing::{clearway, rooms_for, COMFORT_GAP};
 use semio_framework_pets_character::behavior::{activity_weights, dwell_of, Situation, MODE_LIMITS};
@@ -300,7 +300,7 @@ pub(crate) fn reclaimed(draft: &mut Draft<'_>, fixture: &str, now: Ticks) {
     draft.stage.rested = now;
     let Some(index) = index_of(&draft.stage.actors, &lift.pusher).filter(|&index| draft.stage.actors[index].activity == Activity::Push) else { draft.stage.lift = None; return; };
     let body = &draft.stage.actors[index];
-    let toss = draft.stage.fixtures.iter().find(|entry| entry.id == fixture).map_or(crate::climbing::Toss { vx: -lift.side.sign() * THROW_SPEED, vy: -THROW_LIFT }, |fixture| thrown_off(Point { x: body.x, y: body.y }, fixture, unit_of(random_words(&[draft.stage.seed, MISCHIEF_STREAM, now as u32, 1], 1)[0])));
+    let toss = draft.stage.fixtures.iter().find(|entry| entry.id == fixture).map_or(semio_framework_pets_traversal::climbing::Toss { vx: -lift.side.sign() * THROW_SPEED, vy: -THROW_LIFT }, |fixture| thrown_off(Point { x: body.x, y: body.y }, fixture, unit_of(random_words(&[draft.stage.seed, MISCHIEF_STREAM, now as u32, 1], 1)[0])));
     draft.stage.lift = Some(Prank { since: now - LIFT_TICKS - 1, ..lift });
     feel(draft, index, Occasion::Evicted, now);
     unfoot(draft, index, toss.vx, toss.vy, Activity::Tumble, now);

@@ -26,8 +26,8 @@ use semio_framework_tool_run::{ToolRunAction, ToolRunState};
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "energy.simulation";
 pub const BODY_KEY: &str = "energy.simulation";
-pub const SET_SETTINGS_ACTION_ID: &str = "set-simulation-settings";
-pub const SET_RESULT_FIELD_ACTION_ID: &str = "set-result-field";
+pub const SET_SETTINGS_ACTION_ID: &str = semio_s_artifact_energy_model_editor_commands::SET_SIMULATION_SETTINGS_ACTION_ID;
+pub const SET_RESULT_FIELD_ACTION_ID: &str = semio_s_artifact_energy_model_editor_commands::SET_RESULT_FIELD_ACTION_ID;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition

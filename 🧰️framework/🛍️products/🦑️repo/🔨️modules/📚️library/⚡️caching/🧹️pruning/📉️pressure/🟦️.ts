@@ -1,5 +1,5 @@
 import type{CacheUnit}from"../🟦️.ts";
-import schema from"./🧬️schema/🔣️.json";
+import schema from"./🧬️schema/🔣️.json" with { type: "json" };
 import{validateJsonSchemaSubset}from"../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 export type CachePressurePolicyV1=Readonly<{version:1;minimumAvailableBytes:number;targetAvailableBytes:number;guardAgeMs:number;maximumDeletionBytes:number}>;
 export type CachePressurePlanV1=Readonly<{pressured:boolean;units:readonly CacheUnit[];plannedBytes:number;targetUnmetBytes:number}>;

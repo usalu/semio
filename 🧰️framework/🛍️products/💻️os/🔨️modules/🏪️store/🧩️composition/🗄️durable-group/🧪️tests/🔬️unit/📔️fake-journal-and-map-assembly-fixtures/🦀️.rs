@@ -193,7 +193,7 @@ fn map_assembly(
 }
 
 fn drive_assembly_to_mounted(assembly: &mut DemoMapAssembly) {
-        let mut receiving_fixture=super::super::tests::FixtureStoreReceiving::new(copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES).retained_grant());
+        let mut receiving_fixture=semio_framework_os_store_testing_prelude::FixtureStoreReceiving::new(copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES).retained_grant());
 let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../🧫️fixtures/🔣️.json")).unwrap();assert_eq!(fixture["assemblyDiagnosticTransfer"]["sameTurnPreparationGrantReuse"],false);let mut handoff=false;let mut denied_mount=false;
     for _ in 0..4_000_000 {
@@ -210,7 +210,7 @@ let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
 }
 
 fn drain_assembly_rejection(assembly: &mut DemoMapAssembly) -> DurableOwnedThreeStoreMapAssemblyOwnersV1<DemoSnapshot, DemoMutation, DemoSnapshot, DemoMutation, DemoSnapshot, DemoMutation> {
-        let mut receiving_fixture=super::super::tests::FixtureStoreReceiving::new(copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES).retained_grant());
+        let mut receiving_fixture=semio_framework_os_store_testing_prelude::FixtureStoreReceiving::new(copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES).retained_grant());
 let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     for _ in 0..65_536 {
         match receiving_fixture.receive(|receiving|assembly.advance(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES,grant,receiving)).expect("rejected fixed-three assembly cleanup turn") {

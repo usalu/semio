@@ -9,12 +9,13 @@ import schema from "../../🧬️schema/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";
 import type {ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {testCachePrune} from "../../../🧪️tests/🧹️cache-prune/🟦️.ts";
-import {phaseCompilerAdmissionControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import {createIssuedResourceControlV1} from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
 
-test("Cooperative scanners retain every existing portable pruning and physical byte law",async()=>{
+test("Cooperative scanners retain every existing portable pruning and physical byte law",()=>withBuildTestInvocationV1(async original=>{
  const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("Original ticket artifact directory required");
- const control=phaseCompilerAdmissionControlV1(new AbortController().signal,30000,()=>undefined,()=>new Promise(done=>setImmediate(done)));await testCachePrune(output,control);
-},30000);
+ const control=createIssuedResourceControlV1(original,"cache:prune-law",30000);await testCachePrune(output,control);
+}),30000);
 
 test("Large cache walks preserve awaited original cancellation and deadlines",async()=>{
  const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("Original ticket artifact directory required");mkdirSync(output,{recursive:true});const root=mkdtempSync(join(output,"c-")),area=join(root,"area"),consumer=join(area,fixture.consumer);mkdirSync(consumer,{recursive:true});

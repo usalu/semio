@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import { readFileSync } from "node:fs";
-import { emitUiAxesRust } from "../../../../../../🔨️modules/🖱️ui/🎚️axes/📽️projection/🟦️.ts";
+import { emitUiAxesRust } from "@semio-tech/ui/axes/projection";
 
 const text = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
 const read = (path: string) => JSON.parse(text(path));

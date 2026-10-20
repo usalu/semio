@@ -32,3 +32,5 @@ semio-s-artifact-draw-drawing-style = { workspace = true, features = ["testkit"]
 semio-s-artifact-draw-drawing-transform = { workspace = true, features = ["testkit"] }
 semio-s-artifact-draw-drawing-write = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-pack = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-s-artifact-draw-drawing-examples = { workspace = true }

@@ -28,7 +28,7 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptProgram } from "./🟦️.ts";
 
 /** 🚪️ `run` — runs the program of this script. */
@@ -38,4 +38,4 @@ class RunScript extends BundleScript {
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("run", RunScript);
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "run" }));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, argv: ["run"] }));

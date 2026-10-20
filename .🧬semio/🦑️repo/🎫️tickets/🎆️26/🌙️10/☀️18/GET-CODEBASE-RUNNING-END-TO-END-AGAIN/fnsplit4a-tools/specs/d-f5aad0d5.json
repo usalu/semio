@@ -1,0 +1,28 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📚️course/🧪️tests/🏔️challenge-session/🟦️.tsx",
+ "describeLine": 12,
+ "shared": {
+  "dir": "🟠️shared",
+  "doc": "/** 🟠️ The shared declarations of the ⛰️ the challenges through the session suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️starts-run-challenge-sheet",
+   "doc": "/** 🔶️ The starts run challenge sheet tests of the ⛰️ the challenges through the session suite. */",
+   "name": "registerStartsRunChallengeSheetTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the starts run challenge sheet tests of the ⛰️ the challenges through the session suite.",
+   "from": 13,
+   "to": 134
+  },
+  {
+   "dir": "🔸️never-lets-deputy-open",
+   "doc": "/** 🔸️ The never lets deputy open tests of the ⛰️ the challenges through the session suite. */",
+   "name": "registerNeverLetsDeputyOpenTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the never lets deputy open tests of the ⛰️ the challenges through the session suite.",
+   "from": 173,
+   "to": 313
+  }
+ ]
+}

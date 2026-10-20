@@ -1358,6 +1358,12 @@
       "packages": []
     },
     {
+      "name": "@semio-tech/framework-filesystem-workspace-rs",
+      "root": "🧰️framework/🔨️modules/📁️filesystem/📝️workspace/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/📁️filesystem/📝️workspace/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/framework-flow-flow-copy-rs",
       "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/📦️packages/🦀️rust/📋️project.json",
@@ -2217,6 +2223,12 @@
       "packages": []
     },
     {
+      "name": "@semio-tech/framework-source-workspace",
+      "root": "🧰️framework/🔨️modules/📁️filesystem/📝️workspace",
+      "manifest": "🧰️framework/🔨️modules/📁️filesystem/📝️workspace/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/framework-space-collection-rs",
       "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/📦️packages/🦀️rust/📋️project.json",
@@ -2350,7 +2362,9 @@
       "name": "@semio-tech/framework-transient",
       "root": "🧰️framework/🔨️modules/🫧️transient",
       "manifest": "🧰️framework/🔨️modules/🫧️transient/📋️project.json",
-      "packages": []
+      "packages": [
+        "@semio-tech/framework-transient"
+      ]
     },
     {
       "name": "@semio-tech/framework-typeset",
@@ -6199,6 +6213,12 @@
       "name": "@semio-tech/value-schema-rs",
       "root": "🧰️framework/🔨️modules/🌱️value/🧬️schema/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🔨️modules/🌱️value/🧬️schema/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/value-snapshot-projection-rs",
+      "root": "🧰️framework/🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust/📋️project.json",
       "packages": []
     },
     {
@@ -14655,8 +14675,8 @@
     },
     {
       "name": "semio-s-artifact-mathematical-equation-update-graph-algorithm",
-      "root": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧮️update-graph/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧮️update-graph/📦️packages/🦀️rust/Cargo.toml",
+      "root": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧮️update-graph-algorithm/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧮️update-graph-algorithm/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -17973,8 +17993,8 @@
     },
     {
       "name": "semio-s-artifact-shooting-shooting-tests-dims-scene-sun-to-half",
-      "root": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡️change-scene-sun/🧪️tests/💡️dims/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡️change-scene-sun/🧪️tests/💡️dims/📦️packages/🦀️rust/Cargo.toml",
+      "root": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡️change-scene-sun-intensity/🧪️tests/💡️dims/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡️change-scene-sun-intensity/🧪️tests/💡️dims/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -18939,8 +18959,8 @@
     },
     {
       "name": "semio-s-artifact-stdio-gltf-mutations-mut-any-10",
-      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🦴️skin/🔀️reorder/🧪️tests/🔀️flips-the-two-1fc9d9/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🦴️skin/🔀️reorder/🧪️tests/🔀️flips-the-two-1fc9d9/📦️packages/🦀️rust/Cargo.toml",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🦴️skin/🔀️reorder/🧪️tests/🔀️flips/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🦴️skin/🔀️reorder/🧪️tests/🔀️flips/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -18981,14 +19001,14 @@
     },
     {
       "name": "semio-s-artifact-stdio-gltf-mutations-mut-any-8",
-      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/🗑️delete/🧪️tests/🚫️removes-the-8d7de9/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/🗑️delete/🧪️tests/🚫️removes-the-8d7de9/📦️packages/🦀️rust/Cargo.toml",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/🗑️delete/🧪️tests/🚫️removes/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/🗑️delete/🧪️tests/🚫️removes/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
       "name": "semio-s-artifact-stdio-gltf-mutations-mut-any-9",
-      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎬️scene/🚚️move/🧪️tests/⬇️demotes-the-first-f41a10/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎬️scene/🚚️move/🧪️tests/⬇️demotes-the-first-f41a10/📦️packages/🦀️rust/Cargo.toml",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎬️scene/🚚️move/🧪️tests/⬇️demotes/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎬️scene/🚚️move/🧪️tests/⬇️demotes/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {

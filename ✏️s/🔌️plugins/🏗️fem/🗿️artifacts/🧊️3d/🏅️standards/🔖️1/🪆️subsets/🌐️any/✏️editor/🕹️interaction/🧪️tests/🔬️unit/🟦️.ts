@@ -1,10 +1,10 @@
 /** 🧪️ Buffer independently reproduces every FEM3d namespaced identity vector. */
 import assert from "node:assert/strict";
 import Ajv from "ajv";
-import { testSharedMapDeltaOracle } from "@semio-tech/framework-replication/mutation/map/testing/shared-map-delta-source";
+import { testSharedMapDeltaOracle } from "@semio-tech/framework/replication/mutation/map/testing/shared-map-delta-source";
 import { readFileSync } from "node:fs";
 import { applyPatch, type Operation } from "fast-json-patch";
-import { testDeclaredVariantFieldOracle } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🌿️variant-field/🟦️.ts";
+import { testDeclaredVariantFieldOracle } from "@semio-tech/framework/dsl/record/testing/variant-field";
 
 /** 🪪️ Validates namespace collisions, load ownership and UTF8 segment lengths without the runtime codec. */
 export function testFem3dIdentityOracle(): void {

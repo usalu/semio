@@ -22,8 +22,9 @@ export function nativeDirectoryExchangeCallV1():NativeDirectoryExchangeCallV1{
 }
 
 /** 🔁️ Builds the atomic platform port: one exchange call, nothing journaled, nothing to recover. */
-export function createNativeDirectoryExchangePortV1(call:NativeDirectoryExchangeCallV1=nativeDirectoryExchangeCallV1(),flush:(path:string)=>void=flushNativePosixDirectoryV1):NativeDirectoryPlatformPortV1{
+export function createNativeDirectoryExchangePortV1(call:NativeDirectoryExchangeCallV1|undefined=undefined,flush:(path:string)=>void=flushNativePosixDirectoryV1):NativeDirectoryPlatformPortV1{
+ let selected=call;
  return Object.freeze({kind:"exchange"as const,
-  swap:(first:string,second:string)=>{const outcome=call.exchange(first,second);if(outcome.status===0)return;if((exchangeRow().unsupported as readonly number[]).includes(outcome.errno))throw Error(protocol.refusals.unsupported+" (errno "+outcome.errno+")");throw Error("Directory exchange failed (status "+outcome.status+", errno "+outcome.errno+")");},
+  swap:(first:string,second:string)=>{const outcome=(selected??=nativeDirectoryExchangeCallV1()).exchange(first,second);if(outcome.status===0)return;if((exchangeRow().unsupported as readonly number[]).includes(outcome.errno))throw Error(protocol.refusals.unsupported+" (errno "+outcome.errno+")");throw Error("Directory exchange failed (status "+outcome.status+", errno "+outcome.errno+")");},
   flush,pending:()=>false,recover:()=>"clean"as const,prepareVolume:()=>{}});
 }

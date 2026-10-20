@@ -1,0 +1,28 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗨️Popover/🧪️tests/🧩️component/🟦️.tsx",
+ "describeLine": 10,
+ "shared": {
+  "dir": "🟠️shared",
+  "doc": "/** 🟠️ The shared declarations of the Popover suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️owns-uncontrolled-default-controlled",
+   "doc": "/** 🔶️ The owns uncontrolled default controlled tests of the Popover suite. */",
+   "name": "registerOwnsUncontrolledDefaultControlledTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the owns uncontrolled default controlled tests of the Popover suite.",
+   "from": 11,
+   "to": 148
+  },
+  {
+   "dir": "🔸️routes-sibling-escape-focus",
+   "doc": "/** 🔸️ The routes sibling escape focus tests of the Popover suite. */",
+   "name": "registerRoutesSiblingEscapeFocusTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the routes sibling escape focus tests of the Popover suite.",
+   "from": 171,
+   "to": 296
+  }
+ ]
+}

@@ -163,7 +163,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["command", "description"],
-      "properties": { "command": { "type": "string", "minLength": 1 }, "description": { "$ref": "#/definitions/LocalizedText" } }
+      "properties": { "command": { "type": "string", "minLength": 6, "pattern": "^repo " }, "description": { "$ref": "#/definitions/LocalizedText" } }
     }
   }
 }

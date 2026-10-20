@@ -496,7 +496,7 @@ export interface WorldCanvasProps {
   readonly onWheel?: (event: WheelEvent) => void;
   readonly onDoubleClick?: (event: MouseEvent) => void;
   readonly onLostPointerCapture?: (event: PointerEvent) => void;
-  /** Fires only when a click/pointer event hits no interactive object (r3f raycast miss) — the correct signal for "background click deselects", since r3f's per-object `stopPropagation()` does not stop the underlying native DOM event from bubbling to a host-level `onClick`. */
+  /** 👆️ Fires only when a click/pointer event hits no interactive object (r3f raycast miss) — the correct signal for "background click deselects", since r3f's per-object `stopPropagation()` does not stop the underlying native DOM event from bubbling to a host-level `onClick`. */
   readonly onPointerMissed?: (event: MouseEvent) => void;
 }
 
@@ -524,7 +524,8 @@ const WORLD_CANVAS_DEFAULT_DPR: [number, number] = [1, 2];
 /** 🖨️ `stencil` is on because the world section cap (`World3dSection.cap`) closes a cut with a stencil pass. */
 const WORLD_CANVAS_DEFAULT_GL = { antialias: true, stencil: true };
 
-/** 🌍️ Generic infinite-world r3f canvas shell (`frameloop="demand"`).
+/**
+ * 🌍️ Generic infinite-world r3f canvas shell (`frameloop="demand"`).
  *
  * 🎯️ The canvas is mounted into — and binds its DOM events to — a wrapper element this shell names
  * itself, never r3f's private inner div. Left to itself, `<Canvas>` connects its handlers to that
@@ -541,7 +542,11 @@ const WORLD_CANVAS_DEFAULT_GL = { antialias: true, stencil: true };
  * 📐️ `<Canvas>` renders only when its own configuration changes: a Canvas render re-runs r3f's `configure`, which publishes a
  * fresh `size` + `viewport` on EVERY call (it compares the 8-key measured rect with the 4-key stored size), re-rendering every
  * `useThree` size subscriber — twice per canvas per world hover (ticket 26/09/23 F3). Handlers read the latest props through
- * a ref and the children travel through {@link WorldCanvasChildren}. */
+ * a ref and the children travel through {@link WorldCanvasChildren}.
+ *
+ * 🖱️ The wheel hook belongs on the EVENT SOURCE, not on the canvas: a `<Canvas eventSource>`
+ * stamps `pointer-events: none` on its canvas, so a wheel listener bound there is never called.
+ */
 export function WorldCanvas(props: WorldCanvasProps): ReactElement {
   const extra = props.extraRootProps ?? {};
   const frameloop = props.frameloop ?? "demand";

@@ -17,6 +17,7 @@
   "targets": {
     "test": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -50,6 +51,7 @@
         "^default",
         "{workspaceRoot}/✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/Cargo.lock"
       ],
+      "outputs": [],
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust",

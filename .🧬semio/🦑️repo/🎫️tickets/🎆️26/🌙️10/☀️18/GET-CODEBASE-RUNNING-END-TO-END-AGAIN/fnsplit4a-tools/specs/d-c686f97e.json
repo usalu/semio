@@ -1,0 +1,46 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📚️course/🧪️tests/🏠️home-grid/🟦️.tsx",
+ "describeLine": 155,
+ "shared": {
+  "dir": "🟣️shared",
+  "doc": "/** 🟣️ The shared declarations of the 🏠️ home overview suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️replays-language-agnostic-hierarchy",
+   "doc": "/** 🔶️ The replays language agnostic hierarchy tests of the 🏠️ home overview suite. */",
+   "name": "registerReplaysLanguageAgnosticHierarchyTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the replays language agnostic hierarchy tests of the 🏠️ home overview suite.",
+   "from": 156,
+   "to": 307
+  },
+  {
+   "dir": "🔸️opens-page-step-front",
+   "doc": "/** 🔸️ The opens page step front tests of the 🏠️ home overview suite. */",
+   "name": "registerOpensPageStepFrontTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the opens page step front tests of the 🏠️ home overview suite.",
+   "from": 327,
+   "to": 479
+  },
+  {
+   "dir": "🟠️zooms-hovered-topic-pans",
+   "doc": "/** 🟠️ The zooms hovered topic pans tests of the 🏠️ home overview suite. */",
+   "name": "registerZoomsHoveredTopicPansTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the zooms hovered topic pans tests of the 🏠️ home overview suite.",
+   "from": 483,
+   "to": 632
+  },
+  {
+   "dir": "🟢️home-overview",
+   "doc": "/** 🟢️ The home overview tests of the 🏠️ home overview suite. */",
+   "name": "registerHomeOverviewTests",
+   "emoji": "🔵",
+   "fdoc": "Registers the home overview tests of the 🏠️ home overview suite.",
+   "from": 640,
+   "to": 640
+  }
+ ]
+}

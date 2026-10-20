@@ -1,7 +1,7 @@
 import {existsSync,writeFileSync,readFileSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import {withPaidProcessCustodianV1} from "../../🟦️.ts";
-import {receiveScriptProcessInvocation,withScriptInvocationSignalV1} from "../../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation, withScriptInvocationSignalV1 } from "../../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import fixture from "../🧫️fixtures/🔣️.json" with {type:"json"};
 let failed=false,failure:unknown;
 /** 🏃️ Program of the sibling router: the former top-level body of its `📜️script.ts`, kept verbatim. */

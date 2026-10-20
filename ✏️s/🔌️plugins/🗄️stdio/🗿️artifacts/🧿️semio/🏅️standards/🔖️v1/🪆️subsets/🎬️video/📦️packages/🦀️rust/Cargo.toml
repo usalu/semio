@@ -36,6 +36,7 @@ semio-s-artifact-stdio-semio-video-descriptor = { workspace = true }
 semio-s-artifact-stdio-semio-video-inferences = { workspace = true }
 semio-s-artifact-stdio-semio-video-model = { workspace = true }
 semio-s-artifact-stdio-semio-video-mutations = { workspace = true }
+semio-framework-pack = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-s-artifact-stdio-semio-video-model = { workspace = true, features = ["testkit"] }

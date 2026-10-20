@@ -8,8 +8,8 @@ import {openNativePlatformStorageV1,requireNativeStoragePathV1,type NativeImageS
 import type {NativeFixedPlatformOptionsV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import schema from "./🧬️schema/🔣️.json";
-import authoritySchema from "../../../../../../🏗️build/🧬️schema/📥️authority.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
+import authoritySchema from "../../../../../../🏗️build/🧬️schema/📥️authority.json" with { type: "json" };
 const protocol=schema.definitions.Protocol.const,authorityKindsV1=authoritySchema.properties.observations.items.properties.kind.enum;
 /** 📋️ Names the required physical floor and whether recovery queues behind concurrent readers or defers to them, without granting cleanup custody. */
 export interface BuildGraphHeadroomRequestV1{readonly minimumAvailableBytes:number;readonly wait:boolean}

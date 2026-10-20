@@ -14,7 +14,7 @@ use semio_s_spatial_kernel_semio_session::{Session, SessionCapture};
 use protocol::MutationDiff;
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, Widget};
 use semio_framework_artifact_playbook_playbook::{visible_blocks, PlaybookBlock};
-use semio_framework_plugin::__semio_dispatch_PluginApp;
+use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_action_bus::RetainedToolWireInput;

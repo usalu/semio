@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "scope": "Language-neutral first-body-failure observability and primary-error vectors",
+  "cases": [
+    {
+      "id": "ordinary-error",
+      "failure": "error",
+      "records": 1
+    },
+    {
+      "id": "large-unicode",
+      "failure": "unicode",
+      "records": 1
+    },
+    {
+      "id": "escaped-control-bytes",
+      "failure": "escaped",
+      "records": 1
+    },
+    {
+      "id": "undefined-rejection",
+      "failure": "undefined",
+      "records": 1
+    },
+    {
+      "id": "primitive-string",
+      "failure": "string",
+      "records": 1
+    },
+    {
+      "id": "throwing-getters",
+      "failure": "getters",
+      "records": 1
+    },
+    {
+      "id": "proxy-omitted",
+      "failure": "proxy",
+      "records": 1
+    },
+    {
+      "id": "body-and-final-failure",
+      "failure": "error",
+      "finalFailure": true,
+      "records": 1
+    },
+    {
+      "id": "undefined-plus-final-failure",
+      "failure": "undefined",
+      "finalFailure": true,
+      "records": 1
+    },
+    {
+      "id": "held-body-failure",
+      "failure": "error",
+      "held": true,
+      "records": 1
+    },
+    {
+      "id": "console-throws",
+      "failure": "error",
+      "consoleFailure": true,
+      "records": 0
+    },
+    {
+      "id": "namespace-rejection-no-body",
+      "failure": "error",
+      "namespaceFailure": true,
+      "records": 0
+    },
+    {
+      "id": "success-no-error",
+      "failure": "error",
+      "success": true,
+      "records": 0
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
-import type { TreeWindowRowExtent } from "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
+import type { TreeWindowRowExtent } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
 import * as React from "react";
 import { TreeContext } from "../📏️row-alignment/🟦️.tsx";
 import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
@@ -207,7 +207,7 @@ export const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionVi
 });
 
 /**
- * Hierarchical tree view component with optional file tree rendering.
+ * 🌳️ Hierarchical tree view component with optional file tree rendering.
  **/
 export type TreeComponent = ((props: TreeRootProps) => React.ReactElement) & {
   Files: React.FC<TreeFilesProps>;

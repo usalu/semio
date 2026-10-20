@@ -187,9 +187,6 @@ pub fn can_commit(session: &CadEngagementScratch) -> bool {
     let Some(spec) = spec_by_id(&session.interaction_id) else {
         return false;
     };
-    // 🏁️ `commit.fromStates` names the commit-ready state; 20 assets declare `ready` while their
-    // machine ends in a `final` `committed` state instead. A machine that has reached a final state
-    // has nothing left to transition to, so a from-state the machine never defines resolves to it.
     let named_from_state = spec.commit.from_states.iter().any(|state| state == &session.state);
     let dangling_from_states = spec.commit.from_states.iter().all(|state| spec.state(state).is_none());
     let at_final = spec.state(&session.state).is_some_and(|state| state.r#final || state.on.is_empty());
@@ -245,9 +242,6 @@ fn normalize_event_payload(event_kind: &str, payload: Option<&DslValue>) -> Opti
 /// follow-up; they no-operation here rather than error.
 fn run_named_action_effect(context: &mut HashMap<String, DslValue>, payload: Option<&DslValue>, action: &str, params: &HashMap<String, DslValue>) {
     match action {
-        // 📍️ Keyed: `context[field][key] = point` (a map of named points). Unkeyed (polyline /
-        // control-point / interpolate curves): `context[field]` is the ORDERED point list and the
-        // point is appended — the specs seed that field with `[]`, so a map is never fabricated.
         "command.addPoint" => {
             let field = params.get("field").and_then(|value| value.as_str()).unwrap_or("points").to_string();
             let key = params.get("key").and_then(|value| value.as_str()).map(str::to_string);
@@ -277,15 +271,11 @@ fn run_named_action_effect(context: &mut HashMap<String, DslValue>, payload: Opt
                 }
             }
         }
-        // 🎯️ `context[field] = targets` — the framework `"cad"` selection the engagement commands
-        // inject as a `selection.changed` event (see `inject_selection`).
         "command.addSelection" | "command.setSelection" => {
             let field = params.get("field").and_then(|value| value.as_str()).unwrap_or("targets").to_string();
             let targets = params.get("targets").cloned().unwrap_or_else(|| DslValue::Array(Vec::new()));
             context.insert(field, targets);
         }
-        // 🧭️ Rubber-band cursor for a constrained move: `vertical` keeps the pick's x/y and reads the
-        // height off the pointer, `normal`/`free` follow the ground pick as-is.
         "command.constrainMoveCursor" => {
             let Some(point) = params.get("point").and_then(parse_vec3).or_else(|| payload.and_then(|value| value.get("point")).and_then(parse_vec3)) else { return };
             let mode = context.get("moveMode").and_then(|value| value.as_str()).unwrap_or("free").to_string();
@@ -296,8 +286,6 @@ fn run_named_action_effect(context: &mut HashMap<String, DslValue>, payload: Opt
             };
             context.insert("cursor".into(), vec3_json(cursor));
         }
-        // 📦️ The session has no object geometry in hand; the pick that preceded `confirm` is the
-        // anchor a bbox centre would have approximated, so the origin falls back to the world origin.
         "command.selectionBboxCenter" => {
             let field = params.get("field").and_then(|value| value.as_str()).unwrap_or("from").to_string();
             let point = context.get("cursor").and_then(parse_vec3).unwrap_or([0.0, 0.0, 0.0]);
@@ -361,11 +349,6 @@ fn apply_effect(session: &mut CadEngagementScratch, payload: Option<&DslValue>, 
             let evaluated: HashMap<String, DslValue> = params.iter().map(|(key, value)| (key.clone(), evaluate_expr(value, &env, &empty_vars))).collect();
             run_named_action_effect(&mut session.context, payload, action, &evaluated);
         }
-        // Emit/OpenTransaction/CommitTransaction/RollbackTransaction/RequestPreview/KernelQuery/
-        // ResolveEditable/SetDiagnostic/ClearDiagnostic/InteractionCall are not yet interpreted —
-        // InteractionCall (nested sub-interaction composition) is a documented follow-up used only
-        // by the curve-drawing sub-flow (`mode.curve`); the primary `mode.2points` flow doesn't
-        // depend on it. The others have no observable effect on committed geometry.
         _ => {}
     }
 }
@@ -445,7 +428,6 @@ pub fn inject_selection(session: &mut CadEngagementScratch, ids: &[String]) -> b
     if ids.is_empty() || !accepts_selection(session) {
         return false;
     }
-    // 🎯️ Each target is `{ id, kind }` — the shape the specs' entity guards read (`curves[0].id`).
     let targets = DslValue::Array(ids.iter().map(|id| DslValue::object([("id".to_string(), DslValue::String(id.clone())), ("kind".to_string(), DslValue::String("object".into()))])).collect());
     apply_event(session, "selection.changed", Some(&DslValue::object([("targets".to_string(), targets)])))
 }
@@ -487,16 +469,12 @@ pub fn parse_repl_line(line: &str, current_state: Option<&str>) -> Option<(Strin
     if trimmed.is_empty() {
         return None;
     }
-    // Legacy raw forms (still used by the wgpu renderer's REPL, which does not PascalCase drafts).
     if let Some(rest) = trimmed.strip_prefix("set.height ") {
         return rest.trim().parse::<f64>().ok().map(|height| ("set.height".into(), Some(DslValue::float(height))));
     }
     if let Some(rest) = trimmed.strip_prefix("dist ") {
         return rest.trim().parse::<f64>().ok().map(|distance| ("set.distance".into(), Some(DslValue::float(distance))));
     }
-    // Normalized forms: the React shell's engagement input PascalCases every draft (no separators),
-    // so `set.height 3.5` arrives as `SetHeight3.5` (framework/renderer/react `Engagement.applyDraft`
-    // via `normalizeEngagementCommandText`).
     if let Some(rest) = strip_prefix_ignore_case(trimmed, "SetHeight") {
         if let Ok(height) = rest.parse::<f64>() {
             return Some(("set.height".into(), Some(DslValue::float(height))));
@@ -507,8 +485,6 @@ pub fn parse_repl_line(line: &str, current_state: Option<&str>) -> Option<(Strin
             return Some(("set.distance".into(), Some(DslValue::float(distance))));
         }
     }
-    // `SetRadius2.5` / `SetAngle45` / `SetFactor2` — every `set.<field>` scalar event the specs
-    // declare, PascalCased by the shell exactly like `SetHeight`.
     if let Some(rest) = strip_prefix_ignore_case(trimmed, "Set") {
         let digits = rest.find(|character: char| character.is_ascii_digit() || character == '-' || character == '.').unwrap_or(rest.len());
         let (field, number) = rest.split_at(digits);
@@ -518,7 +494,6 @@ pub fn parse_repl_line(line: &str, current_state: Option<&str>) -> Option<(Strin
             }
         }
     }
-    // Bare numeric entry commits height while a numeric-entry state is active.
     if current_state.is_some_and(|state| NUMERIC_ENTRY_STATES.contains(&state)) {
         if let Ok(height) = trimmed.parse::<f64>() {
             return Some(("set.height".into(), Some(DslValue::float(height))));
@@ -599,7 +574,6 @@ fn commit_from_2_points_and_height(kernel: &mut Brep, params: &HashMap<String, D
     } else if lower.contains("windows") {
         (span, 0.05, height.max(0.05))
     } else {
-        // slab / baseplate / roof / hull / fem elements: flat footprint extruded by `height`.
         let w = (point_b[0] - point_a[0]).abs().max(0.5);
         let d = (point_b[1] - point_a[1]).abs().max(0.5);
         (w, d, height.max(0.05))
@@ -659,7 +633,6 @@ pub fn quaternion_from_x_to(direction: [f64; 3]) -> [f64; 4] {
     let pitch = -(direction[2] / length).asin();
     let (sy, cy) = (yaw * 0.5).sin_cos();
     let (sp, cp) = (pitch * 0.5).sin_cos();
-    // q = q_yaw(Z) * q_pitch(Y)
     [-sy * sp, cy * sp, sy * cp, cy * cp]
 }
 
@@ -704,7 +677,7 @@ fn polyline_objects(kernel: &mut Brep, typology: &str, label: &str, points: &[[f
 
 /// 🎯️ What a committed session asks the document to do.
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) enum CommitOutcome {
+pub enum CommitOutcome {
     /// 🧱️ New objects for the session's pane.
     Objects(Vec<CadObject>),
     /// 🚚️ Move the selected `targets` by `delta`.
@@ -759,8 +732,6 @@ fn commit_command_finish(kernel: &mut Brep, params: &HashMap<String, DslValue>, 
         "circle" | "arc" => {
             let center = context_named_point(context, "center")?;
             let radius = if result_kind == "arc" { context_named_point(context, "start").map(|start| distance(start, center)).unwrap_or(1.0).max(0.02) } else { radius_of(center) };
-            // ⭕️ A circle/arc is persisted as its closed polygonal polyline (32 segments, arcs the swept
-            // share) — thin bars are the only curve shape `CadObjectSpec` carries today.
             let sweep = if result_kind == "arc" {
                 let start = context_named_point(context, "start")?;
                 let start_angle = (start[1] - center[1]).atan2(start[0] - center[0]);
@@ -789,8 +760,6 @@ fn commit_command_finish(kernel: &mut Brep, params: &HashMap<String, DslValue>, 
             (!objects.is_empty()).then_some(CommitOutcome::Objects(objects))
         }
         "mirror" => {
-            // 🪞️ Mirror across the vertical plane through the two picked points: a copy whose origin is
-            // reflected; the mirrored solid keeps its own extent (the persisted model has no handedness).
             let targets = context_targets(context);
             let a = context_named_point(context, "mirrorStart")?;
             let b = context_named_point(context, "mirrorEnd")?;
@@ -800,8 +769,6 @@ fn commit_command_finish(kernel: &mut Brep, params: &HashMap<String, DslValue>, 
                 return Some(CommitOutcome::Unsupported(format!("command.finish/{result_kind}")));
             }
             let unit = [normal[0] / length, normal[1] / length, 0.0];
-            // The reflection of the selection's anchor is expressed as one copy offset — the persisted
-            // origin moves twice its signed distance to the plane along the normal.
             let anchor = context.get("cursor").and_then(parse_vec3).unwrap_or(a);
             let signed = (anchor[0] - a[0]) * unit[0] + (anchor[1] - a[1]) * unit[1];
             Some(CommitOutcome::Copy { targets, delta: [-2.0 * signed * unit[0], -2.0 * signed * unit[1], 0.0] })
@@ -814,7 +781,7 @@ fn commit_command_finish(kernel: &mut Brep, params: &HashMap<String, DslValue>, 
 /// model-definition assets declare: `primitive.createBoxFromCorners`, the `*From2PointsAndHeight`/
 /// `*FromSurface` constructions, `curve.line`/`curve.polyline`, `command.finish` result kinds, and
 /// the `transform.*` verbs on the injected selection.
-pub(crate) fn commit_session(kernel: &mut Brep, session: &CadEngagementScratch, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CommitOutcome> {
+pub fn commit_session(kernel: &mut Brep, session: &CadEngagementScratch, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CommitOutcome> {
     let spec = spec_by_id(&session.interaction_id)?;
     let env = ExprEnv { context: &session.context.0, event: None };
     let empty_vars = HashMap::new();

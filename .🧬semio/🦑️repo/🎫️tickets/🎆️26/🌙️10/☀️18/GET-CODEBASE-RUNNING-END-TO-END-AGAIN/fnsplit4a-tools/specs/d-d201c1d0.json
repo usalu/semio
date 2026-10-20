@@ -1,0 +1,34 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-leaf-generics/🟦️.ts",
+ "describeLine": 136,
+ "sharedRewrite": [
+  [
+   "dirname(fileURLToPath(import.meta.url))",
+   "dirname(dirname(fileURLToPath(import.meta.url)))"
+  ]
+ ],
+ "shared": {
+  "dir": "🟠️shared",
+  "doc": "/** 🟠️ The shared declarations of the mutation leaves generic over their aggregate suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️finds-transparent-aggregate-variants",
+   "doc": "/** 🔶️ The finds transparent aggregate variants tests of the mutation leaves generic over their aggregate suite. */",
+   "name": "registerFindsTransparentAggregateVariantsTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the finds transparent aggregate variants tests of the mutation leaves generic over their aggregate suite.",
+   "from": 137,
+   "to": 287
+  },
+  {
+   "dir": "🔸️prunes-use-statements-any",
+   "doc": "/** 🔸️ The prunes use statements any tests of the mutation leaves generic over their aggregate suite. */",
+   "name": "registerPrunesUseStatementsAnyTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the prunes use statements any tests of the mutation leaves generic over their aggregate suite.",
+   "from": 300,
+   "to": 422
+  }
+ ]
+}

@@ -1,0 +1,5 @@
+Paint2dCanvasSurface 4 phases, keep=-, final return=true
+220-377 useWindowInstanceIdState
+381-486 useClientPointState
+522-631 usePointerMoveState
+654-654 useContextMenu

@@ -1,13 +1,18 @@
-import type { ScriptInvocation } from "@semio-tech/process/routing";
-import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
+import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
+import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/framework/process/compiler-capacity";
 import { runWeatherChecks } from "../../../../🧩️extensions/🌦️epw/🧪️tests/🔬️unit/🟦️.ts";
-import { runRepositoryCommand } from "@semio-tech/repo-lib/process";
+import { runRepositoryCommand } from "@semio-tech/framework/process/execution";
+import coefficientSchema from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system/🌡️change-temperature/🧬️schema/🔣️.json" with { type: "json" };
+import constantSchema from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system/🧊️change-heat-loss/🧬️schema/🔣️.json" with { type: "json" };
+import windSchema from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system/💨️change-wind-loss/🧬️schema/🔣️.json" with { type: "json" };
+import mountingSchema from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system/🏠️change-mounting/🧬️schema/🔣️.json" with { type: "json" };
+import createSchema from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system/✨️create/🧬️schema/🔣️.json" with { type: "json" };
 import { runWeatherChronologyChecks } from "../../../../🔨️modules/⚡️simulation/⚙️engine/📍️site/📅️chronology/🧪️tests/🟦️.ts";
 import { resolve } from "node:path";
-import { scriptInvocationBudget } from "@semio-tech/process/routing";
-import { runOwnedCommand } from "@semio-tech/process/execution";
-import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/cargo-laws";
-import { runAdmittedExactCargoLawsV1 as runOwnerExactCargoLaws } from "@semio-tech/process/cargo-test";
+import { scriptInvocationBudget } from "@semio-tech/framework/process/routing";
+import { runOwnedCommand } from "@semio-tech/framework/process/execution";
+import { configuredExactCargoLawPolicyV1 } from "@semio-tech/framework/process/cargo-laws";
+import { runAdmittedExactCargoLawsV1 as runOwnerExactCargoLaws } from "@semio-tech/framework/process/cargo-test";
 
 async function runExactCargoLaws(request: Parameters<typeof runOwnerExactCargoLaws>[0]) {
   const plugin = "✏️s/🔌️plugins/🔋️energy";
@@ -53,7 +58,7 @@ export async function runEnergySolarVerifyScript(context: Readonly<{ root: strin
   }
   const source = resolve(context.repoRoot,"✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/⚡️electrical/🧪️tests/🔆️pv-plane/🟦️.ts");
   await runOwnedCommand(process.execPath,[Bun.resolveSync('typescript/bin/tsc',context.root),'--noEmit','--strict','--skipLibCheck','--resolveJsonModule','--allowImportingTsExtensions','--esModuleInterop','--target','ESNext','--module','ESNext','--moduleResolution','bundler','--types','bun',source],context.repoRoot,'energy:solar-source-typecheck',scriptInvocationBudget(context.invocation,120000),{signal:context.invocation.control.signal,output:{maximumBytes:8388608,maximumLines:65536}});
-  module.verifySolarPvOracle();
+  module.verifySolarPvOracle({ coefficient: coefficientSchema, constant: constantSchema, wind: windSchema, mounting: mountingSchema, create: createSchema });
   if (segments[0] === 'solar-source') return;
   const receipts = await runExactCargoLaws({control:exactCargoCallerControlV1(context.invocation,"exact-cargo:caller",0),invocation:context.invocation,policy:configuredExactCargoLawPolicyV1(),manifestPaths:{'semio-s-artifact-energy-model':resolve(context.root,'Cargo.toml')},cwd:context.repoRoot,groups:[{package:'semio-s-artifact-energy-model',target:{kind:'lib',name:'semio_s_artifact_energy_model'},cargoArgs:['--locked'],laws:['kernel::tests::solar_pv::pv_kernel_preserves_independent_plane_components_weather_and_authored_efficiency','kernel::tests::solar_pv::pv_authored_thermal_mutations_preserve_original_rows_inverse_and_refusal']}]});
 }

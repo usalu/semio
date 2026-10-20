@@ -294,7 +294,7 @@ pub mod text {
     pub use semio_s_artifact_stdio_bmp_schema::standards::v_v3::subsets::any::io::text::*;
     pub use semio_s_artifact_stdio_bmp_inferences::standards::v_v3::subsets::any::io::text::diff;
     pub use semio_s_artifact_stdio_bmp_inferences::standards::v_v3::subsets::any::io::text::inferences;
-    pub use semio_s_artifact_stdio_bmp_mutations::standards::v_v3::subsets::any::io::text::mutations;
+    pub use crate::mirror::standards::v_v3::subsets::any::io::text::mutations;
     pub use semio_s_artifact_stdio_bmp_snapshot::standards::v_v3::subsets::any::io::text::snapshot;
 }
 

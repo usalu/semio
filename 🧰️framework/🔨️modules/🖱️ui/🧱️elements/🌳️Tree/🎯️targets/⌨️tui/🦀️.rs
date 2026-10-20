@@ -1,7 +1,7 @@
 //! 🌳️ tui state, key, pointer, cursor and paint functions for the Tree element: a flat pre-order forest with
 //! expand and collapse, branch guides, a hovered ancestor path and a filter that keeps the ancestors of every match. The filter
 //! matches the whole path of a node, so a leaf is found by the names of its folders. Signals carry item indices.
-//! Wired as a crate-root sibling module of `crate::tui::widget` (see that mod's `pub use crate::tui::tree::{TreeItem, TreeState};`).
+//! The widget owner and its integration laws use the single lower core cell, signal and geometry model.
 
 use semio_framework_ui_tui_core::cell::{Cell, CellBuffer};
 use semio_framework_ui_tui_core::event::{mods, Key, KeyEvent, MouseEvent};
@@ -424,3 +424,7 @@ pub fn paint_tree(t: &TreeState, theme: &Theme, rect: Rect, buf: &mut CellBuffer
     }
     paint_scroll_bar(buf, theme, Rect::new(rect.x + rect.width - 1, area.y, 1, area.height), window.start, rows, count);
 }
+
+#[cfg(test)]
+#[path = "../../🧪️tests/⌨️tui/🦀️.rs"]
+mod tests;

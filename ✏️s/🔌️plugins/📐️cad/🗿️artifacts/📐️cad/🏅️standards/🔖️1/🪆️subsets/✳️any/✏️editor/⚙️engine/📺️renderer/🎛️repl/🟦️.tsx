@@ -4,7 +4,7 @@
  */
 
 // #region 🔌️Adapters
-import { Button, borderNormalClass, canvasHostRootClass, Checkbox, cn, CanvasPickMenu, editorShellRootClass, floatingFieldSurfaceClass, floatingMenuSurfaceClass, floatingPaneAsideClass, floatingTagClass, floatingTagOffClass, floatingTagOnClass, Input, LevelProvider, MenuItem, Select, SelectContent, SelectionMarquee, SelectItem, SelectTrigger, SelectValue, WINDOW_SEARCH_USER, type ReactNode } from "@semio-tech/framework/ui/targets/react";
+import { Button, borderNormalClass, canvasHostRootClass, Checkbox, cn, CanvasPickMenu, editorShellRootClass, floatingFieldSurfaceClass, floatingMenuSurfaceClass, floatingPaneAsideClass, floatingTagClass, floatingTagOffClass, floatingTagOnClass, Input, LevelProvider, MenuItem, Select, SelectContent, SelectionMarquee, SelectItem, SelectTrigger, SelectValue, WINDOW_SEARCH_USER, type ReactNode } from "@semio-tech/ui-react";
 // #endregion 🔌️Adapters
 import { canvasPickTargetKey } from "@semio-tech/framework";
 

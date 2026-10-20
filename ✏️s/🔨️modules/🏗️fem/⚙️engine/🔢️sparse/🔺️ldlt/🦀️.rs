@@ -103,6 +103,7 @@ pub use factor_and_job::*;
 
 #[path = "🔄️restore-cursor/🦀️.rs"]
 mod restore_cursor;
+pub use restore_cursor::LdltRestoreCursor;
 #[cfg(test)]
     use restore_cursor::*;
 

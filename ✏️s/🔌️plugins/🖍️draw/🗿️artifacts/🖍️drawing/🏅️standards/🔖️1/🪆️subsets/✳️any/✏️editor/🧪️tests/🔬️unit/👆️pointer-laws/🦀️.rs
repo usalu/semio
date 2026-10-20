@@ -1,6 +1,10 @@
 //! 👆️ Drawing editor unit laws over pointers: gesture preview, transactions, batched moves, cancelled release and the pointer wire.
 
 use super::*;
+use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::NoConfig;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 //#region 🔖️GesturePreview
 #[semio_framework_async_macros::async_test]

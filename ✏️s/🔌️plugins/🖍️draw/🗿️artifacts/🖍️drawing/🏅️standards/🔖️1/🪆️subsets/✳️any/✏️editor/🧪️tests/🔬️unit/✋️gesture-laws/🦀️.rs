@@ -2,6 +2,7 @@
 
 use super::*;
 use semio_framework_test_fixtures::fixture_text;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 #[semio_framework_async_macros::async_test]
 async fn shape_rect_drag_commits_one_layer_and_requests_utility_reset() {

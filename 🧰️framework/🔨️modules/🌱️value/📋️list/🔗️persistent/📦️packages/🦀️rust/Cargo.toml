@@ -33,6 +33,8 @@ semio-framework-value-retained-clone = { path = "../../../../🧬️retained-clo
 semio-framework-value-retirement = { path = "../../../../♻️retirement/📦️packages/🦀️rust" }
 semio-framework-value-shared-issuance = { path = "../../../../♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust" }
 
+semio-framework-value-snapshot-projection = { path = "../../../../📽️projection/📦️packages/🦀️rust" }
+
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value-testing-allocator = { path = "../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }

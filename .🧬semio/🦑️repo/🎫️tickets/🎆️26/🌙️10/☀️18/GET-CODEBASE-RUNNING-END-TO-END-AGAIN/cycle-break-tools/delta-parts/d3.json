@@ -1,0 +1,35 @@
+{
+ "schema": "cycle-break/delta@1",
+ "stagedAt": "2026-10-20T02:21:48.757Z",
+ "manifestOps": [],
+ "newFiles": [],
+ "edits": [
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/🔌️ports/🟦️.ts",
+   "from": "../../../🔌️ports/🟦️.ts",
+   "to": "../../../../📚️library/🔌️ports/🟦️.ts",
+   "mode": "specifier",
+   "wave": "d3-server-ports",
+   "why": "ports are the adapter layer of the server library: the coordinator consumes them"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🔌️ports/🟦️.ts",
+   "from": "new URL(\"../📦️packages/🟦️typescript/package.json\", import.meta.url)",
+   "to": "new URL(\"../../🎛️coordinator/📦️packages/🟦️typescript/package.json\", import.meta.url)",
+   "mode": "text",
+   "wave": "d3-server-ports",
+   "why": "driver resolution stays anchored at the manifest that declares pg until the library package declares it"
+  }
+ ],
+ "fileOps": [
+  {
+   "op": "move",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🔌️ports/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🔌️ports/🟦️.ts",
+   "sha256": "58727f602b348b46e9fb0a0776140448fb9342c19b8dc716147962929fd85c62",
+   "wave": "d3-server-ports",
+   "why": "ports are the adapter layer of the server library: the coordinator consumes them"
+  }
+ ],
+ "flags": []
+}

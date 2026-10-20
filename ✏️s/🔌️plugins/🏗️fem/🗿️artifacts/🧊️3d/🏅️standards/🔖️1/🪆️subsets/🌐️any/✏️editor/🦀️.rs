@@ -173,6 +173,7 @@ semio_framework_plugin::app_commands! {
 #[path = "🗃️retained-commands/🦀️.rs"]
 mod retained_commands;
 pub(crate) use retained_commands::*;
+pub use retained_commands::fem3d_route;
 
 #[path = "📬️store-preparation/🦀️.rs"]
 mod store_preparation;

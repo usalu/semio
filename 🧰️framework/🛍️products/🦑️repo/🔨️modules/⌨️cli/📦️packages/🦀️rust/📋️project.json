@@ -113,7 +113,7 @@
                 "build-script-run"
               ]
             },
-            "binary": "semio-repo"
+            "binary": "repo"
           }
         }
       }

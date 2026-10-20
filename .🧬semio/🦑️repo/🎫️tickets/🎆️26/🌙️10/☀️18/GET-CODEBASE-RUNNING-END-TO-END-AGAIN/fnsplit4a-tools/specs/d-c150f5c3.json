@@ -1,0 +1,37 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧪️tests/🧾️app-channel-codec/🟦️.ts",
+ "describeLine": 17,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of the @semio-tech/framework-os AppChannelCodec suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️round-trips-app-typed",
+   "doc": "/** 🔶️ The round trips app typed tests of the @semio-tech/framework-os AppChannelCodec suite. */",
+   "name": "registerRoundTripsAppTypedTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the round trips app typed tests of the @semio-tech/framework-os AppChannelCodec suite.",
+   "from": 18,
+   "to": 146
+  },
+  {
+   "dir": "🔸️tags-appframe-variant-per",
+   "doc": "/** 🔸️ The tags appframe variant per tests of the @semio-tech/framework-os AppChannelCodec suite. */",
+   "name": "registerTagsAppframeVariantPerTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the tags appframe variant per tests of the @semio-tech/framework-os AppChannelCodec suite.",
+   "from": 176,
+   "to": 334
+  },
+  {
+   "dir": "🟠️pins-app-channel-version",
+   "doc": "/** 🟠️ The pins app channel version tests of the @semio-tech/framework-os AppChannelCodec suite. */",
+   "name": "registerPinsAppChannelVersionTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the pins app channel version tests of the @semio-tech/framework-os AppChannelCodec suite.",
+   "from": 364,
+   "to": 461
+  }
+ ]
+}

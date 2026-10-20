@@ -70,21 +70,21 @@ pub mod standards {
                             pub mod change_jfif_header {
                                 pub use semio_s_artifact_stdio_jpg_mutations::standards::v_jfif_1_01::subsets::document::io::text::mutations::change_jfif_header::*;
                                 #[cfg(test)]
-                                #[path="../../../../../🧾️document/🚪️io/📝️text/🧬️mutations/🪪️change-jfif/🧪️tests/🎯️direct/🦀️.rs"]
+                                #[path="../../../../../🧾️document/🚪️io/📝️text/🧬️mutations/🪪️change-jfif-header/🧪️tests/🎯️direct/🦀️.rs"]
                                 pub mod tests_direct_behavior;
                             }
                             #[path = "."]
                             pub mod remove_other_segment {
                                 pub use semio_s_artifact_stdio_jpg_mutations::standards::v_jfif_1_01::subsets::document::io::text::mutations::remove_other_segment::*;
                                 #[cfg(test)]
-                                #[path="../../../../../🧾️document/🚪️io/📝️text/🧬️mutations/🗑️remove-other/🧪️tests/🎯️direct/🦀️.rs"]
+                                #[path="../../../../../🧾️document/🚪️io/📝️text/🧬️mutations/🗑️remove-other-segment/🧪️tests/🎯️direct/🦀️.rs"]
                                 pub mod tests_direct_behavior;
                             }
                             #[path = "."]
                             pub mod insert_other_segment {
                                 pub use semio_s_artifact_stdio_jpg_mutations::standards::v_jfif_1_01::subsets::document::io::text::mutations::insert_other_segment::*;
                                 #[cfg(test)]
-                                #[path="../../../../../🧾️document/🚪️io/📝️text/🧬️mutations/📥️insert-other/🧪️tests/🎯️direct/🦀️.rs"]
+                                #[path="../../../../../🧾️document/🚪️io/📝️text/🧬️mutations/📥️insert-other-segment/🧪️tests/🎯️direct/🦀️.rs"]
                                 pub mod tests_direct_behavior;
                             }
                             #[path = "."]

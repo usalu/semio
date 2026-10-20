@@ -1,0 +1,52 @@
+{
+ "file": "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🟦️.ts",
+ "describeLine": 114,
+ "shared": {
+  "dir": "🧰️deploy-fixtures",
+  "doc": "/** 🧰️ The shared deployment test fixtures: the course locations, the parsed compose and workflow documents and the sealed document builders. */"
+ },
+ "sharedRewrite": [
+  [
+   "import.meta.url)), \"../..\")",
+   "import.meta.url)), \"../../..\")"
+  ]
+ ],
+ "parts": [
+  {
+   "dir": "🛑️cancellation-and-staging",
+   "doc": "/** 🛑️ The deployment cancellation, release build and site staging tests. */",
+   "name": "registerCancellationAndStagingTests",
+   "emoji": "🧹",
+   "fdoc": "Registers the preflight alignment, parent cancellation, release build, site staging and staging refusal tests.",
+   "from": 115,
+   "to": 181
+  },
+  {
+   "dir": "🐳️docker-context-and-image",
+   "doc": "/** 🐳️ The docker context, apex domain, schema contract, drift and proctor image tests. */",
+   "name": "registerDockerContextAndImageTests",
+   "emoji": "📦",
+   "fdoc": "Registers the docker context, apex domain, schema contract, source drift, image gate and runtime role tests.",
+   "from": 188,
+   "to": 259
+  },
+  {
+   "dir": "🧩️compose-caddy-and-workflow",
+   "doc": "/** 🧩️ The compose stack, Caddy proxy and release workflow tests. */",
+   "name": "registerComposeCaddyAndWorkflowTests",
+   "emoji": "🔐",
+   "fdoc": "Registers the hardened compose stack, the Caddy proxy and the release workflow tests.",
+   "from": 270,
+   "to": 320
+  },
+  {
+   "dir": "🌐️sealed-publication-and-bundle",
+   "doc": "/** 🌐️ The sealed document, CDN artifact, stack bundle, readiness gate and response header tests. */",
+   "name": "registerSealedPublicationAndBundleTests",
+   "emoji": "🚛",
+   "fdoc": "Registers the sealed document, CDN artifact, stack bundle, readiness gate and response header tests.",
+   "from": 357,
+   "to": 471
+  }
+ ]
+}

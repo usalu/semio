@@ -178,9 +178,8 @@ use retained_command_contracts_and_work::{
 
 #[path = "🏭️retained-job-factories-and-preparation/🦀️.rs"]
 mod retained_job_factories_and_preparation;
-use retained_job_factories_and_preparation::{
-    Fem2dArtifactPreparationFactory, Fem2dRetainedCommandJobFactory,
-};
+pub use retained_job_factories_and_preparation::Fem2dRetainedCommandJobFactory;
+use retained_job_factories_and_preparation::Fem2dArtifactPreparationFactory;
 #[cfg(test)]
 use retained_job_factories_and_preparation::Fem2dArtifactPreparation;
 

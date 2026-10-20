@@ -1,0 +1,115 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🔨️modules/🏠️host/🧰️owned/🏁️initialization-authority/🦀️.rs",
+ "function": "step_phase",
+ "nth": 0,
+ "match_line": 182,
+ "types": {},
+ "ret": "GisMapInitializerTurn",
+ "inline": true,
+ "arms": [
+  {
+   "line": 183,
+   "name": "phase_admit_owners",
+   "doc": "🧱️ Runs the `admit owners` phase of `step_phase`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 248,
+   "name": "phase_clone_initial",
+   "doc": "🪵️ Runs the `clone initial` phase of `step_phase`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 271,
+   "name": "phase_seed_history",
+   "doc": "🔩️ Runs the `seed history` phase of `step_phase`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "edit": "usize",
+    "lane": "u8",
+    "index": "usize"
+   }
+  },
+  {
+   "line": 320,
+   "name": "phase_find_applied",
+   "doc": "⚙️ Runs the `find applied` phase of `step_phase`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "position": "usize"
+   }
+  },
+  {
+   "line": 341,
+   "name": "phase_apply_forward",
+   "doc": "🧲️ Runs the `apply forward` phase of `step_phase`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "position": "usize",
+    "edit": "usize",
+    "mutation": "usize"
+   }
+  },
+  {
+   "line": 383,
+   "name": "phase_find_redo",
+   "doc": "🪛️ Runs the `find redo` phase of `step_phase`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "position": "usize"
+   }
+  },
+  {
+   "line": 414,
+   "name": "phase_build_candidate",
+   "doc": "🔧️ Runs the `build candidate` phase of `step_phase`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 432,
+   "name": "phase_retire_cancelled_or_retire_fault",
+   "doc": "🔨️ Runs the `retire cancelled` or `retire fault` phase of `step_phase`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  }
+ ],
+ "method": {
+  "self_param": "&mut self",
+  "call": "self.{name}({args})"
+ }
+}

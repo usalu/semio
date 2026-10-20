@@ -25,7 +25,8 @@
     "@semio-tech/ui-react": "workspace:*",
     "@semio-tech/ui-styling": "workspace:*",
     "@semio-tech/infinite-world-r3f": "workspace:*",
-    "@semio-tech/framework-os": "workspace:*"
+    "@semio-tech/framework-os": "workspace:*",
+    "@semio-tech/framework-manifest": "workspace:*"
   },
   "devDependencies": {
     "fast-check": "3.23.2",

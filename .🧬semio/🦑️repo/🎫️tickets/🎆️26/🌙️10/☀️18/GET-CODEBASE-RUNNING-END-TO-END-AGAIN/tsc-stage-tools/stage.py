@@ -3,10 +3,11 @@
 #   stage.py add <relative-path>...        copy current real files into the scratch mirror (+ base snapshot) for editing
 #   stage.py mkpatch                       diff edited mirror copies against their base snapshot into patches.json + staged/
 #   stage.py check                         verify every anchor applies exactly once (or is already applied) on the current tree
-#   stage.py apply [--dry-run] [--ignore-sync]   write the patched files (refuses while a dependency sync runs)
+#   stage.py apply [--dry-run] [--ignore-sync] [--rebase]   write the patched files (refuses while a dependency sync runs; refuses a target whose sha differs from its staged base unless --rebase)
+#   stage.py restage TREE                  re-anchor every entry on TREE (the planner's materialized predecessor result, live files elsewhere): picks the target path, records its new base sha
 #   stage.py export OUT.json               write {absolute path: patched text} for tscheck.mjs
 #   stage.py mirror DIR                    build a scratch overlay: real dirs along patched paths, symlinks elsewhere
-import difflib, hashlib, json, os, subprocess, sys
+import difflib, hashlib, json, os, shutil, subprocess, sys, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -132,38 +133,153 @@ def cmd_refresh():
 
 def apply_ops(text, ops, label):
     for index, (old, new) in enumerate(ops):
-        if old in new and new in text:
+        found, done = text.count(old), text.count(new)
+        if done == 1 and (found == 0 or old in new):
             continue
-        elif text.count(old) == 1:
+        if found == 1 and done == 0:
             text = text.replace(old, new)
-        elif new in text:
             continue
-        else:
-            raise SystemExit("anchor %s[%d] occurs %d times (expected 1): %s" % (label, index, text.count(old), old[:100].replace("\n", "\\n")))
+        raise SystemExit("anchor %s[%d] occurs %d times and its replacement %d times (expected one of them exactly once): %s" % (label, index, found, done, old[:100].replace("\n", "\\n")))
     return text
 
 
 SCRIPT = "\U0001F4DC\ufe0fscript.ts"
 OWNER = "\U0001F7E6\ufe0f.ts"
+CHILD = "\U0001F4E6\ufe0fchild"
+TREE = None
 
 
-def candidates(relative):
-    yield relative
-    if os.path.basename(relative) == SCRIPT:
-        yield os.path.join(os.path.dirname(relative), OWNER)
+def deleted_in_tree():
+    marker = os.path.join(TREE, ".materialized.json")
+    return set(json.load(open(marker, encoding="utf-8"))["deleted"]) if TREE is not None and os.path.isfile(marker) else set()
+
+
+def view(relative):
+    if TREE is not None:
+        staged = os.path.join(TREE, relative)
+        if os.path.isfile(staged):
+            return read(staged)
+        if relative in deleted_in_tree():
+            return None
+    path = os.path.join(ROOT, relative)
+    return read(path) if os.path.isfile(path) else None
 
 
 def patched(relative, row):
-    errors = []
-    for candidate in candidates(relative):
-        path = os.path.join(ROOT, candidate)
-        if not os.path.exists(path):
+    data = view(relative)
+    if data is None:
+        raise SystemExit("target missing: " + relative)
+    return relative, apply_ops(data.decode("utf-8"), row["ops"], relative)
+
+
+def hunks(base_text, edit_text):
+    base_lines = base_text.splitlines(keepends=True)
+    edit_lines = edit_text.splitlines(keepends=True)
+    offsets = [0]
+    for line in base_lines:
+        offsets.append(offsets[-1] + len(line))
+    found = []
+    for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, base_lines, edit_lines, autojunk=False).get_opcodes():
+        if tag == "equal":
             continue
+        start, stop = offsets[i1], offsets[i2]
+        old, new = base_text[start:stop], "".join(edit_lines[j1:j2])
+        prefix, limit = 0, min(len(old), len(new))
+        while prefix < limit and old[prefix] == new[prefix]:
+            prefix += 1
+        suffix = 0
+        while suffix < limit - prefix and old[len(old) - 1 - suffix] == new[len(new) - 1 - suffix]:
+            suffix += 1
+        found.append((start + prefix, stop - suffix, new[prefix:len(new) - suffix]))
+    return found
+
+
+def robust_ops(base_text, edit_text):
+    for pad in (0, 24, 48, 96, 192, 400):
+        ops = []
+        for start, stop, new in hunks(base_text, edit_text):
+            left = right = pad
+            while True:
+                anchor = base_text[max(0, start - left):min(len(base_text), stop + right)]
+                if anchor and base_text.count(anchor) == 1:
+                    break
+                left += 12
+                right += 12
+            ops.append([anchor, base_text[max(0, start - left):start] + new + base_text[stop:min(len(base_text), stop + right)]])
         try:
-            return candidate, apply_ops(read(path).decode("utf-8"), row["ops"], candidate)
-        except SystemExit as error:
-            errors.append(str(error))
-    raise SystemExit("; ".join(errors) or "no target for " + relative)
+            if apply_ops(base_text, ops, "rederived") == edit_text:
+                return ops
+        except SystemExit:
+            continue
+    raise SystemExit("no anchored ops reproduce the merged text")
+
+
+def merge3(mine, original, yours):
+    folder = tempfile.mkdtemp(prefix="tsc-merge-")
+    try:
+        names = []
+        for label, text in (("mine", mine), ("original", original), ("yours", yours)):
+            names.append(os.path.join(folder, label))
+            with open(names[-1], "w", encoding="utf-8") as handle:
+                handle.write(text)
+        run = subprocess.run(["diff3", "-m"] + names, capture_output=True)
+        return run.stdout.decode("utf-8") if run.returncode == 0 else None
+    finally:
+        shutil.rmtree(folder, ignore_errors=True)
+
+
+def cmd_restage(tree):
+    global TREE
+    TREE = os.path.abspath(tree)
+    old, new, unresolved = load(), {}, []
+    for relative, row in sorted(old.items()):
+        folder = os.path.dirname(relative)
+        names = [relative] + ([os.path.join(folder, CHILD, OWNER), os.path.join(folder, OWNER), os.path.join(folder, "\U0001F9EA\ufe0ftests", "\U0001F52C\ufe0fscript-commands", OWNER)] if os.path.basename(relative) == SCRIPT else [])
+        fits = []
+        for name in names:
+            data = view(name)
+            if data is None:
+                continue
+            try:
+                apply_ops(data.decode("utf-8"), row["ops"], name)
+                fits.append((name, data))
+            except SystemExit:
+                continue
+        if not fits:
+            name = next((candidate for candidate in names if view(candidate) is not None), relative)
+            data = view(name)
+            original = read(os.path.join(ROOT, relative)) if os.path.isfile(os.path.join(ROOT, relative)) else None
+            merged = None
+            if original is not None and data is not None:
+                try:
+                    merged = merge3(data.decode("utf-8"), original.decode("utf-8"), apply_ops(original.decode("utf-8"), row["ops"], relative))
+                except SystemExit:
+                    merged = None
+            if merged is None:
+                resolved = os.path.join(HERE, "resolved", hashlib.sha256(relative.encode("utf-8")).hexdigest()[:16] + ".txt")
+                if os.path.isfile(resolved):
+                    merged = read(resolved).decode("utf-8")
+                    print("hand-resolved:", relative)
+                else:
+                    unresolved.append(relative)
+                    continue
+            row = {"ops": robust_ops(data.decode("utf-8"), merged)}
+            print("rederived", len(row["ops"]), "ops on the predecessor result:", relative)
+            fits = [(name, data)]
+        if len(fits) != 1:
+            raise SystemExit("restage %s: the ops fit %d of %s (need exactly one)" % (relative, len(fits), [os.path.basename(n) for n in names]))
+        name, data = fits[0]
+        if name != relative:
+            print("retarget", os.path.basename(relative), "->", os.path.basename(name), os.path.dirname(relative))
+        new[name] = {"baseSha256": sha(data), "ops": row["ops"]}
+    if unresolved:
+        for relative in unresolved:
+            print("unresolved (the predecessor changed the same lines; write the intended final text to resolved/%s.txt): %s" % (hashlib.sha256(relative.encode("utf-8")).hexdigest()[:16], relative))
+        raise SystemExit(3)
+    with open(PATCHES, "w", encoding="utf-8") as handle:
+        json.dump(new, handle, ensure_ascii=False, indent=1)
+    cmd_refresh()
+    print("restaged", len(new), "entries on", TREE)
 
 
 def sync_running():
@@ -175,28 +291,51 @@ def sync_running():
         if not words or str(os.getpid()) == pid:
             continue
         executable = os.path.basename(words[0])
-        if executable == "bun" and "dependencies sync" in command:
+        if executable == "bun" and ("dependencies sync" in command or "dependencies lock" in command):
             found.append(line)
-        elif executable in ("sh", "bash", "zsh") and any(name in command for name in ("deps4-run.sh", "deps4-loop.sh")) and "-c" not in words[1:2]:
+        elif executable in ("sh", "bash", "zsh") and any(name in command for name in ("deps4-run.sh", "deps4-loop.sh", "deps4-loop2.sh")) and "-c" not in words[1:2]:
             found.append(line)
     return found
 
 
 def cmd_check():
+    drifted = 0
     for relative, row in load().items():
         target, text = patched(relative, row)
         state = "unchanged" if text == read(os.path.join(ROOT, target)).decode("utf-8") else "patchable"
-        print(state, "(base drifted)" if sha(read(os.path.join(ROOT, target))) != row["baseSha256"] else "", "(retargeted to " + os.path.basename(target) + ")" if target != relative else "", relative)
+        moved = sha(read(os.path.join(ROOT, target))) != row["baseSha256"]
+        drifted += moved and state != "unchanged"
+        print(state, "(base drifted)" if moved else "", relative)
+    return 3 if drifted else 0
 
 
 def cmd_apply(args):
+    unknown = [word for word in args if word not in ("--dry-run", "--ignore-sync", "--rebase")]
+    if unknown:
+        print("refusing unknown argument(s) " + " ".join(unknown))
+        return 64
     running = sync_running()
     if running and "--ignore-sync" not in args:
-        print("refusing: a dependency sync is running (the freeze is not lifted):")
+        print("refusing: a dependency sync or lock is running (the freeze is not lifted):")
         for line in running:
             print("  " + line[:160])
-        raise SystemExit(2)
-    results = dict(patched(relative, row) for relative, row in load().items())
+        return 2
+    rows = load()
+    drifted = []
+    for relative, row in rows.items():
+        path = os.path.join(ROOT, relative)
+        if not os.path.isfile(path):
+            drifted.append(relative + " (missing)")
+        elif sha(read(path)) != row["baseSha256"] and "--rebase" not in args:
+            current = patched(relative, row)[1]
+            if current != read(path).decode("utf-8"):
+                drifted.append(relative)
+    if drifted:
+        print("refusing: %d target(s) changed since staging (rerun restage against the planner's materialized predecessor tree, or pass --rebase for an explicit anchored rebase):" % len(drifted))
+        for relative in drifted:
+            print("  " + relative)
+        return 3
+    results = dict(patched(relative, row) for relative, row in rows.items())
     for relative, text in results.items():
         path = os.path.join(ROOT, relative)
         changed = read(path).decode("utf-8") != text
@@ -206,6 +345,7 @@ def cmd_apply(args):
             with open(tmp, "w", encoding="utf-8") as handle:
                 handle.write(text)
             os.replace(tmp, path)
+    return 0
 
 
 def cmd_export(out):
@@ -255,9 +395,11 @@ if __name__ == "__main__":
     elif command == "refresh":
         cmd_refresh()
     elif command == "check":
-        cmd_check()
+        sys.exit(cmd_check())
+    elif command == "restage":
+        cmd_restage(sys.argv[2])
     elif command == "apply":
-        cmd_apply(sys.argv[2:])
+        sys.exit(cmd_apply(sys.argv[2:]))
     elif command == "mirror":
         cmd_mirror(sys.argv[2:])
     elif command == "export":

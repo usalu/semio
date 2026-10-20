@@ -1,0 +1,28 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🎤️presentation/🧪️tests/🎥️media-and-tile-rendering/🟦️.tsx",
+ "describeLine": 8,
+ "shared": {
+  "dir": "🟠️shared",
+  "doc": "/** 🟠️ The shared declarations of the PresentationDeck suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️renders-video-pdf-embodiments",
+   "doc": "/** 🔶️ The renders video pdf embodiments tests of the PresentationDeck suite. */",
+   "name": "registerRendersVideoPdfEmbodimentsTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the renders video pdf embodiments tests of the PresentationDeck suite.",
+   "from": 9,
+   "to": 124
+  },
+  {
+   "dir": "🔸️renders-split-figure-tiles",
+   "doc": "/** 🔸️ The renders split figure tiles tests of the PresentationDeck suite. */",
+   "name": "registerRendersSplitFigureTilesTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the renders split figure tiles tests of the PresentationDeck suite.",
+   "from": 170,
+   "to": 294
+  }
+ ]
+}

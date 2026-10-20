@@ -334,4 +334,4 @@ pub fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 }
-pub(crate) use residual_diff_helper::*;
+pub use residual_diff_helper::*;

@@ -67,7 +67,8 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
-      ]
+      ],
+      "outputs": []
     },
     "test-snapshot-sqlite": {
       "executor": "repo:script",
@@ -81,6 +82,7 @@
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
       ],
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite",
@@ -99,6 +101,7 @@
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
       ],
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite native",
@@ -117,6 +120,7 @@
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
       ],
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite source",

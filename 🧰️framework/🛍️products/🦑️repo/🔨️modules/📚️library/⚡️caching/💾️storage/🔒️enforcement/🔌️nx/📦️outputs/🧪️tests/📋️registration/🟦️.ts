@@ -10,11 +10,11 @@ import owners from "./📇️owners.json";
 import ownersSchema from "./🧬️schema/📇️owners.json";
 
 test("toolkit output laws have a neutral permanent owner and bilingual dashboard control", () => {
-  const root = process.cwd(), cache = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching"), project = JSON.parse(readFileSync(join(cache, "📋️project.json"), "utf8")), script = readFileSync(join(cache, "📜️script.ts"), "utf8"), db = new Database(":memory:");
+  const root = process.cwd(), cache = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching"), project = JSON.parse(readFileSync(join(cache, "📋️project.json"), "utf8")), script = readFileSync(join(cache, "🧪️tests/🔬️script-commands/🟦️.ts"), "utf8"), db = new Database(":memory:");
   try {
     expect(new Ajv({ strict: true }).compile(schema.definitions.TestRegistration)(fixture)).toBe(true);
     expect(project.targets[fixture.target]?.options.command).toBe(fixture.command);
-    expect(project.targets[fixture.target]?.cache).toBe(false);
+    expect(project.targets[fixture.target]?.cache).toBe(true);
     expect(project.targets[fixture.target]?.dependsOn).toEqual([]);
     expect(script).toContain('"toolkit-outputs":"' + fixture.source + '"');
     expect(script).toContain('selected==="toolkit-outputs"');

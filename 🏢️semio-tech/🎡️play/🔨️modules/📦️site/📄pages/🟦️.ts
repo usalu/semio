@@ -196,6 +196,17 @@ function rewriteStyleFile(file: string, prefixes: readonly string[], origins: Re
   if (next !== text) writeFileSync(file, next);
 }
 
+const relativeImportPatterns: readonly RegExp[] = [
+  /(\bimport\s*\(\s*(?:\/\*[\s\S]*?\*\/\s*)?)(["'])(\.\.?\/[^"']+)\2/gu,
+  /(^[ \t]*(?:import|export)\b[^;"'`]*?\bfrom\s*)(["'])(\.\.?\/[^"']+)\2/gmu,
+  /(^[ \t]*import\s*)(["'])(\.\.?\/[^"']+)\2/gmu,
+];
+
+/** 🔗 The worker is served from the page origin while its modules live on the modules origin, so every relative literal import, dynamic or static, is resolved against the worker's published URL. */
+function absolutizeRelativeImports(source: string, workerUrl: string): string {
+  return relativeImportPatterns.reduce((text, pattern) => text.replace(pattern, (_, prefix: string, quote: string, specifier: string) => `${prefix}${quote}${new URL(specifier, workerUrl).href}${quote}`), source);
+}
+
 /** 🧵 The shard worker is a copied module, so its asset fetches learn the page map here. */
 function installShardWorkerAssetFetch(directory: string, origins: Readonly<Record<string, string>>): void {
   const visit = (current: string): void => {
@@ -205,7 +216,7 @@ function installShardWorkerAssetFetch(directory: string, origins: Readonly<Recor
       else if (entry.name.endsWith("shard-worker.js")) {
         const prelude = `const __semioPageOrigins = ${JSON.stringify(origins)};\nconst __semioNativeFetch = globalThis.fetch.bind(globalThis);\nfunction __semioRelocate(url) {\n  let path = url;\n  if (/^[a-z][a-z0-9+.-]*:/i.test(url)) {\n    let parsed;\n    try { parsed = new URL(url); } catch { return url; }\n    if (parsed.origin !== self.location.origin) return url;\n    path = parsed.pathname + parsed.search + parsed.hash;\n  }\n  if (!path.startsWith("/") || path.startsWith("//")) return url;\n  const encoded = path.split(/[?#]/, 1)[0];\n  if (/%(?:2f|5c)/iu.test(encoded)) return url;\n  let pathname;\n  try { pathname = decodeURIComponent(encoded); } catch { return url; }\n  const key = Object.keys(__semioPageOrigins).sort((a, b) => b.length - a.length).find((prefix) => pathname === prefix || pathname.startsWith(prefix + "/"));\n  return key ? __semioPageOrigins[key].replace(/\\/$/, "") + path : url;\n}\nglobalThis.fetch = (input, init) => {\n  if (typeof Request !== "undefined" && input instanceof Request) {\n    if (input.method !== "GET" && input.method !== "HEAD") return __semioNativeFetch(input, init);\n    const next = __semioRelocate(input.url);\n    return next === input.url ? __semioNativeFetch(input, init) : __semioNativeFetch(new Request(next, input), init);\n  }\n  const raw = typeof input === "string" ? input : input instanceof URL ? input.href : "";\n  const next = raw ? __semioRelocate(raw) : "";\n  return __semioNativeFetch(next || input, init);\n};\n`;
         const workerUrl = publishedPageUrl(`/${relative(directory, path).replaceAll("\\", "/")}`, origins);
-        const source = readFileSync(path, "utf8").replace(/(\bimport\s*\(\s*(?:\/\*[\s\S]*?\*\/\s*)?)(["'])(\.\.?\/[^"']+)\2/gu, (_, prefix: string, quote: string, specifier: string) => `${prefix}${quote}${new URL(specifier, workerUrl).href}${quote}`);
+        const source = absolutizeRelativeImports(readFileSync(path, "utf8"), workerUrl);
         writeFileSync(path, prelude + source);
       }
     }

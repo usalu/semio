@@ -20,7 +20,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it } from "vitest";
 import { SHELL_KEYBINDINGS, ariaKeyshortcutsText, composeControlKeybindings, formatKeybindingShortcut } from "@semio-tech/ui-react";
-import { keyboardEventMatchesOwnedHotkey, parseOwnedHotkeyChords } from "@semio-tech/framework/modules/ui/modules/control-keybinding-context";
+import { keyboardEventMatchesOwnedHotkey, parseOwnedHotkeyChords } from "@semio-tech/ui/modules/control-keybinding-context";
 import type { AppRole, ArtifactDialect } from "@semio-tech/framework";
 import { resolveBootQueryAppRole } from "@semio-tech/framework-os-dev/boot-query";
 import {

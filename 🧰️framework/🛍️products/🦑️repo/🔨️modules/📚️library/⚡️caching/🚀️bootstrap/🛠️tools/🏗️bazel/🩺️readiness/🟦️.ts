@@ -7,7 +7,7 @@ import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️module
 import {probeNativeDirectoryCaseCapabilityV1,probeNativeDirectoryExchangeV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts";
 import {readNativeWindowsLongPathsEnabledV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🪟️host/🟦️.ts";
 import {repositoryCachePartitionRootV1} from "../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
-import schema from "../🧬️schema/🔣️.json";
+import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 
 const policy=schema.definitions.PlatformPolicy.const,version=schema.definitions.Release.const.version;
 

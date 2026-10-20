@@ -24,3 +24,9 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-ui-tui-core = { path = "../../../🧱️cell-model/📦️packages/🦀️rust" }
 semio-framework-ui-tui-vt = { path = "../../../📟️vt/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
+ui_styling = { path = "../../../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+tiny-skia = "0.11.4"

@@ -7,6 +7,10 @@
   "type": "module",
   "private": true,
   "exports": {
+    "./modules/simulation/engine/electrical/testing/pv-plane": "./🔨️modules/⚡️simulation/⚙️engine/⚡️electrical/🧪️testing/🔆️pv-plane/🟦️.ts",
+    "./modules/simulation/engine/kernel/testing/thermal": "./🔨️modules/⚡️simulation/⚙️engine/🌰️kernel/🧪️testing/🌡️thermal/🟦️.ts",
+    "./modules/simulation/engine/precompute/enclosure/exchange/testing": "./🔨️modules/⚡️simulation/⚙️engine/🧠️precompute/🔲️enclosure/⚡️exchange/🧪️testing/🟦️.ts",
+    "./modules/simulation/engine/site/chronology/testing": "./🔨️modules/⚡️simulation/⚙️engine/📍️site/📅️chronology/🧪️testing/🟦️.ts"
   },
   "scripts": {
     "test": "bun --cwd \"../../../../..\" repo run @semio-tech/energy-js:test"

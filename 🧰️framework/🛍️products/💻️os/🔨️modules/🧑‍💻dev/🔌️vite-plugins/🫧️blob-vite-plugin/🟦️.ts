@@ -2,7 +2,7 @@
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { BLOB_ENDPOINT_PATH } from "@semio-tech/framework-os";
-import { blake3Hex } from "@semio-tech/framework/hash";
+import { blake3Hex } from "@semio-tech/framework-hash";
 import { REPO_ROOT } from "../🧭️repo-root/🟦️.ts";
 import { backboneDatabaseCtorLazy } from "../🗃️sqlite-constructor/🟦️.ts";
 

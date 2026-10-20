@@ -106,7 +106,7 @@ fn a_mesh_of_the_wrong_type_is_refused_at_its_port() {
 fn the_fixture_measures_agree_with_the_kernel_analysis_of_the_same_mesh() {
     let mesh = HalfedgeMesh::ico_sphere_prim(1.0, 2).unwrap();
     let measured = h::measure(&mesh);
-    let report = semio_framework_3d::mesh::analyze_polygon_soup(&mesh.positions(), &mesh.polygons());
+    let report = semio_framework_3d_mesh_quality::analyze_polygon_soup(&mesh.positions(), &mesh.polygons());
     assert_eq!(measured.faces, 320);
     assert_eq!(measured.euler, 2);
     assert!(measured.boundary == 0 && measured.non_manifold == 0 && measured.oriented);

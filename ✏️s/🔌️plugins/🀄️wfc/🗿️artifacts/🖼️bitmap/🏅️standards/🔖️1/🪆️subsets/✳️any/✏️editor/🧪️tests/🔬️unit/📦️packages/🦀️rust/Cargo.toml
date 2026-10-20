@@ -58,3 +58,4 @@ semio-framework-test-fixtures = { path = "../../../../../../../../../../../../..
 semio-framework-test-original-snapshot-owners = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }
 serde = { workspace = true }
 serde_json = { workspace = true }
+semio-s-plugin-wfc-engine-oracle = { path = "../../../../../../../../../../../⚙️engine/🧿️oracle/📦️packages/🦀️rust" }

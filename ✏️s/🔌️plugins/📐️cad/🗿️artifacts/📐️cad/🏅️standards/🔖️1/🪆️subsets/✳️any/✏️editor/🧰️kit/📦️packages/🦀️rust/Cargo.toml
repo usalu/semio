@@ -36,6 +36,7 @@ semio-s-artifact-cad-cad-play = { workspace = true }
 semio-s-artifact-cad-cad-transform = { workspace = true }
 semio-s-artifact-cad-cad-transient = { workspace = true }
 semio-s-artifact-stdio-semio-model = { workspace = true }
+semio-framework-interaction = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🕹️interaction/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

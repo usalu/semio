@@ -1,0 +1,6 @@
+ecmaDispositionOracle 5 phases, keep=126,137,464,468,481,493, final return=true
+125-125 buildRole
+127-128 buildSourceState
+465-467 buildHasModuleState
+482-489 buildIdentifiersState
+494-494 buildConditional

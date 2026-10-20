@@ -1,6 +1,6 @@
 {
  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/📜️script.ts": {
-  "baseSha256": "ae50ef9c8a66bd033ed3d999b7c4855c9d7a2227fd1e73cb0c5d0a32f0015ca4",
+  "baseSha256": "8fc141f65d59ecc19a1823a569008a9fc5d07a160125e55b2677f03426ce047a",
   "ops": [
    [
     "BundleScript} from \"../.",
@@ -12,12 +12,29 @@
    ]
   ]
  },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts": {
+  "baseSha256": "8eb2e6dc3df293c49b20efd85ddab771d5c053e078db54470e7a8e3821d7a2ec",
+  "ops": [
+   [
+    "{ownerRoot,memberRoot}=relation,rows=relation.edges.map(edge=>{const expected=edge.expected,actual=edge.provider,sourceInstance=edge.sourceInstance;if(JSON.stringify(expected)!==JSON.stringify(sourceInstance)||(membership.scope===source.owner?JSON.stringify(expected)!==JSON.stringify(actual):expected===null||actual===null?expected!==actual:expected.version!==actual.version||expected.manifestSha256!==actual.manifestSha256)){console.error(\"[DEBUG] provider mismatch \"+JSON.stringify({source:source.path,owner:source.owner,member:membership.scope,ownerRoot,memberRoot,edge,expected,actual,sourceInstance}).slice(0,3500));throw Error(\"Same canonical Native and prospective Source provider instance required\");}",
+    "rows=relation.edges.map(edge=>{const expected=edge.expected,actual=edge.provider,sourceInstance=edge.sourceInstance;if(JSON.stringify(expected)!==JSON.stringify(sourceInstance)||(membership.scope===source.owner?JSON.stringify(expected)!==JSON.stringify(actual):expected===null||actual===null?expected!==actual:expected.version!==actual.version||expected.manifestSha256!==actual.manifestSha256))throw Error(\"Same canonical Native and prospective Source provider instance required\");"
+   ]
+  ]
+ },
  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🟦️.ts": {
   "baseSha256": "10295d78dceee9d27678a18fa6f14630e23f1c4d47b9d59df9b2f6d119ec6cdd",
   "ops": [
    [
-    "(classify({status:row.status,signal:row.signal,stderr:row.stderr})).toBe(row.expected);\n  expect",
-    "<string>(classify({status:row.status,signal:row.signal,stderr:row.stderr})).toBe(row.expected);\n  expect<string>"
+    "llManifestV1} from \"../🟦",
+    "llManifestV1,type classifyJavascriptDependencyInstallerFailureV1} from \"../🟦"
+   ],
+   [
+    "tall.json\";\n\n/** 🎛️ Chec",
+    "tall.json\";\n\n/** 🧷️ A cache link refusal fixture row whose authored `expected` is read as the classification the implementation returns. */\ntype CacheLinkRefusalRow=Omit<(typeof installCorpus.cacheLinkRefusals)[number],\"expected\">&{readonly expected:ReturnType<typeof classifyJavascriptDependencyInstallerFailureV1>};\n\n/** 🎛️ Chec"
+   ],
+   [
+    "LinkRefusals){\n  expect(",
+    "LinkRefusals as readonly CacheLinkRefusalRow[]){\n  expect("
    ]
   ]
  },
@@ -48,7 +65,7 @@
   ]
  },
  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧪️tests/🟦️.ts": {
-  "baseSha256": "90bedd87533e295fd127c0bec7cad1e52feebca352a2b619b0e906457a910725",
+  "baseSha256": "f79a9e6f6e27b4578e5e05ee220d61021cf7926874fd500c4a06b1352f391734",
   "ops": [
    [
     " import(\"../📜️script.ts\"),run=(a",
@@ -73,7 +90,7 @@
   ]
  },
  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🎚️build-mode/🟦️.ts": {
-  "baseSha256": "2744a5305f34ac252d29e5cde1947c563276fc778d4533c4c322fe9b12c1a73f",
+  "baseSha256": "8e4fe498e3f9516f52f8a20b331b12a962f98805ac203a4cd153625dc0b460a3",
   "ops": [
    [
     "@semio-tech/nx-bootstrap-tools/script",
@@ -82,7 +99,7 @@
   ]
  },
  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts": {
-  "baseSha256": "7d0e0977b4788a54815b4f4e6612fc6a1d2d8d6cba7bfd9fa0fd69de1dfb4acb",
+  "baseSha256": "46052e77b70d9bd8d2ec449b4dc7e754c32bf6438d9a4ca2807b4b44395b28ca",
   "ops": [
    [
     "()=>adapter.runBazelTasksV1(root,graph,request,invocation,artifactPhase),repair:task=>adapter.runBazelTasksV1(root,graph,{...request,tasks:[task.id],args:request.tasks.includes(task.id)?request.args:[],skipCache:true,excludeDependencies:true},invocation,artifactPhase)",
@@ -103,16 +120,32 @@
   "baseSha256": "6a7a872b625f983d887baa35464eac59e2eaee76b200ecf12121bdc09922c0d3",
   "ops": [
    [
-    "(actual).toEqual(row.expected);expect(admit(actual),row.name).toBe(true);expect",
-    "<unknown>(actual).toEqual(row.expected);expect(admit(actual),row.name).toBe(true);expect<string|null>"
+    "ache.json\";\n\nconst api=a",
+    "ache.json\";\nimport type {BazelUncachedReasonV1} from \"../../📜️script.ts\";\n\nconst api=a"
    ],
    [
-    "(actual,row.name).toEqual(row.expected);expect(admit(actual),row.name).toBe(true);expect",
-    "<unknown>(actual,row.name).toEqual(row.expected);expect(admit(actual),row.name).toBe(true);expect<string|null>"
+    "\"python3\");\n\ntest(\"Bazel",
+    "\"python3\");\n\n/** 🧷️ A fixture row whose authored `expected` is read as the type the implementation returns. */\ntype Expecting<Row extends {readonly expected:unknown},Expected>=Omit<Row,\"expected\">&{readonly expected:Expected};\ntype CacheDecision=ReturnType<typeof api.bazelCacheDecisionV1>;\ntype EmittedAction=ReturnType<typeof api.bazelActionsV1> extends ReadonlyMap<string,infer Action>?Action:never;\n\ntest(\"Bazel"
    ],
    [
-    ")=>{\n expect(Object.from",
-    ")=>{\n expect<unknown>(Object.from"
+    "us.decisions){\n  const{n",
+    "us.decisions as readonly Expecting<(typeof corpus.decisions)[number],CacheDecision>[]){\n  const{n"
+   ],
+   [
+    " as {reason:string|null};\n  ex",
+    " as {reason:BazelUncachedReasonV1|null};\n  ex"
+   ],
+   [
+    "assDecisions){\n  const{n",
+    "assDecisions as readonly Expecting<(typeof corpus.classDecisions)[number],CacheDecision|{readonly error:string}>[]){\n  const{n"
+   ],
+   [
+    " as {reason:string|null;confli",
+    " as {reason:BazelUncachedReasonV1|null;confli"
+   ],
+   [
+    "ectedActions);\n expect(e",
+    "ectedActions as Record<string,{kind:EmittedAction[\"kind\"];restore:string[];cache:CacheDecision}>);\n expect(e"
    ],
    [
     " const links=process.pla",
@@ -141,16 +174,16 @@
   "baseSha256": "e45d581c8950930ded86e6bed3b4442d4135b7403736c80b90d9c0d83942a822",
   "ops": [
    [
-    "alid) expect(api.cacheDe",
-    "alid) expect<unknown>(api.cacheDe"
+    "(cacheSchema);\nconst decisionOf = (target: any): [string, string",
+    "<ReturnType<typeof api.cacheDecisionV1>>(cacheSchema);\nconst decisionOf = (target: any): string["
    ],
    [
-    ";\n    expect(decisionOf(",
-    ";\n    expect<unknown>(decisionOf("
+    "expect(validateDecision(row.value)",
+    "const decision: unknown = row.value, admitted = validateDecision(decision);\n    expect(admitted"
    ],
    [
-    "ted.cache);\n      expect(decisionOf(target), nam",
-    "ted.cache);\n      expect<unknown>(decisionOf(target), nam"
+    "row.valid) expect(api.cacheDecisionV1(value.class as string, value.reason as string), row.id).toEqual(row.value",
+    "admitted) expect(api.cacheDecisionV1(value.class as string, value.reason as string), row.id).toEqual(decision"
    ]
   ]
  },
@@ -168,7 +201,7 @@
   ]
  },
  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts": {
-  "baseSha256": "cc04d2ef360d13f2fcd6fe12b3286c2bcde2ef160395f765ed9f21765a5850d8",
+  "baseSha256": "d54f43986f260a4301d3518b6c07b5ceb814f76b54c3f04ceb16813d1bf01b17",
   "ops": [
    [
     "owner.name===\"fixture-app\"?{test:{}}:{build",
@@ -180,8 +213,8 @@
   "baseSha256": "6241b4ac1dd41b722f2f1b46cea1e9f6ae09c08ffb7107dde2450d73f2a753d2",
   "ops": [
    [
-    "ment);expect(actual.env.",
-    "ment);expect<string|null|undefined>(actual.env."
+    "(oracle.mode);expect(act",
+    "(oracle.mode??undefined);expect(act"
    ]
   ]
  },
@@ -189,16 +222,24 @@
   "baseSha256": "db4686b1ebadd6a50dbf0b4721f864776455e502e3ca6b4f55da64980dc3297b",
   "ops": [
    [
-    "tries)expect(await obser",
-    "tries)expect<unknown>(await obser"
+    "oreReceiptV1} from \"../🟨",
+    "oreReceiptV1,type StoreReceiptEntryV1} from \"../🟨"
    ],
    [
-    ");}\n  expect((await chec",
-    ");}\n  expect<string>((await chec"
+    "tring[]=[];\nconst policy",
+    "tring[]=[];\n/** 🧷️ The fixture rows read as the types the implementation returns: an entry is a file or a directory, a receipt file is in one closed state. */\nconst entries=fixture.entries as readonly StoreReceiptEntryV1[];\ntype ReceiptFileRow=Omit<(typeof fixture.receiptFiles)[number],\"expected\">&{readonly expected:Awaited<ReturnType<typeof checkStoreReceiptFileV1>>[\"state\"]};\nconst policy"
    ],
    [
-    ")]);\n expect(parseStoreR",
-    ")]);\n expect<unknown>(parseStoreR"
+    "st entry of fixture.entries)expe",
+    "st entry of entries)expe"
+   ],
+   [
+    "receiptFiles){\n  rmSync(",
+    "receiptFiles as readonly ReceiptFileRow[]){\n  rmSync("
+   ],
+   [
+    "ild\",entries:fixture.entries,links:[]});",
+    "ild\",entries,links:[]});"
    ]
   ]
  },
@@ -228,16 +269,36 @@
   "baseSha256": "0e8ba62444f6735a936eb5026b2e7c51cd4ee6aaa3f2ba271fe213bf0f15ff10",
   "ops": [
    [
-    "ive\");expect(args).toEqu",
-    "ive\");expect<readonly string[]|undefined>(args).toEqu"
+    " events: string[] = [], bindings = {\n        roo",
+    " events: string[] = [], invoked = native.dashboardInvocation(row.args), bindings = {\n        roo"
    ],
    [
-    "(retiredIdePath(row.path,row.kind as CensusKind,false,\"content\"in row?row.content:undefined),row.path).toBe(row.expected);expect",
-    "<string>(retiredIdePath(row.path,row.kind as CensusKind,false,\"content\"in row?row.content:undefined),row.path).toBe(row.expected);expect<string>"
+    ");events.push(\"native\");expect(args).toEqual(native.dashboardInvocation(row.args));await Promise.resolve(",
+    ");events.push(\"native\");if(invoked===undefined)throw Error(\"A dashboard launch needs a dashboard invocation: \"+row.args.join(\" \"));expect(args).toEqual(invoked);await Promise.resolve("
    ],
    [
-    "atus);expect(role,row.pa",
-    "atus);expect<string>(role,row.pa"
+    "\"|\"retained\"|\"neutral\";\n\nfunction censusXmlRoot(",
+    "\"|\"retained\"|\"neutral\";\ntype IdeDisposition=\"excluded\"|\"retired\"|\"accepted\";\n/** 🧷️ Census fixture rows whose authored expectations are read as the closed unions the implementation returns. */\ntype PathCaseRow=Omit<(typeof censusFixture.pathCases)[number],\"expected\">&{readonly expected:IdeDisposition};\ntype RoleCaseRow=Omit<(typeof censusFixture.roleCases)[number],\"expectedRole\">&{readonly expectedRole:ManifestRole};\n\nfunction censusXmlRoot("
+   ],
+   [
+    "=false,content?:string):\"excluded\"|\"retired\"|\"accepted\"{\n  const parts=path.toL",
+    "=false,content?:string):IdeDisposition{\n  const parts=path.toL"
+   ],
+   [
+    "=false,content?:string):string=>{\n      const query=\"W",
+    "=false,content?:string):IdeDisposition=>{\n      const query=\"W"
+   ],
+   [
+    "uffixes))as{disposition:string}).disposition;return di",
+    "uffixes))as{disposition:IdeDisposition}).disposition;return di"
+   ],
+   [
+    " censusFixture.pathCases){expect(retiredIdePath(",
+    " censusFixture.pathCases as readonly PathCaseRow[]){expect(retiredIdePath("
+   ],
+   [
+    " censusFixture.roleCases){\n      const role=cens",
+    " censusFixture.roleCases as readonly RoleCaseRow[]){\n      const role=cens"
    ]
   ]
  },
@@ -254,8 +315,8 @@
   "baseSha256": "e1af1c76f2d50df19c24007003b4cbfffdb082562901ece59acacf9314de48a6",
   "ops": [
    [
-    "iringOnly);\n      expect(classifyPackageSource(s",
-    "iringOnly);\n      expect<string>(classifyPackageSource(s"
+    "ring; role: string; wiringOnly",
+    "ring; role: ReturnType<typeof classifyPackageSource>[\"role\"]; wiringOnly"
    ]
   ]
  },
@@ -263,17 +324,25 @@
   "baseSha256": "acfaa1c9496b97b49f9af8ec56f364ce71a14057fcfaa16cbeb8b119e3227ab9",
   "ops": [
    [
-    "      expect(pathBudgetC",
-    "      expect<readonly string[]>(pathBudgetC"
+    "get/🟦️.ts\";\n\nconst rende",
+    "get/🟦️.ts\";\n\n/** 🧷️ A fixture row whose authored `codes` are read as the closed budget codes the implementation returns. */\ntype PathBudgetCase = Omit<(typeof fixture.cases)[number], \"codes\"> & { readonly codes: ReturnType<typeof pathBudgetCodes> };\n\nconst rende"
+   ],
+   [
+    "ixture.cases) {\n    test",
+    "ixture.cases as readonly PathBudgetCase[]) {\n    test"
    ]
   ]
  },
- "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts": {
-  "baseSha256": "8eb2e6dc3df293c49b20efd85ddab771d5c053e078db54470e7a8e3821d7a2ec",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️package-implementation-admission/🟦️.ts": {
+  "baseSha256": "ad260b3117172fcb5e45f80837cc5cc92321843c45865ca10add009d63e6fd19",
   "ops": [
    [
-    "{ownerRoot,memberRoot}=relation,rows=relation.edges.map(edge=>{const expected=edge.expected,actual=edge.provider,sourceInstance=edge.sourceInstance;if(JSON.stringify(expected)!==JSON.stringify(sourceInstance)||(membership.scope===source.owner?JSON.stringify(expected)!==JSON.stringify(actual):expected===null||actual===null?expected!==actual:expected.version!==actual.version||expected.manifestSha256!==actual.manifestSha256)){console.error(\"[DEBUG] provider mismatch \"+JSON.stringify({source:source.path,owner:source.owner,member:membership.scope,ownerRoot,memberRoot,edge,expected,actual,sourceInstance}).slice(0,3500));throw Error(\"Same canonical Native and prospective Source provider instance required\");}",
-    "rows=relation.edges.map(edge=>{const expected=edge.expected,actual=edge.provider,sourceInstance=edge.sourceInstance;if(JSON.stringify(expected)!==JSON.stringify(sourceInstance)||(membership.scope===source.owner?JSON.stringify(expected)!==JSON.stringify(actual):expected===null||actual===null?expected!==actual:expected.version!==actual.version||expected.manifestSha256!==actual.manifestSha256))throw Error(\"Same canonical Native and prospective Source provider instance required\");"
+    "ion/🟦️.ts\";\n\nconst forma",
+    "ion/🟦️.ts\";\n\n/** 🧷️ A source fixture row whose authored `expectedRole` is read as the closed role the classifier returns. */\ntype SourceCaseRow = Omit<(typeof fixture.sourceCases)[number], \"expectedRole\"> & { readonly expectedRole: ReturnType<typeof classifyPackageSource>[\"role\"] };\n\nconst forma"
+   ],
+   [
+    ".sourceCases) {\n    cons",
+    ".sourceCases as readonly SourceCaseRow[]) {\n    cons"
    ]
   ]
  }

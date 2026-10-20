@@ -51,3 +51,5 @@ export async function observePhysicalFileV1(path:string,control:FileObservationC
  * @see ./🧫️fixtures/🔣️.json
  */
 export async function readPhysicalFileV1(path:string,control:FileObservationControlV1):Promise<PhysicalFileReadV1>{const observed=await physicalFileObservationV1(path,control,true);if(observed.bytes===null)throw new FileObservationErrorV1("io",path);return Object.freeze({claim:observed.claim,bytes:observed.bytes});}
+export { CurrentPhysicalOwnerV1 } from "./📁️current/🟦️.ts";
+export type { CurrentPhysicalEntryV1, CurrentPhysicalPortV1 } from "./📁️current/🟦️.ts";

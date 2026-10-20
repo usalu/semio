@@ -1,0 +1,125 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🔨️modules/🏠️host/🏗️store-initialization-authority/🦀️.rs",
+ "function": "step",
+ "nth": 0,
+ "match_line": 78,
+ "types": {},
+ "ret": "Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError>",
+ "inline": true,
+ "arms": [
+  {
+   "line": 102,
+   "name": "phase_census_history",
+   "doc": "🧱️ Runs the `census history` phase of `step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "edit": "usize",
+    "mutation": "usize"
+   }
+  },
+  {
+   "line": 141,
+   "name": "phase_seed_history",
+   "doc": "🪵️ Runs the `seed history` phase of `step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "edit": "usize",
+    "lane": "u8",
+    "index": "usize"
+   }
+  },
+  {
+   "line": 191,
+   "name": "phase_find_applied",
+   "doc": "🔩️ Runs the `find applied` phase of `step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "position": "usize"
+   }
+  },
+  {
+   "line": 212,
+   "name": "phase_apply_forward",
+   "doc": "⚙️ Runs the `apply forward` phase of `step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "position": "usize",
+    "edit": "usize",
+    "mutation": "usize"
+   }
+  },
+  {
+   "line": 267,
+   "name": "phase_find_redo",
+   "doc": "🧲️ Runs the `find redo` phase of `step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {
+    "position": "usize"
+   }
+  },
+  {
+   "line": 290,
+   "name": "phase_build_owners",
+   "doc": "🪛️ Runs the `build owners` phase of `step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 318,
+   "name": "phase_build_candidate",
+   "doc": "🔧️ Runs the `build candidate` phase of `step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 337,
+   "name": "phase_retire_cancelled_or_retire_fault",
+   "doc": "🔨️ Runs the `retire cancelled` or `retire fault` phase of `step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  }
+ ],
+ "method": {
+  "self_param": "&'a mut self",
+  "call": "self.{name}({args})"
+ },
+ "generics": "<'a>",
+ "prelude_ifs": [
+  {
+   "regex": "JobOutcomeBorrow",
+   "line": "use semio_framework_job::JobOutcomeBorrow;"
+  }
+ ]
+}

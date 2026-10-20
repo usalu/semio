@@ -1,4 +1,4 @@
-import { Blake3Hasher } from "@semio-tech/framework/hash";
+import { Blake3Hasher } from "@semio-tech/framework-hash";
 
 export type SceneRasterAlphaMode = "straight";
 export type SceneRasterColourProfile = "none" | "srgb";

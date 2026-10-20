@@ -1,0 +1,28 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📚️course/🧪️tests/⏱️challenge-clock-views/🟦️.tsx",
+ "describeLine": 19,
+ "shared": {
+  "dir": "🟠️shared",
+  "doc": "/** 🟠️ The shared declarations of the ⏱️ the clock of a timed task suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️closed-until-opened-runs",
+   "doc": "/** 🔶️ The closed until opened runs tests of the ⏱️ the clock of a timed task suite. */",
+   "name": "registerClosedUntilOpenedRunsTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the closed until opened runs tests of the ⏱️ the clock of a timed task suite.",
+   "from": 20,
+   "to": 177
+  },
+  {
+   "dir": "🔸️tells-once-time-task",
+   "doc": "/** 🔸️ The tells once time task tests of the ⏱️ the clock of a timed task suite. */",
+   "name": "registerTellsOnceTimeTaskTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the tells once time task tests of the ⏱️ the clock of a timed task suite.",
+   "from": 196,
+   "to": 345
+  }
+ ]
+}

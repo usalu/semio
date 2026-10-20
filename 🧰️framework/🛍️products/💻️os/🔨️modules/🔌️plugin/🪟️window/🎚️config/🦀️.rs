@@ -35,7 +35,7 @@ pub use retained::{WindowConfigPackLoad, WindowConfigPackLoadDiagnostic, WindowC
 
 #[path = "📐️owner-contract-and-mutation/🦀️.rs"]
 mod owner_contract_and_mutation;
-pub use owner_contract_and_mutation::{RejectedWindowConfigEmission, WindowConfigAuthorityIdentity, WindowConfigMutation, WindowConfigOwner, WindowConfigSnapshot, bounded_window_config_preparation_factory, bounded_window_config_preparation_source_birth, bounded_window_config_store_disposer, bounded_window_config_store_owners};
+pub use owner_contract_and_mutation::{RejectedWindowConfigEmission, WindowConfigAuthorityIdentity, WindowConfigBorrow, WindowConfigMutation, WindowConfigOwner, WindowConfigSnapshot, bounded_window_config_preparation_factory, bounded_window_config_preparation_source_birth, bounded_window_config_store_disposer, bounded_window_config_store_owners};
 
 #[path = "🔏️pack-authority-and-publication/🦀️.rs"]
 mod pack_authority_and_publication;

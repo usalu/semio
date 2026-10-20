@@ -10,7 +10,7 @@ mod tests_removes_obj_fin_without_touching_the_order;
 mod tests_moves_obj_fin_in_front_of_obj_hull;
 #[path = "../../🏷️rename-object/🧪️tests/🏷️retitles/🦀️.rs"]
 mod tests_retitles_obj_hull;
-#[path = "../../🔘️change-object-smooth/🧪️tests/🟢️turns/🦀️.rs"]
+#[path = "../../🔘️change-object-smooth-shading/🧪️tests/🟢️turns/🦀️.rs"]
 mod tests_turns_on_smooth_shading_for_obj_hull;
 #[path = "../../↗️move-object/🧪️tests/📍️translates/🦀️.rs"]
 mod tests_translates_obj_hull_along_x_and_z;

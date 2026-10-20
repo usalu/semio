@@ -97,9 +97,10 @@ pub use main::{WRITER_PLAY_BODY_MAIN, WRITER_PLAY_WINDOW_KIND};
 
 #[path = "🧵️command-admission-emission-and-retained-work/🦀️.rs"]
 mod command_admission_emission_and_retained_work;
+pub use command_admission_emission_and_retained_work::WriterArtifactPreparationFactory;
 use command_admission_emission_and_retained_work::{
     writer_ast_topology, writer_context_menu_items, writer_hidden_operation, writer_hidden_view,
-    WriterArtifactPreparationFactory, WriterCommandJobFactory, WriterRetainedCommandWork,
+    WriterCommandJobFactory, WriterRetainedCommandWork,
     MAX_WRITER_COMMAND_RAW_BYTES, MAX_WRITER_COMMAND_WORK_ITEMS, WRITER_COMMAND_TOOL_IDS,
 };
 

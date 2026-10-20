@@ -2,6 +2,8 @@
 
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
+extern crate semio_s_plugin_energy_engine_model as model;
+extern crate semio_s_plugin_energy_engine_results as results;
 
 #[path = "."]
 pub mod examples {

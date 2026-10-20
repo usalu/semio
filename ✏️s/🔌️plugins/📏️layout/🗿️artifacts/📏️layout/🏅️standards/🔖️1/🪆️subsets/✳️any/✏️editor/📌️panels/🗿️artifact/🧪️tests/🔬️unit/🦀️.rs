@@ -46,7 +46,7 @@ async fn definition_binds_the_framework_document_tab_to_this_body_key() {
 }
 
 //#region 🪟️WindowLaws
-use semio_s_artifact_layout_layout_editor_panels::terminology::layout_labels;
+use crate::terminology::layout_labels;
 use semio_s_artifact_layout_layout_model::{ImageLink, Layer, ParagraphStyle, TextStory};
 use semio_framework_plugin::plugin_app_close_prelude::{BuiltNode, Component};
 use semio_framework_plugin::{TreeWindowRequest, ViewModel, INTERACTION_SELECT_ACTION_ID};

@@ -15,10 +15,10 @@
     ]
   },
   "targets": {
-    "verify-snapshot-sqlite-source": {"executor":"repo:script","cache":true,"options":{"cwd":"✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust","command":"bun ./📜️script.ts verify snapshot-sqlite-source","forwardAllArgs":true}},
-    "test-snapshot-sqlite": {"executor":"repo:script","cache":true,"options":{"cwd":"✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite","forwardAllArgs":true}},
-    "test-snapshot-sqlite-native": {"executor":"repo:script","cache":true,"options":{"cwd":"✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite native","forwardAllArgs":true}},
-    "test-snapshot-sqlite-source": {"executor":"repo:script","cache":true,"options":{"cwd":"✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite source","forwardAllArgs":true}},
+    "verify-snapshot-sqlite-source": {"executor":"repo:script","cache":true, "outputs": [],"options":{"cwd":"✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust","command":"bun ./📜️script.ts verify snapshot-sqlite-source","forwardAllArgs":true}},
+    "test-snapshot-sqlite": {"executor":"repo:script","cache":true, "outputs": [],"options":{"cwd":"✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite","forwardAllArgs":true}},
+    "test-snapshot-sqlite-native": {"executor":"repo:script","cache":true, "outputs": [],"options":{"cwd":"✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite native","forwardAllArgs":true}},
+    "test-snapshot-sqlite-source": {"executor":"repo:script","cache":true, "outputs": [],"options":{"cwd":"✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite source","forwardAllArgs":true}},
     "build": {
       "executor": "repo:script",
       "cache": true,
@@ -45,6 +45,7 @@
     },
     "test": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",

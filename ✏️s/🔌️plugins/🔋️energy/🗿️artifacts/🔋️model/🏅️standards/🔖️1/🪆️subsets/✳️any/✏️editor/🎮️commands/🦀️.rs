@@ -12,6 +12,7 @@ use semio_framework_plugin::{Fault, FaultCode, FaultOrigin};
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use crate::model::SurfaceClass;
+use semio_framework_plugin::UiAssemblyResult;
 
 //#region 🏷️ActionIds
 /// 🏷️ Every dispatchable verb of this editor, exactly once. `set-node`/`set-cell` come from the two
@@ -35,6 +36,9 @@ pub const SET_FENESTRATION_PROPERTY_ACTION_ID: &str = "set-fenestration-property
 pub const SET_ZONE_PROPERTY_ACTION_ID: &str = "set-zone-property";
 pub const SET_GLAZING_MATERIAL_PROPERTY_ACTION_ID: &str = "set-glazing-material-property";
 pub const SET_GAS_MATERIAL_PROPERTY_ACTION_ID: &str = "set-gas-material-property";
+pub const SET_SIMULATION_SETTINGS_ACTION_ID: &str = "set-simulation-settings";
+pub const SET_RESULT_FIELD_ACTION_ID: &str = "set-result-field";
+pub const SET_CAMERA_ACTION_ID: &str = "setCamera";
 /// 🧱️ The construction verb: `{construction, property, value}` where `property` is either `name` or
 /// one of the LIST edits `addLayer`/`removeLayer`/`moveLayerUp`/`moveLayerDown`/`replaceLayer`, whose
 /// operand travels in `value` (a material id, or an index, or `<index>:<materialId>`). One verb,
@@ -66,14 +70,14 @@ pub const ENERGY_MODEL_RETAINED_TOOL_IDS: &[&str] = &[
     SET_SITE_ACTION_ID,
     SET_RUN_PERIOD_ACTION_ID,
     SET_ACTIVE_EXAMPLE_ACTION_ID,
-    simulation::SET_SETTINGS_ACTION_ID,
-    simulation::SET_RESULT_FIELD_ACTION_ID,
+    SET_SIMULATION_SETTINGS_ACTION_ID,
+    SET_RESULT_FIELD_ACTION_ID,
     SET_SURFACE_PROPERTY_ACTION_ID,
     SET_FENESTRATION_PROPERTY_ACTION_ID,
     SET_ZONE_PROPERTY_ACTION_ID,
     SET_GLAZING_MATERIAL_PROPERTY_ACTION_ID,
     SET_GAS_MATERIAL_PROPERTY_ACTION_ID,
-    model_window::SET_CAMERA_ACTION_ID,
+    SET_CAMERA_ACTION_ID,
     SET_CONSTRUCTION_PROPERTY_ACTION_ID,
 ];
 
@@ -200,14 +204,14 @@ impl EnergyModelEditorCommand {
             Self::SetSite { .. } => SET_SITE_ACTION_ID,
             Self::SetRunPeriod { .. } => SET_RUN_PERIOD_ACTION_ID,
             Self::SetActiveExample { .. } => SET_ACTIVE_EXAMPLE_ACTION_ID,
-            Self::SetSimulationSettings { .. } => simulation::SET_SETTINGS_ACTION_ID,
-            Self::SetResultField { .. } => simulation::SET_RESULT_FIELD_ACTION_ID,
+            Self::SetSimulationSettings { .. } => SET_SIMULATION_SETTINGS_ACTION_ID,
+            Self::SetResultField { .. } => SET_RESULT_FIELD_ACTION_ID,
             Self::SetSurfaceProperty { .. } => SET_SURFACE_PROPERTY_ACTION_ID,
             Self::SetFenestrationProperty { .. } => SET_FENESTRATION_PROPERTY_ACTION_ID,
             Self::SetZoneProperty { .. } => SET_ZONE_PROPERTY_ACTION_ID,
             Self::SetGlazingMaterialProperty { .. } => SET_GLAZING_MATERIAL_PROPERTY_ACTION_ID,
             Self::SetGasMaterialProperty { .. } => SET_GAS_MATERIAL_PROPERTY_ACTION_ID,
-            Self::SetCamera { .. } => model_window::SET_CAMERA_ACTION_ID,
+            Self::SetCamera { .. } => SET_CAMERA_ACTION_ID,
             Self::SetConstructionProperty { .. } => SET_CONSTRUCTION_PROPERTY_ACTION_ID,
         }
     }
@@ -312,12 +316,12 @@ pub mod args_bridge {
             super::SET_GAS_MATERIAL_PROPERTY_ACTION_ID => {
                 Command::SetGasMaterialProperty { material: u32_or("material", u32_or("id", 0)), property: text(args, "property").unwrap_or_else(|| text_or("field", "")), value: text_or("value", "") }
             }
-            super::simulation::SET_SETTINGS_ACTION_ID => {
-                let defaults = super::EnergyModelConfig::default();
+            super::SET_SIMULATION_SETTINGS_ACTION_ID => {
+                let defaults = semio_s_artifact_energy_model_editor_config::EnergyModelConfig::default();
                 Command::SetSimulationSettings { zone_timestep_minutes: u32_or("zoneTimestepMinutes", defaults.zone_timestep_minutes), system_timestep_minutes: u32_or("systemTimestepMinutes", defaults.system_timestep_minutes), warmup_days: u32_or("warmupDays", defaults.warmup_days) }
             }
-            super::simulation::SET_RESULT_FIELD_ACTION_ID => Command::SetResultField { field: text(args, "field").unwrap_or_else(|| text_or("value", super::EnergyModelConfig::default().result_field.as_str())) },
-            super::model_window::SET_CAMERA_ACTION_ID => Command::SetCamera { camera: camera_pose_json(args).unwrap_or_default() },
+            super::SET_RESULT_FIELD_ACTION_ID => Command::SetResultField { field: text(args, "field").unwrap_or_else(|| text_or("value", semio_s_artifact_energy_model_editor_config::EnergyModelConfig::default().result_field.as_str())) },
+            super::SET_CAMERA_ACTION_ID => Command::SetCamera { camera: camera_pose_json(args).unwrap_or_default() },
             _ => return Err(unknown(action)),
         })
     }

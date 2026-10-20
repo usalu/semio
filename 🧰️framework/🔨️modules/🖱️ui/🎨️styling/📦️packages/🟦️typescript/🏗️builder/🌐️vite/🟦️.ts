@@ -7,3 +7,5 @@ export { semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, staticDeployMar
 export { semioFaviconVitePlugin } from "../../../../🏗️builder/🌐️vite/🔖️favicon/🟦️.ts";
 export { semioServeCloseVitePlugin } from "../../../../🏗️builder/🌐️vite/🚦️status-serve/🟦️.ts";
 export type { FlowWasmDeliveryV1 } from "../../../../🏗️builder/🌐️vite/🪝️playground-stubs/🟦️.ts";
+export { findWorkspacePackages } from "../../../../🏗️builder/🌐️vite/🟦️.ts";
+export type { ProxiedUpgradeProxy, StaticDirectoryAssetSpecV1 } from "../../../../🏗️builder/🌐️vite/🟦️.ts";

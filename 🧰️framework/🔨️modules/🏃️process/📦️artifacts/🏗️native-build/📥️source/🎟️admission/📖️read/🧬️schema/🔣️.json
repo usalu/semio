@@ -92,6 +92,108 @@
         "verification": "descriptor-byte-replay",
         "maximumAncestors": 64
       }
+    },
+    "Refusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "reason",
+        "path",
+        "observedBytes",
+        "maximumBytes",
+        "remainingFiles",
+        "expectedBytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "reason": {
+          "enum": [
+            "files",
+            "bytes",
+            "extent"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "observedBytes": {
+          "type": "string",
+          "pattern": "^[0-9]{1,20}$"
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "remainingFiles": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "expectedBytes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "RefusalCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bytes",
+        "maximumBytes",
+        "remainingFiles",
+        "expectedBytes",
+        "reason"
+      ],
+      "properties": {
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "remainingFiles": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "expectedBytes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "enum": [
+            "files",
+            "bytes",
+            "extent"
+          ]
+        }
+      }
     }
   }
 }

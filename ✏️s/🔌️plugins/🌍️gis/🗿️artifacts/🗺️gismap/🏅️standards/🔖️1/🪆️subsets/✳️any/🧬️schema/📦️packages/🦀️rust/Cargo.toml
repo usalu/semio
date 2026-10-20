@@ -76,5 +76,6 @@ semio-framework-test-original-snapshot-owners = { path = "../../../../../../../.
 serde = { workspace = true }
 serde_json = { workspace = true }
 tokio = { workspace = true }
+semio-s-artifact-stdio-semio-drawing-snapshot = { path = "../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

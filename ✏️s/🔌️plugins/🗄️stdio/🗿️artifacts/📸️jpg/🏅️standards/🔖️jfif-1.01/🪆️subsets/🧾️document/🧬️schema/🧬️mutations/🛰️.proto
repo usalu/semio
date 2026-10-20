@@ -1,8 +1,8 @@
 syntax = "proto3";
 package stdio.jpg;
-import "🪪️change-jfif/🛰️.proto";
-import "📥️insert-other/🛰️.proto";
-import "🗑️remove-other/🛰️.proto";
+import "🪪️change-jfif-header/🛰️.proto";
+import "📥️insert-other-segment/🛰️.proto";
+import "🗑️remove-other-segment/🛰️.proto";
 import "🔲️replace-pixels/🛰️.proto";
 import "🖼️replace-image/🛰️.proto";
 message JpgMutation {

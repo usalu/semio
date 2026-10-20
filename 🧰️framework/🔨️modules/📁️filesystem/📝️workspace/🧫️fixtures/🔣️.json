@@ -1,0 +1,125 @@
+{
+  "version": 1,
+  "policy": {
+    "maximumFileBytes": 1048576,
+    "maximumDirectoryEntries": 4096,
+    "maximumPathUnits": 256,
+    "maximumJournalBytes": 67108864,
+    "existingFilesOnly": true,
+    "encoding": "utf-8",
+    "stateDirectory": ".workspace-events",
+    "publication": "preserved-predecessor",
+    "cancellation": "before-publication"
+  },
+  "cases": [
+    {
+      "name": "Unicode Source",
+      "path": "src/Grüße 🦑.rs",
+      "text": "fn main() {\n    println!(\"Grüße 🦑\");\n}\n",
+      "valid": true
+    },
+    {
+      "name": "CRLF Bytes",
+      "path": "src/main.ts",
+      "text": "one\r\ntwo\r\n",
+      "valid": true
+    },
+    {
+      "name": "Empty Existing File",
+      "path": "empty.txt",
+      "text": "",
+      "valid": true
+    },
+    {
+      "name": "Refuse Path 0",
+      "path": "",
+      "text": "x",
+      "valid": false,
+      "code": "invalid-path"
+    },
+    {
+      "name": "Refuse Path 1",
+      "path": "../out",
+      "text": "x",
+      "valid": false,
+      "code": "invalid-path"
+    },
+    {
+      "name": "Refuse Path 2",
+      "path": "src/../out",
+      "text": "x",
+      "valid": false,
+      "code": "invalid-path"
+    },
+    {
+      "name": "Refuse Path 3",
+      "path": "/absolute",
+      "text": "x",
+      "valid": false,
+      "code": "invalid-path"
+    },
+    {
+      "name": "Refuse Path 4",
+      "path": "C:/absolute",
+      "text": "x",
+      "valid": false,
+      "code": "invalid-path"
+    },
+    {
+      "name": "Refuse Path 5",
+      "path": "a\\b",
+      "text": "x",
+      "valid": false,
+      "code": "invalid-path"
+    },
+    {
+      "name": "Refuse Path 6",
+      "path": "src//a",
+      "text": "x",
+      "valid": false,
+      "code": "invalid-path"
+    },
+    {
+      "name": "Refuse Path 7",
+      "path": "src/./a",
+      "text": "x",
+      "valid": false,
+      "code": "invalid-path"
+    },
+    {
+      "name": "Refuse Path 8",
+      "path": "NUL.txt",
+      "text": "x",
+      "valid": false,
+      "code": "invalid-path"
+    },
+    {
+      "name": "Refuse Path 9",
+      "path": "dir/COM1",
+      "text": "x",
+      "valid": false,
+      "code": "invalid-path"
+    },
+    {
+      "name": "Refuse Path 10",
+      "path": "src/trailing.",
+      "text": "x",
+      "valid": false,
+      "code": "invalid-path"
+    },
+    {
+      "name": "Refuse Path 11",
+      "path": "src/trailing ",
+      "text": "x",
+      "valid": false,
+      "code": "invalid-path"
+    },
+    {
+      "name": "Refuse Binary",
+      "path": "file.txt",
+      "text": "a\u0000b",
+      "valid": false,
+      "code": "not-text"
+    }
+  ]
+}

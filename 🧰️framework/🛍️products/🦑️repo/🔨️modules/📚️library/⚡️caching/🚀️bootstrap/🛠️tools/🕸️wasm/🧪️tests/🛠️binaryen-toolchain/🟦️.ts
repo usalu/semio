@@ -10,7 +10,7 @@ export async function testBinaryenToolchain(workspace: string, output?: string):
   const schema = JSON.parse(readFileSync(join(root, "🧬️schema/🔣️.json"), "utf8")), manifest=schema.definitions.Release.const;
   const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🛠️binaryen-toolchain/🔣️.json"), "utf8"));
   assert.equal(new (require("ajv"))().compile(schema)(manifest), true);
-  const { binaryenDistribution, binaryenMembers, binaryenIdentity, prepareBinaryen, binaryenDirectory } = await import("../../📜️script.ts");
+  const { binaryenDistribution, binaryenMembers, binaryenIdentity, prepareBinaryen, binaryenDirectory } = await import("../../🟦️.ts");
   assert.deepEqual(manifest.platforms.map((row: any) => `${row.platform}/${row.architecture}`).sort(), fixture.supported.sort());
   for (const key of fixture.supported) {
     const [platform, architecture] = key.split("/"), row = binaryenDistribution(platform, architecture);

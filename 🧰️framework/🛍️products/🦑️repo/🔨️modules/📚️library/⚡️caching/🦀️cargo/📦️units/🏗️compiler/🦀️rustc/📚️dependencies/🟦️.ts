@@ -5,7 +5,7 @@ import{checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseCon
 import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{ requireRustUnitPlanV1, type RustUnitPlanV1 }from"../../../📋️plan/🟦️.ts";
 import{requireCapturedRustUnitReceiptV1,captureRustUnitReceiptV1,readRustUnitReceiptV1,type RustUnitReceiptV1}from"../../../📤️receipt/🟦️.ts";
-import schema from"./🧬️schema/🔣️.json";
+import schema from"./🧬️schema/🔣️.json" with { type: "json" };
 const policy=Object.freeze({...structuredClone(schema).definitions.Policy.const}),contract=compileJsonSchemaSubset(schema.definitions.Artifact,schema);
 declare const dependencyBrand:unique symbol;
 /** 🧾️ Retains exact immutable dependency DATA and the real reader operation supplied by its artifact owner. */

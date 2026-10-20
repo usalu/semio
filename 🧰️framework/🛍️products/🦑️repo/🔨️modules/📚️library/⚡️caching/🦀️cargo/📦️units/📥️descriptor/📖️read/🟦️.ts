@@ -1,7 +1,7 @@
 /** 📖️ Read: module exporting `rustUnitDescriptorReadLimitsV2`, `rustUnitDescriptorReadBatchLimitsV1`, `RustUnitDescriptorV2`, `captureRustUnitDescriptorRequestV2` and more. */
 import{fileURLToPath}from"node:url";
 import{types}from"node:util";
-import{captureBoundedSourceRevisionV1}from"../../../../../🏗️build/📥️inputs/🔏️revision/🟨️.mjs";
+import{captureBoundedSourceRevisionV1,physicalSourceOriginV1,type PhysicalSourceModuleMetaV1}from"../../../../../🏗️build/📥️inputs/🔏️revision/🟨️.mjs";
 import{captureRepositorySourceRootV1,captureExactSourcePathV1}from"../../../../../🏗️build/📥️inputs/📋️data/📥️load/🟨️.mjs";
 import{withExactSourceReadBatchV1,readExactSourceJsonV1,readExactSourceFileV1,type ExactSourceReadBatchV1}from"../../../../../🏗️build/📥️inputs/🧮️digest/📥️read/🟨️.mjs";
 import{requireIssuedResourceControlV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -10,7 +10,7 @@ import{captureRustUnitDescriptorNodeV2,rustUnitDescriptorNodeArtifactV2,requireR
 import{rustUnitPlanSlotV1}from"../../📋️plan/🔏️identity/🟦️.ts";
 import{withRustUnitDescriptorNamespaceV2}from"../🔒️namespace/🟦️.ts";
 import type schemaContract from"./🧬️schema/🔣️.json";
-const sourcePath=fileURLToPath(import.meta.url),policyPath=fileURLToPath(new URL("./🧬️schema/🔣️.json",import.meta.url)),sourceRevision=captureBoundedSourceRevisionV1(sourcePath,8388608),policyRevision=captureBoundedSourceRevisionV1(policyPath,65536,true),schema=JSON.parse(policyRevision.text!)as typeof schemaContract;
+const sourcePath=fileURLToPath(physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),policyPath=fileURLToPath(new URL("./🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))),sourceRevision=captureBoundedSourceRevisionV1(sourcePath,8388608),policyRevision=captureBoundedSourceRevisionV1(policyPath,65536,true),schema=JSON.parse(policyRevision.text!)as typeof schemaContract;
 export const rustUnitDescriptorReadLimitsV2=Object.freeze({...schema.definitions.Policy.const});
 export const rustUnitDescriptorReadBatchLimitsV1=Object.freeze({...schema.definitions.MatchBatch.const});
 const policy=rustUnitDescriptorReadLimitsV2;

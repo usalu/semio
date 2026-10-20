@@ -4,7 +4,7 @@ import {lstat,open} from "node:fs/promises";
 import {constants} from "node:fs";
 import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import{withArtifactDescriptorV1}from"../../../../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import{withArtifactDescriptorV1}from"../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import {dirname,isAbsolute,join,relative,resolve,sep} from "node:path";
 import{types}from"node:util";
 import{captureSelectedTaskDataV1}from"./📋️data/🟦️.ts";

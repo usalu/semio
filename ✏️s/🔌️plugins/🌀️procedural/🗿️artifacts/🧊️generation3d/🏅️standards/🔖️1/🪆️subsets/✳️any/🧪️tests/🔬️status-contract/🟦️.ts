@@ -255,7 +255,7 @@ class StatusSession {
 
 export function testGeneration3dPreviewStatusContract(): void {
   const here = fileURLToPath(new URL(".", import.meta.url));
-  const fixture = JSON.parse(readFileSync(`${here}/../../🧫️fixtures/🛑️preview-cancel.json`, "utf8")) as {
+  const fixture = JSON.parse(readFileSync(`${here}/../🧫️fixtures/🛑️preview-cancel.json`, "utf8")) as {
     format: string;
     version: number;
     cancelAction: string;

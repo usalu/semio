@@ -1,2 +1,0 @@
-/** 🧩️ Public `@semio-tech/framework/os/modules/directory/testing/fixtures` entry: explicit re-exports of the source module that owns each member. */
-export { agentDelegationListFixture, directoryLocalSessionDocument, directoryLocalSessionSchema, directorySchema, directorySignInFixture, directorySpacesFixture, mcpClientConfigFixture } from "../../../../../../../../🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🟦️.ts";

@@ -117,8 +117,8 @@
       "vectors": [
         {
           "mutationId": "change-jfif-header",
-          "sourceMutationDirectoryName": "🪪️change-jfif",
-          "mutationDirectoryName": "🪪️change-jfif",
+          "sourceMutationDirectoryName": "🪪️change-jfif-header",
+          "mutationDirectoryName": "🪪️change-jfif-header",
           "scenarios": [
             {
               "id": "direct-behavior",
@@ -128,8 +128,8 @@
         },
         {
           "mutationId": "insert-other-segment",
-          "sourceMutationDirectoryName": "📥️insert-other",
-          "mutationDirectoryName": "📥️insert-other",
+          "sourceMutationDirectoryName": "📥️insert-other-segment",
+          "mutationDirectoryName": "📥️insert-other-segment",
           "scenarios": [
             {
               "id": "direct-behavior",
@@ -139,8 +139,8 @@
         },
         {
           "mutationId": "remove-other-segment",
-          "sourceMutationDirectoryName": "🗑️remove-other",
-          "mutationDirectoryName": "🗑️remove-other",
+          "sourceMutationDirectoryName": "🗑️remove-other-segment",
+          "mutationDirectoryName": "🗑️remove-other-segment",
           "scenarios": [
             {
               "id": "direct-behavior",

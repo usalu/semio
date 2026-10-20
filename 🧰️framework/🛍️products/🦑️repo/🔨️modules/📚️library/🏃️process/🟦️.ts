@@ -16,7 +16,7 @@ import { spawn, spawnSync } from "node:child_process";
 import { createInterface } from "node:readline";
 import { randomUUID } from "node:crypto";
 import {homedir} from "node:os";
-import {CurrentPhysicalOwnerV1} from "../../../../../📦️packages/🟦️typescript/📁️filesystem/🟦️.ts";
+import {CurrentPhysicalOwnerV1} from "../../../../../🔨️modules/📁️filesystem/🧾️observation/🟦️.ts";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";

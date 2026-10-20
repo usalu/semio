@@ -39,7 +39,7 @@ export async function runOwnedVerifyScript(context: Readonly<{ root: string; rep
   }
   if (segments[0] === "remodel-window-ownership") {
     const schemaRoot = join(context.repoRoot, "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes");
-    const testRoot = join(schemaRoot, "🧊️model/🪟️windows/🧊️model/🎚️config/🧪️tests/🔬️window");
+    const testRoot = join(schemaRoot, "🧊️model/🪟️windows/🧊️model/🎚️config/🧪️tests/🔬️window-ownership");
     const { testRemodelWindowOwnershipOracle } = await import(`${testRoot}/🟦️.ts`);
     testRemodelWindowOwnershipOracle();
     runCmd("bun", [join(context.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(schemaRoot, "🧊️model/🪟️windows/🧊️model/🎚️config/🧬️schema/🟦️.ts"), join(schemaRoot, "📷️capture/🪟️windows/🖼️frames/🎚️config/🧬️schema/🟦️.ts"), join(schemaRoot, "🔍️analyze/🪟️windows/📊️report/🎚️config/🧬️schema/🟦️.ts"), `${testRoot}/🟦️.ts`], { cwd: context.repoRoot });

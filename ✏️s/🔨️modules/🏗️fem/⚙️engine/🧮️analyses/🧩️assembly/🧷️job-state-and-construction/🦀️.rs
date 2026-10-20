@@ -64,7 +64,7 @@ pub(super) struct PendingElementAssembly {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub(super) enum PendingElementBuildStage {
+pub enum PendingElementBuildStage {
     ReserveIndices,
     Indices,
     PublishIndex,
@@ -230,7 +230,7 @@ impl AssemblyPlan {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum AssemblyConstructionStage {
+pub enum AssemblyConstructionStage {
     ReservePartitionTripletCounts,
     InitializePartitionTripletCounts,
     ReserveDofs,
@@ -509,45 +509,8 @@ impl AssemblyJobConstruction {
                 }
                 self.stage = AssemblyConstructionStage::ValidateNodePairs;
             }
-            AssemblyConstructionStage::ValidateNodePairs => {
-                let model = self.model.as_ref().ok_or(FemError::EmptyModel)?;
-                if self.node_outer >= model.nodes_len() {
-                    self.stage = AssemblyConstructionStage::ValidateElementReferences;
-                } else if self.node_inner >= model.nodes_len() {
-                    self.node_outer += 1;
-                    self.node_inner = self.node_outer + 1;
-                } else {
-                    let outer = model.node(self.node_outer).ok_or(FemError::EmptyModel)?;
-                    let inner = model.node(self.node_inner).ok_or(FemError::EmptyModel)?;
-                    if outer.id == inner.id {
-                        return Err(FemError::DuplicateNodeId(outer.id.clone()));
-                    }
-                    self.node_inner += 1;
-                }
-            }
-            AssemblyConstructionStage::ValidateElementReferences => {
-                let model = self.model.as_ref().ok_or(FemError::EmptyModel)?;
-                if self.element_cursor >= model.elements_len() {
-                    self.stage = AssemblyConstructionStage::ValidateSupportReferences;
-                } else if self.reference_cursor >= model.element(self.element_cursor).and_then(Elements::mounted_node_id_count).ok_or(FemError::Singular)? {
-                    let element = model.element(self.element_cursor).ok_or(FemError::Singular)?;
-                    let side = element.mounted_node_id_count().and_then(|nodes| nodes.checked_mul(element.dofs_per_node().len())).ok_or(FemError::Singular)?;
-                    let triplets = side.checked_mul(side).ok_or(FemError::Singular)?;
-                    self.maximum_triplets = self.maximum_triplets.checked_add(triplets).ok_or(FemError::Singular)?;
-                    let partition = self.element_cursor % self.partition_count;
-                    self.partition_triplet_counts[partition] = self.partition_triplet_counts[partition].checked_add(triplets).ok_or(FemError::Singular)?;
-                    self.element_cursor += 1;
-                    self.reference_cursor = 0;
-                    self.reference_node_cursor = 0;
-                } else if self.reference_node_cursor >= model.nodes_len() {
-                    return Err(FemError::DanglingNodeRef(model.element(self.element_cursor).and_then(|element| element.mounted_node_id(self.reference_cursor)).ok_or(FemError::Singular)?.to_owned()));
-                } else if model.node(self.reference_node_cursor).ok_or(FemError::EmptyModel)?.id == model.element(self.element_cursor).and_then(|element| element.mounted_node_id(self.reference_cursor)).ok_or(FemError::Singular)? {
-                    self.reference_cursor += 1;
-                    self.reference_node_cursor = 0;
-                } else {
-                    self.reference_node_cursor += 1;
-                }
-            }
+            AssemblyConstructionStage::ValidateNodePairs => self.assembly_validate_node_pairs(),
+            AssemblyConstructionStage::ValidateElementReferences => self.assembly_validate_element_references(),
             AssemblyConstructionStage::ValidateSupportReferences => {
                 let model = self.model.as_ref().ok_or(FemError::EmptyModel)?;
                 if self.support_cursor >= model.supports_len() {
@@ -562,43 +525,8 @@ impl AssemblyJobConstruction {
                     self.support_node_cursor += 1;
                 }
             }
-            AssemblyConstructionStage::DiscoverDofs => {
-                let model = self.model.as_ref().ok_or(FemError::EmptyModel)?;
-                if self.dof_node_cursor >= model.nodes_len() {
-                    self.stage = AssemblyConstructionStage::ReservePermutation;
-                } else if self.dof_element_cursor >= model.elements_len() {
-                    self.dof_emit_cursor = 0;
-                    self.stage = AssemblyConstructionStage::EmitDofs;
-                } else if self.dof_reference_cursor >= model.element(self.dof_element_cursor).and_then(Elements::mounted_node_id_count).ok_or(FemError::Singular)? {
-                    self.dof_element_cursor += 1;
-                    self.dof_reference_cursor = 0;
-                } else {
-                    let element = model.element(self.dof_element_cursor).ok_or(FemError::Singular)?;
-                    if element.mounted_node_id(self.dof_reference_cursor).ok_or(FemError::Singular)? == model.node(self.dof_node_cursor).ok_or(FemError::EmptyModel)?.id {
-                        for dof in element.dofs_per_node() {
-                            self.active_dofs[dof.index()] = true;
-                        }
-                    }
-                    self.dof_reference_cursor += 1;
-                }
-            }
-            AssemblyConstructionStage::EmitDofs => {
-                if self.dof_emit_cursor >= self.active_dofs.len() {
-                    self.dof_node_cursor += 1;
-                    self.dof_element_cursor = 0;
-                    self.active_dofs = [false; 6];
-                    self.stage = AssemblyConstructionStage::DiscoverDofs;
-                } else {
-                    if self.active_dofs[self.dof_emit_cursor] {
-                        let dof = [Dof::Tx, Dof::Ty, Dof::Tz, Dof::Rx, Dof::Ry, Dof::Rz][self.dof_emit_cursor];
-                        let node_id = self.model.as_ref().and_then(|model| model.node(self.dof_node_cursor)).ok_or(FemError::EmptyModel)?.id.clone();
-                        self.pending_dof_owner = Some((node_id, dof));
-                        self.stage = AssemblyConstructionStage::CommitDofOwner;
-                        return Ok(false);
-                    }
-                    self.dof_emit_cursor += 1;
-                }
-            }
+            AssemblyConstructionStage::DiscoverDofs => self.assembly_discover_dofs(),
+            AssemblyConstructionStage::EmitDofs => self.assembly_emit_dofs(),
             AssemblyConstructionStage::CommitDofOwner => {
                 let owner = self.pending_dof_owner.as_ref().ok_or(FemError::Singular)?;
                 if owner.0.capacity() > MOUNTED_OWNER_PAGE_BYTES {
@@ -634,28 +562,7 @@ impl AssemblyJobConstruction {
                     self.stage = AssemblyConstructionStage::MarkConstraints;
                 }
             }
-            AssemblyConstructionStage::MarkConstraints => {
-                let model = self.model.as_ref().ok_or(FemError::EmptyModel)?;
-                if self.constraint_support_cursor >= model.supports_len() {
-                    self.stage = AssemblyConstructionStage::ReserveFree;
-                } else if self.constraint_dof_cursor >= model.support_fixed_len(self.constraint_support_cursor).ok_or(FemError::Singular)? {
-                    self.constraint_support_cursor += 1;
-                    self.constraint_dof_cursor = 0;
-                    self.constraint_order_cursor = 0;
-                } else if self.constraint_order_cursor >= self.plan.dof_map.order.len() {
-                    self.constraint_dof_cursor += 1;
-                    self.constraint_order_cursor = 0;
-                } else {
-                    let (node_id, dof) = &self.plan.dof_map.order[self.constraint_order_cursor];
-                    if node_id == model.support_node_id(self.constraint_support_cursor).ok_or(FemError::Singular)? && *dof == model.support_fixed(self.constraint_support_cursor, self.constraint_dof_cursor).ok_or(FemError::Singular)? {
-                        self.constrained_old[self.constraint_order_cursor] = true;
-                        self.constraint_dof_cursor += 1;
-                        self.constraint_order_cursor = 0;
-                    } else {
-                        self.constraint_order_cursor += 1;
-                    }
-                }
-            }
+            AssemblyConstructionStage::MarkConstraints => self.assembly_mark_constraints(),
             AssemblyConstructionStage::ReserveFree => {
                 self.plan.free_new.reserve_capacity_one(self.plan.ndof, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::ResourceAdmission)?;
                 if self.plan.free_new.capacity() < self.plan.ndof { return Ok(false); }
@@ -699,30 +606,7 @@ impl AssemblyJobConstruction {
                 }
                 self.stage = AssemblyConstructionStage::BuildPartitions;
             }
-            AssemblyConstructionStage::BuildPartitions => {
-                if self.partitions.len() < self.partition_count {
-                    self.partitions.push(AssemblyPartitionBuffer::default());
-                } else if self.partition_reserve_cursor < self.partitions.len() {
-                    let partition = &mut self.partitions[self.partition_reserve_cursor];
-                    let per_partition = self.partition_triplet_counts[self.partition_reserve_cursor];
-                    if self.partition_reserve_lane == 0 {
-                        partition.full.reserve_capacity_one(per_partition, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::ResourceAdmission)?;
-                        if partition.full.capacity() < per_partition {
-                            return Ok(false);
-                        }
-                        self.partition_reserve_lane = 1;
-                    } else {
-                        partition.free.reserve_capacity_one(per_partition, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::ResourceAdmission)?;
-                        if partition.free.capacity() < per_partition {
-                            return Ok(false);
-                        }
-                        self.partition_reserve_lane = 0;
-                        self.partition_reserve_cursor += 1;
-                    }
-                } else {
-                    self.stage = AssemblyConstructionStage::ReserveMergedFull;
-                }
-            }
+            AssemblyConstructionStage::BuildPartitions => self.assembly_build_partitions(),
             AssemblyConstructionStage::ReserveMergedFull => {
                 self.merged_full.reserve_capacity_one(self.maximum_triplets, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::ResourceAdmission)?;
                 if self.merged_full.capacity() >= self.maximum_triplets {
@@ -753,52 +637,189 @@ impl AssemblyJobConstruction {
                 }
                 self.stage = AssemblyConstructionStage::BuildMergeCursors;
             }
-            AssemblyConstructionStage::BuildMergeCursors => {
-                if self.full_merge_cursors.len() < self.partition_count {
-                    self.full_merge_cursors.push(0);
-                } else if self.free_merge_cursors.len() < self.partition_count {
-                    self.free_merge_cursors.push(0);
-                } else {
-                    let model = self.model.take().ok_or(FemError::EmptyModel)?;
-                    let total_elements = model.elements_len();
-                    let model_signature = self.operation.operation.0 ^ self.operation.base_revision.0.rotate_left(17) ^ self.operation.generation.0.rotate_left(33);
-                    let plan = std::mem::replace(&mut self.plan, AssemblyPlan { dof_map: DofMap::from_order(Vec::new()), inv_perm: AssemblyOrder::default(), ndof: 0, free_new: AssemblyOrder::default(), compact_of_new: AssemblyOrder::default(), node_slot: HashMap::new() });
-                    self.job = Some(AssemblyJob {
-                        state: AssemblyCheckpoint {
-                            stage: AssemblyJobStage::ElementTriplets,
-                            total_elements,
-                            element_cursor: 0,
-                            pending_build: None,
-                            pending: None,
-                            partitions: std::mem::take(&mut self.partitions),
-                            full_merge_cursors: std::mem::take(&mut self.full_merge_cursors),
-                            free_merge_cursors: std::mem::take(&mut self.free_merge_cursors),
-                            merged_full: std::mem::take(&mut self.merged_full),
-                            merged_free: std::mem::take(&mut self.merged_free),
-                            checkpoint_due: false,
-                            preview_due: false,
-                            preview_cursor: 0,
-                            resume_target: 0,
-                            merge_scan_partition: 0,
-                            merge_candidate: None,
-                        },
-                        model: match model {
-                            AssemblyConstructionModel::Dynamic(model) => AnalysisModelOwner::Owned(model),
-                            AssemblyConstructionModel::Mounted(model) => AnalysisModelOwner::Mounted(model),
-                        },
-                        operation: self.operation,
-                        model_signature,
-                        plan,
-                        close_lane: 0,
-                        model_close: AnalysisModelCloseCursor::default(),
-                        desk: NumericalOutcomeDesk::default(),
-                    });
-                    self.stage = AssemblyConstructionStage::Complete;
-                }
-            }
+            AssemblyConstructionStage::BuildMergeCursors => self.assembly_build_merge_cursors(),
             AssemblyConstructionStage::Complete => return Ok(true),
         }
         Ok(false)
+    }
+
+    /// 🪵️ Runs the `validate node pairs` stage of `step_one`.
+    fn assembly_validate_node_pairs(&mut self) -> Result<bool, FemError> {
+        let model = self.model.as_ref().ok_or(FemError::EmptyModel)?;
+        if self.node_outer >= model.nodes_len() {
+            self.stage = AssemblyConstructionStage::ValidateElementReferences;
+        } else if self.node_inner >= model.nodes_len() {
+            self.node_outer += 1;
+            self.node_inner = self.node_outer + 1;
+        } else {
+            let outer = model.node(self.node_outer).ok_or(FemError::EmptyModel)?;
+            let inner = model.node(self.node_inner).ok_or(FemError::EmptyModel)?;
+            if outer.id == inner.id {
+                return Err(FemError::DuplicateNodeId(outer.id.clone()));
+            }
+            self.node_inner += 1;
+        }
+    }
+
+    /// 🔩️ Runs the `validate element references` stage of `step_one`.
+    fn assembly_validate_element_references(&mut self) -> Result<bool, FemError> {
+        let model = self.model.as_ref().ok_or(FemError::EmptyModel)?;
+        if self.element_cursor >= model.elements_len() {
+            self.stage = AssemblyConstructionStage::ValidateSupportReferences;
+        } else if self.reference_cursor >= model.element(self.element_cursor).and_then(Elements::mounted_node_id_count).ok_or(FemError::Singular)? {
+            let element = model.element(self.element_cursor).ok_or(FemError::Singular)?;
+            let side = element.mounted_node_id_count().and_then(|nodes| nodes.checked_mul(element.dofs_per_node().len())).ok_or(FemError::Singular)?;
+            let triplets = side.checked_mul(side).ok_or(FemError::Singular)?;
+            self.maximum_triplets = self.maximum_triplets.checked_add(triplets).ok_or(FemError::Singular)?;
+            let partition = self.element_cursor % self.partition_count;
+            self.partition_triplet_counts[partition] = self.partition_triplet_counts[partition].checked_add(triplets).ok_or(FemError::Singular)?;
+            self.element_cursor += 1;
+            self.reference_cursor = 0;
+            self.reference_node_cursor = 0;
+        } else if self.reference_node_cursor >= model.nodes_len() {
+            return Err(FemError::DanglingNodeRef(model.element(self.element_cursor).and_then(|element| element.mounted_node_id(self.reference_cursor)).ok_or(FemError::Singular)?.to_owned()));
+        } else if model.node(self.reference_node_cursor).ok_or(FemError::EmptyModel)?.id == model.element(self.element_cursor).and_then(|element| element.mounted_node_id(self.reference_cursor)).ok_or(FemError::Singular)? {
+            self.reference_cursor += 1;
+            self.reference_node_cursor = 0;
+        } else {
+            self.reference_node_cursor += 1;
+        }
+    }
+
+    /// ⚙️ Runs the `discover dofs` stage of `step_one`.
+    fn assembly_discover_dofs(&mut self) -> Result<bool, FemError> {
+        let model = self.model.as_ref().ok_or(FemError::EmptyModel)?;
+        if self.dof_node_cursor >= model.nodes_len() {
+            self.stage = AssemblyConstructionStage::ReservePermutation;
+        } else if self.dof_element_cursor >= model.elements_len() {
+            self.dof_emit_cursor = 0;
+            self.stage = AssemblyConstructionStage::EmitDofs;
+        } else if self.dof_reference_cursor >= model.element(self.dof_element_cursor).and_then(Elements::mounted_node_id_count).ok_or(FemError::Singular)? {
+            self.dof_element_cursor += 1;
+            self.dof_reference_cursor = 0;
+        } else {
+            let element = model.element(self.dof_element_cursor).ok_or(FemError::Singular)?;
+            if element.mounted_node_id(self.dof_reference_cursor).ok_or(FemError::Singular)? == model.node(self.dof_node_cursor).ok_or(FemError::EmptyModel)?.id {
+                for dof in element.dofs_per_node() {
+                    self.active_dofs[dof.index()] = true;
+                }
+            }
+            self.dof_reference_cursor += 1;
+        }
+    }
+
+    /// 🧲️ Runs the `emit dofs` stage of `step_one`.
+    fn assembly_emit_dofs(&mut self) -> Result<bool, FemError> {
+        if self.dof_emit_cursor >= self.active_dofs.len() {
+            self.dof_node_cursor += 1;
+            self.dof_element_cursor = 0;
+            self.active_dofs = [false; 6];
+            self.stage = AssemblyConstructionStage::DiscoverDofs;
+        } else {
+            if self.active_dofs[self.dof_emit_cursor] {
+                let dof = [Dof::Tx, Dof::Ty, Dof::Tz, Dof::Rx, Dof::Ry, Dof::Rz][self.dof_emit_cursor];
+                let node_id = self.model.as_ref().and_then(|model| model.node(self.dof_node_cursor)).ok_or(FemError::EmptyModel)?.id.clone();
+                self.pending_dof_owner = Some((node_id, dof));
+                self.stage = AssemblyConstructionStage::CommitDofOwner;
+                return Ok(false);
+            }
+            self.dof_emit_cursor += 1;
+        }
+    }
+
+    /// 🪛️ Runs the `mark constraints` stage of `step_one`.
+    fn assembly_mark_constraints(&mut self) -> Result<bool, FemError> {
+        let model = self.model.as_ref().ok_or(FemError::EmptyModel)?;
+        if self.constraint_support_cursor >= model.supports_len() {
+            self.stage = AssemblyConstructionStage::ReserveFree;
+        } else if self.constraint_dof_cursor >= model.support_fixed_len(self.constraint_support_cursor).ok_or(FemError::Singular)? {
+            self.constraint_support_cursor += 1;
+            self.constraint_dof_cursor = 0;
+            self.constraint_order_cursor = 0;
+        } else if self.constraint_order_cursor >= self.plan.dof_map.order.len() {
+            self.constraint_dof_cursor += 1;
+            self.constraint_order_cursor = 0;
+        } else {
+            let (node_id, dof) = &self.plan.dof_map.order[self.constraint_order_cursor];
+            if node_id == model.support_node_id(self.constraint_support_cursor).ok_or(FemError::Singular)? && *dof == model.support_fixed(self.constraint_support_cursor, self.constraint_dof_cursor).ok_or(FemError::Singular)? {
+                self.constrained_old[self.constraint_order_cursor] = true;
+                self.constraint_dof_cursor += 1;
+                self.constraint_order_cursor = 0;
+            } else {
+                self.constraint_order_cursor += 1;
+            }
+        }
+    }
+
+    /// 🔧️ Runs the `build partitions` stage of `step_one`.
+    fn assembly_build_partitions(&mut self) -> Result<bool, FemError> {
+        if self.partitions.len() < self.partition_count {
+            self.partitions.push(AssemblyPartitionBuffer::default());
+        } else if self.partition_reserve_cursor < self.partitions.len() {
+            let partition = &mut self.partitions[self.partition_reserve_cursor];
+            let per_partition = self.partition_triplet_counts[self.partition_reserve_cursor];
+            if self.partition_reserve_lane == 0 {
+                partition.full.reserve_capacity_one(per_partition, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::ResourceAdmission)?;
+                if partition.full.capacity() < per_partition {
+                    return Ok(false);
+                }
+                self.partition_reserve_lane = 1;
+            } else {
+                partition.free.reserve_capacity_one(per_partition, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::ResourceAdmission)?;
+                if partition.free.capacity() < per_partition {
+                    return Ok(false);
+                }
+                self.partition_reserve_lane = 0;
+                self.partition_reserve_cursor += 1;
+            }
+        } else {
+            self.stage = AssemblyConstructionStage::ReserveMergedFull;
+        }
+    }
+
+    /// 🔨️ Runs the `build merge cursors` stage of `step_one`.
+    fn assembly_build_merge_cursors(&mut self) -> Result<bool, FemError> {
+        if self.full_merge_cursors.len() < self.partition_count {
+            self.full_merge_cursors.push(0);
+        } else if self.free_merge_cursors.len() < self.partition_count {
+            self.free_merge_cursors.push(0);
+        } else {
+            let model = self.model.take().ok_or(FemError::EmptyModel)?;
+            let total_elements = model.elements_len();
+            let model_signature = self.operation.operation.0 ^ self.operation.base_revision.0.rotate_left(17) ^ self.operation.generation.0.rotate_left(33);
+            let plan = std::mem::replace(&mut self.plan, AssemblyPlan { dof_map: DofMap::from_order(Vec::new()), inv_perm: AssemblyOrder::default(), ndof: 0, free_new: AssemblyOrder::default(), compact_of_new: AssemblyOrder::default(), node_slot: HashMap::new() });
+            self.job = Some(AssemblyJob {
+                state: AssemblyCheckpoint {
+                    stage: AssemblyJobStage::ElementTriplets,
+                    total_elements,
+                    element_cursor: 0,
+                    pending_build: None,
+                    pending: None,
+                    partitions: std::mem::take(&mut self.partitions),
+                    full_merge_cursors: std::mem::take(&mut self.full_merge_cursors),
+                    free_merge_cursors: std::mem::take(&mut self.free_merge_cursors),
+                    merged_full: std::mem::take(&mut self.merged_full),
+                    merged_free: std::mem::take(&mut self.merged_free),
+                    checkpoint_due: false,
+                    preview_due: false,
+                    preview_cursor: 0,
+                    resume_target: 0,
+                    merge_scan_partition: 0,
+                    merge_candidate: None,
+                },
+                model: match model {
+                    AssemblyConstructionModel::Dynamic(model) => AnalysisModelOwner::Owned(model),
+                    AssemblyConstructionModel::Mounted(model) => AnalysisModelOwner::Mounted(model),
+                },
+                operation: self.operation,
+                model_signature,
+                plan,
+                close_lane: 0,
+                model_close: AnalysisModelCloseCursor::default(),
+                desk: NumericalOutcomeDesk::default(),
+            });
+            self.stage = AssemblyConstructionStage::Complete;
+        }
     }
 
     pub fn take_complete(&mut self) -> Option<AssemblyJob<'static>> {

@@ -1,5 +1,5 @@
 /** 🧾️ CAD renderer REPL: the transition dispatch, the command suggestions, the numeric entry and line submission and the command input key handler. */
-import { humanizeEngagementStepId, reactHostPort, type KeyboardEvent } from "@semio-tech/framework/ui/targets/react";
+import { humanizeEngagementStepId, reactHostPort, type KeyboardEvent } from "@semio-tech/ui-react";
 import { defaultModelDefinitionId } from "@semio-tech/s-spatial-kernel-ts/geometry/definition-catalog";
 import { listKeyedInteractionTransitions, interactionInNumericEntryState, interactionNumericEntryApplyEvent, interactionNumericEntryCommitEvent, interactionNumericEntryExplicitLockValue, interactionStepFinalizeEvent, parseNumericCommandLine, type InteractionKeybindRow } from "../../../🎬️actions/🎰️interaction-state/🟦️.ts";
 import { replActionTextWithoutSpaces, replActiveCompletionSuffix, replBuildDispatchEvent, replInteractionIdOnSpace, replInteractionSuggestions, replPaletteRows, type ReplSuggestion, replTryParseValueInteraction, replUserFacingSuggestionDetail, resolveScopedSpatialInteractionKey } from "../../🧾️repl-model/🟦️.tsx";

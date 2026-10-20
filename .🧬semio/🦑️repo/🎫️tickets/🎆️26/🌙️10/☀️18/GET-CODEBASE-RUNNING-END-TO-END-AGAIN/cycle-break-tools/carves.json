@@ -1,0 +1,150 @@
+[
+ {
+  "name": "@semio-tech/framework-hash",
+  "owners": [
+   "🧰️framework/🔨️modules/🔏️hash",
+   "🧰️framework/📦️packages/🟦️typescript/🔏️hash"
+  ]
+ },
+ {
+  "name": "@semio-tech/framework-trace",
+  "owners": [
+   "🧰️framework/🔨️modules/⏱️trace",
+   "🧰️framework/📦️packages/🟦️typescript/⏱️trace"
+  ]
+ },
+ {
+  "name": "@semio-tech/framework-interaction",
+  "owners": [
+   "🧰️framework/🔨️modules/🕹️interaction",
+   "🧰️framework/📦️packages/🟦️typescript/🕹️interaction"
+  ]
+ },
+ {
+  "name": "@semio-tech/framework-transient",
+  "owners": [
+   "🧰️framework/🔨️modules/🫧️transient",
+   "🧰️framework/📦️packages/🟦️typescript/🫧️transient"
+  ]
+ },
+ {
+  "name": "@semio-tech/framework-filesystem",
+  "owners": [
+   "🧰️framework/🔨️modules/📁️filesystem",
+   "🧰️framework/📦️packages/🟦️typescript/📁️filesystem"
+  ]
+ },
+ {
+  "name": "@semio-tech/framework-manifest",
+  "owners": [
+   "🧰️framework/🔨️modules/🛂️manifest",
+   "🧰️framework/📦️packages/🟦️typescript/🛂️manifest"
+  ]
+ },
+ {
+  "name": "@semio-tech/framework-onboarding",
+  "owners": [
+   "🧰️framework/🔨️modules/🎓️onboarding",
+   "🧰️framework/📦️packages/🟦️typescript/🎓️onboarding"
+  ]
+ },
+ {
+  "name": "@semio-tech/framework-action-argument-resolution",
+  "owners": [
+   "🧰️framework/🔨️modules/🧩️action-argument-resolution",
+   "🧰️framework/📦️packages/🟦️typescript/🧩️action-argument-resolution"
+  ]
+ },
+ {
+  "name": "@semio-tech/ui",
+  "owners": [
+   "🧰️framework/🔨️modules/🖱️ui",
+   "🧰️framework/📦️packages/🟦️typescript/🖱️ui"
+  ]
+ },
+ {
+  "name": "@semio-tech/ui-contract",
+  "owners": [
+   "🧰️framework/🔨️modules/🖱️ui/🧬️contract"
+  ]
+ },
+ {
+  "name": "@semio-tech/framework-effect",
+  "owners": [
+   "🧰️framework/🔨️modules/🎠️kernel/⚡️effect"
+  ]
+ },
+ {
+  "name": "@semio-tech/ui-react",
+  "owners": [
+   "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react"
+  ]
+ },
+ {
+  "name": "@semio-tech/ui-styling",
+  "owners": [
+   "🧰️framework/🔨️modules/🖱️ui/🎨️styling"
+  ]
+ },
+ {
+  "name": "@semio-tech/framework-ui-viewport-ts",
+  "owners": [
+   "🧰️framework/🔨️modules/🖱️ui/🪟️viewport"
+  ]
+ },
+ {
+  "name": "@semio-tech/ui-locale-rs",
+  "owners": [
+   "🧰️framework/🔨️modules/🖱️ui/🌐️locale"
+  ]
+ },
+ {
+  "name": "@semio-tech/repo-product",
+  "owners": [
+   "🧰️framework/🛍️products/🦑️repo",
+   "🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo"
+  ]
+ },
+ {
+  "name": "@semio-tech/repo-lib",
+  "owners": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"
+  ]
+ },
+ {
+  "name": "@semio-tech/repo-coordinator",
+  "owners": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator"
+  ]
+ },
+ {
+  "name": "@semio-tech/repo-server-library",
+  "owners": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library"
+  ]
+ },
+ {
+  "name": "@semio-tech/repo-test",
+  "owners": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"
+  ]
+ },
+ {
+  "name": "@semio-tech/nx-bootstrap-tools",
+  "owners": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools"
+  ]
+ },
+ {
+  "name": "@semio-tech/plugin-registry",
+  "owners": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry"
+  ]
+ },
+ {
+  "name": "@semio-tech/plugin-registry-publication",
+  "owners": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication"
+  ]
+ }
+]

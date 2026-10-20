@@ -1,0 +1,53 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📬️artifact-opening/🟦️.ts",
+ "function": "useArtifactOpening",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of useArtifactOpening. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️catalog",
+   "doc": "/** 🔶️ The catalog phase of useArtifactOpening. */",
+   "phases": [
+    {
+     "name": "useCatalogState",
+     "emoji": "🔷",
+     "doc": "Builds catalog, shellState, dispatch, loadedPlugins of useArtifactOpening.",
+     "from": 92,
+     "to": 271
+    }
+   ]
+  },
+  {
+   "dir": "🔸️open-artifact-app",
+   "doc": "/** 🔸️ The open artifact app phase of useArtifactOpening. */",
+   "phases": [
+    {
+     "name": "useOpenArtifactAppState",
+     "emoji": "🔹",
+     "doc": "Builds openArtifactWithAppRef, openReadySpaceArtifactCreation, defaultAppsRows, defaultAppsHost of useArtifactOpening.",
+     "from": 293,
+     "to": 435
+    }
+   ]
+  },
+  {
+   "dir": "🟠️open-entries",
+   "doc": "/** 🟠️ The open entries phase of useArtifactOpening. */",
+   "phases": [
+    {
+     "name": "useOpenEntriesState",
+     "emoji": "🟡",
+     "doc": "Builds openWithEntries, hasOpenArtifactSurfaces, transientNoticeIdRef, transientNoticeTimerRef of useArtifactOpening.",
+     "from": 437,
+     "to": 541
+    }
+   ]
+  }
+ ]
+}

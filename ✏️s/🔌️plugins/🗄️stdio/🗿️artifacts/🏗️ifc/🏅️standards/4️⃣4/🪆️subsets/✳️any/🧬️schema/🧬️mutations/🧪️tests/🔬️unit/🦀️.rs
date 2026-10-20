@@ -4,6 +4,8 @@ use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::sna
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcHeader;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
+#[cfg(test)] use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
+#[cfg(test)] use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcValue;
 
 #[test]
 fn missing_entity_target_is_rejected_before_mutation() {

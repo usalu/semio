@@ -50,6 +50,14 @@ const KINDS: &[&str] = &[
 /// Registered for `mutate-` only: a refused mutation leaves nothing to undo.
 #[cfg(feature = "sut")]
 const ROWS: &[&str] = &[
+    "retire-subject-middle",
+    "remove-selection-constraint-middle",
+    "retire-product-class-middle",
+    "retire-product-index-middle",
+    "retire-product-series-middle",
+    "retire-product-middle",
+    "retire-product-group-middle",
+    "retire-property-definition-middle",
 ];
 
 /// 🗣️ The real committed ISO 16757 document, read where the domain already keeps it.
@@ -68,6 +76,54 @@ const PACK_ASSET: &str = "asset://🎬️demo/🎒️.pack.semio";
 #[cfg(feature = "sut")]
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
+        "retire-subject-middle" => (
+            include_str!("../🧫️fixtures/🧬️mutations/✂️retire-subject/🧭️middle/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/✂️retire-subject/🧭️middle/🦠️mutation/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/✂️retire-subject/🧭️middle/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/✂️retire-subject/🧭️middle/🎯️outcome/🔣️.json"),
+        ),
+        "remove-selection-constraint-middle" => (
+            include_str!("../🧫️fixtures/🧬️mutations/🔓️remove-selection-constraint/🧭️middle/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🔓️remove-selection-constraint/🧭️middle/🦠️mutation/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🔓️remove-selection-constraint/🧭️middle/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🔓️remove-selection-constraint/🧭️middle/🎯️outcome/🔣️.json"),
+        ),
+        "retire-product-class-middle" => (
+            include_str!("../🧫️fixtures/🧬️mutations/🗑️retire-product-class/🧭️middle/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🗑️retire-product-class/🧭️middle/🦠️mutation/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🗑️retire-product-class/🧭️middle/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🗑️retire-product-class/🧭️middle/🎯️outcome/🔣️.json"),
+        ),
+        "retire-product-index-middle" => (
+            include_str!("../🧫️fixtures/🧬️mutations/🗑️retire-product-index/🧭️middle/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🗑️retire-product-index/🧭️middle/🦠️mutation/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🗑️retire-product-index/🧭️middle/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🗑️retire-product-index/🧭️middle/🎯️outcome/🔣️.json"),
+        ),
+        "retire-product-series-middle" => (
+            include_str!("../🧫️fixtures/🧬️mutations/🗑️retire-product-series/🧭️middle/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🗑️retire-product-series/🧭️middle/🦠️mutation/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🗑️retire-product-series/🧭️middle/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🗑️retire-product-series/🧭️middle/🎯️outcome/🔣️.json"),
+        ),
+        "retire-product-middle" => (
+            include_str!("../🧫️fixtures/🧬️mutations/🚫️retire-product/🧭️middle/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🚫️retire-product/🧭️middle/🦠️mutation/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🚫️retire-product/🧭️middle/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🚫️retire-product/🧭️middle/🎯️outcome/🔣️.json"),
+        ),
+        "retire-product-group-middle" => (
+            include_str!("../🧫️fixtures/🧬️mutations/🧹️retire-product-group/🧭️middle/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🧹️retire-product-group/🧭️middle/🦠️mutation/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🧹️retire-product-group/🧭️middle/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🧹️retire-product-group/🧭️middle/🎯️outcome/🔣️.json"),
+        ),
+        "retire-property-definition-middle" => (
+            include_str!("../🧫️fixtures/🧬️mutations/🧽️retire-property-definition/🧭️middle/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🧽️retire-property-definition/🧭️middle/🦠️mutation/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🧽️retire-property-definition/🧭️middle/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🧽️retire-property-definition/🧭️middle/🎯️outcome/🔣️.json"),
+        ),
         "change-exchange-process" => (
             include_str!("../🧫️fixtures/🧬️mutations/🔄️change-exchange-process/✅apply/📸️snapshot/⬅️before/🔣️.json"),
             include_str!("../🧫️fixtures/🧬️mutations/🔄️change-exchange-process/✅apply/🦠️mutation/🔣️.json"),

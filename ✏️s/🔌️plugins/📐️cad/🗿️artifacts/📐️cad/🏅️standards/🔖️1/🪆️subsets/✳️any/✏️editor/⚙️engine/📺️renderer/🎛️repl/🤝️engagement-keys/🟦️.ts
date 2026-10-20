@@ -1,5 +1,5 @@
 /** 🤝️ CAD renderer REPL: the engagement controls and specs, the numeric entry synchronisation, the global key capture, the scene pointer move and the drag overlay geometry. */
-import { focusActiveSearchInput, queryWindowSearchInput, reactHostPort, type EngagementControl, type EngagementSpec, type SearchSpec, type KeyboardEvent } from "@semio-tech/framework/ui/targets/react";
+import { focusActiveSearchInput, queryWindowSearchInput, reactHostPort, type EngagementControl, type EngagementSpec, type SearchSpec, type KeyboardEvent } from "@semio-tech/ui-react";
 import { type Vec3 } from "@semio-tech/cad-engine-ts/registry";
 import { interactionLengthEntryForState, interactionScalarEntryForState, interactionControlForState, interactionInNumericEntryState, interactionNumericEntryApplyEvent, parseNumericCommandLine } from "../../../🎬️actions/🎰️interaction-state/🟦️.ts";
 import { createSpatialPickEvent } from "../../🧲️geometry-targets/🧬️geometry-index/🟦️.ts";

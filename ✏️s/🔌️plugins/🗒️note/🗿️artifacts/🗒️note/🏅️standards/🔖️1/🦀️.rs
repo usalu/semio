@@ -72,7 +72,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 
 //#region 🧩️ArtifactItems6
 pub mod artifact_items_6 {
-use crate::{NoteSnapshot};
+use semio_s_artifact_note_note_schema::NoteSnapshot;
 
 //#region 🧬️ChildRestoreProjection
 /// 🧬️ The loaded-parent child projection, read off the snapshot's own derived composition fields — the ONE

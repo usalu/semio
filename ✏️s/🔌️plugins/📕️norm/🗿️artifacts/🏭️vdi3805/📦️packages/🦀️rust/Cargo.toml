@@ -31,6 +31,7 @@ semio-s-artifact-norm-vdi3805-inferences = { workspace = true }
 semio-s-artifact-norm-vdi3805-io = { workspace = true }
 semio-s-artifact-norm-vdi3805-schema = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
+semio-s-artifact-norm-vdi3805-model = { workspace = true }
 
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
@@ -52,3 +53,4 @@ semio-s-plugin-norm-compliance = { workspace = true, features = ["compliance-tes
 serde = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-test-original-snapshot-owners = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }
+semio-s-artifact-norm-vdi3805-examples = { workspace = true }

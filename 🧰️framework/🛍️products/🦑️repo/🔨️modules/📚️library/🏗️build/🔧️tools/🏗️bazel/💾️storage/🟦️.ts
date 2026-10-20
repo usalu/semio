@@ -1,5 +1,5 @@
 import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import schema from"../🧬️schema/🔣️.json";
+import schema from"../🧬️schema/🔣️.json" with { type: "json" };
 import{type ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {isAbsolute,join} from "node:path";
 import {createHash} from "node:crypto";
@@ -9,12 +9,14 @@ import {repositoryCachePartitionRootV1} from "../../../../⚡️caching/💾️s
 import type {ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {requireNativeStorageReservationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {resolveRemoteCacheContractV1} from "../../../🌐️remote-cache/🟦️.ts";
+import {bazelRemoteCacheV1,type BazelCredentialHelperV1} from "../🌐️remote-cache/🟦️.ts";
 
 const hostPaths=schema.definitions.HostPaths.const;
 /** 🔤️ Refuses the host paths that a platform's Bazel server cannot open byte-exactly, with the empirical reason authored in the schema. */
 export function requireBazelHostPathsV1(platform:string,layout:Readonly<Record<string,unknown>>):void{
- const rule=(hostPaths.platforms as Readonly<Record<string,{pattern:string}>>)[platform];if(!rule)return;
- const pattern=new RegExp(rule.pattern);for(const key of hostPaths.guarded){const value=layout[key];if(typeof value!=="string"||!pattern.test(value))throw Error(`ASCII Bazel host path required on ${platform}: ${key}`);}
+ const rule=(hostPaths.platforms as Readonly<Record<string,{pattern:string;guarded?:readonly string[]}>>)[platform];if(!rule)return;
+ const pattern=new RegExp(rule.pattern);for(const key of rule.guarded??hostPaths.guarded){const value=layout[key];if(typeof value!=="string"||!pattern.test(value))throw Error(`ASCII Bazel host path required on ${platform}: ${key}`);}
 }
 /** 🛤️ Names every native Bazel cache writer inside its authored finite partition. */
 export function bazelCacheLayoutV1(roots:Readonly<{tools:string;dependencies:string;products:string}>){
@@ -39,14 +41,12 @@ export function bazelServerBaseV1(layout:ReturnType<typeof bazelCacheLayoutV1>,w
  if(!isAbsolute(workspace))throw Error("Absolute Bazel workspace required");
  const base=join(layout.server,createHash("sha256").update(workspace).digest("hex").slice(0,16));if(base.length>256)throw Error("Bazel storage path exceeds 256 characters");return base;
 }
-/** 🌐️ Derives the closed startup and command flags for Bazel's disk, repository-content and optional remote caches; remote stays off until its endpoint environment is set. */
-export function bazelCacheFlagsV1(layout:ReturnType<typeof bazelCacheLayoutV1>,workspace:string,options:Readonly<{environment?:Readonly<Record<string,string|undefined>>;skipCache?:boolean;skipRemoteCache?:boolean}>={}):Readonly<{startup:readonly string[];command:readonly string[];remote:boolean}>{
- const names=cachePolicy.remote,input=options.environment??{},selected:Record<string,string>={};
- for(const name of [names.endpointEnvironment,names.uploadEnvironment,names.credentialHelperEnvironment]){const value=input[name];if(value!==undefined&&value!=="")selected[name]=value;}
- if(validateJsonSchemaSubset(schema.definitions.CacheEnvironment,selected,schema).length)throw Error("Closed Bazel remote cache environment required");
- const endpoint=selected[names.endpointEnvironment],remote=endpoint!==undefined&&!options.skipRemoteCache,command=[`--disk_cache=${layout.actions}`,`--experimental_disk_cache_gc_max_size=${bazelDiskCacheMaximumBytesV1()}`];
+/** 🌐️ Derives the closed startup and command flags for Bazel's disk, repository-content and optional remote caches; the remote part is the Bazel rendering of the neutral remote cache contract (`🌐️remote-cache`) and stays off until an endpoint is configured. The token travels only in `environment`, which the caller hands to the Bazel client and never persists. */
+export function bazelCacheFlagsV1(layout:ReturnType<typeof bazelCacheLayoutV1>,workspace:string,options:Readonly<{environment?:Readonly<Record<string,string|undefined>>;skipCache?:boolean;skipRemoteCache?:boolean}>={}):Readonly<{startup:readonly string[];command:readonly string[];remote:boolean;environment:Readonly<Record<string,string>>;helper?:BazelCredentialHelperV1}>{
+ const input=options.environment??{},contract=resolveRemoteCacheContractV1(input),command=[`--disk_cache=${layout.actions}`,`--experimental_disk_cache_gc_max_size=${bazelDiskCacheMaximumBytesV1()}`];
  if(options.skipCache)command.push("--noremote_accept_cached");
- if(remote){command.push(`--remote_cache=${endpoint}`,`--${selected[names.uploadEnvironment]==="true"?"":"no"}remote_upload_local_results`);const helper=selected[names.credentialHelperEnvironment];if(helper!==undefined)command.push(`--credential_helper=${helper}`);}
- const flags={startup:Object.freeze([`--output_base=${bazelServerBaseV1(layout,workspace)}`]),command:Object.freeze(command),remote};
+ const rendering=contract!==undefined&&!options.skipRemoteCache?bazelRemoteCacheV1(contract,input,{helperDirectory:layout.temporary}):undefined;
+ if(rendering)command.push(...rendering.flags);
+ const flags={startup:Object.freeze([`--output_base=${bazelServerBaseV1(layout,workspace)}`]),command:Object.freeze(command),remote:rendering!==undefined,environment:rendering?.environment??Object.freeze({}),...(rendering?.helper?{helper:rendering.helper}:{})};
  if(validateJsonSchemaSubset(schema.definitions.CacheFlags,flags,schema).length)throw Error("Closed Bazel cache flags required");return Object.freeze(flags);
 }

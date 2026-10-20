@@ -1,22 +1,22 @@
-import { reactHostPort } from "../../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
-import { useShellScopeOptional } from "../../../🧱️elements/🐚️ShellScope/🟦️.tsx";
-import { elementIdSelector } from "../../../🧱️elements/🆔️ElementId/🟦️.tsx";
-import type { IntroductionPlacement } from "../../../../🎓️onboarding/🏷️declaration/🟦️.ts";
-import { ephemeralMap } from "@semio-tech/framework/transient";
+import { reactHostPort } from "@semio-tech/ui/elements/Ports/react";
+import { useShellScopeOptional } from "@semio-tech/ui/elements/ShellScope";
+import { elementIdSelector } from "@semio-tech/ui/elements/ElementId";
+import type { IntroductionPlacement } from "@semio-tech/framework-onboarding/declaration";
+import { ephemeralMap } from "@semio-tech/framework-transient";
 
 type IntroductionRect = { readonly top: number; readonly left: number; readonly width: number; readonly height: number };
 
-/** @emoji 🎓️ Converts a viewport (getBoundingClientRect) box into coordinates local to `host`. */
+/** 🎓️ Converts a viewport (getBoundingClientRect) box into coordinates local to `host`. */
 export function introductionRectRelativeToHost(rect: IntroductionRect, hostRect: IntroductionRect): IntroductionRect {
   return { top: rect.top - hostRect.top, left: rect.left - hostRect.left, width: rect.width, height: rect.height };
 }
 
-/** @emoji 🎓️ Viewport-pixel point → host-local point for absolute overlays inside a transformed shell. */
+/** 🎓️ Viewport-pixel point → host-local point for absolute overlays inside a transformed shell. */
 export function introductionPointRelativeToHost(point: { readonly x: number; readonly y: number }, hostRect: IntroductionRect): { readonly x: number; readonly y: number } {
   return { x: point.x - hostRect.left, y: point.y - hostRect.top };
 }
 
-/** @emoji 🎓️ Live-tracks the union DOM rect of an introduction step's `introduce` element(s) (via
+/** 🎓️ Live-tracks the union DOM rect of an introduction step's `introduce` element(s) (via
  * {@link elementIdSelector}), stamping every match `data-introduced="true"` (pulsing the introduced border, see
  * `framework/ui/styling/js/🎨️ui.css`) for as long as they stay attached — cleared on unmount/selector change. A kind-level
  * window id that aliases every open instance (Top + Perspective) therefore pulses and anchors against the
@@ -123,7 +123,7 @@ export function useIntroductionAnchorRect(selector: string | null): Introduction
   return rect;
 }
 
-/** @emoji 🎓️ Elevates the chrome unit containing each of `ids` above the single fullscreen introduction
+/** 🎓️ Elevates the chrome unit containing each of `ids` above the single fullscreen introduction
  * veil, by stamping `data-introduction-elevated` (see `framework/ui/styling/js/🎨️ui.css`) on its nearest
  * `[data-slot="mode-dock-stack"]` (full window silhouette: tabs + gap + controls + body) or else its
  * nearest `[data-elevation-root]` ancestor — the panel/window/navbar/footer that owns a real, root-level
@@ -204,7 +204,7 @@ export type IntroductionInfoBoxPosition = { readonly top: number; readonly left:
 
 export const INTRODUCTION_INFO_BOX_GAP_PX = 16;
 
-/** @emoji 📝️ Splits an introduction step body into visual paragraphs on blank lines so each
+/** 📝️ Splits an introduction step body into visual paragraphs on blank lines so each
  * paragraph can emphasize independently on hover. */
 export function splitIntroductionBodyParagraphs(body: string): readonly string[] {
   return body
@@ -213,7 +213,7 @@ export function splitIntroductionBodyParagraphs(body: string): readonly string[]
     .filter((paragraph) => paragraph.length > 0);
 }
 
-/** @emoji 🧲️ Clamps an introduction info box to the viewport. Authored placement uses a visual inset;
+/** 🧲️ Clamps an introduction info box to the viewport. Authored placement uses a visual inset;
  * direct manipulation uses zero so every outer edge can meet the corresponding viewport border. */
 export function clampIntroductionInfoBoxPosition(
   position: IntroductionInfoBoxPosition,
@@ -227,7 +227,7 @@ export function clampIntroductionInfoBoxPosition(
   };
 }
 
-/** @emoji 🎓️ Where the info box sits relative to its anchor. `auto` picks the side with the most free
+/** 🎓️ Where the info box sits relative to its anchor. `auto` picks the side with the most free
  * viewport space; `center` (and any anchor-less step) centers the box in the viewport.
  *
  * 🧲️ EVERY branch clamps, the centered one included: centering a box that is wider or taller than the
@@ -270,7 +270,7 @@ export function resolveIntroductionPlacement(
   }
 }
 
-/** @emoji 🏷️ What a surface resolver returns for `IntroductionPoint.Entity`/`Curve`/`Domain`: a viewport
+/** 🏷️ What a surface resolver returns for `IntroductionPoint.Entity`/`Curve`/`Domain`: a viewport
  * pixel anchor plus whatever richer geometry the surface can offer — `rect` for offset-within-bounds and
  * domain-to-track mapping, `polyline` (viewport px) for arc-length curve targeting, `domain` for mapping
  * a value onto `rect`. `visible: false` means "found but not currently resolvable" (off-camera, hidden,
@@ -283,7 +283,7 @@ export type IntroductionResolvedGeometry = {
   readonly visible: boolean;
 };
 
-/** @emoji 🧭️ A surface's live-camera/live-entity capabilities for demonstration targeting, registered per
+/** 🧭️ A surface's live-camera/live-entity capabilities for demonstration targeting, registered per
  * window element id by the surface that owns the data (a react-three-fiber `useThree` bridge, a WASM
  * canvas session, a DOM-rendered host). Every method may be omitted — a surface implements only the point
  * kinds it can genuinely resolve. All three are called every animation frame; implementations must be
@@ -300,7 +300,7 @@ export type IntroductionSurfaceResolver = {
 
 export const introductionSurfaceResolvers = ephemeralMap<string, IntroductionSurfaceResolver>("framework.modules.ui.packages.typescript.targets.react.index.tsx.introductionSurfaceResolvers");
 
-/** @emoji 🧭️ Registers the demonstration-targeting resolver for the surface shown by window element
+/** 🧭️ Registers the demonstration-targeting resolver for the surface shown by window element
  * `windowId` — call from the window's own host component (has the live camera/session/DOM refs),
  * unregister on unmount via the returned disposer. Multiple concurrently open instances of the same
  * window kind (split panes) last-write-wins; acceptable for a single demonstration target. */
@@ -311,7 +311,7 @@ export function registerIntroductionSurfaceResolver(windowId: string, resolver: 
   };
 }
 
-/** @emoji 🧊️ Pure NDC (`[-1, 1]`, y-up) → viewport-pixel conversion shared by every 3D scene resolver. */
+/** 🧊️ Pure NDC (`[-1, 1]`, y-up) → viewport-pixel conversion shared by every 3D scene resolver. */
 export function ndcToViewportPoint(ndc: { readonly x: number; readonly y: number }, rect: { readonly left: number; readonly top: number; readonly width: number; readonly height: number }): { readonly x: number; readonly y: number } {
   return { x: rect.left + ((ndc.x + 1) / 2) * rect.width, y: rect.top + ((1 - ndc.y) / 2) * rect.height };
 }

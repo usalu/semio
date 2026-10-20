@@ -10,7 +10,7 @@ test("Vitest execution requires owner tool/cache policy and preserves exact budg
   fixture.expected[0]=fixture.policy.toolPath;fixture.expected[3]=resolve(fixture.expected[3]);fixture.coverage[3]=`--coverage.reportsDirectory=${fixture.policy.coverageDirectory}`;
   expect(()=>api.readVitestPolicyV1({SEMIO_VITEST_POLICY:JSON.stringify(fixture.policy)},"/foreign")).toThrow("another owner");
   expect(api.vitestArgumentsV1(fixture.policy,fixture.arguments,fixture.config,false)).toEqual(fixture.expected);
-  expect(api.vitestArgumentsV1(fixture.policy,fixture.arguments,fixture.config,true)).toEqual([...fixture.expected.slice(0,10),...fixture.coverage,...fixture.arguments]);
+  expect(api.vitestArgumentsV1(fixture.policy,fixture.arguments,fixture.config,true)).toEqual([...fixture.expected.slice(0,12),...fixture.coverage,...fixture.arguments]);
   expect(api.testCacheDirectoryV1({SEMIO_VITEST_POLICY:JSON.stringify(fixture.policy)},"kernel")).toBe(join(fixture.policy.cacheRoot,"kernel"));
   expect(()=>api.readVitestPolicyV1({})).toThrow("Explicit Vitest policy required");
   for(const policy of [{...fixture.policy,extra:1},{...fixture.policy,budgetMs:-1},{...fixture.policy,cacheRoot:"relative"}]){expect(()=>api.readVitestPolicyV1({SEMIO_VITEST_POLICY:JSON.stringify(policy)})).toThrow();}

@@ -63,7 +63,7 @@ import {parseLayoutArtifact} from "@semio-tech/layout-layout-ts/standards/1/subs
 import type{IntrinsicValue}from "@semio-tech/value-ts/schema";
 import { dictionarySchema as dictionaryNativeSchema } from "@semio-tech/value-ts/dictionary";
 import{questionDictionaryNativeJson,questionDictionaryFromNativeJson}from"@semio-tech/value-ts/dictionary/native-json";
-import{parseMediaPayload}from"@semio-tech/framework/manifest/media";
+import{parseMediaPayload}from"@semio-tech/framework-manifest/media";
 import unsignedFixture from "./🧫️fixtures/🧾️dictionary/🔢️unsigned/🔣️.json";
 
 const dictionaryValue=(source:unknown):IntrinsicValue=>{

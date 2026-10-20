@@ -272,7 +272,6 @@ pub struct ZipState {
     pub current_offset: u32,
 }
 
-integer_json_scalar!(u8, u32, u64, usize);
 //#endregion 🧱️Storage
 
 //#region 🧩️Job

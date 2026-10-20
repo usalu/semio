@@ -1,0 +1,263 @@
+{
+  "cases": [
+    {
+      "name": "build",
+      "args": [
+        "run",
+        "repo-mcp:build"
+      ],
+      "fault": "none",
+      "target": "build",
+      "events": [
+        "build"
+      ]
+    },
+    {
+      "name": "build-options",
+      "args": [
+        "run",
+        "repo-mcp:build",
+        "--skip-cache",
+        "--output=stream"
+      ],
+      "fault": "none",
+      "target": "build",
+      "events": [
+        "build"
+      ]
+    },
+    {
+      "name": "install",
+      "args": [
+        "run",
+        "repo-mcp:install"
+      ],
+      "fault": "none",
+      "target": "install",
+      "events": [
+        "child",
+        "install"
+      ]
+    },
+    {
+      "name": "output-pair",
+      "args": [
+        "run",
+        "repo-mcp:build",
+        "--output",
+        "stream"
+      ],
+      "fault": "none",
+      "target": "build",
+      "events": [
+        "build"
+      ]
+    },
+    {
+      "name": "graph",
+      "args": [
+        "run",
+        "repo-mcp:build",
+        "--dry-run"
+      ],
+      "fault": "none",
+      "target": null,
+      "events": []
+    },
+    {
+      "name": "cache-preference",
+      "args": [
+        "run",
+        "repo-mcp:build",
+        "--skip-cache=false"
+      ],
+      "fault": "none",
+      "target": null,
+      "events": []
+    },
+    {
+      "name": "argv-tail",
+      "args": [
+        "run",
+        "repo-mcp:build",
+        "--",
+        "x"
+      ],
+      "fault": "none",
+      "target": null,
+      "events": []
+    },
+    {
+      "name": "other-target",
+      "args": [
+        "run",
+        "repo-mcp:test"
+      ],
+      "fault": "none",
+      "target": null,
+      "events": []
+    },
+    {
+      "name": "other-owner",
+      "args": [
+        "run",
+        "other:build"
+      ],
+      "fault": "none",
+      "target": null,
+      "events": []
+    },
+    {
+      "name": "unknown-option",
+      "args": [
+        "run",
+        "repo-mcp:build",
+        "--unknown"
+      ],
+      "fault": "none",
+      "target": null,
+      "events": []
+    },
+    {
+      "name": "many",
+      "args": [
+        "run-many",
+        "--projects=repo-mcp",
+        "--targets=build"
+      ],
+      "fault": "none",
+      "target": null,
+      "events": []
+    },
+    {
+      "name": "owner",
+      "args": [
+        "run",
+        "repo-mcp:build"
+      ],
+      "fault": "owner",
+      "target": "build",
+      "events": []
+    },
+    {
+      "name": "command",
+      "args": [
+        "run",
+        "repo-mcp:build"
+      ],
+      "fault": "command",
+      "target": "build",
+      "events": []
+    },
+    {
+      "name": "dependencies",
+      "args": [
+        "run",
+        "repo-mcp:build"
+      ],
+      "fault": "dependencies",
+      "target": "build",
+      "events": []
+    },
+    {
+      "name": "spread",
+      "args": [
+        "run",
+        "repo-mcp:build"
+      ],
+      "fault": "spread",
+      "target": "build",
+      "events": []
+    },
+    {
+      "name": "abort",
+      "args": [
+        "run",
+        "repo-mcp:build"
+      ],
+      "fault": "abort",
+      "target": "build",
+      "events": []
+    },
+    {
+      "name": "reject",
+      "args": [
+        "run",
+        "repo-mcp:build"
+      ],
+      "fault": "reject",
+      "target": "build",
+      "events": [
+        "build"
+      ]
+    },
+    {
+      "name": "missing-output-value",
+      "args": [
+        "run",
+        "repo-mcp:build",
+        "--output"
+      ],
+      "fault": "none",
+      "target": null,
+      "events": []
+    },
+    {
+      "name": "build-exclude",
+      "args": [
+        "run",
+        "repo-mcp:build",
+        "--exclude-dependencies"
+      ],
+      "fault": "none",
+      "target": "build",
+      "events": [
+        "build"
+      ]
+    },
+    {
+      "name": "install-exclude",
+      "args": [
+        "run",
+        "repo-mcp:install",
+        "--exclude-dependencies"
+      ],
+      "fault": "none",
+      "target": null,
+      "events": []
+    },
+    {
+      "name": "install-exclude-true",
+      "args": [
+        "run",
+        "repo-mcp:install",
+        "--exclude-dependencies=true"
+      ],
+      "fault": "none",
+      "target": null,
+      "events": []
+    }
+  ],
+  "declarations": [
+    {
+      "target": "build",
+      "tool": "nx",
+      "mode": "prototype"
+    },
+    {
+      "target": "build",
+      "tool": "bazel",
+      "mode": "release"
+    },
+    {
+      "target": "install",
+      "tool": "nx",
+      "mode": "prototype"
+    },
+    {
+      "target": "install",
+      "tool": "bazel",
+      "mode": "release"
+    }
+  ]
+}

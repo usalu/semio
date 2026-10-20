@@ -4,7 +4,7 @@
   "targets": {
     "build": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "outputs": [],
       "dependsOn": [
         "build-zwischenbericht",
@@ -15,6 +15,11 @@
         "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
         "command": "bun ../../🔨️modules/📄️documents/📜️script.ts complete",
         "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "aggregate", "reason": "orders-prerequisites" }
+        }
       }
     },
     "watch": {

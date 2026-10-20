@@ -1,0 +1,199 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🧹️mounted-state-close/🦀️.rs",
+ "function": "close_step",
+ "nth": 0,
+ "match_line": 21,
+ "types": {
+  "maximum_items": "usize",
+  "maximum_bytes": "usize",
+  "child": "RetainedCloneGrant",
+  "grant": "RetainedCloneGrant"
+ },
+ "ret": "Result<Option<PluginLifecycleStep>, PluginLifecycleFailure>",
+ "inline": true,
+ "arms": [
+  {
+   "line": 22,
+   "name": "close_phase_0",
+   "doc": "🧱️ Runs close phase 0 of `close_step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 46,
+   "name": "close_phase_1",
+   "doc": "🪵️ Runs close phase 1 of `close_step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 58,
+   "name": "close_phase_2",
+   "doc": "🔩️ Runs close phase 2 of `close_step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 69,
+   "name": "close_phase_3",
+   "doc": "⚙️ Runs close phase 3 of `close_step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 80,
+   "name": "close_phase_4",
+   "doc": "🧲️ Runs close phase 4 of `close_step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 91,
+   "name": "close_phase_5",
+   "doc": "🪛️ Runs close phase 5 of `close_step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 102,
+   "name": "close_phase_6",
+   "doc": "🔧️ Runs close phase 6 of `close_step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 114,
+   "name": "close_phase_7",
+   "doc": "🔨️ Runs close phase 7 of `close_step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 177,
+   "name": "close_phase_9",
+   "doc": "🪚️ Runs close phase 9 of `close_step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 200,
+   "name": "close_phase_10",
+   "doc": "🧰️ Runs close phase 10 of `close_step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 223,
+   "name": "close_phase_11",
+   "doc": "🧪️ Runs close phase 11 of `close_step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 244,
+   "name": "close_phase_12",
+   "doc": "🧫️ Runs close phase 12 of `close_step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 269,
+   "name": "close_phase_13",
+   "doc": "🧬️ Runs close phase 13 of `close_step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 283,
+   "name": "close_phase_14",
+   "doc": "🔬️ Runs close phase 14 of `close_step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 297,
+   "name": "close_phase_15",
+   "doc": "🔭️ Runs close phase 15 of `close_step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 313,
+   "name": "close_phase_16",
+   "doc": "📡️ Runs close phase 16 of `close_step`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  }
+ ],
+ "method": {
+  "self_param": "&mut self",
+  "call": "self.{name}({args})"
+ },
+ "fall_tail": "Ok(None)",
+ "flow_option": true,
+ "call_wrap": "if let Some(step) = {call}? { return Ok(step); }"
+}

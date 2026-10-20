@@ -7,7 +7,7 @@ import { parseGeneration3dPreviewWindowTransient } from "../../🚪️io/📝️
 /** 🧪️ Compares the production parser with Ajv for the exact window-transient/config boundary. */
 export function testGeneration3dPreviewWindowTransientContract(): void {
   const here = fileURLToPath(new URL(".", import.meta.url));
-  const fixture = JSON.parse(readFileSync(`${here}/../../🧫️fixtures/🔬️unit/🔣️.json`, "utf8")) as {
+  const fixture = JSON.parse(readFileSync(`${here}/../🧫️fixtures/🔬️unit/🔣️.json`, "utf8")) as {
     accepted: unknown[];
     rejected: unknown[];
     configWithMisclassifiedField: unknown;

@@ -1,4 +1,4 @@
-/** 🧱️ Implementation a package boundary admits because its build tool addresses code by directory: a Go package is one directory below the module root, a Rust crate is a directory that carries its own manifest. Moving such files to the owner would merge distinct compilation units, so the schema (`packageBoundaryRules[*].implementationAdmission`) names the unit form and everything else inside a package boundary stays glue-only. */
+/** 🧱️ Implementation a package boundary admits because its build tool addresses code by directory: a Go package is one directory below the module root, a Rust crate is a directory that carries its own manifest. Moving such files to the owner would merge distinct compilation units, so the schema (`packageBoundaryRules[*].implementationAdmission`) names the unit form and everything else inside a package boundary stays glue-only. A rule that omits `implementationAdmission` (the taxonomy document is read unparsed) admits nothing. */
 export type PackageImplementationAdmission =
   | Readonly<{ form: "nested-source-unit"; unitSourceFileKindId: string }>
   | Readonly<{ form: "nested-manifest-unit"; unitManifestContractId: string }>;

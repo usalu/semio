@@ -1,21 +1,21 @@
-import type { TutorialCameraState, TutorialOverlayRect, TutorialGestureCue } from "../../../../🎓️onboarding/🏷️declaration/🟦️.ts";
-import { ephemeralMap } from "@semio-tech/framework/transient";
+import type { TutorialCameraState, TutorialOverlayRect, TutorialGestureCue } from "@semio-tech/framework-onboarding/declaration";
+import { ephemeralMap } from "@semio-tech/framework-transient";
 import * as React from "react";
-import { useSurface, SurfaceScope, Surface } from "../../../🧱️elements/🌈️Surface/🟦️.tsx";
-import { shellFloorPaints, shellFloorFillClass } from "../../../🔨️modules/🏠️shell-floor-presentation/🟦️.ts";
-import { useLabel } from "../../../🧱️elements/🏷️Label/🟦️.tsx";
-import { Button } from "../../../🧱️elements/🔘️Button/🟦️.tsx";
-import { Slider } from "../../../🧱️elements/🎚️Slider/🟦️.tsx";
-import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { GLASS_OVERLAY_BOX_CLASS } from "../../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
-import { reactHostPort } from "../../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
-import { useShellScopeOptional } from "../../../🧱️elements/🐚️ShellScope/🟦️.tsx";
+import { useSurface, SurfaceScope, Surface } from "@semio-tech/ui/elements/Surface";
+import { shellFloorPaints, shellFloorFillClass } from "@semio-tech/ui/modules/shell-floor-presentation";
+import { useLabel } from "@semio-tech/ui/elements/Label";
+import { Button } from "@semio-tech/ui/elements/Button";
+import { Slider } from "@semio-tech/ui/elements/Slider";
+import { cn } from "@semio-tech/ui/modules/class-name-composition";
+import { GLASS_OVERLAY_BOX_CLASS } from "@semio-tech/ui/modules/chrome-class-names";
+import { reactHostPort } from "@semio-tech/ui/elements/Ports/react";
+import { useShellScopeOptional } from "@semio-tech/ui/elements/ShellScope";
 import { type TutorialClockPort, formatTutorialTime, useTutorialClock } from "../🎞️tutorial-engine/🟦️.ts";
 import { resolveIntroductionPoint } from "../🧭️introduction-resolve/🟦️.ts";
 import { INTRODUCTION_DEMO_GESTURE_DEFAULT_CURSOR, introductionDemoArcPoint } from "../🎬️introduction-demo/🟦️.tsx";
 
 //#region 🎬️TutorialCameraDriver
-/** @emoji 🎥️ A live 3D/2D window's imperative camera bridge for tutorial playback — modeled exactly on {@link registerIntroductionSurfaceResolver}. `get` reads the surface's current live pose (for deviation-then-play convergence); `set` writes a pose during playback/seek. */
+/** 🎥️ A live 3D/2D window's imperative camera bridge for tutorial playback — modeled exactly on {@link registerIntroductionSurfaceResolver}. `get` reads the surface's current live pose (for deviation-then-play convergence); `set` writes a pose during playback/seek. */
 export type TutorialCameraDriver = {
   readonly get: () => TutorialCameraState | null;
   readonly set: (camera: TutorialCameraState) => void;
@@ -23,7 +23,7 @@ export type TutorialCameraDriver = {
 
 const tutorialCameraDrivers = ephemeralMap<string, TutorialCameraDriver>("framework.modules.ui.packages.typescript.targets.react.index.tsx.tutorialCameraDrivers");
 
-/** @emoji 🎥️ Registers the tutorial camera driver for window instance `windowId` — call from the window's own host component (e.g. `World3dHost`), unregister on unmount via the returned disposer. */
+/** 🎥️ Registers the tutorial camera driver for window instance `windowId` — call from the window's own host component (e.g. `World3dHost`), unregister on unmount via the returned disposer. */
 export function registerTutorialCameraDriver(windowId: string, driver: TutorialCameraDriver): () => void {
   tutorialCameraDrivers.set(windowId, driver);
   return () => {
@@ -31,7 +31,7 @@ export function registerTutorialCameraDriver(windowId: string, driver: TutorialC
   };
 }
 
-/** @emoji 🎥️ Looks up a registered {@link TutorialCameraDriver}, or `undefined` if that window hasn't mounted/registered one yet. */
+/** 🎥️ Looks up a registered {@link TutorialCameraDriver}, or `undefined` if that window hasn't mounted/registered one yet. */
 export function getTutorialCameraDriver(windowId: string): TutorialCameraDriver | undefined {
   return tutorialCameraDrivers.get(windowId);
 }
@@ -40,7 +40,7 @@ export function getTutorialCameraDriver(windowId: string): TutorialCameraDriver 
 //#region 🎬️TutorialBar
 const TUTORIAL_RATES = [0.5, 1, 1.5, 2] as const;
 
-/** @emoji ⏭️ Cycles through the fixed rate ladder (0.5→1→1.5→2→0.5→…). */
+/** ⏭️ Cycles through the fixed rate ladder (0.5→1→1.5→2→0.5→…). */
 function nextTutorialRate(rate: number): number {
   const index = TUTORIAL_RATES.indexOf(rate as (typeof TUTORIAL_RATES)[number]);
   const next=TUTORIAL_RATES[(index===-1?0:index+1)%TUTORIAL_RATES.length];if(next===undefined)throw Error("Complete tutorial rate ladder required");return next;
@@ -69,7 +69,7 @@ export type TutorialBarProps = {
   readonly onAddChapter: () => void;
 };
 
-/** @emoji 🎥️ Navbar-style timeline/controls row shown as {@link LayoutProps.subnavbar} whenever a tutorial is active — markup mirrors `Navbar`/`Footer` (`id="ui.tutorial.bar"`, `data-slot="tutorial-bar"`, `data-ui-reveal-region`, `data-elevation-root`). Only this component subscribes to the per-frame `clock` (see {@link useTutorialClock}), so the 60fps scrubber/time readout never re-renders the rest of the shell. */
+/** 🎥️ Navbar-style timeline/controls row shown as {@link LayoutProps.subnavbar} whenever a tutorial is active — markup mirrors `Navbar`/`Footer` (`id="ui.tutorial.bar"`, `data-slot="tutorial-bar"`, `data-ui-reveal-region`, `data-elevation-root`). Only this component subscribes to the per-frame `clock` (see {@link useTutorialClock}), so the 60fps scrubber/time readout never re-renders the rest of the shell. */
 export const TutorialBar: React.FC<TutorialBarProps> = ({
   title,
   durationMs,
@@ -165,7 +165,7 @@ export type TutorialCaptionsProps = {
   readonly visible: boolean;
 };
 
-/** @emoji 💬️ Bottom-center glass strip showing the active narration cue's caption text — hidden entirely when `visible` is false (captions toggled off) or no cue currently covers the playhead. Reuses {@link GLASS_OVERLAY_BOX_CLASS}'s panel glass tier, positioned bottom-center instead of anchored. */
+/** 💬️ Bottom-center glass strip showing the active narration cue's caption text — hidden entirely when `visible` is false (captions toggled off) or no cue currently covers the playhead. Reuses {@link GLASS_OVERLAY_BOX_CLASS}'s panel glass tier, positioned bottom-center instead of anchored. */
 export const TutorialCaptions: React.FC<TutorialCaptionsProps> = ({ text, visible }) => {
   if (!visible || !text) return null;
   return (
@@ -187,7 +187,7 @@ export type TutorialVideoOverlayProps = {
   readonly localTimeMs: number;
 };
 
-/** @emoji 📹️ Fixed `<video>` positioned via the active cue's normalized {@link TutorialOverlayRect}, resynced to the playhead every render (hard reseek past a 300ms drift, matching the plan's tolerance) rather than played independently. */
+/** 📹️ Fixed `<video>` positioned via the active cue's normalized {@link TutorialOverlayRect}, resynced to the playhead every render (hard reseek past a 300ms drift, matching the plan's tolerance) rather than played independently. */
 export const TutorialVideoOverlay: React.FC<TutorialVideoOverlayProps> = ({ src, rect, muted, playing, rate, localTimeMs }) => {
   const videoRef = reactHostPort.useRef<HTMLVideoElement | null>(null);
   reactHostPort.useEffect(() => {
@@ -223,7 +223,7 @@ export type TutorialGhostPointerProps = {
   readonly progress: number;
 };
 
-/** @emoji 👻️ Tutorial-playback ghost cursor — a lean, parallel implementation of `IntroductionDemonstrationOverlay`'s point resolution (reuses {@link resolveIntroductionPoint}/{@link introductionDemoArcPoint}/{@link introductionDemoResolveVisual} verbatim rather than re-deriving them) driven by the tutorial playhead's `progress` instead of its own internal rAF phase machine — click-family/scroll gestures render statically at their point, `drag` lerps linearly from→to, `orbit` bulges along the same quadratic arc the introduction overlay uses. */
+/** 👻️ Tutorial-playback ghost cursor — a lean, parallel implementation of `IntroductionDemonstrationOverlay`'s point resolution (reuses {@link resolveIntroductionPoint}/{@link introductionDemoArcPoint}/{@link introductionDemoResolveVisual} verbatim rather than re-deriving them) driven by the tutorial playhead's `progress` instead of its own internal rAF phase machine — click-family/scroll gestures render statically at their point, `drag` lerps linearly from→to, `orbit` bulges along the same quadratic arc the introduction overlay uses. */
 export const TutorialGhostPointer: React.FC<TutorialGhostPointerProps> = ({ cue, progress }) => {
   const [point, setPoint] = reactHostPort.useState<{ readonly x: number; readonly y: number } | null>(null);
   const shellScope = useShellScopeOptional();

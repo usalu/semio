@@ -1,0 +1,114 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🏃️run/🦀️.rs",
+ "function": "run",
+ "nth": 0,
+ "match_line": 20,
+ "types": {},
+ "ret": "EnergyRun",
+ "inline": true,
+ "arms": [
+  {
+   "line": 34,
+   "name": "run_resolve_weather",
+   "doc": "🧱️ Copies one weather record into the retained weather table, or finishes the weather resolution and starts the precompute.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 73,
+   "name": "run_initialize_zones",
+   "doc": "🪵️ Initializes the zone states of the simulation model.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 94,
+   "name": "run_initialize_surfaces",
+   "doc": "🔩️ Initializes the surface states of the simulation model.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 158,
+   "name": "run_initialize_warmup_history",
+   "doc": "⚙️ Initializes the warmup history of every zone.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 183,
+   "name": "run_warmup_timestep",
+   "doc": "🧲️ Runs one warmup timestep.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 222,
+   "name": "run_warmup_convergence",
+   "doc": "🪛️ Checks the warmup convergence and starts the next warmup day or the run.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 286,
+   "name": "run_start_run",
+   "doc": "🔧️ Starts the run period after the warmup.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 341,
+   "name": "run_zone_timestep",
+   "doc": "🔨️ Runs one zone timestep of the run period.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 461,
+   "name": "run_encode_output",
+   "doc": "🪚️ Encodes the retained results into the output pack.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  }
+ ],
+ "method": {
+  "self_param": "&mut self",
+  "call": "self.{name}({args})"
+ }
+}

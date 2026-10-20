@@ -2,6 +2,7 @@
 
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewCamera;
 
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase", default)]

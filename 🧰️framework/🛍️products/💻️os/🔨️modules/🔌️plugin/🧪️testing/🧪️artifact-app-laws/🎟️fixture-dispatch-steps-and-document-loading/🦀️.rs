@@ -151,6 +151,12 @@ pub fn fixture_step_context_for(turn: semio_framework::kernel::RetainedTurnInput
     semio_framework_job::StepContext::new(semio_framework_job::OperationId(turn.operation), semio_framework_job::Generation(turn.generation), semio_framework_job::StepBudget::new(1_000_000, u64::MAX, turn.grant), semio_framework_job::root_cancel_token(), || Some(0), sequence, progress)
 }
 
+/// 🌀️ Polls one app's pending effects under a fresh fixture step context, as the refresh poll lane does.
+pub async fn fixture_pending_effects<P: PluginApp>(app: &mut P, view: Option<&semio_framework::ViewModel>) -> Result<Vec<semio_framework::kernel::Effect>, semio_framework::Fault> {
+    let mut cx = fixture_step_context();
+    app.pending_effects(view, &mut cx).await
+}
+
 /// 📒️ One leaked retained-progress cell for a hand-built `StepContext`.
 pub fn fixture_progress() -> &'static mut semio_framework_value::RetainedCloneProgress {
     Box::leak(Box::default())

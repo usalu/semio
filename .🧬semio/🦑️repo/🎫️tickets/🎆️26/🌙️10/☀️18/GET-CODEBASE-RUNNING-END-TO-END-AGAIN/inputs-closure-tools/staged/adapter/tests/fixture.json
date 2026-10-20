@@ -1,0 +1,216 @@
+{
+  "files": {
+    "tools/entry.ts": "import './dep.ts';\n",
+    "tools/dep.ts": "export const dep = 1;\n",
+    "tools/unrelated.ts": "export const other = 1;\n",
+    "other/unused.ts": "export const unused = 1;\n",
+    "crate/Cargo.toml": "[package]\nname = \"crate\"\n",
+    "Cargo.lock": "# lock\n",
+    "project/src/lib.rs": "pub fn a() {}\n",
+    "project/📜️script.ts": "export {};\n"
+  },
+  "manifests": {
+    "source": [
+      {
+        "name": "closure",
+        "value": {
+          "version": 1,
+          "files": [
+            "tools/entry.ts",
+            "tools/dep.ts"
+          ]
+        }
+      },
+      {
+        "name": "unreached",
+        "value": {
+          "version": 1,
+          "files": [
+            "other/unused.ts"
+          ]
+        }
+      }
+    ],
+    "lock": [
+      {
+        "name": "lock",
+        "value": {
+          "version": 1,
+          "manifest": "crate/Cargo.toml"
+        }
+      }
+    ]
+  },
+  "graph": {
+    "namedInputs": {
+      "shared": [
+        "{workspaceRoot}/tools/unrelated.ts"
+      ]
+    },
+    "projects": {
+      "p": {
+        "root": "project",
+        "namedInputs": {
+          "default": [
+            "{projectRoot}/**/*",
+            {
+              "env": "@source:closure"
+            }
+          ],
+          "commandSources0": [
+            {
+              "env": "@source:closure"
+            },
+            {
+              "externalDependencies": [
+                "left-pad"
+              ]
+            }
+          ]
+        }
+      },
+      "q": {
+        "root": "consumer",
+        "namedInputs": {}
+      },
+      "r": {
+        "root": "referrer",
+        "namedInputs": {}
+      },
+      "z": {
+        "root": "zone",
+        "namedInputs": {
+          "default": [
+            "{projectRoot}/**/*",
+            {
+              "env": "@source:unreached"
+            }
+          ]
+        }
+      }
+    },
+    "dependencies": [
+      {
+        "source": "q",
+        "target": "p"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "own and inherited named groups expand the closure in place",
+      "project": "q",
+      "inputs": [
+        "default",
+        "^default",
+        "shared",
+        {
+          "env": "@lock:lock"
+        },
+        {
+          "env": "SEMIO_BUILD_MODE"
+        }
+      ],
+      "expanded": [
+        "consumer/**/*",
+        "project/**/*",
+        "tools/dep.ts",
+        "tools/entry.ts",
+        "tools/unrelated.ts",
+        "Cargo.lock",
+        "crate/Cargo.toml"
+      ],
+      "passthrough": [
+        {
+          "env": "SEMIO_BUILD_MODE"
+        }
+      ]
+    },
+    {
+      "name": "a group named by a command source reference expands the same files",
+      "project": "p",
+      "inputs": [
+        "commandSources0"
+      ],
+      "expanded": [
+        "tools/dep.ts",
+        "tools/entry.ts"
+      ],
+      "passthrough": [
+        {
+          "externalDependencies": [
+            "left-pad"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "an explicit project reference reaches that project's closure without a dependency edge",
+      "project": "r",
+      "inputs": [
+        {
+          "input": "default",
+          "projects": [
+            "p"
+          ]
+        }
+      ],
+      "expanded": [
+        "project/**/*",
+        "tools/dep.ts",
+        "tools/entry.ts"
+      ],
+      "passthrough": []
+    }
+  ],
+  "refusals": [
+    {
+      "name": "parent segment",
+      "kind": "source",
+      "value": {
+        "version": 1,
+        "files": [
+          "../outside.ts"
+        ]
+      },
+      "error": "Workspace-relative closure file required"
+    },
+    {
+      "name": "absolute name",
+      "kind": "source",
+      "value": {
+        "version": 1,
+        "files": [
+          "/etc/passwd"
+        ]
+      },
+      "error": "Workspace-relative closure file required"
+    },
+    {
+      "name": "extra property",
+      "kind": "source",
+      "value": {
+        "version": 1,
+        "files": [],
+        "extra": true
+      },
+      "error": "Closed Bazel closure manifest required"
+    },
+    {
+      "name": "wrong version",
+      "kind": "lock",
+      "value": {
+        "version": 2,
+        "manifest": "crate/Cargo.toml"
+      },
+      "error": "Closed Bazel closure manifest required"
+    }
+  ],
+  "mutation": {
+    "file": "tools/dep.ts",
+    "content": "export const dep = 2;\n",
+    "unrelatedFile": "other/unused.ts",
+    "unrelatedContent": "export const unused = 2;\n"
+  },
+  "unreachedProject": "z"
+}

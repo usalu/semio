@@ -513,12 +513,16 @@ repo_bootstrap() {
   fi
   cd "$REPO_ROOT"
   export SEMIO_WORKSPACE_ROOT="$REPO_ROOT"
+  log "Installing the native repository command…"
+  bun repo run repo-mcp:install || return 1
+  export PATH="$LOCAL_BIN:$PATH"
+  hash -r
+  repo --help >/dev/null || return 1
   log "workspace:setup…"
-  bun repo run workspace:setup
-  bun repo run @semio-tech/repo-developer-tools:setup-debugger
-  ensure_browser_libraries || log "The Chromium system libraries could not be installed; run 'node node_modules/playwright/cli.js install-deps chromium' with root privileges."
-  log "Building repo client binary…"
-  bun repo run @semio-tech/repo-client:build || log "repo client build failed; install Go 1.21+ and rerun setup."
+  repo run workspace:setup || return 1
+  repo run @semio-tech/repo-developer-tools:setup-debugger || return 1
+  ensure_browser_libraries || log "The Chromium system libraries could not be installed; use the owned browser setup control with root privileges."
+
 }
 #endregion 🔖️RepoBootstrap
 

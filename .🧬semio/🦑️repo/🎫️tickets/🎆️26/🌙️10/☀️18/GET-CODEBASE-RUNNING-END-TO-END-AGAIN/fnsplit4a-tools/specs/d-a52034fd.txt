@@ -1,0 +1,3 @@
+11-76 🔶️scales-pdf-pages-cover registerScalesPdfPagesCoverTests
+141-141 🔸️shows-center-bottom-pdf registerShowsCenterBottomPdfTests
+221-312 🟠️navigates-only-within-pdf registerNavigatesOnlyWithinPdfTests

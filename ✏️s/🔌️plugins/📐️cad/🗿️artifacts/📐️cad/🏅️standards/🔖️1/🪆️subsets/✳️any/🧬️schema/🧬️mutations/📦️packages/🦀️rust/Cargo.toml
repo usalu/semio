@@ -45,7 +45,7 @@ path = "../../🔌delete-energy-model/🧪️tests/🔌️vacates/🦀️.rs"
 
 [[test]]
 name = "cad_create_structure_classic_model"
-path = "../../🏛️create-structure-classic/🧪️tests/🏛️rehandles/🦀️.rs"
+path = "../../🏛️create-structure-classic-model/🧪️tests/🏛️rehandles/🦀️.rs"
 
 [[test]]
 name = "cad_delete_structure_classic_model"

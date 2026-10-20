@@ -2,6 +2,7 @@
 
 use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::*;
 use semio_s_artifact_stdio_zip::opc::{OpcRelationship, OpcTargetMode};
+#[cfg(test)] use semio_framework_replication_mutation::Mutation;
 
 #[semio_framework_async_macros::async_test]
 async fn remove_relationship_restores_the_relationship_at_its_position() {

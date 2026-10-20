@@ -1,5 +1,5 @@
 import { type StylingTokenKey, STYLING_TOKENS } from "../../🤖️generated/🔤️tokens/🟦️.ts";
-import { ephemeralMap } from "@semio-tech/framework/transient";
+import { ephemeralMap } from "@semio-tech/framework-transient";
 import { currentStylingAppearanceName, stylingAppearanceRootElement } from "../🎛️active-theme/🟦️.ts";
 
 //#region 🔑️TokenRefs

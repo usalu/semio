@@ -31,7 +31,7 @@ test("neutral actual CMake stage and output consumers preserve the closed operat
 /** 📐️ Compares actual finite cache decoding with independent SQLite line and key projection. */
 test("neutral CMake consumed cache facts match independent SQLite and mode schema",()=>{const db=new Database(":memory:");try{for(const row of fixture.caches){const oracle=db.query("with recursive lines(line,rest) as(select '',?1 union all select substr(rest,1,instr(rest,char(10))-1),substr(rest,instr(rest,char(10))+1) from lines where instr(rest,char(10))>0),facts as(select substr(line,1,instr(line,':')-1) name,rtrim(substr(line,instr(line,'=')+1),char(13)) value from lines where instr(line,':')>0 and instr(line,'=')>instr(line,':')) select count(*) n,count(distinct name) d,max(case name when 'CMAKE_HOME_DIRECTORY' then value end) sourceRoot,max(case name when 'CMAKE_CXX_COMPILER' then value end) compiler,max(case name when 'CMAKE_BUILD_TYPE' then value end) configuration,max(case name when 'CMAKE_GENERATOR' then value end) generator from facts where name in ('CMAKE_HOME_DIRECTORY','CMAKE_CXX_COMPILER','CMAKE_BUILD_TYPE','CMAKE_GENERATOR')").get(row.text)as{n:number;d:number;sourceRoot:string;compiler:string;configuration:string;generator:string};const{n,d,...facts}=oracle;expect(n===4&&d===4&&new Ajv({strict:true}).validate(schema.definitions.CacheFacts,facts)).toBe(row.accepted);if(row.accepted){expect(readCmakeCacheFactsV1(row.text)).toEqual(facts);expect(facts).toEqual(row.facts);}else expect(()=>readCmakeCacheFactsV1(row.text)).toThrow();}}finally{db.close();}});
 
-import { parse } from "dotenv";
+import { parseEnv as parse } from "node:util";
 import { compilerEnvironmentFromOutput } from "../🪟️toolchain/🟦️.ts";
 const toolchainFixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json",import.meta.url),"utf8")), validateToolchain=new Ajv2020({strict:false}).compile(schema.definitions.NativePresets);
 test("all native host presets use the compiler-only generator and agree with Ajv", () => {
@@ -49,7 +49,7 @@ test("all native host presets use the compiler-only generator and agree with Ajv
   console.log("[DEBUG] all six native CMake presets use Ninja; Windows setup installs standalone Build Tools");
 });
 
-test("compiler environment vectors agree with the independent dotenv parser", () => {
+test("compiler environment vectors agree with the independent Node dotenv-format parser", () => {
   for (const row of toolchainFixture.environments) {
     const actual = compilerEnvironmentFromOutput(row.output, row.base);
     expect(actual, row.name).toEqual(row.expected);

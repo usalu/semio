@@ -44,5 +44,242 @@
   "lazyMutation": {
     "path": "📥️lazy.ts",
     "bytes": "export const lazy = 19;\n"
-  }
+  },
+  "capacity": {
+    "maximumFiles": 1024,
+    "maximumResolutions": 256,
+    "byteBudgets": {
+      "maximumSourceBytes": 16777216,
+      "maximumFileBytes": 4194304,
+      "maximumSnapshotBytes": 24117248,
+      "maximumOutputBytes": 8388608
+    },
+    "cases": [
+      {
+        "files": 257,
+        "accept": true
+      },
+      {
+        "files": 1024,
+        "accept": true
+      },
+      {
+        "files": 1025,
+        "accept": false
+      }
+    ]
+  },
+  "origins": [
+    {
+      "id": "none",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "id": "schema-before",
+      "fault": "schema-before",
+      "accepted": false
+    },
+    {
+      "id": "schema-after",
+      "fault": "schema-after",
+      "accepted": false
+    },
+    {
+      "id": "undeclared",
+      "fault": "undeclared",
+      "accepted": false
+    },
+    {
+      "id": "global-spoof",
+      "fault": "global-spoof",
+      "accepted": true
+    },
+    {
+      "id": "local-collision",
+      "fault": "local-collision",
+      "accepted": true
+    },
+    {
+      "id": "reader-before",
+      "fault": "reader-before",
+      "accepted": false
+    },
+    {
+      "id": "reader-after",
+      "fault": "reader-after",
+      "accepted": false
+    },
+    {
+      "id": "reader-after-cached",
+      "fault": "reader-after-cached",
+      "accepted": false
+    },
+    {
+      "id": "reader-policy-before",
+      "fault": "reader-policy-before",
+      "accepted": false
+    },
+    {
+      "id": "reader-policy-after",
+      "fault": "reader-policy-after",
+      "accepted": false
+    }
+  ],
+  "runtimeCompanions": {
+    "uniquePaths": 37,
+    "cases": [
+      {
+        "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📋️data/📥️load/🟨️.mjs",
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📋️data/🟨️.mjs",
+        "excluded": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📋️data/🧬️schema/🔣️.json"
+      },
+      {
+        "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/🎯️selection/📥️configuration/🟦️.ts",
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/🎯️selection/📥️configuration/🧬️schema/🔣️.json",
+        "excluded": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/🎯️selection/📥️configuration/🧪️tests/🔣️.json"
+      }
+    ]
+  },
+  "workspacePolicies": [
+    {
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "fault": "before",
+      "accepted": false
+    },
+    {
+      "fault": "after",
+      "accepted": false
+    }
+  ],
+  "commonjs": {
+    "entry": "entry.ts",
+    "files": {
+      "entry.ts": "export{value}from\"./first.cjs\";",
+      "first.cjs": "module.exports={value:require(\"./second.cjs\").value};",
+      "second.cjs": "module.exports={value:require(\"./policy.json\").value};",
+      "policy.json": "{\"value\":7}"
+    },
+    "expectedFiles": [
+      "entry.ts",
+      "first.cjs",
+      "policy.json",
+      "second.cjs"
+    ]
+  },
+  "loaderManifests": [
+    {
+      "id": "current-empty",
+      "fault": "current-empty",
+      "accepted": true
+    },
+    {
+      "id": "resolved",
+      "fault": "resolved",
+      "accepted": true
+    },
+    {
+      "id": "shared-target",
+      "fault": "shared-target",
+      "accepted": true
+    },
+    {
+      "id": "source-limit",
+      "fault": "source-limit",
+      "accepted": true
+    },
+    {
+      "id": "resolution-limit",
+      "fault": "resolution-limit",
+      "accepted": true
+    },
+    {
+      "id": "legacy",
+      "fault": "legacy",
+      "accepted": false
+    },
+    {
+      "id": "manifest-extra",
+      "fault": "manifest-extra",
+      "accepted": false
+    },
+    {
+      "id": "source-extra",
+      "fault": "source-extra",
+      "accepted": false
+    },
+    {
+      "id": "source-overlimit",
+      "fault": "source-overlimit",
+      "accepted": false
+    },
+    {
+      "id": "source-unsorted",
+      "fault": "source-unsorted",
+      "accepted": false
+    },
+    {
+      "id": "source-unsafe",
+      "fault": "source-unsafe",
+      "accepted": false
+    },
+    {
+      "id": "entry-missing",
+      "fault": "entry-missing",
+      "accepted": false
+    },
+    {
+      "id": "resolution-missing",
+      "fault": "resolution-missing",
+      "accepted": false
+    },
+    {
+      "id": "resolution-not-array",
+      "fault": "resolution-not-array",
+      "accepted": false
+    },
+    {
+      "id": "resolution-extra",
+      "fault": "resolution-extra",
+      "accepted": false
+    },
+    {
+      "id": "resolution-nonstring",
+      "fault": "resolution-nonstring",
+      "accepted": false
+    },
+    {
+      "id": "resolution-oversize",
+      "fault": "resolution-oversize",
+      "accepted": false
+    },
+    {
+      "id": "resolution-unknownpath",
+      "fault": "resolution-unknownpath",
+      "accepted": false
+    },
+    {
+      "id": "resolution-duplicate",
+      "fault": "resolution-duplicate",
+      "accepted": false
+    },
+    {
+      "id": "resolution-unsorted",
+      "fault": "resolution-unsorted",
+      "accepted": false
+    },
+    {
+      "id": "resolution-unsafe",
+      "fault": "resolution-unsafe",
+      "accepted": false
+    },
+    {
+      "id": "resolution-overlimit",
+      "fault": "resolution-overlimit",
+      "accepted": false
+    }
+  ]
 }

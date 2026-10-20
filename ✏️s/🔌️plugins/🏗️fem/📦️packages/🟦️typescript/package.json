@@ -9,6 +9,7 @@
   "exports": {
     "./engine/app-surface/schema/result-mode": "./⚙️engine/🖥️app-surface/🧬️schema/👁️result-mode/🟦️.ts",
     "./engine/app-surface/schema/results-animation": "./⚙️engine/🖥️app-surface/🧬️schema/🔣️results-animation/🟦️.ts",
+    "./engine/material/table/testing": "./⚙️engine/🧱️material/📋️table/🧪️testing/🟦️.ts",
     "./testing/fixtures/child-outcomes": "./🧪️tests/🧫️fixtures/🧒️child-outcomes/🟦️.ts",
     "./testing/fixtures/mounted-close": "./🧪️tests/🧫️fixtures/🧹️mounted-close/🟦️.ts",
     "./testing/fixtures/visual-close-grants": "./🧪️tests/🧫️fixtures/💳️visual-close-grants/🟦️.ts",
@@ -24,7 +25,8 @@
     "three-mesh-bvh": "^0.9.14",
     "typescript": "^5.9.3",
     "vitest": "^4.1.10",
-    "@semio-tech/framework": "workspace:*"
+    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/ui-contract": "workspace:*"
   },
   "author": {
     "name": "Ueli Saluz",

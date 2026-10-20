@@ -7,8 +7,8 @@ import {withExactCargoLawOutputV1,type ExactCargoLawOutputsV1} from "@semio-tech
 import {withLocalHubHostTaskV1,type LocalHubHostV1} from "../../../../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import {withRequestedIssuedResourceControlV1} from "@semio-tech/process/routing/invocation/process";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/process/leases";
-import {readPhysicalFileV1,observePhysicalFileV1,type FileObservationControlV1} from "@semio-tech/framework/filesystem/observation";
-import {withArtifactDescriptorV1} from "@semio-tech/framework/filesystem/observation/descriptor";
+import {readPhysicalFileV1,observePhysicalFileV1,type FileObservationControlV1} from "@semio-tech/framework-filesystem/observation";
+import {withArtifactDescriptorV1} from "@semio-tech/framework-filesystem/observation/descriptor";
 type Row=Readonly<{name:string;kind:"directory"|"file";stamp:string;sha256:string;bytes:number}>;
 const stamp=(stat:Stats)=>[stat.dev,stat.ino,stat.mode,stat.size,stat.mtimeMs,stat.ctimeMs].join(":");
 const directory=(stat:Stats)=>stat.isDirectory()&&!stat.isSymbolicLink();

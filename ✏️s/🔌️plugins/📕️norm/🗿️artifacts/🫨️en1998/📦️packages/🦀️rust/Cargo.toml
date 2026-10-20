@@ -43,3 +43,4 @@ semio-s-plugin-norm-compliance = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-test-original-snapshot-owners = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }
 semio-s-artifact-norm-en1998-io = { workspace = true, features = ["testkit"] }
+semio-s-artifact-norm-en1998-mut-buildings = { workspace = true }

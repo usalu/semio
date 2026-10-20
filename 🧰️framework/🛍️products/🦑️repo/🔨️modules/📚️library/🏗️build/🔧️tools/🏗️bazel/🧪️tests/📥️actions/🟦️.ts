@@ -15,8 +15,14 @@ import corpus from "./🔣️.json";
 import schema from "./🧬️schema.json";
 import component from "../../🧬️schema/🔣️.json";
 import targetCache from "../../../../🏃️execution/🧬️schema/💾️cache.json";
+import type {BazelUncachedReasonV1} from "../../📜️script.ts";
 
 const api=await import("../../📜️script.ts"),graph=corpus.graph as any,plan=api.planBazelTasksV1(graph,corpus.request),emitted=api.bazelActionsV1(graph,plan,false),sha=(value:string)=>createHash("sha256").update(value).digest("hex"),python=Bun.which("python3");
+
+/** 🧷️ A fixture row whose authored `expected` is read as the type the implementation returns. */
+type Expecting<Row extends {readonly expected:unknown},Expected>=Omit<Row,"expected">&{readonly expected:Expected};
+type CacheDecision=ReturnType<typeof api.bazelCacheDecisionV1>;
+type EmittedAction=ReturnType<typeof api.bazelActionsV1> extends ReadonlyMap<string,infer Action>?Action:never;
 
 test("Bazel action fixtures are closed and name every generated label by its task identity",()=>{
  expect(new Ajv({strict:true}).validate(schema,corpus)).toBe(true);
@@ -27,9 +33,9 @@ test("Bazel action fixtures are closed and name every generated label by its tas
 
 test("Bazel cache decisions fail closed: only an explicit cache with declared outputs is cacheable and every refusal records its reason",()=>{
  const admit=new Ajv({strict:true}).addSchema(component,"component").compile({$ref:"component#/definitions/CacheDecision"}),database=new Database(":memory:");
- try{for(const row of corpus.decisions){
+ try{for(const row of corpus.decisions as readonly Expecting<(typeof corpus.decisions)[number],CacheDecision>[]){
   const{noop,...rest}=row.task as {noop?:boolean},task={id:"fixture:task",definition:{execution:{kind:noop?"noop":"command"},...rest}} as any,actual=api.bazelCacheDecisionV1(task,row.skipCache);
-  const oracle=database.query("SELECT CASE WHEN ?1=1 THEN 'continuous' WHEN ?2=1 THEN 'skipped' WHEN ?5=1 THEN NULL WHEN ?3 IS NOT NULL AND ?3=0 THEN 'declared' WHEN ?3 IS NULL THEN 'undeclared' WHEN ?4 IS NULL THEN 'unbounded' ELSE NULL END AS reason").get(row.task.continuous===undefined?null:Number(row.task.continuous),Number(row.skipCache),row.task.cache===undefined?null:Number(row.task.cache),(row.task as {outputs?:string[]}).outputs===undefined?null:JSON.stringify((row.task as {outputs?:string[]}).outputs),Number(noop===true)) as {reason:string|null};
+  const oracle=database.query("SELECT CASE WHEN ?1=1 THEN 'continuous' WHEN ?2=1 THEN 'skipped' WHEN ?5=1 THEN NULL WHEN ?3 IS NOT NULL AND ?3=0 THEN 'declared' WHEN ?3 IS NULL THEN 'undeclared' WHEN ?4 IS NULL THEN 'unbounded' ELSE NULL END AS reason").get(row.task.continuous===undefined?null:Number(row.task.continuous),Number(row.skipCache),row.task.cache===undefined?null:Number(row.task.cache),(row.task as {outputs?:string[]}).outputs===undefined?null:JSON.stringify((row.task as {outputs?:string[]}).outputs),Number(noop===true)) as {reason:BazelUncachedReasonV1|null};
   expect(actual).toEqual(row.expected);expect(admit(actual),row.name).toBe(true);expect(actual.reason??null).toBe(oracle.reason);expect(actual.cache).toBe(oracle.reason===null);
  }
  expect(admit({cache:true,reason:"declared"})).toBe(false);expect(admit({cache:false})).toBe(false);expect(admit({cache:false,reason:"because"})).toBe(false);
@@ -38,12 +44,12 @@ test("Bazel cache decisions fail closed: only an explicit cache with declared ou
 
 test("Bazel cache decisions derive from the plugin cache class: only deterministic replays, the manifest stays authoritative and a conflict fails closed",()=>{
  const admitClass=new Ajv({strict:true}).compile(targetCache),admit=new Ajv({strict:true}).addSchema(component,"component").compile({$ref:"component#/definitions/CacheDecision"}),database=new Database(":memory:");
- try{for(const row of corpus.classDecisions){
+ try{for(const row of corpus.classDecisions as readonly Expecting<(typeof corpus.classDecisions)[number],CacheDecision|{readonly error:string}>[]){
   const{noop,...rest}=row.task as {noop?:boolean;metadata?:{semio:{cache:unknown}}},task={id:"fixture:task",definition:{execution:{kind:noop?"noop":"command"},...rest}} as any,metadata=(row.task as {metadata?:{semio:{cache:unknown}}}).metadata?.semio.cache;
   expect(admitClass(metadata),row.name).toBe(row.valid);
   if("error" in row.expected){expect(()=>api.bazelCacheDecisionV1(task,row.skipCache),row.name).toThrow(row.expected.error);continue;}
   const klass=row.valid?(metadata as {class:string}).class:null,cache=(row.task as {cache?:boolean}).cache,outputs=(row.task as {outputs?:string[]}).outputs,
-   oracle=database.query("SELECT CASE WHEN ?1=1 THEN 'continuous' WHEN ?2=1 THEN 'skipped' WHEN ?3=1 THEN NULL WHEN ?4 IS NOT NULL AND ?4!='deterministic' THEN ?4 WHEN ?5=0 THEN 'declared' WHEN ?5 IS NULL AND ?4 IS NOT 'deterministic' THEN 'undeclared' WHEN ?6 IS NULL THEN 'unbounded' ELSE NULL END AS reason, COALESCE(?4 IS NOT NULL AND ?4!='deterministic' AND ?3=0 AND ?5=1,0) AS conflict").get(Number((row.task as {continuous?:boolean}).continuous===true),Number(row.skipCache),Number(noop===true),klass,cache===undefined?null:Number(cache),outputs===undefined?null:JSON.stringify(outputs)) as {reason:string|null;conflict:number},
+   oracle=database.query("SELECT CASE WHEN ?1=1 THEN 'continuous' WHEN ?2=1 THEN 'skipped' WHEN ?3=1 THEN NULL WHEN ?4 IS NOT NULL AND ?4!='deterministic' THEN ?4 WHEN ?5=0 THEN 'declared' WHEN ?5 IS NULL AND ?4 IS NOT 'deterministic' THEN 'undeclared' WHEN ?6 IS NULL THEN 'unbounded' ELSE NULL END AS reason, COALESCE(?4 IS NOT NULL AND ?4!='deterministic' AND ?3=0 AND ?5=1,0) AS conflict").get(Number((row.task as {continuous?:boolean}).continuous===true),Number(row.skipCache),Number(noop===true),klass,cache===undefined?null:Number(cache),outputs===undefined?null:JSON.stringify(outputs)) as {reason:BazelUncachedReasonV1|null;conflict:number},
    actual=api.bazelCacheDecisionV1(task,row.skipCache);
   expect(oracle.conflict,row.name).toBe(0);expect(actual,row.name).toEqual(row.expected);expect(admit(actual),row.name).toBe(true);expect(actual.reason??null,row.name).toBe(oracle.reason);
  }
@@ -57,7 +63,7 @@ test("Bazel cache decisions derive from the plugin cache class: only determinist
 });
 
 test("Bazel actions consume only dependency outputs: ordering tasks vanish, unselected ordering tasks are never emitted and transitive selectors reach every producer",()=>{
- expect(Object.fromEntries([...emitted.keys()].sort().map(id=>[id,{kind:emitted.get(id)!.kind,restore:emitted.get(id)!.restore.map(label=>Object.keys(corpus.labels).find(key=>(corpus.labels as Record<string,string>)[key]===label)!).sort(),cache:emitted.get(id)!.cache}]))).toEqual(corpus.expectedActions);
+ expect(Object.fromEntries([...emitted.keys()].sort().map(id=>[id,{kind:emitted.get(id)!.kind,restore:emitted.get(id)!.restore.map(label=>Object.keys(corpus.labels).find(key=>(corpus.labels as Record<string,string>)[key]===label)!).sort(),cache:emitted.get(id)!.cache}]))).toEqual(corpus.expectedActions as Record<string,{kind:EmittedAction["kind"];restore:string[];cache:CacheDecision}>);
  expect(emitted.has("app:prepare")).toBe(false);
  const database=new Database(":memory:");
  try{
@@ -84,25 +90,25 @@ test.skipIf(!process.env.SEMIO_TEST_ARTIFACT_DIR)("Bazel source classes declare 
  try{
   const unnameable=(path:string)=>process.platform==="win32"&&/[\\\t]/u.test(path);
   for(const[path,bytes]of Object.entries(row.files).filter(([path])=>!unnameable(path))){await mkdir(dirname(join(root,path)),{recursive:true});await writeFile(join(root,path),bytes);}
-  const links=process.platform==="win32"?{}:row.links;for(const[path,target]of Object.entries(links))await symlink(target,join(root,path));
+  const links:Record<string,string>=process.platform==="win32"?{}:row.links;for(const[path,target]of Object.entries(links))await symlink(target,join(root,path));
   const expected=process.platform==="win32"?{files:row.expected.files.filter(path=>path!=="link.ts"),hashed:row.expected.hashed.filter(path=>!["dangling.ts","dirlink"].includes(path)&&!unnameable(path))}:row.expected,paths=row.paths.filter(path=>!unnameable(path)&&(process.platform!=="win32"||!(path in row.links))),actual=await api.bazelSourceClassesV1(root,paths,new Map(),new Map(),original);
   expect({files:[...actual.files].sort(),hashed:[...actual.hashed].sort()}).toEqual(expected);
  }finally{await rm(root,{recursive:true,force:true});}
 }));
 
 test("Bazel BUILD output matches the language-agnostic fixture and never emits the retired tags",()=>{
- const groups=new Map([["i_0123456789abcdef",["lib/src/a.ts","lib/src/deep/c.ts"]],["i_fedcba9876543210",["app/x.ts","bun.lock","package.json"]]]),sources:Record<string,string>={"lib:generate":"i_0123456789abcdef","app:build":"i_fedcba9876543210","app:test":"i_fedcba9876543210"};
+ const groups=new Map([["i_0123456789abcdef",{groups:[],files:["lib/src/a.ts","lib/src/deep/c.ts"]}],["i_fedcba9876543210",{groups:[],files:["app/x.ts","bun.lock","package.json"]}]]),sources:Record<string,string>={"lib:generate":"i_0123456789abcdef","app:build":"i_fedcba9876543210","app:test":"i_fedcba9876543210"};
  const text=api.renderBazelBuildV1({actions:[...emitted.values()].map(action=>({...action,...(sources[action.id]?{sources:sources[action.id]}:{})})),groups,bun:"/opt/bun",sourceIdentity:"a".repeat(64),extension:""});
  expect(text.split("\n")).toEqual(corpus.build);
  expect(text).not.toMatch(/"local"|no-remote"|no-sandbox/u);
- expect(text.match(/^repo_task\(/gmu)?.length).toBe(4);expect(text.match(/^repo_launch\(/gmu)?.length).toBe(1);expect(text.match(/^repo_noop\(/gmu)?.length).toBe(1);
+ expect(text.match(/^repo_task\(/gmu)?.length).toBe(3);expect(text.match(/^repo_test\(/gmu)?.length).toBe(1);expect(text.match(/^repo_launch\(/gmu)?.length).toBe(1);expect(text.match(/^repo_noop\(/gmu)?.length).toBe(1);
  for(const reason of ["declared","continuous"])expect(text).toContain(`uncached_reason = "${reason}"`);
  expect(text.match(/cache = True/gu)?.length).toBe(3);expect(text.match(/cache = False/gu)?.length).toBe(2);
 });
 
 test.skipIf(!python)("Bazel generated Starlark parses and its action requirements agree with the fixture under an independent Python interpreter",async()=>{
  const source=await readFile(new URL("../../📜️script.ts",import.meta.url),"utf8"),file=ts.createSourceFile("bazel.ts",source,ts.ScriptTarget.Latest,true),declaration=file.statements.filter(ts.isVariableStatement).flatMap(row=>[...row.declarationList.declarations]).find(row=>row.name.getText(file)==="STARLARK_RULES")!,rules=(declaration.initializer as ts.NoSubstitutionTemplateLiteral).text;
- const groups=new Map<string,string[]>(),build=api.renderBazelBuildV1({actions:[...emitted.values()],groups,bun:"/opt/bun",sourceIdentity:"a".repeat(64),extension:""}).replace(/^load\(.*$/mu,"");
+ const groups=new Map<string,{groups:string[];files:string[]}>(),build=api.renderBazelBuildV1({actions:[...emitted.values()],groups,bun:"/opt/bun",sourceIdentity:"a".repeat(64),extension:""}).replace(/^load\(.*$/mu,"");
  const run=(program:string)=>Bun.spawnSync([python!,"-I","-c",program],{stdout:"pipe",stderr:"pipe"});
  expect(run("import ast,sys\nast.parse(sys.stdin.read())".replace("sys.stdin.read()",JSON.stringify(rules))).exitCode).toBe(0);
  expect(run("import ast\nast.parse("+JSON.stringify(build)+")").exitCode).toBe(0);
@@ -138,7 +144,7 @@ test.skipIf(!python)("Bazel label rule keeps every non-ASCII code point: it agre
  const matched=run("import json,re,sys\nrule,paths=json.loads(sys.stdin.read())\nprint(json.dumps([re.fullmatch(rule,path) is not None for path in paths]))",[rule,rows.map(row=>row.path)]);
  expect(matched.exitCode,matched.stderr.toString()).toBe(0);expect(JSON.parse(matched.stdout.toString())).toEqual(rows.map(row=>row.label!==null));
  for(const row of labelled)expect(api.bazelSourceLabelV1(row.path)).toBe(row.label);
- const build=api.renderBazelBuildV1({actions:[],groups:new Map([["i_0",labelled.map(row=>row.path)]]),bun:"/opt/bun",sourceIdentity:"a".repeat(64),extension:""}).replace(/^load\(.*$/mu,""),parsed=run("import ast,json,sys\ncall=ast.parse(json.loads(sys.stdin.read())).body[0].value\nprint(json.dumps([item.value for keyword in call.keywords if keyword.arg=='srcs' for item in keyword.value.elts]))",build);
+ const build=api.renderBazelBuildV1({actions:[],groups:new Map([["i_0",{groups:[],files:labelled.map(row=>row.path)}]]),bun:"/opt/bun",sourceIdentity:"a".repeat(64),extension:""}).replace(/^load\(.*$/mu,""),parsed=run("import ast,json,sys\ncall=ast.parse(json.loads(sys.stdin.read())).body[0].value\nprint(json.dumps([item.value for keyword in call.keywords if keyword.arg=='srcs' for item in keyword.value.elts]))",build);
  expect(parsed.exitCode,parsed.stderr.toString()).toBe(0);expect(JSON.parse(parsed.stdout.toString())).toEqual(labelled.map(row=>row.label));
 });
 
@@ -151,12 +157,12 @@ test.skipIf(!binary)("the real Bazel declares every labelled emoji name as a nat
   const rows=corpus.names.filter(row=>!unnameable(row.path));
   for(const row of rows){mkdirSync(dirname(join(checkout,row.path)),{recursive:true});writeFileSync(join(checkout,row.path),row.path+"\n");}
   mkdirSync(workspace);writeFileSync(join(workspace,"MODULE.bazel"),'module(name="labels")\n');symlinkSync(checkout,join(workspace,component.definitions.Actions.const.sources.link),process.platform==="win32"?"junction":"dir");
-  const names=rows.filter(row=>row.label!==null).map(row=>row.path),groups=new Map([["i_0",names]]),render=(extra:string)=>api.renderBazelBuildV1({actions:[],groups,bun:"/opt/bun",sourceIdentity:"a".repeat(64),extension:""}).replace(/^load\(.*$/mu,"")+extra;
+  const names=rows.filter(row=>row.label!==null).map(row=>row.path),groups=new Map([["i_0",{groups:[],files:names}]]),render=(extra:string)=>api.renderBazelBuildV1({actions:[],groups,bun:"/opt/bun",sourceIdentity:"a".repeat(64),extension:""}).replace(/^load\(.*$/mu,"")+extra;
   writeFileSync(join(workspace,"BUILD.bazel"),render('genrule(\n    name = "gen",\n    srcs = [":i_0"],\n    outs = ["out.txt"],\n    cmd = "cat $(SRCS) > $@",\n)\n'));
   const built=bazel(["build",...flags,`--execution_log_json_file=${log}`,"//:gen"]);expect(built.status,built.stderr).toBe(0);
   const bin=bazel(["info","bazel-bin"]).stdout.trim(),output=join(bin,"out.txt"),lines=()=>readFileSync(output,"utf8").split("\n").filter(Boolean).sort();
   expect(lines()).toEqual([...names].sort());
-  if(process.platform!=="win32")expect(readFileSync(log,"utf8")).toMatch(/"runner": "(darwin|linux)-sandbox"/u);
+  if(process.platform!=="win32")expect(readFileSync(log,"utf8")).toMatch(/"runner": "(darwin|linux|processwrapper)-sandbox"/u);
   expect(bazel(["clean"]).status).toBe(0);const warm=bazel(["build",...flags,"//:gen"]);expect(warm.status,warm.stderr).toBe(0);expect(warm.stderr).toMatch(/[1-9]\d* disk cache hit/u);expect(lines()).toEqual([...names].sort());
   writeFileSync(join(checkout,names[0]!),"changed\n");const edited=bazel(["build",...flags,"//:gen"]);expect(edited.status,edited.stderr).toBe(0);expect(edited.stderr).not.toMatch(/disk cache hit/u);expect(lines()).toContain("changed");
   for(const row of rows){

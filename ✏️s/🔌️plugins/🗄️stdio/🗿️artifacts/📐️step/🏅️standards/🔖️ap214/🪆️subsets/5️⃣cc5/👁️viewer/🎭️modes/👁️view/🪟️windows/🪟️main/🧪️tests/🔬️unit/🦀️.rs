@@ -1,4 +1,5 @@
 use super::*;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_the_shared_mesh_window_kit() {

@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "scope": "Language-neutral diagnostic stage/order and failure vectors; port-controlled original function comparison",
+  "cases": [
+    {
+      "id": "success",
+      "stages": [
+        "namespace-before",
+        "namespace-after",
+        "initial-recheck-before",
+        "initial-recheck-after",
+        "body-before",
+        "body-returned",
+        "final-recheck-before",
+        "final-recheck-after"
+      ]
+    },
+    {
+      "id": "held-namespace",
+      "held": true,
+      "stages": [
+        "namespace-before",
+        "namespace-after",
+        "initial-recheck-before",
+        "initial-recheck-after",
+        "body-before",
+        "body-returned",
+        "final-recheck-before",
+        "final-recheck-after"
+      ]
+    },
+    {
+      "id": "namespace-failure",
+      "failure": "namespace",
+      "stages": [
+        "namespace-before"
+      ]
+    },
+    {
+      "id": "initial-recheck-failure",
+      "failure": "initial",
+      "stages": [
+        "namespace-before",
+        "namespace-after",
+        "initial-recheck-before"
+      ]
+    },
+    {
+      "id": "body-failure",
+      "failure": "body",
+      "stages": [
+        "namespace-before",
+        "namespace-after",
+        "initial-recheck-before",
+        "initial-recheck-after",
+        "body-before",
+        "body-rejected",
+        "final-recheck-before",
+        "final-recheck-after"
+      ]
+    },
+    {
+      "id": "final-recheck-failure",
+      "failure": "final",
+      "stages": [
+        "namespace-before",
+        "namespace-after",
+        "initial-recheck-before",
+        "initial-recheck-after",
+        "body-before",
+        "body-returned",
+        "final-recheck-before"
+      ]
+    },
+    {
+      "id": "primary-body-failure",
+      "failure": "body+final",
+      "stages": [
+        "namespace-before",
+        "namespace-after",
+        "initial-recheck-before",
+        "initial-recheck-after",
+        "body-before",
+        "body-rejected",
+        "final-recheck-before"
+      ]
+    },
+    {
+      "id": "undefined-failure",
+      "failure": "undefined",
+      "stages": [
+        "namespace-before",
+        "namespace-after",
+        "initial-recheck-before",
+        "initial-recheck-after",
+        "body-before",
+        "body-rejected",
+        "final-recheck-before",
+        "final-recheck-after"
+      ]
+    },
+    {
+      "id": "cancel-after-held-namespace",
+      "held": true,
+      "failure": "cancel",
+      "stages": [
+        "namespace-before",
+        "namespace-after",
+        "initial-recheck-before"
+      ]
+    }
+  ]
+}

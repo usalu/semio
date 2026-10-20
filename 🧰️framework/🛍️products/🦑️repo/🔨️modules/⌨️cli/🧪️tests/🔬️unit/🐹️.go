@@ -198,3 +198,32 @@ var relativeTimePattern = regexp.MustCompile(`\b(opened |closed |created )?(a lo
 func normalizeRelativeTimes(s string) string {
 	return relativeTimePattern.ReplaceAllString(s, "<TIME>")
 }
+
+// 🚪️ The native process route obeys the shared argv contract before domain parsing.
+func TestNativeEntrypointContract(t *testing.T) {
+ root := workspace.FindRepoRoot(func() string { value, _ := os.Getwd(); return value }())
+ raw, err := os.ReadFile(root + "/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧫️fixtures/🚪️entrypoint/🔣️.json")
+ if err != nil { t.Fatal(err) }
+ var fixture struct { Vectors []struct { ID string `json:"id"`; Argv []string `json:"argv"`; Kind string `json:"kind"`; Arguments []string `json:"arguments"` } `json:"vectors"` }
+ if err := json.Unmarshal(raw, &fixture); err != nil { t.Fatal(err) }
+ for _, row := range fixture.Vectors {
+  plan := PlanNativeEntrypoint(row.Argv)
+  if plan.Kind != row.Kind || strings.Join(plan.Arguments, "\x00") != strings.Join(row.Arguments, "\x00") { t.Fatalf("%s: got=%+v want=%s %q", row.ID, plan, row.Kind, row.Arguments) }
+ }
+}
+
+type nativeEntrypointToolRecorder struct { root string; arguments []string; failure error }
+func (tool *nativeEntrypointToolRecorder) Run(root string, arguments []string) error { tool.root = root; tool.arguments = append([]string{}, arguments...); return tool.failure }
+
+// 🛡️ The tool port retains opaque authority environment and the exact child failure.
+func TestNativeEntrypointToolPort(t *testing.T) {
+ before := strings.Join(os.Environ(), "\x00")
+ failure := fmt.Errorf("owned child settlement")
+ arguments := []string{"cargo", "--store=shared", "--", "check", "--message-format=json"}
+ tool := &nativeEntrypointToolRecorder{failure:failure}
+ if err := RunNativeScript(arguments, tool); err != failure { t.Fatalf("child failure changed: %v", err) }
+ if tool.root == "" || strings.Join(tool.arguments,"\x00") != strings.Join(arguments,"\x00") { t.Fatalf("tool request changed: %+v", tool) }
+ if strings.Join(os.Environ(), "\x00") != before { t.Fatal("ambient Original authority changed") }
+ planned := PlanNativeEntrypoint(arguments); planned.Arguments[0] = "other"
+ if arguments[0] != "cargo" { t.Fatal("planning mutated caller arguments") }
+}

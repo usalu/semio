@@ -4,45 +4,45 @@
 import { normWireArray, normWireInteger, normWireLiteral, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 
 export interface En1990Artifact {
-  /** @state artifact */
+  /** 📑️ @state artifact */
   annex: "En" | "De";
-  /** @state artifact */
+  /** 🏗️ @state artifact */
   projectId: string;
-  /** @state artifact */
+  /** 🏛️ @state artifact */
   structureKind: string;
-  /** @state artifact */
+  /** 📐️ @state artifact */
   altitudeM: number;
-  /** @state artifact */
+  /** 🏷️ @state artifact */
   consequenceClass: number;
-  /** @state artifact */
+  /** 🗂️ @state artifact */
   reliabilityClass: number;
-  /** @state artifact */
+  /** 🎨️ @state artifact */
   designWorkingLifeCategory: number;
-  /** @state artifact */
+  /** 🖌️ @state artifact */
   designWorkingLifeYears: number;
-  /** @state artifact */
+  /** 🔗️ @state artifact */
   referencePeriodYears: number;
-  /** @state artifact */
+  /** 📶️ @state artifact */
   supervisionLevel: string;
-  /** @state artifact */
+  /** 🪜️ @state artifact */
   inspectionLevel: string;
-  /** @state artifact */
+  /** 📜️ @state artifact */
   kFiDeclared: number;
-  /** @state artifact */
+  /** 🧮️ @state artifact */
   betaComputed: number;
-  /** @state artifact */
+  /** 🧱️ @state artifact */
   permanents: PermanentAction[];
-  /** @state artifact */
+  /** 🔣️ @state artifact */
   variables: VariableAction[];
-  /** @state artifact */
+  /** 💥️ @state artifact */
   accidentals: AccidentalAction[];
-  /** @state artifact */
+  /** 🌬️ @state artifact */
   seismics: SeismicAction[];
-  /** @state artifact */
+  /** 👤️ @state artifact */
   members: Member[];
-  /** @state artifact */
+  /** 🌉️ @state artifact */
   bridgeSls: BridgeSls[];
-  /** @state artifact */
+  /** 🔬️ @state artifact */
   effects: MemberEffect[];
 }
 

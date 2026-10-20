@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import {readFile,access} from "node:fs/promises";
 import {createRequire} from "node:module";
 import {join} from "node:path";
@@ -11,7 +12,7 @@ export async function proveHubRendererCommandOwnershipV1(root:string):Promise<vo
  const source=await readFile(join(root,general,"📜️script.ts"),"utf8"),parsed=ts.createSourceFile("router.ts",source,ts.ScriptTarget.Latest,true),specific:string[]=[];
  const visit=(node:any)=>{if(ts.isStringLiteralLike(node)&&["🌎️hub","✏️s"].some(prefix=>node.text===prefix||node.text.startsWith(prefix+"/")))specific.push(node.text);ts.forEachChild(node,visit);};visit(parsed);
  assert.deepEqual(specific,[]);
- const generic=JSON.parse(await readFile(join(root,general,"📋️project.json"),"utf8")),project=JSON.parse(await readFile(join(root,owner,"📋️project.json"),"utf8")),specificSource=await readFile(join(root,owner,"📜️script.ts"),"utf8");
+ const generic=JSON.parse(await readFile(join(root,general,"📋️project.json"),"utf8")),project=JSON.parse(await readFile(join(root,owner,"📋️project.json"),"utf8")),specificSource=readModuleTreeSource(join(root,owner,"📜️script.ts"));
  assert.equal(project.name,"@semio-tech/hub-renderer-wgpu");for(const row of fixture.commands){assert.equal(generic.targets[row.generalCommand],undefined);assert.ok(!source.includes('.register("'+row.generalCommand+'",'));assert.equal(project.targets[row.command].options.command,"bun ./📜️script.ts "+row.command);assert.equal(project.targets[row.command].options.cwd,owner);assert.ok(specificSource.includes('.register("'+row.command+'", '+row.className+')'));for(const law of row.laws)assert.ok(specificSource.includes(law),law);}
  const report=ts.transpileModule(specificSource,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext},reportDiagnostics:true});assert.deepEqual(report.diagnostics,[]);
  await assert.rejects(access(join(root,fixture.collaboration.generalHarness)),{code:"ENOENT"});

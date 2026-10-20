@@ -8,7 +8,7 @@
  * list rather than a hand-kept copy.
  */
 import { describe, expect, it } from "vitest";
-import { traceHopStagesFixture as fixture } from "@semio-tech/framework/trace/testing/fixtures";
+import { traceHopStagesFixture as fixture } from "@semio-tech/framework-trace/testing/fixtures";
 import {
   createHopTracer,
   HOP_TRACE_MEASURE_PREFIX,
@@ -20,7 +20,7 @@ import {
   hopTraceTotalsByStage,
   type HopTraceDetail,
   type HopTracePorts,
-} from "@semio-tech/framework/trace";
+} from "@semio-tech/framework-trace";
 
 /** 🕰️ A virtual clock plus a User Timing sink, so a law drives the real tracer with no browser. */
 const virtualPorts = (): HopTracePorts & { readonly tick: (ms: number) => void; readonly measured: { name: string; startMs: number; endMs: number; detail: HopTraceDetail }[] } => {

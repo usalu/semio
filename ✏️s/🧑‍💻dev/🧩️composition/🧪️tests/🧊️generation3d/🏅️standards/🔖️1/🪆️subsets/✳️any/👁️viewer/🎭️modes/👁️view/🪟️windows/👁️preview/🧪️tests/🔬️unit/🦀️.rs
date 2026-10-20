@@ -3,7 +3,7 @@ use semio_framework_pack_json::Value;
 use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewCamera;
 
 fn default_document() -> Generation3dSnapshot {
-    semio_s_artifact_procedural_3d_model::default_snapshot()
+    semio_s_artifact_procedural_3d_io_text::snapshot::default_snapshot()
 }
 
 /// 🎨️ Evaluates and delivers a concrete preview fixture under its owned broker port.

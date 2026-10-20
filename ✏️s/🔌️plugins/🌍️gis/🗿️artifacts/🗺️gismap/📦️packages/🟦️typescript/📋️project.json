@@ -50,23 +50,6 @@
       },
       "outputs": []
     },
-    "inference-presentation-check": {
-      "executor": "repo:script",
-      "inputs": [
-        "default",
-        "^default",
-        "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/*",
-        "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/**/*",
-        {"externalDependencies":["vitest"]}
-      ],
-      "cache": true,
-      "options": {
-        "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts inference-check --presentation",
-        "forwardAllArgs": true
-      },
-      "outputs": []
-    },
     "inference-bridge-source-check": {
       "executor": "repo:script",
       "inputs": [
@@ -121,6 +104,7 @@
     },
     "tiles-check": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "command": "bun 📜️script.ts tiles-check",
         "cwd": "{projectRoot}",
@@ -135,6 +119,7 @@
     },
     "tiles-check-native": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "command": "bun 📜️script.ts tiles-check --native",
         "cwd": "{projectRoot}",
@@ -210,7 +195,8 @@
         "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
-      ]
+      ],
+      "outputs": []
     },
     "inference-service-receiving-check": {
       "executor": "repo:script",
@@ -232,6 +218,7 @@
     "verify-physical-codecs": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify physical-codecs"

@@ -4,12 +4,12 @@ import { bindBuildCommandV1 } from "../../../../🏗️build/📤️arguments/�
 import { checkResourceLeaseControl } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { checkScriptInvocation, requireIssuedResourceControlInvocationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { createRequire, isBuiltin } from "node:module";
-import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { memoizedObservedAsyncComputationV1, observedSourceAnalysisV1, observedRequireResolve, observedTypeScriptHost, observedFs } from "../../../../🏗️build/👁️observation/🟨️.mjs";
 import { readCargoExecutionContractV1, selectCargoExecutionOperationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-const { existsSync } = observedFs;
+const { existsSync, statSync } = observedFs;
 
 /** 🏷️ Names this component as its roster entry does. */
 export const component = "script-inputs";
@@ -44,6 +44,34 @@ export function buildImportResourceV1(containing,specifier){
  return {specifier:fileURLToPath(url),suffix:url.search+url.hash,source:!query.has("raw")&&(!query.has("url")||query.has("worker")||query.has("sharedworker"))};
 }
 
+/** 📦️ Resolves a package specifier to the workspace module it names, so imports through `@scope/package` subpaths join a command closure like relative ones; installed registry packages stay covered by their locked external dependency. */
+function workspacePackageModuleV1(containing, specifier, workspaceRoot) {
+  if (specifier.startsWith(".") || isAbsolute(specifier) || isBuiltin(specifier) || /^[a-z][a-z0-9+.-]*:/u.test(specifier)) return undefined;
+  let resolved;
+  try { resolved = observedRequireResolve(containing, specifier); }
+  catch (error) { if (error?.code === "MODULE_NOT_FOUND" || error?.code === "ERR_PACKAGE_PATH_NOT_EXPORTED") return undefined; throw error; }
+  if (!isAbsolute(resolved)) return undefined;
+  const local = relative(workspaceRoot, resolved);
+  return local === "" || local.startsWith("..") || isAbsolute(local) || local.split(sep).includes("node_modules") ? undefined : resolved;
+}
+
+/** 🧪️ Names the literal module Source a target declares as an input (a test file it runs) so that file's import closure joins the target's closure. */
+function declaredModuleInputV1(input, workspaceRoot, projectRoot) {
+  if (typeof input !== "string" || input.startsWith("!") || /[*?{}[\]]/u.test(input.replace(/^\{(?:projectRoot|workspaceRoot)\}/u, "")) || !/\.[cm]?[jt]sx?$/u.test(input) || !/^\{(?:projectRoot|workspaceRoot)\}\//u.test(input)) return undefined;
+  const path = resolve(workspaceRoot, input.replace("{projectRoot}", projectRoot).replace("{workspaceRoot}", "."));
+  return !relative(workspaceRoot, path).startsWith("..") && existsSync(path) ? path : undefined;
+}
+
+/** 🔗️ Resolves a literal `new URL("…", import.meta.url)` reference to the workspace file it names, which is how a script points at the test files it runs and the data it reads. */
+function workspaceUrlTargetV1(containing, literal, workspaceRoot) {
+  let url;
+  try { url = new URL(literal, pathToFileURL(containing)); } catch { return undefined; }
+  if (url.protocol !== "file:") return undefined;
+  const path = fileURLToPath(url), local = relative(workspaceRoot, path);
+  if (local === "" || local.startsWith("..") || isAbsolute(local) || local.split(sep).includes("node_modules") || !existsSync(path) || !statSync(path).isFile()) return undefined;
+  return { path, source: /\.[cm]?[jt]sx?$/u.test(path) };
+}
+
 /** 🧭️ Tracks literal relative command imports through the existing TypeScript tooling boundary. */
 export async function relativeScriptInputs(entries, workspaceRoot, cache = createScriptInputCache(), requiredSources=false) {
   const roots = [...new Set(entries.map(entry => resolve(entry)))].sort(), key = JSON.stringify([resolve(workspaceRoot), roots,requiredSources]);
@@ -55,7 +83,7 @@ export async function relativeScriptInputs(entries, workspaceRoot, cache = creat
     if (buildPath(relative(workspaceRoot, path)).startsWith("../")) throw new Error(`Command import escapes workspace: ${path}`);
     const seen=files.has(path);
     files.add(path);
-    if(requiredSources)readPhysicalSource(path);
+    if(requiredSources){const admitted=cache.physical??=new Set();if(!admitted.has(path)){readPhysicalSource(path);admitted.add(path);}}
     else if (!existsSync(path)) return;
     if(!source||!/\.[cm]?[jt]sx?$/u.test(path)){cache.resources.add(path);if(!seen)readPhysicalSource(path);return;}
     if(compiled.has(path))return;
@@ -76,6 +104,17 @@ export async function relativeScriptInputs(entries, workspaceRoot, cache = creat
           if (/\.d\.[cm]?ts$/.test(resolved)) throw error;
         }
         imports.push({path:resolved,source:resource.source});
+      }
+      const references = observedSourceAnalysisV1(prepareSourceAnalysesV1().references,path);
+      for (const specifier of references.runtime) {
+        await checkpoint();
+        const member = workspacePackageModuleV1(path, specifier, workspaceRoot);
+        if (member) imports.push({path:member,source:true});
+      }
+      for (const literal of references.urls) {
+        await checkpoint();
+        const target = workspaceUrlTargetV1(path, literal, workspaceRoot);
+        if (target) imports.push(target);
       }
       return imports;
     },checkpoint);
@@ -118,6 +157,7 @@ export async function targetScriptSources(target, workspaceRoot, scripts, projec
    const child=selectedOperation.continuation,childBound=bindBuildCommandV1([child.program,...child.arguments].map(value=>JSON.stringify(value)).join(" "),workspaceRoot,child.cwd,projectRoot,[]);if(!childBound.script)throw Error("Declared Cargo continuation requires an explicit script Source");retain(childBound);
   }
  }
+ for(const input of target.inputs??[]){const declared=declaredModuleInputV1(input,workspaceRoot,projectRoot);if(declared)entries.add(declared);}
  const closure=entries.size?await relativeScriptInputs([...entries],workspaceRoot,scripts,true):undefined,modules=new Set((closure??[]).map(path=>resolve(workspaceRoot,path.slice("{workspaceRoot}/".length)))),generatedDependencies=[...new Set([...scripts.generatedImports].filter(([path])=>modules.has(path)).flatMap(([,rows])=>rows.map(row=>row.target)))].sort();return {closure,fallback,...(generatedDependencies.length?{generatedDependencies}:{})};
 }
 

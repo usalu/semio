@@ -3,13 +3,42 @@
   "$id": "https://json.schemas.assets.semio-tech.coms/repo/cli/build.json",
   "title": "🏗️ Go Repository CLI Build",
   "type": "object",
-  "required": ["project", "command", "entryPoint", "artifacts", "declaration"],
+  "required": [
+    "project",
+    "command",
+    "entryPoint",
+    "artifacts",
+    "declaration",
+    "module"
+  ],
   "additionalProperties": false,
   "properties": {
-    "project": { "const": "@semio-tech/repo-cli-go" },
-    "command": { "const": "bun ./📜️script.ts build" },
-    "entryPoint": { "const": "./🚀️bin" },
-    "artifacts": { "type": "object", "required": ["windows", "unix"], "additionalProperties": false, "properties": { "windows": { "const": ".🧬semio/🦑️repo/⚡️cache/🗃️bin/semio-repo.exe" }, "unix": { "const": ".🧬semio/🦑️repo/⚡️cache/🗃️bin/semio-repo" } } },
-    "declaration": { "$ref": "https://json.schemas.assets.semio-tech.coms/repo/dashboard/registry.json#/$defs/TargetDeclaration" }
+    "project": {
+      "const": "@semio-tech/repo-cli-go"
+    },
+    "command": {
+      "const": "bun ./📜️script.ts build"
+    },
+    "entryPoint": {
+      "const": "."
+    },
+    "artifacts": {
+      "type": "object",
+      "required": [
+        "directory"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "directory": {
+          "const": "{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/🗃️bin/{options.env.SEMIO_BUILD_MODE}/repo"
+        }
+      }
+    },
+    "declaration": {
+      "$ref": "https://json.schemas.assets.semio-tech.coms/repo/dashboard/registry.json#/$defs/TargetDeclaration"
+    },
+    "module": {
+      "const": "../../../💻️client/🔌️mcp"
+    }
   }
 }

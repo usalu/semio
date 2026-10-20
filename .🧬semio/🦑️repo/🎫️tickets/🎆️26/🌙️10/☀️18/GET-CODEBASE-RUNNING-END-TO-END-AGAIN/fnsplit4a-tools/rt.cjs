@@ -1,0 +1,11 @@
+const ts = require("/Users/ueli/.cache/c6fin2/nm/node_modules/typescript");
+const fs = require("fs"), path = require("path");
+const REPO = "/Users/ueli/Documents/semio";
+const cfg = JSON.parse(fs.readFileSync(path.join(REPO, "tsconfig.json"), "utf8"));
+const { options } = ts.convertCompilerOptionsFromJson({ ...cfg.compilerOptions, noEmit: true, incremental: false, types: process.env.TS_TYPES ? process.env.TS_TYPES.split(",") : [] }, REPO);
+const [file, id] = process.argv.slice(2);
+const program = ts.createProgram([path.resolve(file)], options);
+const sf = program.getSourceFile(path.resolve(file));
+const checker = program.getTypeChecker();
+const visit = (n) => { if (ts.isFunctionDeclaration(n) && n.name && n.name.text === id) { const sig = checker.getSignatureFromDeclaration(n); console.log(checker.typeToString(checker.getReturnTypeOfSignature(sig), undefined, ts.TypeFormatFlags.NoTruncation)); } ts.forEachChild(n, visit); };
+visit(sf);

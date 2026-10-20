@@ -10,8 +10,8 @@
  * @see ../../../🧱️elements/🥞️LayeredOverview/🟦️.tsx — the layered overview
  */
 
-export { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-export { WindowChrome, windowChromeTitleChipClass, type WindowChromeControlAction, type WindowChromeProps } from "../../../🧱️elements/🗂️WindowChrome/🟦️.tsx";
+export { cn } from "@semio-tech/ui/modules/class-name-composition";
+export { WindowChrome, windowChromeTitleChipClass, type WindowChromeControlAction, type WindowChromeProps } from "@semio-tech/ui/elements/WindowChrome";
 export {
   OverviewCard,
   OverviewCardAction,
@@ -22,10 +22,10 @@ export {
   type OverviewCardButtonProps,
   type OverviewCardProps,
   type OverviewCardSectionProps,
-} from "../../../🧱️elements/🃏️OverviewCard/🟦️.tsx";
-export { LayeredOverview, type LayeredDirection } from "../../../🧱️elements/🥞️LayeredOverview/🟦️.tsx";
-export { capturePosterFromCanvases } from "../../../🧱️elements/🥞️LayeredOverview/🧰️pane-helpers/🟦️.ts";
-export { type LayeredCardState, type LayeredChromeState, type LayeredInsets, type LayeredLabels, type LayeredMode, type LayeredOverviewProps, type LayeredPane, type LayeredPaneState } from "../../../🧱️elements/🥞️LayeredOverview/📋️types/🟦️.ts";
+} from "@semio-tech/ui/elements/OverviewCard";
+export { LayeredOverview, type LayeredDirection } from "@semio-tech/ui/elements/LayeredOverview";
+export { capturePosterFromCanvases } from "@semio-tech/ui/elements/LayeredOverview/pane-helpers";
+export { type LayeredCardState, type LayeredChromeState, type LayeredInsets, type LayeredLabels, type LayeredMode, type LayeredOverviewProps, type LayeredPane, type LayeredPaneState } from "@semio-tech/ui/elements/LayeredOverview/types";
 export {
   LAYERED_DEFAULT_LIFECYCLE,
   LAYERED_FOLLOW_EPSILON,
@@ -69,11 +69,11 @@ export {
   type LayeredWarmStep,
   type LayeredWindow,
   type PaneAxisBounds,
-} from "../../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
-export { Navbar, SemioLogo, ShellBrandLogo, navbarFillItem, type NavbarItem, type NavbarProps } from "../../../🧱️elements/🔝️Navbar/🟦️.tsx";
-export { CatalogIcon as Icon, type IconName, type CatalogIconProps as IconProps } from "../../../🧱️elements/🔣️Icons/🟦️.tsx";
-export { DEFAULT_UI_DRIVER, type UiDriver } from "../../../🧱️elements/🚗️UiDriver/🟦️.tsx";
-export { UI_AVAILABLE_HEIGHT, UI_MOBILE_MAX_WIDTH_PX, UI_MOBILE_MEDIA_QUERY, UI_TABLET_MAX_WIDTH_PX, UI_TABLET_MEDIA_QUERY, elementsSurfaceDeviceForLayout, elementsSurfaceDeviceForMatches, type ElementsSurfaceDevice, type ElementsSurfaceLayout } from "../../../📱️device/🟦️.ts";
+} from "@semio-tech/ui/modules/layered-overview-geometry";
+export { Navbar, SemioLogo, ShellBrandLogo, navbarFillItem, type NavbarItem, type NavbarProps } from "@semio-tech/ui/elements/Navbar";
+export { CatalogIcon as Icon, type IconName, type CatalogIconProps as IconProps } from "@semio-tech/ui/elements/Icons";
+export { DEFAULT_UI_DRIVER, type UiDriver } from "@semio-tech/ui/elements/UiDriver";
+export { UI_AVAILABLE_HEIGHT, UI_MOBILE_MAX_WIDTH_PX, UI_MOBILE_MEDIA_QUERY, UI_TABLET_MAX_WIDTH_PX, UI_TABLET_MEDIA_QUERY, elementsSurfaceDeviceForLayout, elementsSurfaceDeviceForMatches, type ElementsSurfaceDevice, type ElementsSurfaceLayout } from "@semio-tech/ui/device";
 export {
   bootstrapElementsSurfaceChromeDocument,
   readStoredUiChromeAppearance,
@@ -84,6 +84,6 @@ export {
   type ElementsSurfaceAppearance,
   type ElementsSurfaceBrowserDefaults,
   type ElementsSurfaceChromeInput,
-} from "../🌓️appearance/🟦️.ts";
-export { presenceColor, presenceCssVar, presencePaint, type PresenceAppearance, type PresenceHsl } from "../../../🔨️modules/👥️presence-presentation/🟦️.ts";
+} from "@semio-tech/ui/appearance";
+export { presenceColor, presenceCssVar, presencePaint, type PresenceAppearance, type PresenceHsl } from "@semio-tech/ui/modules/presence-presentation";
 export { ResponsiveLabel, shellChromeTitleClassName } from "./🏷️responsive-label/🟦️.tsx";

@@ -274,7 +274,7 @@ pub trait ColdMutationKind<P,Op>:MutationLeaf+protocol::value::ToValue+protocol:
 /// `Mutation` to `SemanticMutation`, making semantic vocabulary the only expressible one at
 /// compile time — see `.claude/plans/the-mutations-are-extremely-compiled-pumpkin.md`.
 pub trait SemanticMutation<P>: Mutation<P> {
-    /// This artifact's full kind table, one row per variant — registration/introspection source.
+    /// 💯️ This artifact's full kind table, one row per variant — registration/introspection source.
     fn kinds() -> &'static [SemanticDescriptor];
     fn semantics(&self) -> &'static SemanticDescriptor;
     fn label(&self) -> crate::LocalizedLabel;

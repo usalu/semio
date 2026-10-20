@@ -146,7 +146,7 @@ func rewritingALineAndReadingItBackAgrees(ctx *host.Context) (host.Outcome, erro
 
 // region 🔖️Registration
 
-// Adapter is the registration entry point the generated host calls.
+// 🌉️Adapter is the registration entry point the generated host calls.
 func Adapter() *host.Adapter {
 	return host.NewAdapter("go").
 		Subject("rewriting-a-line-and-reading-it-back-agrees", rewritingALineAndReadingItBackAgrees)

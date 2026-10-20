@@ -1,4 +1,4 @@
-import type { InputKind, UiNumberBound, UiNumberLimits, UiNumberScale } from "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
+import type { InputKind, UiNumberBound, UiNumberLimits, UiNumberScale } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
 import { formatUiNumber, formatUiNumberFixed, roundUiNumber } from "../🖼️presentation/🔢️number-format/🟦️.ts";
 
 /** 🧿️ Share of a slider's axis within which a pointer value is pulled onto a detent — the twin of `SLIDER_SNAP_RADIUS`. */

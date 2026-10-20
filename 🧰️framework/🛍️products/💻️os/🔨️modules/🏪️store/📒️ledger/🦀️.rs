@@ -5,8 +5,6 @@
 //! `ArtifactStore` engine, so the engine and every facet above it depend on it in one direction.
 //!
 //! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT).
-#[path = "📥️lifted/🏪️store/🦀️.rs"]
-pub mod lifted_store;
 #[path = "📥️lifted/♻️retirement/🦀️.rs"]
 pub mod lifted_retirement;
 #[cfg(any(test, feature = "hot-path-census"))]
@@ -40,7 +38,7 @@ use semio_framework_os_vcs::{ArtifactHistoryKey, ArtifactHistoryLedger, Artifact
 use semio_framework_os_pack::pack_rt;
 use semio_framework_os_store_envelope::{ArtifactEnvelope, ArtifactEnvelopeOwners};
 use crate::lifted_snapshot_read::{ArtifactStoreDisplacedOwnerReservation, ArtifactStoreStringRetirement};
-use crate::lifted_replay::{EffectiveSupersessions, FoldProjection, edit_supersession_digest};
+use crate::lifted_replay::{EffectiveSupersessions, edit_supersession_digest};
 use semio_framework_os_store_command::SupersedeInput;
 use semio_framework_value_snapshot_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands};
 use semio_framework_value_retirement_owner::{retirement_owner_close, retirement_owner_demands};
@@ -592,7 +590,7 @@ where
     }
 
     /// 🖊️ Lends the exclusive projection without handing away its terminal retirement.
-    pub(crate) fn projection_mut(&mut self) -> &mut P { self.projection.as_mut().expect("live exclusive replay projection") }
+    pub fn projection_mut(&mut self) -> &mut P { self.projection.as_mut().expect("live exclusive replay projection") }
 
     /// ▶️ Installs the next projection and retires the one it displaces.
     pub fn advance(&mut self, next: P) {
@@ -693,17 +691,4 @@ pub fn stamp_edit_semantics<P, Mutation: self::Mutation<P>>(edit: &mut Edit<Muta
 /// ⏰️ An edit's HLC: its first operation's stamped timestamp (the order key every fold uses).
 pub fn edit_timestamp<Mutation>(edit: &Edit<Mutation>) -> HybridLogicalTimestamp {
     edit.mutation_meta.first().map_or(HybridLogicalTimestamp { actor: 0, physical_ms: 0, logical: 0 }, |meta| meta.timestamp)
-}
-
-impl<P, Mutation> ColdFoldProjection<P, Mutation> for ColdReplayProjection<P, Mutation>
-where
-    Mutation: semio_framework_os_spr::ColdMutation<P>,
-{
-    fn fold_operation(&mut self, operation: &Mutation, op_index: u32) {
-        let _ = super::replay::fold_operation_into::<P, Mutation>(self.projection_mut(), operation, op_index);
-    }
-
-    fn advance(&mut self, next: P) {
-        ColdReplayProjection::advance(self, next);
-    }
 }

@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "test-program-is-bare",
+      "directory": "synth/🧪️tests/🅰️case/👷️child",
+      "source": "import { writeFileSync } from \"node:fs\";\nwriteFileSync(process.argv[2]!, process.argv.slice(3).join(\",\"));\n",
+      "form": "bare",
+      "arguments": [
+        "OUT",
+        "x",
+        "y"
+      ],
+      "written": "x,y"
+    },
+    {
+      "id": "plain-program-is-router-without-commands",
+      "directory": "synth/🅱️plain",
+      "source": "import { writeFileSync } from \"node:fs\";\nwriteFileSync(process.argv[2]!, process.argv.slice(3).join(\",\"));\n",
+      "form": "router",
+      "terminal": "argv: [\"run\"]",
+      "arguments": [
+        "OUT",
+        "x",
+        "y"
+      ],
+      "written": "x,y"
+    },
+    {
+      "id": "plain-program-with-commands-dispatches-first-command",
+      "directory": "synth/🅲️commands",
+      "source": "import { writeFileSync } from \"node:fs\";\nconst command = process.argv[2];\nif (command === \"alpha\") writeFileSync(process.argv[3]!, \"a\");\nelse if (command === \"beta\") writeFileSync(process.argv[3]!, \"b\");\nelse writeFileSync(process.argv[3]!, \"default\");\n",
+      "form": "router",
+      "terminal": "argv: [\"alpha\"]",
+      "arguments": [
+        "unlisted",
+        "OUT"
+      ],
+      "written": "default"
+    }
+  ]
+}

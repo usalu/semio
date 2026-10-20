@@ -31,4 +31,14 @@ class ApprovalRequestFixtureScript extends BundleScript {
 
 router.register("test-approval-request-fixture", ApprovalRequestFixtureScript);
 
+/** 🏗️ Checks native staging ports without preparing a Rust binary. */
+class NativeStagingSourceScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("test-native-staging accepts no arguments");
+    await runBudgetedTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📡️stdio/🏗️staging/🧪️tests/🟦️.ts")], { cwd: this.repoRoot, env: process.env, budgetMs: 15_000, throwOnFailure: true });
+  }
+}
+
+router.register("test-native-staging", NativeStagingSourceScript);
+
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));

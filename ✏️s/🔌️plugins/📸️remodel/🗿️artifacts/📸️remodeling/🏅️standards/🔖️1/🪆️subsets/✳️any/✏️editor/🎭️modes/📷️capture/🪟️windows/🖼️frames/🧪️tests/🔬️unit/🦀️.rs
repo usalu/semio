@@ -3,6 +3,7 @@ use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::sche
 use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::set_active_example::SetActiveExample;
 use crate::editor::remodeling::unit_tests::context::{app, dispatch, render as render_body};
 use semio_s_artifact_remodel_remodeling_editor::editor::remodeling::RemodelingCommand;
+use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::capture::windows::frames::config::RemodelingFrameCursor;
 
 #[semio_framework_async_macros::async_test]
 async fn an_unset_frame_cursor_renders_no_layers_for_a_document_without_streams() {

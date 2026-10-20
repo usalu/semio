@@ -21,7 +21,7 @@ import (
 // #region 🔤️Text
 
 // #region 🎼️Utilities
-// General-purpose utility functions for time parsing and formatting.
+// 📥️General-purpose utility functions for time parsing and formatting.
 // ⏰️parseFlexibleTime holds the data fields for a parseFlexibleTime record.
 func ParseFlexibleTime(t string) (time.Time, error) {
 	if t == "" {

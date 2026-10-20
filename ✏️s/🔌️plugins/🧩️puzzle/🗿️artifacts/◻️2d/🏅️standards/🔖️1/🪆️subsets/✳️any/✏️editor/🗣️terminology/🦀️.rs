@@ -15,20 +15,15 @@ use semio_framework_ui_locale::LocalizedLabel;
 // out explicitly (same text, four times).
 semio_framework_ui_locale::app_labels! {
     pub struct Puzzle2dLabels {
-        // entity nouns — remapped under the "reuse" terminology
         nodes: native_en "Nodes", native_de "Knoten", reuse_en "Building components", reuse_de "Baukomponenten";
         handles: native_en "Handles", native_de "Anschlüsse", reuse_en "Connection points", reuse_de "Verbindungspunkte";
-        // document tree / catalogue section labels
         edges: native_en "Edges", native_de "Kanten", reuse_en "Edges", reuse_de "Kanten";
         none: native_en "(none)", native_de "(keine)", reuse_en "(none)", reuse_de "(keine)";
-        // window-kind titles (window headers / tab titles)
         window_overview: native_en "Overview", native_de "Übersicht", reuse_en "Assembly", reuse_de "Baugruppe";
         window_detail: native_en "Detail", native_de "Detail", reuse_en "Connection Detail", reuse_de "Verbindungsdetail";
         window_selection: native_en "Selection", native_de "Auswahl", reuse_en "Component Selection", reuse_de "Komponentenauswahl";
-        // properties panel summary labels
         schema: native_en "Schema", native_de "Schema", reuse_en "Schema", reuse_de "Schema";
         extension: native_en "Extension", native_de "Erweiterung", reuse_en "Extension", reuse_de "Erweiterung";
-        // inspector field labels
         id: native_en "Id", native_de "Id", reuse_en "Id", reuse_de "Id";
         node_kind: native_en "Node Kind", native_de "Knotenart", reuse_en "Node Kind", reuse_de "Knotenart";
         x: native_en "X", native_de "X", reuse_en "X", reuse_de "X";
@@ -49,24 +44,20 @@ semio_framework_ui_locale::app_labels! {
         hidden: native_en "Hidden", native_de "Ausgeblendet", reuse_en "Hidden", reuse_de "Ausgeblendet";
         locked: native_en "Locked", native_de "Gesperrt", reuse_en "Locked", reuse_de "Gesperrt";
         selected: native_en "Selected", native_de "Ausgewählt", reuse_en "Selected", reuse_de "Ausgewählt";
-        // outliner row toggles — the four states the hide/lock row actions name
         show: native_en "Show", native_de "Einblenden", reuse_en "Show", reuse_de "Einblenden";
         hide: native_en "Hide", native_de "Ausblenden", reuse_en "Hide", reuse_de "Ausblenden";
         lock: native_en "Lock", native_de "Sperren", reuse_en "Lock", reuse_de "Sperren";
         unlock: native_en "Unlock", native_de "Entsperren", reuse_en "Unlock", reuse_de "Entsperren";
-        // settings panel and grid option group
         settings: native_en "Settings", native_de "Einstellungen", reuse_en "Settings", reuse_de "Einstellungen";
         grid: native_en "Grid", native_de "Raster", reuse_en "Grid", reuse_de "Raster";
         grid_snap: native_en "Snap", native_de "Fang", reuse_en "Snap", reuse_de "Fang";
         grid_factor: native_en "Factor", native_de "Faktor", reuse_en "Factor", reuse_de "Faktor";
         visible: native_en "Visible", native_de "Sichtbar", reuse_en "Visible", reuse_de "Sichtbar";
-        // placement tuning (settings panel steppers)
         overlap_budget: native_en "Overlap Budget", native_de "Überlappungsbudget", reuse_en "Overlap Budget", reuse_de "Überlappungsbudget";
         contact_tolerance: native_en "Contact Tolerance", native_de "Kontakttoleranz", reuse_en "Contact Tolerance", reuse_de "Kontakttoleranz";
         kind: native_en "Kind", native_de "Art", reuse_en "Kind", reuse_de "Art";
         node_size: native_en "Node Size", native_de "Knotengröße", reuse_en "Component Size", reuse_de "Komponentengröße";
         distribution: native_en "Distribution", native_de "Verteilung", reuse_en "Distribution", reuse_de "Verteilung";
-        // transform + io verbs
         translate: native_en "Move", native_de "Verschieben", reuse_en "Move", reuse_de "Verschieben";
         rotate: native_en "Rotate", native_de "Drehen", reuse_en "Rotate", reuse_de "Drehen";
         scale: native_en "Scale", native_de "Skalieren", reuse_en "Scale", reuse_de "Skalieren";
@@ -77,14 +68,12 @@ semio_framework_ui_locale::app_labels! {
         import: native_en "Import", native_de "Importieren", reuse_en "Import", reuse_de "Importieren";
         import_invalid: native_en "The file is not a puzzle 2d snapshot", native_de "Die Datei ist kein Puzzle-2d-Fixture", reuse_en "The file is not a puzzle 2d snapshot", reuse_de "Die Datei ist kein Puzzle-2d-Fixture";
         import_too_large: native_en "That file is larger than one import may carry", native_de "Diese Datei ist größer als ein Import tragen kann", reuse_en "That file is larger than one import may carry", reuse_de "Diese Datei ist größer als ein Import tragen kann";
-        // measures
         automatic: native_en "Automatic", native_de "Automatisch", reuse_en "Automatic", reuse_de "Automatisch";
         lod: native_en "LOD", native_de "LOD", reuse_en "LOD", reuse_de "LOD";
         suggestion: native_en "Suggestion", native_de "Vorschlag", reuse_en "Suggestion", reuse_de "Vorschlag";
         offset: native_en "Offset", native_de "Versatz", reuse_en "Offset", reuse_de "Versatz";
         node_weights: native_en "Node Weights", native_de "Knotengewichte", reuse_en "Node Weights", reuse_de "Knotengewichte";
         handle_weights: native_en "Handle Weights", native_de "Anschlussgewichte", reuse_en "Handle Weights", reuse_de "Anschlussgewichte";
-        // engagement
         select: native_en "Select", native_de "Auswählen", reuse_en "Select", reuse_de "Auswählen";
         brush: native_en "Brush", native_de "Pinsel", reuse_en "Brush", reuse_de "Pinsel";
         fill: native_en "Fill", native_de "Füllen", reuse_en "Fill", reuse_de "Füllen";
@@ -94,7 +83,6 @@ semio_framework_ui_locale::app_labels! {
         target_region_origin_required: native_en "Point at the board to paint a target region", native_de "Zeigen Sie auf das Brett, um einen Zielbereich zu malen", reuse_en "Point at the board to paint a target region", reuse_de "Zeigen Sie auf das Brett, um einen Zielbereich zu malen";
         count: native_en "Count", native_de "Anzahl", reuse_en "Count", reuse_de "Anzahl";
         placement: native_en "Placement", native_de "Platzierung", reuse_en "Placement", reuse_de "Platzierung";
-        // 💡️ handle-suggestions popup — the one-shot placement picker and the slot it shares with the brush
         suggest_nodes: native_en "Suggest nodes", native_de "Knoten vorschlagen", reuse_en "Suggest building components", reuse_de "Baukomponenten vorschlagen";
         close_suggestions: native_en "Close Suggestions", native_de "Vorschläge schließen", reuse_en "Close Suggestions", reuse_de "Vorschläge schließen";
         hover_suggestion: native_en "Preview Suggestion", native_de "Vorschlag vorschauen", reuse_en "Preview Suggestion", reuse_de "Vorschlag vorschauen";
@@ -124,7 +112,6 @@ semio_framework_ui_locale::app_labels! {
         fill_reason_requested_reached: native_en "{0} placements reached", native_de "{0} Platzierungen erreicht", reuse_en "{0} placements reached", reuse_de "{0} Platzierungen erreicht";
         fill_reason_outside_target_region: native_en "Outside every visible target region", native_de "Außerhalb jedes sichtbaren Zielbereichs", reuse_en "Outside every visible target region", reuse_de "Außerhalb jedes sichtbaren Zielbereichs";
         fill_reason_retracted: native_en "Provisional tail retracted to {0} placements", native_de "Vorläufiges Ende auf {0} Platzierungen zurückgenommen", reuse_en "Provisional tail retracted to {0} placements", reuse_de "Vorläufiges Ende auf {0} Platzierungen zurückgenommen";
-        // 🔗️ connect verb, its refusals, and the proximity auto-connect setting
         connect: native_en "Connect", native_de "Verbinden", reuse_en "Connect", reuse_de "Verbinden";
         disconnect: native_en "Disconnect", native_de "Trennen", reuse_en "Disconnect", reuse_de "Trennen";
         connect_needs_two_handles: native_en "Select two open handles to connect", native_de "Zwei offene Anschlüsse zum Verbinden auswählen", reuse_en "Select two open connection points to connect", reuse_de "Zwei offene Verbindungspunkte zum Verbinden auswählen";
@@ -133,14 +120,11 @@ semio_framework_ui_locale::app_labels! {
         connect_kind_incompatible: native_en "No compatibility rule allows these handle kinds", native_de "Keine Kompatibilitätsregel erlaubt diese Anschlussarten", reuse_en "No compatibility rule allows these connection kinds", reuse_de "Keine Kompatibilitätsregel erlaubt diese Verbindungsarten";
         proximity: native_en "Proximity", native_de "Nähe", reuse_en "Proximity", reuse_de "Nähe";
         proximity_radius: native_en "Snap Radius", native_de "Fangradius", reuse_en "Snap Radius", reuse_de "Fangradius";
-        // 📋️ clipboard verbs and the one refusal a cut may raise
         copy: native_en "Copy", native_de "Kopieren", reuse_en "Copy", reuse_de "Kopieren";
         cut: native_en "Cut", native_de "Ausschneiden", reuse_en "Cut", reuse_de "Ausschneiden";
         paste: native_en "Paste", native_de "Einfügen", reuse_en "Paste", reuse_de "Einfügen";
         cut_locked: native_en "A locked node cannot be cut", native_de "Ein gesperrter Knoten kann nicht ausgeschnitten werden", reuse_en "A locked building component cannot be cut", reuse_de "Eine gesperrte Baukomponente kann nicht ausgeschnitten werden";
-        // 🔒️ The one sentence every refused lock gesture raises — delete, drag, rotate, transform, inspector patch
         selection_locked: native_en "Selection is locked", native_de "Die Auswahl ist gesperrt", reuse_en "Selection is locked", reuse_de "Die Auswahl ist gesperrt";
-        // example picker
         example_concrete_forest: native_en "Concrete Forest", native_de "Betonwald", reuse_en "Abbau Aufbau", reuse_de "Abbau Aufbau";
     }
 }

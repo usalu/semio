@@ -1,4 +1,4 @@
-import { loadWorld3dSceneLanesFixture, loadCanvas2dSceneLanesFixture, loadBoard2dSceneLanesFixture, loadPaint2dSceneLanesFixture, loadSceneTableLanesFixture, loadTextEditorLanesFixture, loadGraphSceneLanesFixture } from "@semio-tech/framework/ui/testing/fixtures";
+import { loadWorld3dSceneLanesFixture, loadCanvas2dSceneLanesFixture, loadBoard2dSceneLanesFixture, loadPaint2dSceneLanesFixture, loadSceneTableLanesFixture, loadTextEditorLanesFixture, loadGraphSceneLanesFixture } from "@semio-tech/ui/testing/fixtures";
 type TestSource = { readonly url: string };
 
 /** 🚚️ The React half of the world-3d paged scene carrier's laws, read from the SAME language-neutral

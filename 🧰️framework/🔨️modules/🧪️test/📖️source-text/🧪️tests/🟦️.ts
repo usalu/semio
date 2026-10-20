@@ -66,6 +66,8 @@ test("a fixture facade entry only re-exports files that exist; anything else is 
     expect(fixtureFacadeTargets(entry("c", `import x from "${target}/🔣️.json";\nexport { x } from "${target}/🔣️.json";\n`))).toBeUndefined();
     expect(fixtureFacadeTargets(entry("d", `export { one } from "${target}/missing.json";\n`))).toBeUndefined();
     expect(fixtureFacadeTargets(entry("e", `/** only a docstring */\n`))).toBeUndefined();
+    expect(fixtureFacadeTargets(entry("f", `import document from "${target}/🔣️.json" with { type: "json" };\nexport default document;\n`))).toEqual([join(tests, "🔣️.json")]);
+    expect(fixtureFacadeTargets(entry("g", `import document from "${target}/🔣️.json" with { type: "json" };\nexport default other;\n`))).toBeUndefined();
     expect(fixtureFacadeTargets(join(tests, "🟦️.ts"))).toBeUndefined();
     expect(fixtureFacadeTargets(join(tests, "🔣️.json"))).toBeUndefined();
   } finally { rmSync(root, { recursive: true, force: true }); }

@@ -20,7 +20,7 @@ use ids_command_and_messages::wire_err;
 #[path = "🗺️pathmap-diff-and-bridge/🦀️.rs"]
 mod pathmap_diff_and_bridge;
 pub use pathmap_diff_and_bridge::{
-    decode_pathmap_json, diff_entries, encode_pathmap, encode_pathmap_json, entries_to_value, entries_touched, envelope_from_operation, inverse_entries, DB_PATHMAP_SCHEMA,
+    decode_pathmap_json, diff_entries, encode_pathmap, encode_pathmap_json, entries_to_value, entries_touched, envelope_from_operation_cold, inverse_entries, DB_PATHMAP_SCHEMA,
 };
 
 #[path = "⚔️conflict-records/🦀️.rs"]

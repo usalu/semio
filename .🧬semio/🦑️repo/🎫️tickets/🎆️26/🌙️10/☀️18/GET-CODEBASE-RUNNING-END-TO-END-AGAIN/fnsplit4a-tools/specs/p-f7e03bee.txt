@@ -1,0 +1,5 @@
+testCanonicalActorAsyncImport 4 phases, keep=-, final return=false
+26-127 buildFixtureRootState
+128-225 buildRuntimeState
+226-226 buildPart3
+449-449 buildPart4

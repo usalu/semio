@@ -15,7 +15,11 @@ workspace = true
 [lib]
 path = "🦀️.rs"
 
+[features]
+testkit = ["dep:semio-framework-job"]
+
 [dependencies]
+semio-framework-job = { workspace = true, optional = true }
 semio-framework-pixels = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-s-artifact-stdio-jpg = { workspace = true }

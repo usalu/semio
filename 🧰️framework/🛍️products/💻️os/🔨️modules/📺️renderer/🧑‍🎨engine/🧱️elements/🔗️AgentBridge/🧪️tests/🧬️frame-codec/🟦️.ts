@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 import { type AgentBridgeConfig, useAgentBridge, applyInboundShellCommand, bridgeProtocols, buildShellStateFrame, createDefaultShellState, decodeJsonPayload, encodeJsonPayload } from "../../🟦️.tsx";
 import { bytesToHex, decodeShellToGateway, decodeGatewayToShell, encodeShellToGateway, encodeGatewayToShell, type GatewayToShell, type ShellToGateway } from "@semio-tech/framework/mcp/bridge";
-import { documentInferencePortFixtureUrl } from "@semio-tech/framework/os/modules/shell/testing/fixtures";
+import { documentInferencePortFixtureUrl } from "@semio-tech/framework-os-shell/testing/fixtures";
 // #endregion 🔌️Adapters
 
 const here = dirname(fileURLToPath(import.meta.url));

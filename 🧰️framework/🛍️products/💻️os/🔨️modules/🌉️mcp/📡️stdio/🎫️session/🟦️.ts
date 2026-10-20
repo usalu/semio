@@ -4,7 +4,7 @@ import{requireIssuedResourceControlInvocationV1,withRequestedIssuedResourceContr
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{withOwnedCommandChannelV1,readOwnedCommandChannelLineV1,writeOwnedCommandChannelV1,closeOwnedCommandChannelV1,readOwnedCommandChannelDiagnosticsV1,type OwnedCommandChannelV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/📥️capture/🟦️.ts";
 import{snapshotMcpJsonV1,readMcpWireMessageV1,writeMcpWireMessageV1,type McpJsonRecordV1,type McpJsonValueV1,type McpWireNotificationV1,type McpWireSuccessV1,type McpWireFailureV1}from"../📋️protocol/🟦️.ts";
-import schema from"./🧬️schema/🔣️.json";
+import schema from"./🧬️schema/🔣️.json" with { type: "json" };
 const policy=Object.freeze({...schema.definitions.Policy.const});
 function record(value:McpJsonValueV1):value is McpJsonRecordV1{return value!==null&&typeof value==="object"&&!Array.isArray(value);}
 export type McpSessionResponseV1=Readonly<{jsonrpc:"2.0";id:number|string;result?:McpJsonRecordV1;error?:McpWireFailureV1["error"]}>;

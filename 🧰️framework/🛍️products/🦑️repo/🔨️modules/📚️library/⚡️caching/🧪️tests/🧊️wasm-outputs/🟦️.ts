@@ -56,7 +56,7 @@ export async function testWgpuWasmOutputs(workspace: string, output: string, inv
   const run = (profile: string) => execute(["node", cli, "run", "renderer:wasm", "--configuration="+profile,"--outputStyle=static"]);
   const files = (directory: string): Map<string, Buffer> => new Map(readdirSync(directory, { recursive: true, withFileTypes: true }).filter(row => row.isFile()).map(row => [join(row.parentPath, row.name).slice(directory.length + 1), readFileSync(join(row.parentPath, row.name))]));
   const value = async (path: string) => JSON.parse(await execute(["node", "--input-type=module", "-e", `import { readFileSync } from "node:fs"; import { pathToFileURL } from "node:url"; const module = await import(pathToFileURL(process.argv[1].replace(/_bg.wasm$/, ".js")).href); await module.default({ module_or_path: readFileSync(process.argv[1]) }); console.log(JSON.stringify({ value: module.answer() }));`, path])).value;
-  const { preparedBinaryen } = await import("@semio-tech/nx-bootstrap-tools/wasm/script");
+  const { preparedBinaryen } = await import("@semio-tech/nx-bootstrap-tools/wasm");
   const oracleEnv: NodeJS.ProcessEnv = { ...env, PATH: `${dirname(preparedBinaryen(workspace))}${delimiter}${env.PATH}`, CARGO_TARGET_DIR: join(root, "state/oracle-target") };
   for (const key of Object.keys(oracleEnv)) if (key.startsWith("TRUNK_") || ["NO_COLOR", "FORCE_COLOR"].includes(key)) delete oracleEnv[key];
   const oracle = async (profile: string, expected: number) => {

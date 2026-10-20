@@ -20,7 +20,7 @@ import (
 
 // #region 🗂️Files And Plan
 
-// Ticket file input normalization for close operations.
+// 📏️Ticket file input normalization for close operations.
 // Requirements: Accept repo-relative paths, absolute paths, repo file URIs, and file artifact IDs.
 // Docs: Used by ticket close to map file identifiers to repo paths.
 // 📝️normalizeTicketFileInput holds the data fields for a normalizeTicketFileInput record.

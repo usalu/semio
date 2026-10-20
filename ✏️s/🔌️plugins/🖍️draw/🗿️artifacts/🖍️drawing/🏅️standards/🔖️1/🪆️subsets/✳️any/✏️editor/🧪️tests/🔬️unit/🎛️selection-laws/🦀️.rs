@@ -1,6 +1,7 @@
 //! 🎛️ Drawing editor unit laws over selection edits: group and layer drag, created layers, initial framing, text edits, select all, transform handles and node drag.
 
 use super::*;
+use semio_s_artifact_draw_drawing_editor_interaction as interaction;
 
 #[semio_framework_async_macros::async_test]
 async fn selected_group_and_layer_drag_preserves_selection_and_one_history_edit() {

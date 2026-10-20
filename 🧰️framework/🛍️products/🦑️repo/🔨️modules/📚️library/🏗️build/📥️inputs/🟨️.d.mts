@@ -10,5 +10,7 @@ export function deduplicateProjectInputs(inputs:unknown[],root:string):unknown[]
 export function sourceOutputOverlaps(output:string,inputs:unknown[],root:string):boolean;
 /** 🗂️ Shares equivalent arrays within one project input declaration. */
 export function internProjectInputGroups(groups:Record<string,unknown[]>):Record<string,unknown[]>;
+/** 🧭️ Resolves contracts only after normalized task references see the actual inferred own groups. */
+export interface ProjectInputInferenceContextV1 extends Readonly<Record<string,unknown>>{declaredSourceInputs(project:Record<string,unknown>,workspaceRoot:string,namedInputs:Record<string,unknown[]>):Promise<Record<string,unknown[]>>}
 /** 🧾️ Infers owned source groups from admitted first-party project declarations. */
-export function inferProjectInputs(json:Record<string,unknown>,root:string,workspaceRoot:string,facts:Record<string,unknown>,scripts:unknown,context:Record<string,unknown>):Promise<Record<string,unknown[]>>;
+export function inferProjectInputs(json:Record<string,unknown>,root:string,workspaceRoot:string,facts:Record<string,unknown>,scripts:unknown,context:ProjectInputInferenceContextV1):Promise<Record<string,unknown[]>>;

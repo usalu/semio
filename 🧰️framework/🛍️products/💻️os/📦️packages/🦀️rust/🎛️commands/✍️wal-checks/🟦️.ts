@@ -13,7 +13,7 @@ import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/m
 import { runCargo } from "@semio-tech/process/execution";
 import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { blake3Hex } from "@semio-tech/framework/hash";
+import { blake3Hex } from "@semio-tech/framework-hash";
 import { exactCargoStageEnvironments } from "../🧱️script-bases/🟦️.ts";
 
 /** 🔐️ Checks fixed writer capabilities and retained local backend integration. */

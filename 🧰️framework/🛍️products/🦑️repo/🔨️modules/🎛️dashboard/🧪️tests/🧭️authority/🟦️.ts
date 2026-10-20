@@ -1,6 +1,6 @@
 import "../🔎️source-discovery/🟦️.ts";
 import "../🧭️journeys/🧩️sources/🟦️.ts";
-import "../../../📚️library/🏃️process/🦀️cargo/🧪️testing/📦️executable/🧪️tests/🌿️/🟦️.ts";
+import "../../../📚️library/🏃️process/🦀️cargo/🧪️testing/📦️executable/🧪️tests/🌿️runtime-selection/🟦️.ts";
 import "../🎛️dispatch/🟦️.ts";
 import "../🧊️execution/🚀️launch/🟦️.ts";
 import "../🧊️execution/🛠️bootstrap/🟦️.ts";
@@ -16,7 +16,7 @@ import stringWidth from "string-width";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { createRequire } from "node:module";
-import { installedDashboard } from "../../📦️installation/🟦️.ts";
+import { installedDashboard } from "../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts";
 import { spawnSync } from "node:child_process";
 
 const root = resolve(import.meta.dir, "../../../../../../.."), dashboard = resolve(import.meta.dir, "../..");
@@ -99,20 +99,17 @@ test("active inventory fails closed and only excludes declared generated roots a
   } finally { rmSync(workspace, { recursive: true, force: true }); }
 });
 
-test("protected instructions are an exact explicit root constraint and never exempt mutable documentation", () => {
-  const validateOverride = oracle.getSchema(`${authority.$id}#/$defs/ProtectedInstructions`)!;
-  for (const row of fixture.protectedInstructionCases) {
-    const modeled = row.path === "AGENTS.md" && row.text === fixture.protectedInstructions[0].text;
+test("root agent instructions name the dashboard as the human surface and need no editor exemption", () => {
+  const validateInstruction = oracle.getSchema(`${authority.$id}#/$defs/DashboardInstruction`)!;
+  for (const row of fixture.dashboardInstructionCases) {
+    const modeled = row.path === fixture.dashboardInstruction.path && row.text === fixture.dashboardInstruction.text;
     expect(modeled, row.path).toBe(row.accepted);
-    expect(validateOverride({ path: row.path, text: row.text }), row.path).toBe(row.accepted);
-    expect(acceptsInstructions(row.text)).toBe(false);
+    expect(validateInstruction({ path: row.path, text: row.text }), row.path).toBe(row.accepted);
   }
-  for (const instruction of fixture.protectedInstructions) {
-    expect(validateOverride(instruction)).toBe(true);
-    const text = readFileSync(join(root, instruction.path), "utf8").replaceAll("\r\n", "\n");
-    expect(text.split(instruction.text).length).toBe(2);
-    expect(acceptsInstructions(text.replace(instruction.text, "")), instruction.path).toBe(true);
-  }
+  expect(validateInstruction(fixture.dashboardInstruction)).toBe(true);
+  const text = readFileSync(join(root, fixture.dashboardInstruction.path), "utf8").replaceAll("\r\n", "\n");
+  expect(text.split(fixture.dashboardInstruction.text).length).toBe(2);
+  expect(acceptsInstructions(text), fixture.dashboardInstruction.path).toBe(true);
 });
 
 test("every owner command and target agrees with the independent schema validator", () => {
@@ -169,11 +166,7 @@ test("developer instructions agree with the independent schema validator and ret
   const documents = new Set<string>(fixture.developerDocuments);
   for (const { path, directory } of activeRepositoryPaths()) if (!directory && /(?:^|\/)(?:README|CONTRIBUTING|DEVELOPMENT|AGENTS)\.md$/i.test(path) && !/(?:🧫️fixtures|🧪️tests|🧬️schema|\.cursor\/plans)(?:\/|$)/.test(path)) documents.add(path);
   for (const path of documents) {
-    let text = readFileSync(join(root, path), "utf8").replaceAll("\r\n", "\n");
-    for (const instruction of fixture.protectedInstructions) if (instruction.path === path) {
-      expect(text.split(instruction.text).length, path).toBe(2);
-      text = text.replace(instruction.text, "");
-    }
+    const text = readFileSync(join(root, path), "utf8").replaceAll("\r\n", "\n");
     expect(acceptsInstructions(text), path).toBe(true);
     expect(validateInstructions(text.toLowerCase()), path).toBe(true);
   }
@@ -324,7 +317,10 @@ test("the Go repository implementation has a dashboard-owned source build", () =
   expect(owner.name).toBe(vector.project);
   expect(owner.targets.build?.options.command).toBe(vector.command);
   expect(owner.targets.build?.metadata.semio.dashboard).toEqual(vector.declaration);
-  expect(owner.targets.build?.outputs).toEqual(Object.values(vector.artifacts).map(path => `{workspaceRoot}/${path}`));
+  expect(owner.targets.build?.outputs).toEqual(Object.values(vector.artifacts));
+  const entry = readFileSync(join(cli, "📦️packages/🐹️go/📜️script.ts"), "utf8");
+  expect(entry).toContain(`resolve(import.meta.dir, "${vector.module}")`);
+  expect(entry).toContain(`"-o", binary, "${vector.entryPoint}"`);
   expect(oracle.getSchema(`${schema.$id}#/$defs/TargetDeclaration`)!(owner.targets.build?.metadata.semio.dashboard)).toBe(true);
   console.log("[DEBUG] canonical Go repository build target agrees with its shared build/registry schemas");
 });

@@ -241,7 +241,7 @@
       }
     },
     "properties": {
-      "type": "object",
+      "type": ["object", "null"],
       "x-semio-type": "store::os_store::artifact_child::ArtifactChild<SemioValueSnapshot>"
     },
     "representations": {
@@ -290,8 +290,7 @@
                 "minimum": 0
               },
               "item": {
-                "type": "object",
-                "x-semio-type": "store::ArtifactLink"
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference/link/schema.json"
               }
             }
           }

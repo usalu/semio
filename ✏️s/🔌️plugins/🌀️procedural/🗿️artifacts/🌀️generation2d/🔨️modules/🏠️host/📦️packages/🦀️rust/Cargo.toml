@@ -32,6 +32,7 @@ semio-s-artifact-procedural-2d-io-binary = { workspace = true }
 semio-s-artifact-procedural-2d-io-text = { workspace = true }
 semio-s-artifact-procedural-2d-model = { workspace = true }
 semio-s-artifact-procedural-2d-mutations = { workspace = true }
+semio-s-artifact-procedural-2d-mut-generations = { workspace = true }
 
 [dev-dependencies]
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

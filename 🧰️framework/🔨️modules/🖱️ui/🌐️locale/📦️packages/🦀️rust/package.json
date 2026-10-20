@@ -5,6 +5,9 @@
     "./package.json": "./package.json",
     "./index": "./🟦️.ts"
   },
+  "dependencies": {
+    "@semio-tech/ui": "workspace:*"
+  },
   "scripts": {
     "test": "bun --cwd \"../../../../../..\" repo run @semio-tech/ui-locale-rs:test --skip-cache",
     "test-quick": "bun --cwd \"../../../../../..\" repo run @semio-tech/ui-locale-rs:test --skip-cache -- quick",

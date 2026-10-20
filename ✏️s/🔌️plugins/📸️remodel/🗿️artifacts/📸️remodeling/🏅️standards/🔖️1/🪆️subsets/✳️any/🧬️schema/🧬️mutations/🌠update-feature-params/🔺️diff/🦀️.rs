@@ -6,7 +6,7 @@ use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any:
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::UpdateFeatureParams, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
+pub fn diff(payload: &crate::standards::v1::subsets::any::schema::mutations::update_feature_params::component::UpdateFeatureParams, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
     if payload.params.target_count == 0 || !payload.params.edge_threshold.is_finite() || payload.params.edge_threshold < 0.0 {
         return protocol::MutationOutcome::fatal(
             "mutation.invariant",

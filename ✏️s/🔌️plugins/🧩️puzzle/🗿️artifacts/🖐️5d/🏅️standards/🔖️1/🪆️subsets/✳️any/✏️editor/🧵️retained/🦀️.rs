@@ -13,7 +13,7 @@ use semio_framework_job::Operation;
 use semio_framework_pack_json::Value;
 use crate::editor::puzzle5d::dispatch::puzzle5d_handle_action;
 use crate::editor::puzzle5d::interaction::Puzzle5dEditor;
-use crate::editor::puzzle5d::{interaction, snapshot, view};
+use crate::editor::puzzle5d::{interaction, view};
 use crate::editor::puzzle5d::entities::{PUZZLE5D_INTERACTION_DOMAIN, Puzzle5dDocument, puzzle5d_document_from_snapshot, puzzle5d_editor_projection};
 use semio_framework_job::StepContext;
 use crate::editor::puzzle5d::entities::{PUZZLE5D_WORLD_WINDOW_KIND_ID};
@@ -127,9 +127,6 @@ impl Puzzle5dWindowCommandWork {
         self.instance_owner = Some(owner);
         self
     }
-
-    /// ⏯️ Binds the instance's tool run as of admission — the identity Escape's `toolRunAbort` needs.
-
 }
 
 impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle5dWindowCommandWork {

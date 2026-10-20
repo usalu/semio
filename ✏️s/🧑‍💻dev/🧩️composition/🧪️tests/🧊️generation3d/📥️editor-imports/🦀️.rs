@@ -56,7 +56,7 @@ use semio_s_artifact_procedural_3d_editor_panels::inspection as inspection_panel
 use semio_s_artifact_procedural_3d_terminology::generation3d_labels;
 use semio_s_artifact_procedural_3d_editor_transient::Generation3dTransient;
 use semio_s_artifact_procedural_3d_editor_transient::Generation3dTransientMutation;
-use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::artifact_kind;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA;

@@ -10,7 +10,7 @@ use semio_s_artifact_stdio_zip::opc::{OpcPackage, OpcRelationship};
 
 /// 📦️ Reads the OPC package of `base` through `read`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn with_package<R>(base: &PptxSnapshot, read: impl FnOnce(&OpcPackage) -> R) -> Result<R, String> {
+pub fn with_package<R>(base: &PptxSnapshot, read: impl FnOnce(&OpcPackage) -> R) -> Result<R, String> {
     Ok(read(&base.opc))
 }
 
@@ -33,7 +33,7 @@ pub(crate) fn relationship_at(opc: &OpcPackage, owner: &str, id: &str) -> Option
 /// ✍️ The diff that writes `relationship` into `owner`: a new relationship is inserted at `index` (last by default), an existing id is changed in place, and an
 /// owner without relationships gains its first at its sorted position among the owners.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn relationship_write_diff(opc: &OpcPackage, owner: &str, relationship: &OpcRelationship, index: Option<usize>) -> Result<PptxDiff, String> {
+pub fn relationship_write_diff(opc: &OpcPackage, owner: &str, relationship: &OpcRelationship, index: Option<usize>) -> Result<PptxDiff, String> {
     let relationships = match opc.relationships.relationships(owner) {
         None => OpcOwnersDelta::insertion(opc.relationships.groups().take_while(|(existing, _)| existing.as_str() < owner).count(), OpcOwnerRow { owner: owner.to_string(), relationships: vec![relationship.clone()] }),
         Some(list) => {
@@ -94,7 +94,7 @@ fn content_type_rows(rows: OpcContentTypeEntriesDelta, is_override: bool) -> Ppt
 
 /// ✍️ The diff that gives entry `name` the content type `content_type`: a new entry is added at `index` (last by default), an existing one changed in place.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn content_type_write_diff(opc: &OpcPackage, is_override: bool, name: &str, content_type: &str, index: Option<usize>) -> Result<PptxDiff, String> {
+pub fn content_type_write_diff(opc: &OpcPackage, is_override: bool, name: &str, content_type: &str, index: Option<usize>) -> Result<PptxDiff, String> {
     let list = entries(opc, is_override);
     if !is_override && list.iter().any(|(key, _)| key != name && key.eq_ignore_ascii_case(name)) {
         return Err(format!("default extension {name:?} already exists in another letter case"));
@@ -127,9 +127,9 @@ pub(crate) fn with_demo_entries(mut snapshot: PptxSnapshot) -> PptxSnapshot {
 }
 
 /// 🧪️ One representative case per OPC-layer kind, in declaration order, valid on a fixture carrying [`with_demo_entries`].
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_cases() -> Vec<PptxMutation> {
+pub fn demo_cases() -> Vec<PptxMutation> {
     vec![
         PptxMutation::SetRelationship(set_relationship::SetRelationship { owner: String::new(), id: "rIdDemoAdded".into(), rel_type: "http://example.invalid/relationships/added".into(), target: "https://example.invalid/added".into(), external: true, index: Some(0) }),
         PptxMutation::RemoveRelationship(remove_relationship::RemoveRelationship { owner: String::new(), id: "rIdDemoExternal".into() }),

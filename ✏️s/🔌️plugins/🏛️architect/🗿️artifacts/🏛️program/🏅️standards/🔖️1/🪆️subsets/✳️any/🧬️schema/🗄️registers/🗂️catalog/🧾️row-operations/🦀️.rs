@@ -2,6 +2,18 @@
 
 use super::*;
 
+/// 🧱️ Replaces the row at `index` of one collection of `base` by `row`: removal and insertion at the same position in one delta.
+macro_rules! replace_row {
+    ($delta:ident, $field:ident, $base:expr, $index:expr, $row:expr) => {
+        replace_row!($delta, $field, $field, $base, $index, $row)
+    };
+    ($delta:ident, $base_field:ident, $field:ident, $base:expr, $index:expr, $row:expr) => {{
+        let mut delta = $delta::removal(&$base.$base_field, $index);
+        delta.absorb($delta::insertion($index, $row.clone()));
+        ProgramDiff { $field: Some(delta), ..Default::default() }
+    }};
+}
+
 impl RegisterRow {
     /// 🗂️ The collection this row belongs to.
     pub fn key(&self) -> RegisterKey {
@@ -216,326 +228,70 @@ impl RegisterRow {
     /// ♻️ Diff replacing the row at `index` of its collection of `base` with this row, in place.
     pub fn replacement(&self, base: &ProgramSnapshot, index: usize) -> ProgramDiff {
         match self {
-            Self::InformationRequirement(row) => {
-                let mut delta = ProgramInformationDelta::removal(&base.information, index);
-                delta.absorb(ProgramInformationDelta::insertion(index, row.clone()));
-                ProgramDiff { information: Some(delta), ..Default::default() }
-            },
-            Self::SustainabilityRequirement(row) => {
-                let mut delta = ProgramSustainabilityDelta::removal(&base.sustainability, index);
-                delta.absorb(ProgramSustainabilityDelta::insertion(index, row.clone()));
-                ProgramDiff { sustainability: Some(delta), ..Default::default() }
-            },
-            Self::AccessibilityRequirement(row) => {
-                let mut delta = ProgramAccessibilityDelta::removal(&base.accessibility, index);
-                delta.absorb(ProgramAccessibilityDelta::insertion(index, row.clone()));
-                ProgramDiff { accessibility: Some(delta), ..Default::default() }
-            },
-            Self::Conflict(row) => {
-                let mut delta = ProgramConflictsDelta::removal(&base.conflicts, index);
-                delta.absorb(ProgramConflictsDelta::insertion(index, row.clone()));
-                ProgramDiff { conflicts: Some(delta), ..Default::default() }
-            },
-            Self::OptionEvaluation(row) => {
-                let mut delta = ProgramOptionsDelta::removal(&base.options, index);
-                delta.absorb(ProgramOptionsDelta::insertion(index, row.clone()));
-                ProgramDiff { options: Some(delta), ..Default::default() }
-            },
-            Self::Function(row) => {
-                let mut delta = ProgramFunctionsDelta::removal(&base.functions, index);
-                delta.absorb(ProgramFunctionsDelta::insertion(index, row.clone()));
-                ProgramDiff { functions: Some(delta), ..Default::default() }
-            },
-            Self::Risk(row) => {
-                let mut delta = ProgramRisksDelta::removal(&base.risks, index);
-                delta.absorb(ProgramRisksDelta::insertion(index, row.clone()));
-                ProgramDiff { risks: Some(delta), ..Default::default() }
-            },
-            Self::Decision(row) => {
-                let mut delta = ProgramDecisionsDelta::removal(&base.decisions, index);
-                delta.absorb(ProgramDecisionsDelta::insertion(index, row.clone()));
-                ProgramDiff { decisions: Some(delta), ..Default::default() }
-            },
-            Self::ValidationRecord(row) => {
-                let mut delta = ProgramValidationsDelta::removal(&base.validations, index);
-                delta.absorb(ProgramValidationsDelta::insertion(index, row.clone()));
-                ProgramDiff { validations: Some(delta), ..Default::default() }
-            },
-            Self::PriorityRecord(row) => {
-                let mut delta = ProgramPrioritiesDelta::removal(&base.priorities, index);
-                delta.absorb(ProgramPrioritiesDelta::insertion(index, row.clone()));
-                ProgramDiff { priorities: Some(delta), ..Default::default() }
-            },
-            Self::FlowRequirement(row) => {
-                let mut delta = ProgramFlowsDelta::removal(&base.flows, index);
-                delta.absorb(ProgramFlowsDelta::insertion(index, row.clone()));
-                ProgramDiff { flows: Some(delta), ..Default::default() }
-            },
-            Self::EnvironmentalRequirement(row) => {
-                let mut delta = ProgramEnvironmentalDelta::removal(&base.environmental, index);
-                delta.absorb(ProgramEnvironmentalDelta::insertion(index, row.clone()));
-                ProgramDiff { environmental: Some(delta), ..Default::default() }
-            },
-            Self::Workshop(row) => {
-                let mut delta = ProgramWorkshopsDelta::removal(&base.workshops, index);
-                delta.absorb(ProgramWorkshopsDelta::insertion(index, row.clone()));
-                ProgramDiff { workshops: Some(delta), ..Default::default() }
-            },
-            Self::Scenario(row) => {
-                let mut delta = ProgramScenariosDelta::removal(&base.scenarios, index);
-                delta.absorb(ProgramScenariosDelta::insertion(index, row.clone()));
-                ProgramDiff { scenarios: Some(delta), ..Default::default() }
-            },
-            Self::BenchmarkRecord(row) => {
-                let mut delta = ProgramBenchmarksDelta::removal(&base.benchmarks_payload, index);
-                delta.absorb(ProgramBenchmarksDelta::insertion(index, row.clone()));
-                ProgramDiff { benchmarks: Some(delta), ..Default::default() }
-            },
-            Self::Activity(row) => {
-                let mut delta = ProgramActivitiesDelta::removal(&base.activities, index);
-                delta.absorb(ProgramActivitiesDelta::insertion(index, row.clone()));
-                ProgramDiff { activities: Some(delta), ..Default::default() }
-            },
-            Self::InfrastructureRequirement(row) => {
-                let mut delta = ProgramInfrastructureDelta::removal(&base.infrastructure, index);
-                delta.absorb(ProgramInfrastructureDelta::insertion(index, row.clone()));
-                ProgramDiff { infrastructure: Some(delta), ..Default::default() }
-            },
-            Self::OrganizationalRequirement(row) => {
-                let mut delta = ProgramOrganizationalDelta::removal(&base.organizational, index);
-                delta.absorb(ProgramOrganizationalDelta::insertion(index, row.clone()));
-                ProgramDiff { organizational: Some(delta), ..Default::default() }
-            },
-            Self::Issue(row) => {
-                let mut delta = ProgramIssuesDelta::removal(&base.issues, index);
-                delta.absorb(ProgramIssuesDelta::insertion(index, row.clone()));
-                ProgramDiff { issues: Some(delta), ..Default::default() }
-            },
-            Self::ApprovalRecord(row) => {
-                let mut delta = ProgramApprovalsDelta::removal(&base.approvals, index);
-                delta.absorb(ProgramApprovalsDelta::insertion(index, row.clone()));
-                ProgramDiff { approvals: Some(delta), ..Default::default() }
-            },
-            Self::Stakeholder(row) => {
-                let mut delta = ProgramStakeholdersDelta::removal(&base.stakeholders, index);
-                delta.absorb(ProgramStakeholdersDelta::insertion(index, row.clone()));
-                ProgramDiff { stakeholders: Some(delta), ..Default::default() }
-            },
-            Self::QualityRecord(row) => {
-                let mut delta = ProgramQualityDelta::removal(&base.quality, index);
-                delta.absorb(ProgramQualityDelta::insertion(index, row.clone()));
-                ProgramDiff { quality: Some(delta), ..Default::default() }
-            },
-            Self::ResilienceRequirement(row) => {
-                let mut delta = ProgramResilienceDelta::removal(&base.resilience, index);
-                delta.absorb(ProgramResilienceDelta::insertion(index, row.clone()));
-                ProgramDiff { resilience: Some(delta), ..Default::default() }
-            },
-            Self::Assumption(row) => {
-                let mut delta = ProgramAssumptionsDelta::removal(&base.assumptions, index);
-                delta.absorb(ProgramAssumptionsDelta::insertion(index, row.clone()));
-                ProgramDiff { assumptions: Some(delta), ..Default::default() }
-            },
-            Self::CostRequirement(row) => {
-                let mut delta = ProgramCostsDelta::removal(&base.costs, index);
-                delta.absorb(ProgramCostsDelta::insertion(index, row.clone()));
-                ProgramDiff { costs: Some(delta), ..Default::default() }
-            },
-            Self::Document(row) => {
-                let mut delta = ProgramArtifactsDelta::removal(&base.artifacts, index);
-                delta.absorb(ProgramArtifactsDelta::insertion(index, row.clone()));
-                ProgramDiff { artifacts: Some(delta), ..Default::default() }
-            },
-            Self::ScheduleRequirement(row) => {
-                let mut delta = ProgramSchedulesDelta::removal(&base.schedules, index);
-                delta.absorb(ProgramSchedulesDelta::insertion(index, row.clone()));
-                ProgramDiff { schedules: Some(delta), ..Default::default() }
-            },
-            Self::GrowthPlan(row) => {
-                let mut delta = ProgramGrowthDelta::removal(&base.growth, index);
-                delta.absorb(ProgramGrowthDelta::insertion(index, row.clone()));
-                ProgramDiff { growth: Some(delta), ..Default::default() }
-            },
-            Self::PerformanceCriterion(row) => {
-                let mut delta = ProgramPerformanceDelta::removal(&base.performance, index);
-                delta.absorb(ProgramPerformanceDelta::insertion(index, row.clone()));
-                ProgramDiff { performance: Some(delta), ..Default::default() }
-            },
-            Self::OperationalRequirement(row) => {
-                let mut delta = ProgramOperationsDelta::removal(&base.operations, index);
-                delta.absorb(ProgramOperationsDelta::insertion(index, row.clone()));
-                ProgramDiff { operations: Some(delta), ..Default::default() }
-            },
-            Self::Requirement(row) => {
-                let mut delta = ProgramRequirementsDelta::removal(&base.requirements, index);
-                delta.absorb(ProgramRequirementsDelta::insertion(index, row.clone()));
-                ProgramDiff { requirements: Some(delta), ..Default::default() }
-            },
-            Self::SiteContext(row) => {
-                let mut delta = ProgramSiteContextDelta::removal(&base.site_context, index);
-                delta.absorb(ProgramSiteContextDelta::insertion(index, row.clone()));
-                ProgramDiff { site_context: Some(delta), ..Default::default() }
-            },
-            Self::TemplateRecord(row) => {
-                let mut delta = ProgramTemplatesDelta::removal(&base.templates, index);
-                delta.absorb(ProgramTemplatesDelta::insertion(index, row.clone()));
-                ProgramDiff { templates: Some(delta), ..Default::default() }
-            },
-            Self::ReportRecord(row) => {
-                let mut delta = ProgramReportsDelta::removal(&base.reports, index);
-                delta.absorb(ProgramReportsDelta::insertion(index, row.clone()));
-                ProgramDiff { reports: Some(delta), ..Default::default() }
-            },
-            Self::AuditEvent(row) => {
-                let mut delta = ProgramAuditEventsDelta::removal(&base.audit_events, index);
-                delta.absorb(ProgramAuditEventsDelta::insertion(index, row.clone()));
-                ProgramDiff { audit_events: Some(delta), ..Default::default() }
-            },
-            Self::KnowledgeRecord(row) => {
-                let mut delta = ProgramKnowledgeDelta::removal(&base.knowledge_payload, index);
-                delta.absorb(ProgramKnowledgeDelta::insertion(index, row.clone()));
-                ProgramDiff { knowledge: Some(delta), ..Default::default() }
-            },
-            Self::RegulatoryRequirement(row) => {
-                let mut delta = ProgramRegulatoryDelta::removal(&base.regulatory, index);
-                delta.absorb(ProgramRegulatoryDelta::insertion(index, row.clone()));
-                ProgramDiff { regulatory: Some(delta), ..Default::default() }
-            },
-            Self::CommunicationRequirement(row) => {
-                let mut delta = ProgramCommunicationDelta::removal(&base.communication, index);
-                delta.absorb(ProgramCommunicationDelta::insertion(index, row.clone()));
-                ProgramDiff { communication: Some(delta), ..Default::default() }
-            },
-            Self::Resource(row) => {
-                let mut delta = ProgramResourcesDelta::removal(&base.resources, index);
-                delta.absorb(ProgramResourcesDelta::insertion(index, row.clone()));
-                ProgramDiff { resources: Some(delta), ..Default::default() }
-            },
-            Self::StatusRecord(row) => {
-                let mut delta = ProgramStatusRecordsDelta::removal(&base.status_records, index);
-                delta.absorb(ProgramStatusRecordsDelta::insertion(index, row.clone()));
-                ProgramDiff { status_records: Some(delta), ..Default::default() }
-            },
-            Self::ChangeRecord(row) => {
-                let mut delta = ProgramChangesDelta::removal(&base.changes, index);
-                delta.absorb(ProgramChangesDelta::insertion(index, row.clone()));
-                ProgramDiff { changes: Some(delta), ..Default::default() }
-            },
-            Self::Process(row) => {
-                let mut delta = ProgramProcessesDelta::removal(&base.processes, index);
-                delta.absorb(ProgramProcessesDelta::insertion(index, row.clone()));
-                ProgramDiff { processes: Some(delta), ..Default::default() }
-            },
-            Self::SearchFilter(row) => {
-                let mut delta = ProgramSearchFiltersDelta::removal(&base.search_filters, index);
-                delta.absorb(ProgramSearchFiltersDelta::insertion(index, row.clone()));
-                ProgramDiff { search_filters: Some(delta), ..Default::default() }
-            },
-            Self::AccessRule(row) => {
-                let mut delta = ProgramAccessRulesDelta::removal(&base.access_rules, index);
-                delta.absorb(ProgramAccessRulesDelta::insertion(index, row.clone()));
-                ProgramDiff { access_rules: Some(delta), ..Default::default() }
-            },
-            Self::PrivacyRequirement(row) => {
-                let mut delta = ProgramPrivacyDelta::removal(&base.privacy, index);
-                delta.absorb(ProgramPrivacyDelta::insertion(index, row.clone()));
-                ProgramDiff { privacy: Some(delta), ..Default::default() }
-            },
-            Self::QuantityRequirement(row) => {
-                let mut delta = ProgramQuantitiesDelta::removal(&base.quantities, index);
-                delta.absorb(ProgramQuantitiesDelta::insertion(index, row.clone()));
-                ProgramDiff { quantities: Some(delta), ..Default::default() }
-            },
-            Self::AnalysisRecord(row) => {
-                let mut delta = ProgramAnalysesDelta::removal(&base.analyses, index);
-                delta.absorb(ProgramAnalysesDelta::insertion(index, row.clone()));
-                ProgramDiff { analyses: Some(delta), ..Default::default() }
-            },
-            Self::Relationship(row) => {
-                let mut delta = ProgramRelationshipsDelta::removal(&base.relationships, index);
-                delta.absorb(ProgramRelationshipsDelta::insertion(index, row.clone()));
-                ProgramDiff { relationships: Some(delta), ..Default::default() }
-            },
-            Self::StorageRequirement(row) => {
-                let mut delta = ProgramStorageDelta::removal(&base.storage, index);
-                delta.absorb(ProgramStorageDelta::insertion(index, row.clone()));
-                ProgramDiff { storage: Some(delta), ..Default::default() }
-            },
-            Self::MeetingRecord(row) => {
-                let mut delta = ProgramMeetingsDelta::removal(&base.meetings, index);
-                delta.absorb(ProgramMeetingsDelta::insertion(index, row.clone()));
-                ProgramDiff { meetings: Some(delta), ..Default::default() }
-            },
-            Self::Survey(row) => {
-                let mut delta = ProgramSurveysDelta::removal(&base.surveys, index);
-                delta.absorb(ProgramSurveysDelta::insertion(index, row.clone()));
-                ProgramDiff { surveys: Some(delta), ..Default::default() }
-            },
-            Self::DeliveryConstraint(row) => {
-                let mut delta = ProgramDeliveryDelta::removal(&base.delivery, index);
-                delta.absorb(ProgramDeliveryDelta::insertion(index, row.clone()));
-                ProgramDiff { delivery: Some(delta), ..Default::default() }
-            },
-            Self::ConstraintRecord(row) => {
-                let mut delta = ProgramConstraintsDelta::removal(&base.constraints, index);
-                delta.absorb(ProgramConstraintsDelta::insertion(index, row.clone()));
-                ProgramDiff { constraints: Some(delta), ..Default::default() }
-            },
-            Self::ComplianceRecord(row) => {
-                let mut delta = ProgramComplianceRecordsDelta::removal(&base.compliance_records, index);
-                delta.absorb(ProgramComplianceRecordsDelta::insertion(index, row.clone()));
-                ProgramDiff { compliance_records: Some(delta), ..Default::default() }
-            },
-            Self::ServiceRequirement(row) => {
-                let mut delta = ProgramServicesDelta::removal(&base.services, index);
-                delta.absorb(ProgramServicesDelta::insertion(index, row.clone()));
-                ProgramDiff { services: Some(delta), ..Default::default() }
-            },
-            Self::Equipment(row) => {
-                let mut delta = ProgramEquipmentDelta::removal(&base.equipment, index);
-                delta.absorb(ProgramEquipmentDelta::insertion(index, row.clone()));
-                ProgramDiff { equipment: Some(delta), ..Default::default() }
-            },
-            Self::SecurityRequirement(row) => {
-                let mut delta = ProgramSecurityDelta::removal(&base.security, index);
-                delta.absorb(ProgramSecurityDelta::insertion(index, row.clone()));
-                ProgramDiff { security: Some(delta), ..Default::default() }
-            },
-            Self::CollaborationRecord(row) => {
-                let mut delta = ProgramCollaborationDelta::removal(&base.collaboration, index);
-                delta.absorb(ProgramCollaborationDelta::insertion(index, row.clone()));
-                ProgramDiff { collaboration: Some(delta), ..Default::default() }
-            },
-            Self::SafetyRequirement(row) => {
-                let mut delta = ProgramSafetyDelta::removal(&base.safety, index);
-                delta.absorb(ProgramSafetyDelta::insertion(index, row.clone()));
-                ProgramDiff { safety: Some(delta), ..Default::default() }
-            },
-            Self::UserProfile(row) => {
-                let mut delta = ProgramUsersDelta::removal(&base.users, index);
-                delta.absorb(ProgramUsersDelta::insertion(index, row.clone()));
-                ProgramDiff { users: Some(delta), ..Default::default() }
-            },
-            Self::HumanFactorRequirement(row) => {
-                let mut delta = ProgramHumanFactorsDelta::removal(&base.human_factors, index);
-                delta.absorb(ProgramHumanFactorsDelta::insertion(index, row.clone()));
-                ProgramDiff { human_factors: Some(delta), ..Default::default() }
-            },
-            Self::FlexibilityRequirement(row) => {
-                let mut delta = ProgramFlexibilityDelta::removal(&base.flexibility, index);
-                delta.absorb(ProgramFlexibilityDelta::insertion(index, row.clone()));
-                ProgramDiff { flexibility: Some(delta), ..Default::default() }
-            },
-            Self::WayfindingRequirement(row) => {
-                let mut delta = ProgramWayfindingDelta::removal(&base.wayfinding, index);
-                delta.absorb(ProgramWayfindingDelta::insertion(index, row.clone()));
-                ProgramDiff { wayfinding: Some(delta), ..Default::default() }
-            },
-            Self::ProgramElement(row) => {
-                let mut delta = ProgramElementsDelta::removal(&base.elements, index);
-                delta.absorb(ProgramElementsDelta::insertion(index, row.clone()));
-                ProgramDiff { elements: Some(delta), ..Default::default() }
-            },
+            Self::InformationRequirement(row) => replace_row!(ProgramInformationDelta, information, base, index, row),
+            Self::SustainabilityRequirement(row) => replace_row!(ProgramSustainabilityDelta, sustainability, base, index, row),
+            Self::AccessibilityRequirement(row) => replace_row!(ProgramAccessibilityDelta, accessibility, base, index, row),
+            Self::Conflict(row) => replace_row!(ProgramConflictsDelta, conflicts, base, index, row),
+            Self::OptionEvaluation(row) => replace_row!(ProgramOptionsDelta, options, base, index, row),
+            Self::Function(row) => replace_row!(ProgramFunctionsDelta, functions, base, index, row),
+            Self::Risk(row) => replace_row!(ProgramRisksDelta, risks, base, index, row),
+            Self::Decision(row) => replace_row!(ProgramDecisionsDelta, decisions, base, index, row),
+            Self::ValidationRecord(row) => replace_row!(ProgramValidationsDelta, validations, base, index, row),
+            Self::PriorityRecord(row) => replace_row!(ProgramPrioritiesDelta, priorities, base, index, row),
+            Self::FlowRequirement(row) => replace_row!(ProgramFlowsDelta, flows, base, index, row),
+            Self::EnvironmentalRequirement(row) => replace_row!(ProgramEnvironmentalDelta, environmental, base, index, row),
+            Self::Workshop(row) => replace_row!(ProgramWorkshopsDelta, workshops, base, index, row),
+            Self::Scenario(row) => replace_row!(ProgramScenariosDelta, scenarios, base, index, row),
+            Self::BenchmarkRecord(row) => replace_row!(ProgramBenchmarksDelta, benchmarks_payload, benchmarks, base, index, row),
+            Self::Activity(row) => replace_row!(ProgramActivitiesDelta, activities, base, index, row),
+            Self::InfrastructureRequirement(row) => replace_row!(ProgramInfrastructureDelta, infrastructure, base, index, row),
+            Self::OrganizationalRequirement(row) => replace_row!(ProgramOrganizationalDelta, organizational, base, index, row),
+            Self::Issue(row) => replace_row!(ProgramIssuesDelta, issues, base, index, row),
+            Self::ApprovalRecord(row) => replace_row!(ProgramApprovalsDelta, approvals, base, index, row),
+            Self::Stakeholder(row) => replace_row!(ProgramStakeholdersDelta, stakeholders, base, index, row),
+            Self::QualityRecord(row) => replace_row!(ProgramQualityDelta, quality, base, index, row),
+            Self::ResilienceRequirement(row) => replace_row!(ProgramResilienceDelta, resilience, base, index, row),
+            Self::Assumption(row) => replace_row!(ProgramAssumptionsDelta, assumptions, base, index, row),
+            Self::CostRequirement(row) => replace_row!(ProgramCostsDelta, costs, base, index, row),
+            Self::Document(row) => replace_row!(ProgramArtifactsDelta, artifacts, base, index, row),
+            Self::ScheduleRequirement(row) => replace_row!(ProgramSchedulesDelta, schedules, base, index, row),
+            Self::GrowthPlan(row) => replace_row!(ProgramGrowthDelta, growth, base, index, row),
+            Self::PerformanceCriterion(row) => replace_row!(ProgramPerformanceDelta, performance, base, index, row),
+            Self::OperationalRequirement(row) => replace_row!(ProgramOperationsDelta, operations, base, index, row),
+            Self::Requirement(row) => replace_row!(ProgramRequirementsDelta, requirements, base, index, row),
+            Self::SiteContext(row) => replace_row!(ProgramSiteContextDelta, site_context, base, index, row),
+            Self::TemplateRecord(row) => replace_row!(ProgramTemplatesDelta, templates, base, index, row),
+            Self::ReportRecord(row) => replace_row!(ProgramReportsDelta, reports, base, index, row),
+            Self::AuditEvent(row) => replace_row!(ProgramAuditEventsDelta, audit_events, base, index, row),
+            Self::KnowledgeRecord(row) => replace_row!(ProgramKnowledgeDelta, knowledge_payload, knowledge, base, index, row),
+            Self::RegulatoryRequirement(row) => replace_row!(ProgramRegulatoryDelta, regulatory, base, index, row),
+            Self::CommunicationRequirement(row) => replace_row!(ProgramCommunicationDelta, communication, base, index, row),
+            Self::Resource(row) => replace_row!(ProgramResourcesDelta, resources, base, index, row),
+            Self::StatusRecord(row) => replace_row!(ProgramStatusRecordsDelta, status_records, base, index, row),
+            Self::ChangeRecord(row) => replace_row!(ProgramChangesDelta, changes, base, index, row),
+            Self::Process(row) => replace_row!(ProgramProcessesDelta, processes, base, index, row),
+            Self::SearchFilter(row) => replace_row!(ProgramSearchFiltersDelta, search_filters, base, index, row),
+            Self::AccessRule(row) => replace_row!(ProgramAccessRulesDelta, access_rules, base, index, row),
+            Self::PrivacyRequirement(row) => replace_row!(ProgramPrivacyDelta, privacy, base, index, row),
+            Self::QuantityRequirement(row) => replace_row!(ProgramQuantitiesDelta, quantities, base, index, row),
+            Self::AnalysisRecord(row) => replace_row!(ProgramAnalysesDelta, analyses, base, index, row),
+            Self::Relationship(row) => replace_row!(ProgramRelationshipsDelta, relationships, base, index, row),
+            Self::StorageRequirement(row) => replace_row!(ProgramStorageDelta, storage, base, index, row),
+            Self::MeetingRecord(row) => replace_row!(ProgramMeetingsDelta, meetings, base, index, row),
+            Self::Survey(row) => replace_row!(ProgramSurveysDelta, surveys, base, index, row),
+            Self::DeliveryConstraint(row) => replace_row!(ProgramDeliveryDelta, delivery, base, index, row),
+            Self::ConstraintRecord(row) => replace_row!(ProgramConstraintsDelta, constraints, base, index, row),
+            Self::ComplianceRecord(row) => replace_row!(ProgramComplianceRecordsDelta, compliance_records, base, index, row),
+            Self::ServiceRequirement(row) => replace_row!(ProgramServicesDelta, services, base, index, row),
+            Self::Equipment(row) => replace_row!(ProgramEquipmentDelta, equipment, base, index, row),
+            Self::SecurityRequirement(row) => replace_row!(ProgramSecurityDelta, security, base, index, row),
+            Self::CollaborationRecord(row) => replace_row!(ProgramCollaborationDelta, collaboration, base, index, row),
+            Self::SafetyRequirement(row) => replace_row!(ProgramSafetyDelta, safety, base, index, row),
+            Self::UserProfile(row) => replace_row!(ProgramUsersDelta, users, base, index, row),
+            Self::HumanFactorRequirement(row) => replace_row!(ProgramHumanFactorsDelta, human_factors, base, index, row),
+            Self::FlexibilityRequirement(row) => replace_row!(ProgramFlexibilityDelta, flexibility, base, index, row),
+            Self::WayfindingRequirement(row) => replace_row!(ProgramWayfindingDelta, wayfinding, base, index, row),
+            Self::ProgramElement(row) => replace_row!(ProgramElementsDelta, elements, base, index, row),
         }
     }
 

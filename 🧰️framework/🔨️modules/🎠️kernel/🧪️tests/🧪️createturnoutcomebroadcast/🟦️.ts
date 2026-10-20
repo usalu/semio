@@ -73,8 +73,8 @@ async function registerTests1(vitest: Vitest, dependencies: Pick<typeof import("
 
 async function registerTests2(vitest: Vitest, dependencies: Pick<typeof import("@semio-tech/framework-io-schema-ts"), "dialectCoordinate"> & Pick<typeof import("../../🧭️app-router/🟦️.ts"), "AppRouter">, source: TestSource): Promise<void> {
   const { AppRouter, dialectCoordinate } = dependencies;
-  type AppRef = import("@semio-tech/framework/manifest/schema").AppRef;
-  type AppRole = import("@semio-tech/framework/manifest/schema").AppRole;
+  type AppRef = import("@semio-tech/framework-manifest/schema").AppRef;
+  type AppRole = import("@semio-tech/framework-manifest/schema").AppRole;
   type AppRouterManifest = import("../../🧭️app-router/🟦️.ts").AppRouterManifest;
   type ArtifactDialect = import("@semio-tech/schema-ts/artifact-reference").ArtifactDialect;
 

@@ -1,5 +1,6 @@
 //! 🧪️ `tests` — moved out of `🏷️field-meta/🦀️.rs` into its canonical test implementation.
 
+use super::*;
 use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 fn to_template(path: &str) -> String {

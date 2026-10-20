@@ -13,7 +13,7 @@ import (
 
 // region 🔖️Rendering
 
-// readFixture reads one declared fixture as text.
+// 📥️readFixture reads one declared fixture as text.
 func readFixture(ctx *host.Context, uri string) (string, error) {
 	path, err := ctx.Input(uri)
 	if err != nil {
@@ -26,7 +26,7 @@ func readFixture(ctx *host.Context, uri string) (string, error) {
 	return string(content), nil
 }
 
-// renderBreachs renders every breach as `kind|scope|line`.
+// 🌐️renderBreachs renders every breach as `kind|scope|line`.
 func renderBreachs(breachs []model.Breach) []string {
 	rows := make([]string, 0, len(breachs))
 	for _, breach := range breachs {
@@ -35,7 +35,7 @@ func renderBreachs(breachs []model.Breach) []string {
 	return rows
 }
 
-// renderStatutes renders every repaired statute identifier.
+// 🖥️renderStatutes renders every repaired statute identifier.
 func renderStatutes(kinds []model.Statute) []string {
 	rows := make([]string, 0, len(kinds))
 	for _, kind := range kinds {
@@ -44,7 +44,7 @@ func renderStatutes(kinds []model.Statute) []string {
 	return rows
 }
 
-// analyzeOne analyses exactly one source.
+// 🧮️analyzeOne analyses exactly one source.
 func analyzeOne(source statutes.SourceFile) []model.Breach {
 	return statutes.Analyze(statutes.NewSourceSet([]statutes.SourceFile{source}))
 }
@@ -88,7 +88,7 @@ func theFixableSourceBecomesTheExpectedSource(ctx *host.Context) (host.Outcome, 
 
 // region 🔖️Registration
 
-// Adapter is the registration entry point the generated host calls.
+// 🌉️Adapter is the registration entry point the generated host calls.
 func Adapter() *host.Adapter {
 	return host.NewAdapter("go").
 		Subject("the-fixable-source-becomes-the-expected-source", theFixableSourceBecomesTheExpectedSource)

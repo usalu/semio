@@ -1,0 +1,13 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json": "3fb0a5b8567296df1c0a263ca771ab95a2851e34ac358ad46ea55ddc93df7c8c",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json": "8f5f69cf0086e89f1e1f4e65e08f1df4b1074436701f2833386cbe9737af5379",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🟦️.ts": "64fadb5d9d337f0bca7a65d5a1367756991358a54fa9b1e3ddcf03f373f27417",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/🟦️.ts": "3c39042e0baf7b4864d503f1219264226aa1ee1512715c4471dfae23ade7aa89",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts": "48f1d7df41f898018876a84683267eca0f4cf50fd2246756163b5485af854dad",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts": "d21d54aae8c93fd55c56a0bc86cbd7a42406ef1eee88f86fca87922f37500765",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts": "5a32baa3edfd4492f480a820a01d7c7e7cbf8338df8265b19520076643dd3390",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🧪️tests/🧫️fixtures/📖️help/🔣️.json": "a4296f166814a7bff3f45a059e8a1b3b21fba235277078f8e991be8d641aaf64",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️actions/🔣️.json": "ff26bbb0d33398bd88605928643711ced3531c9b8bbe6ae08488100eba193ae4",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/🔏️implementation/🔣️.json": "c62be090fbb402fbc6387771aca2a7e089a32e911d2f8333cb334d7d715ce816",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/🧪️tests/🟦️.ts": "30889ebbc45bfcefea4626ca4e0defa913de519d09fd7b49d919cd6be6b7725a"
+}

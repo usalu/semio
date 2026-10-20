@@ -1,5 +1,5 @@
 import {acquireCompilerCapacityLeaseV1,scriptCompilerAdmissionControlV1} from "../../../🟦️.ts";
-import {receiveScriptProcessInvocation} from "../../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import fixture from "../🧫️fixtures/🔣️.json" with {type:"json"};
 
 /** 🏃️ Program of the sibling router: the former top-level body of its `📜️script.ts`, kept verbatim. */

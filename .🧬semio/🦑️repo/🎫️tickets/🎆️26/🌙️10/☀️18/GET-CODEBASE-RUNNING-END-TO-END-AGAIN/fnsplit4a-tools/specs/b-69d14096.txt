@@ -1,0 +1,5 @@
+testCacheContracts 4 ranges
+41-191 runValidateStep
+192-314 runActivationSchemaStep
+315-464 runValidatedProjectStep
+465-604 runRevisionRootStep

@@ -48,7 +48,7 @@ mod fixture_dispatch_steps_and_document_loading;
 pub use fixture_dispatch_steps_and_document_loading::{
     assert_editor_genesis_children_declared, assert_viewer_genesis_children_declared,
     dispatch_fixture_action, dispatch_original_fixture_command, FixtureOriginalJob, dispatch_fixture_command, dispatch_fixture_response_action, poll_fixture_media_export, produce_fixture_media, retain_fixture_media_export_result, submit_fixture_media_export, take_fixture_media_export_chunk, drain_maintenance_pressure, export_fixture_media,
-    fixture_identity, fixture_job_outcome, fixture_mounted_policy, fixture_payload_bytes,
+    fixture_identity, fixture_job_outcome, fixture_mounted_policy, fixture_payload_bytes, fixture_pending_effects,
     fixture_progress, fixture_retained_turn, fixture_step, fixture_step_context,
     fixture_step_context_for, load_document, load_document_text, plugin_load_document,
     plugin_load_document_text, plugin_settle_store_constructor, typing_run, with_document_view,

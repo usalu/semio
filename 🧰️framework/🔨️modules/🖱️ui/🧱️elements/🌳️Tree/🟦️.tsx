@@ -5,7 +5,7 @@
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 // #endregion 🧲️Header
 
-import type { TreeWindowRowExtent } from "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
+import type { TreeWindowRowExtent } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
 import { retainTreeFocus } from "./🎯️focus/🟦️.ts";
 
 /** 📏️ Re-exported from the UI contract because this element's whole window API is stated in it — a consumer of `TreeDataWindow`/`TreeWindowContainerMeasure` must be able to name the token without reaching past this module. */
@@ -554,7 +554,7 @@ interface FileTreeItemProps {
 }
 
 /**
- * FileTreeItem holds the data fields for a FileTreeItem record.
+ * 📄️ FileTreeItem holds the data fields for a FileTreeItem record.
  **/
 const FileTreeItem: React.FC<FileTreeItemProps> = ({ node, currentPath, onNavigate, as = "a" }) => {
   const { level, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
@@ -638,7 +638,7 @@ const TreeFiles: React.FC<TreeFilesProps> = ({ title, nodes, currentPath, onNavi
 Tree.Files = TreeFiles;
 Tree.Section = Tree.Files;
 
-/** Alias for Tree.Files rendering a file tree from FileTreeNode data.
+/** 📃️ Alias for Tree.Files rendering a file tree from FileTreeNode data.
  **/
 export const FileTree = TreeFiles;
 export { type TreeDirection, TreeContext, TreeRowAlignmentContext, PropertyValueColumnContext, detailPanelIndentLen, detailPanelIndentPx, treeRowHeightPx, detailPanelHeaderLineCenterPx, detailPanelPropertyInlineGapPx, detailPanelPropertyStackedToInlineHysteresisPx, detailPanelPropertyRowClassName, detailPanelPropertyControlClassName, treeInspectorInnerRowClassName, treeHeaderRowClassName, treeHeaderMainClassName, treeItemLabelStyle, TreeAlignedRow } from "./📏️row-alignment/🟦️.tsx";

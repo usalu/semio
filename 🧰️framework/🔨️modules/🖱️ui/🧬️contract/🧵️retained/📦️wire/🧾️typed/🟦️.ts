@@ -1,5 +1,5 @@
 //#region 🧾️TypedContract
-import type { AccessibilitySpec, ActionBinding, Activity, Align, Component, DropOverlaySpec, EdgeSpace, GridTrack, Justify, KeyValueEntry, LayoutSpec, MenuRef, RowAction, RowTarget, SelectItem, Sizing, SpaceToken, StyleSpec, TreeWindow, UiNodeRecord, UiNumberBound, UiNumberLimits as ContractUiNumberLimits, UiSurfaceKind, UiValue } from "../../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
+import type { AccessibilitySpec, ActionBinding, Activity, Align, Component, DropOverlaySpec, EdgeSpace, GridTrack, Justify, KeyValueEntry, LayoutSpec, MenuRef, RowAction, RowTarget, SelectItem, Sizing, SpaceToken, StyleSpec, TreeWindow, UiNodeRecord, UiNumberBound, UiNumberLimits as ContractUiNumberLimits, UiSurfaceKind, UiValue } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
 import type { UiIndexGrant } from "../../🔌️host/🟦️.ts";
 import { RetainedUiWireValueCursor, type RetainedUiWireStep } from "../🟦️.ts";
 import { UiSurfaceBytes, type UiSurfaceByteRetirement } from "../🔢️bytes/🟦️.ts";

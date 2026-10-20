@@ -8,8 +8,8 @@
 import { NextRequest, NextResponse } from "next/server";
 // #endregion 🔌️Adapters
 
-import { listBreaches } from "@semio-tech/framework/products/repo/modules/server/library/persistence";
-import { requireAuth, isAuthError } from "@semio-tech/framework/products/repo/modules/server/library/authentication";
+import { listBreaches } from "@semio-tech/repo-server-library/persistence";
+import { requireAuth, isAuthError } from "@semio-tech/repo-server-library/authentication";
 
 export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);

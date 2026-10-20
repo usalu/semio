@@ -8,7 +8,7 @@ use semio_framework_plugin::{Fault, InteractionTarget};
 use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
 use crate::editor::puzzle2d::modes::edit::windows::{detail, overview, selection};
 use crate::editor::puzzle2d::recorder::{self, Puzzle2dRecorder};
-use crate::editor::puzzle2d::snapshot::{self, PUZZLE2D_INTERACTION_DOMAIN, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, Puzzle2dInteractionSnapshot, Puzzle2dScene};
+use crate::editor::puzzle2d::snapshot::{self, PUZZLE2D_INTERACTION_DOMAIN, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, Puzzle2dCommand, Puzzle2dInteractionSnapshot, Puzzle2dScene};
 use crate::editor::puzzle2d::window;
 use crate::editor::puzzle2d::{create_puzzle2d_app, Puzzle2dPlayApp};
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
@@ -177,12 +177,6 @@ fn settle(app: &mut Puzzle2dApp, result: Result<InvocationResult, Fault>) -> Res
         }
         app.maintain(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|failure| Fault::from(format!("{failure:?}")))?;
         block_on(app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).map_err(|failure| Fault::from(format!("{failure:?}")))?;
-        // 📄️ EVERY presented page and EVERY completion per turn, never one: `has_pending_typed_operations`
-        // counts the outboxes and the mounted operations but NOT a page already presented and waiting
-        // for its ACK, so a turn that leaves a second page (or the terminal completion that CARRIES
-        // THE HISTORY PATCH) queued can be the very turn this loop exits on — and the caller then reads
-        // a result with no committed edits at all. The framework's own `settle_registered_typed_operation`
-        // drains both in inner loops for exactly this reason.
         drain_settled(app, &mut result, &mut fault)?;
     }
     Err(Fault::from("puzzle2d test operation did not settle"))
@@ -194,10 +188,6 @@ fn settle(app: &mut Puzzle2dApp, result: Result<InvocationResult, Fault>) -> Res
 /// `(action, args, window_id)` triple every pre-B1 test already passed.
 pub fn dispatch(app: &mut Puzzle2dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
     let action_meta = action_meta(args, window_id);
-    // 🕰️ Framework-reserved verbs (undo/redo/checkpoint/…/the six interaction verbs) stay on
-    // `handle_action` — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM added
-    // interactionSelect/interactionHover/clearSelection/selectAll/setSelectionMode/
-    // setInteractionGranularity to this reserved set.
     if matches!(
         action,
         "undo"

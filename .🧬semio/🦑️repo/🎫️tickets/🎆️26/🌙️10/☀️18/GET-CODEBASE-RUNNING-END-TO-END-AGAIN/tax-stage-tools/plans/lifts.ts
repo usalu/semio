@@ -3,13 +3,13 @@ import {readFileSync} from "node:fs";
 import {accepts, syntaxOk} from "../lib.ts";
 import {planLift, type LiftOptions} from "../lift.ts";
 import {LIB, REPO, TOOLS, Vfs} from "../vfs.ts";
-import {RELOCATED, repoint, repointKinds} from "../refs-lib.ts";
-import {childList} from "./children.ts";
-import {moduleScripts} from "./modules.ts";
+import {classifyRef, refsOf, RELOCATED, repoint, repointKinds, repointSites} from "../refs-lib.ts";
 
 const E = (cp: number): string => String.fromCodePoint(cp) + "\ufe0f";
 const caching = `L/${E(0x26A1)}caching`, boot = `${caching}/${E(0x1F680)}bootstrap`;
 export const LIFT_OPTIONS: Record<string, LiftOptions> = {
+  [`${caching}/${E(0x1F4DC)}script.ts`]: {forceReads: [`${E(0x26A1)}caching/${E(0x1F9EA)}tests/${E(0x1F4D0)}phases/${E(0x1F7E6)}.ts:16`]},
+  [`${caching}/${E(0x1F4E6)}artifacts/${E(0x1F7E6)}typescript/${E(0x1F4DC)}script.ts`]: {forceReads: [`${E(0x1F3D7)}build/${E(0x1F7E6)}typescript/${E(0x1F4DA)}libraries/${E(0x1F9EA)}tests/${E(0x1F7E6)}.ts:13`]},
   [`${boot}/${E(0x1F4E6)}dependencies/${E(0x1F3D7)}native/${E(0x1F4DC)}script.ts`]: {routerRoot: "workspace"},
   [`${boot}/${E(0x1F4E6)}dependencies/${E(0x1F4DC)}script.ts`]: {routerRoot: "workspace"},
   [`${boot}/${E(0x1F6E0)}tools/${E(0x1F578)}wasm/${E(0x1F4DC)}script.ts`]: {routerRoot: "workspace"},
@@ -51,7 +51,9 @@ if (import.meta.main) await receiveScriptProcessInvocation(process.env, original
       return src.slice(0, at) + tail;
     },
   },
+  [`${caching}/${E(0x1F980)}cargo/${E(0x1F4E6)}units/${E(0x1F4DC)}script.ts`]: {forceReads: [`${E(0x1F980)}rustc/${E(0x1F4DA)}dependencies/${E(0x1F9EA)}tests/${E(0x1F7E6)}.ts:4`, `${E(0x1F4BE)}state/${E(0x1F9EA)}tests/${E(0x1F39F)}funding/${E(0x1F7E6)}.ts:16`]},
   [`L/${E(0x1F4E6)}packages/${E(0x1F7E6)}typescript/${E(0x1F4DC)}script.ts`]: {
+    forceReads: [`${E(0x1F4CB)}native-orchestration/${E(0x1F9EA)}tests/${E(0x1F4CB)}owner-cmd-policy/${E(0x1F7E6)}.ts:107`, `${E(0x1F9EA)}tests/${E(0x1F39A)}tool-configuration-ownership/${E(0x1F7E6)}.ts:218`, `${E(0x21AA)}rust-divergence-callback/${E(0x1F7E6)}.ts:109`, `${E(0x270D)}rust-writable-path-authority/${E(0x1F7E6)}.ts:63`, `${E(0x1F964)}rust-finite-target-consumption/${E(0x1F7E6)}.ts:234`, `${E(0x1F9EB)}fixtures/${E(0x21AA)}rust-divergence-callback/${E(0x1F523)}.json:944`, `${E(0x1F9EB)}fixtures/${E(0x270D)}rust-writable-path-authority/${E(0x1F523)}.json:220`, `${E(0x1F9EB)}fixtures/${E(0x1F964)}rust-finite-target-consumption/${E(0x1F523)}.json:447`],
     preprocess: (src) => {
       const lazy = /\.registerLazy\("test-tool-run-policy-source",async\(\)=>\s*\(await import\("([^"]+)"\)\)\.ToolRunPolicySourceScript\)/u.exec(src);
       if (!lazy) throw new Error("registerLazy anchor missing");
@@ -72,7 +74,7 @@ export const BLOCKED = (): string[] => [
 ];
 
 export const liftList = (): string[] => {
-  const skip = new Set([...inPlaceList(), ...childList().map((d) => `${d}/${E(0x1F4DC)}script.ts`), ...moduleScripts(), ...BLOCKED()]);
+  const skip = new Set([...inPlaceList(), ...BLOCKED()]);
   const rows = readFileSync(`${TOOLS}/library-43.txt`, "utf8").split("\n").filter(Boolean).filter((p) => !skip.has(p));
   const last = (p: string): number => p.includes(`${E(0x1F4E6)}packages/${E(0x1F7E6)}typescript/`) ? 1 : 0;
   return rows.sort((a, b) => last(a) - last(b));
@@ -84,14 +86,16 @@ export function planLifts(v: Vfs, log: (row: Record<string, unknown>) => void, o
     const short = p.replace(LIB + "/", "L/");
     const plan = planLift(p, v.read(p), v, LIFT_OPTIONS[short] ?? {});
     if (!plan.ok) { log({kind: "lift", script: short, result: plan.reason}); continue; }
+    if (plan.commands.length === 1 && plan.commands[0] === "run" && /\b(?:process|Bun)\.argv\b/u.test(v.read(p))) { log({kind: "lift", script: short, result: "argv-program-needs-a-command-name"}); continue; }
     const scriptOk = syntaxOk(p, plan.script) && accepts(plan.script), moduleOk = syntaxOk(plan.modulePath, plan.module);
     if (!scriptOk || !moduleOk) { log({kind: "lift", script: short, result: "invalid-output", scriptOk, moduleOk, module: plan.modulePath.replace(LIB + "/", "L/")}); continue; }
     v.write(plan.modulePath, plan.module);
     v.write(p, plan.script);
     RELOCATED.set(p, plan.modulePath);
     const touched = plan.exported ? repoint(v, p, plan.modulePath, true, new Set([p])) : [];
-    const readers = (LIFT_OPTIONS[short] ?? {}).readers === "none" ? [] : repointKinds(v, p, plan.modulePath, new Set(["READ"]), (f) => f.includes("🧪️tests") || f.includes("🧼️"));
-    log({kind: "lift", script: short, result: "lifted", module: plan.modulePath.replace(LIB + "/", "L/"), merged: plan.mergedInto, commands: plan.commands, repointed: touched.length, sourceReaders: readers.map((f) => f.replace(LIB + "/", "L/"))});
+    const forced = repointSites(v, p, plan.modulePath, (LIFT_OPTIONS[short] ?? {}).forceReads ?? []);
+    const readers = [...forced, ...((LIFT_OPTIONS[short] ?? {}).readers === "none" ? [] : repointKinds(v, p, plan.modulePath, new Set(["READ"]), (f) => f.includes("🧪️tests") || f.includes("🧼️")))];
+    log({kind: "lift", script: short, result: "lifted", module: plan.modulePath.replace(LIB + "/", "L/"), merged: plan.mergedInto, commands: plan.commands, repointed: touched.length, sourceReaders: readers.map((f) => f.replace(LIB + "/", "L/")), unboundReads: refsOf(p).filter((r) => classifyRef(r) === "READ?" && !((LIFT_OPTIONS[short] ?? {}).forceReads ?? []).some((x) => x === `${r.file.slice(r.file.lastIndexOf("/", r.file.lastIndexOf("/") - 1) + 1)}:${r.line}` || r.file.includes(x.slice(0, x.lastIndexOf(":"))) && x.endsWith(":" + r.line))).map((r) => `${r.file.replace(LIB + "/", "L/")}:${r.line}`)});
   }
 }
 

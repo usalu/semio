@@ -80,6 +80,7 @@
         "production",
         "^production"
       ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts check-wgpu"

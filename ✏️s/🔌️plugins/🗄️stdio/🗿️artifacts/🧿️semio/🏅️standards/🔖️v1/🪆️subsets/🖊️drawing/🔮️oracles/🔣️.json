@@ -184,8 +184,8 @@
       "vectors": [
         {
           "mutationId": "change-stroke-color",
-          "sourceMutationDirectoryName": "🖌️change-stroke",
-          "mutationDirectoryName": "🖌️change-stroke",
+          "sourceMutationDirectoryName": "🖌️change-stroke-color",
+          "mutationDirectoryName": "🖌️change-stroke-color",
           "scenarios": [
             {
               "id": "recolours-the-primary-styles-stroke-to-translucent-white",

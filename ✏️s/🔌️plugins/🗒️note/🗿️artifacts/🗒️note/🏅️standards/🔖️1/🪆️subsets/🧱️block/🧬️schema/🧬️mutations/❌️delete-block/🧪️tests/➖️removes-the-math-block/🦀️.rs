@@ -7,7 +7,8 @@
 
 use crate::schema::mutations::{apply_note_mutation, inverse_note_mutation, NoteMutation};
 use crate::schema::{find_block, find_block_location};
-use crate::{NoteDiff, NoteSnapshot};
+use semio_s_artifact_note_note_diff::standards::v1::subsets::any::schema::diff::NoteDiff;
+use semio_s_artifact_note_note_schema::NoteSnapshot;
 use protocol::Mutation;
 use semio_framework_test_fixtures::fixture_text;
 

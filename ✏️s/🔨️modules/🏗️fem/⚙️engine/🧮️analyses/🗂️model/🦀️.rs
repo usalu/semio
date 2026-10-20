@@ -616,8 +616,6 @@ pub fn build_rcm_permutation(nodes: &[Node], elements: &[Elements], dof_map: &Do
     }
     let node_perm = rcm_order(&adjacency);
 
-    // `dof_map.order` is grouped by node in `nodes`' own iteration order (see `build_dof_map`), so
-    // each original node index owns one contiguous run — walk it once to find each run's bounds.
     let mut node_dof_ranges: Vec<(usize, usize)> = vec![(0, 0); n_nodes];
     let mut cursor = 0usize;
     for (i, node) in nodes.iter().enumerate() {

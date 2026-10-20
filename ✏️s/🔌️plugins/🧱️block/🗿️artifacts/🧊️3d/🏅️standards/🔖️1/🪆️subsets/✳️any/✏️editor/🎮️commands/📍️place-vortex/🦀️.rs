@@ -36,5 +36,5 @@ pub fn handle(payload: &PlaceVortex, doc: &ArtifactView<'_, Block3dSnapshot>, cf
     let id = semio_s_artifact_block_3d_schema::next_id(doc.snapshot.vortices.iter().map(|vortex| vortex.id.as_str()), "vortex-");
     operations.push(semio_s_artifact_block_3d_mut_vortices::create_vortex(Block3dVortexTemplate { id, vortex_kind: vortex_kind_id, position: local_position, direction, radius: cfg.snapshot.brush_radius, label: None }));
     let authoring_seed = doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str());
-    Ok(Emit::tool_once(crate::BLOCK3D_PLAY_APP_ID, PLACE_VORTEX_VERB, authoring_seed, operations))
+    Ok(Emit::tool_once(semio_s_artifact_block_3d_editor_modes::BLOCK3D_PLAY_APP_ID, PLACE_VORTEX_VERB, authoring_seed, operations))
 }

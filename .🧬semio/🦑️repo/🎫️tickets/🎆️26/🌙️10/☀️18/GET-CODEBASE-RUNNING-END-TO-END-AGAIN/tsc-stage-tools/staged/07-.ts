@@ -16,12 +16,11 @@ import {nxToolingInstallManifestV1, nxToolingInstallIdentityV1} from "../../🚀
 import {verifyNxAdmissionDirectoriesV1,resolveNxInvocation} from "../../🚀️bootstrap/📜️script.ts";
 import { resolveNxBuildMode } from "../../🚀️bootstrap/🎚️mode/🟦️.ts";
 import {devToolingEnv} from "../../../🏃️process/🌿️environment/🟦️.ts";
-import { sourceClosureDigest } from "../../../🏗️build/📥️inputs/🧮️digest/📜️script.ts";
 import {repositoryBuildGraphDataDirectoryV1} from "../../../🏗️build/📥️inputs/💾️storage/🟨️.mjs";
 import {buildGraphPathV1} from "../../../🏗️build/🕸️graph/🟦️.ts";
 import { cargoLockClosure, cargoLockIdentity } from "../../../🏗️build/📥️inputs/🔒️lock/🟨️.mjs";
 import { selectedCargoLockDigest } from "../../../🏗️build/📥️inputs/🔒️lock/📥️read/🟨️.mjs";
-import { sourceClosureTaskEnvironments, sourceClosureReceiptHolds } from "../../../🏗️build/📥️inputs/🧮️digest/🟨️.mjs";
+import { sourceClosureDigest, sourceClosureTaskEnvironments, sourceClosureReceiptHolds } from "../../../🏗️build/📥️inputs/🧮️digest/🟨️.mjs";
 import { sourceOutputOverlaps, internProjectInputGroups, compactSourceInputs, deduplicateProjectInputs } from "../../../🏗️build/📥️inputs/🟨️.mjs";
 import { cacheInternals } from "../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs";
 import { targetBuildModes } from "../../../🏗️build/🎚️mode/🟨️.mjs";

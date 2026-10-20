@@ -1,4 +1,6 @@
-use semio_s_artifact_draw_drawing_diff::{DrawingLayerPatch, diff_set_fill, diff_set_stroke};
+use crate::DrawingLayerPatch;
+use crate::diff_set_fill;
+use crate::diff_set_stroke;
 
 #[test]
 fn typed_patch_preserves_explicit_clear_with_json_oracle() {

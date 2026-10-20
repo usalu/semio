@@ -14,6 +14,6 @@ export type { NativeCallerPhaseV1, NativeOrchestrationCallerV1, NativeOwnerCapab
 export { NativeScript } from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts";
 export { withRepositoryExecutablePinV1 } from "../../../⚡️caching/📦️artifacts/📌️executable/🟦️.ts";
 export { stageRepositoryArtifacts, withRepositoryArtifactDestinationV1 } from "../../../⚡️caching/📦️artifacts/🟦️.ts";
-export { buildArtifactTypeScriptPackageV1, checkArtifactTypeScriptSourceV1 } from "../../../⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts";
+export { buildArtifactTypeScriptPackageV1, checkArtifactTypeScriptSourceV1 } from "../../../⚡️caching/📦️artifacts/🟦️typescript/🟦️.ts";
 export { bindTypeScriptPackageArtifactV1, withTypeScriptPackageArtifactTaskV1, withTypeScriptPackageArtifactV1 } from "../../../⚡️caching/📦️artifacts/🟦️typescript/🔗️binding/🟦️.ts";
 export { bundleVirtualJavaScript } from "../../../⚡️caching/📦️bundle/🟦️.ts";

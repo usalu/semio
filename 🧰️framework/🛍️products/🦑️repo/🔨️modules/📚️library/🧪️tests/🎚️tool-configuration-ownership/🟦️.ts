@@ -215,7 +215,7 @@ describe("Tool configuration ownership", () => {
     expect(taxonomy.semanticDirectoryMemberKinds["tool-configuration-ownership"].memberNames).toEqual(["🎚️tool-configuration-ownership"]);
     expect(taxonomy.semanticDirectoryMemberKinds["react-build-tooling-styling"].ownerKindIds).toEqual(["build-tooling"]);
     expect(taxonomy.semanticDirectoryMemberKinds["react-build-tooling-styling"].memberNames).toEqual(["🎨️styling"]);
-    const script = read("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts");
+    const script = read("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️typescript-package-commands/🟦️.ts");
     expect(script).toContain('segments[0] === "tool-configuration-ownership"');
     const project = JSON.parse(read("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json"));
     expect(project.targets[fixture.registration.target].options.command).toBe("bun ./📜️script.ts test tool-configuration-ownership");

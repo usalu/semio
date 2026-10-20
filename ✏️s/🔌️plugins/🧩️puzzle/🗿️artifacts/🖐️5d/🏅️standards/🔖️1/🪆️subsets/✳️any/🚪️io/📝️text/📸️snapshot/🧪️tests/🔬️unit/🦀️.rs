@@ -2,16 +2,16 @@ use crate::Puzzle5dSnapshot;
 
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
 use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dCompatSpecificity;
-use crate::Puzzle5dFastener;
-use crate::Puzzle5dGrip;
-use crate::Puzzle5dGrip2d;
-use crate::Puzzle5dGrip3d;
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dFastener;
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dGrip;
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dGrip2d;
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dGrip3d;
 use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::Puzzle5dKindCompatibility;
 use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::Puzzle5dMeta;
-use crate::Puzzle5dPart;
-use crate::Puzzle5dPart2d;
-use crate::Puzzle5dPart3d;
-use crate::Puzzle5dPartAnchor;
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart;
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart2d;
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart3d;
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPartAnchor;
 use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::Puzzle5dScale;
 
 #[test]

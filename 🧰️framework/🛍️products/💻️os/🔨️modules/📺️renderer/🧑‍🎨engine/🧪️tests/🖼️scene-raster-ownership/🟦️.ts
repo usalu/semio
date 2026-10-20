@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 
 import { meshPaintSealCurrent, nextSceneRasterEpoch, SceneRasterPool, SceneRasterUploadAuthority, sceneRasterUploadRows, type SceneRasterIdentity } from "../../💾️scene-raster-ownership/🟦️.ts";
-import { sceneRasterOwnershipFixtureUrl } from "@semio-tech/framework/ui/testing/fixtures";
+import { sceneRasterOwnershipFixtureUrl } from "@semio-tech/ui/testing/fixtures";
 const fixture = JSON.parse(readFileSync(sceneRasterOwnershipFixtureUrl, "utf8"));
 
 function identity(seed: string, width = 1, height = 1): SceneRasterIdentity {

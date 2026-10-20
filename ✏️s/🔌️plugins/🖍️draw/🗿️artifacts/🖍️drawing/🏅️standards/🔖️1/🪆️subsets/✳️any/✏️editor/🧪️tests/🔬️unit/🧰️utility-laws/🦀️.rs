@@ -2,6 +2,8 @@
 
 use super::*;
 use semio_framework_test_fixtures::fixture_text;
+use semio_s_artifact_draw_drawing_geometry::editing::SegmentType;
+use semio_framework_plugin::UtilityCategory;
 
 fn with_utility(meta: &semio_framework_plugin::ActionMeta, utility: &str) -> semio_framework_plugin::ActionMeta {
     let mut meta = meta.clone();

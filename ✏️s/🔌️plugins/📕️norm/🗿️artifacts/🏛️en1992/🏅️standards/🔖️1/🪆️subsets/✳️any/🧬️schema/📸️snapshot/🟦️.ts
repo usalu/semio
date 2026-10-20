@@ -4,25 +4,25 @@
 import { normWireArray, normWireBoolean, normWireInteger, normWireLiteral, normWireNullable, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 
 export interface En1992Snapshot {
-  /** @state artifact */
+  /** 📑️ @state artifact */
   annex: AnnexChoice;
-  /** @state artifact */
+  /** 📛️ @state artifact */
   title: string;
-  /** @state artifact */
+  /** 🎨️ @state artifact */
   designWorkingLifeYears: number;
-  /** @state artifact */
+  /** 🔺️ @state artifact */
   deltaCDev: number;
-  /** @state artifact */
+  /** 📐️ @state artifact */
   cementType: string;
-  /** @state artifact */
+  /** 🪵️ @state artifact */
   concreteGrades: ConcreteGrade[];
-  /** @state artifact */
+  /** 📜️ @state artifact */
   reinforcementGrades: ReinforcementGrade[];
-  /** @state artifact */
+  /** 🧱️ @state artifact */
   prestressSteels: PrestressSteel[];
-  /** @state artifact */
+  /** 👤️ @state artifact */
   members: RcMember[];
-  /** @state artifact */
+  /** 🗺️ @state artifact */
   anchors: Anchor[];
 }
 

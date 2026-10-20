@@ -19,6 +19,7 @@ pub mod standards {
                         pub mod update_ingest_params {
                             #[path = "../../../🥣update-ingest-params/🦀️.rs"]
                             mod component;
+                            pub use component::*;
                             #[path = "../../../🥣update-ingest-params/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../../../🥣update-ingest-params/↩️inverse/🦀️.rs"]
@@ -28,6 +29,7 @@ pub mod standards {
                         pub mod update_dense_params {
                             #[path = "../../../🌁update-dense-params/🦀️.rs"]
                             mod component;
+                            pub use component::*;
                             #[path = "../../../🌁update-dense-params/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../../../🌁update-dense-params/↩️inverse/🦀️.rs"]

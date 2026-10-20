@@ -11,7 +11,6 @@
     "./clipboard/schema": "./📋️clipboard/🧬️schema/🟦️.ts",
     "./descriptor-admission": "./🛂️descriptor-admission/🟦️.ts",
     "./descriptor/package": "./📇️descriptor/📦️package/🟦️.ts",
-    "./effect": "./⚡️effect/🟦️.ts",
     "./merge-outcome": "./🔄️merge-outcome/🟦️.ts",
     "./notice-labels": "./🏷️notice-labels/🟦️.ts",
     "./package-assets": "./📦️package-assets/🟦️.ts",
@@ -21,7 +20,6 @@
     "./plugin-registry": "./🗂️plugin-registry/🟦️.ts",
     "./plugin-source": "./🔌️plugin-source/🟦️.ts",
     "./return/content/input": "./📤️return/📦️content/📥️input/🟦️.ts",
-    "./spawned-job": "./🛠️spawned-job/🟦️.ts",
     "./testing/file-open-import": "./🧪️testing/📤️file-open-import/🟦️.ts",
     "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts",
     "./testing/media-export-encoding": "./🧪️testing/⬇️media-export-encoding/🟦️.ts",
@@ -30,17 +28,19 @@
     "./testing/video-render-job": "./🧪️testing/🧵️video-render-job/🟦️.ts",
     "./testing/video-render-program": "./🧪️testing/🎞️video-render-program/🟦️.ts",
     "./turn-outcome-broadcast": "./📡️turn-outcome-broadcast/🟦️.ts",
-    "./ui-dirty-scope": "./🎯️ui-dirty-scope/🟦️.ts",
-    "./video-render-program": "./🎥️video-render-program/🟦️.ts"
+    "./ui-dirty-scope": "./🎯️ui-dirty-scope/🟦️.ts"
   },
   "dependencies": {
-    "@semio-tech/framework": "workspace:*",
     "@semio-tech/framework-actor": "workspace:*",
     "@semio-tech/framework-canvas-ts": "workspace:*",
+    "@semio-tech/framework-effect": "workspace:*",
     "@semio-tech/framework-io-base64-ts": "workspace:*",
     "@semio-tech/framework-io-schema-ts": "workspace:*",
+    "@semio-tech/framework-manifest": "workspace:*",
+    "@semio-tech/framework-trace": "workspace:*",
     "@semio-tech/schema-ts": "workspace:*",
     "@semio-tech/schema-validator-ts": "workspace:*",
+    "@semio-tech/ui-contract": "workspace:*",
     "@semio-tech/value-ts": "workspace:*"
   },
   "scripts": {
@@ -54,7 +54,10 @@
     "@semio-tech/process": "workspace:*",
     "ajv": "8.20.0",
     "iconv-lite": "0.6.3",
-    "@semio-tech/framework-replication": "workspace:*"
+    "@semio-tech/framework-replication": "workspace:*",
+    "semver": "7.8.5",
+    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/ui": "workspace:*"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

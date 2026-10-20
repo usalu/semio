@@ -10,7 +10,8 @@ export { projectViteCommandEnvironmentV1 } from "../../../⚡️caching/🌐️v
 export { withViteArtifactInputsV1 } from "../../../⚡️caching/🌐️vite/📥️inputs/🟦️.ts";
 export { canonicalWasmBuildVitePlugin } from "../../../⚡️caching/🌐️vite/🕸️wasm/🟦️.ts";
 export { buildViteArtifact, serveVite } from "../../../⚡️caching/🌐️vite/🟦️.ts";
-export { closeServiceSession, openServiceSession, publishServiceReady, readServiceSession, waitForServiceReady } from "../../../⚡️caching/🌐️vite/🧾️session/🟦️.ts";
+export { closeServiceSession, openServiceSession, parseServiceReadinessBudgetV1, publishServiceReady, readServiceSession, serviceReadyProgressLanguage, serviceReadyProgressLine, waitForServiceReady } from "../../../⚡️caching/🌐️vite/🧾️session/🟦️.ts";
+export type { ServiceReadinessBudget, ServiceReadyProgress, ServiceReadyWait } from "../../../⚡️caching/🌐️vite/🧾️session/🟦️.ts";
 export { describeDevPortOccupant, devServerUrl, isDevPortInUse } from "../../../🌐️network/🔌️ports/🟦️.ts";
 export { frameworkOsLockedPrefsEnv } from "../../../🎮️playground/🔒️preferences/🟦️.ts";
 export { admitPlaygroundNativeHostV1, nativeHostFilesystemViewV1, nativeHostTextSourceViewV1, parsePlaygroundNativeHostV1, playgroundNativeHostArtifactV1 } from "../../../🎮️playground/🖥️native-host/🟦️.ts";

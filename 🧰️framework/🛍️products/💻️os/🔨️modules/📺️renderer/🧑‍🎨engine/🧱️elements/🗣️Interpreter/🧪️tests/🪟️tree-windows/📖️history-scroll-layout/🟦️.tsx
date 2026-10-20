@@ -5,7 +5,7 @@ import type { TreeWindowsTestKit } from "../🧰️tree-windows-test-kit/🟦️
 /** 🗂 Registers the authored history scroll layout as the Tree viewport test. */
 export async function registerHistoryScrollLayoutTests(kit: TreeWindowsTestKit): Promise<void> {
   const { expect, it, mount, node, treeItem, treeWindowScrollViewport } = kit;
-  const { default: historyViewportFixture } = await import("@semio-tech/framework/os/modules/plugin/testing/fixtures/history-panel-command-window.json");
+  const { default: historyViewportFixture } = await import("@semio-tech/framework-plugin/testing/fixtures/history-panel-command-window.json");
   it("uses the authored history scroll layout as its Tree viewport", () => {
     const root = node(0, "history", { type: "tree" }, [1]);
     root.layout = historyViewportFixture.rootLayout;

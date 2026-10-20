@@ -12,8 +12,8 @@ import { useCallback, useEffect, useMemo, useState, type ReactElement } from "re
 import { World3dHost } from "@semio-tech/framework-renderer-react";
 import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framework-renderer-react";
 
-import concreteForestFixtureDsl from "../../../../🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🗣️.dsl.semio?raw";
-import nakaginCapsuleTowerFixtureDsl from "../../../../🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio?raw";
+import { puzzle3dConcreteForestDsl as concreteForestFixtureDsl } from "@semio-tech/puzzle-3d-ts/examples/concrete-forest/assets/forest";
+import { puzzle3dNakaginCapsuleTowerDsl as nakaginCapsuleTowerFixtureDsl } from "@semio-tech/puzzle-3d-ts/examples/nakagin-capsule-tower/assets/tower";
 
 import { abbauAufbauMasterarbeitGrundrissUrl as abbauAufbauReferenceUrl } from "@semio-tech/framework-os/modules/infinite/assets/abbau-aufbau-masterarbeit-grundriss";
 import { rathausAhlenGrundrissUrl as rathausAhlenReferenceUrl } from "@semio-tech/framework-os/modules/infinite/assets/rathaus-ahlen-grundriss";

@@ -1,0 +1,8 @@
+{
+ "function": "fixture_text",
+ "table": "FIXTURE_TEXTS",
+ "emoji": "🗃️",
+ "doc": "The committed before, mutation, after and outcome fixture texts of every registered mutation kind, read literally via `include_str!`.",
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🔩️mutate-en1993-1/🦀️.rs",
+ "nth": 0
+}

@@ -34,7 +34,7 @@ semio-framework-os-renderer-wgpu-frame-actions = { path = "../../../🛎️frame
 semio-framework-os-renderer-wgpu-frame-job = { path = "../../../👷️frame-job/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-frame-transaction = { path = "../../../🧾️frame-transaction/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-host-base = { path = "../../../🏛️host-base/📦️packages/🦀️rust" }
-semio-framework-os-renderer-wgpu-host-plumbing = { path = "../../../🔧️host-plumbing/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-host-plumbing = { path = "../../../🔧️host-plumbing/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-renderer-wgpu-icon-host = { path = "../../../💠️icon-host/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-mailbox-core = { path = "../../../📬️mailbox-core/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-program-bridge = { path = "../../../🪢️program-bridge/📦️packages/🦀️rust" }

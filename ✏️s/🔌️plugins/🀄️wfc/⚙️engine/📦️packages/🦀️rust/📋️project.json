@@ -6,6 +6,6 @@
   "namedInputs": {"default": ["{workspaceRoot}/✏️s/🔌️plugins/🀄️wfc/⚙️engine/**/*"]},
   "targets": {
     "check": {"executor": "repo:script", "options": {"cwd": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/📦️packages/🦀️rust", "command": "bun ./📜️script.ts check", "forwardAllArgs": true}},
-    "test": {"executor": "repo:script", "options": {"cwd": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test", "forwardAllArgs": true}}
+    "test": {"executor": "repo:script", "outputs": [], "options": {"cwd": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test", "forwardAllArgs": true}}
   }
 }

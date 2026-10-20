@@ -26,7 +26,8 @@
     "@semio-tech/process": "workspace:*",
     "@semio-tech/schema-ts": "workspace:*",
     "@semio-tech/schema-validator-ts": "workspace:*",
-    "@semio-tech/framework-pack-ts": "workspace:*"
+    "@semio-tech/framework-pack-ts": "workspace:*",
+    "@semio-tech/framework": "workspace:*"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {
@@ -36,7 +37,8 @@
   },
   "bundleKind": "library",
   "dependencies": {
-    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/framework-hash": "workspace:*",
+    "@semio-tech/framework-interaction": "workspace:*",
     "@semio-tech/value-ts": "workspace:*"
   }
 }

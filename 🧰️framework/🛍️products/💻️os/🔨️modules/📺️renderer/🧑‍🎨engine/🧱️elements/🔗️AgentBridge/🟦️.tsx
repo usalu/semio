@@ -268,9 +268,9 @@ export function buildShellStateFrame(state: ShellState): ShellToGateway {
 }
 
 export type ApplyInboundShellCommandOutcome = {
-  /** `null` only when `commandBytes` failed to decode — no `ShellCommand` ever existed to reduce. */
+  /** 🎮️ `null` only when `commandBytes` failed to decode — no `ShellCommand` ever existed to reduce. */
   readonly command: ShellCommand | null;
-  /** `null` only when `commandBytes` failed to decode; otherwise the real `reduce()` outcome
+  /** ❌️ `null` only when `commandBytes` failed to decode; otherwise the real `reduce()` outcome
    * (which itself may be `{ok:false}` for a command the reducer rejects — that is NOT a decode
    * failure and is reported via `result.error`, not `null`). */
   readonly result: ReduceResult | null;

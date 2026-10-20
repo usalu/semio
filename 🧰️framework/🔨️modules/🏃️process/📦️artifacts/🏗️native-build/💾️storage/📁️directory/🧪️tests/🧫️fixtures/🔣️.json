@@ -594,5 +594,214 @@
       true,
       false
     ]
-  }
+  },
+  "exchangeBindingLifecycle": [
+    {
+      "id": "unavailable-non-swap",
+      "binding": "unavailable",
+      "injected": false,
+      "status": 0,
+      "errno": 0,
+      "callFailure": false,
+      "flushFailure": false,
+      "actions": [
+        "pending",
+        "recover",
+        "prepareVolume",
+        "flush"
+      ],
+      "errors": [
+        "none",
+        "none",
+        "none",
+        "none"
+      ]
+    },
+    {
+      "id": "available-non-swap",
+      "binding": "available",
+      "injected": false,
+      "status": 0,
+      "errno": 0,
+      "callFailure": false,
+      "flushFailure": false,
+      "actions": [
+        "pending",
+        "recover",
+        "prepareVolume",
+        "flush"
+      ],
+      "errors": [
+        "none",
+        "none",
+        "none",
+        "none"
+      ]
+    },
+    {
+      "id": "default-first-and-repeat",
+      "binding": "available",
+      "injected": false,
+      "status": 0,
+      "errno": 0,
+      "callFailure": false,
+      "flushFailure": false,
+      "actions": [
+        "swap",
+        "pending",
+        "swap",
+        "flush"
+      ],
+      "errors": [
+        "none",
+        "none",
+        "none",
+        "none"
+      ]
+    },
+    {
+      "id": "injected-bypasses-unavailable",
+      "binding": "unavailable",
+      "injected": true,
+      "status": 0,
+      "errno": 0,
+      "callFailure": false,
+      "flushFailure": false,
+      "actions": [
+        "swap",
+        "flush",
+        "swap",
+        "pending"
+      ],
+      "errors": [
+        "none",
+        "none",
+        "none",
+        "none"
+      ]
+    },
+    {
+      "id": "failed-binding-retries",
+      "binding": "fail-first",
+      "injected": false,
+      "status": 0,
+      "errno": 0,
+      "callFailure": false,
+      "flushFailure": false,
+      "actions": [
+        "swap",
+        "swap",
+        "swap",
+        "pending"
+      ],
+      "errors": [
+        "binding",
+        "none",
+        "none",
+        "none"
+      ]
+    },
+    {
+      "id": "unavailable-binding-retries",
+      "binding": "unavailable",
+      "injected": false,
+      "status": 0,
+      "errno": 0,
+      "callFailure": false,
+      "flushFailure": false,
+      "actions": [
+        "swap",
+        "swap"
+      ],
+      "errors": [
+        "binding",
+        "binding"
+      ]
+    },
+    {
+      "id": "exchange-error-keeps-binding",
+      "binding": "available",
+      "injected": false,
+      "status": -1,
+      "errno": 5,
+      "callFailure": false,
+      "flushFailure": false,
+      "actions": [
+        "swap",
+        "swap"
+      ],
+      "errors": [
+        "failed",
+        "failed"
+      ]
+    },
+    {
+      "id": "unsupported-error-keeps-binding",
+      "binding": "available",
+      "injected": false,
+      "status": -1,
+      "errno": 22,
+      "callFailure": false,
+      "flushFailure": false,
+      "actions": [
+        "swap",
+        "swap"
+      ],
+      "errors": [
+        "unsupported",
+        "unsupported"
+      ]
+    },
+    {
+      "id": "injected-call-primary",
+      "binding": "unavailable",
+      "injected": true,
+      "status": 0,
+      "errno": 0,
+      "callFailure": true,
+      "flushFailure": false,
+      "actions": [
+        "swap",
+        "swap"
+      ],
+      "errors": [
+        "call",
+        "call"
+      ]
+    },
+    {
+      "id": "default-call-primary-keeps-binding",
+      "binding": "available",
+      "injected": false,
+      "status": 0,
+      "errno": 0,
+      "callFailure": true,
+      "flushFailure": false,
+      "actions": [
+        "swap",
+        "swap"
+      ],
+      "errors": [
+        "call",
+        "call"
+      ]
+    },
+    {
+      "id": "flush-primary-does-not-bind",
+      "binding": "unavailable",
+      "injected": false,
+      "status": 0,
+      "errno": 0,
+      "callFailure": false,
+      "flushFailure": true,
+      "actions": [
+        "flush",
+        "pending"
+      ],
+      "errors": [
+        "flush",
+        "none"
+      ]
+    }
+  ]
 }

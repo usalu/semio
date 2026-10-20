@@ -1,0 +1,9 @@
+{
+ "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+ "edits": [
+  {
+   "old": "}else try{await lstat(workspacePath(manifest.workspace,path));roots.add(path);}catch(error){if((error as NodeJS.ErrnoException).code!==\"ENOENT\")throw error;}}",
+   "new": "}else try{await lstat(workspacePath(manifest.workspace,path));roots.add(path);}catch(error){if((error as NodeJS.ErrnoException).code!==\"ENOENT\")throw error;if(manifest.task.definition.cache===true&&manifest.task.definition.metadata?.semio?.optionalOutputs!==true)throw new Error(`Declared output of a replayed Bazel task was not produced: ${manifest.task.id} ${path}`);}}"
+  }
+ ]
+}

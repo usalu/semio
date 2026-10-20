@@ -1,5 +1,5 @@
 import type { BrowserActorUiMountedV1 } from "../../../🛰️backbone/🎭️artifact-actor/🟦️.ts";
-import type { UiNodeId, UiNodeRecord, UiRevision } from "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
+import type { UiNodeId, UiNodeRecord, UiRevision } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
 
 /** 📖️ The acknowledged retained document a mounted service view exposes for reading: its revision, root and nodes, without any way to change them. */
 export type MountedServiceUiStateV1 = Readonly<{ revision: UiRevision; root: UiNodeId | null; nodes: ReadonlyMap<UiNodeId, UiNodeRecord> }>;

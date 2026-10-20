@@ -1,0 +1,39 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs",
+ "function": "check_full_actions",
+ "nth": 0,
+ "types": {
+  "annex": "semio_s_plugin_norm_compliance::AnnexChoice",
+  "report": "CheckReport"
+ },
+ "modes": {
+  "annex": "val",
+  "report": "mut"
+ },
+ "keep": [
+  159,
+  160,
+  161,
+  518
+ ],
+ "phases": [
+  {
+   "name": "check_imposed_and_fire_actions",
+   "doc": "🧱️ Checks the self weight, imposed and fire actions of the full actions check.",
+   "from": 162,
+   "to": 262
+  },
+  {
+   "name": "check_wind_thermal_and_accidental_actions",
+   "doc": "🪵️ Checks the wind, thermal, construction and accidental actions of the full actions check.",
+   "from": 265,
+   "to": 351
+  },
+  {
+   "name": "check_traffic_and_crane_actions",
+   "doc": "🔩️ Checks the bridge traffic, crane and silo actions of the full actions check.",
+   "from": 366,
+   "to": 496
+  }
+ ]
+}

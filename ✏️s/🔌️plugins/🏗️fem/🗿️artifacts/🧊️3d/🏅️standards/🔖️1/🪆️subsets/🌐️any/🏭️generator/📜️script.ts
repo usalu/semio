@@ -35,8 +35,8 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import { receiveScriptProcessInvocation } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { runRepositoryCargoTests } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { runAdmittedCargoPackageTestsV1 } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
@@ -170,36 +170,24 @@ function topology(shape: Manifold): { solids: number; genus: number | null; comp
  *  matching this subset's committed snapshot fixtures (e.g. a 6×4 m, 0.25 m thick roof slab at
  *  `baseZ: 3.5`). */
 const RECIPES: readonly Recipe[] = [
-  // 👪️rectangles — the plainest possible extruded footprint, resting on the origin plane (baseZ 0).
   { id: "rect-unit-cube", family: "rectangles", tolerance: "fem-polygon-exact", notes: "1×1 m square, 1 m tall, resting on z=0 — the simplest possible FemSolid.", outline: [[0, 0], [1, 0], [1, 1], [0, 1]], holes: [], height: 1, baseZ: 0 },
   { id: "rect-roof-slab", family: "elevated", tolerance: "fem-polygon-exact", notes: "6×4 m, 0.25 m tall, baseZ 3.5 m — mirrors the committed create-solid/appends-an-extruded-roof-slab scenario exactly (same outline+height+baseZ).", outline: [[0, 0], [6, 0], [6, 4], [0, 4]], holes: [], height: 0.25, baseZ: 3.5 },
   { id: "rect-thin-plate", family: "rectangles", tolerance: "fem-polygon-exact", notes: "10×6 m footprint, 0.02 m tall, baseZ 0 — a high aspect-ratio plate.", outline: [[0, 0], [10, 0], [10, 6], [0, 6]], holes: [], height: 0.02, baseZ: 0 },
 
-  // 👪️polygons — non-rectangular, non-convex outlines. Volume/area of a straight-edged prism is
-  // triangulation-invariant, so a re-entrant corner is not expected to be any harder to gate than a box.
   { id: "polygon-l-shape", family: "polygons", tolerance: "fem-polygon-exact", notes: "an L-shaped (non-convex, re-entrant) footprint, 0.3 m tall, baseZ 0.", outline: [[0, 0], [3, 0], [3, 1], [1, 1], [1, 3], [0, 3]], holes: [], height: 0.3, baseZ: 0 },
   { id: "polygon-triangle", family: "polygons", tolerance: "fem-polygon-exact", notes: "a triangular footprint, 2 m tall column, baseZ 0.", outline: [[0, 0], [5, 0], [2.5, 4]], holes: [], height: 2, baseZ: 0 },
 
-  // 👪️holes — a solid with holes punched through it. A through-hole in a linearly extruded prism is a
-  // genuine topological fact (genus rises by one per hole), not merely a triangle count, exactly as the
-  // mesh pilot's bored cube proved for a curved solid.
   { id: "solid-one-hole", family: "holes", tolerance: "fem-polygon-exact", notes: "4×2 m slab, 0.25 m tall, one 1×1 m rectangular hole, baseZ 0 — genus 1.", outline: [[0, 0], [4, 0], [4, 2], [0, 2]], holes: [[[1, 0.5], [2, 0.5], [2, 1.5], [1, 1.5]]], height: 0.25, baseZ: 0 },
   { id: "solid-two-holes", family: "holes", tolerance: "fem-polygon-exact", notes: "4×2 m slab, 0.25 m tall, two disjoint square holes, baseZ 0 — genus 2.", outline: [[0, 0], [4, 0], [4, 2], [0, 2]], holes: [[[0.5, 0.5], [1.2, 0.5], [1.2, 1.2], [0.5, 1.2]], [[2.8, 0.5], [3.5, 0.5], [3.5, 1.2], [2.8, 1.2]]], height: 0.25, baseZ: 0 },
 
-  // 👪️elevated — proves the `baseZ` translation lands correctly: the same one-hole footprint, resting
-  // at three different elevations rather than always at the origin.
   { id: "solid-one-hole-elevated-low", family: "elevated", tolerance: "fem-polygon-exact", notes: "solid-one-hole at baseZ 2 m (a suspended floor slab).", outline: [[0, 0], [4, 0], [4, 2], [0, 2]], holes: [[[1, 0.5], [2, 0.5], [2, 1.5], [1, 1.5]]], height: 0.25, baseZ: 2 },
   { id: "solid-one-hole-elevated-high", family: "elevated", tolerance: "fem-polygon-exact", notes: "solid-one-hole at baseZ 30 m (a high floor slab).", outline: [[0, 0], [4, 0], [4, 2], [0, 2]], holes: [[[1, 0.5], [2, 0.5], [2, 1.5], [1, 1.5]]], height: 0.25, baseZ: 30 },
   { id: "solid-one-hole-elevated-negative", family: "elevated", tolerance: "fem-polygon-exact", notes: "solid-one-hole at baseZ -5 m (a basement slab below the origin).", outline: [[0, 0], [4, 0], [4, 2], [0, 2]], holes: [[[1, 0.5], [2, 0.5], [2, 1.5], [1, 1.5]]], height: 0.25, baseZ: -5 },
 
-  // 👪️scale — the SAME shape (the one-hole slab above) at three orders of magnitude either side of 1,
-  // baseZ scaled along with it, to prove the weld grid and the gate are scale-relative rather than
-  // tuned to metre-scale fixtures.
   { id: "scale-one-hole-1e-3", family: "scale", tolerance: "fem-polygon-exact", notes: "solid-one-hole scaled ×1e-3 (millimetre-scale slab), baseZ scaled too.", outline: [[0, 0], [0.004, 0], [0.004, 0.002], [0, 0.002]], holes: [[[0.001, 0.0005], [0.002, 0.0005], [0.002, 0.0015], [0.001, 0.0015]]], height: 0.00025, baseZ: 0.002 },
   { id: "scale-one-hole-1e3", family: "scale", tolerance: "fem-polygon-exact", notes: "solid-one-hole scaled ×1e3 (kilometre-scale slab), baseZ scaled too.", outline: [[0, 0], [4000, 0], [4000, 2000], [0, 2000]], holes: [[[1000, 500], [2000, 500], [2000, 1500], [1000, 1500]]], height: 250, baseZ: 2000 },
   { id: "scale-one-hole-1e6", family: "scale", tolerance: "fem-polygon-exact", notes: "solid-one-hole scaled ×1e6, baseZ scaled too.", outline: [[0, 0], [4e6, 0], [4e6, 2e6], [0, 2e6]], holes: [[[1e6, 5e5], [2e6, 5e5], [2e6, 1.5e6], [1e6, 1.5e6]]], height: 250000, baseZ: 2000000 },
 
-  // 👪️degenerate — edge cases a corpus that only ever builds "nice" shapes would never surface.
   { id: "degenerate-hairline-height", family: "degenerate", tolerance: "fem-polygon-exact", notes: "a 2×1 m footprint at 1e-6 m height, baseZ 0 — height far below the weld grid's own absolute floor at metre scale, kept as a recorded edge case rather than dropped to make the corpus look clean.", outline: [[0, 0], [2, 0], [2, 1], [0, 1]], holes: [], height: 1e-6, baseZ: 0 },
   { id: "degenerate-sliver-outline", family: "degenerate", tolerance: "fem-polygon-exact", notes: "a 5×0.01 m sliver footprint, 0.1 m tall, baseZ 0 — an extreme aspect ratio in-plane rather than through the height.", outline: [[0, 0], [5, 0], [5, 0.01], [0, 0.01]], holes: [], height: 0.1, baseZ: 0 },
 ];
@@ -348,14 +336,12 @@ async function generateOne(t: NonNullable<typeof toolkit>, recipe: Recipe, outDi
     measurements.solids = shape.solids;
     measurements.genus = shape.genus;
     measurements.componentGenus = shape.componentGenus;
-    measurements.expectedGenus = recipe.holes.length; // 🕳️an n-hole through-extrusion of a simply-connected footprint has genus n
+    measurements.expectedGenus = recipe.holes.length;
     measurements.expectedBaseZ = recipe.baseZ;
     measurements.weld = { grid: weld.grid, soupVertices: weld.soupVertices, weldedVertices: weld.weldedVertices, droppedDegenerateTriangles: weld.droppedDegenerateTriangles };
     measurements.crossFormatTriangleCounts = crossFormatTriangleCounts;
     measurements.crossFormatTriangleCountsAgree = crossFormatTriangleCounts.obj === measurements.triangleCount || crossFormatTriangleCounts.obj === weld.soupVertices / 3;
 
-    // 📐️independent analytic cross-check: shoelace area of outline minus holes, times height, plus the
-    // baseZ offset the bridge fn applies AFTER the extrusion.
     const shoelace = (poly: readonly (readonly [number, number])[]): number => {
       let sum = 0;
       for (let i = 0; i < poly.length; i += 1) {
@@ -397,8 +383,6 @@ async function generateOne(t: NonNullable<typeof toolkit>, recipe: Recipe, outDi
     provenance: { source: "generated", license: "Apache-2.0 (manifold-3d) + MIT (three)", attribution: "Generated with manifold-3d (Apache-2.0) and exported/re-imported via three.js (MIT)", security: "scanned-clean", privacy: "no-personal-data" },
     comparisonProfile: "semantic-fem-mesh-manifold-v1",
     toleranceProfile: recipe.tolerance,
-    // ✅️Two STLExporter/OBJExporter passes over the same THREE.Mesh in the same process produce
-    // byte-identical output — no timestamps, no incrementing counters anywhere in three's exporters.
     reproducible: true,
     family: recipe.family,
     notes: recipe.notes,
@@ -411,7 +395,7 @@ async function main(argv: readonly string[]): Promise<number> {
   const [command = "generate", ...rest] = argv;
   if (command === "test-carrier") {
     const engineDir = join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust");
-    await receiveScriptProcessInvocation(process.env, invocation => runRepositoryCargoTests(["fem3d-1-any-json-engine"], engineDir, invocation, ["--lib", "--bins", ...rest]));
+    await receiveScriptProcessInvocation(process.env, invocation => runAdmittedCargoPackageTestsV1(["fem3d-1-any-json-engine"], engineDir, invocation, ["--lib", "--bins", ...rest]));
     return 0;
   }
   const value = (flag: string): string | null => {
@@ -454,19 +438,9 @@ async function main(argv: readonly string[]): Promise<number> {
     console.error(`[generator] ${manifests.length}/${recipes.length} bundle(s) generated into ${outDir}${failed > 0 ? `, ${failed} failed` : ""}`);
     return failed > 0 ? 1 : 0;
   }
-  // 🧱️CARRIER MODE — the 22 non-geometric kinds.
-  //
-  // The mesh recipes above answer geometry, which is why the two mesh oracles cover the three region
-  // kinds and nothing else: a material's Young's modulus, a support's restrained DOFs, a load case's
-  // self-weight flag and the analysis settings do not move a single triangle. Those 26 kinds ride this
-  // subset's JSON carrier instead, which — unlike its csv/md/txt leaves, which wrap the DSL text in a
-  // single blob — is the real structured tree. `🧩️json` writes and reads it through `json` (json-rust)
-  // and nothing of ours.
   if (command === "carrier" || command === "carrier-manifests") {
     const engineDir = join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust");
     const cargoTargetDir = cargoTargetDirectory(findWorkspaceRoot());
-    // 🏭️`--offline`: the engine is its own standalone workspace; the shared build-dir/target-dir
-    // (`.cargo/config.toml`, `-Zfine-grain-locking`) resolves without any override here.
     const build = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(engineDir, "Cargo.toml")], { stdio: "inherit" });
     if (build.status !== 0) throw new Error(`cargo build failed with status ${build.status}`);
     const subsetsDir = join(import.meta.dir, "..", "..");

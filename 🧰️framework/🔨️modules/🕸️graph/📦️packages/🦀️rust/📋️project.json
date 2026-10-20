@@ -52,6 +52,11 @@
   "targets": {
     "generate": {
       "executor": "repo:script",
+      "metadata": {
+        "semio": {
+          "sourceInputObservation": "freshness"
+        }
+      },
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
@@ -79,6 +84,7 @@
     "check-generated": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check-generated"

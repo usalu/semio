@@ -22,6 +22,7 @@
       "import": "./dist/🟦️.js"
     },
     "./source": "./📥️source/🟦️.ts",
+    "./standards/v1/subsets/base/source/testing": "./🏅️standards/🔖️v1/🪆️subsets/✉️base/📥️source/🧪️testing/🟦️.ts",
     "./standards/v1/subsets/drawing/io/sqlite/snapshot": "./🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts",
     "./standards/v1/subsets/drawing/io/text/snapshot/native-json": "./🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📝️text/📸️snapshot/🪪️native-json/🟦️.ts",
     "./standards/v1/subsets/drawing/schema/snapshot": "./🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🟦️.ts",
@@ -40,6 +41,8 @@
   },
   "bundleKind": "library",
   "devDependencies": {
-    "@semio-tech/framework": "workspace:*"
+    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/framework-hash": "workspace:*",
+    "@semio-tech/framework-manifest": "workspace:*"
   }
 }

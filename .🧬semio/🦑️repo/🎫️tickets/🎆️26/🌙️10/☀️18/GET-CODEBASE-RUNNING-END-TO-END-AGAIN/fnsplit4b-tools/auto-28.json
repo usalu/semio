@@ -1,0 +1,143 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📃️document/🧷️pdf-conformance/⚙️forward-mutation/🦀️.rs",
+ "function": "apply_in_place",
+ "nth": 0,
+ "match_line": 20,
+ "types": {},
+ "ret": "Result<(), String>",
+ "inline": true,
+ "arms": [
+  {
+   "line": 30,
+   "name": "apply_remove_encryption_dictionary",
+   "doc": "🧱️ Runs the `remove encryption dictionary` kind of `apply_in_place`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 78,
+   "name": "apply_insert_media_annotation",
+   "doc": "🪵️ Runs the `insert media annotation` kind of `apply_in_place`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 101,
+   "name": "apply_insert_embedded_file",
+   "doc": "🔩️ Runs the `insert embedded file` kind of `apply_in_place`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 127,
+   "name": "apply_set_af_relationship",
+   "doc": "🧲️ Runs the `set af relationship` kind of `apply_in_place`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 140,
+   "name": "apply_remove_af_relationship",
+   "doc": "🪛️ Runs the `remove af relationship` kind of `apply_in_place`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 153,
+   "name": "apply_set_output_intent",
+   "doc": "🔧️ Runs the `set output intent` kind of `apply_in_place`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 182,
+   "name": "apply_embed_font_file",
+   "doc": "🔨️ Runs the `embed font file` kind of `apply_in_place`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 207,
+   "name": "apply_set_trim_box",
+   "doc": "🪚️ Runs the `set trim box` kind of `apply_in_place`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 250,
+   "name": "apply_set_struct_tree_root",
+   "doc": "🧰️ Runs the `set struct tree root` kind of `apply_in_place`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 299,
+   "name": "apply_insert_signature_field",
+   "doc": "🧪️ Runs the `insert signature field` kind of `apply_in_place`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 317,
+   "name": "apply_remove_signature_field",
+   "doc": "🧫️ Runs the `remove signature field` kind of `apply_in_place`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  },
+  {
+   "line": 333,
+   "name": "apply_set_dpart_root",
+   "doc": "🧬️ Runs the `set dpart root` kind of `apply_in_place`.",
+   "child": {
+    "dir": "inline",
+    "doc": ""
+   },
+   "allow_returns": true,
+   "binds": {}
+  }
+ ]
+}

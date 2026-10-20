@@ -100,7 +100,7 @@ type Breach struct {
 	Line    int     `json:"line,omitempty"`
 	Column  int     `json:"column,omitempty"`
 	Excerpt string  `json:"excerpt,omitempty"`
-	// Optional fields from lint script JSON (`.🧬semio/🦑️repo/⚡️cache/breach/*.json`).
+	// 🧹️Optional fields from lint script JSON (`.🧬semio/🦑️repo/⚡️cache/breach/*.json`).
 	LintPriority    BreachPriority `json:"priority,omitempty"`
 	LintAutofixable *bool          `json:"autofixable,omitempty"`
 	Reason          string         `json:"reason,omitempty"`

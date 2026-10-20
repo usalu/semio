@@ -27,12 +27,6 @@ impl protocol::DiffBinary for GltfDiff {
 /// Rust side IS genuinely, fully structured real binary throughout, never text-as-bytes.
 fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
     let mut w = dsl::ByteWriter::new();
-    // `asset`/`extensions_used`/`extensions_required`/`extensions`/`extras` are each wrapped
-    // in a length-prefixed blob (matching `../💾️binary/📡️.protocol.semio`'s
-    // `Array(u8, Field(<name>_len))` shape exactly) — NOT bare-inline like `scene`/
-    // `source_form`'s fixed-width payloads — because they are NOT the last field in the frame
-    // and their own internal shape has no fixed width `walk_protocol` could otherwise skip
-    // past without knowing its byte length up front.
     write_bin_option(&mut w, &self.asset, |w, v| {
         write_bin_blob(w, &{
             let mut inner = dsl::ByteWriter::new();

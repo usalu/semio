@@ -1,0 +1,46 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔽️Select/🧪️tests/🧩️component/🟦️.tsx",
+ "describeLine": 35,
+ "shared": {
+  "dir": "🟣️shared",
+  "doc": "/** 🟣️ The shared declarations of the Select suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️mounts-listbox-options-only",
+   "doc": "/** 🔶️ The mounts listbox options only tests of the Select suite. */",
+   "name": "registerMountsListboxOptionsOnlyTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the mounts listbox options only tests of the Select suite.",
+   "from": 36,
+   "to": 129
+  },
+  {
+   "dir": "🔸️keeps-measured-popup-minimum",
+   "doc": "/** 🔸️ The keeps measured popup minimum tests of the Select suite. */",
+   "name": "registerKeepsMeasuredPopupMinimumTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the keeps measured popup minimum tests of the Select suite.",
+   "from": 183,
+   "to": 305
+  },
+  {
+   "dir": "🟠️honors-preventable-escape-outside",
+   "doc": "/** 🟠️ The honors preventable escape outside tests of the Select suite. */",
+   "name": "registerHonorsPreventableEscapeOutsideTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the honors preventable escape outside tests of the Select suite.",
+   "from": 331,
+   "to": 455
+  },
+  {
+   "dir": "🟢️uses-owned-rtl-placement",
+   "doc": "/** 🟢️ The uses owned rtl placement tests of the Select suite. */",
+   "name": "registerUsesOwnedRtlPlacementTests",
+   "emoji": "🔵",
+   "fdoc": "Registers the uses owned rtl placement tests of the Select suite.",
+   "from": 470,
+   "to": 470
+  }
+ ]
+}

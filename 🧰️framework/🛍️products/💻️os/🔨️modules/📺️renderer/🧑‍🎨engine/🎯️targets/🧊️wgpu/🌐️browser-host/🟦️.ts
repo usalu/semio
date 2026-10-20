@@ -25,7 +25,7 @@ import { BrowserFrameTransport } from "../🚚️browser-frame-transport/🟦️
 import { browserFrameEventFromDom, browserFrameEventIsReplaceable, browserFramePointerDomEvent, browserFrameWheelDomEvent, type BrowserFrameDomEvent } from "../🚚️browser-frame-transport/🖱️dom-events/🟦️.ts";
 import { type BrowserFrameFallbackState, type BrowserFrameIntrospectionProbe, type BrowserFrameWorkerFaultCode, type BrowserFrameWorkerStepReport, type BrowserHubDocumentRemote } from "../🚚️browser-frame-transport/📋️contract/🟦️.ts";
 import { createWgpuPageHostIo } from "../🚪️host-io/🟦️.ts";
-import { setInteractiveJobPort } from "@semio-tech/framework/modules/ui/elements/Ports/interactive-jobs";
+import { setInteractiveJobPort } from "@semio-tech/ui/elements/Ports/interactive-jobs";
 import { TURN_DIAGNOSTICS_KEY, setTurnDiagnostics, turnDiagnosticsEnabled } from "../⏱️turn-budget/🟦️.ts";
 import { resolveRuntimeDiagnosticsPreference, stampShardWorkerDiagnostics } from "@semio-tech/framework-actor/diagnostics";
 import { describeBrowserBootPhase } from "../🫀️boot-liveness/🟦️.ts";
@@ -33,7 +33,7 @@ import { WGPU_PREFERS_DARK_MEDIA_QUERY, readWgpuHostStorageSnapshot, resolveWgpu
 import { createAccessibilityMirror } from "../♿️accessibility-mirror/🟦️.ts";
 import { agentBridgeOfferScopeFromJsonV1, watchAgentBridgeOffer } from "@semio-tech/framework-os/modules/renderer/engine/elements/AgentBridge/offer";
 import { browserClipboardPasteCandidate, wireBrowserFullscreen, wireBrowserKeyboard } from "../🎮️input-wire/🟦️.ts";
-import bootLifecycleSchema from "../../../🧬️schema/⏳️boot-lifecycle/🔣️.json";
+import bootLifecycleSchema from "../../../🧬️schema/⏳️boot-lifecycle/🔣️.json" with { type: "json" };
 
 /** ⏳️ Progress belongs to one pending browser mount and its owned Worker. */
 export type WgpuBootProgress = { readonly stage: string; readonly progress: number; readonly worker: BrowserFrameWorkerStepReport };

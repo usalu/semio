@@ -686,6 +686,8 @@ pub mod life_cleanup_vocabulary;
 pub mod life_instance_registry;
 #[path = "../🏃️runtime/📥️staging/♻️reactor-lifecycle/🧯️cleanup-pumps/🦀️.rs"]
 pub mod life_cleanup_pumps;
+#[path = "../🏃️runtime/📮️publication/🦀️.rs"]
+pub mod result_publication;
 use std::cell::Cell;
 use life_reactor_close::ReactorCloseRegistry;
 

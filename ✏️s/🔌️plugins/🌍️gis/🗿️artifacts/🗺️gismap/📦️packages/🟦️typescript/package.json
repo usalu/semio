@@ -10,7 +10,6 @@
   },
   "scripts": {
     "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/gis-gismap-js:test",
-    "inference-presentation-check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/gis-gismap-js:inference-presentation-check",
     "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/gis-gismap-js:build",
     "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/gis-gismap-js:check",
     "inference-service-receiving-check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/gis-gismap-js:inference-service-receiving-check"

@@ -69,8 +69,8 @@
         },
         {
           "mutationId": "update-layer-trace-params",
-          "sourceMutationDirectoryName": "🔍️update-layer",
-          "mutationDirectoryName": "🔍️update-layer",
+          "sourceMutationDirectoryName": "🔍️update-layer-trace-params",
+          "mutationDirectoryName": "🔍️update-layer-trace-params",
           "scenarios": [
             {
               "id": "sharpens-the-trace",
@@ -80,8 +80,8 @@
         },
         {
           "mutationId": "update-layer-transform",
-          "sourceMutationDirectoryName": "🔄️update-layer",
-          "mutationDirectoryName": "🔄️update-layer",
+          "sourceMutationDirectoryName": "🔄️update-layer-transform",
+          "mutationDirectoryName": "🔄️update-layer-transform",
           "scenarios": [
             {
               "id": "translates-and-scales-shape-a",

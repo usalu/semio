@@ -14,13 +14,13 @@ import { writeGeneratedFileIfChanged } from "../../../../../../../🔨️modules
 import { REFRESH_COMMAND, REPO_CLI_GO, repoEntityKindTarget } from "../../🏷️entity-kinds/📽️projection/🟦️.ts";
 import { runTestScript, runPreviewEntityKindsScript } from "../../🧪️tests/🔬️typescript-package-commands/🟦️.ts";
 
-const REPO_CLI_MAIN = join(REPO_CLI_GO,"📦️packages","🐹️go","📦️main");
+const REPO_CLI_MAIN = "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp";
 
 /** ▶️ Runs the executable restored by the `build` prerequisite instead of rebuilding inline. */
 class DevScript extends BundleScript {
   run(segments: string[]): void {
     const bin = resolveCliBin(this.repoRoot);
-    if (!existsSync(bin)) throw new Error(`repo client binary is missing at ${bin}; run: bun repo run @semio-tech/repo-client:build`);
+    if (!existsSync(bin)) throw new Error(`repo client binary is missing at ${bin}; run: repo run @semio-tech/repo-client:build`);
     runCmd(bin, [...segments], {
       cwd: this.repoRoot,
       env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") },

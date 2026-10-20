@@ -28,6 +28,7 @@ semio-s-artifact-remodel-remodeling-mesh-repair = { workspace = true }
 semio-s-artifact-remodel-remodeling-mesh-surface = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-remodel-remodeling-images = { workspace = true, features = ["testkit"] }
 png = "0.17.16"
 semio-s-artifact-remodel-remodeling-algebra = { workspace = true }
 semio-s-artifact-remodel-remodeling-lie = { workspace = true }

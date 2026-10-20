@@ -16,11 +16,11 @@ export { withRepositoryToolingStoreV1 } from "../../../⚡️caching/💾️stor
 export { repositoryStrictStorageV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/🟦️.ts";
 export { NX_OUTPUT_LOG_ENV, runOwnedNxInvocationV1 } from "../../../⚡️caching/🚀️bootstrap/📜️script.ts";
 export { withJavascriptDependencyReadStorageV1 } from "../../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts";
-export { preparedBinaryen } from "@semio-tech/nx-bootstrap-tools/wasm/script";
-export { prepareBun } from "@semio-tech/nx-bootstrap-tools/bun/script";
-export { default as toolsBunSchema } from "@semio-tech/nx-bootstrap-tools/bun/schema.json" with { type: "json" };
-export { requireRepositoryRustToolchainV1, withRepositoryRustToolchainV1 } from "@semio-tech/nx-bootstrap-tools/rustup/installation";
-export type { RepositoryRustToolchainV1 } from "@semio-tech/nx-bootstrap-tools/rustup/installation";
-export { requireToolingPublicationValueV1 } from "@semio-tech/nx-bootstrap-tools/retention/headroom";
+export { preparedBinaryen } from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🟦️.ts";
+export { prepareBun } from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🟦️.ts";
+export { default as toolsBunSchema } from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🧬️schema/🔣️.json" with { type: "json" };
+export { requireRepositoryRustToolchainV1, withRepositoryRustToolchainV1 } from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🟦️.ts";
+export type { RepositoryRustToolchainV1 } from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🟦️.ts";
+export { requireToolingPublicationValueV1 } from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📏️headroom/🟦️.ts";
 export { withRepositoryDevelopmentStateTaskV1, withRepositoryDevelopmentStateV1 } from "../../../💾️development/🟦️.ts";
 export type { RepositoryDevelopmentStateV1 } from "../../../💾️development/🟦️.ts";

@@ -71,7 +71,7 @@ test("bulk native selector reaches the defining retained clone crate",()=>{
   expect(project.targets["test-bulk-vec-retained-native"].options.command).toBe("bun ./📜️script.ts test-bulk-vec-retained native");
   const router=readFileSync(new URL("../../../📦️packages/🦀️rust/📜️script.ts",import.meta.url),"utf8");
   expect(router).toContain('.register("test-bulk-vec-retained",BulkVecRetainedCheckScript)');
-  const owner=router.slice(router.indexOf("class BulkVecRetainedCheckScript"),router.indexOf("class PlainElementRetirementSourceScript"));
+  const start=router.indexOf("class BulkVecRetainedCheckScript"),owner=router.slice(start,router.indexOf("\nclass ",start+1));
   expect(owner).toContain('"semio-framework-value-retained-clone"');
   expect(owner).toContain('"semio_framework_value_retained_clone"');
   expect(owner).toContain('"retained_clone::bulk_vec_tests::bulk_array_zero_sized_work_is_bounded_and_every_prefix_closes"');

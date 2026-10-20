@@ -163,7 +163,7 @@ impl<T:RetireOwned+Sync> ReadLease<T> {
         if self.owner.is_none(){return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"returned read cannot issue an original source"),self));}
         RetainedCloneSource::admit_borrowed(OriginalReadSource::new(self),|read:&OriginalReadSource<T>|read.get(),grant).map_err(|(error,mut read)|{let original=read.take_refused();(error,original)})
     }
-    pub fn demands(&self,body:usize)->Result<RetirementDemand,ValueError> {if let Some(owner)=self.closing.as_ref(){owner.next_demand(body)}else{Ok(RetirementDemand{release_bytes:if self.owner.is_none()&&self.registry.is_some(){crate::retirement::shared::arc_bytes::<ReadOwnershipRegistry<T>>()}else{0},depth:usize::from(!self.terminal_is_empty()),..Default::default()})}}
+    pub fn demands(&self,body:usize)->Result<RetirementDemand,ValueError> {if let Some(owner)=self.closing.as_ref(){owner.next_demand(body)}else{Ok(RetirementDemand{release_bytes:if self.owner.is_none()&&self.registry.is_some(){crate::retirement::arc_custody::arc_bytes::<ReadOwnershipRegistry<T>>()}else{0},depth:usize::from(!self.terminal_is_empty()),..Default::default()})}}
 }
 impl<T:RetireOwned+Sync> ErasedSnapshotRetirement for ReadLease<T> {
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.demands(body)}

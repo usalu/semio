@@ -40,6 +40,7 @@
     },
     "test": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -49,6 +50,7 @@
     "verify-forms-document-contract": {
       "executor": "repo:script",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify forms-document-contract",
@@ -67,10 +69,11 @@
       "executor": "repo:script",
       "cache": true,
       "inputs": [
-        "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/**/*",
-        "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        "{workspaceRoot}/✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
       ],
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite",
@@ -89,10 +92,11 @@
       "executor": "repo:script",
       "cache": true,
       "inputs": [
-        "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/**/*",
-        "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        "{workspaceRoot}/✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
       ],
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite native",
@@ -111,10 +115,11 @@
       "executor": "repo:script",
       "cache": true,
       "inputs": [
-        "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/**/*",
-        "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        "{workspaceRoot}/✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
       ],
+      "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite source",

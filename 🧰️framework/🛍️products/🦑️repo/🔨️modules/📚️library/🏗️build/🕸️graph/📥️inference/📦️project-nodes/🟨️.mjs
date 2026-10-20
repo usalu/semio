@@ -11,7 +11,7 @@ const { existsSync, readFileSync } = observedFs;
 
 /** 🏷️ Names this component as its roster entry does. */
 export const component = "project-nodes";
-let readBuildGeneratedCompileOutputV1,buildPath, yieldInferenceV1, catalogBuildContributionsV1, discoverNativeBuildOwnersV1, createScriptInputCache, POLICY, nativeCommandInputs, readTaxonomyProjectionV1, collectPlaygroundCatalog, PROJECT_BASENAME, playgroundSessionTargets, playgroundPreparationTargets, playgroundSiteTargetsForAdmissionV1, readToml, cargoTargets, componentBuildTargets, componentCrateRoots, projectAssemblyAuthorityV1, workspaceDataDirectory, declaredSourceInputs, projectWithDefaults, withNativePreparation, withReleasePipelinePreparation, loaded, readBunLockGraph, revisionIdentity;
+let readBuildGeneratedCompileOutputV1,buildPath, yieldInferenceV1, catalogBuildContributionsV1, discoverNativeBuildOwnersV1, createScriptInputCache, POLICY, nativeCommandInputs, readTaxonomyProjectionV1, collectPlaygroundCatalog, PROJECT_BASENAME, playgroundSessionTargets, playgroundPreparationTargets, playgroundSiteTargetsForAdmissionV1, readToml, cargoTargets, componentBuildTargets, componentCrateRoots, projectAssemblyAuthorityV1, workspaceDataDirectory, projectWithDefaults, withNativePreparation, withReleasePipelinePreparation, loaded, readBunLockGraph, revisionIdentity;
 
 /** 🔌️ Binds this component's dependencies from the revision registry once its needs are wired. */
 export function wire(registry) {
@@ -23,7 +23,7 @@ export function wire(registry) {
   ({ collectPlaygroundCatalog, playgroundSessionTargets, playgroundPreparationTargets, playgroundSiteTargetsForAdmissionV1 } = registry.playgroundTargets);
   ({ readToml, withNativePreparation } = registry.nativeManifests);
   ({ cargoTargets, componentBuildTargets, componentCrateRoots, withReleasePipelinePreparation } = registry.componentTargets);
-  ({ declaredSourceInputs, projectWithDefaults } = registry.projectAssembly);
+  ({ projectWithDefaults } = registry.projectAssembly);
   ({ loaded } = registry.bootstrap);
   ({ readBunLockGraph } = registry.bunLock);
   ({ revisionIdentity } = registry);
@@ -135,16 +135,15 @@ export async function emojiProjectJsonNodes(configFiles, options, context) {
     const started=performance.now();
     await yieldInferenceV1(context,"build:projects",++projectIndex);
     const inactive=options?.ownerAdmission?Object.fromEntries(Object.entries(json.targets??{}).filter(([name])=>!options.ownerAdmission.targets[json.name]?.includes(name))):{};
-    const selectedTargets=options?.ownerAdmission?.targets[json.name],activeJson=options?.ownerAdmission?{...json,targets:Object.fromEntries(Object.entries(json.targets??{}).filter(([name])=>selectedTargets?.includes(name)))}:json;
+    const selectedTargets=options?.ownerAdmission?.targets[json.name],selectedInputs=[...new Set(options?.ownerAdmission?.inputs?.[json.name]??[])].sort(),activeJson=options?.ownerAdmission?{...json,targets:Object.fromEntries(Object.entries(json.targets??{}).filter(([name])=>selectedTargets?.includes(name)))}:json;
     const root=json.root, nativeRoot=json.metadata?.nativeRoot??root, native=existsSync(join(workspaceRoot,nativeRoot,"Cargo.toml"))||Object.values(activeJson.targets??{}).some(target=>target.options?.command?.includes("⚡️caching/🦀️cargo/📜️script.ts")), pipeline=Object.values(activeJson.targets??{}).some(target=>target.metadata?.semio?.release);
     const assemblyAuthority=native||pipeline?projectAssemblyAuthorityV1(workspaceRoot,native?nativeRoot:undefined,projectsByRoot,pipeline?componentRoots:undefined,nativeCache,nativeClosures):null;
     const authorityMilliseconds=performance.now()-started;
     const cachePath=join(workspaceDataDirectory(workspaceRoot),"np",createHash("sha256").update(root).digest("hex").slice(0,24)+".json");
-    result.projects[name]=await observeProjectInferenceV1({cachePath,key:[projectAuthority,registryDigest,native?commandRevision:null,native||pipeline?assemblyAuthority:null,root,json,selectedTargets??null],owner:root,reusable:value=>inferenceInventoryReferencesHoldV1(workspaceRoot,value,context.phaseControl)},async()=>{
+    result.projects[name]=await observeProjectInferenceV1({cachePath,key:[projectAuthority,registryDigest,native?commandRevision:null,native||pipeline?assemblyAuthority:null,root,json,selectedTargets??null,selectedInputs],owner:root,reusable:value=>inferenceInventoryReferencesHoldV1(workspaceRoot,value,context.phaseControl)},async()=>{
       try{
-      const sourceGroups=await declaredSourceInputs(activeJson,workspaceRoot,context);
       await yieldInferenceV1(context,"build:project-assembly",0);
-      const project=await projectWithDefaults(json,root,join(workspaceRoot,root),workspaceRoot,contracts,new Map(),commandInputs,scripts,sourceGroups,"hash",options?.ownerAdmission?selectedTargets??[]:undefined),preparationCache=nativeCache,dependencyRootsCache=nativeClosures;
+      const project=await projectWithDefaults(json,root,join(workspaceRoot,root),workspaceRoot,contracts,new Map(),commandInputs,scripts,undefined,"hash",options?.ownerAdmission?selectedTargets??[]:undefined,selectedInputs),preparationCache=nativeCache,dependencyRootsCache=nativeClosures;
       withNativePreparation(project,workspaceRoot,contracts,preparationCache,projectsByRoot,dependencyRootsCache);
       withReleasePipelinePreparation(project,workspaceRoot,contracts,componentRoots,preparationCache,dependencyRootsCache);
       for(const[name,target]of Object.entries(project.targets))project.targets[name]=loaded.targetBuildModes(name,target);

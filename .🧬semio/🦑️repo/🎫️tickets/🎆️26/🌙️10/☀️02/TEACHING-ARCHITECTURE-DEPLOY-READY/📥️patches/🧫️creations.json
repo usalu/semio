@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "declarations": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟨️.d.cts",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟨️.cjs"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📦️payload/🟨️.d.cts",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📦️payload/🟨️.cjs"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.d.cts",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs"
+    }
+  ],
+  "cases": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟨️.d.cts",
+      "captured": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟨️.cjs"
+      ],
+      "entry": {
+        "create": true
+      },
+      "accepted": true,
+      "created": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📦️payload/🟨️.d.cts",
+      "captured": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📦️payload/🟨️.cjs"
+      ],
+      "entry": {
+        "create": true
+      },
+      "accepted": true,
+      "created": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.d.cts",
+      "captured": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs"
+      ],
+      "entry": {
+        "create": true
+      },
+      "accepted": true,
+      "created": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟨️.cjs",
+      "captured": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟨️.cjs"
+      ],
+      "entry": {},
+      "accepted": true,
+      "created": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟨️.cjs",
+      "captured": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟨️.cjs"
+      ],
+      "entry": {
+        "create": true
+      },
+      "accepted": false,
+      "created": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟨️.d.cts",
+      "captured": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟨️.cjs"
+      ],
+      "entry": {},
+      "accepted": false,
+      "created": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟨️.d.cts",
+      "captured": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟨️.cjs"
+      ],
+      "entry": {
+        "create": false
+      },
+      "accepted": false,
+      "created": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟨️.d.cts",
+      "captured": [],
+      "entry": {
+        "create": true
+      },
+      "accepted": false,
+      "created": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟨️.d.cts",
+      "captured": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟨️.cjs"
+      ],
+      "entry": {
+        "create": true,
+        "privateImportPatch": {}
+      },
+      "accepted": false,
+      "created": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/other.d.cts",
+      "captured": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟨️.cjs"
+      ],
+      "entry": {
+        "create": true
+      },
+      "accepted": false,
+      "created": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟨️.d.cts",
+      "captured": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟨️.d.cts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟨️.cjs"
+      ],
+      "entry": {
+        "create": true
+      },
+      "accepted": false,
+      "created": false
+    }
+  ]
+}

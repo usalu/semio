@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "attribute",
+          "root",
+          "shape"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "attribute": {
+            "type": "string"
+          },
+          "root": {
+            "enum": [
+              "semio_framework_value",
+              "crate",
+              "domain_value"
+            ]
+          },
+          "shape": {
+            "enum": [
+              "empty",
+              "record"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

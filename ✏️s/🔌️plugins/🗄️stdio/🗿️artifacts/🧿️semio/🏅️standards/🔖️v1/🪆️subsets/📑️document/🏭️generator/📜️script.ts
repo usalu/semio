@@ -330,9 +330,6 @@ async function generateOne(recipe: Recipe, outDir: string): Promise<Record<strin
   if (fixtureDirectory === undefined) throw new Error(`No reviewed fixture directory is registered for ${recipe.id}`);
   const dir = join(outDir, fixtureDirectory);
   const manifests: Record<string, unknown>[] = [];
-  // 🪞️`NoMutation` no longer exists — every recipe is tagged with a real mutation kind, including the
-  // identity ones, so the outcome can only be read off the DATA: a no-op is a recipe whose after is
-  // structurally identical to its before, whatever kind it is tagged with.
   const outcome = JSON.stringify(recipe.before) === JSON.stringify(recipe.after) ? "no-op" : "applied";
   for (const carrier of recipe.carriers) {
     const spec = CARRIER[carrier];
@@ -352,8 +349,6 @@ async function generateOne(recipe: Recipe, outDir: string): Promise<Record<strin
       target: { artifact: "s.stdio.semio", standard: "v1", subset: "document" },
       mutation: recipe.mutation,
       outcome,
-      // 📏️A document has no spatial extent; `unitless`/`radian` is the schema's own way of saying so,
-      // and the fixture's real policy lives in `toleranceProfile` instead.
       units: { length: "unitless", angle: "radian" },
       files,
       generator: {
@@ -374,9 +369,6 @@ async function generateOne(recipe: Recipe, outDir: string): Promise<Record<strin
       },
       comparisonProfile: "semantic-document-carrier-v1",
       toleranceProfile: "document-text-exact",
-      // ✅️MEASURED, not assumed: `@xmldom/xmldom` writes no timestamp, `mdast-util-to-markdown` writes
-      // no timestamp, and JSZip is pinned to a fixed 1980-01-01 stamp above, so two runs over the same
-      // recipe agree byte for byte. `test fixture reproduce` is what proves it per fixture.
       reproducible: true,
       family: recipe.family,
       notes: `${recipe.notes} Witnessed through the ${recipe.property} property.`,
@@ -415,17 +407,12 @@ async function main(argv: readonly string[]): Promise<number> {
         manifests.push(...(await generateOne(recipe, outDir)));
         console.error(`[generator] ${recipe.id} (${recipe.family}) → ${recipe.carriers.join(", ")}`);
       } catch (error) {
-        // 🧭️A recipe a library REFUSES is reported, never dropped: a corpus that quietly shrank to
-        // whatever happened to encode would read as complete coverage of a smaller matrix.
         failed += 1;
         console.error(`[generator] ${recipe.id} FAILED — ${(error as Error).message}`);
       }
     }
     if (command === "manifests") process.stdout.write(`${JSON.stringify(manifests, null, 2)}\n`);
     else {
-      // 🧬️A NARROWED run MERGES into the manifest index; it never replaces it. A sequence of `--only`
-      // runs during development silently destroying every other fixture's record while leaving its
-      // files on disk is a real incident the sibling pilots already paid for.
       const indexPath = join(outDir, "🔣️.json");
       const previous = (() => {
         if (only === null || !existsSync(indexPath)) return [];
@@ -444,13 +431,6 @@ async function main(argv: readonly string[]): Promise<number> {
     console.error(`[generator] ${manifests.length} fixture manifest(s) from ${recipes.length} recipe(s) into ${outDir}${failed > 0 ? `, ${failed} failed` : ""}`);
     return failed > 0 ? 1 : 0;
   }
-  // 🖼️CARRIER MODE — the three IMAGE kinds.
-  //
-  // The docx and markdown recipes above answer the exported document, which is why the two readers
-  // registered here cover the text/style kinds and not these three: an embedded image's raw BYTES
-  // survive neither carrier faithfully — docx stores them as separate zip media parts, markdown
-  // references them by path. `SemioDocumentSnapshot::images` is an INLINE `Vec<DocImage>` carrying
-  // `{id, mime, bytes}` directly, so all three are carrier-level facts in the JSON export.
   if (command === "carrier" || command === "carrier-manifests") {
     const engineDir = join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust");
     const build = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(engineDir, "Cargo.toml")], { stdio: "inherit" });

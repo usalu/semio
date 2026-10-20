@@ -488,7 +488,7 @@ func JsonReindentEntry(entry string, indent string) string {
 
 // #region 🎙️GraphQL
 
-// GraphQL query and mutation string constants.
+// 🧾️GraphQL query and mutation string constants.
 // 🔖️jsonToYaml holds the data fields for a jsonToYaml record.
 func JsonToYaml(jsonStr string) (string, error) {
 	var data interface{}

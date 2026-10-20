@@ -1,7 +1,7 @@
 /** 📂️ Payloads, dispatch union and constructors of the opening-preferences mutation vocabulary, shared by its two direct leaves. */
 
 import type { ArtifactDialect } from "@semio-tech/schema-ts/artifact-reference";
-import type { AppRef, AppRole } from "../../../../🛂️manifest/🧬️schema/🟦️.ts";
+import type { AppRef, AppRole } from "@semio-tech/framework-manifest/schema";
 
 //#region 🔖️Payloads
 /** 📌️ Pins `app` for one `(dialect, role)` coordinate, replacing any prior pin. */

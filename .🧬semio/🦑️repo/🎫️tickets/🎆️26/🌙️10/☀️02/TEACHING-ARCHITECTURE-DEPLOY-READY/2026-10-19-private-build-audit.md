@@ -479,3 +479,225 @@ Independently verified removal receipt afterhashes exactly invert instrument ori
 ### Own physical Cargo package compile-root design constraints
 
 Actual own-root Cargo.package identity is stronger language authority than target names or metadata.nativeRoot. It does not universally prove a package owner has no TS compiler/Vitest target, so runtime’s actual mixed-target inventory is required before relying on it for this repository cohort. Valid Cargo documents may contain both workspace and package: package identity still exists and should not be rejected because workspace is also present. Virtual workspace-only Cargo document lacks package identity and must not suppress TS roots. TS owner with separate metadata.nativeRoot must preserve selected TS compilation. Command, explicit sourceInputs and demanded bare runtime/types entries remain strict regardless of own native package. Neutral mixed/explicit-root tests and finite actual inventory were requested; no design implementation accepted yet and no private action by reviewer.
+
+
+### Mixed-owner counterexample and explicit target role design
+
+Runtime actual framework-rs script contains Vitest and explicit tsc operations, invalidating universal own-Cargo package suppression. Root’s alternative explicit schema-owned per-target named-input observation role is narrower: existing compile behavior remains, while only audited generator targets opt named-input matches into freshness. Commands/declared sourceInputs/demanded bare entries stay strict; any compile target among a mixed selection retains compile roots. Hashed metadata, closed role validation, actual generator-effect association and neutral mixed-selection/source-mutation controls are required. Compared with exhaustive sourceInputs contracts for every existing compiler gate, this preserves existing mixed TS coverage while making one data-generator opt-out explicit. No name/path/Cargo heuristic or implementation change by reviewer.
+
+
+Target-role effect provenance correction: runtime found host framework Rust script hash e448… differs from frozen6ff9…, although owner manifest matches. Host generate effect review is conceptual evidence only; actual frozen selected generate branch must be read/verified before annotating/transferring the private manifest role. No private role approval is inferred from host/manifest equality.
+
+
+Mixed-selection design correction: earlier any-compile shorthand is insufficient when named patterns are unioned. Root identified that it would promote broad freshness matches into another selected target’s compilation. Final requirement is target-specific positive/exclusion matching and separate matchedCompile provenance; requested inputNames/freshness target matches remain hash witnesses. Shared walk cache may reuse directory observations but must not merge role/matcher/exclusion authority. Neutral broad-freshness invalidTS plus narrow-compile/missing-declaration controls are required. Reviewer accepts this correction; no implementation written.
+
+
+### Seven-file target-role Source review before pipeline approval
+
+All seven actual current hashes match target-input-roles-handoff.json (schema0e68a0d7…, project schemab3c0ee3f…, admission74a72884…, discovery096da683…, tests9146bfd5…, corpus11377ca9…, manifest3e6ad7af…). Per-target scans each retain their own positive/exclusion set and role; shared walk/matcher cache reuses observations without unioning exclusion authority. all matched files remain hash witnesses; compileMatched contains only compile-target matches, with requestedinputNames explicitly freshness. Explicit entries retain raw-resource priority; command/demanded bare closures remain strict. Compile default/closed metadata validation and configuration metadata-override refusal retain target identity. Only framework-rs generate receives freshness annotation.
+
+Read actual frozen generate-flow AST metadata: script6ff9b03559dcfbefa24777ba619e7cf17db8639c8eaf68a85e5c0cef4788f892 branch uses generatedManifestPath/seedGeneratedFile/runTypegenExportTest→admitted Cargo typegen; actual Rust export536abbb6… validates metadata and writes TS output. This is exact frozen static evidence, distinct from divergent hoste448…, not runtime generator success. No Rust script is transferred. No concrete Source blocker found; release reports7focusedtests169assertions, reviewer did not rerun them. Final mixed-target pipeline proof remains pending.
+
+
+### Final per-target role pipeline evidence review
+
+Read selected-generator-green1 log, generator result JSON and actual retained harness without rerun. Six positives/five demanded negatives complete. Actual readBuildSourceInputMatchesV1 and discovery execute under shared lexical ports, then actual admission/project assembly/Nx/Bazel paths. Mixed broad freshness+narrow compile and compile-scoped exclusions leave invalid passive TS unparsed but hashed; requested inputNames remain freshness; normal selected compile, declared/raw-priority, command runtime, bare typed entry and exact generator order/refusals remain strict. Python independently chooses SQLite paths and recomputes24actual-byte digests. Recorded production hashes match current Source; final seven-file comparison matches handoff. No concrete Source/proof blocker found. This is direct pure pipeline proof plus frozen static effect evidence, not Native generator execution, managed course collection or compiler/browser success. Reviewer did not mutate private state or run managed commands.
+
+
+### Overlay11 exact transfer verification
+
+All eleven actual receipt hashes and continuous base/path before→after chains independently match. Overlay11 SHA2563c46adb6b97cce809b5008723d2da8e3ee3ad94b02c20ca467c64012d4d3a10e matches parent expected; all seven actual private file hashes match reviewed target-role handoff. All diagnostic flags inactive. No mismatch, private mutation, implementation import or managed invocation by reviewer. Release8 remains a distinct pending runtime gate.
+
+
+### Supplementary target-role identity proof review
+
+Read retained target-role identity proof/log/result and actual harness mutation path. One neutral selected-generator manifest changes only sourceInputObservation freshness→compile; the current selected input set includes its manifest, so digest changes de0f27c56ba76427f317f25b64ca3e618c4b7b1f393f93dd4bd35e24214b5e0e→e7b53eeb1a678ccd9fc75871c72ae1cc2e6311e464f61c7ca80bb24a6fea8df2. Python independently parses original fixture manifest, applies the exact role field and serializes/hashlib hashes its own mutated bytes; matches implementation result. Final log PASS/session69313 terminal0 reported by runtime. No concrete gap found in this identity-only supplement; it does not execute a second mutated admission or prove compile execution. Same seven handoff/read fences retained, no Source/private mutation by reviewer.
+
+
+### Release8 immutable terminal boundary
+
+Independently read private-build-20261019T233214-ace24a38.json (SHA2565536292637bc1ab5a4b2ecf996ff25f06417e275ec8581228f99917776c9880c) matching course:test release args,23:32:14.959–23:35:25.614Z,status1/expiredfalse. Log SHA256dfd638b37a15438ae198d8ed441bb226d68f34c403e5990a8ce301278c1f5f28matches release observation. Prior missing VSCode output refusal is crossed; new Generated task cannot consume its own output guard fires at discovery212 via219. No collection/assertion output. Actual owner/producer/path provenance is absent from this log, so legitimate strict self-cycle versus wrong demand classification must be diagnosed rather than assumed. Reviewer made no private mutation or managed invocation.
+
+
+### Temporary generated-cycle diagnostic review
+
+Read distinct cycle-check/instrument/remove helper. It verifies base/overlay11continuous path hash, exact current prehash, four unique text matches, JS transpile before write/posthash, and exact inverse restoration. Original self-output refusal remains unchanged after diagnostic emission. First-parent map is initialized before generated replay and records later compile parents, allowing one bounded chain8; this is partial first-observed path evidence. Process-once emission caps one8192B record plusLF, trims copied chain and falls back to bounded core context. Root reports actual stress8085B/one line and transpile terminal0; reviewer did not execute the check or mutate private Source. No concrete scope/control issue found.
+
+
+### Actual generated-cycle trace and exact restoration
+
+Fresh log SHA256f891b7a712da1e9a60875fabbd226dda2426d4065bc3bd353ab5544ad2b05e2cmatches parent; terminal1/expiredfalse, one critical record3168B. Actual framework-rs generate(freshness) demanded manifest UI-contract source reaches its own framework-rs:generate output. command/declaredfalse but demandedtrue; eight-row first-parent chain ends at command seed plugin store installation via component bridge→framework/app-channel→wire-contracts→bare framework root barrel→manifest projection. Truncatedtrue marks incomplete parent history. This is demanded command/bare entry coupling, not passive named-input promotion.
+
+Independent removal receipt inverse check and actual private SHA256 confirm restored discovery096da6837b6b892871036efb66c96811af086a4a91fc16f3ec1c1e6a875ccdea. All diagnostics inactive. No type-only/generated guard exemption inferred, and no collection/compiler success. Reviewer read only metadata/files and wrote this report.
+
+
+### Canonical Wire Type Dependency Review
+
+The strict cycle trace identifies a genuinely demanded command route through wire-contracts and the framework umbrella barrel. The framework TypeScript barrel reexports the kernel public entry, which reexports the original `MutationMessage` declaration from `kernel/merge-outcome` and `Severity` from `kernel/fault`. The merge-outcome module already imports that same Severity declaration directly and explicitly documents direct child-module imports. Narrow relative type imports therefore preserve canonical declaration identity and dependency direction without changing schemas, runtime values, typed-import traversal, or the generated-output self-cycle guard. This is a Source review; the final patch and its direct regression evidence remain pending.
+
+
+The immediately demanded packs module has the same bootstrap umbrella coupling. Its runtime `viewContextWithIntegerCarriers` and `PluginViewState` type are originally declared in manifest/view-state-and-public-invocation, directly reexported by the umbrella at line 47. Its five mutation types originate in kernel/mutation-vocabulary and are reexported through the kernel entry. Direct leaf imports preserve the actual function implementation and declarations. This finding is limited to the traced wire-contracts → packs edge; it does not justify unrelated import cleanup. Frozen/current equality and final regression evidence remain the other workers’ explicit proof obligations.
+
+
+### Demand Phase Authority Review
+
+The later exact frozen effect trace establishes type-only phase cuts before wire-contracts and before the manifest output. The actual generator executes Bun and the Rust compiler without a TypeScript checker. The packs identity finding above does not establish runtime reachability and does not justify changing packs or history. The approved design separates runtime command module demand from typed compiler/declared-entry demand. A runtime projection must include bare runtime imports; typed roots must still observe type imports and declaration companions. Any shared traversal cache must revisit a path when demand upgrades from runtime to typed. Missing actual runtime dependencies, missing typed dependencies, and generated self-consumption remain strict in their respective demand phases. These are review controls for the forthcoming implementation, not passing-test claims.
+
+
+### Frozen Source Demand Phase Cohort And Direct Proof
+
+The eleven-file handoff independently matches all host hashes and byte counts. Its SHA-256 is `36c5e35e4aa3a10d6e8ba8809878490f571b7c12ea0b333ea733e5f07adf6c94`; maximum absolute path length is 130 characters. The cohort uses existing library, declaration, schema, fixture and test paths, with no new executable script or applicable descendant AGENTS instruction. The wire type imports preserve canonical leaf declarations; packs and history are unchanged.
+
+The final Source review found no concrete blocker. Runtime module facts retain bare runtime imports under the existing erased-type parser rules; typed facts remain separate and required. Parser/compiler bytes participate in the revision identity. Command roots use runtime demand; compileMatched and explicit entries use typed demand. Max-role queueing and phase-specific visited state revisit runtime paths upgraded to typed demand. Runtime declaration-only resolution is refused, typed declaration companions remain observed, and generated producer classification and the original self-cycle refusal operate on each traversed phase. Failure context is bounded to task, relative importer/output and phase, with no success-path logger.
+
+I read `2026-10-20-runtime-command-phase-green2.log`, the phase result, provider-binding record and eleven-file handoff proof. They retain two positive final Nx/Bazel input cases and nine strict negative cases, including actual runtime→compile revisits, both-phase self-cycle context, missing runtime bare entry, typed declaration companion and declared raw-entry priority. The handoff proof records sixteen Source read fences, nine independently recomputed Python byte digests and three provider revision digests. This is reviewed direct pure-function evidence from the worker, not an independently rerun test or a managed/Native/compiler/application pass. The earlier companion case was corrected before this final evidence.
+
+
+### Overlay Twelve Observation
+
+All twelve listed receipt SHA-256 values and the continuous previously overlaid path before/after chain match. Overlay twelve has SHA-256 `34643d4304c9d943d63765a0059dc2de94d3145ce54b8a2178d71a019b84da25`. A read-only Node filesystem/crypto observation in the existing builder independently matched all eleven final private Source hashes and byte counts to the reviewed handoff. All recorded temporary diagnostics are inactive. This verifies bounded provenance and observed private inputs, not current-host equivalence or managed readiness.
+
+
+### Release Nine Terminal Boundary
+
+The immutable `private-build-20261020T000131-ace24a38.json` records the genuine course test invocation from 00:01:31.333Z to 00:07:31.796Z, status 1 and expired false. The fresh 4,108,386-byte log independently hashes to `0ffd58f78d49088b353e9efd4f35ea9b26e7933a5d44a41d63fd27abb7331af6`. Its durable guard context now identifies `@semio-tech/assets:build`, importer `assets/concepts`, its exact generated icons output, and compile demand. This is a different concrete selected compile self-consumption boundary from the previous runtime-generator route. Vitest collection and assertions were not reached; no application pass follows from this attempt.
+
+
+### Bounded Same-Cause Producer Inventory
+
+The retained 49-import inventory names eleven exact producers. Current authored defaults expose additional possible self-consumer overlap: actor:typegen explicitly includes mailbox/shard-client consumers; styling-tokens:generate covers all styling consumers; schema:generate includes schema tests importing generated entity kinds. The styling GenerateScript directly calls generateStylingArtifacts(writeGeneratedFileIfChanged), whereas its separate TestScript invokes Vitest. Actor TypegenScript seeds and publishes an actual staged export; its downstream implementation still needs effect confirmation. These are bounded Source overlap observations, not proof that these targets are selected in the current course invocation or that frozen bytes equal current host bytes. No annotation or other Source edit was made, and no broader producer task was inferred from its name alone.
+
+
+### Four Audited Producer Roles: Final Review
+
+The frozen six-file producer-input-roles handoff matches every actual host SHA-256 and byte count. Only assets:build, actor:typegen, styling-tokens:generate and schema:generate receive explicit freshness observation. Sibling compiler/test defaults remain compile; scripts, parser semantics and strict runtime/typed generated guards are unchanged. The actual architecture build and deploy-check explicitly require styling generation. The actor/schema reachability evidence comes from earlier actual demanded boundaries, rather than task-name inference.
+
+The reviewed runtime producer-role handoff proof retains four bounded neutral actual-metadata projections, eighteen Source read fences and twenty independently recomputed Python byte digests through actual admission/node/assembly/installed Nx/Bazel functions. Each projection intentionally reuses the same neutral fixture; identical digests therefore do not imply execution of four real package closures. Exact frozen effect evidence is retained separately by runtime. I found no concrete blocker in the bounded Source/hash/proof review. The worker’s focused regression result is reported as one test with twenty-eight assertions, not rerun by this auditor. No managed test collection or real generator success is claimed.
+
+
+### Overlay Thirteen Observation
+
+All thirteen receipt hashes and continuous previously overlaid path chains match. Overlay thirteen SHA-256 is `b33bc6ed8a85d4808c3444fd1a1c6b112b43cc62f2e199b27a7aa8c47c20f070`. The six final private Source files independently match reviewed handoff hashes and byte counts via read-only Node filesystem/crypto observation. All diagnostic flags remain inactive. This is bounded input provenance, not managed readiness.
+
+
+### Release Ten And Remaining Finite Producer Overlaps
+
+The immutable release-ten receipt records status 1, expired false, 00:14:57.842Z–00:19:32.641Z. Its 4,083,419-byte log matches SHA-256 `3f771358efeb7e3914398f8f71fd2fb1d333a06a3e16634298867d5bb52cb19d` and identifies ui-contract-rs:generate consuming its own generated contract in compile demand. No collection was reached.
+
+The remaining eleven-producer roster contains two further direct authored overlap candidates: ui-rs defaults explicitly match interaction, which imports its ui-axes output; framework-graph defaults explicitly match the graph suite importing its catalog output. Async and shell defaults do not directly match their known semantic TypeScript consumers. Composition has broad own-consumer overlap but no established current-goal reachability. These distinctions were relayed to the effect/provenance worker; a pure generator branch and actual goal relevance must be established before any additional annotation. No Source change or runtime operation was performed.
+
+
+### Remaining Producer Cohort And Overlay Fourteen
+
+The five-file host handoff matches actual hashes/bytes; its three audited generate roles are freshness and sibling test/check defaults remain compile. Maximum absolute path length is 120 characters. The reviewed direct proof records three actual-metadata neutral projections, seventeen Source fences and fifteen independent Python digests. It does not execute the three real package closures.
+
+All fourteen receipt hashes and continuous previously overlaid path chains match. Overlay fourteen SHA-256 is `7e9e79250234d296a223298815f728786b6c450b010d45180a73d4e57b92805f`. All five actual private Source hashes/bytes match the separate expected-private roster. The UI private manifest differs intentionally from current host: removing the single 106-byte generate-role metadata insertion reconstructs SHA-256 `eaa3fb3997dcc0c8450134cbc7bab6c19bacf26cd7ead828d419218f774b73b1`, the authentic frozen preimage. This exact inverse proves unrelated host test metadata was not imported. All temporary diagnostic flags remain inactive. No private mutation or managed command was performed by this auditor.
+
+
+### Release Eleven Terminal Boundary
+
+The immutable release-eleven receipt records status 1, expired false, 00:27:04.538Z–00:32:19.316Z. Its 4,123,720-byte log matches SHA-256 `277b39537b65f48f5c91d39ae66f0b45179cf6fae61af746d515c2a32ce28926`. The durable context identifies ui-rs:generate, manifest/host-effects-choices-and-fault-notices, its own generated ui-axes output and runtime demand. This is an actual runtime dependency boundary, distinct from the repaired passive compile-root metadata. The strict guard remains effective; no role annotation or phase rollback follows from the error. Vitest collection/assertions were not reached.
+
+
+### Provider Runtime Value Cohort: Final Bounded Review
+
+All seven host handoff hashes and byte counts match. Five Source files replace proven umbrella value bindings with canonical existing semantic leaves; broad types, phase rules and strict generated guards remain unchanged. Canonical aliases preserve the actual timeout/backoff functions, merge converters, opening helpers and view-context function. Scoped private packs editing excludes unrelated host comment drift.
+
+I reviewed the corrected drained provider closure, eleven frozen TypeScript aliases, three strict phase negatives and two borrowed-file structural AST/pragma equivalence records. The closure retains 1,124 queued modules and 1,127 reads/12,602,443 bytes, with zero unresolved relative/known-bare/outside edges, umbrella value edges, generated edges or generated Source reads. The former failing importer is absent. Final handoff JSON matches seven host files, five memory-private Source hashes and twelve guard read fences. Borrowed envelope/directory formatting/comment deltas are explicitly separated from authored import changes. No concrete blocker was found. This is direct finite Source/parser evidence, not managed generator or course-test success. The worker-referenced handoff log was not present when read; the JSON and individual proof logs were available.
+
+
+### Overlay Fifteen Observation
+
+All fifteen receipt hashes and continuous overlaid path chains match; overlay fifteen SHA-256 is `fd650d96b73f50dc8c83df1568a48b6baebeef4c9df16c96b15b0f1ce04fb23f`. All seven actual private final hashes/bytes match the expected-private roster. Reversing the single packs value import reconstructs exact captured preimage SHA-256 `e1bfc9ef3b7a418d4d5f98cd842714a6ff10a23e81f7ccce9e3f17a97045ee9e`, proving unrelated host comment deletion was excluded. Diagnostic flags remain inactive. The aggregate proof log is present under its corrected name `2026-10-20-runtime-provider-value-handoff.log` and confirms the final fence result; the earlier absent-name note was a filename mismatch. This verifies bounded provenance, not managed readiness.
+
+
+### Release Twelve Terminal Boundary
+
+The immutable receipt records status 1, expired false, 00:53:02.302Z–01:06:31.811Z (809.509 seconds). Its 5,558,181-byte log independently matches SHA-256 `fdac64c5380fef6c5cc2935e25d797d9609bcaca23596ea3684b23f596774d17`. This attempt crossed selected compile traversal into project assembly, then refused an undeclared external plugin-registry/runtime Source-input dependency from renderer/wgpu/renderer-boot. No Vitest collection/assertions occurred. This is a new explicit Source-contract boundary, not recurrence of the repaired provider umbrella runtime cycle.
+
+
+### Selected Source Contract Scope: Final Review
+
+All twelve frozen handoff hashes and byte counts match host files. The corrected caller forwards sorted requested owner inputs and includes them in the observation key. Contract selection uses normalized targets and the actual provisional named/command groups; inactive metadata contracts are not eagerly read. The finite schema-backed helper preserves explicit, nested, project and dependency demand, with strict selected-contract parsing. Its implementation and schema enter the inference revision. The WGPU contract declares actual package-root namespaces rather than subpath strings; the underlying external-import guard is unchanged.
+
+I read the final GREEN6 evidence with ten positive cases and three strict negatives, including inactive poison avoidance, requested-group cache changes, explicit/caret peer groups, selected/requested undeclared namespace refusals and missing relative Source. Final twelve-file proof matches all hashes/bytes; eight of ten original read fences match exactly and the two import/unused-binding cleanups are documented with exact inverse and unchanged tested function text. This is bounded direct parser/normalization/Nx/Bazel evidence and reviewed third-party oracle output, not managed course readiness. No concrete blocker was found.
+
+
+### Overlay Sixteen Observation
+
+All sixteen receipt SHA-256 values and continuous overlaid path chains match. All twelve actual private final Source files independently match the reviewed handoff hashes and byte counts via read-only Node filesystem/crypto observation. All diagnostic flags remain inactive. This confirms bounded input provenance, not managed readiness.
+
+
+### Release Thirteen: Actual Policy Binding Boundary
+
+The immutable receipt records status 1, expired false, 01:23:46.601Z–01:28:20.667Z. The 4,111,513-byte log independently matches SHA-256 `efbfdcaea18de4a005d9ecee50efb5ded199f825741afe7c3d386213b9191f04`. The new unknown sharedGlobals refusal occurs before collection. The authored build policy defines sharedGlobals, but assembly currently supplies caching POLICY to the contract selector. This is a concrete policy-binding integration defect; an injected fixture named map does not establish correct actual binding. Separate physical workspace-policy coordinates and revision hashing can repair authority without relaxing unknown-name refusal. Final repair proof remains pending.
+
+
+### Workspace Policy Cohort: Final Review
+
+The final six-file cohort matches actual host hashes. Coordinates read the physical build policy as WORKSPACE_POLICY independently of caching POLICY. Assembly contract selection and discovery named-input scans both consume workspace named inputs. The inference revision hashes exact consumed build-policy bytes before cache identity/reuse, while strict unknown-name refusal remains intact. No executable script or new Source path is added.
+
+The reviewed final runtime handoff retains eleven positive cases, two strict negatives, eleven read fences, exact private/base/host policy equality and independent Python revision-mutation recomputations. This corrects the earlier fixture-only policy binding gap. No concrete blocker was found. This checkpoint supersedes historical pending/five-file wording: the current cohort has six files, release thirteen is terminal failure, and all managed commands are terminal before transfer. No managed/compiler/application pass is claimed.
+
+
+### Overlay Seventeen Observation
+
+All seventeen receipt hashes and continuous overlaid path chains match. All six actual private final Source files independently match the reviewed handoff hashes and byte counts. All temporary diagnostic flags remain inactive. This verifies bounded provenance only; the next genuine managed invocation remains necessary.
+
+
+### Release Fourteen Terminal Boundary
+
+The immutable receipt records status 1, expired false, 01:39:25.044Z–02:26:01.680Z (2,796.636 seconds). Its 5,547,141-byte log independently matches SHA-256 `2a529018a75275b732e4e5279f61776e7059af6b35854724dde9dcc38ea8b391`. The invocation passed the graph marker and eventually reached Nx tool-input capture, then refused an authorizer Source closure capacity bound. The log does not identify whether the 256-file or 16-MiB limit was exceeded. Vitest collection, compiler/generator execution and application assertions were not reached. The long elapsed interval does not establish that portableInputs was the live CPU bottleneck; the adaptive batching proof remains a separate bounded Source experiment.
+
+
+### Adaptive Inventory Cohort: Final Bounded Review
+
+All nine frozen Source hashes/bytes match the handoff. The planner uses finite inert extent hints and a uniform enforced per-record cap; count × cap fits the unchanged metadata ceiling and remaining aggregate inventory budget before allocation. The actual descriptor read enforces the cap before retained allocation and on cached records, while retaining no-follow/path/descriptor, content-digest and EOF checks. Hint growth beyond the cap refuses; harmless within-cap changes remain subject to exact digest identity.
+
+A retained outer graph consumer owns planning and inner batches. Planning rechecks Store at bounded segments, checks invocation/lease per record and yields/reports every 128 records; actual reads retain their own Store rechecks and the same progress cadence. Reviewed direct proofs cover six positive/ten negative portable cases, eleven descriptor cases with four opens/four closes, four permanent callbacks, primary cancellation and retired inner/outer lifetimes. Final nine-file fences, syntax parsing and unchanged old ceilings are retained in the adaptive handoff proof. No concrete blocker was found. This structural setup-count proof does not identify the live release-fourteen CPU site or claim managed performance/test success.
+
+The separate compiler census provenance record matches all 604 files/5,035,907 bytes to base plus seventeen overlays with zero unmatched Source. It demonstrates a file-count limit issue while leaving byte/output/resolution authorities unchanged; it grants no Native or compiler readiness.
+
+
+### Overlay Eighteen Observation
+
+All eighteen receipt hashes and continuous overlaid path chains match. All nine actual private final Source files match reviewed hashes and byte counts. Diagnostic flags remain inactive. This is bounded provenance only; no managed retry occurred in this audit lane.
+
+
+### Authorizer File-Count Cohort: Final Review
+
+All six frozen Source hashes/bytes and retained proof log hashes match. The demonstrated 604-file compiler closure fits the schema-owned 1,024 Source-file count; capture, manifest and snapshot inert-array validation agree. The independent resolution ceiling remains 256, and per-file/total Source/snapshot/output byte ceilings and physical read/digest code are unchanged. Numeric refusal context now reports actual file and byte counts.
+
+The reviewed capacity regression retains meaningful old-257 refusal, exact 1,024 acceptance, 1,025 refusal and 257-resolution manifest/snapshot refusal. Final clean custody evidence reports two tests/twenty-eight assertions with independent esbuild, Ajv and WebCrypto; the separate capacity case reports one test/twenty assertions. Earlier mixed setup failure is not counted as a clean pass. These are reviewed direct tests under host Bun 1.3.14, not the private managed Bun1.4.2 compiler gate. No concrete blocker was found; actual normal private capture/snapshot validation remains required after transfer.
+
+
+### Overlay Nineteen Observation
+
+All nineteen receipt hashes and continuous overlaid path chains match. All six actual private final Source hashes/bytes match the reviewed authorizer handoff. Diagnostic flags remain inactive. This verifies input provenance only; no normal capture/snapshot or managed command was performed by this auditor.
+
+
+### Actual Private Normal Authorizer Capture Proof
+
+The reviewed final private normal capture/snapshot/read proof records terminal zero using unmodified production Source capture APIs after overlay nineteen. Runtime capture has 256 files/2,354,744 bytes and a 3,239,723-byte snapshot; compiler capture has 604 files/5,039,277 bytes and a 6,958,375-byte snapshot. All 860 rows/629 unique paths match the frozen base plus nineteen overlays. Production performs the physical no-follow reads; the host Python oracle independently verifies captured bytes, hashes, JSON and base64 only. Earlier guest-Python missing executable and strict host zip harness failures are separately retained, not counted as passes. This proves bounded normal capture/snapshot acceptance, not authorizer projection, compilation, Native/managed execution or course collection.
+
+
+### Release Fifteen Terminal Boundary
+
+The immutable receipt records status 1, expired false, 02:49:14.980Z–03:14:58.880Z (1,543.9 seconds). The 5,622,734-byte log independently matches SHA-256 `b07352b84fad5e00ecac44da3dc9b1355a2e5a6067dcf3296ededabc4c618850`. Portable-input expansion completed and authorizer capture crossed into Nx SDK materialization. The new refusal is Native borrower operation admission closed or full through borrower/storage/mapping. The log does not identify exact pending-operation or lifetime state; no diagnosis beyond that boundary is justified yet. No test collection, compiler/generator or application assertions were reached.
+
+
+### Borrower Admission Guard: Bounded Source Review
+
+The current guard combines three refusal causes under one message: closed top-level admission without retained same-scope nested work, scope pending count at the schema ceiling 32, or current-frame pending count at 32. Released scope and nonaccepting current frame have distinct earlier errors, but the observed message alone cannot choose among the remaining causes. Operations are enrolled synchronously in both scope and parent pending sets; accepted descendants drain before frame retirement and guard release. No ceiling increase, custody weakening or lifecycle diagnosis is justified without actual numeric/state evidence. This is static Source evidence, not a new private instrumentation or process observation.
+
+
+### Release Sixteen Deliberate Cancellation
+
+The immutable receipt SHA-256 `febfeacb6d27b8ba9d653ad1fd7e2d0f93598054d886827c675ec8f6dc3895de` records 05:20:21.113Z–06:12:04.388Z, status 0, expired true, cleanupStatus 0 and containerStopped true, retaining the original 7,200,000-ms limit. Parent explicitly requested controlled cancellation for further observation; status zero is cancellation transport outcome, not a test pass. The 5,838,280-byte log matches `e98e986850bdbb614e6dcd010bb3b76ab756e4dd997dabc3314cb4580825551a`. No course collection/assertions were reached, and neither a hang nor current JavaScript site is established. The current plan remains twenty-four overlays with no active diagnostic flags. No signal or process mutation was performed by this auditor.
+
+
+### Release Nineteen Wait Prefix Observation
+
+A bounded existing-log read observed 9946044 bytes/57923 lines. The inspected dependencies-exclusive rows are running activity counters, not a waiting-stage record. They show ownership traversal followed by workspace-edge processing. No lease-wait or deadlock claim is supported by that prefix. The latest prefix contains no terminal result; current Source remains frozen. This is a prefix observation, not an immutable outcome.
+
+The exact reported human still-waits line is40960, following the running ownership-state1410368 activity at40959. Later actual rows advance into workspace-edge processing (at least80127), so that reported interval is not an unchanged wait. The generic human wait wording must not override the subsequent emitted progress. No terminal/collection was present in this observation.

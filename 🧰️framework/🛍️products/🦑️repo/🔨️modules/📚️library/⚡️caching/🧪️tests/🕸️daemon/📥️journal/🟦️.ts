@@ -12,7 +12,7 @@ import { createHash } from "node:crypto";
 import type { ScriptInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { createRepositoryFilesystemJournalV1 } from "../../../🕸️graph/🔏️seal/📥️membership/📥️journal/🟦️.ts";
-import { createLiveFilesystemJournalV1, type FilesystemJournalChangeV1 } from "@semio-tech/framework/filesystem/observation/journal";
+import { createLiveFilesystemJournalV1, type FilesystemJournalChangeV1 } from "@semio-tech/framework-filesystem/observation/journal";
 
 /** 🧪️ Checks the pinned daemon journal protocol and real native observation boundaries. */
 export async function proveDaemonJournal(workspace: string, output: string, invocation: ScriptInvocation, transport = false, fullWorkspace = false): Promise<void> {

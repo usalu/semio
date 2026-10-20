@@ -16,7 +16,7 @@ import {
   Vector3
 } from "@semio-tech/ui-react";
 // #endregion 🔌️Adapters
-import { worldProjectionGumballPlane, type WorldProjectionSpec } from "@semio-tech/infinite-world-r3f";
+import { worldProjectionGumballPlane, type WorldProjectionSpec } from "@semio-tech/framework/infinite/world/r3f";
 import { type WorldAttractionRecord, type WorldInstanceRecord, type WorldVortexRecord } from "../🔭️scene-schema/🟦️.ts";
 import { useThree } from "../🎨️mesh-render/🟦️.tsx";
 

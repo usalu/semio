@@ -1,4 +1,4 @@
-import schema from "./🔣️.json";
+import schema from "./🔣️.json" with { type: "json" };
 
 /** 🎭️ A principal's role for one directory request. */
 export type DirectoryAccessRoleV1 = "admin" | "owner" | "author" | "spectator" | "share" | "authenticated" | "agent-reader" | "agent-editor";

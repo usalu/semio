@@ -1,5 +1,5 @@
 use super::*;
-use crate::bestest::{project, run};
+use crate::bestest::project;
 use crate::results::Results;
 
 /// 📄️ One real, spec-compliant 35-column EPW header+record pair (LOCATION line handcrafted;
@@ -144,7 +144,7 @@ fn synthetic_annual_epw() -> String {
 }
 
 fn annual_results(case: &str) -> Results {
-    run(case, parse(&synthetic_annual_epw()).expect("synthetic weather"), 3).unwrap_or_else(|diagnostics| panic!("case {case} must run: {:?}", diagnostics.messages))
+    crate::sim::testing::run_preborn_factory(|operation| bestest_job(operation, case, &synthetic_annual_epw(), 3).unwrap_or_else(|failure| panic!("case {case} must admit: {failure:?}"))).unwrap_or_else(|error| panic!("case {case} must run: {error:?}"))
 }
 
 /// 🌦️ The synthetic file must actually reach the engine through the real `🌦️epw` codec, with

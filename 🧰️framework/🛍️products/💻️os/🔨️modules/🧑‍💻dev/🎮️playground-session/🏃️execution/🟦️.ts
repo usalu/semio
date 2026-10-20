@@ -1,5 +1,5 @@
 import { parseGeneratorPreviewProgressPolicyV1, serializeGeneratorPreviewProgressV1 } from "@semio-tech/repo-lib/authoring";
-import { readPhysicalFileV1 } from "@semio-tech/framework/filesystem/observation";
+import { readPhysicalFileV1 } from "@semio-tech/framework-filesystem/observation";
 import { parseDeployedRegistryEntryV1 } from "@semio-tech/plugin-registry/discovery/schema";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -8,7 +8,7 @@ import { renderPlaygroundSessionTypeScript } from "@semio-tech/plugin-registry/p
 import { registryModuleDirectories, type GeneratedCatalogProjection } from "@semio-tech/plugin-registry/catalog-view";
 import { PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, playgroundSessionOutputPath } from "../../♻️activation/🟦️.ts";
 import { parsePlaygroundSessionPublicationRequestV1, type PlaygroundSessionPublicationRequestV1 } from "../🧬️schema/🟦️.ts";
-import schema from "../🧬️schema/🔣️.json";
+import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 
 export class PlaygroundSessionGenerateScript extends BundleScript {
   readonly playgroundSessionPath: string;

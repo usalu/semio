@@ -5,6 +5,8 @@ pub use semio_framework_value_native_owned::native_decoding::NativeDecodeControl
 #[path="../🪆️binding/🦀️.rs"]
 mod binding;
 pub use binding::*;
+#[path="../🛬️receive/🦀️.rs"]
+mod native_receive;
 #[path="../🫴️receiving/🦀️.rs"]
 pub mod receiving;
 pub use receiving::{DslReceivingField,DslReceivingRecord,DslReceivingVariants,DslOwnedReceivingField,DslOwnedReceivingRecord,DslOwnedReceivingVariants,OwnedFieldReceiving};
@@ -25,12 +27,12 @@ pub use authored_borrowed_schema::{BorrowedRecordSpecProducer,BorrowedDslField,B
 //#region 🔖️Shape
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RecordLayout {
-    /// All fields printed as space-joined `key=value` tokens on one logical unit.
+    /// 📎️ All fields printed as space-joined `key=value` tokens on one logical unit.
     Inline,
-    /// Each field printed as its own line/statement (norm-family style) in Document mode;
+    /// 📏️ Each field printed as its own line/statement (norm-family style) in Document mode;
     /// collapses to the same space-joined form as `Inline` when rendered in `JoinMode::Inline`.
     Lines,
-    /// `<name> = <keyword>(arg1=val1 arg2=val2)` — a named call assignment (the graph-family
+    /// 📨️ `<name> = <keyword>(arg1=val1 arg2=val2)` — a named call assignment (the graph-family
     /// construction-chain notation, e.g. `extrude = brep.solid.extrude(profile=w1 axis=v1)`).
     /// Requires exactly one field marked [`FieldSpec::call_name`] (printed before `=`, must have
     /// `Shape::Text`) and `RecordSpec.keyword` set (the dotted call target after `=`, e.g.
@@ -51,9 +53,9 @@ pub enum Shape {
     Float,
     Text,
     Bytes64,
-    /// Unit-variant keyword table: `(tag, ordinal)` pairs.
+    /// 🔀️ Unit-variant keyword table: `(tag, ordinal)` pairs.
     Enum(Vec<(String, u32)>),
-    /// Packed `x,y,z` — `len = Some(n)` enforces arity.
+    /// 👫️ Packed `x,y,z` — `len = Some(n)` enforces arity.
     Tuple(Box<Shape>, Option<usize>),
     /// 🧾️ Bracketed scalar lists `[a b c]`; each direct record item is braced `[ { fields } { } ]`.
     List(Box<Shape>),
@@ -62,19 +64,19 @@ pub enum Shape {
     /// recurses back to the struct itself, e.g. a dynamic-value type with a nested-dictionary-of-
     /// itself field) would otherwise recurse infinitely just building its own `RecordSpec`.
     Record(RecordSpecProducer),
-    /// Wraps the inner shape in `{ ... }`.
+    /// 🧱️ Wraps the inner shape in `{ ... }`.
     Block(Box<Shape>),
-    /// Keyword-dispatched, order-preserving repeated records: `(keyword, spec_fn)` per variant.
+    /// 📡️ Keyword-dispatched, order-preserving repeated records: `(keyword, spec_fn)` per variant.
     /// `spec_fn` is a zero-capture `fn` pointer, not an eagerly-built `RecordSpec` — a genuinely
     /// self-referential grammar (a recursive block tree whose own variant table contains itself)
     /// would otherwise recurse infinitely just building the table. Calling `(spec_fn.ordinary)()` one level at
     /// a time bottoms out naturally at real documents' finite depth instead.
     Statements(Vec<(String, RecordSpecProducer)>),
-    /// `{ key=value ... }` block, keys sorted on canonical print.
+    /// 🔳️ `{ key=value ... }` block, keys sorted on canonical print.
     Map(Box<Shape>),
-    /// Dynamic JSON-equivalent literal.
+    /// 📰️ Dynamic JSON-equivalent literal.
     Value,
-    /// Structure-of-Arrays columnar table: `key [col:TYPE ...] { v11 v12 ...  v21 v22 ... }`.
+    /// 🗺️ Structure-of-Arrays columnar table: `key [col:TYPE ...] { v11 v12 ...  v21 v22 ... }`.
     /// `fn() -> RecordSpec` is the SAME lazy self-referential seam `Record`/`Statements` use.
     /// Parses to `FieldValue::List(Vec<FieldValue::Record>)` — identical to `List(Record)` — so
     /// no binder/diff/derive path needs to know a field is a table rather than a verbose AoS list.
@@ -84,69 +86,69 @@ pub enum Shape {
     /// as the bracketed AoS list `[ {...} {...} ]` instead — the bare form has no bracket of its
     /// own to mark where it ends, so it's only safe directly after a record's leading keyword.
     Table(RecordSpecProducer),
-    /// Graph endpoint literal: `id[:kind][@port][->|--id2[:kind2][@port2]]{props}`.
+    /// 🔗️ Graph endpoint literal: `id[:kind][@port][->|--id2[:kind2][@port2]]{props}`.
     Wire,
-    /// A `Shape::Float` refinement: prints/parses with a glued unit suffix (`210GPa`). The value
+    /// 📦️ A `Shape::Float` refinement: prints/parses with a glued unit suffix (`210GPa`). The value
     /// is stored in `unit`'s declared unit; a compatible alien suffix on parse (`210000MPa`)
     /// converts into it, an incompatible one (wrong dimension) is a parse error. No suffix at all
     /// means the bare number is already in the declared unit.
     Quantity(&'static semio_framework_dsl::UnitSpec),
-    /// A `Shape::Quantity` restricted to angle units (`deg`/`rad`/`turn`) — kept as its own variant
+    /// 🔄️ A `Shape::Quantity` restricted to angle units (`deg`/`rad`/`turn`) — kept as its own variant
     /// (rather than reusing `Quantity` with an angle unit) so `shape_type_name`/table headers can
     /// tell a length from a rotation at a glance (`NUM` vs `QTY` vs `ANG`).
     Angle(&'static semio_framework_dsl::UnitSpec),
-    /// A `Shape::Text` refinement: a checked reference to an entity of the named kind (e.g.
+    /// 🧷️ A `Shape::Text` refinement: a checked reference to an entity of the named kind (e.g.
     /// `"material"`). Prints/parses identically to `Text` (bare-preferred) — the only difference
     /// is semantic (a paired `FieldSpec.defines` anchor lets `LanguageService::validate` flag a
     /// dangling reference), so it needs no dedicated parse/print arm, only a distinct type name.
     Ref(&'static str),
-    /// `@x,y[,z,...]` — a placement/position literal, `dims` coordinates. Value is
+    /// 📍️ `@x,y[,z,...]` — a placement/position literal, `dims` coordinates. Value is
     /// `FieldValue::Tuple` (same representation `Shape::Tuple` uses) with exactly `dims` floats.
     Coord(u8),
-    /// `^x,y,z` — a unit direction/axis vector, always exactly 3 floats. Value is
+    /// 📁️ `^x,y,z` — a unit direction/axis vector, always exactly 3 floats. Value is
     /// `FieldValue::Tuple` — distinct from `Coord(3)` only by its `^` sigil and `DIR` type tag,
     /// so a reader never confuses "where" from "which way".
     Dir,
-    /// `WxHxD` (glued, no separator token — see `parse_dim`) — `dims` size components. Value is
+    /// ➖️ `WxHxD` (glued, no separator token — see `parse_dim`) — `dims` size components. Value is
     /// `FieldValue::Tuple` with exactly `dims` floats.
     Dim(u8),
-    /// `(lo..hi)` or `(lo..hi,step)` — value is `FieldValue::Tuple` of 2 or 3 floats (no dedicated
+    /// ↔️ `(lo..hi)` or `(lo..hi,step)` — value is `FieldValue::Tuple` of 2 or 3 floats (no dedicated
     /// `RangeValue` type: a range IS a small tuple, just printed with `..` instead of `,` between
     /// the first two elements).
     Range,
-    /// `xN` — a bare count/multiplicity literal. Value is `FieldValue::UInt`.
+    /// 📜️ `xN` — a bare count/multiplicity literal. Value is `FieldValue::UInt`.
     Count,
-    /// `(expr)` — an arithmetic formula literal, always outer-parenthesized. Value is the ONE
+    /// ➗️ `(expr)` — an arithmetic formula literal, always outer-parenthesized. Value is the ONE
     /// genuinely new `FieldValue` variant this engine adds (`FieldValue::Expr`) — everything else
     /// in this Shape reuses an existing representation.
     Expr,
-    /// Fenced verbatim text in Document mode (`` ```lang\ncontent\n``` ``), escaped-quoted `Text`
+    /// 🏠️ Fenced verbatim text in Document mode (`` ```lang\ncontent\n``` ``), escaped-quoted `Text`
     /// in Inline mode — both parse to the same `FieldValue::Text`, the "Document/Inline agree" law
     /// applied to a shape whose Document form needs raw multi-line content. `lang` is this field's
     /// DECLARED embedded language (e.g. `"jack"`); an authored fence's own lang tag must be empty
     /// or match it.
     Embed(&'static str),
-    /// Fence language taken from a sibling Text field named by this key (see `#[dsl(lang_from)]`).
+    /// 🏨️ Fence language taken from a sibling Text field named by this key (see `#[dsl(lang_from)]`).
     EmbedFrom(&'static str),
 }
 
 #[derive(Clone, Debug)]
 pub struct FieldSpec {
     pub id: u16,
-    /// Empty for positional-only fields.
+    /// 🫥️ Empty for positional-only fields.
     pub key: String,
-    /// `Some(n)` = nth positional token right after the keyword, in declaration order among
+    /// 🧭️ `Some(n)` = nth positional token right after the keyword, in declaration order among
     /// positional fields.
     pub position: Option<u8>,
     pub shape: Shape,
     pub optional: bool,
-    /// Splice a nested record's fields directly into this record (shared doc/op field schemas).
+    /// 🪆️ Splice a nested record's fields directly into this record (shared doc/op field schemas).
     pub flatten: bool,
-    /// Paired with a sibling field's `Shape::Ref(kind)`: this field's value is the canonical id of
+    /// ⚖️ Paired with a sibling field's `Shape::Ref(kind)`: this field's value is the canonical id of
     /// an entity of kind `kind`. `None` for every field that isn't such an anchor. Not wire/hash
     /// relevant (LanguageService-only, see `Shape::Ref`'s doc comment) — purely an authoring aid.
     pub defines: Option<&'static str>,
-    /// The one field a `RecordLayout::Call` spec prints before `=` and parses as the assignment
+    /// 📞️ The one field a `RecordLayout::Call` spec prints before `=` and parses as the assignment
     /// target — see [`RecordLayout::Call`]. Always `false` outside a `Call`-layout spec; ignored
     /// (never printed/parsed specially) for any other layout.
     pub is_call_name: bool,
@@ -361,7 +363,7 @@ impl WireEdgeLabel {
 #[derive(Clone, Debug, PartialEq)]
 pub struct WireValue {
     pub from: WireNode,
-    /// `Some((directed, to))` if this line describes an edge, `None` for a bare node declaration.
+    /// ⛓️ `Some((directed, to))` if this line describes an edge, `None` for a bare node declaration.
     pub edge: Option<(bool, WireNode)>,
     pub edge_label: WireEdgeLabel,
     pub properties: DslValue,
@@ -447,7 +449,7 @@ impl ExprOp {
 #[derive(Clone, Debug, PartialEq)]
 pub enum ExprValue {
     Num(f64),
-    /// A snake_case reference to a sibling field/symbol, resolved by the consuming technology
+    /// 🔣️ A snake_case reference to a sibling field/symbol, resolved by the consuming technology
     /// (e.g. a norm calc-sheet's own `given`/prior `clause` definitions) — this engine only
     /// parses/prints the name, it never evaluates it.
     Var(String),

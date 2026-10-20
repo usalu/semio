@@ -5,7 +5,7 @@
     {
       "kind": "change-jfif-header",
       "variant": "ChangeJfifHeader",
-      "directory": "🪪️change-jfif",
+      "directory": "🪪️change-jfif-header",
       "textOpcode": "change-jfif-header",
       "binaryTag": 1,
       "requiredFiles": [
@@ -20,7 +20,7 @@
     {
       "kind": "insert-other-segment",
       "variant": "InsertOtherSegment",
-      "directory": "📥️insert-other",
+      "directory": "📥️insert-other-segment",
       "textOpcode": "insert-other-segment",
       "binaryTag": 2,
       "requiredFiles": [
@@ -35,7 +35,7 @@
     {
       "kind": "remove-other-segment",
       "variant": "RemoveOtherSegment",
-      "directory": "🗑️remove-other",
+      "directory": "🗑️remove-other-segment",
       "textOpcode": "remove-other-segment",
       "binaryTag": 3,
       "requiredFiles": [

@@ -11,7 +11,7 @@ members = [
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/➕️create-node/📦️packages/🦀️rust",
-  "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧮️update-graph/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧮️update-graph-algorithm/📦️packages/🦀️rust",
   "📦️packages/🦀️rust",
 ]
 exclude = [

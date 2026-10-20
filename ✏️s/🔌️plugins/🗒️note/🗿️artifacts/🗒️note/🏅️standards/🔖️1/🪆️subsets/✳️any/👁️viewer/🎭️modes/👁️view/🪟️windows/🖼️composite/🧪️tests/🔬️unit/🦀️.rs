@@ -1,7 +1,7 @@
 use semio_framework_plugin::InkCanvasScene;
 use semio_framework_plugin::SurfaceKind;
 #[allow(unused_imports)]
-use crate::NoteSnapshot;
+use semio_s_artifact_note_note_schema::NoteSnapshot;
 #[allow(unused_imports)]
 use semio_framework_plugin::BuiltNode;
 #[allow(unused_imports)]

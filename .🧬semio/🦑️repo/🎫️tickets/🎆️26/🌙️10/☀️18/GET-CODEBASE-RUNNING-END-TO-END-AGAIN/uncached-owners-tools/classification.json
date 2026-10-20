@@ -1,0 +1,4538 @@
+[
+ {
+  "id": "@leutwiler/realparts-of-powers-z-n:deps",
+  "manifest": "👴️leutwiler/💤️realparts-of-powers-z-n/📋️project.json",
+  "target": "deps",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes host stores, installs tools or rebuilds the pinned binary (workspace-anchored write sites outside the declared outputs)"
+ },
+ {
+  "id": "@semio-tech/architect-program-rs:generate-register-catalog",
+  "manifest": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust/📋️project.json",
+  "target": "generate-register-catalog",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes tracked or generated workspace files (strong, workspace-anchored write sites) the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/assets:logo-dev",
+  "manifest": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📋️project.json",
+  "target": "logo-dev",
+  "disposition": "interactive",
+  "decision": {
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  },
+  "basis": "name",
+  "note": "runs until stopped: a server, watcher, shell, debugger or terminal user interface"
+ },
+ {
+  "id": "@semio-tech/bim-model-rs:sqlite-oracle",
+  "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust/📋️project.json",
+  "target": "sqlite-oracle",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  },
+  "basis": "read",
+  "note": "the output is a function of arguments or standard input the caller supplies, which are not declared inputs"
+ },
+ {
+  "id": "@semio-tech/cad-cad-rs:canonical-architecture",
+  "manifest": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/cad-js:fixture",
+  "manifest": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/📋️project.json",
+  "target": "fixture",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/cad-js:generate",
+  "manifest": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/📋️project.json",
+  "target": "generate",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes tracked or generated workspace files (strong, workspace-anchored write sites) the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/cargo-workspaces:members-write",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📋️project.json",
+  "target": "members-write",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/dag-dag:test",
+  "manifest": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "read",
+  "note": "standard TypeScript artifact test (runArtifactTypeScriptPackageMain); 77 sibling artifact tests are cached with outputs []"
+ },
+ {
+  "id": "@semio-tech/demonstrator-playground:test",
+  "manifest": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "read",
+  "note": "standard TypeScript artifact test (runArtifactTypeScriptPackageMain); 77 sibling artifact tests are cached with outputs []"
+ },
+ {
+  "id": "@semio-tech/energy-model-rs:canonical-architecture",
+  "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/energy-model-rs:lock",
+  "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust/📋️project.json",
+  "target": "lock",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/energy-oracle-py:deps",
+  "manifest": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/📋️project.json",
+  "target": "deps",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "@semio-tech/energy-oracle-py:oracle-emit",
+  "manifest": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/📋️project.json",
+  "target": "oracle-emit",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  },
+  "basis": "read",
+  "note": "the output is a function of arguments or standard input the caller supplies, which are not declared inputs"
+ },
+ {
+  "id": "@semio-tech/energy-oracle-py:oracle-epjson",
+  "manifest": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/📋️project.json",
+  "target": "oracle-epjson",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  },
+  "basis": "read",
+  "note": "the output is a function of arguments or standard input the caller supplies, which are not declared inputs"
+ },
+ {
+  "id": "@semio-tech/energy-oracle-py:oracle-native",
+  "manifest": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/📋️project.json",
+  "target": "oracle-native",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  },
+  "basis": "read",
+  "note": "the output is a function of arguments or standard input the caller supplies, which are not declared inputs"
+ },
+ {
+  "id": "@semio-tech/energy-oracle-py:oracle-run",
+  "manifest": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/📋️project.json",
+  "target": "oracle-run",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  },
+  "basis": "read",
+  "note": "the output is a function of arguments or standard input the caller supplies, which are not declared inputs"
+ },
+ {
+  "id": "@semio-tech/energy-oracle-py:oracle-setup",
+  "manifest": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/📋️project.json",
+  "target": "oracle-setup",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "@semio-tech/energy-oracle-py:oracle-status",
+  "manifest": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/📋️project.json",
+  "target": "oracle-status",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  },
+  "basis": "name",
+  "note": "measures or reports the environment: benchmark, report, doctor, probe or repository-state check"
+ },
+ {
+  "id": "@semio-tech/fixture-generator-stdio-jpg-jfif-1-01-document:🧪️witness",
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📋️project.json",
+  "target": "🧪️witness",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes tracked or generated workspace files (strong, workspace-anchored write sites) the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/flow-extension-brep-rust:canonical-architecture",
+  "manifest": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/framework-actor:canonical-architecture",
+  "manifest": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/framework-async:twin",
+  "manifest": "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/📋️project.json",
+  "target": "twin",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "read",
+  "note": "vitest or bun test over the project's own sources and fixtures; the reached files show no spawn, signal, server, browser, network, home or store marker"
+ },
+ {
+  "id": "@semio-tech/framework-job-rs:canonical-architecture",
+  "manifest": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/framework-os-dev:bench",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "bench",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  },
+  "basis": "name",
+  "note": "measures or reports the environment: benchmark, report, doctor, probe or repository-state check"
+ },
+ {
+  "id": "@semio-tech/framework-os-dev:bench-plugins-native",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "bench-plugins-native",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  },
+  "basis": "name",
+  "note": "measures or reports the environment: benchmark, report, doctor, probe or repository-state check"
+ },
+ {
+  "id": "@semio-tech/framework-os-dev:bench-plugins-react",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "bench-plugins-react",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  },
+  "basis": "name",
+  "note": "measures or reports the environment: benchmark, report, doctor, probe or repository-state check"
+ },
+ {
+  "id": "@semio-tech/framework-os-dev:bench-plugins-wgpu",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "bench-plugins-wgpu",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  },
+  "basis": "name",
+  "note": "measures or reports the environment: benchmark, report, doctor, probe or repository-state check"
+ },
+ {
+  "id": "@semio-tech/framework-os-dev:boot-budget",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "boot-budget",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/framework-os-dev:canonical-architecture",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/framework-os-dev:cold-boot-check-s",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "cold-boot-check-s",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/framework-os-dev:connection-budget",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "connection-budget",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/framework-os-dev:idle-budget",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "idle-budget",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/framework-os-dev:interaction-latency",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "interaction-latency",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/framework-os-dev:memory-soak",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "memory-soak",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/framework-os-dev:parity-journey",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "parity-journey",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/framework-os-dev:plugin-size",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "plugin-size",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  },
+  "basis": "name",
+  "note": "measures or reports the environment: benchmark, report, doctor, probe or repository-state check"
+ },
+ {
+  "id": "@semio-tech/framework-os-dev:program-matrix",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "program-matrix",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/framework-os-dev:s-host-foreign-kind-s",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "s-host-foreign-kind-s",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/framework-os-dev:s-host-pinch-diagram-contrast-s",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "s-host-pinch-diagram-contrast-s",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/framework-os-dev:time-travel",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "time-travel",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/framework-os-dev:tool-run-matrix",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "tool-run-matrix",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/framework-os-dev:two-human",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "two-human",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/framework-os-dev:two-human-cross-undo",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "two-human-cross-undo",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/framework-os-dev:two-human-viewer",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "two-human-viewer",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/framework-os-kernel:canonical-architecture",
+  "manifest": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/framework-os-kernel:test-directory-lease-fixture",
+  "manifest": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json",
+  "target": "test-directory-lease-fixture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "read",
+  "note": "vitest or bun test over the project's own sources and fixtures; the reached files show no spawn, signal, server, browser, network, home or store marker"
+ },
+ {
+  "id": "@semio-tech/framework-os-kernel:wal-writer-fence-live",
+  "manifest": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json",
+  "target": "wal-writer-fence-live",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/framework-os-mcp-rs:publish",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/📋️project.json",
+  "target": "publish",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "publishes-remote"
+  },
+  "basis": "name",
+  "note": "publishes a release, image or package to a remote"
+ },
+ {
+  "id": "@semio-tech/framework-os-mcp:test-native-staging",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test-native-staging",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "read",
+  "note": "vitest or bun test over the project's own sources and fixtures; the reached files show no spawn, signal, server, browser, network, home or store marker"
+ },
+ {
+  "id": "@semio-tech/framework-os-node-graph-rs:wasm",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust/📋️project.json",
+  "target": "wasm",
+  "disposition": "uncached",
+  "decision": {
+   "class": "managed-output",
+   "reason": "outputs-in-managed-store"
+  },
+  "basis": "read",
+  "note": "wasm package, site, storybook or cmake build whose product lives in the leased products store behind a receipt (outputs-in-managed-store)"
+ },
+ {
+  "id": "@semio-tech/framework-os:canonical-architecture",
+  "manifest": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/framework-plugin:canonical-architecture",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/framework-process:test-budget",
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-budget",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "read",
+  "note": "the selected tests run on temporary directories, fixtures or the parsed source text only"
+ },
+ {
+  "id": "@semio-tech/framework-process:test-cargo-build-lease",
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-cargo-build-lease",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "@semio-tech/framework-process:test-cargo-source-admission",
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-cargo-source-admission",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "read",
+  "note": "the selected tests run on temporary directories, fixtures or the parsed source text only"
+ },
+ {
+  "id": "@semio-tech/framework-process:test-cargo-test-leases",
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-cargo-test-leases",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "@semio-tech/framework-process:test-compiler-capacity",
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-compiler-capacity",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "@semio-tech/framework-process:test-compiler-capacity-custodian",
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-compiler-capacity-custodian",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "@semio-tech/framework-process:test-compiler-capacity-inheritance",
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-compiler-capacity-inheritance",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "@semio-tech/framework-process:test-descriptor-lifetime",
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-descriptor-lifetime",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "@semio-tech/framework-process:test-exact-cargo-storage",
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-exact-cargo-storage",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "@semio-tech/framework-process:test-execution-budget",
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-execution-budget",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "@semio-tech/framework-process:test-native-artifact-publication",
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-native-artifact-publication",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "@semio-tech/framework-process:test-native-cache-descriptors",
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-native-cache-descriptors",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "read",
+  "note": "the selected tests run on temporary directories, fixtures or the parsed source text only"
+ },
+ {
+  "id": "@semio-tech/framework-process:test-native-image-observation",
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-native-image-observation",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "read",
+  "note": "the selected tests run on temporary directories, fixtures or the parsed source text only"
+ },
+ {
+  "id": "@semio-tech/framework-process:test-native-storage-platform",
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-native-storage-platform",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "@semio-tech/framework-process:test-process-progress",
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-process-progress",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "@semio-tech/framework-process:test-process-tree-termination",
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-process-tree-termination",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "@semio-tech/framework-process:test-resource-lease-fairness",
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-resource-lease-fairness",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "@semio-tech/framework-process:test-resource-lease-waits",
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-resource-lease-waits",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "@semio-tech/framework-process:test-resource-leases",
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-resource-leases",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "@semio-tech/framework-process:test-runtime-environment",
+  "manifest": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+  "target": "test-runtime-environment",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "read",
+  "note": "the selected tests run on temporary directories, fixtures or the parsed source text only"
+ },
+ {
+  "id": "@semio-tech/framework-renderer-wgpu:browser-dock-acceptance",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+  "target": "browser-dock-acceptance",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/framework-renderer-wgpu:browser-embedded-acceptance",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+  "target": "browser-embedded-acceptance",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/framework-renderer-wgpu:browser-media-acceptance",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+  "target": "browser-media-acceptance",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/framework-renderer-wgpu:canonical-architecture",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/framework-renderer-wgpu:native-scale",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+  "target": "native-scale",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  },
+  "basis": "name",
+  "note": "measures or reports the environment: benchmark, report, doctor, probe or repository-state check"
+ },
+ {
+  "id": "@semio-tech/framework-source-workspace:test-source",
+  "manifest": "🧰️framework/🔨️modules/📁️filesystem/📝️workspace/📋️project.json",
+  "target": "test-source",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "read",
+  "note": "vitest or bun test over the project's own sources and fixtures; the reached files show no spawn, signal, server, browser, network, home or store marker"
+ },
+ {
+  "id": "@semio-tech/gis-gismap-js:tiles-prefetch",
+  "manifest": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📋️project.json",
+  "target": "tiles-prefetch",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "@semio-tech/gis-plugin:hub-edit-durability-check",
+  "manifest": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust/📋️project.json",
+  "target": "hub-edit-durability-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/hub-puzzle-retained-test:test-native",
+  "manifest": "🌎️hub/🧩️compositions/🧩️puzzle/🧵️retained/📋️project.json",
+  "target": "test-native",
+  "disposition": "uncached",
+  "decision": {
+   "class": "aggregate",
+   "reason": "reenters-build-tool"
+  },
+  "basis": "read",
+  "note": "re-enters the build tool (bun repo run / run-many --skip-cache) for other targets instead of declaring them as dependencies"
+ },
+ {
+  "id": "@semio-tech/hub-renderer-wgpu:collaboration-acceptance",
+  "manifest": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+  "target": "collaboration-acceptance",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/hub-renderer-wgpu:collaboration-check",
+  "manifest": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+  "target": "collaboration-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/hub-renderer-wgpu:creation-check",
+  "manifest": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+  "target": "creation-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/hub-renderer-wgpu:journey-check",
+  "manifest": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+  "target": "journey-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/hub-renderer-wgpu:native-guest-journey-check",
+  "manifest": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+  "target": "native-guest-journey-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/hub-space-document-sources-test:test-native",
+  "manifest": "🌎️hub/🧩️compositions/🪐️space/🧪️testing/📋️project.json",
+  "target": "test-native",
+  "disposition": "uncached",
+  "decision": {
+   "class": "aggregate",
+   "reason": "reenters-build-tool"
+  },
+  "basis": "read",
+  "note": "re-enters the build tool (bun repo run / run-many --skip-cache) for other targets instead of declaring them as dependencies"
+ },
+ {
+  "id": "@semio-tech/hub-stdio-publication:publish",
+  "manifest": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📋️project.json",
+  "target": "publish",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes tracked or generated workspace files (strong, workspace-anchored write sites) the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/mit-bestand-demonstrator:build",
+  "manifest": "♻️mit-bestand/🧺️demonstrator/📋️project.json",
+  "target": "build",
+  "disposition": "uncached",
+  "decision": {
+   "class": "managed-output",
+   "reason": "outputs-in-managed-store"
+  },
+  "basis": "read",
+  "note": "wasm package, site, storybook or cmake build whose product lives in the leased products store behind a receipt (outputs-in-managed-store)"
+ },
+ {
+  "id": "@semio-tech/mit-bestand-demonstrator:canonical-architecture",
+  "manifest": "♻️mit-bestand/🧺️demonstrator/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/mit-bestand-demonstrator:prepare-e2e",
+  "manifest": "♻️mit-bestand/🧺️demonstrator/📋️project.json",
+  "target": "prepare-e2e",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "@semio-tech/mit-bestand-demonstrator:test",
+  "manifest": "♻️mit-bestand/🧺️demonstrator/📋️project.json",
+  "target": "test",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "read",
+  "note": "vitest or bun test over the project's own sources and fixtures; the reached files show no spawn, signal, server, browser, network, home or store marker"
+ },
+ {
+  "id": "@semio-tech/mit-bestand-demonstrator:test-e2e",
+  "manifest": "♻️mit-bestand/🧺️demonstrator/📋️project.json",
+  "target": "test-e2e",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/mit-bestand-demonstrator:test-runtime-catalog",
+  "manifest": "♻️mit-bestand/🧺️demonstrator/📋️project.json",
+  "target": "test-runtime-catalog",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "read",
+  "note": "vitest or bun test over the project's own sources and fixtures; the reached files show no spawn, signal, server, browser, network, home or store marker"
+ },
+ {
+  "id": "@semio-tech/mit-bestand-praesentation-projektetage:canonical-architecture",
+  "manifest": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/norm-en1996-rs:regenerate-example-assets",
+  "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/📦️packages/🦀️rust/📋️project.json",
+  "target": "regenerate-example-assets",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/note-note-js:canonical-architecture",
+  "manifest": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🟦️typescript/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/os-plugin-describe-rs:describe",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📋️project.json",
+  "target": "describe",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/playbook-extension-procedural-rust:canonical-architecture",
+  "manifest": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/plugin-registry:new",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📋️project.json",
+  "target": "new",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/plugin-registry:rebuild-all",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📋️project.json",
+  "target": "rebuild-all",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/plugin-registry:surface-schema",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📋️project.json",
+  "target": "surface-schema",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/print-rs:produce-logical-owner",
+  "manifest": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust/📋️project.json",
+  "target": "produce-logical-owner",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/print:deps-tectonic",
+  "manifest": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📋️project.json",
+  "target": "deps-tectonic",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "@semio-tech/print:deps-tex",
+  "manifest": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📋️project.json",
+  "target": "deps-tex",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "@semio-tech/procedural-generation3d-rs:canonical-architecture",
+  "manifest": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/procedural-js:canonical-architecture",
+  "manifest": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/puzzle-plugin:canonical-architecture",
+  "manifest": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/raster-js:canonical-architecture",
+  "manifest": "✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/remodel-plugin:regenerate-example",
+  "manifest": "🌎️hub/🧩️compositions/📸️remodel/📦️packages/🦀️rust/📋️project.json",
+  "target": "regenerate-example",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/remodel-remodeling-rs:composition-prepare",
+  "manifest": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust/📋️project.json",
+  "target": "composition-prepare",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/repo-cli-go:test-entrypoint-source",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/📋️project.json",
+  "target": "test-entrypoint-source",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "read",
+  "note": "vitest or bun test over the project's own sources and fixtures; the reached files show no spawn, signal, server, browser, network, home or store marker"
+ },
+ {
+  "id": "@semio-tech/repo-cli-rs:mcp",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📋️project.json",
+  "target": "mcp",
+  "disposition": "interactive",
+  "decision": {
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  },
+  "basis": "name",
+  "note": "runs until stopped: a server, watcher, shell, debugger or terminal user interface"
+ },
+ {
+  "id": "@semio-tech/repo-cli-rs:repo",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📋️project.json",
+  "target": "repo",
+  "disposition": "interactive",
+  "decision": {
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  },
+  "basis": "name",
+  "note": "runs until stopped: a server, watcher, shell, debugger or terminal user interface"
+ },
+ {
+  "id": "@semio-tech/repo-coordinator-rs:run",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🦀️rust/📋️project.json",
+  "target": "run",
+  "disposition": "interactive",
+  "decision": {
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  },
+  "basis": "name",
+  "note": "runs until stopped: a server, watcher, shell, debugger or terminal user interface"
+ },
+ {
+  "id": "@semio-tech/repo-dashboard-rs:build",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "build",
+  "disposition": "uncached",
+  "decision": {
+   "class": "driver-owned",
+   "reason": "freshness-owned-by-driver"
+  },
+  "basis": "name",
+  "note": "native dashboard binary compiled through the build driver"
+ },
+ {
+  "id": "@semio-tech/repo-dashboard-rs:install",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "install",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "@semio-tech/repo-dashboard-rs:preferences",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "preferences",
+  "disposition": "interactive",
+  "decision": {
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  },
+  "basis": "name",
+  "note": "runs until stopped: a server, watcher, shell, debugger or terminal user interface"
+ },
+ {
+  "id": "@semio-tech/repo-dashboard-rs:run",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "run",
+  "disposition": "interactive",
+  "decision": {
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  },
+  "basis": "name",
+  "note": "runs until stopped: a server, watcher, shell, debugger or terminal user interface"
+ },
+ {
+  "id": "@semio-tech/repo-dashboard-rs:test",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "test",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/repo-dashboard-rs:test-authority",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "test-authority",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/repo-dashboard-rs:test-coverage",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "test-coverage",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/repo-dashboard-rs:test-dispatch",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "test-dispatch",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "read",
+  "note": "vitest or bun test over the project's own sources and fixtures; the reached files show no spawn, signal, server, browser, network, home or store marker"
+ },
+ {
+  "id": "@semio-tech/repo-dashboard-rs:test-execution",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "test-execution",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/repo-dashboard-rs:test-exhaustive",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "test-exhaustive",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/repo-dashboard-rs:test-journeys",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "test-journeys",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/repo-dashboard-rs:test-load",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "test-load",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/repo-dashboard-rs:test-long",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "test-long",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/repo-dashboard-rs:test-process-deadline",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "test-process-deadline",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "@semio-tech/repo-dashboard-rs:test-quick",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "test-quick",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/repo-dashboard-rs:test-smoke",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "test-smoke",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/repo-dashboard-rs:test-source-freshness",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+  "target": "test-source-freshness",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "read",
+  "note": "vitest or bun test over the project's own sources and fixtures; the reached files show no spawn, signal, server, browser, network, home or store marker"
+ },
+ {
+  "id": "@semio-tech/repo-developer-tools:debug",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/📋️project.json",
+  "target": "debug",
+  "disposition": "interactive",
+  "decision": {
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  },
+  "basis": "name",
+  "note": "runs until stopped: a server, watcher, shell, debugger or terminal user interface"
+ },
+ {
+  "id": "@semio-tech/repo-developer-tools:debuggers",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/📋️project.json",
+  "target": "debuggers",
+  "disposition": "interactive",
+  "decision": {
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  },
+  "basis": "name",
+  "note": "runs until stopped: a server, watcher, shell, debugger or terminal user interface"
+ },
+ {
+  "id": "@semio-tech/repo-developer-tools:git-blame",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/📋️project.json",
+  "target": "git-blame",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  },
+  "basis": "read",
+  "note": "the output is a function of arguments or standard input the caller supplies, which are not declared inputs"
+ },
+ {
+  "id": "@semio-tech/repo-developer-tools:git-diff",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/📋️project.json",
+  "target": "git-diff",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  },
+  "basis": "read",
+  "note": "the output is a function of arguments or standard input the caller supplies, which are not declared inputs"
+ },
+ {
+  "id": "@semio-tech/repo-developer-tools:git-history",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/📋️project.json",
+  "target": "git-history",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  },
+  "basis": "read",
+  "note": "the output is a function of arguments or standard input the caller supplies, which are not declared inputs"
+ },
+ {
+  "id": "@semio-tech/repo-developer-tools:git-show",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/📋️project.json",
+  "target": "git-show",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  },
+  "basis": "read",
+  "note": "the output is a function of arguments or standard input the caller supplies, which are not declared inputs"
+ },
+ {
+  "id": "@semio-tech/repo-developer-tools:git-status",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/📋️project.json",
+  "target": "git-status",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  },
+  "basis": "read",
+  "note": "the output is a function of arguments or standard input the caller supplies, which are not declared inputs"
+ },
+ {
+  "id": "@semio-tech/repo-developer-tools:setup-debugger",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/📋️project.json",
+  "target": "setup-debugger",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "@semio-tech/repo-developer-tools:terminal",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/📋️project.json",
+  "target": "terminal",
+  "disposition": "interactive",
+  "decision": {
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  },
+  "basis": "name",
+  "note": "runs until stopped: a server, watcher, shell, debugger or terminal user interface"
+ },
+ {
+  "id": "@semio-tech/repo-lib:canonical-architecture",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/repo-lib:go-test",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "go-test",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "read",
+  "note": "owner-declared inputs cover the read domain; the suite writes only the test-artifact sink and spawns nothing live"
+ },
+ {
+  "id": "@semio-tech/repo-lib:owner-command",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "owner-command",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  },
+  "basis": "read",
+  "note": "the output is a function of arguments or standard input the caller supplies, which are not declared inputs"
+ },
+ {
+  "id": "@semio-tech/repo-lib:probe-nx-owner-arguments",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "probe-nx-owner-arguments",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  },
+  "basis": "name",
+  "note": "measures or reports the environment: benchmark, report, doctor, probe or repository-state check"
+ },
+ {
+  "id": "@semio-tech/repo-lib:schema-read-inventory",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "schema-read-inventory",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes tracked or generated workspace files (strong, workspace-anchored write sites) the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/repo-lib:test-build-caller-birth",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test-build-caller-birth",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "@semio-tech/repo-lib:test-cargo-workspace-ownership",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test-cargo-workspace-ownership",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "read",
+  "note": "owner-declared inputs cover the read domain; the suite writes only the test-artifact sink and spawns nothing live"
+ },
+ {
+  "id": "@semio-tech/repo-lib:test-cross-platform-bootstrap",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test-cross-platform-bootstrap",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  },
+  "basis": "name",
+  "note": "measures or reports the environment: benchmark, report, doctor, probe or repository-state check"
+ },
+ {
+  "id": "@semio-tech/repo-lib:test-dependency-policy-bootstrap",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test-dependency-policy-bootstrap",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "read",
+  "note": "owner-declared inputs cover the read domain; the suite writes only the test-artifact sink and spawns nothing live"
+ },
+ {
+  "id": "@semio-tech/repo-lib:test-fixture-ownership",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test-fixture-ownership",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "read",
+  "note": "owner-declared inputs cover the read domain; the suite writes only the test-artifact sink and spawns nothing live"
+ },
+ {
+  "id": "@semio-tech/repo-lib:test-go-executable-acceptance",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test-go-executable-acceptance",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "@semio-tech/repo-lib:test-original-default-preparation-control",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test-original-default-preparation-control",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "@semio-tech/repo-lib:test-preflight-reference-basis",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test-preflight-reference-basis",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  },
+  "basis": "name",
+  "note": "measures or reports the environment: benchmark, report, doctor, probe or repository-state check"
+ },
+ {
+  "id": "@semio-tech/repo-lib:test-registry-catalog-gitlink-boundary",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test-registry-catalog-gitlink-boundary",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  },
+  "basis": "name",
+  "note": "measures or reports the environment: benchmark, report, doctor, probe or repository-state check"
+ },
+ {
+  "id": "@semio-tech/repo-lib:ui-storybook-dev",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "ui-storybook-dev",
+  "disposition": "interactive",
+  "decision": {
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  },
+  "basis": "name",
+  "note": "runs until stopped: a server, watcher, shell, debugger or terminal user interface"
+ },
+ {
+  "id": "@semio-tech/repo-lib:workspaces-write",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "target": "workspaces-write",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/repo-mcp-rs:run",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🦀️rust/📋️project.json",
+  "target": "run",
+  "disposition": "interactive",
+  "decision": {
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  },
+  "basis": "name",
+  "note": "runs until stopped: a server, watcher, shell, debugger or terminal user interface"
+ },
+ {
+  "id": "@semio-tech/repo-test-domain:test-clean",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+  "target": "test-clean",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/repo-test-domain:test-doctor",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+  "target": "test-doctor",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  },
+  "basis": "name",
+  "note": "measures or reports the environment: benchmark, report, doctor, probe or repository-state check"
+ },
+ {
+  "id": "@semio-tech/repo-test-domain:test-fixture-generate",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+  "target": "test-fixture-generate",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/repo-test-domain:test-fixture-reproduce",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+  "target": "test-fixture-reproduce",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/repo-test-domain:test-gc",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+  "target": "test-gc",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/repo-test-domain:test-inventory",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+  "target": "test-inventory",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  },
+  "basis": "name",
+  "note": "measures or reports the environment: benchmark, report, doctor, probe or repository-state check"
+ },
+ {
+  "id": "@semio-tech/repo-test-domain:test-probe",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+  "target": "test-probe",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  },
+  "basis": "name",
+  "note": "measures or reports the environment: benchmark, report, doctor, probe or repository-state check"
+ },
+ {
+  "id": "@semio-tech/repo-test-dotnet:deps",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🔷️dotnet/📋️project.json",
+  "target": "deps",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "@semio-tech/s-cad-composition-rs:browser-test",
+  "manifest": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust/📋️project.json",
+  "target": "browser-test",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/s-cad-composition-rs:wasm",
+  "manifest": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust/📋️project.json",
+  "target": "wasm",
+  "disposition": "uncached",
+  "decision": {
+   "class": "managed-output",
+   "reason": "outputs-in-managed-store"
+  },
+  "basis": "read",
+  "note": "wasm package, site, storybook or cmake build whose product lives in the leased products store behind a receipt (outputs-in-managed-store)"
+ },
+ {
+  "id": "@semio-tech/s-composition-laws-rs:canonical-architecture",
+  "manifest": "✏️s/🧑‍💻dev/🧩️composition/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/s-dev-composition:mcp-client-e2e",
+  "manifest": "✏️s/🧑‍💻dev/📋️project.json",
+  "target": "mcp-client-e2e",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/s-dev-composition:preview-generated",
+  "manifest": "✏️s/🧑‍💻dev/📋️project.json",
+  "target": "preview-generated",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  },
+  "basis": "read",
+  "note": "the output is a function of arguments or standard input the caller supplies, which are not declared inputs"
+ },
+ {
+  "id": "@semio-tech/s-fem-composition-tests:verify-fem-live-visual-publication",
+  "manifest": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript/📋️project.json",
+  "target": "verify-fem-live-visual-publication",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/s-fixture-sweep-rs:canonical-architecture",
+  "manifest": "✏️s/🧑‍💻dev/🧹️fixture-sweep/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/s-flow-composition-rs:canonical-architecture",
+  "manifest": "✏️s/🧑‍💻dev/🌊️flow/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/s-gis-services-native:agent-reply-check",
+  "manifest": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📋️project.json",
+  "target": "agent-reply-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/s-gis-services-native:canonical-pair-composition-check",
+  "manifest": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-pair-composition-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "aggregate",
+   "reason": "reenters-build-tool"
+  },
+  "basis": "read",
+  "note": "re-enters the build tool (bun repo run / run-many --skip-cache) for other targets instead of declaring them as dependencies"
+ },
+ {
+  "id": "@semio-tech/s-gis-services-native:fixture-ownership-check",
+  "manifest": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📋️project.json",
+  "target": "fixture-ownership-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "aggregate",
+   "reason": "reenters-build-tool"
+  },
+  "basis": "read",
+  "note": "re-enters the build tool (bun repo run / run-many --skip-cache) for other targets instead of declaring them as dependencies"
+ },
+ {
+  "id": "@semio-tech/s-gis-services-native:hub-agent-participant-check",
+  "manifest": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📋️project.json",
+  "target": "hub-agent-participant-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/s-gis-services-native:inference-quartet-check",
+  "manifest": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📋️project.json",
+  "target": "inference-quartet-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/s-gis-services-native:live-agent-loop-check",
+  "manifest": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📋️project.json",
+  "target": "live-agent-loop-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/s-gis-services-native:plugin-coverage-check",
+  "manifest": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📋️project.json",
+  "target": "plugin-coverage-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/s-gis-services-native:security-check",
+  "manifest": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📋️project.json",
+  "target": "security-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/s-gis-services-native:user-path-check",
+  "manifest": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📋️project.json",
+  "target": "user-path-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/s-rebuild:guest-framework-check",
+  "manifest": "✏️s/🧑‍💻dev/🔁️rebuild/📋️project.json",
+  "target": "guest-framework-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "@semio-tech/s-rebuild:rebuild-all",
+  "manifest": "✏️s/🧑‍💻dev/🔁️rebuild/📋️project.json",
+  "target": "rebuild-all",
+  "disposition": "uncached",
+  "decision": {
+   "class": "aggregate",
+   "reason": "reenters-build-tool"
+  },
+  "basis": "read",
+  "note": "re-enters the build tool (bun repo run / run-many --skip-cache) for other targets instead of declaring them as dependencies"
+ },
+ {
+  "id": "@semio-tech/s-spatial-kernel-semio-session-rs:browser-test",
+  "manifest": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust/📋️project.json",
+  "target": "browser-test",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/s-spatial-kernel-semio-session-rs:canonical-architecture",
+  "manifest": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/s-spatial-kernel-semio-session-rs:wasm",
+  "manifest": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust/📋️project.json",
+  "target": "wasm",
+  "disposition": "uncached",
+  "decision": {
+   "class": "managed-output",
+   "reason": "outputs-in-managed-store"
+  },
+  "basis": "read",
+  "note": "wasm package, site, storybook or cmake build whose product lives in the leased products store behind a receipt (outputs-in-managed-store)"
+ },
+ {
+  "id": "@semio-tech/semio-tech-play:build",
+  "manifest": "🏢️semio-tech/🎡️play/📋️project.json",
+  "target": "build",
+  "disposition": "uncached",
+  "decision": {
+   "class": "managed-output",
+   "reason": "outputs-in-managed-store"
+  },
+  "basis": "read",
+  "note": "wasm package, site, storybook or cmake build whose product lives in the leased products store behind a receipt (outputs-in-managed-store)"
+ },
+ {
+  "id": "@semio-tech/semio-tech-play:prepare-e2e",
+  "manifest": "🏢️semio-tech/🎡️play/📋️project.json",
+  "target": "prepare-e2e",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "@semio-tech/semio-tech-play:release-verify",
+  "manifest": "🏢️semio-tech/🎡️play/📋️project.json",
+  "target": "release-verify",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  },
+  "basis": "name",
+  "note": "measures or reports the environment: benchmark, report, doctor, probe or repository-state check"
+ },
+ {
+  "id": "@semio-tech/semio-tech-play:test",
+  "manifest": "🏢️semio-tech/🎡️play/📋️project.json",
+  "target": "test",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "read",
+  "note": "vitest or bun test over the project's own sources and fixtures; the reached files show no spawn, signal, server, browser, network, home or store marker"
+ },
+ {
+  "id": "@semio-tech/semio-tech-play:test-e2e",
+  "manifest": "🏢️semio-tech/🎡️play/📋️project.json",
+  "target": "test-e2e",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/semio-tech-play:test-e2e-enduser",
+  "manifest": "🏢️semio-tech/🎡️play/📋️project.json",
+  "target": "test-e2e-enduser",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/semio-tech-play:test-release",
+  "manifest": "🏢️semio-tech/🎡️play/📋️project.json",
+  "target": "test-release",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/semio-tech-play:test-release-routing",
+  "manifest": "🏢️semio-tech/🎡️play/📋️project.json",
+  "target": "test-release-routing",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@semio-tech/sequence-sequence-rs:canonical-architecture",
+  "manifest": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/stdio-artifact-contract-rs:canonical-architecture",
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/stdio-assembly-rs:canonical-architecture",
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/stdio-assembly-rs:deletion-proof",
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📋️project.json",
+  "target": "deletion-proof",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "@semio-tech/stdio-bmp-rs:canonical-architecture",
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/stdio-gltf-rs:canonical-architecture",
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/stdio-plugin:artifact-directory-wiring-generate",
+  "manifest": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📋️project.json",
+  "target": "artifact-directory-wiring-generate",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes tracked or generated workspace files (strong, workspace-anchored write sites) the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/stdio-plugin:catalog-root",
+  "manifest": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📋️project.json",
+  "target": "catalog-root",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes tracked or generated workspace files (strong, workspace-anchored write sites) the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/stdio-plugin:composition-prepare",
+  "manifest": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📋️project.json",
+  "target": "composition-prepare",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes tracked or generated workspace files (strong, workspace-anchored write sites) the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/stdio-plugin:editor-component-check",
+  "manifest": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📋️project.json",
+  "target": "editor-component-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes tracked or generated workspace files (strong, workspace-anchored write sites) the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/stdio-plugin:home-io-surface-check",
+  "manifest": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📋️project.json",
+  "target": "home-io-surface-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes tracked or generated workspace files (strong, workspace-anchored write sites) the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/stdio-plugin:native-codec-projection",
+  "manifest": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📋️project.json",
+  "target": "native-codec-projection",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes tracked or generated workspace files (strong, workspace-anchored write sites) the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/stdio-plugin:parent-removal-check",
+  "manifest": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📋️project.json",
+  "target": "parent-removal-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes tracked or generated workspace files (strong, workspace-anchored write sites) the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/stdio-plugin:parent-removal-test-check",
+  "manifest": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📋️project.json",
+  "target": "parent-removal-test-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes tracked or generated workspace files (strong, workspace-anchored write sites) the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/stdio-plugin:subset-directory-wiring-generate",
+  "manifest": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📋️project.json",
+  "target": "subset-directory-wiring-generate",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes tracked or generated workspace files (strong, workspace-anchored write sites) the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/stdio-semio-rs:canonical-architecture",
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/stdio-semio-rs:composition-prepare",
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📋️project.json",
+  "target": "composition-prepare",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes tracked or generated workspace files (strong, workspace-anchored write sites) the target does not declare as outputs"
+ },
+ {
+  "id": "@semio-tech/stdio-wav-rs:canonical-architecture",
+  "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/trinity-jack-shell:run",
+  "manifest": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🐚️shell/📦️packages/🦀️rust/📋️project.json",
+  "target": "run",
+  "disposition": "interactive",
+  "decision": {
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  },
+  "basis": "name",
+  "note": "runs until stopped: a server, watcher, shell, debugger or terminal user interface"
+ },
+ {
+  "id": "@semio-tech/trinity-jack:test",
+  "manifest": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "read",
+  "note": "standard TypeScript artifact test (runArtifactTypeScriptPackageMain); 77 sibling artifact tests are cached with outputs []"
+ },
+ {
+  "id": "@semio-tech/trinity-rewriting:test",
+  "manifest": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "read",
+  "note": "standard TypeScript artifact test (runArtifactTypeScriptPackageMain); 77 sibling artifact tests are cached with outputs []"
+ },
+ {
+  "id": "@semio-tech/ui-react:canonical-architecture",
+  "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "@semio-tech/ui-rs:test-text-editor-source",
+  "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json",
+  "target": "test-text-editor-source",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "read",
+  "note": "vitest or bun test over the project's own sources and fixtures; the reached files show no spawn, signal, server, browser, network, home or store marker"
+ },
+ {
+  "id": "@semio-tech/ui-styling-dotnet:deps",
+  "manifest": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🔷️dotnet/📋️project.json",
+  "target": "deps",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "@semio-tech/ui-styling-py:deps",
+  "manifest": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python/📋️project.json",
+  "target": "deps",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "@semio-tech/ui-styling-tokens:fonts",
+  "manifest": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📋️project.json",
+  "target": "fonts",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "@teaching/architecture-course:build",
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "build",
+  "disposition": "uncached",
+  "decision": {
+   "class": "managed-output",
+   "reason": "outputs-in-managed-store"
+  },
+  "basis": "read",
+  "note": "wasm package, site, storybook or cmake build whose product lives in the leased products store behind a receipt (outputs-in-managed-store)"
+ },
+ {
+  "id": "@teaching/architecture-course:check",
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "check",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "read",
+  "note": "validates the course directory with the proctor binary built from the checked-in sources; reads the course, the proctor sources and PROCTOR_COURSE only"
+ },
+ {
+  "id": "@teaching/architecture-course:ci-browser-prepare",
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "ci-browser-prepare",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "@teaching/architecture-course:deploy-check",
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "deploy-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@teaching/architecture-course:docker-image-build",
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "docker-image-build",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "@teaching/architecture-course:docker-image-check",
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "docker-image-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@teaching/architecture-course:docker-image-publish",
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "docker-image-publish",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "publishes-remote"
+  },
+  "basis": "name",
+  "note": "publishes a release, image or package to a remote"
+ },
+ {
+  "id": "@teaching/architecture-course:docker-stack-bundle",
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "docker-stack-bundle",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@teaching/architecture-course:docker-stack-check",
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "docker-stack-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@teaching/architecture-course:preflight",
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "preflight",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  },
+  "basis": "name",
+  "note": "measures or reports the environment: benchmark, report, doctor, probe or repository-state check"
+ },
+ {
+  "id": "@teaching/architecture-course:publish",
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "publish",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "publishes-remote"
+  },
+  "basis": "name",
+  "note": "publishes a release, image or package to a remote"
+ },
+ {
+  "id": "@teaching/architecture-course:test-e2e",
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test-e2e",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@teaching/proctor:backup",
+  "manifest": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+  "target": "backup",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes host stores, installs tools or rebuilds the pinned binary (workspace-anchored write sites outside the declared outputs)"
+ },
+ {
+  "id": "@teaching/proctor:capacity",
+  "manifest": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+  "target": "capacity",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@teaching/proctor:check",
+  "manifest": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+  "target": "check",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "read",
+  "note": "validates the course directory with the proctor binary built from the checked-in sources; reads the course, the proctor sources and PROCTOR_COURSE only"
+ },
+ {
+  "id": "@teaching/proctor:erase",
+  "manifest": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+  "target": "erase",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes host stores, installs tools or rebuilds the pinned binary (workspace-anchored write sites outside the declared outputs)"
+ },
+ {
+  "id": "@teaching/proctor:health",
+  "manifest": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+  "target": "health",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "@teaching/proctor:prune",
+  "manifest": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+  "target": "prune",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes host stores, installs tools or rebuilds the pinned binary (workspace-anchored write sites outside the declared outputs)"
+ },
+ {
+  "id": "@teaching/proctor:rebuild",
+  "manifest": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+  "target": "rebuild",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes host stores, installs tools or rebuilds the pinned binary (workspace-anchored write sites outside the declared outputs)"
+ },
+ {
+  "id": "@teaching/proctor:restore",
+  "manifest": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+  "target": "restore",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes host stores, installs tools or rebuilds the pinned binary (workspace-anchored write sites outside the declared outputs)"
+ },
+ {
+  "id": "os-hub-ts:agent-ceiling-check",
+  "manifest": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+  "target": "agent-ceiling-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "os-hub-ts:backend-down",
+  "manifest": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+  "target": "backend-down",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "os-hub-ts:backend-run",
+  "manifest": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+  "target": "backend-run",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "os-hub-ts:backend-status",
+  "manifest": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+  "target": "backend-status",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  },
+  "basis": "name",
+  "note": "measures or reports the environment: benchmark, report, doctor, probe or repository-state check"
+ },
+ {
+  "id": "os-hub-ts:backend-up",
+  "manifest": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+  "target": "backend-up",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "os-hub-ts:backup-restore-drill",
+  "manifest": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+  "target": "backup-restore-drill",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "os-hub-ts:boot-watch",
+  "manifest": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+  "target": "boot-watch",
+  "disposition": "interactive",
+  "decision": {
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  },
+  "basis": "name",
+  "note": "runs until stopped: a server, watcher, shell, debugger or terminal user interface"
+ },
+ {
+  "id": "os-hub-ts:docker-image-build",
+  "manifest": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+  "target": "docker-image-build",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "os-hub-ts:docker-image-check",
+  "manifest": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+  "target": "docker-image-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "os-hub-ts:document-growth-e2e",
+  "manifest": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+  "target": "document-growth-e2e",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "os-hub-ts:hub-freshness",
+  "manifest": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+  "target": "hub-freshness",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "os-hub-ts:residency-watch",
+  "manifest": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+  "target": "residency-watch",
+  "disposition": "interactive",
+  "decision": {
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  },
+  "basis": "name",
+  "note": "runs until stopped: a server, watcher, shell, debugger or terminal user interface"
+ },
+ {
+  "id": "os-hub-ts:shutdown-drill",
+  "manifest": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+  "target": "shutdown-drill",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "os-hub-ts:two-client-e2e",
+  "manifest": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+  "target": "two-client-e2e",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "os-hub:admin-live-journey-check",
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "admin-live-journey-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "os-hub:browser-actor-child-worker-containment-check",
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "browser-actor-child-worker-containment-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "os-hub:browser-actor-gis-describe-check",
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "browser-actor-gis-describe-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "os-hub:canonical-architecture",
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "os-hub:directory-live-lanes",
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "directory-live-lanes",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "os-hub:hostile-input-check",
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "hostile-input-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "os-hub:hub-document-sweep",
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "hub-document-sweep",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "os-hub:io-matrix",
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "io-matrix",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes tracked or generated workspace files (strong, workspace-anchored write sites) the target does not declare as outputs"
+ },
+ {
+  "id": "os-hub:live-sign-in-check",
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "live-sign-in-check",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "os-hub:local-hub-owner",
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "local-hub-owner",
+  "disposition": "interactive",
+  "decision": {
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  },
+  "basis": "name",
+  "note": "runs until stopped: a server, watcher, shell, debugger or terminal user interface"
+ },
+ {
+  "id": "os-hub:publish",
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "publish",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "publishes-remote"
+  },
+  "basis": "name",
+  "note": "publishes a release, image or package to a remote"
+ },
+ {
+  "id": "os-hub:runtime-fixture-graph",
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "runtime-fixture-graph",
+  "disposition": "uncached",
+  "decision": {
+   "class": "aggregate",
+   "reason": "reenters-build-tool"
+  },
+  "basis": "read",
+  "note": "re-enters the build tool (bun repo run / run-many --skip-cache) for other targets instead of declaring them as dependencies"
+ },
+ {
+  "id": "os-hub:scoped-presence-browser-serve",
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "scoped-presence-browser-serve",
+  "disposition": "interactive",
+  "decision": {
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  },
+  "basis": "name",
+  "note": "runs until stopped: a server, watcher, shell, debugger or terminal user interface"
+ },
+ {
+  "id": "os-hub:secure-local-smoke",
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "secure-local-smoke",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "drives-running-process"
+  },
+  "basis": "read",
+  "note": "drives a real hub, MCP gateway, browser, dev server or docker stack; the verdict is a property of the running process"
+ },
+ {
+  "id": "os-hub:setup",
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "setup",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "os-hub:trusted-catalog-bootstrap",
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "trusted-catalog-bootstrap",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "os-hub:trusted-catalog-preflight",
+  "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+  "target": "trusted-catalog-preflight",
+  "disposition": "uncached",
+  "decision": {
+   "class": "aggregate",
+   "reason": "reenters-build-tool"
+  },
+  "basis": "read",
+  "note": "re-enters the build tool (bun repo run / run-many --skip-cache) for other targets instead of declaring them as dependencies"
+ },
+ {
+  "id": "repo-mcp:install",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📋️project.json",
+  "target": "install",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "repo-mcp:test-install",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📋️project.json",
+  "target": "test-install",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "repo-next-storage:test-nx-cache",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/💾️storage/📋️project.json",
+  "target": "test-nx-cache",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "read",
+  "note": "vitest or bun test over the project's own sources and fixtures; the reached files show no spawn, signal, server, browser, network, home or store marker"
+ },
+ {
+  "id": "repo:audit",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "audit",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  },
+  "basis": "name",
+  "note": "measures or reports the environment: benchmark, report, doctor, probe or repository-state check"
+ },
+ {
+  "id": "repo:cache-prune",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "cache-prune",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "repo:cache-prune-stale-incremental",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "cache-prune-stale-incremental",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "repo:cache-report",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "cache-report",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  },
+  "basis": "name",
+  "note": "measures or reports the environment: benchmark, report, doctor, probe or repository-state check"
+ },
+ {
+  "id": "repo:cache-verify",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "cache-verify",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  },
+  "basis": "name",
+  "note": "measures or reports the environment: benchmark, report, doctor, probe or repository-state check"
+ },
+ {
+  "id": "repo:cargo-prepare",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "cargo-prepare",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "repo:cargo-provenance-repair",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "cargo-provenance-repair",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "repo:cargo-synchronize",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "cargo-synchronize",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "repo:ci-baseline",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "ci-baseline",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  },
+  "basis": "name",
+  "note": "measures or reports the environment: benchmark, report, doctor, probe or repository-state check"
+ },
+ {
+  "id": "repo:debug-bun-bundle",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "debug-bun-bundle",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  },
+  "basis": "read",
+  "note": "the output is a function of arguments or standard input the caller supplies, which are not declared inputs"
+ },
+ {
+  "id": "repo:digest-cargo-lock",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "digest-cargo-lock",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  },
+  "basis": "read",
+  "note": "the output is a function of arguments or standard input the caller supplies, which are not declared inputs"
+ },
+ {
+  "id": "repo:digest-source-closure",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "digest-source-closure",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  },
+  "basis": "read",
+  "note": "the output is a function of arguments or standard input the caller supplies, which are not declared inputs"
+ },
+ {
+  "id": "repo:digest-source-inventory",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "digest-source-inventory",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  },
+  "basis": "read",
+  "note": "the output is a function of arguments or standard input the caller supplies, which are not declared inputs"
+ },
+ {
+  "id": "repo:disk-report",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "disk-report",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  },
+  "basis": "name",
+  "note": "measures or reports the environment: benchmark, report, doctor, probe or repository-state check"
+ },
+ {
+  "id": "repo:doctor",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "doctor",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  },
+  "basis": "name",
+  "note": "measures or reports the environment: benchmark, report, doctor, probe or repository-state check"
+ },
+ {
+  "id": "repo:emit-typescript-declarations",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "emit-typescript-declarations",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "reads-caller-input"
+  },
+  "basis": "read",
+  "note": "the output is a function of arguments or standard input the caller supplies, which are not declared inputs"
+ },
+ {
+  "id": "repo:test-bazel-storage",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-bazel-storage",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "repo:test-bazel-storage-runtime",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-bazel-storage-runtime",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "repo:test-bootstrap-original-invocation-source",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-bootstrap-original-invocation-source",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "read",
+  "note": "vitest or bun test over the project's own sources and fixtures; the reached files show no spawn, signal, server, browser, network, home or store marker"
+ },
+ {
+  "id": "repo:test-cargo-build-lease",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-cargo-build-lease",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "repo:test-daemon-journal",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-daemon-journal",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "repo:test-daemon-journal-workspace",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-daemon-journal-workspace",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "repo:test-graph-cache-waiter",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-graph-cache-waiter",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "repo:test-javascript-endpoint-fence",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-javascript-endpoint-fence",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "repo:test-javascript-installed-paths",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-javascript-installed-paths",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "repo:test-javascript-provider-walk",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-javascript-provider-walk",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "repo:test-javascript-storage",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-javascript-storage",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "repo:test-lease-bootstrap",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-lease-bootstrap",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "repo:test-lease-queue",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-lease-queue",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "repo:test-leases-partition",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-leases-partition",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "repo:test-next-dev-runtime",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-next-dev-runtime",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "repo:test-next-runtime",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-next-runtime",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "repo:test-runtime-bootstrap",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-runtime-bootstrap",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "repo:test-runtime-verification-storage",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-runtime-verification-storage",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "repo:test-runtime-verification-storage-runtime",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-runtime-verification-storage-runtime",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "repo:test-rustup-toolchain",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-rustup-toolchain",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "repo:test-storage-budget",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-storage-budget",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "repo:test-tools-partition",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-tools-partition",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "semio-framework-3d:bench",
+  "manifest": "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/📋️project.json",
+  "target": "bench",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  },
+  "basis": "name",
+  "note": "measures or reports the environment: benchmark, report, doctor, probe or repository-state check"
+ },
+ {
+  "id": "semio-framework-3d:canonical-architecture",
+  "manifest": "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/📋️project.json",
+  "target": "canonical-architecture",
+  "disposition": "cached",
+  "decision": {
+   "class": "deterministic",
+   "reason": "check-without-outputs"
+  },
+  "basis": "analysis",
+  "note": "contract oracle or twin of the owning component; bun, vitest or cargo-law verdict over repository sources; zero workspace-anchored writes (test-artifact sink only)"
+ },
+ {
+  "id": "workspace:agents-write",
+  "manifest": "📋️project.json",
+  "target": "agents-write",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "workspace:bench-plugins",
+  "manifest": "📋️project.json",
+  "target": "bench-plugins",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  },
+  "basis": "name",
+  "note": "measures or reports the environment: benchmark, report, doctor, probe or repository-state check"
+ },
+ {
+  "id": "workspace:build",
+  "manifest": "📋️project.json",
+  "target": "build",
+  "disposition": "uncached",
+  "decision": {
+   "class": "aggregate",
+   "reason": "orders-prerequisites"
+  },
+  "basis": "name",
+  "note": "pure ordering task over its dependencies"
+ },
+ {
+  "id": "workspace:build-canvas-font-assets",
+  "manifest": "📋️project.json",
+  "target": "build-canvas-font-assets",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "workspace:build-storybook",
+  "manifest": "📋️project.json",
+  "target": "build-storybook",
+  "disposition": "uncached",
+  "decision": {
+   "class": "managed-output",
+   "reason": "outputs-in-managed-store"
+  },
+  "basis": "read",
+  "note": "wasm package, site, storybook or cmake build whose product lives in the leased products store behind a receipt (outputs-in-managed-store)"
+ },
+ {
+  "id": "workspace:cargo-prepare",
+  "manifest": "📋️project.json",
+  "target": "cargo-prepare",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "workspace:clean-coverage",
+  "manifest": "📋️project.json",
+  "target": "clean-coverage",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes tracked or generated workspace files (strong, workspace-anchored write sites) the target does not declare as outputs"
+ },
+ {
+  "id": "workspace:clean-marker-only-folders",
+  "manifest": "📋️project.json",
+  "target": "clean-marker-only-folders",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "workspace:clean-taxonomy-apply",
+  "manifest": "📋️project.json",
+  "target": "clean-taxonomy-apply",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "workspace:clean-taxonomy-inventory",
+  "manifest": "📋️project.json",
+  "target": "clean-taxonomy-inventory",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "workspace:clean-taxonomy-plan",
+  "manifest": "📋️project.json",
+  "target": "clean-taxonomy-plan",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "workspace:clean-taxonomy-verify",
+  "manifest": "📋️project.json",
+  "target": "clean-taxonomy-verify",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "workspace:clean-test",
+  "manifest": "📋️project.json",
+  "target": "clean-test",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "workspace:components",
+  "manifest": "📋️project.json",
+  "target": "components",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "workspace:cpp",
+  "manifest": "📋️project.json",
+  "target": "cpp",
+  "disposition": "uncached",
+  "decision": {
+   "class": "aggregate",
+   "reason": "orders-prerequisites"
+  },
+  "basis": "name",
+  "note": "pure ordering task over its dependencies"
+ },
+ {
+  "id": "workspace:cpp-build",
+  "manifest": "📋️project.json",
+  "target": "cpp-build",
+  "disposition": "uncached",
+  "decision": {
+   "class": "managed-output",
+   "reason": "outputs-in-managed-store"
+  },
+  "basis": "read",
+  "note": "wasm package, site, storybook or cmake build whose product lives in the leased products store behind a receipt (outputs-in-managed-store)"
+ },
+ {
+  "id": "workspace:cpp-configure",
+  "manifest": "📋️project.json",
+  "target": "cpp-configure",
+  "disposition": "uncached",
+  "decision": {
+   "class": "managed-output",
+   "reason": "outputs-in-managed-store"
+  },
+  "basis": "read",
+  "note": "wasm package, site, storybook or cmake build whose product lives in the leased products store behind a receipt (outputs-in-managed-store)"
+ },
+ {
+  "id": "workspace:cpp-setup",
+  "manifest": "📋️project.json",
+  "target": "cpp-setup",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "workspace:cpp-test",
+  "manifest": "📋️project.json",
+  "target": "cpp-test",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "workspace:deps-browsers",
+  "manifest": "📋️project.json",
+  "target": "deps-browsers",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "workspace:deps-build-tools",
+  "manifest": "📋️project.json",
+  "target": "deps-build-tools",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "workspace:deps-cargo",
+  "manifest": "📋️project.json",
+  "target": "deps-cargo",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "workspace:deps-cargo-lock",
+  "manifest": "📋️project.json",
+  "target": "deps-cargo-lock",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "workspace:deps-cpp",
+  "manifest": "📋️project.json",
+  "target": "deps-cpp",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "workspace:deps-dotnet",
+  "manifest": "📋️project.json",
+  "target": "deps-dotnet",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "workspace:deps-go",
+  "manifest": "📋️project.json",
+  "target": "deps-go",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "workspace:deps-javascript",
+  "manifest": "📋️project.json",
+  "target": "deps-javascript",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "workspace:deps-js-all",
+  "manifest": "📋️project.json",
+  "target": "deps-js-all",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "workspace:deps-js-contract",
+  "manifest": "📋️project.json",
+  "target": "deps-js-contract",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "workspace:deps-js-lock",
+  "manifest": "📋️project.json",
+  "target": "deps-js-lock",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "workspace:deps-python",
+  "manifest": "📋️project.json",
+  "target": "deps-python",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "workspace:deps-tools",
+  "manifest": "📋️project.json",
+  "target": "deps-tools",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "workspace:deps-trunk",
+  "manifest": "📋️project.json",
+  "target": "deps-trunk",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "workspace:deps-wasm",
+  "manifest": "📋️project.json",
+  "target": "deps-wasm",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "workspace:deps-wasm-opt",
+  "manifest": "📋️project.json",
+  "target": "deps-wasm-opt",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "workspace:format",
+  "manifest": "📋️project.json",
+  "target": "format",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "workspace:generate-config",
+  "manifest": "📋️project.json",
+  "target": "generate-config",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "workspace:new-taxonomy-mutation",
+  "manifest": "📋️project.json",
+  "target": "new-taxonomy-mutation",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes tracked or generated workspace files (strong, workspace-anchored write sites) the target does not declare as outputs"
+ },
+ {
+  "id": "workspace:os",
+  "manifest": "📋️project.json",
+  "target": "os",
+  "disposition": "interactive",
+  "decision": {
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  },
+  "basis": "name",
+  "note": "runs until stopped: a server, watcher, shell, debugger or terminal user interface"
+ },
+ {
+  "id": "workspace:publish",
+  "manifest": "📋️project.json",
+  "target": "publish",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "publishes-remote"
+  },
+  "basis": "name",
+  "note": "publishes a release, image or package to a remote"
+ },
+ {
+  "id": "workspace:release",
+  "manifest": "📋️project.json",
+  "target": "release",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "publishes-remote"
+  },
+  "basis": "name",
+  "note": "publishes a release, image or package to a remote"
+ },
+ {
+  "id": "workspace:runtime-fixture-graph",
+  "manifest": "📋️project.json",
+  "target": "runtime-fixture-graph",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes tracked or generated workspace files (strong, workspace-anchored write sites) the target does not declare as outputs"
+ },
+ {
+  "id": "workspace:schema-parsers-apply",
+  "manifest": "📋️project.json",
+  "target": "schema-parsers-apply",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes tracked or generated workspace files (strong, workspace-anchored write sites) the target does not declare as outputs"
+ },
+ {
+  "id": "workspace:schema-parsers-restate",
+  "manifest": "📋️project.json",
+  "target": "schema-parsers-restate",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes tracked or generated workspace files (strong, workspace-anchored write sites) the target does not declare as outputs"
+ },
+ {
+  "id": "workspace:semio",
+  "manifest": "📋️project.json",
+  "target": "semio",
+  "disposition": "interactive",
+  "decision": {
+   "class": "continuous",
+   "reason": "serves-until-stopped"
+  },
+  "basis": "name",
+  "note": "runs until stopped: a server, watcher, shell, debugger or terminal user interface"
+ },
+ {
+  "id": "workspace:setup",
+  "manifest": "📋️project.json",
+  "target": "setup",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes host stores, installs tools or rebuilds the pinned binary (workspace-anchored write sites outside the declared outputs)"
+ },
+ {
+  "id": "workspace:setup-devcontainer-attach",
+  "manifest": "📋️project.json",
+  "target": "setup-devcontainer-attach",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "workspace:setup-devcontainer-start",
+  "manifest": "📋️project.json",
+  "target": "setup-devcontainer-start",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "name",
+  "note": "provisions, installs, repairs or prunes tools, dependencies, caches or images outside the declared outputs"
+ },
+ {
+  "id": "workspace:setup-git",
+  "manifest": "📋️project.json",
+  "target": "setup-git",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes host stores, installs tools or rebuilds the pinned binary (workspace-anchored write sites outside the declared outputs)"
+ },
+ {
+  "id": "workspace:setup-native",
+  "manifest": "📋️project.json",
+  "target": "setup-native",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes host stores, installs tools or rebuilds the pinned binary (workspace-anchored write sites outside the declared outputs)"
+ },
+ {
+  "id": "workspace:setup-storybook",
+  "manifest": "📋️project.json",
+  "target": "setup-storybook",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  },
+  "basis": "analysis",
+  "note": "the handler call graph writes host stores, installs tools or rebuilds the pinned binary (workspace-anchored write sites outside the declared outputs)"
+ },
+ {
+  "id": "workspace:stdio-fuzz",
+  "manifest": "📋️project.json",
+  "target": "stdio-fuzz",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "workspace:test-build-tool-bazel",
+  "manifest": "📋️project.json",
+  "target": "test-build-tool-bazel",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "workspace:test-build-tool-bazel-bootstrap",
+  "manifest": "📋️project.json",
+  "target": "test-build-tool-bazel-bootstrap",
+  "disposition": "uncached",
+  "decision": {
+   "class": "live",
+   "reason": "exercises-host-resources"
+  },
+  "basis": "read",
+  "note": "exercises the machine's real locks, lease queues, storage volumes, process tree, descriptors, clock or installed toolchain; the verdict is a property of this host and moment"
+ },
+ {
+  "id": "workspace:test-doctor",
+  "manifest": "📋️project.json",
+  "target": "test-doctor",
+  "disposition": "uncached",
+  "decision": {
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  },
+  "basis": "name",
+  "note": "measures or reports the environment: benchmark, report, doctor, probe or repository-state check"
+ },
+ {
+  "id": "workspace:test-report",
+  "manifest": "📋️project.json",
+  "target": "test-report",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ },
+ {
+  "id": "workspace:verify-build-owners-sync",
+  "manifest": "📋️project.json",
+  "target": "verify-build-owners-sync",
+  "disposition": "uncached",
+  "decision": {
+   "class": "aggregate",
+   "reason": "reenters-build-tool"
+  },
+  "basis": "read",
+  "note": "re-enters the build tool (bun repo run / run-many --skip-cache) for other targets instead of declaring them as dependencies"
+ },
+ {
+  "id": "workspace:verify-canonical-architecture",
+  "manifest": "📋️project.json",
+  "target": "verify-canonical-architecture",
+  "disposition": "uncached",
+  "decision": {
+   "class": "aggregate",
+   "reason": "reenters-build-tool"
+  },
+  "basis": "read",
+  "note": "re-enters the build tool (bun repo run / run-many --skip-cache) for other targets instead of declaring them as dependencies"
+ },
+ {
+  "id": "workspace:verify-gate",
+  "manifest": "📋️project.json",
+  "target": "verify-gate",
+  "disposition": "uncached",
+  "decision": {
+   "class": "aggregate",
+   "reason": "reenters-build-tool"
+  },
+  "basis": "read",
+  "note": "re-enters the build tool (bun repo run / run-many --skip-cache) for other targets instead of declaring them as dependencies"
+ },
+ {
+  "id": "workspace:verify-layering",
+  "manifest": "📋️project.json",
+  "target": "verify-layering",
+  "disposition": "uncached",
+  "decision": {
+   "class": "aggregate",
+   "reason": "reenters-build-tool"
+  },
+  "basis": "read",
+  "note": "re-enters the build tool (bun repo run / run-many --skip-cache) for other targets instead of declaring them as dependencies"
+ },
+ {
+  "id": "workspace:verify-typescript-project",
+  "manifest": "📋️project.json",
+  "target": "verify-typescript-project",
+  "disposition": "uncached",
+  "decision": {
+   "class": "side-effecting",
+   "reason": "mutates-workspace"
+  },
+  "basis": "name",
+  "note": "regenerates, formats, applies or scaffolds tracked files the target does not declare as outputs"
+ }
+]

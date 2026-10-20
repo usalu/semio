@@ -4,31 +4,31 @@
 import { type NormJson, normWireArray, normWireInteger, normWireJson, normWireLiteral, normWireMap, normWireNumber, normWireObject, type NormWireReader, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 
 export interface En1997Artifact {
-  /** @state artifact */
+  /** 🏗️ @state artifact */
   structureId: string;
-  /** @state artifact */
+  /** 🚦️ @state artifact */
   geotechnicalCategory: number;
-  /** @state artifact */
+  /** 🎨️ @state artifact */
   designSituation: string;
-  /** @state artifact */
+  /** 📐️ @state artifact */
   designApproach: string;
-  /** @state artifact */
+  /** 📑️ @state artifact */
   annex: "En" | "De";
-  /** @state artifact */
+  /** 📶️ @state artifact */
   groundwaterLevel: number;
-  /** @state artifact */
+  /** 📏️ @state artifact */
   investigationDepth: number;
-  /** @state artifact */
+  /** 🥞️ @state artifact */
   layers: { [key: string]: NormJson }[];
-  /** @state artifact */
+  /** 🏛️ @state artifact */
   footings: { [key: string]: NormJson }[];
-  /** @state artifact */
+  /** 📜️ @state artifact */
   piles: { [key: string]: NormJson }[];
-  /** @state artifact */
+  /** 🗄️ @state artifact */
   retainingWalls: { [key: string]: NormJson }[];
-  /** @state artifact */
+  /** 🧱️ @state artifact */
   slopes: { [key: string]: NormJson }[];
-  /** @state artifact */
+  /** 🧮️ @state artifact */
   upliftCases: { [key: string]: NormJson }[];
 }
 

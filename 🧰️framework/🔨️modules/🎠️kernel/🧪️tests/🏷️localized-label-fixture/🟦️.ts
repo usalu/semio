@@ -9,9 +9,9 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
 import { describe, expect, it } from "vitest";
-import { SHELL_LOCALES, SHELL_TERMINOLOGIES, type LocalizedLabel } from "@semio-tech/framework/manifest/generated/ui-axes";
+import { SHELL_LOCALES, SHELL_TERMINOLOGIES, type LocalizedLabel } from "@semio-tech/framework-manifest/generated/ui-axes";
 import { historyEntryLabelText } from "../../🕰️history/🟦️.ts";
-import { localeLocalizedLabelFixtureUrl, localeLocalizedLabelSchemaUrl } from "@semio-tech/framework/ui/testing/fixtures";
+import { localeLocalizedLabelFixtureUrl, localeLocalizedLabelSchemaUrl } from "@semio-tech/ui/testing/fixtures";
 
 /** 📄️ `fileURLToPath`, never `new URL(...).pathname`: the latter percent-encodes every emoji segment. */
 const read = (url: URL): unknown => JSON.parse(readFileSync(fileURLToPath(url), "utf8")) as unknown;

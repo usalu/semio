@@ -1,4 +1,5 @@
 use super::*;
+use semio_s_artifact_stdio_step::StepSnapshot;
 
 /// 🧱️ Same single-triangular-planar-face box fixture used by step's own
 /// `⚙️engine/🧱️brep` tests — a real-world-shaped AP214 exchange snippet (3 vertices, 3

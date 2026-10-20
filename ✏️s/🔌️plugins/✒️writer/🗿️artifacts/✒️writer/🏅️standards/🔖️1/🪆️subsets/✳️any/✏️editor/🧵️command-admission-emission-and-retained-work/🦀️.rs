@@ -461,13 +461,13 @@ fn admit_writer_artifact_mutation(mutation: &WriterMutation) -> Result<(), Strin
 /// 🔒️ Keeps the Artifact lane's deliberate contract on top of the shared bounded preparation: only the exact `EditText`/`SpliceText` cohort
 /// every Writer tool emits, at most `MAX_WRITER_COMMAND_TEXT_BYTES` per edit, against a base of at most `WRITER_ARTIFACT_STORE_MAXIMUM_BYTES`.
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
-pub(super) struct WriterArtifactPreparationFactory {
+pub struct WriterArtifactPreparationFactory {
     #[factory_child]
     inner: Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<WriterSnapshot, WriterMutation>>,
 }
 
 impl WriterArtifactPreparationFactory {
-    pub(super) fn shared() -> Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<WriterSnapshot, WriterMutation>> {
+    pub fn shared() -> Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<WriterSnapshot, WriterMutation>> {
         Arc::new(Self { inner: store::mutation_apply_preparation_factory::<WriterSnapshot, WriterMutation>() })
     }
 }

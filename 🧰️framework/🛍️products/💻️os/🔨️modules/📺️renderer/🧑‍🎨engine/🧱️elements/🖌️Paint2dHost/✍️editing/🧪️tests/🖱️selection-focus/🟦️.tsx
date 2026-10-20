@@ -303,7 +303,7 @@ for(const kind of ["pixel","group"])for(const sample of fixture.affineMaskTarget
 });
 
 import patch,{type Operation} from "fast-json-patch";
-import { paintStrokeRevisionFixture as revisions } from "@semio-tech/framework/surface/testing/fixtures";
+import { paintStrokeRevisionFixture as revisions } from "@semio-tech/framework-surface-ts/testing/fixtures";
 for(const row of revisions.cases)test("active stroke handles target revision "+row.name,async()=>{
   vi.stubGlobal("ResizeObserver",class {observe(){} disconnect(){}});
   vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);

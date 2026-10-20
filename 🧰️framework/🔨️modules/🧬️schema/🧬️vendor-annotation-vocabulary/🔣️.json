@@ -44,6 +44,7 @@
     "x-semio-taxonomy-sections": { "type": "array", "items": { "type": "object" } },
     "x-semio-toolRun": { "type": "object" },
     "x-semio-transfer-retry": { "type": "object" },
+    "x-semio-type": { "type": "string" },
     "x-semio-ui": { "$ref": "https://json.schemas.assets.semio-tech.com/framework/manifest/schema.json#/$defs/InputUi" }
   }
 }

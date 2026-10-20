@@ -369,13 +369,6 @@
       "forbidden": false
     },
     {
-      "id": "ui-foundation-transient-package-entry-is-allowed",
-      "rule": "ui-no-framework-packages",
-      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/🔌️provider/🟦️.ts",
-      "to": "🧰️framework/📦️packages/🟦️typescript/🫧️transient/🟦️.ts",
-      "forbidden": false
-    },
-    {
       "id": "ui-foundation-value-module-is-allowed",
       "rule": "ui-no-framework-packages",
       "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/🔌️provider/🟦️.ts",

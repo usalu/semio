@@ -10,7 +10,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::note::commands::nudge_selection_up::*;
 use crate::editor::note::commands::{nudge_selection_down, nudge_selection_left, nudge_selection_right, nudge_selection_right_fast};
 use crate::schema::{block_bounds, block_id, create_block_by_kind, mutations::apply_note_mutation, NoteIdOwner};
-use crate::NoteSnapshot;
+use semio_s_artifact_note_note_schema::NoteSnapshot;
 
 /// 🕹️ Selection is framework-owned `InteractionState`, resolved into `NoteDispatchCtx::selected_block_ids`
 /// by `ArtifactEditor::handle`/the retained tool. These laws drive the handlers with that resolved selection

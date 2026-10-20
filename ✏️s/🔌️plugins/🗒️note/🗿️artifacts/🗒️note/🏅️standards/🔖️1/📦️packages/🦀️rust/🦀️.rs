@@ -4,7 +4,7 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 
-pub use crate::schema::snapshot::NoteSnapshot;
+pub use semio_s_artifact_note_note_schema::NoteSnapshot;
 pub use crate::standards::v1::subsets::any::schema;
 pub use crate::schema::mutations::NoteMutation;
 pub mod op {

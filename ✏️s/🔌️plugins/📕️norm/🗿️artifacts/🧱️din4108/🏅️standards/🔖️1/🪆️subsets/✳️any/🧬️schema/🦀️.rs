@@ -9,6 +9,10 @@ extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 use framework_schema::ArtifactSchema;
+use semio_s_plugin_norm_compliance::ClimateZoneDe;
+use semio_s_artifact_norm_din4108_model::ThermalZone;
+use semio_s_artifact_norm_din4108_model::EnvelopeElement;
+use semio_s_artifact_norm_din4108_model::ThermalBridge;
 
 //#region 🔖️Artifact
 /// 🧬️ Full Din4108 artifact state across the artifact and presence lanes.

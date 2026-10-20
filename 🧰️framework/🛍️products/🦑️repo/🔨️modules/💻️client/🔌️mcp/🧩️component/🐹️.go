@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+ cli "github.com/usalu/semio/repo/cli"
 	"github.com/usalu/semio/repo/providers"
 	"github.com/usalu/semio/repo/workspace"
 )
@@ -30,14 +31,17 @@ import (
 const MCPProfileEnvironment = "SEMIO_REPO_MCP_CLIENT"
 
 func resolveMCPProfile(arguments []string, lookupEnvironment func(string) (string, bool)) (providers.McpClientKind, error) {
-	if len(arguments) != 0 {
-		return "", errors.New("repo MCP accepts no command arguments")
+	if len(arguments) != 1 || arguments[0] != "mcp" {
+		return "", errors.New("Expected repo mcp without additional arguments")
 	}
 	raw, _ := lookupEnvironment(MCPProfileEnvironment)
 	return providers.ParseMcpClientKind(raw)
 }
 
 func main() {
+ if len(os.Args) < 2 || os.Args[1] != "mcp" {
+  if err := cli.RunCLI(); err != nil { var exited workspace.ExitError; if errors.As(err, &exited) { os.Exit(exited.Code) }; fmt.Fprintln(os.Stderr, err); os.Exit(1) }; return
+ }
 	profile, err := resolveMCPProfile(os.Args[1:], os.LookupEnv)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)

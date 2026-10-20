@@ -2,7 +2,7 @@
 //! the committed Denver TMY year, and the laws that keep the committed case fixtures and example DSL assets equal to
 //! what `crate::bestest` builds today.
 
-use crate::bestest::{is_free_float, model, model_json, project, run, CASES};
+use crate::bestest::{is_free_float, model, model_json, project, CASES};
 use crate::model::Model;
 use semio_framework_test_fixtures::fixture_path;
 
@@ -68,7 +68,7 @@ fn bestest_cases_compared_with_energyplus() {
             lines.push(format!("{case:<6} | no committed 🔮️energyplus.json"));
             continue;
         };
-        let results = run(case, crate::epw::parse(&weather).expect("reference weather"), 7).unwrap_or_else(|diagnostics| panic!("case {case} must run: {:?}", diagnostics.messages));
+        let results = semio_s_plugin_energy_engine_sim::testing::run_preborn_factory(|operation| crate::bestest::simulation_job(operation, case, crate::epw::parse(&weather).expect("reference weather"), 7).unwrap_or_else(|failure| panic!("case {case} must admit: {failure:?}"))).unwrap_or_else(|error| panic!("case {case} must run: {error:?}"));
         let projected = project(case, &results);
         if is_free_float(case) {
             for (metric, ours, path) in [("minC", projected.free_float_min_c, ["freeFloat", "minC"]), ("maxC", projected.free_float_max_c, ["freeFloat", "maxC"]), ("meanC", projected.free_float_mean_c, ["freeFloat", "meanC"])] {

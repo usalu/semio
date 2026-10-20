@@ -6,7 +6,7 @@ use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any:
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::UpdateGeoParams, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
+pub fn diff(payload: &crate::standards::v1::subsets::any::schema::mutations::update_geo_params::component::UpdateGeoParams, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
     let params = &payload.params;
     let distances_ok = [params.gsd_m, params.dsm_cell_m, params.dtm_filter_radius_m].iter().all(|value| value.is_finite() && *value > 0.0);
     let lat_ok = params.origin_lat.is_none_or(|lat| lat.is_finite() && (-90.0..=90.0).contains(&lat));

@@ -13,7 +13,7 @@ use semio_s_artifact_procedural_3d_model::catalogue::Catalogue;
 use semio_s_artifact_procedural_3d_model::catalogue::Kind;
 use std::collections::BTreeMap;
 use std::sync::OnceLock;
-use semio_s_artifact_procedural_3d_geometry_compute::original::OriginalFixedOutputJob;
+pub use semio_s_artifact_procedural_3d_geometry_compute::original::OriginalFixedOutputJob;
 
 
 

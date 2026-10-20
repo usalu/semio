@@ -1,0 +1,6 @@
+{
+ "tokenConflictSha256": "e23ae0ecc516abd1d8d0964f8061f937cb9a10c15c15b24f5c0f77d5caa0aaaf",
+ "choices": [
+  "  if(cache.helper){await mkdir(dirname(cache.helper.path),{recursive:true});await writeChanged(cache.helper.path,cache.helper.content);await chmod(cache.helper.path,cache.helper.mode);}\n  if(hermetic){const execution=bazelExecutionFlagsV1({host:{platform:process.platform,arch:process.arch},hermetic,jobs:request.parallel??Math.max(1,Math.min(8,require(\"node:os\").availableParallelism())),environment:process.env});options.push(...execution.command);if(execution.remote)options.push(`--jobs=${execution.jobs}`);}\n  await writeChanged("
+ ]
+}

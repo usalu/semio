@@ -5,6 +5,9 @@ use crate::standards::v1_7::subsets::base::io::export::{encode_pdf, text_documen
 use crate::standards::v1_7::subsets::base::modules::lift::lift_document_with;
 use crate::standards::v1_7::subsets::base::schema::graph_source::GraphSource;
 use semio_framework_test_fixtures::{fixture_bytes, fixture_text};
+use semio_s_artifact_stdio_pdf_model::standards::v1_7::subsets::base::schema::snapshot::model::PdfFontKind;
+use semio_s_artifact_stdio_pdf_model::standards::v1_7::subsets::base::schema::snapshot::model::PdfCMap;
+use semio_s_artifact_stdio_pdf_model::standards::v1_7::subsets::base::schema::snapshot::model::PdfCidToGid;
 
 fn role() -> PdfAdmittedStreamRole {
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🪪️stream-roles/🔣️.json")).unwrap();

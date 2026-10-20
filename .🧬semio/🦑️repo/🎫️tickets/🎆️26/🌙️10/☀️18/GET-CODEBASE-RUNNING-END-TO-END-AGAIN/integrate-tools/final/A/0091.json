@@ -1,0 +1,972 @@
+{
+ "version": 1,
+ "bazel": {
+  "version": "8.4.2",
+  "note": "Recorded with the provisioned binary: a rule with requires-worker-protocol=json, supports-workers, supports-worker-cancellation and, for multiplex, supports-multiplex-workers; the worker logged every chunk it read from standard input.",
+  "captures": {
+   "singleplex": {
+    "stdin": [
+     "{\"arguments\":[\"bazel-out/darwin_arm64-fastbuild/bin/b.out\",\"P2\"],\"inputs\":[{\"path\":\"worker.ts\",\"digest\":\"YzQ2MDY5MWIyZWYxNjgwNGJhZGQwNzhlMzE4ZDcwZDUxYWQ4YzEzZWFlMDJlYmVhMGI0MDE5OGNkNTUzYmM4Zg==\"},{\"path\":\"bazel-out/darwin_arm64-fastbuild/bin/b.out-0.params\",\"digest\":\"M2RhNDEyODMyYWRkMWExZWY3ODliYjM5ZWU2ZWYzYjZiY2IyMzJjYmE3NzI3MDIyNzMyZGY4MzA4ZTQ3MTIyMQ==\"}]}\n",
+     "{\"arguments\":[\"bazel-out/darwin_arm64-fastbuild/bin/a.out\",\"P1\"],\"inputs\":[{\"path\":\"dir-🧬/in-🦑.txt\",\"digest\":\"OThlYTZlNGYyMTZmMmZiNGI2OWZmZjliM2E0NDg0MmMzODY4NmNhNjg1ZjNmNTVkYzQ4YzVkM2ZiMTEwN2JlNA==\"},{\"path\":\"worker.ts\",\"digest\":\"YzQ2MDY5MWIyZWYxNjgwNGJhZGQwNzhlMzE4ZDcwZDUxYWQ4YzEzZWFlMDJlYmVhMGI0MDE5OGNkNTUzYmM4Zg==\"},{\"path\":\"bazel-out/darwin_arm64-fastbuild/bin/a.out-0.params\",\"digest\":\"YzVjMDhmMDE2ZWU5Y2NmMTIxNzI1Y2IwZmFkOGU0MDkwNmQ3ZDE4ZGY0MGE3MWU3NjY4MjIwMjMyZGQ1NjQ0OA==\"}]}\n"
+    ],
+    "responses": [
+     {
+      "exitCode": 0,
+      "output": "ok P2",
+      "requestId": 0
+     },
+     {
+      "exitCode": 0,
+      "output": "ok P1",
+      "requestId": 0
+     }
+    ]
+   },
+   "multiplex": {
+    "stdin": [
+     "{\"arguments\":[\"bazel-out/darwin_arm64-fastbuild/bin/m2.out\",\"Q2\"],\"inputs\":[{\"path\":\"worker.ts\",\"digest\":\"YzQ2MDY5MWIyZWYxNjgwNGJhZGQwNzhlMzE4ZDcwZDUxYWQ4YzEzZWFlMDJlYmVhMGI0MDE5OGNkNTUzYmM4Zg==\"},{\"path\":\"bazel-out/darwin_arm64-fastbuild/bin/m2.out-0.params\",\"digest\":\"YjIwMmMxMjE0YWExYjhkY2NkOTBhMWQ0NWU2M2VkMGJmZWRhMGZjMWZhYzE2ZjZmODAwN2E3MWFjNzZlYjZmMA==\"}],\"requestId\":4}\n{\"arguments\":[\"bazel-out/darwin_arm64-fastbuild/bin/m3.out\",\"Q3\"],\"inputs\":[{\"path\":\"worker.ts\",\"digest\":\"YzQ2MDY5MWIyZWYxNjgwNGJhZGQwNzhlMzE4ZDcwZDUxYWQ4YzEzZWFlMDJlYmVhMGI0MDE5OGNkNTUzYmM4Zg==\"},{\"path\":\"bazel-out/darwin_arm64-fastbuild/bin/m3.out-0.params\",\"digest\":\"YjAyZTkzNzZlN2RlN2QxZjU1MzhkYTg0ZTcwYzY1ZTRiMDY2ZDExYzM5ZmNmNTc2MTEwMzI3ZWNmZWY0ZGQ0ZQ==\"}],\"requestId\":5}\n",
+     "{\"arguments\":[\"bazel-out/darwin_arm64-fastbuild/bin/m1.out\",\"Q1\"],\"inputs\":[{\"path\":\"worker.ts\",\"digest\":\"YzQ2MDY5MWIyZWYxNjgwNGJhZGQwNzhlMzE4ZDcwZDUxYWQ4YzEzZWFlMDJlYmVhMGI0MDE5OGNkNTUzYmM4Zg==\"},{\"path\":\"bazel-out/darwin_arm64-fastbuild/bin/m1.out-0.params\",\"digest\":\"MDk2ZmZiYWI4MGFlZjcyYTdiNjE1OTQ4OTI1ZjEzYTlhMzA5OGU5ZjI0OTNjOTIyN2NmMjNmNTU2MzdkYWFhNg==\"}],\"requestId\":6}\n"
+    ],
+    "responses": [
+     {
+      "exitCode": 0,
+      "output": "ok Q2",
+      "requestId": 4
+     },
+     {
+      "exitCode": 0,
+      "output": "ok Q3",
+      "requestId": 5
+     },
+     {
+      "exitCode": 0,
+      "output": "ok Q1",
+      "requestId": 6
+     }
+    ]
+   },
+   "cancel": {
+    "stdin": [
+     "{\"arguments\":[\"bazel-out/darwin_arm64-fastbuild/bin/m2.out\",\"O2\"],\"inputs\":[{\"path\":\"worker.ts\",\"digest\":\"YzQ2MDY5MWIyZWYxNjgwNGJhZGQwNzhlMzE4ZDcwZDUxYWQ4YzEzZWFlMDJlYmVhMGI0MDE5OGNkNTUzYmM4Zg==\"},{\"path\":\"bazel-out/darwin_arm64-fastbuild/bin/m2.out-0.params\",\"digest\":\"ODdiNTkyNWYwNWZhY2I3ZGY0ZjgzYTU4ZTM1ZmJmMzhkMjViMTZkZjAyOGZjMDk0MjUxZWVhNzU2MDI3YjQ5OA==\"}],\"verbosity\":10}\n{\"cancel\":true}\n"
+    ],
+    "responses": [
+     {
+      "exitCode": 0,
+      "output": "cancelled",
+      "requestId": 0,
+      "wasCancelled": true
+     }
+    ]
+   }
+  }
+ },
+ "classification": [
+  {
+   "target": "test",
+   "continuous": false,
+   "kind": "test"
+  },
+  {
+   "target": "test-snapshot-sqlite",
+   "continuous": false,
+   "kind": "test"
+  },
+  {
+   "target": "test-original-receiving-source",
+   "continuous": false,
+   "kind": "test"
+  },
+  {
+   "target": "smoke-battery",
+   "continuous": false,
+   "kind": "test"
+  },
+  {
+   "target": "mutation-run",
+   "continuous": false,
+   "kind": "test"
+  },
+  {
+   "target": "bench-hot",
+   "continuous": false,
+   "kind": "test"
+  },
+  {
+   "target": "e2e-live",
+   "continuous": false,
+   "kind": "test"
+  },
+  {
+   "target": "typecheck",
+   "continuous": false,
+   "kind": "check"
+  },
+  {
+   "target": "check",
+   "continuous": false,
+   "kind": "check"
+  },
+  {
+   "target": "lint",
+   "continuous": false,
+   "kind": "check"
+  },
+  {
+   "target": "verify-dependencies",
+   "continuous": false,
+   "kind": "check"
+  },
+  {
+   "target": "format-check",
+   "continuous": false,
+   "kind": "check"
+  },
+  {
+   "target": "schema-sync",
+   "continuous": false,
+   "kind": "check"
+  },
+  {
+   "target": "stdio-contract",
+   "continuous": false,
+   "kind": "check"
+  },
+  {
+   "target": "graph-wire-check",
+   "continuous": false,
+   "kind": "check"
+  },
+  {
+   "target": "source-check",
+   "continuous": false,
+   "kind": "check"
+  },
+  {
+   "target": "generate",
+   "continuous": false,
+   "kind": "generate"
+  },
+  {
+   "target": "generate-browser-boot",
+   "continuous": false,
+   "kind": "generate"
+  },
+  {
+   "target": "graph-generate",
+   "continuous": false,
+   "kind": "generate"
+  },
+  {
+   "target": "🏭️generator",
+   "continuous": false,
+   "kind": "generate"
+  },
+  {
+   "target": "🏭️generator-inputs",
+   "continuous": false,
+   "kind": "generate"
+  },
+  {
+   "target": "build",
+   "continuous": false,
+   "kind": "build"
+  },
+  {
+   "target": "build-release",
+   "continuous": false,
+   "kind": "build"
+  },
+  {
+   "target": "prepare-prototype",
+   "continuous": false,
+   "kind": "build"
+  },
+  {
+   "target": "activate-wgpu-react-prototype",
+   "continuous": false,
+   "kind": "build"
+  },
+  {
+   "target": "wasm",
+   "continuous": false,
+   "kind": "build"
+  },
+  {
+   "target": "native-build",
+   "continuous": false,
+   "kind": "build"
+  },
+  {
+   "target": "package",
+   "continuous": false,
+   "kind": "build"
+  },
+  {
+   "target": "publish-docs",
+   "continuous": false,
+   "kind": "build"
+  },
+  {
+   "target": "deps-browsers",
+   "continuous": false,
+   "kind": "build"
+  },
+  {
+   "target": "preview-generated",
+   "continuous": false,
+   "kind": "build"
+  },
+  {
+   "target": "run",
+   "continuous": false,
+   "kind": "script"
+  },
+  {
+   "target": "session-play",
+   "continuous": false,
+   "kind": "script"
+  },
+  {
+   "target": "canonical-architecture",
+   "continuous": false,
+   "kind": "build"
+  },
+  {
+   "target": "watch-types",
+   "continuous": false,
+   "kind": "script"
+  },
+  {
+   "target": "home",
+   "continuous": false,
+   "kind": "script"
+  },
+  {
+   "target": "regenerated",
+   "continuous": false,
+   "kind": "script"
+  },
+  {
+   "target": "serve",
+   "continuous": true,
+   "kind": "service"
+  },
+  {
+   "target": "dev",
+   "continuous": true,
+   "kind": "service"
+  },
+  {
+   "target": "watch",
+   "continuous": true,
+   "kind": "service"
+  },
+  {
+   "target": "test",
+   "continuous": true,
+   "kind": "service"
+  }
+ ],
+ "plans": [
+  {
+   "name": "ten cores 32 GiB",
+   "host": {
+    "cores": 10,
+    "memoryBytes": 34359738368
+   },
+   "overrides": {},
+   "expected": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": 8,
+    "memory": {
+     "totalMegabytes": 9830,
+     "perWorkerMegabytes": 512,
+     "instances": 19
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": true,
+      "maxInstances": 8,
+      "multiplex": false,
+      "inProcess": true
+     },
+     "check": {
+      "workers": true,
+      "maxInstances": 8,
+      "multiplex": false,
+      "inProcess": true
+     },
+     "generate": {
+      "workers": true,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": true
+     },
+     "build": {
+      "workers": true,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": true
+     },
+     "script": {
+      "workers": true,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": true
+     },
+     "service": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     }
+    }
+   }
+  },
+  {
+   "name": "two cores 4 GiB",
+   "host": {
+    "cores": 2,
+    "memoryBytes": 4294967296
+   },
+   "overrides": {},
+   "expected": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": 2,
+    "memory": {
+     "totalMegabytes": 1228,
+     "perWorkerMegabytes": 512,
+     "instances": 2
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": true,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": true
+     },
+     "check": {
+      "workers": true,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": true
+     },
+     "generate": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "build": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "script": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "service": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     }
+    }
+   }
+  },
+  {
+   "name": "sixty-four cores 256 GiB",
+   "host": {
+    "cores": 64,
+    "memoryBytes": 274877906944
+   },
+   "overrides": {},
+   "expected": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": 8,
+    "memory": {
+     "totalMegabytes": 78643,
+     "perWorkerMegabytes": 512,
+     "instances": 153
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": true,
+      "maxInstances": 8,
+      "multiplex": false,
+      "inProcess": true
+     },
+     "check": {
+      "workers": true,
+      "maxInstances": 8,
+      "multiplex": false,
+      "inProcess": true
+     },
+     "generate": {
+      "workers": true,
+      "maxInstances": 4,
+      "multiplex": false,
+      "inProcess": true
+     },
+     "build": {
+      "workers": true,
+      "maxInstances": 2,
+      "multiplex": false,
+      "inProcess": true
+     },
+     "script": {
+      "workers": true,
+      "maxInstances": 4,
+      "multiplex": false,
+      "inProcess": true
+     },
+     "service": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     }
+    }
+   }
+  },
+  {
+   "name": "one core 512 MiB",
+   "host": {
+    "cores": 1,
+    "memoryBytes": 536870912
+   },
+   "overrides": {},
+   "expected": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": 1,
+    "memory": {
+     "totalMegabytes": 153,
+     "perWorkerMegabytes": 512,
+     "instances": 1
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": true,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": true
+     },
+     "check": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "generate": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "build": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "script": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "service": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     }
+    }
+   }
+  },
+  {
+   "name": "explicit jobs",
+   "host": {
+    "cores": 10,
+    "memoryBytes": 34359738368
+   },
+   "overrides": {
+    "jobs": 3
+   },
+   "expected": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": 3,
+    "memory": {
+     "totalMegabytes": 9830,
+     "perWorkerMegabytes": 512,
+     "instances": 19
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": true,
+      "maxInstances": 3,
+      "multiplex": false,
+      "inProcess": true
+     },
+     "check": {
+      "workers": true,
+      "maxInstances": 3,
+      "multiplex": false,
+      "inProcess": true
+     },
+     "generate": {
+      "workers": true,
+      "maxInstances": 3,
+      "multiplex": false,
+      "inProcess": true
+     },
+     "build": {
+      "workers": true,
+      "maxInstances": 2,
+      "multiplex": false,
+      "inProcess": true
+     },
+     "script": {
+      "workers": true,
+      "maxInstances": 3,
+      "multiplex": false,
+      "inProcess": true
+     },
+     "service": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     }
+    }
+   }
+  },
+  {
+   "name": "workers off",
+   "host": {
+    "cores": 10,
+    "memoryBytes": 34359738368
+   },
+   "overrides": {
+    "workers": false
+   },
+   "expected": {
+    "version": 1,
+    "enabled": false,
+    "protocol": "json",
+    "localJobs": 8,
+    "memory": {
+     "totalMegabytes": 9830,
+     "perWorkerMegabytes": 512,
+     "instances": 19
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "check": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "generate": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "build": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "script": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "service": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     }
+    }
+   }
+  },
+  {
+   "name": "memory fits three instances",
+   "host": {
+    "cores": 10,
+    "memoryBytes": 5368709120
+   },
+   "overrides": {},
+   "expected": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": 8,
+    "memory": {
+     "totalMegabytes": 1536,
+     "perWorkerMegabytes": 512,
+     "instances": 3
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": true,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": true
+     },
+     "check": {
+      "workers": true,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": true
+     },
+     "generate": {
+      "workers": true,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": true
+     },
+     "build": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "script": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "service": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     }
+    }
+   }
+  }
+ ],
+ "invalidPolicies": [
+  {
+   "name": "unknown protocol",
+   "set": {
+    "protocol": "proto"
+   }
+  },
+  {
+   "name": "no classification rule",
+   "set": {
+    "classification": []
+   }
+  },
+  {
+   "name": "rule without a condition",
+   "set": {
+    "classification": [
+     {
+      "kind": "test"
+     }
+    ]
+   }
+  },
+  {
+   "name": "unknown kind",
+   "set": {
+    "defaultKind": "service"
+   }
+  },
+  {
+   "name": "zero instances",
+   "setIn": {
+    "kinds.test.maxInstances": 0
+   }
+  },
+  {
+   "name": "multiplex and in-process together",
+   "setIn": {
+    "kinds.test.multiplex": true
+   }
+  },
+  {
+   "name": "extra top-level field",
+   "set": {
+    "unexpected": true
+   }
+  },
+  {
+   "name": "memory share beyond the host",
+   "setIn": {
+    "memory.hostShareBasisPoints": 9500
+   }
+  }
+ ],
+ "frames": {
+  "valid": [
+   {
+    "name": "empty object",
+    "line": "{}",
+    "expected": {
+     "arguments": [],
+     "inputs": [],
+     "requestId": 0,
+     "cancel": false,
+     "verbosity": 0
+    }
+   },
+   {
+    "name": "unknown fields are ignored",
+    "line": "{\"arguments\":[\"a\"],\"future\":{\"x\":1},\"requestId\":7}",
+    "expected": {
+     "arguments": [
+      "a"
+     ],
+     "inputs": [],
+     "requestId": 7,
+     "cancel": false,
+     "verbosity": 0
+    }
+   },
+   {
+    "name": "cancel without id",
+    "line": "{\"cancel\":true}",
+    "expected": {
+     "arguments": [],
+     "inputs": [],
+     "requestId": 0,
+     "cancel": true,
+     "verbosity": 0
+    }
+   },
+   {
+    "name": "sandbox directory",
+    "line": "{\"arguments\":[\"x\"],\"sandboxDir\":\"sandbox/3\",\"verbosity\":10}",
+    "expected": {
+     "arguments": [
+      "x"
+     ],
+     "inputs": [],
+     "requestId": 0,
+     "cancel": false,
+     "verbosity": 10,
+     "sandboxDir": "sandbox/3"
+    }
+   },
+   {
+    "name": "non-ascii argument and input",
+    "line": "{\"arguments\": [\"s/🧬️/ü.txt\"], \"inputs\": [{\"path\": \"dir-🧬/in-🦑.txt\", \"digest\": \"ZGlnZXN0\"}]}",
+    "expected": {
+     "arguments": [
+      "s/🧬️/ü.txt"
+     ],
+     "inputs": [
+      {
+       "path": "dir-🧬/in-🦑.txt",
+       "digest": "ZGlnZXN0"
+      }
+     ],
+     "requestId": 0,
+     "cancel": false,
+     "verbosity": 0
+    }
+   }
+  ],
+  "invalid": [
+   {
+    "name": "not json",
+    "line": "{arguments"
+   },
+   {
+    "name": "array",
+    "line": "[]"
+   },
+   {
+    "name": "arguments not strings",
+    "line": "{\"arguments\":[1]}"
+   },
+   {
+    "name": "negative request id",
+    "line": "{\"requestId\":-1}"
+   },
+   {
+    "name": "input without digest",
+    "line": "{\"inputs\":[{\"path\":\"a\"}]}"
+   },
+   {
+    "name": "cancel not boolean",
+    "line": "{\"cancel\":\"yes\"}"
+   }
+  ],
+  "responses": [
+   {
+    "name": "plain",
+    "response": {
+     "exitCode": 0,
+     "output": "ok",
+     "requestId": 0
+    },
+    "line": "{\"exitCode\":0,\"output\":\"ok\",\"requestId\":0}\n"
+   },
+   {
+    "name": "cancelled",
+    "response": {
+     "exitCode": 0,
+     "output": "",
+     "requestId": 4,
+     "wasCancelled": true
+    },
+    "line": "{\"exitCode\":0,\"output\":\"\",\"requestId\":4,\"wasCancelled\":true}\n"
+   },
+   {
+    "name": "failure with newline and non-ascii",
+    "response": {
+     "exitCode": 1,
+     "output": "bad\nü🧬",
+     "requestId": 2
+    },
+    "line": "{\"exitCode\":1,\"output\":\"bad\\nü🧬\",\"requestId\":2}\n"
+   }
+  ],
+  "truncation": {
+   "maximumOutputBytes": 64,
+   "output": "🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬",
+   "marker": "\n[worker] output truncated\n"
+  }
+ },
+ "invocation": [
+  {
+   "args": [
+    "run",
+    "a:b"
+   ],
+   "environment": {},
+   "workers": null
+  },
+  {
+   "args": [
+    "run",
+    "a:b",
+    "--workers",
+    "off"
+   ],
+   "environment": {},
+   "workers": "off",
+   "rest": [
+    "run",
+    "a:b"
+   ]
+  },
+  {
+   "args": [
+    "--workers=on",
+    "run",
+    "a:b"
+   ],
+   "environment": {},
+   "workers": "on",
+   "rest": [
+    "run",
+    "a:b"
+   ]
+  },
+  {
+   "args": [
+    "run",
+    "a:b"
+   ],
+   "environment": {
+    "SEMIO_BUILD_WORKERS": "off"
+   },
+   "workers": "off",
+   "rest": [
+    "run",
+    "a:b"
+   ]
+  },
+  {
+   "args": [
+    "run",
+    "a:b",
+    "--workers=off"
+   ],
+   "environment": {
+    "SEMIO_BUILD_WORKERS": "on"
+   },
+   "workers": "off",
+   "rest": [
+    "run",
+    "a:b"
+   ]
+  },
+  {
+   "args": [
+    "run",
+    "a:b",
+    "--",
+    "--workers",
+    "off"
+   ],
+   "environment": {},
+   "workers": null,
+   "rest": [
+    "run",
+    "a:b",
+    "--",
+    "--workers",
+    "off"
+   ]
+  }
+ ],
+ "invalidSwitches": [
+  "yes",
+  "1",
+  "ON",
+  "true"
+ ]
+}

@@ -1,0 +1,37 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📚️course/🧪️tests/🐾️pet-companions/🟦️.tsx",
+ "describeLine": 43,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of the 🐾️ pet companions suite tests. */"
+ },
+ "parts": [
+  {
+   "dir": "🔶️learner-s-choice",
+   "doc": "/** 🔶️ The learner s choice tests of the 🐾️ pet companions suite. */",
+   "name": "registerLearnerSChoiceTests",
+   "emoji": "🔷",
+   "fdoc": "Registers the learner s choice tests of the 🐾️ pet companions suite.",
+   "from": 44,
+   "to": 44
+  },
+  {
+   "dir": "🔸️liveliness",
+   "doc": "/** 🔸️ The liveliness tests of the 🐾️ pet companions suite. */",
+   "name": "registerLivelinessTests",
+   "emoji": "🔹",
+   "fdoc": "Registers the liveliness tests of the 🐾️ pet companions suite.",
+   "from": 169,
+   "to": 231
+  },
+  {
+   "dir": "🟠️layer",
+   "doc": "/** 🟠️ The layer tests of the 🐾️ pet companions suite. */",
+   "name": "registerLayerTests",
+   "emoji": "🟡",
+   "fdoc": "Registers the layer tests of the 🐾️ pet companions suite.",
+   "from": 266,
+   "to": 266
+  }
+ ]
+}

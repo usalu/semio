@@ -316,7 +316,7 @@ fn check(snapshot: &XlsxSnapshot, subset: &str, control: &mut NativeEncodeContro
     }
     Ok(output)
 }
-pub(super) fn validate(snapshot: &XlsxSnapshot, subset: &str, control: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
+pub fn validate(snapshot: &XlsxSnapshot, subset: &str, control: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
     let limits = control.limits();
     let mut callback = |event: semio_framework_value::native_encoding::NativeEncodeProgress| control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, event.completed, event.total).is_ok();
     let mut native = NativeEncodeControl::new(limits.max_value_bytes, &mut callback);

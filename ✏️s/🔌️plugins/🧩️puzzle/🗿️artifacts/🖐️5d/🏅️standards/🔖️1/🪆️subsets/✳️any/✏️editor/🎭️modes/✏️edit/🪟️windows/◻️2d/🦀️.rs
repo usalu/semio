@@ -190,9 +190,6 @@ pub fn puzzle5d_board_scene(envelope: &Puzzle5dScene) -> Board2dScene {
         snapshot_json: board_snapshot_value(&envelope.document, &envelope.runtime.camera2d).to_string(),
         camera_json: board_camera_value(&envelope.runtime.camera2d).to_string(),
         glyph_catalogs_json: board_kind_catalogs_value(&envelope.document).to_string(),
-        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: selection and hover both come
-        // from the framework-owned `vortex` domain the ONE 5d interaction snapshot reads — the same
-        // domain the world pane projects, so a part picked or hovered in either pane paints in both.
         selection_json: envelope.interaction.selection_json(),
         highlighted_ids_json: envelope.interaction.referenced_json(),
         interactive: true,
@@ -202,8 +199,6 @@ pub fn puzzle5d_board_scene(envelope: &Puzzle5dScene) -> Board2dScene {
         grid_visible: envelope.runtime.grid_visible,
         grid_snap_enabled: envelope.runtime.grid_snap_enabled,
         grid_factor: envelope.runtime.grid_factor,
-        // 🎯️ The board's own pick filter, projected from this pane's `selectable_kinds` record in the
-        // engine's node/edge/handle vocabulary (part/fastener/grip).
         selectable_nodes: envelope.runtime.selectable_kinds.parts,
         selectable_edges: envelope.runtime.selectable_kinds.fasteners,
         selectable_handles: envelope.runtime.selectable_kinds.grips,
