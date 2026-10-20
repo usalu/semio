@@ -899,7 +899,7 @@
       "name": "🛠️dev🎬manim scene_5",
       "type": "node-terminal",
       "request": "launch",
-      "command": "uv run manim -pql tutorial/energy/demand/Cooling/5_systemauslegung/scene_5.py Beat1_MechanicalVentilation",
+      "command": "uv run manim -pql tutorial/energy/demand/Cooling/5_systemauslegung/scene_5.py Beat2_VolumeFlowEquation",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -910,7 +910,7 @@
       "name": "🛠️dev🎬manim scene_6",
       "type": "node-terminal",
       "request": "launch",
-      "command": "uv run manim -pql tutorial/energy/demand/Cooling/6_lueftungssysteme/scene_6.py Beat1_PassivhausIdee",
+      "command": "uv run manim -pql tutorial/energy/demand/Cooling/6_sommerstrategie/scene_6.py Beat1_LastZuerstSenken",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -962,6 +962,39 @@
       }
     },
     {
+      "name": "🛠️dev🎬manim ventilation",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run manim -pql tutorial/energy/demand/Ventilation/1_warum_lueften/scene_1.py Beat1_Lueftungsbedarf",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 210
+      }
+    },
+    {
+      "name": "🛠️dev🎬manim ventilation full",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "\"${workspaceFolder}/.venv/bin/python\" tutorial/energy/demand/Ventilation/full_ventilation_video.py -q h --no-play --force",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 211
+      }
+    },
+    {
+      "name": "🛠️dev🎬manim intro ventilation",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run manim -pql tutorial/intro/intro_scene.py Demo_Intro_Lueftung",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 212
+      }
+    },
+    {
       "name": "🛠️dev🎬manim energy balance full",
       "type": "node-terminal",
       "request": "launch",
@@ -969,7 +1002,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
-        "order": 210
+        "order": 213
       }
     },
     {
@@ -980,7 +1013,7 @@
       "cwd": "${workspaceFolder}/tutorial/energy/demand/Heating/2_conduction",
       "presentation": {
         "group": "3_dev",
-        "order": 211
+        "order": 214
       }
     },
     {
@@ -991,7 +1024,7 @@
       "cwd": "${workspaceFolder}/tutorial/energy/demand/Heating/1_introduction",
       "presentation": {
         "group": "3_dev",
-        "order": 212
+        "order": 215
       }
     },
     {
@@ -1002,7 +1035,7 @@
       "cwd": "${workspaceFolder}/tutorial/energy/demand/Heating/1_introduction",
       "presentation": {
         "group": "3_dev",
-        "order": 213
+        "order": 216
       }
     },
     {
@@ -1013,7 +1046,7 @@
       "cwd": "${workspaceFolder}/tutorial/energy/demand/Heating/final_calculation",
       "presentation": {
         "group": "3_dev",
-        "order": 214
+        "order": 217
       }
     },
     {
@@ -1024,7 +1057,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
-        "order": 215
+        "order": 218
       }
     },
     // #endregion
@@ -1317,10 +1350,10 @@
       }
     },
     {
-      "name": "📦build📽️lueftungssysteme🔊audio",
+      "name": "📦build📽️sommerstrategie🔊audio",
       "type": "node-terminal",
       "request": "launch",
-      "command": "uv run python tutorial/energy/demand/Cooling/6_lueftungssysteme/generate_audio.py",
+      "command": "uv run python tutorial/energy/demand/Cooling/6_sommerstrategie/generate_audio.py",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
@@ -1328,10 +1361,10 @@
       }
     },
     {
-      "name": "📦build📽️lueftungssysteme🎬video",
+      "name": "📦build📽️sommerstrategie🎬video",
       "type": "node-terminal",
       "request": "launch",
-      "command": "uv run python tutorial/energy/demand/Cooling/6_lueftungssysteme/build_full_video.py",
+      "command": "uv run python tutorial/energy/demand/Cooling/6_sommerstrategie/build_full_video.py",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
@@ -1391,6 +1424,336 @@
       "presentation": {
         "group": "4_build",
         "order": 143
+      }
+    },
+    {
+      "name": "📦build📽️lueftungsbedarf🔊audio",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/1_warum_lueften/generate_audio.py",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 144
+      }
+    },
+    {
+      "name": "📦build📽️lueftungsbedarf📍trace",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/1_warum_lueften/generate_audio.py --trace",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 145
+      }
+    },
+    {
+      "name": "📦build📽️lueftungsbedarf🧩align",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/1_warum_lueften/generate_audio.py --align",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 146
+      }
+    },
+    {
+      "name": "📦build📽️lueftungsbedarf🔎syncreport",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/1_warum_lueften/generate_audio.py --report",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 147
+      }
+    },
+    {
+      "name": "📦build📽️lueftungsbedarf🎬video",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/1_warum_lueften/build_full_video.py",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 148
+      }
+    },
+    {
+      "name": "📦build📽️luftmenge🔊audio",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/2_luftmenge/generate_audio.py",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 149
+      }
+    },
+    {
+      "name": "📦build📽️luftmenge📍trace",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/2_luftmenge/generate_audio.py --trace",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 150
+      }
+    },
+    {
+      "name": "📦build📽️luftmenge🧩align",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/2_luftmenge/generate_audio.py --align",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 151
+      }
+    },
+    {
+      "name": "📦build📽️luftmenge🔎syncreport",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/2_luftmenge/generate_audio.py --report",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 152
+      }
+    },
+    {
+      "name": "📦build📽️luftmenge🎬video",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/2_luftmenge/build_full_video.py",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 153
+      }
+    },
+    {
+      "name": "📦build📽️waermestromluft🔊audio",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/3_waermestrom_luft/generate_audio.py",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 154
+      }
+    },
+    {
+      "name": "📦build📽️waermestromluft📍trace",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/3_waermestrom_luft/generate_audio.py --trace",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 155
+      }
+    },
+    {
+      "name": "📦build📽️waermestromluft🧩align",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/3_waermestrom_luft/generate_audio.py --align",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 156
+      }
+    },
+    {
+      "name": "📦build📽️waermestromluft🔎syncreport",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/3_waermestrom_luft/generate_audio.py --report",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 157
+      }
+    },
+    {
+      "name": "📦build📽️waermestromluft🎬video",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/3_waermestrom_luft/build_full_video.py",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 158
+      }
+    },
+    {
+      "name": "📦build📽️natuerlichelueftung🔊audio",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/4_natuerliche_lueftung/generate_audio.py",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 159
+      }
+    },
+    {
+      "name": "📦build📽️natuerlichelueftung📍trace",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/4_natuerliche_lueftung/generate_audio.py --trace",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 160
+      }
+    },
+    {
+      "name": "📦build📽️natuerlichelueftung🧩align",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/4_natuerliche_lueftung/generate_audio.py --align",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 161
+      }
+    },
+    {
+      "name": "📦build📽️natuerlichelueftung🔎syncreport",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/4_natuerliche_lueftung/generate_audio.py --report",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 162
+      }
+    },
+    {
+      "name": "📦build📽️natuerlichelueftung🎬video",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/4_natuerliche_lueftung/build_full_video.py",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 163
+      }
+    },
+    {
+      "name": "📦build📽️mechanischelueftung🔊audio",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/5_mechanische_lueftung/generate_audio.py",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 164
+      }
+    },
+    {
+      "name": "📦build📽️mechanischelueftung📍trace",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/5_mechanische_lueftung/generate_audio.py --trace",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 165
+      }
+    },
+    {
+      "name": "📦build📽️mechanischelueftung🧩align",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/5_mechanische_lueftung/generate_audio.py --align",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 166
+      }
+    },
+    {
+      "name": "📦build📽️mechanischelueftung🔎syncreport",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/5_mechanische_lueftung/generate_audio.py --report",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 167
+      }
+    },
+    {
+      "name": "📦build📽️mechanischelueftung🎬video",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/5_mechanische_lueftung/build_full_video.py",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 168
+      }
+    },
+    {
+      "name": "📦build📽️uebergabe🔊audio",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/6_uebergabe/generate_audio.py",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 169
+      }
+    },
+    {
+      "name": "📦build📽️uebergabe📍trace",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/6_uebergabe/generate_audio.py --trace",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 170
+      }
+    },
+    {
+      "name": "📦build📽️uebergabe🧩align",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/6_uebergabe/generate_audio.py --align",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 171
+      }
+    },
+    {
+      "name": "📦build📽️uebergabe🔎syncreport",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/6_uebergabe/generate_audio.py --report",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 172
+      }
+    },
+    {
+      "name": "📦build📽️uebergabe🎬video",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Ventilation/6_uebergabe/build_full_video.py",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 173
       }
     },
     // #endregion

@@ -37,10 +37,10 @@ if _VO_TIMING.is_file():
 # 🏔️ One persistent chapter title — written once on Beat 1, re-added on later beats.
 TITLE_DE = "Die Energiebilanz des Gebäudes"
 
-# Carried over unchanged from the Heating and Cooling series so a viewer who
+# Carried over unchanged from the Ventilation, Heating and Cooling series so a viewer who
 # watched those recognises each flow by its colour before reading its label.
 LOSS_BLUE = "#38BDF8"     # Transmission — Heating/2_conduction
-VENT_BLUE = "#60A5FA"     # Lüftung — Heating/3_convection
+VENT_BLUE = "#60A5FA"     # Lüftung — Ventilation/
 SOLAR_YELLOW = "#FDE047"  # Solare Gewinne — Heating/5_solar_heat_gain
 INT_ORANGE = "#F59E0B"    # Interne Gewinne — Heating/4_internal_heat_gain
 ETA_GREEN = "#22C55E"     # Ausnutzungsgrad
@@ -51,7 +51,7 @@ HOUSE_SCALE = 0.8
 
 #region Example house
 # One set of numbers for the whole chapter — the same example house the Heating
-# series calculates (areas, U-values, volume, air change), so every bar and
+# series calculates (areas, U-values, volume, air change from Ventilation/), so every bar and
 # readout below is a product of drawn quantities.
 SURFACES = [
     ("Außenwand", 209.0, 0.24, 20.0, LOSS_BLUE),
@@ -507,8 +507,8 @@ class Beat1_Bilanzgrenze(Scene):
 class Beat2_Verlustseite(Scene):
     NARRATION = [
         ("intro",
-         "The loss side first — and it is exactly the two mechanisms the Heating video derived.",
-         "Zuerst die Verlustseite — genau die beiden Mechanismen aus dem Heizen-Video."),
+         "The loss side first — and it is exactly the two mechanisms the Heating and Ventilation videos derived.",
+         "Zuerst die Verlustseite — genau die beiden Mechanismen aus den Videos Heizen und Lüftung."),
         ("transmission",
          "Transmission: heat conducts through every envelope surface to the outside, and we add the surfaces up one by one.",
          "Transmission: Wärme wird durch jede Hüllfläche nach außen geleitet — Fläche für Fläche summieren wir sie auf."),
@@ -546,8 +546,8 @@ class Beat2_Verlustseite(Scene):
          "That is 0.05 watts per square metre kelvin when a thermal-bridge check is available, more without one.",
          "Mit Wärmebrückennachweis sind es 0,05 W/(m²·K), ohne Nachweis deutlich mehr."),
         ("lueftung",
-         "Ventilation carries the second stream out of the building.",
-         "Die Lüftung trägt den zweiten Strom aus dem Gebäude hinaus."),
+         "Ventilation, as the Ventilation video built it, carries the second stream out of the building.",
+         "Die Lüftung, wie das Lüftungs-Video sie aufgebaut hat, trägt den zweiten Strom aus dem Gebäude hinaus."),
         ("luftwechsel",
          "The air change rate n states how often the room air is exchanged per hour — here 0.5.",
          "Der Luftwechsel n gibt an, wie oft pro Stunde die Raumluft ausgetauscht wird — hier 0,5."),

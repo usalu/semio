@@ -1,0 +1,22 @@
+{
+  "id": "2026/10/20/ADD-VENTILATION-VIDEO-AS-SECOND-TUTORIAL",
+  "title": "Add Ventilation Video as Second Tutorial",
+  "slug": "ADD-VENTILATION-VIDEO-AS-SECOND-TUTORIAL",
+  "emoji": "🌬️",
+  "status": "open",
+  "description": "Professor feedback: ventilation affects both heating and cooling (air change rates matter in summer and winter), so extract all ventilation content into its own video placed after Physical Fundamentals and before Heating and Cooling. Physical Fundamentals stays unchanged. The new Ventilation series (6 chapters) reuses the existing scenes, shapes and animated glyphs, keeps the academic Physical Fundamentals style, and ends with a hand-over summary of what Heating and Cooling take from it. A source backup of tutorial/ was taken first.",
+  "goal": "R26-02/UPDATED-DOCS/UPDATED-USER-DOCS/UPDATED-TUTORIALS",
+  "dates": {
+    "due": "2026-10-20",
+    "started": "2026-10-20",
+    "completed": null
+  },
+  "client": "claude-code",
+  "llm": "sonnet-5",
+  "summary": "",
+  "files": {
+    "created": [],
+    "updated": [],
+    "removed": []
+  }
+}

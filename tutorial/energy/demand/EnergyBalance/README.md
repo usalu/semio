@@ -14,8 +14,8 @@ series intro card ``Demo_Intro_Energiebilanz`` from ``tutorial/intro/intro_scene
 
 Entry file: [`full_energy_balance_video.py`](./full_energy_balance_video.py)
 
-This is the fourth video in the curriculum, after `1_physical_fundamentals/`,
-`Heating/`, and `Cooling/`.
+This is the fifth video in the curriculum, after `1_physical_fundamentals/`,
+`Ventilation/`, `Heating/`, and `Cooling/`.
 
 ---
 
@@ -33,6 +33,9 @@ the next one a number:
 | Vorkette | `Q_P = Q_E · f_p` | Kapitel 5 |
 | Ergebnis | Effizienzklasse auf dem Ausweis | Kapitel 6 |
 | Realität | Bedarf ≠ Verbrauch | Kapitel 7 |
+
+The building blocks of `Q_V` (airflow `V̇ = V·n`, `c_Luft`, `Δθ`, `η_WRG`) come
+from the Lüftung video (`Ventilation/`); Kapitel 1 only sums them into the loss side.
 
 One schematic worked example runs through Kapitel 4 to 7 unchanged, so the
 numbers on screen stay the same building throughout:
@@ -211,7 +214,7 @@ chapter folder's `scene_N.py`.
 | 6 | `Beat3_PflichtangabenUndFolgen` | Inserat, Effizienzklasse, Empfehlungen |
 | 7 | `Beat1_BerechnungVsAbrechnung` | genormte Randbedingungen, Prebound/Rebound |
 | 7 | `Beat2_HydraulischerAbgleich` | Durchfluss folgt Widerstand, nicht Bedarf |
-| 7 | `Beat3_SerienAbschluss` | die vier Videos als eine Rechnung |
+| 7 | `Beat3_SerienAbschluss` | die fünf Videos als eine Rechnung |
 
 ```bash
 .venv/bin/manim -pql tutorial/energy/demand/EnergyBalance/1_recap_heizen_kuehlen/scene_1.py Beat1_Bilanzgrenze
@@ -230,5 +233,5 @@ chapter folder's `scene_N.py`.
 - The house/sun motifs, the `_din_ref()` citation chip, and the
   `equation_row` / `formula_panel` / `highlight_param` formula style match the
   Cooling series (`Cooling/3_transmission_humidity/scene_3.py`) for visual
-  continuity across all four videos.
+  continuity across all five videos.
 - Do not mix Heating/Cooling scenes into this playlist.

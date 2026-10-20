@@ -1,0 +1,246 @@
+##### tutorial/energy/demand/Ventilation/1_warum_lueften/scene_1.py Warum lüften?
+==  Beat1_Lueftungsbedarf
+  [intro] Vier Personen halten sich im Raum auf. Sie atmen, schwitzen und geben Wärme ab.
+  [co2] Jeder Atemzug erhöht den CO₂-Gehalt. Draußen sind es etwa 420 ppm.
+  [pettenkofer] Bei rund 1000 ppm gilt die Luft als verbraucht: der Pettenkoferwert.
+  [feuchte] Dazu kommt Feuchte: Ein ruhender Mensch gibt rund 30 W latent ab.
+  [geruch] Auch Gerüche und Schadstoffe sammeln sich im Raum an.
+  [frisch] Frischluft ersetzt die verbrauchte Luft: Alle drei Werte sinken wieder.
+  [personen] Mehr Personen brauchen mehr Luft: etwa 30 m³/h je Person.
+  [jahreszeit] Diesen Bedarf gibt es im Winter wie im Sommer, darum steht die Lüftung vor Heizung und Kühlung.
+==  Beat2_Lueftungsweg
+  [intro] Luft strömt durch die Öffnungen eines Hauses: Sie tritt ein und wieder aus.
+  [winter] Im Winter verlässt warme Raumluft das Haus oben, kalte Außenluft strömt unten nach.
+  [waerme_winter] Mit der Luft geht Wärme verloren: Der Unterschied beträgt 20 K.
+  [sommer] Im Sommer kehrt sich die Strömung um: Heiße Außenluft tritt oben ein, gekühlte Raumluft unten aus.
+  [waerme_sommer] Jetzt gelangt Wärme mit der Luft hinein. Der Unterschied beträgt nur 6 K.
+  [beide] Gleiche Öffnungen, umgekehrte Richtung: Wärme wandert in beiden Fällen mit der Luft.
+==  Beat3_Fahrplan
+  [intro] Dieses Video folgt fünf Schritten.
+  [menge] Zuerst die Luftmenge: Volumen, Luftwechselrate und Volumenstrom.
+  [waerme] Dann, was die Luft trägt: Temperaturdifferenz, Wärmekapazität und Feuchte.
+  [natuerlich] Drittens die natürliche Lüftung durch Fenster.
+  [mechanisch] Viertens die mechanische Lüftung mit Wärmerückgewinnung.
+  [uebergabe] Zuletzt die Übergabe: Die Heizung übernimmt den Winterwert, die Kühlung den Sommerwert.
+##### tutorial/energy/demand/Ventilation/2_luftmenge/scene_2.py Wie viel Luft?
+==  Beat1_Innenvolumen
+  [intro] Wir zeichnen das Haus im Schnitt: 10 m breit, 6 m bis zur Traufe, 8,5 m bis zum First.
+  [gross] Mit Außenmaßen hat der Schnitt 72,5 m², mal 8 m Tiefe: das Bruttovolumen V-e mit 580 m³.
+  [focus] Die Außenluft verblasst — getauscht wird nur die Luft innen. Wände, Decken und Dach sind aber keine Luft.
+  [subtract] Ohne die Konstruktion bleiben rund 60 m² Schnittfläche und 7,3 m Innentiefe.
+  [fill] Die beiden Lufträume ergeben das Nettovolumen V — rund 440 m³.
+  [ratio] V ist also rund 0,76 mal V-e — so setzen es DIN V 18599-1 und GEG pauschal an.
+  [label] V ist das Nettovolumen — Ausgangspunkt jedes Lüftungswärmestroms, im Winter wie im Sommer.
+==  Beat2_Luftwechselrate
+  [volume] Wieder vom Luftvolumen V im Haus ausgehen: 440 m³.
+  [rate] Die Luftwechselrate n sagt, wie oft dieses Volumen pro Stunde ausgetauscht wird.
+  [hour] Bei n = 0,5 pro Stunde strömen in einer Stunde 220 m³ frische Luft herein.
+  [one_change] Ein Luftwechsel heißt: das ganze Volumen ist ersetzt — hier nach zwei Stunden.
+  [product] Volumen mal Luftwechselrate — V mal n — bestimmt den Lüftungsvolumenstrom, in beiden Jahreszeiten.
+  [home] Unsere 0,5 pro Stunde sind der Mindestluftwechsel für Wohnungen nach DIN EN 12831.
+  [low] Ein unbeheizter Lagerraum ohne Nutzung braucht kaum Luftwechsel, ein Passivhaus mit Lüftungsanlage etwa 0,3.
+  [mid] Ein Büro braucht etwa 2, ein Klassenzimmer etwa 4 Luftwechsel pro Stunde.
+  [high] Eine Gewerbeküche etwa 15, ein Operationssaal nach DIN 1946-4 etwa 20 — dort ist die Luft alle 3 Minuten neu.
+==  Beat3_Volumenstrom
+  [area] Volumen mal Luftwechselrate: 440 m³ hoch, 0,5 pro Stunde breit — die Fläche ist der Volumenstrom, 220 m³ pro Stunde.
+  [hour] Diese 220 m³ strömen in einer Stunde durch das Haus — das sind 3600 Sekunden.
+  [second] Geteilt durch 3600 bleiben pro Sekunde 0,061 m³ — rund 61 Liter.
+  [spell] Ein Luftstrom, zwei Schreibweisen: Die Heizung schreibt V mal n in m³/h, die Kühlung q-v-R in m³/s.
+  [people] Gegenprobe Hygiene: Vier Personen brauchen je etwa 30 m³/h, zusammen 120 m³/h.
+  [cover] Das liegt unter 220 m³/h — der Mindestluftwechsel n = 0,5 deckt den Hygienebedarf ab, im Winter wie im Sommer.
+##### tutorial/energy/demand/Ventilation/3_waermestrom_luft/scene_3.py Was die Luft trägt
+==  Beat1_Luftwaerme
+  [cube] Nehmen wir einen Kubikmeter Luft — die Einheit, in der die Lüftung Wärme transportiert.
+  [mass] Ein Kubikmeter Luft hat eine Masse von etwa 1,2 Kilogramm.
+  [coil] Ein Heizelement erwärmt diesen Kubikmeter von unten.
+  [heat] Von 20 auf 21 °C braucht es 1,2 mal 1005, also 1206 Joule.
+  [c_luft] Die Energie je Kubikmeter und Kelvin ist die volumenbezogene Wärmekapazität der Luft, c-Luft — etwa 0,34 Wattstunden.
+  [spell] Heizung und Kühlung schreiben dieselbe Größe verschieden: c-Luft in Wh/(m³·K) oder ρ mal c-p in J/(m³·K).
+  [perk] Damit tragen 220 m³/h je Kelvin Temperaturunterschied rund 75 Watt.
+==  Beat2_SensibleWaerme
+  [intro] Sensible Wärme ändert die Lufttemperatur: Die Abluft nimmt Raumwärme mit, die Zuluft bringt Außenwärme herein.
+  [delta] Treiber ist die Temperaturdifferenz Delta-Theta, innen minus außen. Im Winter sind das 20 minus 0, also 20 Kelvin.
+  [formula] Der sensible Lüftungswärmestrom ist Volumenstrom mal c-Luft mal Delta-Theta, in Watt.
+  [v] Der Volumenstrom ist V mal n: 440 mal 0,5 ergibt 220 Kubikmeter pro Stunde.
+  [c] Und c-Luft ist die Wärmekapazität der Luft: 0,34 Wattstunden je Kubikmeter und Kelvin.
+  [winter] Im Winter: 220 mal 0,34 mal 20 — rund 1500 Watt gehen mit der Luft verloren. Die Heizung rechnet das als Lüftungsverlust.
+  [summer] Im Sommer wird Delta-Theta negativ: 26 minus 32 sind minus 6 Kelvin. Dieselbe Formel liefert minus 450 Watt — die Luft bringt Wärme herein.
+==  Beat3_LatenteLast
+  [intro] Sommerluft trägt mehr als Wärme: Die feuchte Außenluft bringt Wasserdampf in den Raum.
+  [dx] Bei 32 °C und 50 % enthält die Außenluft 15 g Wasser je kg, die Raumluft bei 26 °C und 50 % nur 10,5 g — Delta-x beträgt 4,5 g/kg.
+  [formula] Die latente Lüftungslast ist Dichte mal Verdampfungswärme r mal Delta-x mal Volumenstrom.
+  [water] Je Kubikmeter sind das 1,2 mal 4,5, also 5,4 Gramm Wasser, die kondensiert werden müssen.
+  [r] Der Phasenwechsel braucht Energie: r beträgt etwa 2450 Kilojoule je Kilogramm — beim Kondensieren wird sie frei und muss abgeführt werden.
+  [qv] Der Luftstrom von 220 Kubikmetern pro Stunde sind 0,061 Kubikmeter pro Sekunde.
+  [result] Zusammen: rund 810 Watt latente Last — mehr als die 450 Watt sensible Wärme.
+==  Beat4_WinterUndSommer
+  [intro] Ein Haus, eine Formel, zwei Jahreszeiten: Die Luft trägt in beiden Wärme, aber in entgegengesetzte Richtungen.
+  [winter] Im Winter treiben 20 Kelvin 1500 Watt sensible Wärme hinaus. Die latente Wärme gehört nicht zur Heizlast.
+  [sens] Im Sommer treiben nur 6 Kelvin 450 Watt sensible Wärme herein.
+  [lat] Dazu kommt die latente Last von 810 Watt aus der Feuchte — zusammen 1260 Watt.
+  [use] Die Heizung übernimmt den Winterwert als Lüftungsverlust, die Kühlung beide Sommeranteile als Lüftungslast.
+##### tutorial/energy/demand/Ventilation/4_natuerliche_lueftung/scene_4.py Natürliche Lüftung
+==  Beat1_Fensterregeln
+  [intro] Natürliche Lüftung ist einstellbar, Winter wie Sommer —
+eine Fassadenöffnung ist ein Regler, kein Schalter.
+  [closed] Ganz geschlossen sinkt der Luftwechsel fast auf null —
+Wärme und Feuchte stauen sich, der Komfort bricht ein.
+  [partial] Ein schmaler Spalt hebt den Luftwechsel ins Komfortband —
+genug Frischluft, keine Zugluft.
+  [cooler] In der Sommernacht ist die Außenluft kühler als der Raum —
+weit öffnen, das Fenster spült jetzt Wärme hinaus.
+  [hotter] Am Sommernachmittag ist es draußen heißer — drosseln,
+eine weite Öffnung würde Wärme hereinholen.
+  [winter] Im Winter ist die Außenluft immer kälter — weit, aber nur kurz
+öffnen: jede Minute trägt Wärme hinaus.
+  [rule] Die Regel gilt in beiden Jahreszeiten: das Fenster nach den Menschen,
+der Außentemperatur und der Öffnungsdauer einstellen.
+==  Beat2_StossOderKipp
+  [room] Winterfall: Ein Raum mit 20 m² und 2,5 m Höhe enthält 50 m³ Luft. Innen 20 °C, außen 0 °C.
+  [open] Zwei Arten zu lüften: Thermostat zu und Fenster weit auf — oder Fenster gekippt.
+  [five] Nach fünf Minuten ist beim weit offenen Fenster die ganze Luft getauscht, beim gekippten erst etwa 8 %.
+  [stoss] Beim Stoßlüften wird nur die Luft nachgeheizt: 0,34 · 50 · 20 = 340 Wh. Die Wände bleiben warm.
+  [hour] Das gekippte Fenster braucht für einen vollen Luftwechsel etwa eine Stunde.
+  [thermostat] Kalte Luft fällt auf das Thermostat unter dem Fenster. Das Ventil öffnet, die Hälfte von 500 W geht direkt hinaus: 250 Wh.
+  [laibung] Laibung und Sturz kühlen um etwa 5 K ab. 160 kg Mauerwerk wieder zu erwärmen kostet rund 190 Wh.
+  [sum] Für dieselben 50 m³ Frischluft: 340 Wh beim Stoßlüften, rund 780 Wh bei Kipplüftung.
+  [rule] Darum im Winter: kurz und weit öffnen statt kippen.
+  [summer] Im Sommer entfallen Heizkörper und Laibung: nur etwa 100 Wh bei 6 K.
+Gekippt tauscht kaum Luft — weit und kurz, in den kühlen Stunden.
+==  Beat3_Querlueftung
+  [intro] Für stärkeren, weiterhin natürlichen Luftstrom:
+zwei gegenüberliegende Fassaden öffnen.
+  [pressure] Wind drückt auf der Luvseite und saugt auf der Leeseite —
+diese Druckdifferenz treibt die Luft, kein Ventilator.
+  [formula] Wie viel Luft durchkommt, bestimmt eine wirksame Fläche aus beiden Öffnungen.
+  [a1] A eins ist die Zuluftöffnung auf der Luvseite.
+  [a2] A zwei ist die Abluftöffnung auf der Leeseite.
+  [limit] Weil beide in Reihe wirken, bestimmt die kleinere Öffnung:
+verkleinert man den Auslass, bricht der Durchzug ein.
+  [summer] Also beide Seiten gemeinsam dimensionieren. Im Sommer führt die
+Spülung nachts viel Wärme ab, ersetzt aber keine Kälteanlage.
+  [winter] Im Winter zieht derselbe Winddruck kalte Luft durch den Raum —
+Durchzug kostet schnell Wärme: kurz lüften, danach schließen.
+==  Beat4_Auftrieb
+  [intro] Fällt der Wind aus, bleibt der Auftrieb: warme Raumluft
+ist leichter und entweicht oben, kühle Luft strömt unten nach.
+  [shaft] Treppenhaus oder Schacht führt die warme Luft zu einem
+hohen Auslass — auch an windstillen Tagen.
+  [formula] Der treibende Druck ist Höhendifferenz mal Erdbeschleunigung
+mal Dichteunterschied zwischen außen und innen.
+  [h] h ist der senkrechte Abstand zwischen tiefem Einlass und hohem Auslass.
+  [rho] Der Dichteunterschied folgt aus der Temperaturdifferenz: 18 °C außen,
+26 °C innen — je wärmer die Raumluft, desto stärker der Auftrieb.
+  [taller] Höherer Auslass, größere Höhe — der Druck wächst mit.
+Der Schacht hebt h von 2,5 auf 4,4 m, der Strom wird schneller.
+  [winter] Im Winter beträgt die Temperaturdifferenz 20 statt 8 K — derselbe Schacht
+erzeugt fast dreimal so viel Druck: im Kalten wirkt der Auftrieb am stärksten.
+  [comfort] Deshalb sitzen Zulüfte tief bei den Menschen und die
+Abluft hoch am Dach — Komfort ohne Ventilator.
+==  Beat5_Nachtlueftung
+  [intro] Sommerkomfort lebt von der Nachtlüftung, sobald die Hülle
+verschattet ist — hier zwei Sommertage, Außentemperatur in Gelb.
+  [day] Tagsüber ist es draußen heißer als drinnen — die Fenster
+bleiben zu, und die Bauteile nehmen die Wärme auf.
+  [without] Ohne Nachtlüftung wird die gespeicherte Wärme nie
+abgegeben — der Raum verlässt das Komfortband.
+  [night] Nach Sonnenuntergang fällt die Außenluft unter die
+Raumtemperatur — jetzt weit öffnen und kühl spülen.
+  [result] Über Nacht entlädt sich die Masse — der zweite Tag liegt
+rund vier Kelvin tiefer, ganz ohne Kältemaschine.
+  [schedule] Im Sommer ist Nachtlüftung ein Zeitplan, keine Einstellung:
+nachts weit offen, tagsüber zu und verschattet.
+  [winter] Im Winter kehrt sich der Zeitplan um: die Masse hält die Tageswärme —
+nachts bleiben die Fenster zu, tagsüber wird kurz gelüftet.
+==  Beat6_GrenzenDerFreienLueftung
+  [intro] Bisher galt eine Annahme: die Außenluft ist brauchbar. Wenn nicht,
+hat die freie Lüftung in Sommer wie Winter keine Antwort.
+  [hot] An einem heißen, schwülen Sommernachmittag trägt die Zuluft
+Wärme und Feuchte herein statt heraus.
+  [cold] Im Winter ist es umgekehrt: Luft mit 0 °C strömt herein,
+der Raum verliert Wärme.
+  [filter] Ein offenes Fenster hat auch keinen Filter — Pollen,
+Staub und Straßenlärm kommen mit.
+  [control] Der Volumenstrom folgt dem Wetter, nicht dem Entwurf — auf eine
+Heiz- oder Kühllast lässt er sich nicht auslegen.
+  [recovery] Die gesamte Energie der abströmenden Luft verschwindet durch die Öffnung:
+η = 0, im Winter gehen die vollen 1500 W Lüftungswärmeverlust verloren.
+  [handover] Genau diese vier Lücken schließt die ventilatorgestützte Lüftung mit
+Wärmerückgewinnung — Kapitel 5, Grundlage für Heizung und Kühlung.
+##### tutorial/energy/demand/Ventilation/5_mechanische_lueftung/scene_5.py Mechanische Lüftung und Wärmerückgewinnung
+==  Beat1_Grundtypen
+  [intro] Ventilatorgestützte Lüftung hat drei Grundtypen — sie
+unterscheiden sich nur darin, wer einen Ventilator bekommt.
+  [exhaust] Die Abluftanlage saugt mechanisch ab — die Zuluft kommt
+ungefiltert nach, im Raum herrscht leichter Unterdruck.
+  [supply] Die Zuluftanlage macht es umgekehrt: aufbereitete Luft
+wird eingeblasen und entweicht über Fugen — Überdruck.
+  [balanced] Die Zu-/Abluftanlage führt beide Ströme — die Drücke
+gleichen sich aus, beide Volumenströme sind bekannt.
+  [verdict] Nur der dritte Typ hat beide Ströme unter Kontrolle — erst dann
+sind Filter, Feuchte und WRG möglich, im Winter wie im Sommer.
+==  Beat2_Waermerueckgewinnung
+  [intro] Sobald beide Ströme geführt sind, laufen sie im Platten-
+wärmeübertrager aneinander vorbei, ohne sich zu mischen.
+  [winter] Im Winter gibt die 20 °C warme Abluft Wärme an die 0 °C
+kalte Außenluft ab — die Zuluft steigt auf 16 °C.
+  [formula] Der Temperaturänderungsgrad η: erreichte Erwärmung der Zuluft,
+geteilt durch die verfügbare Differenz Abluft − Außenluft.
+  [winter_bars] Nur der Anteil 1 − η bleibt als Verlust: bei η = 0,8
+sinken 1500 W auf 300 W.
+  [summer] Im Sommer gilt dieselbe Definition: Außenluft 32 °C, Abluft 26 °C —
+fast fünf von sechs Kelvin, die WRG wird zur Kälterückgewinnung.
+  [summer_bars] Die fühlbare Last sinkt von 450 W auf rund 90 W.
+  [latent] Der Plattenübertrager überträgt nur fühlbare Wärme: die latente
+Last von 810 W bleibt — die Kühlung muss später entfeuchten.
+  [close] Eine Definition, zwei Jahreszeiten: die Heizung rechnet mit 300 W,
+die Kühlung mit 90 W fühlbar plus 810 W latent.
+==  Beat3_Anlagenvergleich
+  [window] Fensterlüftung ist freier Luftwechsel ohne Rückgewinnung — der
+volle Lüftungsverlust von 1500 W bleibt, η = 0.
+  [central] Eine zentrale Anlage mit WRG erreicht η von etwa 0,8 bis 0,9 —
+der Verlust sinkt auf 300 bis 150 W.
+  [decentral] Dezentrale Keramik-Pendellüfter speichern die Wärme abwechselnd
+und gewinnen raumweise 70 bis 90 % zurück.
+  [outro] DIN 1946-6: mechanische WRG senkt den Lüftungswärmeverlust im Winter
+um bis zu 90 % — im Sommer gewinnt sie dieselbe Kälte zurück.
+  [passivhaus] Ein offenes Fenster gewinnt nichts zurück — das Passivhaus führt
+die Luft deshalb über die WRG, nicht über das Fenster.
+==  Beat4_Kanalquerschnitt
+  [intro] Die Anlage muss den Hygieneluftstrom von 0,061 m³/s fördern —
+welchen Kanalquerschnitt braucht sie dafür?
+  [continuity] Die Kontinuität verknüpft sie: Der Volumenstrom ist die mittlere
+Geschwindigkeit mal die Querschnittsfläche.
+  [vm] Für einen leisen Kanal wird die Geschwindigkeit auf etwa 2,5 m/s
+begrenzt — der kleine Kanal hier ist viel zu schnell.
+  [area] Mehr Fläche bremst denselben Strom: bei 2,5 m/s ist A gleich
+Volumenstrom durch Geschwindigkeit — rund 0,0244 m².
+  [radius] Beim runden Kanal ist r die Wurzel aus A durch π: rund 9 cm,
+also ein Durchmesser von etwa 18 cm.
+  [cooling] Die Kühlung braucht für ihre Last ein Vielfaches an Luft —
+dieselbe Methode, nur ein größerer Kanal.
+  [handover] Die Heizung übernimmt η für ihren Lüftungsverlust, die Kühlung
+den Luftstrom für ihre Kanalauslegung.
+##### tutorial/energy/demand/Ventilation/6_uebergabe/scene_6.py Übergabe an Heizung und Kühlung
+==  Beat1_Zusammenfassung
+  [intro] Sieben Größen tragen das ganze Thema Lüftung — hier liegen sie auf einer Tafel.
+  [v] Das Volumen V: 440 Kubikmeter Raumluft im Haus.
+  [n] Die Luftwechselrate n: 0,5 pro Stunde — das halbe Volumen in jeder Stunde.
+  [vdot] Zusammen ergeben sie den Volumenstrom V-Punkt: 220 Kubikmeter pro Stunde — die Kühlung schreibt q v R.
+  [c] Jeder Kubikmeter trägt Wärme: c-Luft beträgt 0,34 Wattstunden je Kubikmeter und Kelvin.
+  [dt] Delta-Theta ist die Triebkraft: 20 Kelvin im Winter, 6 Kelvin im Sommer.
+  [sens] Daraus folgt der fühlbare Wärmestrom: 1500 Watt im Winter, 450 Watt im Sommer.
+  [dx] Im Sommer kommt die Feuchte hinzu: Delta-x beträgt 4,5 Gramm je Kilogramm.
+  [lat] Mit Dichte und Verdampfungsenthalpie wird daraus ein latenter Wärmestrom von 810 Watt.
+  [eta] Die Wärmerückgewinnung mit Eta gleich 0,8 holt vier Fünftel des fühlbaren Anteils zurück.
+  [wrg] Übrig bleiben 300 Watt im Winter und 90 Watt im Sommer — die latenten 810 Watt bleiben unberührt.
+  [close] Die Heizung übernimmt die Winterspalte, die Kühlung die Sommerspalte.
+==  Beat2_UebergabeHeizungKuehlung
+  [intro] Dasselbe Haus wird das ganze Jahr gelüftet — ein Luftstrom, aber zwei verschiedene Rechnungen.
+  [winter] Im Winter trägt die Abluft Wärme hinaus: 1500 Watt bei 20 Kelvin Temperaturdifferenz.
+  [heizung] Die Heizung übernimmt diesen Strom als Lüftungsterm Phi-V des Heizwärmebedarfs.
+  [wrg_winter] Mit Wärmerückgewinnung bleiben davon nur 300 Watt zu decken.
+  [summer] Im Sommer kehrt sich die Richtung um: 450 Watt fühlbar und zusätzlich 810 Watt latent.
+  [kuehlung] Die Kühlung übernimmt beide Anteile als Lüftungslast — der Luftstrom dimensioniert ihre Anlage.
+  [extras] Nachtlüftung entlädt die Speichermasse, die Kälterückgewinnung senkt den fühlbaren Anteil von 450 auf 90 Watt.
+  [serie] Damit ist die Lüftung erklärt: Es folgen Heizung und Kühlung, die Energiebilanz schließt die Serie.

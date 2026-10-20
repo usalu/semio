@@ -42,6 +42,7 @@ WARM_RED = "#EF4444"
 COLD_BLUE = "#4D96FF"
 GOOD_GREEN = "#22C55E"
 WATER_HOT = "#F97316"
+VENT_BLUE = "#60A5FA"
 
 #region Chain constants
 CHAIN_E_FACTORS = (1.04, 1.08, 1.06, 1.18)
@@ -949,7 +950,7 @@ def _boiler(center):
 
 def _tile(cx, title, detail, colour):
     """🗂️ One video of the series — framed slot with its title and what it contributed."""
-    frame = RoundedRectangle(width=2.95, height=2.70, corner_radius=0.12, color=colour, stroke_width=2.0).move_to(
+    frame = RoundedRectangle(width=2.40, height=2.70, corner_radius=0.12, color=colour, stroke_width=2.0).move_to(
         np.array([cx, 0.45, 0.0]))
     name = body_text(title, font_size=BODY_FONT_SIZE, color=colour).move_to(np.array([cx, -0.28, 0.0]))
     detail.move_to(np.array([cx, -0.68, 0.0]))
@@ -959,11 +960,14 @@ def _tile(cx, title, detail, colour):
 class Beat3_SerienAbschluss(Scene):
     NARRATION = [
         ("intro",
-         "Four videos, one continuous calculation — worth seeing end to end one last time.",
-         "Vier Videos, eine durchgehende Rechnung — es lohnt sich, sie einmal am Stück zu sehen."),
+         "Five videos, one continuous calculation — worth seeing end to end one last time.",
+         "Fünf Videos, eine durchgehende Rechnung — es lohnt sich, sie einmal am Stück zu sehen."),
         ("kette_grund",
          "The fundamentals gave us the units.",
          "Die Grundlagen gaben uns die Einheiten."),
+        ("kette_lueften",
+         "Ventilation gave us the airflow and the heat the air carries, in winter and in summer.",
+         "Die Lüftung gab uns den Luftstrom und die Wärme, die die Luft trägt, im Winter wie im Sommer."),
         ("kette_heizen",
          "Heating gave us the heat flows across the envelope in winter.",
          "Das Heizen gab uns die Wärmeströme über die Hülle im Winter."),
@@ -1020,29 +1024,36 @@ class Beat3_SerienAbschluss(Scene):
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        xs = (-4.95, -1.65, 1.65, 4.95)
-        small = 0.42
+        xs = (-5.10, -2.55, 0.0, 2.55, 5.10)
+        small = 0.36
         anchor = np.array([xs[0] - 0.55, 1.62, 0.0])
         lamp = lamp_glyph(anchor, drop=0.25)
         lamp["group"].scale(1.5, about_point=anchor)
         gauge = thermometer_glyph(np.array([xs[0] + 0.62, 0.22, 0.0]), height=1.15, color=P_RED, level=0.0)
         glow = lambda rt: [ripples([lamp["bulb"].get_center()], r_max=0.55, color=P_YELLOW, down=True, cycles=max(1.0, rt / 1.4))]
-        hs_heat = house_section(np.array([xs[1], 0.78, 0.0]), scale=small)
-        hs_cool = house_section(np.array([xs[2] + 0.30, 0.78, 0.0]), scale=small)
-        hs_small = house_section(np.array([xs[3], 0.78, 0.0]), scale=small)
-        sun_small_c = np.array([xs[2] - 1.05, 1.45, 0.0])
+        hs_vent = house_section(np.array([xs[1] + 0.20, 0.78, 0.0]), scale=small)
+        hs_heat = house_section(np.array([xs[2], 0.78, 0.0]), scale=small)
+        hs_cool = house_section(np.array([xs[3] + 0.38, 0.78, 0.0]), scale=small)
+        hs_small = house_section(np.array([xs[4], 0.78, 0.0]), scale=small)
+        sun_small_c = np.array([xs[3] - 0.92, 1.45, 0.0])
         sun_small = sun_glyph(sun_small_c).scale(0.34)
         cool_win = hs_cool["windows"][1]
         sun_beams = sun_rays(sun_small_c, cool_win["x"], [cool_win["sill"] + 0.04, cool_win["center"][1], cool_win["lintel"] - 0.04],
                              hs_cool["bottom_left"][1] + 0.02, gap=0.36)
         beam_paths = [[s_, h_, l_] for s_, h_, l_ in zip(sun_beams["starts"], sun_beams["hits"], sun_beams["lands"])]
-        heat_paths = [smooth_path([(xs[1] + 0.30, y, 0), (xs[1] + 0.80, y + 0.02, 0), (xs[1] + 1.30, y + 0.04, 0)])
+        heat_paths = [smooth_path([(xs[2] + 0.25, y, 0), (xs[2] + 0.65, y + 0.02, 0), (xs[2] + 1.05, y + 0.04, 0)])
                       for y in (0.50, 0.78, 1.06)]
+        vent_left = float(hs_vent["bottom_left"][0])
+        vent_in = [smooth_path([(vent_left - 0.42, y, 0), (vent_left, y, 0), (vent_left + 0.50, y, 0)])
+                   for y in (float(hs_vent["windows"][0]["center"][1]),)]
+        vent_out = [smooth_path([(vent_left + 0.50, y, 0), (vent_left, y, 0), (vent_left - 0.42, y, 0)])
+                    for y in (float(hs_vent["windows"][1]["center"][1]),)]
         tiles = VGroup(
             _tile(xs[0], "1 · Grundlagen", math_label(r"\mathrm{W},\;\mathrm{J},\;\Delta T", size=LABEL_FONT_SIZE, color=P_WHITE), P_YELLOW),
-            _tile(xs[1], "2 · Heizen", body_text("Verluste & Gewinne", font_size=LABEL_FONT_SIZE, color=P_WHITE), P_ORANGE),
-            _tile(xs[2], "3 · Kühlen", body_text("Sommerlasten", font_size=LABEL_FONT_SIZE, color=P_WHITE), P_CYAN),
-            _tile(xs[3], "4 · Energiebilanz", body_text("Gesetz & Ausweis", font_size=LABEL_FONT_SIZE, color=P_WHITE), P_TEAL),
+            _tile(xs[1], "2 · Lüftung", math_label(r"\dot{V},\;Q_{V}", size=LABEL_FONT_SIZE, color=P_WHITE), VENT_BLUE),
+            _tile(xs[2], "3 · Heizen", body_text("Verluste & Gewinne", font_size=LABEL_FONT_SIZE, color=P_WHITE), P_ORANGE),
+            _tile(xs[3], "4 · Kühlen", body_text("Sommerlasten", font_size=LABEL_FONT_SIZE, color=P_WHITE), P_CYAN),
+            _tile(xs[4], "5 · Energiebilanz", body_text("Gesetz & Ausweis", font_size=LABEL_FONT_SIZE, color=P_WHITE), P_TEAL),
         )
         line_y = -1.18
         thread = smooth_path([(-6.0, line_y, 0), (0.0, line_y, 0), (6.0, line_y, 0)])
@@ -1064,15 +1075,22 @@ class Beat3_SerienAbschluss(Scene):
                   run_time=1.6)
         hold_for(self, self.NARRATION, "kette_grund", during=glow)
 
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "kette_lueften"))
+        airflow = [(vent_in, VENT_BLUE), (vent_out, P_RED, P_ORANGE)]
+        self.play(Create(hs_vent["group"]), tiles[1][0].animate.set_stroke(width=3.6), run_time=1.2)
+        self.play(flow_animation(airflow, waves=3, radius=0.05, cycles=2.0), run_time=1.8)
+        hold_for(self, self.NARRATION, "kette_lueften",
+                 during=lambda rt: [flow_animation(airflow, waves=3, radius=0.05, cycles=max(1.0, rt / 0.9))])
+
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "kette_heizen"))
         leaving = [(heat_paths, P_RED, P_ORANGE)]
-        self.play(Create(hs_heat["group"]), tiles[1][0].animate.set_stroke(width=3.6), run_time=1.2)
+        self.play(Create(hs_heat["group"]), tiles[2][0].animate.set_stroke(width=3.6), run_time=1.2)
         self.play(flow_animation(leaving, waves=3, radius=0.05, cycles=2.0), run_time=1.8)
         hold_for(self, self.NARRATION, "kette_heizen",
                  during=lambda rt: [flow_animation(leaving, waves=3, radius=0.05, cycles=max(1.0, rt / 0.9))])
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "kette_kuehlen"))
-        self.play(Create(hs_cool["group"]), FadeIn(sun_small), tiles[2][0].animate.set_stroke(width=3.6), run_time=1.2)
+        self.play(Create(hs_cool["group"]), FadeIn(sun_small), tiles[3][0].animate.set_stroke(width=3.6), run_time=1.2)
         self.play(shine(sun_beams), run_time=1.8)
         hold_for(self, self.NARRATION, "kette_kuehlen",
                  during=lambda rt: [pulse_flashes(beam_paths, P_YELLOW, repeats=max(1, int(rt / 1.6)), width=3.5)])
@@ -1108,10 +1126,10 @@ class Beat3_SerienAbschluss(Scene):
             return [ripples(warm_spots, r_max=r_max, cycles=max(1.0, rt / 1.4))]
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "bilanz"))
-        self.play(tiles[3][0].animate.set_stroke(width=3.6), Create(hs_small["group"]), run_time=1.2)
+        self.play(tiles[4][0].animate.set_stroke(width=3.6), Create(hs_small["group"]), run_time=1.2)
         _freeze(gauge["column"])
         self.play(FadeOut(tiles),
-                  FadeOut(VGroup(lamp["group"], gauge["group"], gauge["column"], hs_heat["group"], hs_cool["group"], sun_small,
+                  FadeOut(VGroup(lamp["group"], gauge["group"], gauge["column"], hs_vent["group"], hs_heat["group"], hs_cool["group"], sun_small,
                                  sun_beams["group"])),
                   ReplacementTransform(hs_small["group"], hs["group"]), run_time=1.5)
         self.play(FadeIn(rad), FadeIn(boiler), FadeIn(person), Create(cuts[0]), FadeIn(names[0]), *heat(1.2), run_time=1.2)

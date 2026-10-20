@@ -3244,24 +3244,33 @@ class Beat7_SensibelLatent(Scene):
 #endregion
 
 
-#region Beat8 – Ventilation: heat leaves with the air
-class Beat8_Lueftung(Scene):
+#region Beat8 – Summary: seven building blocks of the video
+class Beat8_Zusammenfassung(Scene):
     NARRATION = [
-        ("openings",
-         "Air flows into the house through one opening and out through another — the air volume per hour is the volume flow.",
-         "Luft strömt durch eine Öffnung ins Haus und durch eine andere wieder hinaus — das Luftvolumen pro Stunde ist der Volumenstrom."),
-        ("loss",
-         "Each cubic metre takes heat with it: density times heat capacity, times volume flow, times temperature difference.",
-         "Jeder Kubikmeter nimmt Wärme mit: Dichte mal Wärmekapazität, mal Volumenstrom, mal Temperaturunterschied."),
-        ("const",
-         "For air, density times heat capacity is together about 0.34 watt-hours per cubic metre and kelvin.",
-         "Bei Luft sind Dichte mal Wärmekapazität zusammen rund 0,34 Wh pro m³ und Kelvin."),
-        ("winter",
-         "In winter, a hundred cubic metres per hour at twenty kelvin difference is about 680 watts — seven people's worth.",
-         "Im Winter sind 100 m³/h bei 20 K Unterschied rund 680 W — so viel wie sieben Menschen."),
-        ("night",
-         "So ventilate small and controlled in winter, and open wide at summer nights — that cools the house down.",
-         "Darum im Winter klein und kontrolliert lüften, im Sommer nachts weit öffnen — das kühlt das Haus aus."),
+        ("energy",
+         "Energy is what we use: one kilowatt for one hour is one kilowatt-hour.",
+         "Energie ist, was wir verbrauchen: 1 kW über 1 Stunde sind 1 Kilowattstunde."),
+        ("power",
+         "Power says how fast the energy flows — energy per time.",
+         "Leistung sagt, wie schnell die Energie fließt — Energie pro Zeit."),
+        ("keep",
+         "Energy is never lost: it leaves as heat or it is stored.",
+         "Energie geht nie verloren: Sie kommt als Wärme heraus oder wird gespeichert."),
+        ("pump",
+         "The heat pump transfers energy to a higher temperature level — the COP counts the heat per kilowatt-hour of electricity.",
+         "Die Wärmepumpe überträgt Energie auf ein höheres Temperaturniveau — der COP nennt die Wärme je kWh Strom."),
+        ("sun",
+         "Radiation comes through the glass short-wave and stays trapped long-wave — the g-value sets the gain.",
+         "Strahlung kommt kurzwellig durchs Glas und bleibt langwellig gefangen — der g-Wert bestimmt den Gewinn."),
+        ("mass",
+         "Thermal mass stores heat and gives it back later.",
+         "Thermische Masse speichert Wärme und gibt sie zeitversetzt wieder ab."),
+        ("latent",
+         "Heat sits in the temperature and in the water vapour — evaporating takes over five times as much as warming.",
+         "Wärme steckt in der Temperatur und im Wasserdampf — Verdampfen braucht über fünfmal so viel wie Erwärmen."),
+        ("next",
+         "With these seven building blocks we now calculate heating and cooling.",
+         "Mit diesen sieben Bausteinen rechnen wir nun Heizung und Kühlung."),
     ]
 
     def construct(self):
@@ -3269,140 +3278,45 @@ class Beat8_Lueftung(Scene):
         N = self.NARRATION
         title = scene_title(TITLE_DE)
         self.add(title)
-        subtitle = beat_subtitle("Lüftung — Wärme geht mit der Luft", title)
+        subtitle = beat_subtitle("Zusammenfassung — was wir gelernt haben", title)
         self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
-        caption = caption_bar(subtitle_text(N, "openings"))
+        caption = caption_bar(subtitle_text(N, "energy"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        #region house and openings
-        g_y, eave, peak, hx_l, hx_r, t = -1.3, 0.35, 1.25, -3.0, 1.0, 0.16
-        hxc = (hx_l + hx_r) / 2
-        inlet = (g_y + 0.3, g_y + 0.8)
-        out_lo = ValueTracker(-0.15)
-        out_hi = 0.15
-        style = dict(color=P_WHITE, stroke_width=2, fill_color=P_WHITE, fill_opacity=0.16)
-
-        def wall(x, y0, y1):
-            return Rectangle(width=t, height=max(0.002, y1 - y0), **style).move_to(np.array([x, (y0 + y1) / 2, 0.0]))
-
-        def reveal(x, ys):
-            return VGroup(*[Line(np.array([x - 0.14, y, 0.0]), np.array([x + 0.14, y, 0.0]), color=P_WHITE,
-                                 stroke_width=3) for y in ys])
-
-        wall_l = VGroup(wall(hx_l, g_y, inlet[0]), wall(hx_l, inlet[1], eave))
-        wall_r_top = wall(hx_r, out_hi, eave)
-        wall_r_low = always_redraw(lambda: wall(hx_r, g_y, out_lo.get_value()))
-        in_reveal = reveal(hx_l, inlet)
-        out_reveal = always_redraw(lambda: reveal(hx_r, (out_lo.get_value(), out_hi)))
-        ceiling_line = Line(np.array([hx_l, eave, 0.0]), np.array([hx_r, eave, 0.0]), color=P_WHITE, stroke_width=2.5)
-        roof_pts = [np.array([hx_l - 0.4, eave + 0.05, 0.0]), np.array([hxc, peak + 0.2, 0.0]),
-                    np.array([hx_r + 0.4, eave + 0.05, 0.0])]
-        roof = VMobject(color=P_WHITE, stroke_width=3.5)
-        roof.set_points_as_corners(roof_pts)
-        ground = Line(np.array([-6.8, g_y, 0.0]), np.array([6.8, g_y, 0.0]), color=P_TEAL, stroke_width=3)
-        house = VGroup(wall_l, wall_r_top, in_reveal, ceiling_line, roof)
-
-        def cross_paths():
-            lo = out_lo.get_value()
-            return [smooth_path([np.array([-5.2, inlet[0] + 0.2 + dy, 0.0]),
-                                 np.array([hx_l - 0.6, (inlet[0] + inlet[1]) / 2 + dy, 0.0]),
-                                 np.array([hx_l + 0.5, (inlet[0] + inlet[1]) / 2 + dy, 0.0]),
-                                 np.array([hxc, -0.55 + dy, 0.0]),
-                                 np.array([hx_r - 0.5, (lo + out_hi) / 2 + dy * 0.5, 0.0]),
-                                 np.array([hx_r + 0.8, (lo + out_hi) / 2 + 0.25 + dy, 0.0]),
-                                 np.array([hx_r + 2.2, (lo + out_hi) / 2 + 0.9 + dy, 0.0])])
-                    for dy in (-0.1, 0.0, 0.1)]
-
-        in_lbl = Text("Zuluft", font_size=LABEL_FONT_SIZE, color=P_CYAN)
-        in_lbl.next_to(np.array([-5.2, inlet[0], 0.0]), LEFT, buff=0.15)
-        out_lbl = Text("Abluft", font_size=LABEL_FONT_SIZE, color=P_CYAN)
-        out_lbl.move_to(np.array([hx_r + 0.9 + out_lbl.width / 2, out_lo.get_value() - 0.35, 0.0]))
-        rx = 4.6
-        v_flow = ValueTracker(0.0)
-        v_read = _readout(lambda: rf"\dot{{V}} = {_de(v_flow.get_value())}\,\mathrm{{m^{{3}}/h}}",
-                          np.array([rx, -0.45, 0.0]), color=P_CYAN, edge="center")
-        self.play(Create(ground), FadeIn(house), FadeIn(wall_r_low), FadeIn(out_reveal), run_time=1.0)
-        self.play(FadeIn(in_lbl), FadeIn(out_lbl), run_time=0.6)
-        _reveal(self, v_read)
-        _paced_flow(self, [(cross_paths(), P_CYAN, None, None, False)], run_time=8.0, waves=6, cycles=3.5,
-                    extra=[v_flow.animate.set_value(100.0)])
-        hold_for(self, N, "openings", used=BEAT_SUBTITLE_FADE + 0.3 + 9.6)
+        #region rows
+        specs = [
+            ("energy", "Energie", P_YELLOW, r"1\,\mathrm{kW} \cdot 1\,\mathrm{h} = 1\,\mathrm{kWh}"),
+            ("power", "Leistung", P_CYAN, r"P = E \,/\, t"),
+            ("keep", "Energieerhaltung", P_RED, r"E_{\mathrm{ein}} = E_{\mathrm{aus}} + \Delta E_{\mathrm{Speicher}}"),
+            ("pump", "Wärmepumpe", P_ORANGE, r"\mathrm{COP} = Q_{\mathrm{H}} \,/\, W_{\mathrm{el}}"),
+            ("sun", "Strahlung", P_YELLOW, r"\dot{Q}_{\mathrm{S}} = g \cdot A \cdot I"),
+            ("mass", "Thermische Masse", P_ORANGE, r"Q = m \cdot c \cdot \Delta T"),
+            ("latent", "Sensibel und latent", P_BLUE, r"Q_{\mathrm{lat}} = m \cdot r"),
+        ]
+        top, pitch, x_bullet, x_topic, x_formula = 1.65, 0.62, -3.8, -3.5, 0.8
+        rows = {}
+        for k, (key, topic, color, formula) in enumerate(specs):
+            y = top - k * pitch
+            bullet = Square(side_length=0.2, stroke_width=0, fill_color=color, fill_opacity=0.85).move_to(
+                np.array([x_bullet, y, 0.0]))
+            label = Text(topic, font_size=LABEL_FONT_SIZE, color=color)
+            label.move_to(np.array([x_topic + label.width / 2, y, 0.0]))
+            math = _m(formula, np.array([x_formula, y - 0.08, 0.0]), size=BODY_FONT_SIZE, color=P_WHITE, edge="left")
+            rows[key] = VGroup(bullet, label, math)
         #endregion
 
-        #region loss
-        caption = swap_caption(self, caption, subtitle_text(N, "loss"))
-        self.play(FadeOut(VGroup(in_lbl, out_lbl)), run_time=0.5)
-        row, box, items = _panel([
-            (None, r"\dot{Q}_{\mathrm{V}}", P_RED), (None, "=", P_WHITE), ("rho", r"\rho", P_TEAL),
-            (None, r"\cdot", P_WHITE), ("c", "c", P_TEAL), (None, r"\cdot", P_WHITE),
-            ("v", r"\dot{V}", P_CYAN), (None, r"\cdot", P_WHITE), ("dt", r"\Delta T", P_ORANGE),
-        ])
-        t_in = _m(r"\vartheta_{\mathrm{i}} = 20\,\mathrm{°C}", np.array([hxc, -0.05, 0.0]), size=LABEL_FONT_SIZE,
-                  color=P_RED)
-        t_out = _m(r"\vartheta_{\mathrm{e}} = 0\,\mathrm{°C}", np.array([-5.4, -0.25, 0.0]), size=LABEL_FONT_SIZE,
-                   color=P_BLUE)
-        self.play(FadeIn(row), Create(box), run_time=1.0)
-        self.play(FadeIn(t_in), FadeIn(t_out), run_time=0.8)
-        self.play(Indicate(items["v"], color=P_CYAN), Indicate(v_read, color=P_CYAN), run_time=1.0)
-        self.play(Indicate(items["dt"], color=P_ORANGE), Indicate(t_in, color=P_RED), Indicate(t_out, color=P_BLUE),
-                  run_time=1.0)
-        hold_for(self, N, "loss")
+        for k, (key, *_rest) in enumerate(specs):
+            if k:
+                caption = swap_caption(self, caption, subtitle_text(N, key))
+            self.play(FadeIn(rows[key], shift=RIGHT * 0.2), run_time=0.8)
+            self.play(Indicate(rows[key][2], color=specs[k][2], scale_factor=1.08), run_time=0.7)
+            hold_for(self, N, key, used=0.0 if k else BEAT_SUBTITLE_FADE + 0.3 + 1.5)
 
-        caption = swap_caption(self, caption, subtitle_text(N, "const"))
-        c_panel = _panel([
-            (None, r"\rho \cdot c", P_TEAL), (None, r"\approx", P_WHITE),
-            (None, r"0{,}34\,\mathrm{Wh/(m^{3}\,K)}", P_TEAL),
-        ])
-        _swap_panel(self, (row, box), (c_panel[0], c_panel[1]))
-        hold_for(self, N, "const")
-        #endregion
-
-        #region winter and night
-        caption = swap_caption(self, caption, subtitle_text(N, "winter"))
-        frac = ValueTracker(0.0)
-        q_case = _m(r"\dot{V} = 100\,\mathrm{m^{3}/h},\;\Delta T = 20\,\mathrm{K}", np.array([rx, 0.75, 0.0]),
-                    size=LABEL_FONT_SIZE, color=P_CYAN)
-        q_read = _readout(lambda: rf"\dot{{Q}}_{{\mathrm{{V}}}} = {_de(680 * frac.get_value())}\,\mathrm{{W}}",
-                          np.array([rx, 0.25, 0.0]), color=P_RED, edge="center")
-        people = VGroup(*[_person(ORIGIN, scale=0.9) for _ in range(7)]).arrange(RIGHT, buff=0.18)
-        people.move_to(np.array([rx, -0.95, 0.0]))
-        people_lbl = _m(r"7 \cdot 100\,\mathrm{W}", people.get_bottom() + DOWN * 0.38, size=LABEL_FONT_SIZE,
-                        color=P_ORANGE)
-        self.play(FadeOut(v_read), run_time=0.3)
-        _reveal(self, q_case, q_read)
-        _paced_flow(self, [(cross_paths(), P_BLUE, None, _gradient([(0.0, P_BLUE), (0.35, P_BLUE), (0.55, P_RED),
-                                                                    (1.0, P_RED)]), False)],
-                    run_time=4.0, waves=4, cycles=1.0,
-                    extra=[frac.animate.set_value(1.0), LaggedStart(*[FadeIn(p) for p in people], lag_ratio=0.3),
-                           FadeIn(people_lbl)])
-        hold_for(self, N, "winter")
-
-        caption = swap_caption(self, caption, subtitle_text(N, "night"))
-        self.play(FadeOut(VGroup(people, people_lbl, t_in, t_out, c_panel[0], c_panel[1], q_case)), FadeOut(q_read),
-                  run_time=0.5)
-        moon = _moon(np.array([5.6, 1.9, 0.0]))
-        board_heat = ValueTracker(0.75)
-        board = Polygon(*roof_pts, *[p_ + DOWN * 0.14 for p_ in roof_pts[::-1]], stroke_width=0, fill_color=P_ORANGE,
-                        fill_opacity=0.75)
-        board.add_updater(lambda m: m.set_fill(P_ORANGE, opacity=board_heat.get_value()))
-        board_lbl = Text("Dach", font_size=LABEL_FONT_SIZE, color=P_ORANGE).move_to(
-            np.array([hx_r + 1.0, eave + 0.55, 0.0]))
-        norm = Text("DIN 1946-6", font_size=LABEL_FONT_SIZE, color=P_TEAL).move_to(np.array([rx, -1.0, 0.0]))
-        self.play(FadeIn(moon), out_lo.animate.set_value(-0.85), FadeIn(norm), FadeIn(board), FadeIn(board_lbl),
-                  run_time=0.8)
-        night = [smooth_path([np.array([-5.6, inlet[0] + 0.2 + dy, 0.0]),
-                              np.array([hx_l - 0.5, (inlet[0] + inlet[1]) / 2 + dy, 0.0]),
-                              np.array([hx_l + 0.6, -0.2 + dy, 0.0]),
-                              np.array([hxc, eave - 0.18 + dy * 0.4, 0.0]),
-                              np.array([hx_r - 0.5, -0.1 + dy, 0.0]),
-                              np.array([hx_r + 0.8, -0.2 + dy, 0.0]), np.array([hx_r + 2.2, 0.4 + dy, 0.0])])
-                 for dy in (-0.12, 0.0, 0.12)]
-        _paced_flow(self, [(night, P_BLUE, None, _gradient([(0.0, P_BLUE), (0.45, P_BLUE), (0.65, P_ORANGE),
-                                                            (1.0, P_ORANGE)]), False)],
-                    run_time=7.0, waves=7, cycles=2.8, extra=[board_heat.animate.set_value(0.15)])
-        board.clear_updaters()
-        hold_for(self, N, "night")
-        #endregion
+        caption = swap_caption(self, caption, subtitle_text(N, "next"))
+        frame = SurroundingRectangle(VGroup(*rows.values()), color=P_TEAL, buff=0.3, stroke_width=2.5,
+                                     corner_radius=0.15)
+        self.play(Create(frame), run_time=1.0)
+        hold_for(self, N, "next")
 
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
@@ -3419,6 +3333,6 @@ BEATS = [
     Beat5_Strahlung,
     Beat6_ThermischeMasse,
     Beat7_SensibelLatent,
-    Beat8_Lueftung,
+    Beat8_Zusammenfassung,
 ]
 #endregion

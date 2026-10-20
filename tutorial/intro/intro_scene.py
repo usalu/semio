@@ -336,6 +336,16 @@ class Demo_Intro_PhysikalischeGrundlagen(NGSIntro):
     credits_de = ("Niloufar Ghandeharioun", "Ueli Saluz")
 
 
+class Demo_Intro_Lueftung(NGSIntro):
+    """🌬️ Series intro for Lüftung — air change, heat carried by air, natural and mechanical ventilation."""
+
+    topic_de = "Lüftung"
+    topic_explain_de = "Luftmenge, Wärmestrom der Luft und Wärmerückgewinnung — im Winter wie im Sommer."
+    series_de = "Gebäudeenergie · Lüftung"
+    credit_title_de = "Konzeption & Produktion der Animation"
+    credits_de = ("Niloufar Ghandeharioun", "Ueli Saluz")
+
+
 class Demo_Intro_Energiebilanz(NGSIntro):
     """📜 Series intro for EnergyBalance — regulation, losses, and the Energieausweis."""
 
@@ -363,8 +373,8 @@ class Intro_InternalGains(NGSIntro):
 class Intro_TransmissionHumidity(NGSIntro):
     """💧 Intro for Cooling part 3 — Transmission & Feuchte."""
 
-    topic_de = "Transmission und Feuchte"
-    topic_explain_de = "Wärmeleitung durch die Hülle und latente Lasten durch Feuchte."
+    topic_de = "Transmission und Lüftungslast"
+    topic_explain_de = "Wärmeleitung durch die Hülle und die sommerliche Last der Lüftung."
     series_de = "Kühllast · Teil 3"
 
 
@@ -380,14 +390,14 @@ class Intro_Systemauslegung(NGSIntro):
     """🌬️ Intro for Cooling part 5 — Systemauslegung."""
 
     topic_de = "Systemauslegung"
-    topic_explain_de = "Von der Kühllast zum Luftvolumenstrom und Kanalquerschnitt."
+    topic_explain_de = "Von der Kühllast zum Luftvolumenstrom — im Vergleich zur Hygienelüftung."
     series_de = "Kühllast · Teil 5"
 
 
-class Intro_Lueftungssysteme(NGSIntro):
-    """🌀 Intro for Cooling part 6 — Lüftungssysteme."""
+class Intro_Sommerstrategie(NGSIntro):
+    """🌀 Intro for Cooling part 6 — Sommerstrategie."""
 
-    topic_de = "Lüftungssysteme"
-    topic_explain_de = "Last senken, frei lüften wenn die Außenluft kühler ist, RLT als Reserve."
+    topic_de = "Sommerstrategie"
+    topic_explain_de = "Last senken, frei lüften wenn die Außenluft kühler ist, Maschinen als Reserve."
     series_de = "Kühllast · Teil 6"
 # endregion

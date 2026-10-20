@@ -9,27 +9,35 @@ Jedes Kapitel fasst **Lernziel**, **Kernbegriffe**, **Formeln** und **Merksätze
 
 ```mermaid
 flowchart TB
-    PF["0 · Physikalische Grundlagen<br/>kWh · kW · COP · Strahlung · Speicher · Feuchte · Lüftung"]
+    PF["0 · Physikalische Grundlagen<br/>kWh · kW · COP · Strahlung · Speicher · Feuchte"]
+    V1["Lüftung Kapitel 1<br/>Warum lüften?"]
+    V2["Lüftung Kapitel 2<br/>Luftmenge · V · n · V̇"]
+    V3["Lüftung Kapitel 3<br/>Wärmestrom der Luft · sensibel · latent"]
+    V4["Lüftung Kapitel 4<br/>Natürliche Lüftung"]
+    V5["Lüftung Kapitel 5<br/>Mechanische Lüftung · WRG · Kanal"]
+    V6["Lüftung Kapitel 6<br/>Übergabe an Heizung und Kühlung"]
     H1["Heizung Modul 1<br/>Drei Wärmeübertragungswege · U-Wert"]
     H2["Heizung Modul 2<br/>Leitung · R · U"]
-    H3["Heizung Modul 3<br/>Konvektion · Lüftung"]
+    H3["Heizung Modul 3<br/>Lüftung im Winter"]
     H4["Heizung Modul 4<br/>Interne Gewinne"]
     H5["Heizung Modul 5<br/>Solarer Wärmegewinn"]
     HF["Heizung Final<br/>Heizwärmebedarf DIN V 18599"]
     C1["Kühlung Teil 1<br/>Heiz- vs Kühllast"]
     C2["Kühlung Teil 2<br/>Interne Lasten"]
-    C3["Kühlung Teil 3<br/>Transmission & Feuchte"]
+    C3["Kühlung Teil 3<br/>Transmission & Lüftungslast"]
     C4["Kühlung Teil 4<br/>Solarstrahlung"]
-    C5["Kühlung Teil 5<br/>Systemauslegung"]
-    C6["Kühlung Teil 6<br/>Lüftungssysteme"]
+    C5["Kühlung Teil 5<br/>Kühlen mit Luft"]
+    C6["Kühlung Teil 6<br/>Sommerstrategie"]
 
-    PF --> H1 --> H2 --> H3 --> H4 --> H5 --> HF
-    PF --> C1 --> C2 --> C3 --> C4 --> C5 --> C6
+    PF --> V1 --> V2 --> V3 --> V4 --> V5 --> V6
+    V6 --> H1 --> H2 --> H3 --> H4 --> H5 --> HF
+    V6 --> C1 --> C2 --> C3 --> C4 --> C5 --> C6
 ```
 
 | # | Video | Ordner | Normen (Auswahl) |
 |---|-------|--------|------------------|
 | 0 | Physikalische Grundlagen | `1_physical_fundamentals/` | DIN EN 12831, DIN V 18599, DIN EN 14511, VDI 4650, DIN EN 410, DIN 4108-2/-3, DIN EN ISO 13786, DIN 1946-6 |
+| L1–L6 | Lüftung (6 Kapitel) | `Ventilation/` | DIN EN 12831-1, DIN V 18599, DIN 1946-4, DIN 1946-6, DIN EN 16798-1, DIN 4108-2 |
 | H1–H5 | Heizwärmebedarf (5 Module) | `Heating/` | DIN EN ISO 6946, DIN EN 12831, DIN V 18599 |
 | HF | Heizwärmebedarf — Bilanz | `Heating/final_calculation/` | DIN V 18599 |
 | C1–C6 | Kühllast (6 Teile) | `Cooling/` | DIN V 18599, VDI 2078 (implizit) |
@@ -43,7 +51,7 @@ flowchart TB
 
 ### Lernziel
 
-Die Größen der Gebäudeenergie konkret und visuell verstehen — immer am Bauteil, das sie bestimmt: **Energie (kWh)** im Alltag, **Leistung (kW)** als Fläche im Leistung-Zeit-Diagramm, **Energieerhaltung**, **Wärmepumpe/COP** im Vergleich zu anderen Heizsystemen, **Strahlung** am Glas, **thermische Masse** der Decke, **sensible/latente Wärme** und der **Lüftungswärmeverlust** an Öffnungen.
+Die Größen der Gebäudeenergie konkret und visuell verstehen — immer am Bauteil, das sie bestimmt: **Energie (kWh)** im Alltag, **Leistung (kW)** als Fläche im Leistung-Zeit-Diagramm, **Energieerhaltung**, **Wärmepumpe/COP** im Vergleich zu anderen Heizsystemen, **Strahlung** am Glas, **thermische Masse** der Decke und **sensible/latente Wärme** — am Ende fasst eine Zusammenfassung die sieben Bausteine zusammen.
 
 ### Beat-Übersicht
 
@@ -56,7 +64,7 @@ Die Größen der Gebäudeenergie konkret und visuell verstehen — immer am Baut
 | 5 | Strahlung — kurzwellig hinein, langwellig gefangen | g-Wert aus Strahlen · Q̇_S = g · A · I · langwellige Rückstrahlung, Low-E · Treibhauseffekt · Sonnenschutz außen |
 | 6 | Thermische Masse — speichern und zeitversetzt abgeben | Q = m · c · ΔT an 1 m² Betondecke · 24-h-Verlauf, Phasenverschiebung, Dämpfung · warum die Decke · Nachtlüftung/Sonnengewinne |
 | 7 | Sensible und latente Wärme | T-Q-Diagramm Wasser · Sättigungskurve x_s(ϑ) · Taupunkt · Mensch 70 W sensibel + 30 W latent · Tauwasser/Entfeuchtung |
-| 8 | Lüftung — Wärme geht mit der Luft | Zuluft/Abluft · Volumenstrom V̇ · Q̇_V = ρ · c · V̇ · ΔT · ρ · c ≈ 0,34 Wh/(m³ K) · 100 m³/h bei 20 K = 680 W · Nachtlüftung kühlt das Dach aus |
+| 8 | Zusammenfassung — was wir gelernt haben | Sieben Zeilen, eine je Baustein: 1 kW · 1 h = 1 kWh · P = E / t · E_ein = E_aus + ΔE_Speicher · COP = Q_H / W_el · Q̇_S = g · A · I · Q = m · c · ΔT · Q_lat = m · r · Überleitung zu Heizung und Kühlung |
 
 ### Kernbegriffe
 
@@ -78,7 +86,6 @@ Die Größen der Gebäudeenergie konkret und visuell verstehen — immer am Baut
 | **sensible Wärme** | ändert die Temperatur | 1 kg Wasser 0 → 100 °C: 419 kJ |
 | **latente Wärme** | steckt im Phasenwechsel, Temperatur bleibt | Verdampfen 1 kg Wasser: 2 257 kJ |
 | **Taupunkt** | Temperatur, bei der φ = 100 % erreicht wird | 20 °C / 50 % → ≈ 9,3 °C, DIN 4108-3 |
-| **Volumenstrom V̇** | Luftvolumen pro Stunde durch das Haus | 100 m³/h bei 20 K → 680 W |
 
 ### Formeln
 
@@ -95,7 +102,6 @@ Die Größen der Gebäudeenergie konkret und visuell verstehen — immer am Baut
 | **m = ρ · A · d** | 2 400 kg/m³ · 1 m² · 0,10 m = 240 kg |
 | **Q_lat = m · r** | 1 kg · 2 257 kJ/kg |
 | **A₁ · v₁ = A₂ · v₂**, **p + ½ ρ v² = konstant** | Kontinuität und Bernoulli |
-| **Q̇_V = ρ · c · V̇ · ΔT** | ρ · c ≈ 0,34 Wh/(m³ K) · 100 m³/h · 20 K → 680 W |
 
 ### Skalen
 
@@ -138,6 +144,66 @@ Die Größen der Gebäudeenergie konkret und visuell verstehen — immer am Baut
 - Die **Decke** ist der wirksamste Speicher: frei, von warmer Luft angeströmt, im Strahlungsaustausch mit allen Flächen.
 - **Latente** Wärme ist unsichtbar, aber groß; kühle Flächen unter dem Taupunkt bekommen Tauwasser.
 - Durch die **Öffnungen** strömt Luft; jeder m³ trägt Wärme mit.
+
+---
+
+## L · Lüftung — Luftmenge, Wärmestrom der Luft, natürlich und mechanisch
+
+**Titel:** Lüftung  
+**Dateien:** `Ventilation/1_warum_lueften/` … `Ventilation/6_uebergabe/` · **6 Kapitel, 22 Beats** (Reihenfolge: `VENTILATION_PLAYLIST` in `Ventilation/full_ventilation_video.py`)
+
+### Lernziel
+
+Lüftung wird **einmal und jahreszeitenneutral** erklärt, weil sie Heizung und Kühlung gleichermaßen betrifft: Der Luftwechsel bringt im Winter Wärmeverlust, im Sommer Wärme- und Feuchtelast. Heizung und Kühlung setzen danach nur ihre Jahreszeit in dieselbe Formel ein.
+
+### Kapitel und Beats
+
+| Kapitel | Beats | Inhalt |
+|---------|-------|--------|
+| 1 · Warum lüften? | Lüftungsbedarf · Lüftungsweg · Fahrplan | CO₂ (≈ 420 ppm außen, 1 000 ppm Pettenkoferwert), Feuchte, Schadstoffe · 4 Personen · 30 m³/h = 120 m³/h · Richtung der Luft kehrt mit der Jahreszeit um |
+| 2 · Wie viel Luft? | Innenvolumen · Luftwechselrate · Volumenstrom | V_e = 580 m³ → V ≈ 0,76 · V_e ≈ 440 m³ · n = 0,5 h⁻¹ → V̇ = V · n = 220 m³/h = 0,061 m³/s = q_v,R |
+| 3 · Was die Luft trägt | Luftwärme · sensible Wärme · latente Last · Winter und Sommer | c_Luft ≈ 0,34 Wh/(m³·K) · Winter 1 500 W Verlust · Sommer 450 W sensibel + 810 W latent |
+| 4 · Natürliche Lüftung | Fensterregeln · Stoß oder Kipp · Querlüftung · Auftrieb · Nachtlüftung · Grenzen | Fenster als Regler · 340 Wh gegen ≈ 780 Wh · 1/A_eff² = 1/A₁² + 1/A₂² · Δp = h · g · (ρ_a − ρ_i) |
+| 5 · Mechanische Lüftung und WRG | Grundtypen · Wärmerückgewinnung · Anlagenvergleich · Kanalquerschnitt | η_WRG = (θ_ZUL − θ_AUL) / (θ_ABL − θ_AUL) · Winter 1 500 → 300 W · Sommer sensibel 450 → 90 W, latent bleibt · A = q_v,R / v_m, r = √(A/π) |
+| 6 · Übergabe | Zusammenfassung · Übergabe an Heizung und Kühlung | alle Größen als eine Kette; was Heizung und Kühlung übernehmen |
+
+### Kernbegriffe
+
+| Begriff | Definition | Zahl im Laufbeispiel |
+|---------|------------|----------------------|
+| **Nettovolumen V** | beheiztes Luftvolumen ohne Konstruktion | ≈ 440 m³ |
+| **Luftwechselrate n** | wie oft das Luftvolumen pro Stunde ausgetauscht wird [h⁻¹] | 0,5 h⁻¹ (Wohnung, DIN EN 12831) |
+| **Volumenstrom V̇ = q_v,R** | Luft pro Zeit; Heizung schreibt V · n, Kühlung q_v,R | 220 m³/h = 0,061 m³/s |
+| **c_Luft** | volumenbezogene Wärmekapazität, ρ · c_p / 3 600 | ≈ 0,34 Wh/(m³·K) |
+| **Δθ** | Temperaturdifferenz innen − außen, mit Vorzeichen | Winter 20 K · Sommer −6 K (Gewinn) |
+| **Δx** | Differenz der absoluten Feuchte | 4,5 g/kg (15,0 gegen 10,5 g/kg) |
+| **η_WRG** | Temperaturänderungsgrad der Wärmerückgewinnung | 0,8 |
+
+### Formeln
+
+| Formel | Bedeutung |
+|--------|-----------|
+| **V̇ = V · n** | Luftvolumenstrom [m³/h], ÷ 3 600 gibt m³/s |
+| **c_Luft = ρ · c_p / 3 600** | 1,2 · 1 005 / 3 600 ≈ 0,34 Wh/(m³·K) |
+| **Q̇_V,sens = V̇ · c_Luft · Δθ** | sensible Lüftungsleistung; Winter 440 · 0,5 · 0,34 · 20 ≈ 1 500 W |
+| **Q̇_V,lat = ρ · r · Δx · q_v,R** | latente Last; 1,2 · 2 450 kJ/kg · 4,5 g/kg · 0,061 m³/s ≈ 810 W |
+| **Q̇_V,sens · (1 − η_WRG)** | mit Wärmerückgewinnung; 1 500 → 300 W, 450 → 90 W |
+| **q_v,R = v_m · A**, **r = √(A/π)** | Kanal: 0,061 m³/s bei 2,5 m/s → A ≈ 0,0244 m², r ≈ 0,088 m |
+
+### Übergabe
+
+| Video | übernimmt aus der Lüftung |
+|-------|---------------------------|
+| **Heizung** | Φ_V = Q̇_V,sens als Lüftungsterm der Heizlast (1 500 W, mit WRG 300 W); Stoß- statt Kipplüftung |
+| **Kühlung** | Q̇_L = sensibel + latent (450 W + 810 W), V̇ als Auslegungsgröße für Luftmenge und Kanal, Nachtlüftung als Speicherentladung, Kälterückgewinnung |
+
+### Merksätze
+
+- Der **hygienische Luftbedarf** besteht im Winter wie im Sommer — deshalb steht die Lüftung vor Heizung und Kühlung.
+- **V̇ = V · n** und **q_v,R** sind derselbe Volumenstrom, nur anders geschrieben.
+- Die Luft trägt Wärme **und** Feuchte: Heizung zählt nur den sensiblen Anteil, Kühlung beide.
+- Ein **offenes Fenster** gewinnt nichts zurück (η = 0); erst die Zu-/Abluftanlage kann η_WRG nutzen.
+- Der **Plattentauscher** gewinnt nur sensible Wärme zurück — die latente Last bleibt und braucht Entfeuchtung.
 
 ---
 
