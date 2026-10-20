@@ -336,6 +336,26 @@ def _card(caption, value, color, *, width=None):
     return VGroup(frame, body)
 #endregion
 
+
+#region Pacing
+def _say(scene, narration, key, caption, *beats, during=None, first=False):
+    """🎞️ One clause, one idea — swap its subtitle in, play each ``(run_time, anims)`` reveal in turn, then hold the rest of the clause.
+
+    ``anims`` may be a callable, built only when its reveal starts (for rings around parts that move in first).
+
+    ``first`` marks the beat's opening clause, whose caption is already on screen.
+    """
+    if not first:
+        caption = swap_caption(scene, caption, subtitle_text(narration, key))
+    spent = 0.3 if first else 0.0
+    for run_time, anims in beats:
+        scene.play(*(anims() if callable(anims) else anims), *(during(run_time) if during else []),
+                   run_time=run_time)
+        spent += run_time
+    hold_for(scene, narration, key, used=spent, during=during)
+    return caption
+#endregion
+
 #endregion
 
 
@@ -347,17 +367,35 @@ class Beat1_DreiBilanzgrenzen(Scene):
          "Everything in this series has depended on one decision: where we draw the balance boundary.",
          "Alles in dieser Serie hing an einer Entscheidung: wo wir die Bilanzgrenze ziehen."),
         ("raum",
-         "Draw it around the room and you count useful energy — the heat the balance said the room needs.",
-         "Zieht man sie um den Raum, zählt man Nutzenergie — die Wärme, die die Bilanz für den Raum verlangt."),
+         "Draw it around the room and you count useful energy.",
+         "Zieht man sie um den Raum, zählt man Nutzenergie."),
+        ("heizwaerme",
+         "That is the heat the balance said the room needs.",
+         "Das ist die Wärme, die die Bilanz für den Raum verlangt."),
         ("gebaeude",
-         "Draw it around the building at the meter and you count final energy, plant losses included.",
-         "Zieht man sie am Zähler um das Gebäude, zählt man Endenergie — samt Anlagenverlusten."),
+         "Draw it around the building at the meter and you count final energy.",
+         "Zieht man sie am Zähler um das Gebäude, zählt man Endenergie."),
+        ("verluste",
+         "That includes the plant losses: the waste heat of the boiler counts as well.",
+         "Dazu zählen die Anlagenverluste: Auch die Abwärme des Kessels wird mitgezählt."),
         ("quelle",
-         "Draw it all the way back to the source and you count primary energy: extraction, conversion and transport as well.",
-         "Zieht man sie bis zur Quelle, zählt man Primärenergie — Gewinnung, Umwandlung und Transport inklusive."),
+         "Draw it all the way back to the source and you count primary energy.",
+         "Zieht man sie bis zur Quelle, zählt man Primärenergie."),
+        ("gewinnung",
+         "First comes extraction: the fuel has to be taken out of the ground.",
+         "Zuerst die Gewinnung: Der Brennstoff muss aus dem Boden geholt werden."),
+        ("umwandlung",
+         "Then conversion: a plant turns it into the carrier that is delivered.",
+         "Dann die Umwandlung: Eine Anlage macht daraus den gelieferten Energieträger."),
+        ("transport",
+         "Last comes transport, all the way to the meter.",
+         "Zuletzt der Transport — bis zum Zähler."),
         ("geg",
-         "That is why the GEG caps primary energy demand: it makes different energy carriers comparable.",
-         "Deshalb begrenzt das GEG den Primärenergiebedarf: Er macht verschiedene Energieträger vergleichbar."),
+         "That is why the GEG caps primary energy demand.",
+         "Deshalb begrenzt das GEG den Primärenergiebedarf."),
+        ("vergleich",
+         "Because it puts different energy carriers on one common scale.",
+         "Denn er bringt verschiedene Energieträger auf einen gemeinsamen Maßstab."),
     ]
 
     def construct(self):
@@ -395,38 +433,41 @@ class Beat1_DreiBilanzgrenzen(Scene):
         derrick = _derrick(np.array([-5.9, G]))
         plant = _power_plant(np.array([-4.3, G]), w=0.95, h=0.5)
         pump = _pump(np.array([-2.75, y_pipe]))
-        station_names = VGroup(*[
-            body_text(text, font_size=LABEL_FONT_SIZE, color=PRIM_VIOLET).move_to(np.array([x, G + 1.28, 0.0]))
+        names = [
+            body_text(text, font_size=LABEL_FONT_SIZE, color=PRIM_VIOLET).move_to(np.array([x, G + 1.1, 0.0]))
             for text, x in (("Gewinnung", -5.9), ("Umwandlung", -4.3), ("Transport", -2.75))
-        ])
+        ]
+        loss_name = body_text("Anlagenverluste", font_size=LABEL_FONT_SIZE, color=P_ORANGE).move_to(
+            np.array([4.95, G + 0.45, 0.0]))
+        loss_arrow = Arrow(np.array([4.0, G + 0.45, 0.0]), np.array([annex_x + 0.4, G + 0.42, 0.0]), buff=0,
+                           color=P_ORANGE, stroke_width=3, max_tip_length_to_length_ratio=0.25)
 
         path_up = smooth_path([(-5.9, y_pipe, 0.0), (-4.3, y_pipe, 0.0), (-2.75, y_pipe, 0.0), (-2.3, y_pipe, 0.0),
                                (-1.95, y_ground, 0.0), (meter_x, y_ground, 0.0)])
         path_end = smooth_path([(meter_x, y_ground, 0.0), (HX + 0.4, y_ground, 0.0), (annex_x, y_ground, 0.0),
                                 (annex_x, G + 0.1, 0.0)])
-        path_use = smooth_path([(annex_x - 0.3, G + 0.18, 0.0), (wall_r, G + 0.18, 0.0),
+        path_use = smooth_path([(annex_x + 0.3, G + 0.18, 0.0), (wall_r, G + 0.18, 0.0),
                                 (inside["radiator"].get_right()[0] + 0.05, G + 0.18, 0.0)])
-        pipes = _pipes(path_up, path_end, path_use)
+        pipe_up, pipe_end, pipe_use = (_pipes(p) for p in (path_up, path_end, path_use))
 
         ring_room = _ring(HX - 1.8 * S + 0.12, wall_r - 0.12, G + 0.05, G + 2.4 * S - 0.06, NUTZ_BLUE)
         ring_house = _ring(meter_x - 0.15, annex_x + 0.95, G - 0.36, peak + 0.12, END_RED)
         ring_source = _ring(-6.85, 3.8, G - 0.52, peak + 0.25, PRIM_VIOLET)
 
-        def stage_card(caption_text, name, symbol, color, y):
+        def stage_card(caption_text, name, symbol, color, x, y):
             name_mob = body_text(name, font_size=LABEL_FONT_SIZE + 1, color=color)
             sym = math_label(symbol, size=BODY_FONT_SIZE, color=color)
             value = VGroup(name_mob, sym).arrange(RIGHT, buff=0.16)
             card = _card(caption_text, value, color, width=2.75)
-            card.move_to(np.array([5.45, y, 0.0]))
+            card.move_to(np.array([x, y, 0.0]))
             return {"card": card, "sym": sym}
 
-        cards = [
-            stage_card("Raum", "Nutzenergie", r"Q_{h}", NUTZ_BLUE, 1.2),
-            stage_card("Zähler", "Endenergie", r"Q_{E}", END_RED, 0.1),
-            stage_card("Quelle", "Primärenergie", r"Q_{P}", PRIM_VIOLET, -1.0),
-        ]
+        specs = (("Raum", "Nutzenergie", r"Q_{h}", NUTZ_BLUE), ("Zähler", "Endenergie", r"Q_{E}", END_RED),
+                 ("Quelle", "Primärenergie", r"Q_{P}", PRIM_VIOLET))
+        cards = [stage_card(*spec, 5.45, 0.4) for spec in specs]
 
-        active = []
+        room_heat = lambda rt: _heat([inside["warm"]], rt, 0.4)
+        active = [room_heat]
 
         def during(rt):
             anims = []
@@ -434,58 +475,81 @@ class Beat1_DreiBilanzgrenzen(Scene):
                 anims.extend(make(rt))
             return anims
 
-        active.append(lambda rt: _heat([inside["warm"]], rt, 0.4))
+        def say(key, *beats, first=False):
+            nonlocal caption
+            caption = _say(self, self.NARRATION, key, caption, *beats, during=during, first=first)
 
-        self.play(FadeOut(revision_note), Create(hs["group"]), Create(ground), FadeIn(inside["group"]),
-                  run_time=1.4)
-        self.play(Create(annex), FadeIn(boiler), FadeIn(meter_glyph), FadeIn(pipes), run_time=0.9)
-        self.play(FadeIn(derrick), FadeIn(plant), FadeIn(pump), *_heat([inside["warm"]], 0.9, 0.4), run_time=0.9)
-        hold_for(self, self.NARRATION, "intro",
-                 used=TITLE_RUN_TIME + BEAT_SUBTITLE_FADE + 0.3 + 1.4 + 0.9 + 0.9, during=during)
+        say("intro",
+            (1.6, [FadeOut(revision_note), Create(hs["group"]), Create(ground)]),
+            (1.2, [FadeIn(inside["group"])]), first=True)
 
-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "raum"))
+        say("raum", (1.4, [Create(ring_room), FadeIn(cards[0]["card"], shift=LEFT * 0.2)]))
+
         active.append(lambda rt: [_flow(path_use, NUTZ_BLUE, rt, v=0.9, per_unit=3.0)])
-        self.play(Create(ring_room), FadeIn(cards[0]["card"], shift=LEFT * 0.2), *during(0.9), run_time=0.9)
-        hold_for(self, self.NARRATION, "raum", during=during)
+        say("heizwaerme", (1.2, [FadeIn(pipe_use)]))
 
-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "gebaeude"))
+        active[:] = [room_heat]
         active.append(lambda rt: [_flow(path_end, END_RED, rt, v=1.4, per_unit=1.5)])
+        say("gebaeude",
+            (1.0, [FadeOut(cards[0]["card"]), FadeOut(pipe_use), ring_room.animate.set_stroke(opacity=0.3)]),
+            (1.4, [Create(ring_house), FadeIn(cards[1]["card"], shift=LEFT * 0.2), FadeIn(meter_glyph),
+                   Create(annex), FadeIn(boiler), FadeIn(pipe_end)]))
+
         active.append(lambda rt: _heat([np.array([annex_x, G + 0.75, 0.0])], rt, 0.35))
-        self.play(Create(ring_house), FadeIn(cards[1]["card"], shift=LEFT * 0.2), *during(0.9), run_time=0.9)
-        hold_for(self, self.NARRATION, "gebaeude", during=during)
+        say("verluste", (1.2, [FadeIn(loss_name), GrowArrow(loss_arrow)]))
 
-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "quelle"))
-        active.append(lambda rt: [_flow(path_up, PRIM_VIOLET, rt, v=1.5, per_unit=1.8)])
+        active[:] = [room_heat]
+        say("quelle",
+            (1.0, [FadeOut(cards[1]["card"]), FadeOut(pipe_end), FadeOut(annex), FadeOut(boiler),
+                   FadeOut(loss_name), FadeOut(loss_arrow), FadeOut(ring_room), FadeOut(ring_house)]),
+            (1.4, [Create(ring_source), FadeIn(cards[2]["card"], shift=LEFT * 0.2)]))
+
+        say("gewinnung", (1.2, [FadeIn(derrick), FadeIn(names[0])]))
+
         active.append(lambda rt: _heat([np.array([-4.3, G + 0.62, 0.0])], rt, 0.4))
-        self.play(Create(ring_source), FadeIn(cards[2]["card"], shift=LEFT * 0.2), FadeIn(station_names),
-                  *during(0.9), run_time=0.9)
-        hold_for(self, self.NARRATION, "quelle", during=during)
+        say("umwandlung", (1.2, [FadeIn(plant), FadeIn(names[1])]))
 
-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "geg"))
+        active.append(lambda rt: [_flow(path_up, PRIM_VIOLET, rt, v=1.5, per_unit=1.8)])
+        say("transport", (1.2, [FadeIn(pump), FadeIn(names[2]), FadeIn(pipe_up)]))
+
+        active.clear()
+        row_cards = [stage_card(*spec, x, 0.7) for spec, x in zip(specs, (-4.0, 0.0, 4.0))]
+        hops = [
+            Arrow(np.array([x0, 0.7, 0.0]), np.array([x1, 0.7, 0.0]), buff=0, color=P_WHITE, stroke_width=3,
+                  max_tip_length_to_length_ratio=0.3)
+            for x0, x1 in ((-2.55, -1.45), (1.45, 2.55))
+        ]
+        hop_names = VGroup(
+            body_text("Anlage", font_size=LABEL_FONT_SIZE - 2, color=P_TEAL).move_to(np.array([-2.0, 1.05, 0.0])),
+            math_label(r"f_{p}", np.array([2.0, 1.1, 0.0]), size=LABEL_FONT_SIZE, color=P_YELLOW),
+        )
         row, box, items = math_panel([
             ("qp", r"Q_{P}", PRIM_VIOLET), ("eq", "=", P_WHITE),
             ("qe", r"Q_{E}", END_RED), ("dot", r"\cdot", P_WHITE),
             ("fp", r"f_{p}", P_YELLOW), ("cap", r"\;\text{← vom GEG begrenzt}", P_TEAL),
         ])
-        self.play(
-            ring_source.animate.set_stroke(width=4.5),
-            Create(box), FadeIn(items["eq"]), FadeIn(items["dot"]), FadeIn(items["cap"]),
-            TransformFromCopy(cards[2]["sym"], items["qp"]),
-            TransformFromCopy(cards[1]["sym"], items["qe"]),
-            FadeIn(items["fp"], shift=UP * 0.2),
-            Indicate(VGroup(derrick, plant, pump, station_names), color=P_YELLOW, scale_factor=1.04),
-            *during(1.4), run_time=1.4,
-        )
-        ring_p = highlight_param(items, "qp", color=P_YELLOW)
-        self.play(Create(ring_p), *during(0.5), run_time=0.5)
-        hold_for(self, self.NARRATION, "geg", used=1.4 + 0.5, during=during)
+        rings = {}
+        scenery = (hs["group"], ground, inside["group"], meter_glyph, derrick, plant, pump, pipe_up, ring_source,
+                   cards[2]["card"], *names)
+        say("geg",
+            (1.0, [FadeOut(m) for m in scenery]),
+            (1.6, [FadeIn(rc["card"]) for rc in row_cards] + [GrowArrow(h) for h in hops] + [FadeIn(hop_names)]),
+            (1.4, [Create(box), FadeIn(items["eq"]), FadeIn(items["dot"]), FadeIn(items["cap"]),
+                   TransformFromCopy(row_cards[2]["sym"], items["qp"]),
+                   TransformFromCopy(row_cards[1]["sym"], items["qe"]),
+                   FadeIn(items["fp"], shift=UP * 0.2)]),
+            (0.8, lambda: [Create(rings.setdefault("p", highlight_param(items, "qp", color=P_YELLOW)))]))
 
-        self.play(
-            FadeOut(caption), FadeOut(box), FadeOut(row), FadeOut(ring_p),
-            *[FadeOut(m) for m in (hs["group"], ground, inside["group"], annex, boiler, meter_glyph, derrick,
-                                   plant, pump, station_names, pipes, ring_room, ring_house, ring_source)],
-            *[FadeOut(c["card"]) for c in cards], run_time=0.6,
-        )
+        carriers = [chip(text, colour, font_size=BODY_FONT_SIZE) for text, colour in (
+            ("Erdgas", GAS_AMBER), ("Strom", P_YELLOW), ("Holz", WOOD_BROWN), ("Umweltwärme", AMBIENT_GREEN))]
+        VGroup(*carriers).arrange(RIGHT, buff=0.6).move_to(np.array([0.0, 0.7, 0.0]))
+        say("vergleich",
+            (1.0, [FadeOut(rc["card"]) for rc in row_cards] + [FadeOut(h) for h in hops] + [FadeOut(hop_names),
+                                                                                         FadeOut(rings["p"])]),
+            (2.4, [LaggedStart(*[FadeIn(c, shift=UP * 0.15) for c in carriers], lag_ratio=0.45)]),
+            (1.0, [Indicate(items["fp"], color=P_YELLOW, scale_factor=1.15)]))
+
+        self.play(FadeOut(caption), FadeOut(box), FadeOut(row), *[FadeOut(c) for c in carriers], run_time=0.6)
         self.wait(0.4)
 
 #endregion
@@ -496,20 +560,44 @@ class Beat1_DreiBilanzgrenzen(Scene):
 class Beat2_Primaerenergiefaktor(Scene):
     NARRATION = [
         ("intro",
-         "The step from final to primary energy is one multiplication, with one number per energy carrier.",
-         "Der Schritt von End- zu Primärenergie ist eine Multiplikation — mit einer Zahl je Energieträger."),
+         "The step from final to primary energy is one multiplication.",
+         "Der Schritt von End- zu Primärenergie ist eine Multiplikation."),
+        ("zahl",
+         "The multiplier is one number for each energy carrier.",
+         "Der Faktor ist eine Zahl je Energieträger."),
+        ("bezug",
+         "It says how much primary energy one kilowatt-hour of final energy needs.",
+         "Er sagt, wie viel Primärenergie eine Kilowattstunde Endenergie braucht."),
         ("strom",
-         "Grid electricity carries a high factor among household carriers — its generation mix still has a large fossil share. The value is fixed in the GEG.",
-         "Netzstrom trägt unter den Haushalts-Energieträgern einen hohen Faktor — sein Erzeugungsmix hat noch einen großen fossilen Anteil. Der Wert ist im GEG festgelegt."),
+         "Grid electricity carries a high factor among household carriers.",
+         "Netzstrom trägt unter den Haushalts-Energieträgern einen hohen Faktor."),
+        ("strom_mix",
+         "Its generation mix still has a large fossil share.",
+         "Sein Erzeugungsmix hat noch einen großen fossilen Anteil."),
+        ("strom_geg",
+         "The value is fixed in the GEG.",
+         "Der Wert ist im GEG festgelegt."),
         ("gas",
-         "Gas and oil sit just above one: the fuel itself is fossil, plus a small share for the supply chain.",
-         "Gas und Öl liegen knapp über eins: Der Brennstoff selbst ist fossil, dazu kommt ein kleiner Anteil für die Vorkette."),
+         "Gas and oil sit just above one.",
+         "Gas und Öl liegen knapp über eins."),
+        ("gas_kette",
+         "The fuel itself is fossil, plus a small share for the supply chain.",
+         "Der Brennstoff selbst ist fossil, dazu kommt ein kleiner Anteil für die Vorkette."),
         ("holz",
-         "Wood is counted at a fifth, and ambient heat a heat pump draws from air or ground counts as zero.",
-         "Holz wird mit einem Fünftel angesetzt, und Umweltwärme aus Luft oder Erdreich zählt als null."),
+         "Wood is counted at a fifth.",
+         "Holz wird mit einem Fünftel angesetzt."),
+        ("holz_rest",
+         "The remaining four fifths are renewable and do not count.",
+         "Die übrigen vier Fünftel sind erneuerbar und zählen nicht."),
+        ("umwelt",
+         "Ambient heat from air or ground counts as zero.",
+         "Umweltwärme aus Luft oder Erdreich zählt als null."),
         ("erneuerbar",
-         "These are the non-renewable shares — fixed calculation values, not measurements of any individual delivery.",
-         "Das sind die nicht erneuerbaren Anteile — festgelegte Rechenwerte, keine Messgrößen einzelner Lieferungen."),
+         "These are the non-renewable shares.",
+         "Das sind die nicht erneuerbaren Anteile."),
+        ("rechenwert",
+         "They are fixed calculation values, not measurements of any individual delivery.",
+         "Es sind festgelegte Rechenwerte, keine Messgrößen einzelner Lieferungen."),
     ]
 
     def construct(self):
@@ -525,13 +613,16 @@ class Beat2_Primaerenergiefaktor(Scene):
         self.play(FadeIn(caption), run_time=0.3)
 
         X_NAME, X_SRC, X_START, X_METER, X_BAR, UNIT_LEN = -3.75, -3.2, -2.75, 0.35, 1.2, 1.8
-        X_LOSS, V = -1.9, 1.5
+        X_LOSS, V, BIG = -1.9, 1.5, 1.7
         rows = [
             ("strom", "Netzstrom", F_P_STROM, P_YELLOW, 1.45),
             ("gas", "Erdgas / Heizöl", F_P_GAS, GAS_AMBER, 0.62),
             ("holz", "Holz (Biomasse)", F_P_HOLZ, WOOD_BROWN, -0.21),
             ("umwelt", "Umweltwärme, Solar", F_P_UMWELT, AMBIENT_GREEN, -1.04),
         ]
+        FP = {k: f for k, n, f, c, y in rows}
+        COL = {k: c for k, n, f, c, y in rows}
+        YS = {k: y for k, n, f, c, y in rows}
 
         def source_glyph(key, y):
             if key == "strom":
@@ -546,21 +637,28 @@ class Beat2_Primaerenergiefaktor(Scene):
                  .align_to(np.array([X_NAME, y, 0.0]), RIGHT) for k, n, f, c, y in rows}
         glyphs = {k: source_glyph(k, y) for k, n, f, c, y in rows}
         meters = {k: _meter_glyph(np.array([X_METER + 0.2, y, 0.0])) for k, n, f, c, y in rows}
-        rails = VGroup(*[
-            Line(np.array([X_START, y, 0.0]), np.array([X_METER, y, 0.0]), color=P_WHITE, stroke_width=6,
-                 stroke_opacity=0.2) for k, n, f, c, y in rows
-        ])
+        rails = {k: Line(np.array([X_START, y, 0.0]), np.array([X_METER, y, 0.0]), color=P_WHITE, stroke_width=6,
+                         stroke_opacity=0.2) for k, n, f, c, y in rows}
         ref_line = DashedLine(np.array([X_BAR + UNIT_LEN, -1.4, 0.0]), np.array([X_BAR + UNIT_LEN, 1.8, 0.0]),
                               color=P_WHITE, stroke_width=1.8, stroke_opacity=0.6)
         ref_label = math_label(r"Q_{E}=1\,\mathrm{kWh}", np.array([X_BAR + UNIT_LEN - 0.1, 1.84, 0.0]),
                                size=LABEL_FONT_SIZE, color=P_TEAL, edge="right")
-        chain_tag = body_text("Vorkette", font_size=LABEL_FONT_SIZE, color=PRIM_VIOLET)
-        chain_tag.move_to(np.array([X_BAR + UNIT_LEN + 0.1, 1.84, 0.0])).align_to(
-            np.array([X_BAR + UNIT_LEN + 0.1, 1.84, 0.0]), LEFT)
         bar_axis = Line(np.array([X_BAR, -1.4, 0.0]), np.array([X_BAR, 1.8, 0.0]), color=P_WHITE, stroke_width=2,
                         stroke_opacity=0.5)
 
-        trackers = {k: ValueTracker(0.0) for k, *_ in rows}
+        def chain_marks(key):
+            f, y = FP[key], YS[key]
+            at = np.array([X_BAR + (1.0 + f) / 2 * UNIT_LEN, y, 0.0])
+            box = DashedVMobject(Rectangle(width=(f - 1.0) * UNIT_LEN + 0.14, height=0.56, color=PRIM_VIOLET,
+                                           stroke_width=2.2).move_to(at), num_dashes=24, dashed_ratio=0.55)
+            tag = body_text("Vorkette", font_size=LABEL_FONT_SIZE, color=PRIM_VIOLET).move_to(
+                np.array([X_BAR + UNIT_LEN + 0.7, y + 0.46, 0.0]))
+            return VGroup(box, tag)
+
+        fixed_tag = body_text("im GEG festgelegt (Anlage 4)", font_size=LABEL_FONT_SIZE - 2, color=P_TEAL)
+        fixed_tag.move_to(np.array([X_NAME + 0.35, YS["strom"] - 0.4, 0.0]))
+
+        trackers = {k: ValueTracker(0.0) for k in FP}
 
         def factor_bar(key, y, colour):
             tracker = trackers[key]
@@ -594,72 +692,104 @@ class Beat2_Primaerenergiefaktor(Scene):
                 tag.move_to(np.array([X_BAR + (f + 1.0) / 2 * UNIT_LEN, y, 0.0]))
                 renewable[k] = VGroup(rest, tag)
 
-        def supply(key, y, rt):
-            f = dict((k, ff) for k, n, ff, c, yy in rows)[key]
-            kept, lost = 20, int(round(20 * max(0.0, f - 1.0)))
-            counted = int(round(20 * min(f, 1.0)))
-            colour_counted = dict((k, c) for k, n, ff, c, yy in rows)[key]
-            return _supply_flow(y, X_START, X_METER, X_LOSS, kept, lost, counted, colour_counted,
-                                AMBIENT_GREEN, rt, v=V)
+        def supply(key, rt):
+            kept, lost = 20, int(round(20 * max(0.0, FP[key] - 1.0)))
+            counted = int(round(20 * min(FP[key], 1.0)))
+            return _supply_flow(YS[key], X_START, X_METER, X_LOSS, kept, lost, counted, COL[key], AMBIENT_GREEN, rt,
+                                v=V)
+
+        def lane(key):
+            return [FadeIn(names[key]), FadeIn(glyphs[key]), FadeIn(rails[key]), FadeIn(meters[key])]
+
+        def unlane(key):
+            return [FadeOut(rails[key]), FadeOut(meters[key])]
+
+        def grow(key):
+            self.add(bars[key], reads[key])
+            return [trackers[key].animate.set_value(FP[key])]
 
         active = []
 
         def during(rt):
             return [make(rt) for make in active]
 
+        def say(key, *beats, first=False):
+            nonlocal caption
+            caption = _say(self, self.NARRATION, key, caption, *beats, during=during, first=first)
+
         row, items = math_row([
             ("qp", r"Q_{P}", PRIM_VIOLET), ("eq", "=", P_WHITE),
             ("qe", r"Q_{E}", END_RED), ("dot", r"\cdot", P_WHITE),
             ("fp", r"f_{p}", P_YELLOW),
         ], font_size=BODY_FONT_SIZE + 4)
-        row.move_to(np.array([0.0, 2.32, 0.0]))
+        top = np.array([0.0, 2.32, 0.0])
+        row.scale(BIG).move_to(np.array([0.0, 0.3, 0.0]))
+        ring_fp = highlight_param(items, "fp", color=P_YELLOW)
 
-        self.play(
-            LaggedStart(*[FadeIn(names[k]) for k, *_ in rows], lag_ratio=0.15),
-            LaggedStart(*[FadeIn(glyphs[k]) for k, *_ in rows], lag_ratio=0.15),
-            FadeIn(rails), FadeIn(VGroup(*meters.values())), Create(bar_axis), Create(ref_line), FadeIn(ref_label),
-            run_time=1.4,
-        )
-        self.play(FadeIn(row, shift=DOWN * 0.15), run_time=0.9)
-        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.4 + 0.9)
+        say("intro",
+            (1.2, [FadeIn(items["qe"], shift=UP * 0.15)]),
+            (1.2, [FadeIn(items["dot"]), FadeIn(items["fp"], shift=UP * 0.15)]),
+            (1.2, [FadeIn(items["eq"]), FadeIn(items["qp"], shift=UP * 0.15)]), first=True)
 
-        for clause, keys in (("strom", ("strom",)), ("gas", ("gas",)), ("holz", ("holz", "umwelt"))):
-            caption = swap_caption(self, caption, subtitle_text(self.NARRATION, clause))
-            for key in keys:
-                y = dict((k, yy) for k, n, ff, c, yy in rows)[key]
-                active.append(lambda rt, key=key, y=y: supply(key, y, rt))
-                self.add(bars[key], reads[key])
-            self.play(
-                *[trackers[k].animate.set_value(dict((kk, ff) for kk, n, ff, c, yy in rows)[k]) for k in keys],
-                *[FadeIn(renewable[k]) for k in keys if k in renewable],
-                *([FadeIn(chain_tag)] if clause == "strom" else []),
-                *during(1.8), run_time=1.8,
-            )
-            hold_for(self, self.NARRATION, clause, used=1.8, during=during)
+        say("zahl",
+            (1.0, [Create(ring_fp)]),
+            (1.4, [FadeOut(ring_fp), row.animate.scale(1 / BIG).move_to(top)]))
 
-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "erneuerbar"))
-        note = note_line("f_p nach GEG Anlage 4: nicht erneuerbarer Anteil — festgelegter Rechenwert", color=P_TEAL)
+        say("bezug", (1.4, [Create(bar_axis), Create(ref_line)]), (1.2, [FadeIn(ref_label)]))
+
+        active.append(lambda rt: supply("strom", rt))
+        say("strom", (1.2, lane("strom")), (1.8, lambda: grow("strom")))
+
+        marks = chain_marks("strom")
+        say("strom_mix", (1.4, [Create(marks[0]), FadeIn(marks[1])]))
+
+        active.clear()
+        say("strom_geg",
+            (1.0, [*unlane("strom"), FadeOut(marks)]),
+            (1.2, [FadeIn(fixed_tag)]))
+
+        active.append(lambda rt: supply("gas", rt))
+        say("gas",
+            (1.0, [FadeOut(fixed_tag)] + lane("gas")),
+            (1.6, lambda: grow("gas")))
+
+        marks = chain_marks("gas")
+        say("gas_kette", (1.4, [Create(marks[0]), FadeIn(marks[1])]))
+
+        active.clear()
+        active.append(lambda rt: supply("holz", rt))
+        say("holz",
+            (1.0, [*unlane("gas"), FadeOut(marks)] + lane("holz")),
+            (1.6, lambda: grow("holz")))
+
+        say("holz_rest", (1.4, [FadeIn(renewable["holz"])]))
+
+        active.clear()
+        active.append(lambda rt: supply("umwelt", rt))
+        say("umwelt",
+            (1.0, unlane("holz") + lane("umwelt")),
+            (1.6, lambda: grow("umwelt") + [FadeIn(renewable["umwelt"])]))
+
+        active.clear()
         row2, box2, items2 = math_panel([
             ("qp", r"Q_{P}", PRIM_VIOLET), ("eq", "=", P_WHITE),
             ("qe", r"Q_{E}", END_RED), ("dot", r"\cdot", P_WHITE),
             ("fp", r"f_{p,\mathrm{n.\,ern.}}", P_YELLOW), ("unit", rf"\;[{UNIT}]", P_TEAL),
         ])
-        self.play(
-            FadeIn(note), Create(box2),
-            *[ReplacementTransform(items[k], items2[k]) for k in ("qp", "eq", "qe", "dot", "fp")],
-            FadeIn(items2["unit"]),
-            Indicate(VGroup(*reads.values()), color=P_YELLOW, scale_factor=1.06),
-            *during(1.2), run_time=1.2,
-        )
+        say("erneuerbar",
+            (1.0, unlane("umwelt")),
+            (1.4, [Create(box2), *[ReplacementTransform(items[k], items2[k]) for k in ("qp", "eq", "qe", "dot", "fp")],
+                   FadeIn(items2["unit"]), Indicate(VGroup(*reads.values()), color=P_YELLOW, scale_factor=1.06)]))
+
+        note = note_line("f_p nach GEG Anlage 4: nicht erneuerbarer Anteil — festgelegter Rechenwert", color=P_TEAL)
         ring = highlight_param(items2, "fp", color=P_YELLOW)
-        self.play(Create(ring), *during(0.5), run_time=0.5)
-        hold_for(self, self.NARRATION, "erneuerbar", used=1.2 + 0.5, during=during)
+        say("rechenwert", (1.2, [FadeIn(note), Create(ring)]))
 
         self.play(
             FadeOut(caption), FadeOut(ring), FadeOut(box2), FadeOut(row2), FadeOut(note),
-            FadeOut(VGroup(*names.values())), FadeOut(VGroup(*glyphs.values())), FadeOut(rails),
-            FadeOut(VGroup(*meters.values())), FadeOut(bar_axis), FadeOut(ref_line), FadeOut(ref_label),
-            FadeOut(chain_tag), *[FadeOut(m) for m in list(bars.values()) + list(reads.values()) + list(renewable.values())],
+            FadeOut(VGroup(*names.values())), FadeOut(VGroup(*glyphs.values())),
+            FadeOut(bar_axis), FadeOut(ref_line), FadeOut(ref_label),
+            *[FadeOut(m) for m in list(bars.values()) + list(reads.values()) + list(renewable.values())],
             run_time=0.6,
         )
         self.wait(0.4)
@@ -737,7 +867,7 @@ def _plant_panel(px, kind):
     return {
         "kind": kind, "xs": xs, "y_b": y_b, "hs": hs, "inside": inside, "ground": _ground(px, px + 6.6, G3),
         "head": head, "plant": plant, "fan": fan, "meter": meter_glyph, "sun": sun,
-        "paths": {"up": p_up, "end": p_end, "use": p_use, "air": p_air}, "pipes": _pipes(p_up, p_end, p_use),
+        "paths": {"up": p_up, "end": p_end, "use": p_use, "air": p_air}, "pipes": {"up": _pipes(p_up), "end": _pipes(p_end), "use": _pipes(p_use)},
         "trackers": trackers, "bars": bars, "reads": reads, "split": split, "plain": plain, "stacks": stacks,
         "gauge": gauge, "tick": tick, "share": share, "gauge_read": gauge_read, "colour": colour,
         "static": {},
@@ -747,20 +877,44 @@ def _plant_panel(px, kind):
 class Beat3_Rechenbeispiel(Scene):
     NARRATION = [
         ("intro",
-         "Now the whole chain on one building — the same hundred kilowatt-hours of useful heat as in the last chapter.",
-         "Jetzt die ganze Kette an einem Gebäude — dieselben hundert Kilowattstunden Nutzwärme wie im letzten Kapitel."),
-        ("end",
-         "The plant turns that into final energy: a hundred and forty of gas, or thirty-one of electricity.",
-         "Die Anlage macht daraus Endenergie: hundertvierzig Gas oder einunddreißig Strom."),
+         "Now the whole chain on one building.",
+         "Jetzt die ganze Kette an einem Gebäude."),
+        ("nutz",
+         "The same hundred kilowatt-hours of useful heat as in the last chapter.",
+         "Dieselben hundert Kilowattstunden Nutzwärme wie im letzten Kapitel."),
+        ("anlage",
+         "The plant turns that useful heat into final energy.",
+         "Die Anlage macht aus dieser Nutzwärme Endenergie."),
+        ("end_gas",
+         "The gas boiler draws a hundred and forty.",
+         "Der Gaskessel nimmt hundertvierzig auf."),
+        ("end_wp",
+         "The heat pump needs only thirty-one of electricity.",
+         "Die Wärmepumpe braucht nur einunddreißig Strom."),
+        ("end_umwelt",
+         "The rest comes free as ambient heat from the air.",
+         "Den Rest liefert kostenlos die Umweltwärme aus der Luft."),
         ("prim",
-         "Now apply the factors. Gas is multiplied by one point one, electricity by one point eight.",
-         "Jetzt die Faktoren: Gas mal eins Komma eins, Strom mal eins Komma acht."),
+         "Now apply the factors.",
+         "Jetzt kommen die Faktoren."),
+        ("prim_gas",
+         "Gas is multiplied by one point one.",
+         "Gas wird mit eins Komma eins multipliziert."),
+        ("prim_wp",
+         "Electricity is multiplied by one point eight.",
+         "Strom wird mit eins Komma acht multipliziert."),
         ("ergebnis",
-         "A hundred and fifty-four against fifty-six. The electricity factor is higher, yet the heat pump ends up far lower.",
-         "Hundertvierundfünfzig gegen sechsundfünfzig. Der Stromfaktor ist höher — und die Wärmepumpe liegt trotzdem weit darunter."),
+         "A hundred and fifty-four against fifty-six.",
+         "Hundertvierundfünfzig gegen sechsundfünfzig."),
+        ("hoeher",
+         "The electricity factor is higher, yet the heat pump ends up far lower.",
+         "Der Stromfaktor ist höher — und die Wärmepumpe liegt trotzdem weit darunter."),
         ("warum",
-         "Because the factor is applied to a number that was already more than three quarters smaller. Efficiency beats the factor.",
-         "Weil der Faktor auf eine Zahl trifft, die schon gut drei Viertel kleiner war. Effizienz schlägt den Faktor."),
+         "Because the factor is applied to a number that was already more than three quarters smaller.",
+         "Weil der Faktor auf eine Zahl trifft, die schon gut drei Viertel kleiner war."),
+        ("effizienz",
+         "Efficiency beats the factor.",
+         "Effizienz schlägt den Faktor."),
     ]
 
     def construct(self):
@@ -786,13 +940,23 @@ class Beat3_Rechenbeispiel(Scene):
         legend = VGroup(legend_unit, *words.values()).arrange(RIGHT, buff=0.45).move_to(np.array([0.0, 2.3, 0.0]))
 
         streams = []
+        houses_on = [True]
 
         def during(rt):
             anims = []
-            for p in panels:
-                anims.extend(_heat([p["inside"]["warm"]], rt, 0.35))
+            if houses_on[0]:
+                for p in panels:
+                    anims.extend(_heat([p["inside"]["warm"]], rt, 0.35))
             for make in streams:
                 anims.extend(make(rt))
+            return anims
+
+        def say(key, *beats, first=False):
+            nonlocal caption
+            caption = _say(self, self.NARRATION, key, caption, *beats, during=during, first=first)
+
+        def shown(*mobs, anims):
+            self.add(*mobs)
             return anims
 
         def freeze(p, key, *, base_src, color):
@@ -803,14 +967,31 @@ class Beat3_Rechenbeispiel(Scene):
             sym = _freeze(self, p["reads"][key]["sym"], base_src, (x, top_y + 0.58), color)
             p["static"][key] = {"num": num, "sym": sym}
 
-        self.play(
-            *[Create(p["hs"]["group"]) for p in panels], *[Create(p["ground"]) for p in panels],
-            *[FadeIn(p["inside"]["group"]) for p in panels], *[FadeIn(p["head"]) for p in panels], run_time=1.5,
-        )
-        for p in panels:
-            self.add(p["bars"]["h"], p["reads"]["h"]["num"], p["reads"]["h"]["sym"])
-        self.play(*[p["trackers"]["h"].animate.set_value(Q_NUTZ) for p in panels], *during(1.6), run_time=1.6)
-        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.5 + 1.6, during=during)
+        def end_streams(p):
+            streams.append(lambda rt, p=p: [_flow(p["paths"]["end"], END_RED, rt, v=1.3, per_unit=2.2)])
+            if p["kind"] == "gas":
+                xs = p["xs"]
+                streams.append(lambda rt, p=p: [_flow(p["paths"]["use"], NUTZ_BLUE, rt, v=1.3, per_unit=2.2)])
+                streams.append(lambda rt, xs=xs: _heat([np.array([xs["plant"], G3 + 0.75, 0.0])], rt, 0.3))
+            else:
+                streams.append(lambda rt, p=p: [_flow(p["paths"]["use"], NUTZ_BLUE, rt, v=1.3, per_unit=1.0)])
+
+        def ambient_streams(p):
+            streams.append(lambda rt, p=p: [_flow(p["paths"]["use"], AMBIENT_GREEN, rt, v=1.3, per_unit=2.3)])
+            streams.append(lambda rt, p=p: [_flow(p["paths"]["air"], AMBIENT_GREEN, rt, v=0.9, per_unit=3.0)])
+            streams.append(lambda rt, p=p: [Rotate(p["fan"][1], angle=-TAU * rt / 0.9,
+                                                  about_point=p["fan"][0].get_center(), rate_func=linear)])
+
+        say("intro",
+            (1.5, [*[Create(p["hs"]["group"]) for p in panels], *[Create(p["ground"]) for p in panels],
+                   *[FadeIn(p["inside"]["group"]) for p in panels], *[FadeIn(p["head"]) for p in panels]]),
+            first=True)
+
+        say("nutz",
+            (1.0, [ReplacementTransform(schematic_note, legend_unit), FadeIn(words["nutz"])]),
+            (1.6, lambda: shown(*[m for p in panels for m in (p["bars"]["h"], p["reads"]["h"]["num"],
+                                                              p["reads"]["h"]["sym"])],
+                                anims=[p["trackers"]["h"].animate.set_value(Q_NUTZ) for p in panels])))
         for p in panels:
             freeze(p, "h", base_src=r"Q_{h}", color=NUTZ_BLUE)
             rect = _bar_rects(Q_NUTZ, p["plain"], p["xs"]["h"], G3, unit=U3)
@@ -818,59 +999,62 @@ class Beat3_Rechenbeispiel(Scene):
             self.add(rect)
             p["rect_h"] = rect
 
-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "end"))
-        for p in panels:
-            xs = p["xs"]
-            streams.append(lambda rt, p=p: [_flow(p["paths"]["end"], END_RED, rt, v=1.3, per_unit=2.2)])
-            if p["kind"] == "gas":
-                streams.append(lambda rt, p=p: [_flow(p["paths"]["use"], NUTZ_BLUE, rt, v=1.3, per_unit=2.2)])
-                streams.append(lambda rt, p=p: _heat([np.array([xs["plant"], G3 + 0.75, 0.0])], rt, 0.3))
-            else:
-                streams.append(lambda rt, p=p: [_flow(p["paths"]["use"], NUTZ_BLUE, rt, v=1.3, per_unit=1.0),
-                                                _flow(p["paths"]["use"], AMBIENT_GREEN, rt, v=1.3, per_unit=2.3)])
-                streams.append(lambda rt, p=p: [_flow(p["paths"]["air"], AMBIENT_GREEN, rt, v=0.9, per_unit=3.0)])
-                streams.append(lambda rt, p=p: [Rotate(p["fan"][1], angle=-TAU * rt / 0.9,
-                                                      about_point=p["fan"][0].get_center(), rate_func=linear)])
-            self.add(p["bars"]["e"], p["reads"]["e"]["num"], p["reads"]["e"]["sym"])
+        say("anlage",
+            (1.6, [*[FadeIn(p["plant"]) for p in panels], *[FadeIn(p["meter"]) for p in panels],
+                   *[FadeIn(p["pipes"][k]) for p in panels for k in ("end", "use")]]))
+
+        end_streams(gas)
+        say("end_gas",
+            (2.0, lambda: shown(gas["bars"]["e"], gas["reads"]["e"]["num"], gas["reads"]["e"]["sym"],
+                                anims=[FadeIn(words["loss"]), gas["trackers"]["e"].animate.set_value(Q_END_GAS)])))
+        freeze(gas, "e", base_src=r"Q_{E}", color=END_RED)
+
+        end_streams(wp)
+        say("end_wp",
+            (1.6, lambda: shown(wp["bars"]["e"], wp["reads"]["e"]["num"], wp["reads"]["e"]["sym"],
+                                anims=[wp["trackers"]["e"].animate.set_value(Q_END_WP)])))
+        freeze(wp, "e", base_src=r"Q_{E}", color=END_RED)
+
+        ambient_streams(wp)
         split_bar = _bar_rects(Q_NUTZ, wp["split"], wp["xs"]["h"], G3, unit=U3)
-        self.play(
-            ReplacementTransform(schematic_note, legend_unit),
-            *[FadeIn(p["plant"]) for p in panels], *[FadeIn(p["pipes"]) for p in panels],
-            *[FadeIn(p["meter"]) for p in panels], FadeIn(wp["sun"]),
-            FadeIn(words["nutz"]), FadeIn(words["loss"]), FadeIn(words["env"]),
-            *[p["trackers"]["e"].animate.set_value(v) for p, v in ((gas, Q_END_GAS), (wp, Q_END_WP))],
-            ReplacementTransform(wp["rect_h"], split_bar),
-            *during(2.2), run_time=2.2,
-        )
+        say("end_umwelt",
+            (1.2, [FadeIn(wp["sun"]), FadeIn(words["env"])]),
+            (1.6, [ReplacementTransform(wp["rect_h"], split_bar)]))
         wp["rect_h"] = split_bar
-        hold_for(self, self.NARRATION, "end", used=2.2, during=during)
-        for p in panels:
-            freeze(p, "e", base_src=r"Q_{E}", color=END_RED)
 
-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "prim"))
-        for p in panels:
+        streams.clear()
+        houses_on[0] = False
+        say("prim",
+            (1.4, [FadeOut(m) for p in panels for m in (
+                p["hs"]["group"], p["inside"]["group"], p["plant"], p["pipes"]["end"], p["pipes"]["use"])] +
+                   [FadeOut(wp["sun"])]),
+            (1.2, [FadeIn(words["chain"])]))
+
+        def factor_step(p):
+            streams.clear()
             streams.append(lambda rt, p=p: [_flow(p["paths"]["up"], PRIM_VIOLET, rt, v=1.0, per_unit=2.4)])
-            p["trackers"]["q"].set_value(Q_END_GAS if p is gas else Q_END_WP)
-            self.add(p["bars"]["q"], p["reads"]["q"]["num"], p["reads"]["q"]["sym"])
-            self.add(p["tick"], p["gauge"]["track"], p["gauge"]["fill"], p["gauge_read"])
-        self.play(
-            *[FadeIn(m) for p in panels for m in (p["gauge"]["track"], p["tick"], p["gauge_read"])],
-            FadeIn(words["chain"]),
-            *during(0.6), run_time=0.6,
-        )
-        self.play(
-            gas["share"].animate.set_value(F_P_GAS / 2.0), wp["share"].animate.set_value(F_P_STROM / 2.0),
-            gas["trackers"]["q"].animate.set_value(Q_PRIM_GAS), wp["trackers"]["q"].animate.set_value(Q_PRIM_WP),
-            *during(2.0), run_time=2.0,
-        )
-        hold_for(self, self.NARRATION, "prim", used=2.6, during=during)
-        for p in panels:
-            freeze(p, "q", base_src=r"Q_{P}", color=PRIM_VIOLET)
             factor = F_P_GAS if p is gas else F_P_STROM
-            p["static"]["f"] = _freeze(self, p["gauge_read"], rf"f_{{p}}={de_num(factor, 1)}",
-                                       (p["xs"]["e"] - 0.25 + 0.0, 1.78), P_YELLOW, edge="right")
+            prim = Q_PRIM_GAS if p is gas else Q_PRIM_WP
+            p["trackers"]["q"].set_value(Q_END_GAS if p is gas else Q_END_WP)
+            return [
+                (1.0, lambda: shown(p["bars"]["q"], p["reads"]["q"]["num"], p["reads"]["q"]["sym"], p["tick"],
+                                    p["gauge"]["track"], p["gauge"]["fill"], p["gauge_read"],
+                                    anims=[FadeIn(p["gauge"]["track"]), FadeIn(p["tick"]), FadeIn(p["gauge_read"]),
+                                           FadeIn(p["pipes"]["up"])])),
+                (2.0, [p["share"].animate.set_value(factor / 2.0), p["trackers"]["q"].animate.set_value(prim)]),
+            ]
 
-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "ergebnis"))
+        say("prim_gas", *factor_step(gas))
+        freeze(gas, "q", base_src=r"Q_{P}", color=PRIM_VIOLET)
+        gas["static"]["f"] = _freeze(self, gas["gauge_read"], rf"f_{{p}}={de_num(F_P_GAS, 1)}",
+                                     (gas["xs"]["e"] - 0.25, 1.78), P_YELLOW, edge="right")
+
+        say("prim_wp", *factor_step(wp))
+        freeze(wp, "q", base_src=r"Q_{P}", color=PRIM_VIOLET)
+        wp["static"]["f"] = _freeze(self, wp["gauge_read"], rf"f_{{p}}={de_num(F_P_STROM, 1)}",
+                                    (wp["xs"]["e"] - 0.25, 1.78), P_YELLOW, edge="right")
+        streams.clear()
+
         rings = VGroup(
             SurroundingRectangle(VGroup(gas["static"]["q"]["num"]), color=P_RED, buff=0.08, corner_radius=0.05,
                                  stroke_width=2.6),
@@ -878,16 +1062,15 @@ class Beat3_Rechenbeispiel(Scene):
                                  stroke_width=2.6),
         )
         ghost_q = _ghost(wp["xs"]["q"], G3, Q_PRIM_GAS, unit=U3)
-        self.play(
-            Create(rings), FadeIn(ghost_q),
-            Indicate(VGroup(wp["gauge"]["track"], wp["gauge"]["fill"], wp["static"]["f"]), color=P_YELLOW,
-                     scale_factor=1.12),
-            *during(1.4), run_time=1.4,
-        )
-        hold_for(self, self.NARRATION, "ergebnis", used=1.4, during=during)
+        say("ergebnis", (1.4, [Create(rings), FadeIn(ghost_q)]))
 
-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "warum"))
+        say("hoeher",
+            (1.6, [Indicate(VGroup(wp["gauge"]["track"], wp["gauge"]["fill"], wp["static"]["f"]), color=P_YELLOW,
+                            scale_factor=1.12)]))
+
         ghost_e = _ghost(wp["xs"]["e"], G3, Q_END_GAS, unit=U3)
+        say("warum", (1.4, [FadeOut(rings), FadeIn(ghost_e)]))
+
         parts = [
             ("g_qe", de_num(Q_END_GAS), END_RED), ("g_dot", r"\cdot", P_WHITE),
             ("g_fp", de_num(F_P_GAS, 1), P_YELLOW), ("g_eq", _eq(Q_END_GAS * F_P_GAS), P_WHITE),
@@ -905,14 +1088,14 @@ class Beat3_Rechenbeispiel(Scene):
                 TransformFromCopy(p["static"]["q"]["num"], items[f"{tag}_qp"]),
                 FadeIn(items[f"{tag}_dot"]), FadeIn(items[f"{tag}_eq"]),
             ]
-        self.play(FadeOut(rings), FadeIn(ghost_e), Create(box), FadeIn(items["unit"]), *copies,
-                  *during(1.6), run_time=1.6)
-        hold_for(self, self.NARRATION, "warum", used=1.6, during=during)
+        say("effizienz",
+            (1.8, [Create(box), FadeIn(items["unit"]), *copies]),
+            (1.0, [Indicate(VGroup(items["g_qp"], items["w_qp"]), color=P_YELLOW, scale_factor=1.15)]))
 
         everything = [
-            caption, box, row, ghost_q, ghost_e, legend_unit, *words.values(), wp["sun"],
+            caption, box, row, ghost_q, ghost_e, legend_unit, *words.values(),
             *[m for p in panels for m in (
-                p["hs"]["group"], p["ground"], p["inside"]["group"], p["head"], p["plant"], p["pipes"], p["meter"],
+                p["ground"], p["meter"], p["head"], p["pipes"]["up"],
                 p["rect_h"], p["bars"]["e"], p["bars"]["q"], p["gauge"]["track"], p["gauge"]["fill"], p["tick"],
                 *[m for tag in p["static"].values() for m in (tag.values() if isinstance(tag, dict) else [tag])],
             )],
@@ -931,20 +1114,35 @@ G4, S4, U4 = -0.45, 0.62, 0.0125
 class Beat4_Referenzgebaeude(Scene):
     NARRATION = [
         ("intro",
-         "So what does the law compare those numbers against? Not a flat limit — against a reference building with your own geometry.",
-         "Womit vergleicht das Gesetz diese Zahlen? Nicht mit einem pauschalen Grenzwert — sondern mit einem Referenzgebäude Ihrer Geometrie."),
+         "So what does the law compare those numbers against?",
+         "Womit vergleicht das Gesetz diese Zahlen?"),
+        ("pauschal",
+         "Not against a flat limit, but against a reference building with your own geometry.",
+         "Nicht mit einem pauschalen Grenzwert, sondern mit einem Referenzgebäude Ihrer Geometrie."),
         ("referenz",
-         "It takes the identical geometry and fills it with the technical reference specification from Annex 1: the reference building.",
-         "Es nimmt dieselbe Geometrie und füllt sie mit der technischen Referenzausführung nach Anlage 1: das Referenzgebäude."),
+         "It takes the identical geometry.",
+         "Es nimmt dieselbe Geometrie."),
+        ("anlage1",
+         "And it fills it with the technical reference specification from Annex 1: the reference building.",
+         "Und es füllt sie mit der technischen Referenzausführung nach Anlage 1: das Referenzgebäude."),
         ("grenze",
-         "Its calculated primary energy sets the benchmark — a new residential building may reach at most fifty-five percent of it.",
-         "Dessen Primärenergiebedarf setzt den Maßstab — ein neues Wohngebäude darf höchstens fünfundfünfzig Prozent davon erreichen."),
-        ("ergebnis",
-         "In this example the heat pump clears the line; the gas boiler misses it by more than a factor of two.",
-         "Im Beispiel unterschreitet die Wärmepumpe die Linie — der Gaskessel verfehlt sie um mehr als das Doppelte."),
-        ("zusatz",
-         "The GEG also demands thermal protection of the envelope, and new heating systems — with transition periods — 65 percent renewable energy.",
-         "Daneben verlangt das GEG baulichen Wärmeschutz und für neue Heizungen, mit Übergangsfristen, 65 Prozent erneuerbare Energie."),
+         "Its calculated primary energy sets the benchmark.",
+         "Dessen Primärenergiebedarf setzt den Maßstab."),
+        ("anteil",
+         "A new residential building may reach at most fifty-five percent of it.",
+         "Ein neues Wohngebäude darf höchstens fünfundfünfzig Prozent davon erreichen."),
+        ("waermepumpe",
+         "In this example the heat pump clears the line.",
+         "Im Beispiel unterschreitet die Wärmepumpe die Linie."),
+        ("gaskessel",
+         "The gas boiler misses it by more than a factor of two.",
+         "Der Gaskessel verfehlt sie um mehr als das Doppelte."),
+        ("huelle",
+         "The GEG also demands thermal protection of the envelope.",
+         "Daneben verlangt das GEG baulichen Wärmeschutz."),
+        ("erneuerbar",
+         "New heating systems must run on 65 percent renewable energy, with transition periods.",
+         "Für neue Heizungen gilt — mit Übergangsfristen — ein Anteil von 65 Prozent erneuerbarer Energie."),
     ]
 
     def construct(self):
@@ -979,25 +1177,28 @@ class Beat4_Referenzgebaeude(Scene):
             np.array([-1.95, -0.95, 0.0]))
         spec = chip("Anlage 1", P_TEAL, font_size=LABEL_FONT_SIZE).move_to(np.array([-1.95, G4 + 1.1, 0.0]))
 
-        x_ref, x_gas, x_wp = 0.45, 2.55, 4.85
+        SHIFT, x_ref, x_wp, x_gas = 3.85, -3.4, -0.9, 1.6
+        ox = ValueTracker(SHIFT)
         t_ref, t_share, t_gas, t_wp = (ValueTracker(0.0) for _ in range(4))
-        bar_ref = _bar_mob(t_ref, [(Q_REF, PRIM_VIOLET)], x_ref, G4, width=1.0, unit=U4)
+        bar_ref = always_redraw(lambda: _bar_rects(t_ref.get_value(), [(Q_REF, PRIM_VIOLET)], x_ref + ox.get_value(),
+                                                   G4, width=1.0, unit=U4))
         fill = always_redraw(lambda: Rectangle(
             width=0.72, height=max(0.002, t_share.get_value() * t_ref.get_value() * U4), stroke_width=0,
             fill_color=P_RED, fill_opacity=0.85).move_to(np.array(
-                [x_ref, G4 + t_share.get_value() * t_ref.get_value() * U4 / 2, 0.0])))
+                [x_ref + ox.get_value(), G4 + t_share.get_value() * t_ref.get_value() * U4 / 2, 0.0])))
         limit_line = always_redraw(lambda: DashedLine(
-            np.array([x_ref + 0.5, G4 + t_share.get_value() * t_ref.get_value() * U4, 0.0]),
-            np.array([6.6, G4 + t_share.get_value() * t_ref.get_value() * U4, 0.0]),
+            np.array([x_ref + ox.get_value() + 0.5, G4 + t_share.get_value() * t_ref.get_value() * U4, 0.0]),
+            np.array([6.2, G4 + t_share.get_value() * t_ref.get_value() * U4, 0.0]),
             color=P_RED, stroke_width=2.6))
         share_read = math_readout(
-            lambda: rf"{de_num(t_share.get_value(), 2)}\cdot {Q_REF}", np.array([x_ref, G4 + Q_REF * U4 + 0.28, 0.0]),
+            lambda: rf"{de_num(t_share.get_value(), 2)}\cdot {Q_REF}",
+            lambda: np.array([x_ref + ox.get_value(), G4 + Q_REF * U4 + 0.28, 0.0]),
             size=LABEL_FONT_SIZE, color=P_RED, edge="center")
         y_limit = G4 + Q_LIMIT * U4
         limit_card = _card("Grenzwert im Beispiel", math_label(rf"{Q_LIMIT}\,{UNIT}", size=BODY_FONT_SIZE, color=P_RED),
                            P_RED)
-        limit_card.move_to(np.array([5.55, 1.15, 0.0]))
-        limit_leader = DashedLine(limit_card.get_bottom(), np.array([5.55, y_limit, 0.0]), color=P_RED,
+        limit_card.move_to(np.array([4.9, 1.15, 0.0]))
+        limit_leader = DashedLine(limit_card.get_bottom(), np.array([4.9, y_limit, 0.0]), color=P_RED,
                                   stroke_width=1.6, stroke_opacity=0.6)
         share_note = note_line(
             f"Neubau (Wohngebäude): max. {int(REF_SHARE * 100)} % des Referenzwerts — hier schematisch", color=P_RED)
@@ -1009,7 +1210,7 @@ class Beat4_Referenzgebaeude(Scene):
             number = _count(tracker, lambda: np.array([label.get_right()[0] + 0.1, -1.01, 0.0]), colour, edge="left")
             return label, number
 
-        name_ref, num_ref = caption_under("Referenz", PRIM_VIOLET, t_ref, x_ref)
+        name_ref, num_ref = caption_under("Referenz", PRIM_VIOLET, t_ref, x_ref + SHIFT)
         name_gas, num_gas = caption_under("Gaskessel", GAS_AMBER, t_gas, x_gas)
         name_wp, num_wp = caption_under("Wärmepumpe", AMBIENT_GREEN, t_wp, x_wp)
         double_line = DashedLine(np.array([x_gas - 0.7, G4 + 2 * Q_LIMIT * U4, 0.0]),
@@ -1017,17 +1218,19 @@ class Beat4_Referenzgebaeude(Scene):
                                  stroke_opacity=0.55)
         double_tag = math_label(r"2\times", np.array([x_gas + 0.88, G4 + 2 * Q_LIMIT * U4 - 0.06, 0.0]),
                                 size=LABEL_FONT_SIZE, color=P_RED, edge="left")
-        path_ref = smooth_path([(reference["bottom_right"][0] + 0.1, G4 - 0.2, 0.0), (x_ref - 0.5, G4 - 0.2, 0.0)])
+        path_ref = smooth_path([(reference["bottom_right"][0] + 0.1, G4 - 0.2, 0.0),
+                                (x_ref + SHIFT - 0.5, G4 - 0.2, 0.0)])
         pipe_ref = _pipes(path_ref)
+        verdict = note_line("im Beispiel unterschreitet nur die Wärmepumpe den Grenzwert", color=AMBIENT_GREEN)
 
         share_gauge = meter("e", length=1.0, thickness=0.2, color=AMBIENT_GREEN, vertical=False)
         share_gauge["group"].remove(share_gauge["label"])
-        share_gauge["group"].move_to(np.array([-5.55, G4 + 0.95, 0.0]))
+        share_gauge["group"].move_to(np.array([3.0, 0.5, 0.0]))
         t_ee = ValueTracker(0.0)
         bind_meter(share_gauge, t_ee)
         ee_name = body_text("erneuerbar", font_size=LABEL_FONT_SIZE - 2, color=AMBIENT_GREEN).move_to(
-            np.array([-5.55, G4 + 1.24, 0.0]))
-        ee_read = math_readout(lambda: rf"{de_num(100.0 * t_ee.get_value())}\,\%", np.array([-4.95, G4 + 0.88, 0.0]),
+            np.array([3.0, 0.8, 0.0]))
+        ee_read = math_readout(lambda: rf"{de_num(100.0 * t_ee.get_value())}\,\%", np.array([3.65, 0.44, 0.0]),
                                size=LABEL_FONT_SIZE, color=AMBIENT_GREEN, edge="left")
 
         warm = [design_in["warm"]]
@@ -1039,66 +1242,85 @@ class Beat4_Referenzgebaeude(Scene):
                 anims.extend(make(rt))
             return anims
 
-        self.play(Create(design["group"]), Create(ground), FadeIn(design_in["group"]), run_time=1.4)
-        self.play(Create(dims_d), FadeIn(tag_d), *during(1.0), run_time=1.0)
-        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.4 + 1.0, during=during)
+        def say(key, *beats, first=False):
+            nonlocal caption
+            caption = _say(self, self.NARRATION, key, caption, *beats, during=during, first=first)
 
-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "referenz"))
+        def shown(*mobs, anims):
+            self.add(*mobs)
+            return anims
+
+        say("intro",
+            (1.4, [Create(design["group"]), Create(ground), FadeIn(design_in["group"])]),
+            (1.0, [FadeIn(tag_d)]), first=True)
+
+        say("pauschal", (1.4, [Create(dims_d)]))
+
         warm.append(reference_in["warm"])
-        self.play(
-            TransformFromCopy(design["group"], reference["group"]),
-            TransformFromCopy(design_in["group"], reference_in["group"]),
-            TransformFromCopy(dims_d, dims_r),
-            FadeIn(tag_r), *during(1.6), run_time=1.6,
-        )
-        self.play(Create(envelope_r), FadeIn(spec), *during(1.0), run_time=1.0)
-        hold_for(self, self.NARRATION, "referenz", used=2.6, during=during)
+        say("referenz",
+            (1.8, [TransformFromCopy(design["group"], reference["group"]),
+                   TransformFromCopy(design_in["group"], reference_in["group"]),
+                   TransformFromCopy(dims_d, dims_r), FadeIn(tag_r)]))
 
-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "grenze"))
+        say("anlage1", (1.4, [Create(envelope_r)]), (1.0, [FadeIn(spec)]))
+
+        warm[:] = [reference_in["warm"]]
         active.append(lambda rt: [_flow(path_ref, PRIM_VIOLET, rt, v=1.0, per_unit=3.0)])
-        self.add(bar_ref, num_ref, fill, limit_line)
-        self.play(FadeIn(pipe_ref), FadeIn(name_ref), FadeOut(dims_d), FadeOut(dims_r), FadeIn(share_note),
-                  t_ref.animate.set_value(Q_REF), *during(1.6), run_time=1.6)
-        self.add(share_read)
-        self.play(t_share.animate.set_value(REF_SHARE), FadeIn(limit_card), Create(limit_leader), *during(1.6),
-                  run_time=1.6)
-        hold_for(self, self.NARRATION, "grenze", used=3.2, during=during)
+        say("grenze",
+            (1.2, [FadeOut(m) for m in (design["group"], design_in["group"], dims_d, dims_r, tag_d, spec, envelope_r)]),
+            (1.8, lambda: shown(bar_ref, num_ref, anims=[FadeIn(pipe_ref), FadeIn(name_ref),
+                                                         t_ref.animate.set_value(Q_REF)])))
 
-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "ergebnis"))
-        verdict = note_line("im Beispiel unterschreitet nur die Wärmepumpe den Grenzwert", color=AMBIENT_GREEN)
-        self.add(bar_gas, bar_wp, num_gas, num_wp)
-        self.play(FadeOut(share_note), FadeIn(name_gas), run_time=0.3)
-        self.play(t_gas.animate.set_value(Q_PRIM_GAS), *during(1.2), run_time=1.2)
-        self.play(Create(double_line), FadeIn(double_tag), FadeIn(name_wp), *during(0.6), run_time=0.6)
-        self.play(t_wp.animate.set_value(Q_PRIM_WP), FadeIn(verdict), *during(1.2), run_time=1.2)
-        hold_for(self, self.NARRATION, "ergebnis", used=0.3 + 1.2 + 0.6 + 1.2, during=during)
+        active.clear()
+        say("anteil",
+            (1.0, [FadeOut(m) for m in (reference["group"], reference_in["group"], tag_r, pipe_ref)]),
+            (1.4, [ox.animate.set_value(0.0), name_ref.animate.shift(LEFT * SHIFT)]),
+            (1.6, lambda: shown(fill, limit_line, share_read, anims=[
+                FadeIn(share_note), t_share.animate.set_value(REF_SHARE), FadeIn(limit_card), Create(limit_leader)])))
 
-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "zusatz"))
-        row, box, items = math_panel([
-            ("ht", r"H′_{T}", P_CYAN), ("ht_ref", r"\text{(§ 16)}", P_TEAL), (None, r"\quad", P_WHITE),
+        say("waermepumpe",
+            (1.0, [FadeOut(share_note), FadeIn(name_wp)]),
+            (1.6, lambda: shown(bar_wp, num_wp, anims=[t_wp.animate.set_value(Q_PRIM_WP), FadeIn(verdict)])))
+
+        say("gaskessel",
+            (1.0, [FadeIn(name_gas)]),
+            (1.6, lambda: shown(bar_gas, num_gas, anims=[t_gas.animate.set_value(Q_PRIM_GAS)])),
+            (1.0, [Create(double_line), FadeIn(double_tag)]))
+
+        chart = (bar_ref, fill, limit_line, share_read, limit_card, limit_leader, bar_gas, bar_wp, name_ref, name_gas,
+                 name_wp, num_ref, num_gas, num_wp, double_line, double_tag, verdict)
+        house_d = VGroup(design["group"], design_in["group"], envelope_d)
+        house_d.shift(RIGHT * 5.25)
+        row, box, items = math_panel([("ht", r"H′_{T}", P_CYAN), ("ht_ref", r"\text{(§ 16)}", P_TEAL)])
+        ring_ht = highlight_param(items, "ht", color=P_CYAN)
+        say("huelle",
+            (1.2, [FadeOut(m) for m in chart]),
+            (1.4, [Create(design["group"]), FadeIn(design_in["group"])]),
+            (1.2, [Create(envelope_d)]),
+            (1.4, [Create(box), FadeIn(items["ht_ref"]), TransformFromCopy(envelope_d, items["ht"]),
+                   Indicate(envelope_d, color=P_CYAN, scale_factor=1.02)]),
+            (0.5, [Create(ring_ht)]))
+
+        row2, box2, items2 = math_panel([
             ("ee", r"65\,\%", AMBIENT_GREEN), ("ee_text", r"\text{erneuerbar für neue Heizungen (§ 71)}", P_TEAL),
         ])
-        self.play(FadeOut(verdict), Create(envelope_d), *during(1.0), run_time=1.0)
-        ring_ht = highlight_param(items, "ht", color=P_CYAN)
-        self.play(Create(box), FadeIn(items["ht_ref"]), TransformFromCopy(envelope_d, items["ht"]),
-                  Indicate(VGroup(envelope_d, envelope_r), color=P_CYAN, scale_factor=1.02),
-                  *during(1.2), run_time=1.2)
-        self.play(Create(ring_ht), *during(0.5), run_time=0.5)
-        self.add(ee_read)
-        self.play(FadeIn(share_gauge["track"]), FadeIn(share_gauge["fill"]), FadeIn(ee_name), FadeOut(ring_ht),
-                  t_ee.animate.set_value(EE_SHARE), *during(1.6), run_time=1.6)
-        ee_static = _freeze(self, ee_read, rf"{de_num(100.0 * EE_SHARE)}\,\%", (-4.95, G4 + 0.88), AMBIENT_GREEN,
-                            edge="left")
-        self.play(TransformFromCopy(ee_static, items["ee"]), FadeIn(items["ee_text"]), *during(1.0), run_time=1.0)
-        hold_for(self, self.NARRATION, "zusatz", used=1.0 + 1.2 + 0.5 + 1.6 + 1.0, during=during)
+        frozen = {}
+
+        def freeze_ee():
+            frozen["ee"] = _freeze(self, ee_read, rf"{de_num(100.0 * EE_SHARE)}\,\%", (3.65, 0.44), AMBIENT_GREEN,
+                                   edge="left")
+            return [Create(box2), TransformFromCopy(frozen["ee"], items2["ee"]), FadeIn(items2["ee_text"])]
+
+        say("erneuerbar",
+            (1.0, [FadeOut(box), FadeOut(row), FadeOut(ring_ht)]),
+            (1.6, lambda: shown(ee_read, anims=[FadeIn(share_gauge["track"]), FadeIn(share_gauge["fill"]),
+                                                FadeIn(ee_name), t_ee.animate.set_value(EE_SHARE)])),
+            (1.2, freeze_ee))
 
         self.play(
-            FadeOut(caption), FadeOut(box), FadeOut(row), FadeOut(ring_ht),
-            *[FadeOut(m) for m in (design["group"], reference["group"], design_in["group"], reference_in["group"],
-                                   ground, tag_d, tag_r, spec, envelope_d, envelope_r, bar_ref, fill, limit_line,
-                                   share_read, limit_card, limit_leader, bar_gas, bar_wp, name_ref, name_gas, name_wp,
-                                   num_ref, num_gas, num_wp, double_line, double_tag, pipe_ref,
-                                   share_gauge["track"], share_gauge["fill"], ee_name, ee_static)],
+            FadeOut(caption), FadeOut(box2), FadeOut(row2),
+            *[FadeOut(m) for m in (design["group"], design_in["group"], ground, envelope_d,
+                                   share_gauge["track"], share_gauge["fill"], ee_name, frozen["ee"])],
             run_time=0.6,
         )
         self.wait(0.4)

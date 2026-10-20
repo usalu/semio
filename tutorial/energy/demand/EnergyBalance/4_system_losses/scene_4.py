@@ -553,17 +553,35 @@ def _grow(plant, names, run_time: float = 1.4, rate=smooth):
 class Beat1_Verlustkette(Scene):
     NARRATION = [
         ("intro",
-         "So far every kilowatt-hour has been heat inside the room. Nobody sells that — it has to be produced.",
-         "Bisher war jede Kilowattstunde Wärme im Raum. Die verkauft niemand — sie muss erst erzeugt werden."),
+         "So far every kilowatt-hour has been heat inside the room.",
+         "Bisher war jede Kilowattstunde Wärme im Raum."),
+        ("verkauf",
+         "Nobody sells that — it has to be produced.",
+         "Die verkauft niemand — sie muss erst erzeugt werden."),
         ("nutz",
          "Start from the demand we calculated: a hundred kilowatt-hours per square metre and year of useful heat.",
          "Wir starten beim berechneten Bedarf: hundert Kilowattstunden je Quadratmeter und Jahr Nutzenergie."),
         ("stufen",
-         "Between that room and the gas meter sit four stages, each needing extra energy — how it is counted depends on where it happens.",
-         "Zwischen Raum und Gaszähler liegen vier Stufen, jede braucht zusätzliche Energie — wie sie zählt, hängt vom Ort des Verlusts ab."),
+         "Between that room and the gas meter sit four stages, each needing extra energy.",
+         "Zwischen Raum und Gaszähler liegen vier Stufen, jede braucht zusätzliche Energie."),
+        ("uebergabe",
+         "Emission: the radiator hands heat to the room and needs slightly more energy than it delivers.",
+         "Übergabe: Der Heizkörper gibt Wärme an den Raum ab und braucht dafür etwas mehr Energie, als er liefert."),
+        ("verteilung",
+         "Distribution: pipes lose heat on the way — where that happens decides how it is counted.",
+         "Verteilung: Die Rohre verlieren unterwegs Wärme — wo das geschieht, entscheidet, wie sie zählt."),
+        ("speicherung",
+         "Storage: the tank keeps heat ready and loses some of it while it waits.",
+         "Speicherung: Der Speicher hält Wärme bereit und verliert dabei einen Teil davon."),
+        ("erzeugung",
+         "Generation: the boiler loses the most — heat leaves through the flue.",
+         "Erzeugung: Der Kessel verliert am meisten — Wärme entweicht durch den Schornstein."),
         ("ende",
-         "The energy billed at the building boundary is counted as final energy — here roughly forty percent more than the room ever received.",
-         "Die am Gebäude bezogene Energie wird als Endenergie bilanziert — hier rund vierzig Prozent mehr, als der Raum je bekommen hat."),
+         "The energy billed at the building boundary is counted as final energy.",
+         "Die am Gebäude bezogene Energie wird als Endenergie bilanziert."),
+        ("mehr",
+         "Here that is roughly forty percent more than the room ever received.",
+         "Hier sind das rund vierzig Prozent mehr, als der Raum je bekommen hat."),
     ]
 
     def construct(self):
@@ -589,29 +607,32 @@ class Beat1_Verlustkette(Scene):
         def live(rt, *heat):
             return [_flow(active, rt), *[P["heat"](n, rt) for n in heat]]
 
+        def step(caption, key, *heat):
+            return _swap(self, caption, subtitle_text(self.NARRATION, key), lambda rt: live(rt, *heat))
+
         q_h = _readout(lambda: rf"Q_{{h}}={de_num(v['z0n'].get_value())}\,\mathrm{{kWh/(m^{{2}}\cdot a)}}",
                            np.array([ROOM_C[0], 1.42, 0.0]), size=BODY_FONT_SIZE, color=NUTZ_BLUE, edge="center")
         q_e = _readout(lambda: rf"Q_{{E}}={de_num(P['z4'].total())}\,\mathrm{{kWh/(m^{{2}}\cdot a)}}",
                            np.array([0.78, -1.10, 0.0]), size=BODY_FONT_SIZE, color=END_RED, edge="left")
         gas_tag = body_text("Gaszähler", font_size=LABEL_FONT_SIZE - 3, color=P_WHITE).move_to(
-            np.array([METER_X + 0.36, -0.22, 0.0]))
+            np.array([METER_X + 0.36, -0.13, 0.0]))
 
-        # —— Room first: the heat everybody already knows ——
         self.play(Create(P["shell"]), run_time=1.4)
         self.play(FadeIn(P["radiator"]), FadeIn(P["person"]),
                   room["air"].animate.set_fill(P_ORANGE, opacity=0.10), *live(1.0, "rad", "person"), run_time=1.0)
         hold_for(self, self.NARRATION, "intro", used=TITLE_RUN_TIME + BEAT_SUBTITLE_FADE + 0.3 + 1.4 + 1.0,
                  during=lambda rt: live(rt, "rad", "person"))
 
-        # —— The useful heat as the first and slimmest stream ——
-        caption = _swap(self, caption, subtitle_text(self.NARRATION, "nutz"), lambda rt: live(rt, "rad", "person"))
+        caption = step(caption, "verkauf", "rad", "person")
+        self.play(FadeIn(P["boiler"]), FadeIn(P["chimney"]), *live(1.6, "rad", "person"), run_time=1.6)
+        hold_for(self, self.NARRATION, "verkauf", during=lambda rt: live(rt, "rad", "person"))
+
+        caption = step(caption, "nutz", "rad", "person")
         self.add(P["z0"].ribbons, q_h)
-        active.append(P["z0"])
-        self.play(FadeOut(revision_note), *_grow(P, ["z0n"], 1.6), *live(1.6, "rad", "person"), run_time=1.6)
+        active[:] = [P["z0"]]
+        self.play(FadeOut(revision_note), *_grow(P, ["z0n"], 2.0), *live(2.0, "rad", "person"), run_time=2.0)
         hold_for(self, self.NARRATION, "nutz", during=lambda rt: live(rt, "rad", "person"))
 
-        # —— Four stages, walked upstream: every node widens the stream by its loss ——
-        caption = _swap(self, caption, subtitle_text(self.NARRATION, "stufen"), lambda rt: live(rt, "rad", "person"))
         bar_x, bar_base, unit = 4.9, -1.2, 0.0165
         bar = stacked_bar([("Nutzenergie", Q_NUTZ, NUTZ_BLUE)] + [(n, val, c) for n, val, c in STAGES],
                           base=np.array([bar_x, bar_base, 0.0]), width=1.0, unit=unit)
@@ -628,50 +649,53 @@ class Beat1_Verlustkette(Scene):
             leaders.add(leader)
             return label, leader
 
+        caption = step(caption, "stufen")
+        active[:] = []
         label, leader = legend_row(0, f"Nutzenergie  {round(Q_NUTZ)} kWh", NUTZ_BLUE)
-        self.play(GrowFromEdge(bar["bars"][0], DOWN), FadeIn(label), Create(leader), *live(1.0, "rad", "person"),
-                  run_time=1.0)
+        self.play(FadeIn(P["meter"]), FadeIn(gas_tag), GrowFromEdge(bar["bars"][0], DOWN), FadeIn(label),
+                  Create(leader), run_time=1.6)
+        hold_for(self, self.NARRATION, "stufen")
 
-        def stage(k, name, colour, hit, grow, heat_names, extra=(), still_of=None, run=1.8):
+        def stage(caption, key, k, name, colour, hit, grow, heat_names, streams, ribbons=(), extra=(), still_of=None,
+                  run=2.0):
+            caption = step(caption, key)
+            self.add(*ribbons)
+            active[:] = streams
             label, leader = legend_row(k + 1, f"{name}  + {round(LOSS[k])} kWh", colour)
-            self.play(Circumscribe(hit, color=colour, buff=0.1, stroke_width=3, fade_out=True), *grow, *extra, *live(run, *heat_names),
-                      run_time=run)
+            self.play(Circumscribe(hit, color=colour, buff=0.1, stroke_width=3, fade_out=True), *grow, *extra,
+                      *live(run, *heat_names), run_time=run)
             source = _still(still_of)
             self.add(source)
             self.play(ReplacementTransform(source, bar["bars"][k + 1]), FadeIn(label), Create(leader),
-                      *live(1.0, *heat_names), run_time=1.0)
+                      *live(1.4, *heat_names), run_time=1.4)
+            hold_for(self, self.NARRATION, key, during=lambda rt: live(rt, *heat_names))
+            return caption
 
-        self.add(P["z2"].ribbons)
-        active.append(P["z2"])
-        stage(0, "Übergabe", UEBER_RED, P["radiator"], _grow(P, ["z2n", "z2u"]), ("rad", "person", "ue"),
-              still_of=P["z2"].ribbons[1])
-        stage(1, "Verteilung", VERT_ORANGE, P["z2"].ribbons, _grow(P, ["z2v"]), ("rad", "person", "ue", "ve"),
-              still_of=P["z2"].ribbons[2])
-        self.add(P["z3"].ribbons, P["tank"]["fill"])
-        active.append(P["z3"])
-        stage(2, "Speicherung", SPEI_YELLOW, P["tank"]["group"],
-              [FadeIn(P["tank"]["group"]), *_grow(P, ["z3n", "z3u", "z3v", "z3s"])],
-              ("rad", "person", "ue", "ve", "sp"), still_of=P["z3"].ribbons[3])
-        self.add(P["z4"].ribbons, P["flue"].ribbons, q_e)
-        active.extend([P["z4"], P["flue"]])
-        stage(3, "Erzeugung", ERZ_AMBER, P["boiler"],
-              [FadeIn(P["boiler"]), FadeIn(P["meter"]), FadeIn(P["chimney"]), FadeIn(gas_tag),
-               *_grow(P, ["z4n", "z4u", "z4v", "z4s", "z4e", "flue"])],
-              ("rad", "person", "ue", "ve", "sp"), still_of=P["flue"].ribbons[0])
-        hold_for(self, self.NARRATION, "stufen", during=lambda rt: live(rt, "rad", "person", "ue", "ve", "sp"))
+        caption = stage(caption, "uebergabe", 0, "Übergabe", UEBER_RED, P["radiator"], _grow(P, ["z2n", "z2u"]),
+                        ("rad", "ue"), [P["z2"]], [P["z2"].ribbons], still_of=P["z2"].ribbons[1])
+        caption = stage(caption, "verteilung", 1, "Verteilung", VERT_ORANGE, P["z2"].ribbons, _grow(P, ["z2v"]),
+                        ("ve",), [P["z2"]], still_of=P["z2"].ribbons[2])
+        caption = stage(caption, "speicherung", 2, "Speicherung", SPEI_YELLOW, P["tank"]["group"],
+                        [FadeIn(P["tank"]["group"]), *_grow(P, ["z3n", "z3u", "z3v", "z3s"])], ("sp",), [P["z3"]],
+                        [P["z3"].ribbons, P["tank"]["fill"]], still_of=P["z3"].ribbons[3])
+        caption = stage(caption, "erzeugung", 3, "Erzeugung", ERZ_AMBER, P["boiler"],
+                        _grow(P, ["z4n", "z4u", "z4v", "z4s", "z4e", "flue"]), (), [P["z4"], P["flue"]],
+                        [P["z4"].ribbons, P["flue"].ribbons], still_of=P["flue"].ribbons[0])
 
-        # —— Final energy: the stream at the meter against the stream in the room ——
-        caption = _swap(self, caption, subtitle_text(self.NARRATION, "ende"),
-                        lambda rt: live(rt, "rad", "person", "ue", "ve", "sp"))
+        caption = step(caption, "ende")
+        active[:] = [P["z0"], P["z2"], P["z3"], P["z4"], P["flue"]]
+        self.add(q_e)
+        self.play(Indicate(P["meter"], color=END_RED), *live(2.0), run_time=2.0)
+        hold_for(self, self.NARRATION, "ende", during=lambda rt: live(rt))
+
+        caption = step(caption, "mehr")
         top_n = bar["base"] + UP * Q_NUTZ * unit
         extra_arrow = dim_arrow(top_n + RIGHT * 0.75, bar["top"] + RIGHT * 0.75, color=END_RED)
         extra_label = math_label(rf"\approx +{de_num((Q_E_GAS / Q_NUTZ - 1) * 100)}\,\%",
                                  np.array([bar_x + 0.95, (top_n[1] + bar["top"][1]) / 2, 0.0]),
                                  size=BODY_FONT_SIZE, color=END_RED, edge="left")
-        self.play(Create(extra_arrow), FadeIn(extra_label), Indicate(P["meter"], color=END_RED), *live(1.4, "rad", "person",
-                                                                                             "ue", "ve", "sp"),
-                  run_time=1.4)
-        hold_for(self, self.NARRATION, "ende", during=lambda rt: live(rt, "rad", "person", "ue", "ve", "sp"))
+        self.play(Create(extra_arrow), FadeIn(extra_label), *live(1.6), run_time=1.6)
+        hold_for(self, self.NARRATION, "mehr", during=lambda rt: live(rt))
 
         self.play(FadeOut(caption), run_time=0.6)
         self.wait(0.4)
@@ -687,17 +711,29 @@ class Beat2_UebergabeVerteilungSpeicherung(Scene):
          "Walk the chain backwards through a real building, starting in the room itself.",
          "Gehen wir die Kette rückwärts durch ein echtes Gebäude — beginnend im Raum selbst."),
         ("uebergabe",
-         "Emission: how the surface hands heat to the air. A radiator needs hot water, underfloor heating needs far less.",
-         "Übergabe: wie die Fläche Wärme an die Luft abgibt. Ein Heizkörper braucht heißes Wasser, eine Fußbodenheizung viel weniger."),
+         "Emission: how the surface hands heat to the air.",
+         "Übergabe: wie die Fläche Wärme an die Luft abgibt."),
+        ("flaeche",
+         "A radiator needs hot water, underfloor heating needs far less.",
+         "Ein Heizkörper braucht heißes Wasser, eine Fußbodenheizung viel weniger."),
         ("verteilung",
-         "Distribution: every pipe metre loses heat. Outside the envelope it is lost for good — inside it partly comes back as a gain.",
-         "Verteilung: Jeder Rohrmeter verliert Wärme. Außerhalb der Hülle ist sie weg — innerhalb kommt sie teilweise als Gewinn zurück."),
+         "Distribution: every pipe metre loses heat.",
+         "Verteilung: Jeder Rohrmeter verliert Wärme."),
+        ("huelle",
+         "Outside the envelope that heat is lost for good — inside it partly comes back as a gain.",
+         "Außerhalb der Hülle ist sie weg — innerhalb kommt sie teilweise als Gewinn zurück."),
         ("speicher",
-         "Storage: a tank kept warm around the clock loses heat even without any draw-off, for as long as a whole week.",
-         "Speicherung: Ein warm gehaltener Speicher verliert auch ohne Zapfung Wärme — selbst eine ganze Woche lang."),
+         "Storage: a tank kept warm around the clock loses heat even without any draw-off.",
+         "Speicherung: Ein warm gehaltener Speicher verliert auch ohne Zapfung Wärme."),
+        ("woche",
+         "That goes on for as long as a whole week.",
+         "Das geht selbst eine ganze Woche lang so."),
         ("kennzahl",
-         "Each stage gets one expense figure: how much has to go in for one unit to come out.",
-         "Jede Stufe bekommt eine Aufwandszahl: wie viel hinein muss, damit eine Einheit herauskommt."),
+         "Each stage gets one expense figure.",
+         "Jede Stufe bekommt eine Aufwandszahl."),
+        ("einheit",
+         "It tells how much has to go in so that one unit comes out.",
+         "Sie sagt, wie viel hinein muss, damit eine Einheit herauskommt."),
     ]
 
     def construct(self):
@@ -715,9 +751,13 @@ class Beat2_UebergabeVerteilungSpeicherung(Scene):
         P = _plant()
         room, v = P["room"], P["v"]
         active: list = []
+        extra: list = []
 
         def live(rt, *heat):
-            return [_flow(active, rt), *[P["heat"](n, rt) for n in heat]]
+            return [_flow(active, rt), *[fn(rt) for fn in extra], *[P["heat"](n, rt) for n in heat]]
+
+        def step(caption, key, *heat):
+            return _swap(self, caption, subtitle_text(self.NARRATION, key), lambda rt: live(rt, *heat))
 
         envelope = DashedVMobject(
             Rectangle(width=ROOM_W + 0.64, height=ROOM_H + 0.26 + 0.12 + 0.26, color=P_TEAL, stroke_width=2.4).move_to(
@@ -728,90 +768,109 @@ class Beat2_UebergabeVerteilungSpeicherung(Scene):
             np.array([ROOM_C[0], GROUND_Y - 0.30, 0.0]))
         cellar_tag.set_opacity(0.7)
 
-        rows = {
-            "ue": _stage_row("Übergabe", r"e_{ü}", UEBER_RED, 1.35, v["z2u"], LEVELS[0], tick_label=True),
-            "ve": _stage_row("Verteilung", r"e_{d}", VERT_ORANGE, 0.55, v["z2v"], LEVELS[1]),
-            "sp": _stage_row("Speicherung", r"e_{s}", SPEI_YELLOW, -0.35, v["z3s"], LEVELS[2]),
+        specs = {
+            "ue": ("Übergabe", r"e_{ü}", UEBER_RED, v["z2u"], LEVELS[0]),
+            "ve": ("Verteilung", r"e_{d}", VERT_ORANGE, v["z2v"], LEVELS[1]),
+            "sp": ("Speicherung", r"e_{s}", SPEI_YELLOW, v["z3s"], LEVELS[2]),
         }
-
+        rows = {k: _stage_row(name, sym, colour, 0.95, loss, out, tick_label=True)
+                for k, (name, sym, colour, loss, out) in specs.items()}
         floor_heat = lambda rt: ripples([np.array([x, room["y_f"] + 0.02, 0.0]) for x in (-2.7, -2.35, -2.0)],
                                         r_max=0.30, color=P_CYAN, cycles=max(1.0, rt / 1.4))
 
-        def reveal(name, rt):
-            row = rows[name]
-            return [row["unit"].animate.set_value(1.0)]
+        def show_row(key, rt):
+            row = rows[key]
+            self.add(row["readout"])
+            return [FadeIn(row["group"]), row["unit"].animate(run_time=rt).set_value(1.0)]
 
-        # —— The building, heated storey over the unheated cellar ——
-        self.play(Create(P["shell"]), Create(envelope), FadeIn(shell_tag), FadeIn(cellar_tag), run_time=1.5)
+        def hide_row(key):
+            return [FadeOut(rows[key]["group"]), FadeOut(rows[key]["readout"])]
+
+        self.play(Create(P["shell"]), run_time=1.5)
         self.play(FadeIn(P["person"]), FadeIn(P["radiator"]),
-                  room["air"].animate.set_fill(P_ORANGE, opacity=0.10), *live(0.8, "person"), run_time=0.8)
-        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.5 + 0.8,
+                  room["air"].animate.set_fill(P_ORANGE, opacity=0.10), *live(1.2, "person"), run_time=1.2)
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.5 + 1.2,
                  during=lambda rt: live(rt, "person"))
 
-        # —— Emission: the radiator hands one unit to the room and takes 1,04 in ——
-        caption = _swap(self, caption, subtitle_text(self.NARRATION, "uebergabe"), lambda rt: live(rt, "person"))
+        caption = step(caption, "uebergabe", "person")
+        self.add(P["z0"].ribbons, P["z2"].ribbons)
+        active[:] = [P["z0"], P["z2"]]
+        self.play(*show_row("ue", 1.4), *_grow(P, ["z0n"], 1.4), *live(1.4, "rad"), run_time=1.4)
+        self.play(Circumscribe(P["radiator"], color=UEBER_RED, buff=0.1, stroke_width=3, fade_out=True),
+                  *_grow(P, ["z2n", "z2u"], 2.0), *live(2.0, "rad", "ue"), run_time=2.0)
+        hold_for(self, self.NARRATION, "uebergabe", during=lambda rt: live(rt, "rad", "ue"))
+
+        caption = step(caption, "flaeche", "rad", "ue")
         rad_tag = math_label(r"\text{Heizkörper}\,\cdot\,55\,\mathrm{°C}", np.array([-4.95, 1.52, 0.0]),
                              size=LABEL_FONT_SIZE, color=UEBER_RED)
         loop = _floor_loop(-2.95, -1.75, room["y_f"] - 0.07)
         loop_tag = math_label(r"\text{Fußbodenheizung}\,\cdot\,35\,\mathrm{°C}", np.array([-3.00, 1.10, 0.0]),
                               size=LABEL_FONT_SIZE, color=P_CYAN)
         flow_note = note_line("niedrige Vorlauftemperatur → bessere Erzeugereffizienz", color=P_CYAN)
-        self.add(P["z0"].ribbons, P["z2"].ribbons, rows["ue"]["readout"], rows["ve"]["readout"], rows["sp"]["readout"])
-        active.extend([P["z0"], P["z2"]])
-        self.play(FadeIn(rows["ue"]["group"]), FadeIn(rad_tag), *_grow(P, ["z0n"], 1.2), *reveal("ue", 1.2),
-                  *live(1.2, "person", "rad"), run_time=1.2)
-        self.play(Circumscribe(P["radiator"], color=UEBER_RED, buff=0.1, stroke_width=3, fade_out=True),
-                  *_grow(P, ["z2n", "z2u"], 1.6), *live(1.6, "person", "rad", "ue"), run_time=1.6)
-        self.play(Create(loop), FadeIn(loop_tag), FadeIn(flow_note), *live(1.2, "person", "rad", "ue"), floor_heat(1.2),
-                  run_time=1.2)
-        hold_for(self, self.NARRATION, "uebergabe",
-                 during=lambda rt: [*live(rt, "person", "rad", "ue"), floor_heat(rt)])
+        extra[:] = [floor_heat]
+        self.play(FadeIn(rad_tag), run_time=1.0)
+        self.play(Create(loop), FadeIn(loop_tag), FadeIn(flow_note), *live(1.6, "rad", "ue"), run_time=1.6)
+        hold_for(self, self.NARRATION, "flaeche", during=lambda rt: live(rt, "rad", "ue"))
 
-        # —— Distribution: the pipe narrows by 8 kWh on its way up ——
-        caption = _swap(self, caption, subtitle_text(self.NARRATION, "verteilung"),
-                        lambda rt: [*live(rt, "person", "rad", "ue"), floor_heat(rt)])
-        inside_note = note_line("Verluste innerhalb der Hülle werden als Gewinn gutgeschrieben", color=VERT_ORANGE)
-        self.play(FadeOut(flow_note), FadeOut(rad_tag), FadeOut(loop_tag), FadeOut(loop), run_time=0.3)
-        self.play(FadeIn(rows["ve"]["group"]), FadeIn(inside_note), *reveal("ve", 1.0), *live(1.0, "person", "rad", "ue"),
-                  run_time=1.0)
+        caption = step(caption, "verteilung", "rad", "ue")
+        extra[:] = []
+        active[:] = [P["z2"]]
+        self.play(FadeOut(flow_note), FadeOut(rad_tag), FadeOut(loop_tag), FadeOut(loop), *hide_row("ue"),
+                  run_time=0.8)
+        self.play(*show_row("ve", 1.2), *live(1.2), run_time=1.2)
         self.play(Circumscribe(P["z2"].ribbons, color=VERT_ORANGE, buff=0.1, stroke_width=3, fade_out=True),
-                  *_grow(P, ["z2v"], 2.0), *live(2.0, "person", "rad", "ue", "ve", "gain"), run_time=2.0)
-        hold_for(self, self.NARRATION, "verteilung",
-                 during=lambda rt: live(rt, "person", "rad", "ue", "ve", "gain"))
+                  *_grow(P, ["z2v"], 2.0), *live(2.0, "ve"), run_time=2.0)
+        hold_for(self, self.NARRATION, "verteilung", during=lambda rt: live(rt, "ve"))
 
-        # —— Storage: the tank drains while it waits ——
-        caption = _swap(self, caption, subtitle_text(self.NARRATION, "speicher"),
-                        lambda rt: live(rt, "person", "rad", "ue", "ve", "gain"))
+        caption = step(caption, "huelle", "ve")
+        inside_note = note_line("Verluste innerhalb der Hülle werden als Gewinn gutgeschrieben", color=VERT_ORANGE)
+        self.play(Create(envelope), FadeIn(shell_tag), FadeIn(cellar_tag), *live(1.6, "ve"), run_time=1.6)
+        self.play(FadeIn(inside_note), *live(1.2, "ve", "gain"), run_time=1.2)
+        hold_for(self, self.NARRATION, "huelle", during=lambda rt: live(rt, "ve", "gain"))
+
+        caption = step(caption, "speicher", "ve", "gain")
         tank_note = body_text("7 Tage ohne Zapfung", font_size=LABEL_FONT_SIZE - 3, color=SPEI_YELLOW).move_to(
             np.array([TANK_X, GROUND_Y - 0.62, 0.0]))
-        self.play(FadeOut(inside_note), FadeOut(cellar_tag), run_time=0.3)
         self.add(P["z3"].ribbons, P["tank"]["fill"])
-        active.append(P["z3"])
-        self.play(FadeIn(rows["sp"]["group"]), FadeIn(P["tank"]["group"]), FadeIn(P["boiler"]), FadeIn(tank_note),
-                  *reveal("sp", 1.0), *live(1.0, "person", "rad", "ue", "ve"), run_time=1.0)
+        active[:] = [P["z3"]]
+        self.play(FadeOut(inside_note), FadeOut(envelope), FadeOut(shell_tag), FadeOut(cellar_tag), *hide_row("ve"),
+                  run_time=0.8)
+        self.play(*show_row("sp", 1.2), FadeIn(P["tank"]["group"]), FadeIn(P["boiler"]), *live(1.2), run_time=1.2)
         self.play(Circumscribe(P["tank"]["group"], color=SPEI_YELLOW, buff=0.1, stroke_width=3, fade_out=True),
-                  *_grow(P, ["z3n", "z3u", "z3v", "z3s"], 1.8), *live(1.8, "person", "rad", "ue", "ve", "sp"),
-                  run_time=1.8)
-        hold_for(self, self.NARRATION, "speicher",
-                 during=lambda rt: [*live(rt, "person", "rad", "ue", "ve", "sp"),
-                                    P["tank"]["level"].animate.set_value(0.72)])
+                  *_grow(P, ["z3n", "z3u", "z3v", "z3s"], 2.0), *live(2.0, "sp"), run_time=2.0)
+        hold_for(self, self.NARRATION, "speicher", during=lambda rt: live(rt, "sp"))
 
-        # —— One expense figure per stage ——
-        caption = _swap(self, caption, subtitle_text(self.NARRATION, "kennzahl"),
-                        lambda rt: live(rt, "person", "rad", "ue", "ve", "sp"))
+        caption = step(caption, "woche", "sp")
+        self.play(FadeIn(tank_note), P["tank"]["level"].animate(run_time=3.0).set_value(0.72), *live(3.0, "sp"),
+                  run_time=3.0)
+        hold_for(self, self.NARRATION, "woche", during=lambda rt: live(rt, "sp"))
+
+        caption = step(caption, "kennzahl", "sp")
+        keep = (title, subtitle, din, caption)
+        self.play(*[FadeOut(m) for m in list(self.mobjects) if all(m is not k for k in keep)], run_time=1.2)
+        active[:] = []
+        final = {k: _stage_row(name, sym, colour, y, loss, out, x0=-3.2, tick_label=True)
+                 for (k, (name, sym, colour, loss, out)), y in zip(specs.items(), (1.5, 0.6, -0.3))}
+        for row in final.values():
+            row["unit"].set_value(1.0)
+            row["group"].update()
+            row["readout"].update()
+        self.play(*[FadeIn(part) for row in final.values() for part in (row["group"], row["readout"])], run_time=1.6)
+        hold_for(self, self.NARRATION, "kennzahl")
+
+        caption = step(caption, "einheit")
         gt_note = note_line("alle Aufwandszahlen > 1", color=P_TEAL)
         eq, eq_box, items = math_panel([
             ("eu", r"e_{ü}\approx 1{,}04", UEBER_RED), (None, r"\cdot", P_WHITE),
             ("ed", r"e_{d}\approx 1{,}08", VERT_ORANGE), (None, r"\cdot", P_WHITE),
             ("es", r"e_{s}\approx 1{,}06", SPEI_YELLOW),
         ])
-        self.play(FadeOut(tank_note), FadeIn(gt_note), run_time=0.3)
-        self.play(Create(eq_box), *[ReplacementTransform(rows[k]["symbol"].copy(), items[i])
-                                    for k, i in (("ue", "eu"), ("ve", "ed"), ("sp", "es"))],
+        self.play(Create(eq_box), FadeIn(gt_note),
+                  *[ReplacementTransform(final[k]["symbol"].copy(), items[i])
+                    for k, i in (("ue", "eu"), ("ve", "ed"), ("sp", "es"))],
                   FadeIn(VGroup(*[m for m in eq if all(m is not items[i] for i in ("eu", "ed", "es"))])),
-                  *live(1.4, "person", "rad", "ue", "ve", "sp"), run_time=1.4)
-        hold_for(self, self.NARRATION, "kennzahl",
-                 during=lambda rt: live(rt, "person", "rad", "ue", "ve", "sp"))
+                  run_time=1.6)
+        hold_for(self, self.NARRATION, "einheit")
 
         self.play(FadeOut(caption), run_time=0.6)
         self.wait(0.4)
@@ -824,20 +883,44 @@ class Beat2_UebergabeVerteilungSpeicherung(Scene):
 class Beat3_Erzeugung(Scene):
     NARRATION = [
         ("intro",
-         "The last stage is the biggest — and this is where a combustion boiler and a heat pump differ fundamentally.",
-         "Die letzte Stufe ist die größte — hier unterscheiden sich Verbrennungskessel und Wärmepumpe grundlegend."),
+         "The last stage is the biggest.",
+         "Die letzte Stufe ist die größte."),
+        ("unterschied",
+         "Here a combustion boiler and a heat pump differ fundamentally.",
+         "Hier unterscheiden sich Verbrennungskessel und Wärmepumpe grundlegend."),
         ("kessel",
-         "A boiler burns fuel. Part of the heat leaves through the flue, so more always goes in than comes out.",
-         "Ein Kessel verbrennt Brennstoff. Ein Teil der Wärme geht durch den Schornstein — es muss immer mehr hinein als heraus."),
+         "A boiler burns fuel.",
+         "Ein Kessel verbrennt Brennstoff."),
+        ("abgas",
+         "Part of the heat leaves through the flue.",
+         "Ein Teil der Wärme geht durch den Schornstein."),
+        ("mehr",
+         "So more always goes in than comes out.",
+         "Es muss also immer mehr hinein als heraus."),
         ("brennwert",
-         "A condensing boiler cools the flue gas until its water vapour condenses — the latent heat from the fundamentals video becomes usable.",
-         "Ein Brennwertkessel kühlt das Abgas, bis Wasserdampf darin kondensiert — die latente Wärme aus dem Grundlagen-Video wird nutzbar."),
+         "A condensing boiler cools the flue gas until its water vapour condenses.",
+         "Ein Brennwertkessel kühlt das Abgas, bis Wasserdampf darin kondensiert."),
+        ("latent",
+         "The latent heat from the fundamentals video becomes usable.",
+         "Die latente Wärme aus dem Grundlagen-Video wird nutzbar."),
         ("waermepumpe",
-         "A heat pump burns nothing. It lifts ambient heat, so three quarters of what it delivers is not purchased final energy.",
-         "Eine Wärmepumpe verbrennt nichts. Sie hebt Umweltwärme an — drei Viertel der Lieferung sind keine zugekaufte Endenergie."),
+         "A heat pump burns nothing.",
+         "Eine Wärmepumpe verbrennt nichts."),
+        ("umwelt",
+         "It lifts ambient heat.",
+         "Sie hebt Umweltwärme an."),
+        ("zukauf",
+         "So three quarters of what it delivers is not purchased final energy.",
+         "Drei Viertel der Lieferung sind daher keine zugekaufte Endenergie."),
         ("jaz",
-         "Its seasonal performance factor is the ratio of heat delivered over the year to the electricity that drove it: here a hundred to twenty-six.",
-         "Ihre Jahresarbeitszahl ist das Verhältnis von Wärme zu eingesetztem Strom im Jahr: hier hundert zu sechsundzwanzig."),
+         "Its seasonal performance factor is the ratio of heat delivered over the year to the electricity that drove it.",
+         "Ihre Jahresarbeitszahl ist das Verhältnis von Wärme zu eingesetztem Strom im Jahr."),
+        ("zahl",
+         "Here that is a hundred to twenty-six.",
+         "Hier sind das hundert zu sechsundzwanzig."),
+        ("kehrwert",
+         "The expense figure of the generator is its inverse: about zero point two six.",
+         "Die Aufwandszahl der Erzeugung ist ihr Kehrwert: etwa null Komma zwei sechs."),
     ]
 
     def construct(self):
@@ -853,101 +936,142 @@ class Beat3_Erzeugung(Scene):
         self.play(FadeIn(caption), run_time=0.3)
 
         t = {k: ValueTracker(0.0) for k in ("heat", "gas", "loss", "recov", "el", "env", "out_env", "out_el", "split")}
-        Y, half = 0.55, 0.5 * Q_NUTZ * FLOW_UNIT
-        boiler = _boiler(np.array([-3.2, Y, 0.0]), w=0.9, h=1.2)
-        pump = _heat_pump(np.array([3.7, Y, 0.0]), w=1.0, h=1.2)
-        divider = DashedLine(np.array([0.0, -1.0, 0.0]), np.array([0.0, 2.05, 0.0]), color=P_WHITE, stroke_width=1.6,
-                             stroke_opacity=0.3)
+        Y, half, BX, PX, ROW_Y = 0.55, 0.5 * Q_NUTZ * FLOW_UNIT, 3.2, -3.7, -0.85
+        at = lambda x, y: np.array([x, y, 0.0])
+        boiler = _boiler(at(-3.2, Y), w=0.9, h=1.2)
+        pump = _heat_pump(at(3.7, Y), w=1.0, h=1.2)
+        divider = DashedLine(at(0.0, -1.0), at(0.0, 1.4), color=P_WHITE, stroke_width=1.6, stroke_opacity=0.3)
+        stage_tag = body_text("Stufe 4 · Erzeugung", font_size=BODY_FONT_SIZE, color=ERZ_AMBER).move_to(at(0.0, 1.75))
+        boiler_name = body_text("Verbrennungskessel", font_size=LABEL_FONT_SIZE, color=ERZ_AMBER).move_to(at(-3.2, Y - 0.95))
+        pump_name = body_text("Wärmepumpe", font_size=LABEL_FONT_SIZE, color=AMBIENT_GREEN).move_to(at(3.7, Y - 0.95))
         out_env = lambda: interpolate_color(ManimColor(NUTZ_BLUE), ManimColor(AMBIENT_GREEN), t["split"].get_value())
         out_el = lambda: interpolate_color(ManimColor(NUTZ_BLUE), ManimColor(P_YELLOW), t["split"].get_value())
 
-        gas_in = _Stream([np.array([-6.3, Y, 0.0]), np.array([-3.65, Y, 0.0])],
-                         [(t["gas"], ERZ_AMBER, False), (t["loss"], P_RED, False)], start=-half, cap=118, seed=11)
-        heat_l = _Stream([np.array([-2.75, Y, 0.0]), np.array([-0.60, Y, 0.0])], [(t["heat"], NUTZ_BLUE, False)],
-                         start=-half, cap=100, seed=12)
-        flue = _Stream([np.array([-3.40, Y + 0.58, 0.0]), np.array([-3.40, 1.95, 0.0])], [(t["loss"], P_RED, False)],
+        gas_in = _Stream([at(-3.1, Y), at(-0.45, Y)], [(t["gas"], ERZ_AMBER, False), (t["loss"], P_RED, False)],
+                         start=-half, cap=118, seed=11)
+        heat_l = _Stream([at(0.45, Y), at(2.6, Y)], [(t["heat"], NUTZ_BLUE, False)], start=-half, cap=100, seed=12)
+        flue = _Stream([at(-0.2, Y + 0.58), at(-0.2, 1.95)], [(t["loss"], P_RED, False)],
                        start=-0.5 * 18 * FLOW_UNIT, cap=18, seed=13)
-        recov = _Stream([np.array([-3.40, 1.62, 0.0]), np.array([-2.85, 1.62, 0.0]), np.array([-2.85, Y + 0.58, 0.0])],
-                        [(t["recov"], P_CYAN, False)], start=-0.5 * 11 * FLOW_UNIT, cap=11, seed=14, radius=0.25)
-        env_in = _Stream([np.array([0.9, Y - 0.25, 0.0]), np.array([3.15, Y - 0.25, 0.0])],
-                         [(t["env"], AMBIENT_GREEN, False)], start=-0.5 * 74 * FLOW_UNIT, cap=74, seed=15)
-        el_in = _Stream([np.array([0.9, Y + 0.42, 0.0]), np.array([3.15, Y + 0.42, 0.0])],
-                        [(t["el"], P_YELLOW, False)], start=-0.5 * 26 * FLOW_UNIT, cap=26, seed=16)
-        hp_out = _Stream([np.array([4.25, Y, 0.0]), np.array([6.0, Y, 0.0])],
-                         [(t["out_env"], out_env, False), (t["out_el"], out_el, False)], start=-half, cap=100, seed=17)
+        recov = _Stream([at(-0.2, 1.62), at(0.35, 1.62), at(0.35, Y + 0.58)], [(t["recov"], P_CYAN, False)],
+                        start=-0.5 * 11 * FLOW_UNIT, cap=11, seed=14, radius=0.25)
+        env_in = _Stream([at(-2.8, Y - 0.25), at(-0.55, Y - 0.25)], [(t["env"], AMBIENT_GREEN, False)],
+                         start=-0.5 * 74 * FLOW_UNIT, cap=74, seed=15)
+        el_in = _Stream([at(-2.8, Y + 0.42), at(-0.55, Y + 0.42)], [(t["el"], P_YELLOW, False)],
+                        start=-0.5 * 26 * FLOW_UNIT, cap=26, seed=16)
+        hp_out = _Stream([at(0.55, Y), at(2.3, Y)], [(t["out_env"], out_env, False), (t["out_el"], out_el, False)],
+                         start=-half, cap=100, seed=17)
         active: list = []
+        pump_on = [False]
 
         def live(rt):
-            fan = Rotate(pump[1][1], angle=-TAU * rt / 0.9, about_point=pump[1][0].get_center(), rate_func=linear)
-            return [_flow(active, rt), fan]
+            fan = [Rotate(pump[1][1], angle=-TAU * rt / 0.9, about_point=pump[1][0].get_center(), rate_func=linear)]
+            return [_flow(active, rt), *(fan if pump_on[0] else [])]
 
-        def label(src, at, color, edge="left"):
-            return _readout(src, np.array(at, dtype=float), size=LABEL_FONT_SIZE, color=color, edge=edge)
+        def step(caption, key):
+            return _swap(self, caption, subtitle_text(self.NARRATION, key), live)
+
+        def label(src, pos, color, edge="left"):
+            return _readout(src, pos, size=LABEL_FONT_SIZE, color=color, edge=edge)
 
         gas_lbl = label(lambda: rf"\text{{Erdgas}}\;{de_num(t['gas'].get_value() + t['loss'].get_value())}\,\mathrm{{kWh}}",
-                        (-6.3, Y + 0.75, 0.0), ERZ_AMBER)
+                        at(-3.1, Y + 0.75), ERZ_AMBER)
         heat_lbl = label(lambda: rf"\text{{Wärme}}\;{de_num(t['heat'].get_value())}\,\mathrm{{kWh}}",
-                         (-0.60, Y + 0.50, 0.0), NUTZ_BLUE, "right")
+                         at(2.6, Y + 0.50), NUTZ_BLUE, "right")
         pump_lbl = label(lambda: rf"{de_num(t['out_env'].get_value() + t['out_el'].get_value())}\,\mathrm{{kWh}}",
-                         (6.0, Y + 0.50, 0.0), NUTZ_BLUE, "right")
+                         at(2.3, Y + 0.50), NUTZ_BLUE, "right")
         el_lbl = label(lambda: rf"\text{{Strom}}\;{de_num(t['el'].get_value())}\,\mathrm{{kWh}}",
-                       (0.9, Y + 0.75, 0.0), P_YELLOW)
+                       at(-2.8, Y + 0.75), P_YELLOW)
         env_lbl = label(lambda: rf"\text{{Umwelt}}\;{de_num(t['env'].get_value())}\,\mathrm{{kWh}}",
-                        (0.9, Y - 0.82, 0.0), AMBIENT_GREEN)
+                        at(-2.8, Y - 0.82), AMBIENT_GREEN)
 
-        gas_row = _ratio_row("Gaskessel", r"e_{g}", ERZ_AMBER, -0.65, out=Q_NUTZ,
+        gas_row = _ratio_row("Gaskessel", r"e_{g}", ERZ_AMBER, ROW_Y, out=Q_NUTZ,
                              value=lambda: (t["gas"].get_value() + t["loss"].get_value()) / Q_NUTZ,
-                             shown=lambda: t["gas"].get_value() > 99.0, x0=-6.95, name_w=2.15, length=2.0)
-        wp_row = _ratio_row("Wärmepumpe", r"e_{g}", AMBIENT_GREEN, -0.65, out=Q_NUTZ,
+                             shown=lambda: t["gas"].get_value() > 99.0 and t["heat"].get_value() > 99.0,
+                             x0=-3.75, name_w=2.15, length=2.0)
+        wp_row = _ratio_row("Wärmepumpe", r"e_{g}", AMBIENT_GREEN, ROW_Y, out=Q_NUTZ,
                             value=lambda: t["el"].get_value() / Q_NUTZ,
-                            shown=lambda: t["el"].get_value() > 25.0, x0=0.35, name_w=1.85, length=2.0)
+                            shown=lambda: t["el"].get_value() > 25.0, x0=-3.35, name_w=1.85, length=2.0)
         cond_label = body_text("Brennwertkessel", font_size=LABEL_FONT_SIZE, color=P_CYAN).move_to(
             gas_row["label"].get_left(), aligned_edge=LEFT)
-        flue_lbl = body_text("Abgas", font_size=LABEL_FONT_SIZE - 3, color=P_RED).move_to(np.array([-3.0, 1.95, 0.0]))
-        drops = droplets(np.array([-3.12, 1.40, 0.0]), n=4, spread=(0.10, 0.08), color=P_CYAN)
+        flue_lbl = body_text("Abgas", font_size=LABEL_FONT_SIZE - 3, color=P_RED).move_to(at(0.2, 1.95))
+        drops = droplets(at(0.08, 1.40), n=4, spread=(0.10, 0.08), color=P_CYAN)
 
-        self.play(Create(divider), FadeIn(boiler), FadeIn(pump), run_time=0.8)
-        self.add(heat_l.ribbons, hp_out.ribbons, heat_lbl, pump_lbl)
-        active.extend([heat_l, hp_out])
-        self.play(t["heat"].animate.set_value(Q_NUTZ), t["out_env"].animate.set_value(74.0),
-                  t["out_el"].animate.set_value(26.0), *live(1.2), run_time=1.2)
-        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 0.8 + 1.2, during=live)
+        self.play(FadeIn(stage_tag), FadeIn(boiler), FadeIn(pump), run_time=1.2)
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.2)
 
-        caption = _swap(self, caption, subtitle_text(self.NARRATION, "kessel"), live)
-        self.add(gas_in.ribbons, flue.ribbons, gas_lbl, gas_row["readout"])
-        active.extend([gas_in, flue])
-        self.play(FadeIn(gas_row["group"]), FadeIn(flue_lbl), *live(0.8), run_time=0.8)
-        self.play(t["gas"].animate.set_value(Q_NUTZ), t["loss"].animate.set_value(18.0),
-                  Circumscribe(boiler, color=ERZ_AMBER, buff=0.1, stroke_width=3, fade_out=True),
-                  *live(2.0), run_time=2.0)
+        pump_on[0] = True
+        caption = step(caption, "unterschied")
+        self.play(Create(divider), FadeIn(boiler_name), FadeIn(pump_name), *live(1.4), run_time=1.4)
+        hold_for(self, self.NARRATION, "unterschied", during=live)
+
+        caption = step(caption, "kessel")
+        pump_on[0] = False
+        self.play(FadeOut(pump), FadeOut(pump_name), FadeOut(divider), FadeOut(stage_tag), FadeOut(boiler_name),
+                  boiler.animate.shift(RIGHT * BX), run_time=1.4)
+        self.add(gas_in.ribbons, gas_lbl)
+        active[:] = [gas_in]
+        self.play(t["gas"].animate.set_value(Q_NUTZ), Circumscribe(boiler, color=ERZ_AMBER, buff=0.1, stroke_width=3,
+                                                                    fade_out=True), *live(2.0), run_time=2.0)
         hold_for(self, self.NARRATION, "kessel", during=live)
 
-        caption = _swap(self, caption, subtitle_text(self.NARRATION, "brennwert"), live)
+        caption = step(caption, "abgas")
+        self.add(flue.ribbons)
+        active[:] = [gas_in, flue]
+        self.play(FadeIn(flue_lbl), run_time=0.8)
+        self.play(t["loss"].animate.set_value(18.0), *live(2.0), run_time=2.0)
+        hold_for(self, self.NARRATION, "abgas", during=live)
+
+        caption = step(caption, "mehr")
+        self.add(heat_l.ribbons, heat_lbl, gas_row["readout"])
+        active[:] = [gas_in, flue, heat_l]
+        self.play(FadeOut(flue_lbl), FadeIn(gas_row["group"]), t["heat"].animate.set_value(Q_NUTZ), *live(2.0),
+                  run_time=2.0)
+        hold_for(self, self.NARRATION, "mehr", during=live)
+
+        caption = step(caption, "brennwert")
         cond_note = note_line("Brennwert: Wasserdampf im Abgas kondensiert → latente Wärme wird nutzbar", color=P_CYAN)
-        self.add(recov.ribbons)
-        active.append(recov)
-        self.play(FadeIn(cond_note), FadeIn(drops), ReplacementTransform(gas_row["label"], cond_label),
-                  t["loss"].animate.set_value(7.0), t["recov"].animate.set_value(11.0), *live(2.2), run_time=2.2)
+        self.play(FadeIn(cond_note), FadeIn(drops), *live(1.6), run_time=1.6)
         hold_for(self, self.NARRATION, "brennwert", during=live)
 
-        caption = _swap(self, caption, subtitle_text(self.NARRATION, "waermepumpe"), live)
-        bought = body_text("zugekauft", font_size=LABEL_FONT_SIZE - 2, color=P_YELLOW).move_to(np.array([4.95, 1.50, 0.0]))
-        free = body_text("nicht zugekauft", font_size=LABEL_FONT_SIZE - 2, color=AMBIENT_GREEN).move_to(
-            np.array([5.2, 0.02, 0.0]))
-        bought_leader = Line(bought.get_bottom() + DOWN * 0.04, np.array([4.95, Y + 0.185, 0.0]), color=P_YELLOW,
-                             stroke_width=1.4, stroke_opacity=0.6)
-        free_leader = Line(np.array([4.95, free.get_top()[1] + 0.04, 0.0]), np.array([4.95, Y - 0.065, 0.0]), color=AMBIENT_GREEN,
-                           stroke_width=1.4, stroke_opacity=0.6)
-        self.add(env_in.ribbons, el_in.ribbons, el_lbl, env_lbl, wp_row["readout"])
-        active.extend([env_in, el_in])
-        self.play(FadeOut(cond_note), FadeIn(wp_row["group"]), *live(0.3), run_time=0.3)
-        self.play(t["env"].animate.set_value(74.0), t["el"].animate.set_value(26.0), t["split"].animate.set_value(1.0),
-                  Circumscribe(pump, color=AMBIENT_GREEN, buff=0.1, stroke_width=3, fade_out=True),
-                  *live(2.2), run_time=2.2)
-        self.play(FadeIn(bought), FadeIn(free), Create(bought_leader), Create(free_leader), *live(0.8), run_time=0.8)
+        caption = step(caption, "latent")
+        self.add(recov.ribbons)
+        active[:] = [gas_in, flue, heat_l, recov]
+        self.play(ReplacementTransform(gas_row["label"], cond_label), t["loss"].animate.set_value(7.0),
+                  t["recov"].animate.set_value(11.0), *live(2.4), run_time=2.4)
+        hold_for(self, self.NARRATION, "latent", during=live)
+
+        caption = step(caption, "waermepumpe")
+        boiler_side = [boiler, cond_label, *[m for m in gas_row["group"] if m is not gas_row["label"]],
+                       gas_row["readout"], gas_lbl, heat_lbl, drops, cond_note, gas_in.ribbons, flue.ribbons,
+                       heat_l.ribbons, recov.ribbons]
+        active[:] = []
+        self.play(*[FadeOut(m) for m in boiler_side], pump.animate.shift(RIGHT * PX), run_time=1.6)
+        pump_on[0] = True
         hold_for(self, self.NARRATION, "waermepumpe", during=live)
 
-        caption = _swap(self, caption, subtitle_text(self.NARRATION, "jaz"), live)
+        caption = step(caption, "umwelt")
+        self.add(env_in.ribbons, env_lbl)
+        active[:] = [env_in]
+        self.play(t["env"].animate.set_value(74.0), Circumscribe(pump, color=AMBIENT_GREEN, buff=0.1, stroke_width=3,
+                                                                  fade_out=True), *live(2.2), run_time=2.2)
+        hold_for(self, self.NARRATION, "umwelt", during=live)
+
+        caption = step(caption, "zukauf")
+        bought = body_text("zugekauft", font_size=LABEL_FONT_SIZE - 2, color=P_YELLOW).move_to(at(1.25, 1.50))
+        free = body_text("nicht zugekauft", font_size=LABEL_FONT_SIZE - 2, color=AMBIENT_GREEN).move_to(at(1.5, 0.02))
+        bought_leader = Line(bought.get_bottom() + DOWN * 0.04, at(1.25, Y + 0.185), color=P_YELLOW, stroke_width=1.4,
+                             stroke_opacity=0.6)
+        free_leader = Line(at(1.25, free.get_top()[1] + 0.04), at(1.25, Y - 0.065), color=AMBIENT_GREEN,
+                           stroke_width=1.4, stroke_opacity=0.6)
+        self.add(el_in.ribbons, hp_out.ribbons, el_lbl, pump_lbl)
+        active[:] = [env_in, el_in, hp_out]
+        self.play(t["el"].animate.set_value(26.0), t["out_env"].animate.set_value(74.0),
+                  t["out_el"].animate.set_value(26.0), *live(2.2), run_time=2.2)
+        self.play(t["split"].animate.set_value(1.0), FadeIn(bought), FadeIn(free), Create(bought_leader),
+                  Create(free_leader), *live(1.6), run_time=1.6)
+        hold_for(self, self.NARRATION, "zukauf", during=live)
+
+        caption = step(caption, "jaz")
         eq, eq_box, items = math_panel([
             ("jaz", r"\mathrm{JAZ}", AMBIENT_GREEN), (None, "=", P_WHITE),
             ("frac", rf"\frac{{\textcolor{{{NUTZ_BLUE}}}{{\text{{Wärme ab}}}}}}{{\textcolor{{{P_YELLOW}}}{{\text{{Strom zu}}}}}}",
@@ -958,15 +1082,26 @@ class Beat3_Erzeugung(Scene):
         pump_lbl.clear_updaters()
         el_lbl.clear_updaters()
         sources = VGroup(pump_lbl[0].copy(), el_lbl[0].copy())
+        active[:] = [el_in, hp_out]
+        self.play(FadeOut(env_in.ribbons), FadeOut(env_lbl), FadeOut(bought), FadeOut(free), FadeOut(bought_leader),
+                  FadeOut(free_leader), run_time=0.8)
         self.play(Create(eq_box), FadeIn(items["jaz"]), FadeIn(eq[1]),
                   ReplacementTransform(sources, items["frac"]),
                   Circumscribe(hp_out.ribbons, color=NUTZ_BLUE, buff=0.06, stroke_width=3, fade_out=True),
                   Circumscribe(el_in.ribbons, color=P_YELLOW, buff=0.06, stroke_width=3, fade_out=True),
                   *live(2.0), run_time=2.0)
-        self.play(FadeIn(items["num"]), *live(1.0), run_time=1.0)
-        self.play(FadeIn(items["eg"]), Circumscribe(wp_row["group"], color=AMBIENT_GREEN, buff=0.08, stroke_width=3,
-                                                    fade_out=True), *live(1.0), run_time=1.0)
         hold_for(self, self.NARRATION, "jaz", during=live)
+
+        caption = step(caption, "zahl")
+        self.play(FadeIn(items["num"]), *live(1.4), run_time=1.4)
+        hold_for(self, self.NARRATION, "zahl", during=live)
+
+        caption = step(caption, "kehrwert")
+        self.add(wp_row["readout"])
+        self.play(FadeIn(items["eg"]), FadeIn(wp_row["group"]), *live(1.6), run_time=1.6)
+        self.play(Circumscribe(wp_row["group"], color=AMBIENT_GREEN, buff=0.08, stroke_width=3, fade_out=True),
+                  *live(1.4), run_time=1.4)
+        hold_for(self, self.NARRATION, "kehrwert", during=live)
 
         self.play(FadeOut(caption), run_time=0.6)
         self.wait(0.4)
@@ -981,18 +1116,36 @@ class Beat4_Anlagenaufwandszahl(Scene):
         ("intro",
          "Multiply the four stages together and the whole plant collapses into a single number.",
          "Multipliziert man die vier Stufen, schrumpft die ganze Anlage auf eine einzige Zahl."),
+        ("faktoren",
+         "Each of the four stages has its own expense figure.",
+         "Jede der vier Stufen hat ihre eigene Aufwandszahl."),
+        ("produkt",
+         "Multiplied together, the four figures stack up into one bar.",
+         "Miteinander multipliziert, stapeln sich die vier Zahlen zu einem Balken."),
         ("kette",
-         "That is the plant expense figure: how much final energy is required per unit of useful heat.",
-         "Das ist die Anlagenaufwandszahl: wie viel Endenergie je Einheit Nutzenergie erforderlich ist."),
+         "That is the plant expense figure.",
+         "Das ist die Anlagenaufwandszahl."),
+        ("einheit",
+         "It tells how much final energy is required per unit of useful heat.",
+         "Sie sagt, wie viel Endenergie je Einheit Nutzenergie erforderlich ist."),
         ("gas",
-         "For the gas boiler it lands at one point four — a hundred becomes about a hundred and forty.",
-         "Beim Gaskessel liegt sie bei eins Komma vier — aus hundert werden etwa hundertvierzig."),
+         "For the gas boiler the figure lands at one point four.",
+         "Beim Gaskessel liegt sie bei eins Komma vier."),
+        ("gas_kwh",
+         "A hundred kilowatt-hours of useful heat become about a hundred and forty.",
+         "Aus hundert Kilowattstunden Nutzenergie werden etwa hundertvierzig."),
         ("wp",
-         "For the heat pump it drops below one, because three quarters of the delivered heat came from the environment.",
-         "Bei der Wärmepumpe fällt sie unter eins — drei Viertel der gelieferten Wärme kamen aus der Umwelt."),
+         "For the heat pump it drops below one.",
+         "Bei der Wärmepumpe fällt sie unter eins."),
+        ("umwelt",
+         "Three quarters of the delivered heat came from the environment.",
+         "Drei Viertel der gelieferten Wärme kamen aus der Umwelt."),
         ("brueck",
-         "But thirty-one kilowatt-hours of electricity and a hundred and forty of gas are still not comparable. That is the next chapter.",
-         "Doch einunddreißig Kilowattstunden Strom und hundertvierzig Gas sind noch nicht vergleichbar. Das ist das nächste Kapitel."),
+         "But thirty-one kilowatt-hours of electricity and a hundred and forty of gas are still not comparable.",
+         "Doch einunddreißig Kilowattstunden Strom und hundertvierzig Gas sind noch nicht vergleichbar."),
+        ("weiter",
+         "That is the next chapter.",
+         "Das ist das nächste Kapitel."),
     ]
 
     def construct(self):
@@ -1016,15 +1169,20 @@ class Beat4_Anlagenaufwandszahl(Scene):
         def live(rt):
             return [_flow(active, rt), *[P["heat"](n, rt) for n in heat_names]]
 
+        def step(caption, key, during=None):
+            return _swap(self, caption, subtitle_text(self.NARRATION, key), during or (lambda rt: []))
+
         q_h = _readout(lambda: rf"Q_{{h}}={de_num(v['z0n'].get_value())}\,\mathrm{{kWh/(m^{{2}}\cdot a)}}",
                        np.array([ROOM_C[0], 1.42, 0.0]), size=BODY_FONT_SIZE, color=NUTZ_BLUE, edge="center")
         q_e = _readout(lambda: rf"Q_{{E}}={de_num(P['z4'].total())}\,\mathrm{{kWh/(m^{{2}}\cdot a)}}",
                        np.array([1.55, -1.22, 0.0]), size=BODY_FONT_SIZE, color=END_RED, edge="left")
 
+        X0 = -4.4
         rows = {
-            "ue": _stage_row("Übergabe", r"e_{ü}", UEBER_RED, 1.80, v["z2u"], LEVELS[0], name_w=1.85),
-            "ve": _stage_row("Verteilung", r"e_{d}", VERT_ORANGE, 1.22, v["z2v"], LEVELS[1], name_w=1.85),
-            "sp": _stage_row("Speicherung", r"e_{s}", SPEI_YELLOW, 0.64, v["z3s"], LEVELS[2], name_w=1.85),
+            "ue": _stage_row("Übergabe", r"e_{ü}", UEBER_RED, 1.50, v["z2u"], LEVELS[0], name_w=1.85, x0=X0,
+                             tick_label=True),
+            "ve": _stage_row("Verteilung", r"e_{d}", VERT_ORANGE, 0.95, v["z2v"], LEVELS[1], name_w=1.85, x0=X0),
+            "sp": _stage_row("Speicherung", r"e_{s}", SPEI_YELLOW, 0.40, v["z3s"], LEVELS[2], name_w=1.85, x0=X0),
         }
         eg_unit = ValueTracker(0.0)
 
@@ -1033,21 +1191,20 @@ class Beat4_Anlagenaufwandszahl(Scene):
             return ((1 - m) * (eg_unit.get_value() + v["z4e"].get_value() / LEVELS[3])
                     + m * v["z4w"].get_value() / LEVELS[3])
 
-        rows["eg"] = _ratio_row("Erzeugung", r"e_{g}", ERZ_AMBER, 0.06, out=LEVELS[3], value=eg_value, name_w=1.85,
-                                shown=lambda: eg_unit.get_value() > 0.999 and (v["z4e"].get_value() > 0.05
-                                                                              or v["z4w"].get_value() > 0.05))
+        rows["eg"] = _ratio_row("Erzeugung", r"e_{g}", ERZ_AMBER, -0.15, out=LEVELS[3], value=eg_value, name_w=1.85,
+                                x0=X0, shown=lambda: eg_unit.get_value() > 0.999 and (v["z4e"].get_value() > 0.05
+                                                                                      or v["z4w"].get_value() > 0.05))
         keys = ("ue", "ve", "sp", "eg")
         colours = (UEBER_RED, VERT_ORANGE, SPEI_YELLOW, ERZ_AMBER)
         units = {"ue": rows["ue"]["unit"], "ve": rows["ve"]["unit"], "sp": rows["sp"]["unit"], "eg": eg_unit}
         product = _product_row(
-            "Anlage", r"e_{p}", -0.75, name_w=1.85, factors=
+            "Anlage", r"e_{p}", -0.90, name_w=1.85, x0=X0, factors=
             [((lambda f=rows[k]["value"]: 1.0 + grow_p.get_value() * (f() - 1.0)), c) for k, c in zip(keys, colours)],
             lift=lambda: lift.get_value())
 
-        # —— The whole plant, drawn once: every stream at its final width ——
         self.play(Create(P["shell"]), run_time=1.2)
         self.add(P["z0"].ribbons, P["z2"].ribbons, P["z3"].ribbons, P["z4"].ribbons, P["flue"].ribbons,
-                 P["env"].ribbons, P["tank"]["fill"], q_h, q_e)
+                 P["tank"]["fill"], q_h, q_e)
         active.extend([P["z0"], P["z2"], P["z3"], P["z4"], P["flue"]])
         self.play(FadeIn(P["person"]), FadeIn(P["radiator"]), FadeIn(P["tank"]["group"]), FadeIn(P["boiler"]),
                   FadeIn(P["meter"]), FadeIn(P["chimney"]),
@@ -1056,12 +1213,25 @@ class Beat4_Anlagenaufwandszahl(Scene):
                              "z4e", "flue"], 2.4), *live(2.4), run_time=2.4)
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.2 + 0.8 + 2.4, during=live)
 
-        # —— Four gauges, then their product as one bar ——
-        caption = _swap(self, caption, subtitle_text(self.NARRATION, "kette"), live)
-        self.add(*[rows[k]["readout"] for k in keys], product["readout"])
-        for k, c, node in zip(keys, colours, (P["radiator"], P["z2"].ribbons, P["tank"]["group"], P["boiler"])):
-            self.play(FadeIn(rows[k]["group"]), units[k].animate.set_value(1.0),
-                      Circumscribe(node, color=c, buff=0.1, stroke_width=3, fade_out=True), *live(0.8), run_time=0.8)
+        caption = step(caption, "faktoren", live)
+        keep = (title, subtitle, din, caption)
+        self.play(*[FadeOut(m) for m in list(self.mobjects) if all(m is not k for k in keep)], run_time=1.2)
+        active[:] = []
+        for k in keys:
+            self.add(rows[k]["readout"])
+            self.play(FadeIn(rows[k]["group"]), units[k].animate(run_time=1.4).set_value(1.0), run_time=1.4)
+        hold_for(self, self.NARRATION, "faktoren")
+
+        caption = step(caption, "produkt")
+        schematic_note = note_line("Schematische Darstellung — DIN/TS 18599-5 rechnet deutlich detaillierter",
+                                   color=P_TEAL)
+        self.play(FadeIn(product["group"]), FadeIn(schematic_note), lift.animate(run_time=1.4).set_value(1.0),
+                  run_time=1.4)
+        self.add(product["readout"])
+        self.play(grow_p.animate(run_time=2.4).set_value(1.0), run_time=2.4)
+        hold_for(self, self.NARRATION, "produkt")
+
+        caption = step(caption, "kette")
         eq, eq_box, items = math_panel([
             ("ep", r"e_{p}", P_WHITE), (None, "=", P_WHITE),
             ("eu", r"e_{ü}", UEBER_RED), (None, r"\cdot", P_WHITE),
@@ -1069,21 +1239,21 @@ class Beat4_Anlagenaufwandszahl(Scene):
             ("es", r"e_{s}", SPEI_YELLOW), (None, r"\cdot", P_WHITE),
             ("eg", r"e_{g}", ERZ_AMBER),
         ])
-        schematic_note = note_line("Schematische Darstellung — DIN/TS 18599-5 rechnet deutlich detaillierter",
-                                   color=P_TEAL)
-        self.play(FadeIn(product["group"]), FadeIn(schematic_note), lift.animate.set_value(1.0), *live(0.8),
-                  run_time=0.8)
-        self.play(grow_p.animate.set_value(1.0), *live(2.0), run_time=2.0)
         self.play(Create(eq_box),
                   ReplacementTransform(product["symbol"].copy(), items["ep"]),
                   *[ReplacementTransform(rows[k]["symbol"].copy(), items[i])
                     for k, i in zip(keys, ("eu", "ed", "es", "eg"))],
                   FadeIn(VGroup(*[m for m in eq if all(m is not items[i] for i in ("ep", "eu", "ed", "es", "eg"))])),
-                  *live(1.4), run_time=1.4)
-        hold_for(self, self.NARRATION, "kette", during=live)
+                  run_time=1.6)
+        hold_for(self, self.NARRATION, "kette")
 
-        # —— Gas: 100 become 140 ——
-        caption = _swap(self, caption, subtitle_text(self.NARRATION, "gas"), live)
+        caption = step(caption, "einheit")
+        self.play(Indicate(product["readout"], color=P_WHITE), Circumscribe(product["group"], color=P_WHITE, buff=0.08,
+                                                                             stroke_width=3, fade_out=True),
+                  run_time=1.6)
+        hold_for(self, self.NARRATION, "einheit")
+
+        caption = step(caption, "gas")
         gas_label = body_text("Gaskessel", font_size=LABEL_FONT_SIZE, color=ERZ_AMBER).move_to(
             rows["eg"]["label"].get_left(), aligned_edge=LEFT)
         eq2, eq2_box, items2 = math_panel([
@@ -1094,16 +1264,27 @@ class Beat4_Anlagenaufwandszahl(Scene):
             ("eg", r"1{,}18", ERZ_AMBER), (None, r"\approx 1{,}40", P_WHITE),
         ])
         self.play(FadeOut(schematic_note), ReplacementTransform(rows["eg"]["label"], gas_label),
-                  ReplacementTransform(eq_box, eq2_box), ReplacementTransform(eq, eq2),
-                  Indicate(P["meter"], color=END_RED), *live(1.6), run_time=1.6)
-        hold_for(self, self.NARRATION, "gas", during=live)
+                  ReplacementTransform(eq_box, eq2_box), ReplacementTransform(eq, eq2), run_time=1.8)
+        hold_for(self, self.NARRATION, "gas")
 
-        # —— Heat pump: the same chain with a generator that takes 0,26 ——
-        caption = _swap(self, caption, subtitle_text(self.NARRATION, "wp"), live)
+        caption = step(caption, "gas_kwh")
+        unit_tex = r"\,\mathrm{kWh/(m^{2}\cdot a)}"
+        out_h = math_label(rf"Q_{{h}}={de_num(Q_NUTZ)}{unit_tex}", np.array([5.1, 1.5, 0.0]), size=LABEL_FONT_SIZE,
+                           color=NUTZ_BLUE)
+        out_e = math_label(rf"Q_{{E}}\approx {de_num(round(Q_E_GAS))}{unit_tex}", np.array([5.1, 0.3, 0.0]),
+                           size=LABEL_FONT_SIZE, color=END_RED)
+        out_arrow = Arrow(np.array([4.2, 1.2, 0.0]), np.array([4.2, 0.6, 0.0]), buff=0, color=P_WHITE, stroke_width=3,
+                          max_tip_length_to_length_ratio=0.3)
+        out_x = math_label(r"\cdot\,e_{p}\approx 1{,}40", np.array([4.5, 0.9, 0.0]), size=LABEL_FONT_SIZE,
+                           color=P_WHITE, edge="left")
+        self.play(FadeIn(out_h), run_time=1.0)
+        self.play(Create(out_arrow), FadeIn(out_x), run_time=1.2)
+        self.play(FadeIn(out_e), run_time=1.2)
+        hold_for(self, self.NARRATION, "gas_kwh")
+
+        caption = step(caption, "wp")
         pump_label = body_text("Wärmepumpe", font_size=LABEL_FONT_SIZE, color=AMBIENT_GREEN).move_to(
             gas_label.get_left(), aligned_edge=LEFT)
-        env_lbl = _readout(lambda: rf"\text{{Umwelt}}\;{de_num(v['env'].get_value())}\,\mathrm{{kWh}}",
-                           np.array([-0.45, PIPE_Y - 0.62, 0.0]), size=LABEL_FONT_SIZE, color=AMBIENT_GREEN, edge="left")
         eq3, eq3_box, items3 = math_panel([
             ("ep", r"e_{p}", P_WHITE), (None, r"\approx", P_WHITE),
             ("eu", r"1{,}04", UEBER_RED), (None, r"\cdot", P_WHITE),
@@ -1111,45 +1292,63 @@ class Beat4_Anlagenaufwandszahl(Scene):
             ("es", r"1{,}06", SPEI_YELLOW), (None, r"\cdot", P_WHITE),
             ("eg", r"0{,}26", AMBIENT_GREEN), (None, r"\approx 0{,}31", P_WHITE),
         ])
-        why = note_line("e_p < 1 nur, weil Umweltwärme ohne zugekaufte Endenergie dazukommt", color=AMBIENT_GREEN)
-        self.add(env_lbl)
-        active.append(P["env"])
+        out_e_wp = math_label(rf"Q_{{E}}\approx {de_num(round(Q_E_WP))}{unit_tex}", np.array([5.1, 0.3, 0.0]),
+                              size=LABEL_FONT_SIZE, color=P_YELLOW)
+        out_x_wp = math_label(r"\cdot\,e_{p}\approx 0{,}31", np.array([4.5, 0.9, 0.0]), size=LABEL_FONT_SIZE,
+                              color=P_WHITE, edge="left")
         self.play(
-            ReplacementTransform(P["boiler"], P["heat_pump"]), ReplacementTransform(P["meter"], P["power_meter"]),
-            FadeOut(P["chimney"]), ReplacementTransform(gas_label, pump_label),
-            *[v[n].animate.set_value(0.0) for n in ("z4n", "z4u", "z4v", "z4s", "z4e", "flue")],
-            v["z4w"].animate.set_value(WP_STROM), v["env"].animate.set_value(WP_UMWELT), mix.animate.set_value(1.0),
-            ReplacementTransform(eq2_box, eq3_box), ReplacementTransform(eq2, eq3), FadeIn(why),
-            *live(3.0), run_time=3.0)
-        hold_for(self, self.NARRATION, "wp", during=live)
+            ReplacementTransform(gas_label, pump_label),
+            *[v[n].animate(run_time=3.0).set_value(0.0) for n in ("z4n", "z4u", "z4v", "z4s", "z4e", "flue")],
+            v["z4w"].animate(run_time=3.0).set_value(WP_STROM), v["env"].animate(run_time=3.0).set_value(WP_UMWELT),
+            mix.animate(run_time=3.0).set_value(1.0),
+            ReplacementTransform(eq2_box, eq3_box), ReplacementTransform(eq2, eq3),
+            ReplacementTransform(out_e, out_e_wp), ReplacementTransform(out_x, out_x_wp), run_time=3.0)
+        hold_for(self, self.NARRATION, "wp")
 
-        # —— Both numbers side by side — not yet comparable ——
-        caption = _swap(self, caption, subtitle_text(self.NARRATION, "brueck"), live)
+        caption = step(caption, "umwelt")
+        why = note_line("e_p < 1 nur, weil Umweltwärme ohne zugekaufte Endenergie dazukommt", color=AMBIENT_GREEN)
+        gen = stacked_bar([("Umwelt", WP_UMWELT, AMBIENT_GREEN), ("Strom", WP_STROM, P_YELLOW)],
+                          base=np.array([6.0, -1.0, 0.0]), width=0.8, unit=0.0165)
+        env_tag = body_text(f"Umwelt  {round(WP_UMWELT)} kWh", font_size=LABEL_FONT_SIZE - 2, color=AMBIENT_GREEN
+                            ).move_to(np.array([5.4, gen["anchors"][0][1], 0.0]), aligned_edge=RIGHT)
+        el_tag = body_text(f"Strom  {round(WP_STROM)} kWh", font_size=LABEL_FONT_SIZE - 2, color=P_YELLOW
+                           ).move_to(np.array([5.4, gen["anchors"][1][1], 0.0]), aligned_edge=RIGHT)
+        self.play(*[FadeOut(m) for m in (out_h, out_arrow, out_x_wp, out_e_wp)], run_time=0.8)
+        self.play(FadeIn(why), GrowFromEdge(gen["bars"][0], DOWN), FadeIn(env_tag), run_time=1.8)
+        self.play(GrowFromEdge(gen["bars"][1], DOWN), FadeIn(el_tag), run_time=1.4)
+        hold_for(self, self.NARRATION, "umwelt")
+
+        caption = step(caption, "brueck")
         bridge, bridge_box, bitems = math_panel([
             ("qe", r"Q_{E}", END_RED), (None, "=", P_WHITE),
             ("qh", r"Q_{h}", NUTZ_BLUE), (None, r"\cdot", P_WHITE),
             ("ep", r"e_{p}", P_WHITE),
         ])
-        gas_meter = _meter(np.array([2.1, 1.35, 0.0]), kind="gas", color=ERZ_AMBER).scale(1.5)
-        power_meter = _meter(np.array([5.3, 1.35, 0.0]), kind="power", color=P_YELLOW).scale(1.5)
-        gas_val = math_label(rf"{de_num(round(Q_E_GAS))}\,\mathrm{{kWh/(m^{{2}}\cdot a)}}", np.array([2.1, 0.55, 0.0]),
-                             size=BODY_FONT_SIZE, color=END_RED)
-        power_val = math_label(rf"{de_num(round(Q_E_WP))}\,\mathrm{{kWh/(m^{{2}}\cdot a)}}", np.array([5.3, 0.55, 0.0]),
-                               size=BODY_FONT_SIZE, color=P_YELLOW)
-        not_equal = VGroup(*[Line(np.array([3.55 - 0.16, 1.35 + dy, 0.0]), np.array([3.55 + 0.16, 1.35 + dy, 0.0]),
-                                  color=P_WHITE, stroke_width=3) for dy in (0.07, -0.07)],
-                           Line(np.array([3.55 - 0.1, 1.35 - 0.2, 0.0]), np.array([3.55 + 0.1, 1.35 + 0.2, 0.0]),
-                                color=P_WHITE, stroke_width=3))
-        gas_name = body_text("Gas", font_size=LABEL_FONT_SIZE, color=ERZ_AMBER).move_to(np.array([2.1, 1.95, 0.0]))
-        power_name = body_text("Strom", font_size=LABEL_FONT_SIZE, color=P_YELLOW).move_to(np.array([5.3, 1.95, 0.0]))
+        gx, px = -2.4, 2.4
+        gas_meter = _meter(np.array([gx, 1.2, 0.0]), kind="gas", color=ERZ_AMBER).scale(1.5)
+        power_meter = _meter(np.array([px, 1.2, 0.0]), kind="power", color=P_YELLOW).scale(1.5)
+        gas_val = math_label(rf"{de_num(round(Q_E_GAS))}{unit_tex}", np.array([gx, 0.4, 0.0]), size=BODY_FONT_SIZE,
+                             color=END_RED)
+        power_val = math_label(rf"{de_num(round(Q_E_WP))}{unit_tex}", np.array([px, 0.4, 0.0]), size=BODY_FONT_SIZE,
+                               color=P_YELLOW)
+        not_equal = VGroup(*[Line(np.array([-0.16, 1.2 + dy, 0.0]), np.array([0.16, 1.2 + dy, 0.0]), color=P_WHITE,
+                                  stroke_width=3) for dy in (0.07, -0.07)],
+                           Line(np.array([-0.1, 1.0, 0.0]), np.array([0.1, 1.4, 0.0]), color=P_WHITE, stroke_width=3))
+        gas_name = body_text("Gas", font_size=LABEL_FONT_SIZE, color=ERZ_AMBER).move_to(np.array([gx, 1.85, 0.0]))
+        power_name = body_text("Strom", font_size=LABEL_FONT_SIZE, color=P_YELLOW).move_to(np.array([px, 1.85, 0.0]))
+        gone = [*[rows[k]["group"] for k in keys], *[rows[k]["readout"] for k in keys], product["group"],
+                product["readout"], pump_label, why, gen["bars"], env_tag,
+                el_tag]
+        self.play(*[FadeOut(m) for m in gone], run_time=1.2)
+        self.play(ReplacementTransform(eq3_box, bridge_box), ReplacementTransform(eq3, bridge),
+                  FadeIn(gas_meter), FadeIn(gas_name), FadeIn(gas_val), FadeIn(power_meter), FadeIn(power_name),
+                  FadeIn(power_val), FadeIn(not_equal), run_time=1.8)
+        hold_for(self, self.NARRATION, "brueck")
+
+        caption = step(caption, "weiter")
         bridge_note = note_line("1 kWh Strom ≠ 1 kWh Gas", color=P_TEAL)
-        everything = VGroup(*[rows[k]["group"] for k in keys], product["group"])
-        self.remove(*[rows[k]["readout"] for k in keys], product["readout"])
-        self.play(FadeOut(why), FadeOut(everything), FadeOut(pump_label),
-                  ReplacementTransform(eq3_box, bridge_box), ReplacementTransform(eq3, bridge),
-                  FadeIn(gas_meter), FadeIn(power_meter), FadeIn(gas_val), FadeIn(power_val), FadeIn(not_equal),
-                  FadeIn(gas_name), FadeIn(power_name), FadeIn(bridge_note), *live(1.6), run_time=1.6)
-        hold_for(self, self.NARRATION, "brueck", during=live)
+        self.play(FadeIn(bridge_note), run_time=1.0)
+        hold_for(self, self.NARRATION, "weiter")
 
         self.play(FadeOut(caption), run_time=0.6)
         self.wait(0.4)

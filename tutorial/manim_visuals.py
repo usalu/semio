@@ -1122,20 +1122,21 @@ def energy_tank(center, *, height: float = 2.2, width: float = 0.9, color=P_YELL
             "group": VGroup(frame, cap), "center": c, "height": height, "width": width}
 
 
-def lamp_glyph(anchor, drop: float = 0.55):
-    """💡 Pendant lamp — cable, conical shade, bulb."""
+def lamp_glyph(anchor, drop: float = 0.55, scale: float = 1.0):
+    """💡 Pendant lamp — cable, conical shade, bulb; ``scale`` shrinks the shade and bulb, not the cable drop."""
     from manim import DOWN, LEFT, RIGHT, UP, Circle, Line, VGroup
 
     a = np.array(anchor, dtype=float)
     cable = Line(a, a + DOWN * drop, color=P_WHITE, stroke_width=1.4)
     top = a + DOWN * drop
+    h, w, tip = 0.2 * scale, 0.22 * scale, 0.05 * scale
     shade = VGroup(
-        Line(top + LEFT * 0.05, top + DOWN * 0.2 + LEFT * 0.22, color=P_WHITE, stroke_width=1.5),
-        Line(top + RIGHT * 0.05, top + DOWN * 0.2 + RIGHT * 0.22, color=P_WHITE, stroke_width=1.5),
-        Line(top + DOWN * 0.2 + LEFT * 0.22, top + DOWN * 0.2 + RIGHT * 0.22, color=P_WHITE, stroke_width=1.5),
+        Line(top + LEFT * tip, top + DOWN * h + LEFT * w, color=P_WHITE, stroke_width=1.5),
+        Line(top + RIGHT * tip, top + DOWN * h + RIGHT * w, color=P_WHITE, stroke_width=1.5),
+        Line(top + DOWN * h + LEFT * w, top + DOWN * h + RIGHT * w, color=P_WHITE, stroke_width=1.5),
     )
-    bulb = Circle(radius=0.09, color=P_YELLOW, stroke_width=1.5).move_to(a + DOWN * (drop + 0.32))
-    filament = Line(bulb.get_center() + UP * 0.03 + LEFT * 0.025, bulb.get_center() + DOWN * 0.03 + RIGHT * 0.025,
+    bulb = Circle(radius=0.09 * scale, color=P_YELLOW, stroke_width=1.5).move_to(top + DOWN * 0.32 * scale)
+    filament = Line(bulb.get_center() + (UP * 0.03 + LEFT * 0.025) * scale, bulb.get_center() + (DOWN * 0.03 + RIGHT * 0.025) * scale,
                     color=P_YELLOW, stroke_width=1.1)
     return {"cable": cable, "bulb": bulb, "group": VGroup(cable, shade, bulb, filament)}
 
@@ -1865,12 +1866,9 @@ def caption_bar(text_de: str, *, font_size: int | None = None, color: str = P_WH
 
     n_lines = len(label.submobjects) if isinstance(label, _VGroup) else 1
     if n_lines > CAPTION_MAX_LINES:
-        import warnings
-
-        warnings.warn(
+        raise ValueError(
             f"caption_bar wrapped to {n_lines} lines (max {CAPTION_MAX_LINES}); "
-            f"shorten the German clause: {text_de!r}",
-            stacklevel=2,
+            f"split or shorten the German clause: {text_de!r}"
         )
     bg = RoundedRectangle(
         width=label.width + 0.5,

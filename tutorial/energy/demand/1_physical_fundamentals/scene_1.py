@@ -1791,12 +1791,12 @@ class Beat3_Energieerhaltung(Scene):
 #endregion
 
 
-#region Beat4 – Heat pump: moving heat instead of making it
+#region Beat4 – Heat pump: lifting energy to a higher temperature level
 class Beat4_Waermepumpe(Scene):
     NARRATION = [
         ("move",
-         "A heat pump does not create heat. It moves heat from the cold outdoor air into the warm house.",
-         "Eine Wärmepumpe erzeugt keine Wärme. Sie verschiebt Wärme aus der kalten Außenluft ins warme Haus."),
+         "A heat pump does not create heat. It transfers energy from the cold outdoor air to a higher temperature level, into the warm house.",
+         "Eine Wärmepumpe erzeugt keine Wärme. Sie überträgt Energie aus der kalten Außenluft auf ein höheres Temperaturniveau — ins warme Haus."),
         ("evap",
          "In the evaporator a very cold refrigerant takes up heat from the outdoor air and evaporates.",
          "Im Verdampfer nimmt ein sehr kaltes Kältemittel Wärme aus der Außenluft auf und verdampft."),
@@ -1828,8 +1828,8 @@ class Beat4_Waermepumpe(Scene):
          "Per kilowatt-hour of final energy: wood chips give about 0.85 kilowatt-hours of heat, oil about 0.94, gas about 0.96.",
          "Je 1 kWh Endenergie liefern Holzhackschnitzel rund 0,85 kWh Wärme, Heizöl rund 0,94, Erdgas rund 0,96."),
         ("compare2",
-         "In the house an electric heater gives exactly one. With fuels the rest leaves with the flue gas.",
-         "Ein Elektroheizstab liefert im Haus genau 1. Bei Brennstoffen geht der Rest mit dem Abgas verloren."),
+         "At the house an electric heater gives exactly one. With fuels the rest leaves with the flue gas at the house; electricity may cause flue gas elsewhere.",
+         "Am Haus liefert ein Elektroheizstab genau 1. Bei Brennstoffen geht der Rest mit dem Abgas verloren — Strom verursacht gegebenenfalls anderswo Abgas."),
         ("power",
          "But electricity is often made from fuels too: then the flue gas arises at the power station, not in the house.",
          "Auch Strom entsteht oft aus Brennstoffen: Dann entsteht das Abgas im Kraftwerk, nicht im Haus."),
@@ -1843,7 +1843,7 @@ class Beat4_Waermepumpe(Scene):
         N = self.NARRATION
         title = scene_title(TITLE_DE)
         self.add(title)
-        subtitle = beat_subtitle("Wärmepumpe — Wärme verschieben statt erzeugen", title)
+        subtitle = beat_subtitle("Wärmepumpe — Energie auf höheres Temperaturniveau übertragen", title)
         self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "move"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -2118,7 +2118,7 @@ class Beat4_Waermepumpe(Scene):
                 np.array([xs[i], cb + (1 + specs[i][1]) / 2 * cu, 0.0])), num_dashes=14)
             for i in range(3)
         ])
-        loss_lbl = Text("Abgas", font_size=LABEL_FONT_SIZE, color=P_ORANGE).move_to(np.array([-3.6, cb + cu + 0.55, 0.0]))
+        loss_lbl = Text("Abgas am Haus", font_size=LABEL_FONT_SIZE, color=P_ORANGE).move_to(np.array([-3.4, cb + cu + 0.55, 0.0]))
         self.play(grow[3].animate.set_value(1.0), run_time=1.0)
         self.play(FadeIn(values[3]), run_time=0.4)
         self.play(Create(losses), FadeIn(loss_lbl), run_time=0.8)

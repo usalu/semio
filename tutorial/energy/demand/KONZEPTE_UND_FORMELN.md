@@ -52,7 +52,7 @@ Die Größen der Gebäudeenergie konkret und visuell verstehen — immer am Baut
 | 1 | Energie im Alltag — die Kilowattstunde | Zähler · weggelassenes „h“ · 1 kWh = Staubsauger 1 h = ≈ 3 min warm duschen · Energie-Skala Teelicht → Welt · Glas, Decke, Öffnungen |
 | 2 | Leistung — wie schnell Energie fließt | E = P · t als Fläche · Staubsauger/Wasserkocher/Dusche · 1 W = 1 J/s · Leistungs-Skala Teelicht → alle Kraftwerke · Heizlast vs. Heizwärmebedarf |
 | 3 | Energie bleibt erhalten — jedes Watt wird Wärme | E_ein = E_aus + ΔE_Speicher · Lampe 5 % Licht + 95 % Wärme → 100 % Wärme · Mensch 100 W · Winter/Sommer |
-| 4 | Wärmepumpe — Wärme verschieben statt erzeugen | Kältekreis animiert · 1 + 3 = 4 · COP aus Balken · COP(Außentemperatur) · JAZ · Vergleich Holz, Öl, Gas, Elektro, Luft-/Erd-WP |
+| 4 | Wärmepumpe — Energie auf höheres Temperaturniveau übertragen | Kältekreis animiert · 1 + 3 = 4 · COP aus Balken · COP(Außentemperatur) · JAZ · Vergleich Holz, Öl, Gas, Elektro, Luft-/Erd-WP |
 | 5 | Strahlung — kurzwellig hinein, langwellig gefangen | g-Wert aus Strahlen · Q̇_S = g · A · I · langwellige Rückstrahlung, Low-E · Treibhauseffekt · Sonnenschutz außen |
 | 6 | Thermische Masse — speichern und zeitversetzt abgeben | Q = m · c · ΔT an 1 m² Betondecke · 24-h-Verlauf, Phasenverschiebung, Dämpfung · warum die Decke · Nachtlüftung/Sonnengewinne |
 | 7 | Sensible und latente Wärme | T-Q-Diagramm Wasser · Sättigungskurve x_s(ϑ) · Taupunkt · Mensch 70 W sensibel + 30 W latent · Tauwasser/Entfeuchtung |
@@ -133,7 +133,7 @@ Die Größen der Gebäudeenergie konkret und visuell verstehen — immer am Baut
 - Im Alltag ist die **kWh** die wichtigste Größe — eine Energiemenge. Das „h“ nicht weglassen.
 - **Leistung × Zeit = Fläche = Energie**; dieselbe kWh kann schnell (Dusche, 20 kW) oder langsam (Staubsauger, 1 kW) fließen.
 - Fast jedes Watt im Gebäude endet als **Wärme** — im Winter Gewinn, im Sommer Last.
-- Die Wärmepumpe **verschiebt** Umweltwärme; Brennstoffe verlieren einen Teil mit dem Abgas.
+- Die Wärmepumpe **überträgt** Umweltenergie auf ein höheres Temperaturniveau; Brennstoffe verlieren am Haus einen Teil mit dem Abgas, Strom verursacht gegebenenfalls anderswo Abgas.
 - Glas lässt **kurzwellig** hinein und hält **langwellig** zurück — Sonnenschutz gehört nach außen.
 - Die **Decke** ist der wirksamste Speicher: frei, von warmer Luft angeströmt, im Strahlungsaustausch mit allen Flächen.
 - **Latente** Wärme ist unsichtbar, aber groß; kühle Flächen unter dem Taupunkt bekommen Tauwasser.
